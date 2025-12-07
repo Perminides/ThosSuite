@@ -9,12 +9,12 @@ import app.data.CardSortOrder;
 import app.data.LearnSessionInfo;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
-import javafx.application.Platform;
-import javafx.scene.Node;
+import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.HeaderDragType;
@@ -23,7 +23,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-public class MainWindow extends Stage {
+public class MainWindow {
 
     private MenuItem itemSave = null;
     private Menu menuLearn = null;
@@ -38,45 +38,70 @@ public class MainWindow extends Stage {
     private Runnable onEscPressed = null;
     private Runnable onPausePressed = null;
     
+    private Stage stage;
     private HeaderBar headerBar;
     private BorderPane root;
     private Pane contentPane;
 
-    public MainWindow() {
-        initStyle(StageStyle.EXTENDED);
-        setTitle("Thos Suite");
-        setResizable(false);
+    public MainWindow(Stage stage) {
+    	this.stage = stage;
+        // 1. Fenster-Basics (unabhängig vom Skin)
+        stage.initStyle(StageStyle.EXTENDED);
+        stage.setTitle("Thos Suite");
+        stage.setResizable(false);
         
-        Skin skin = SkinService.get();
-        
-        // Alles vom Skin holen - kein Styling hier!
-        headerBar = skin.createHeaderBar();
-        headerBar.getStyleClass().add("thorstens-bar");  // Style-Class setzen!
-
-        contentPane = skin.createContentPane();
-        contentPane.getStyleClass().add("thorstens-pane");
-        
+        // 2. Struktur anlegen (Container überleben den Skin-Wechsel)
         root = new BorderPane();
         root.getStyleClass().add("thorstens-root");
-        root.setTop(headerBar);
-        root.setCenter(contentPane);
         
+        // 3. Scene erstellen
         Scene scene = new Scene(root);
-        skin.styleScene(scene);
-        setScene(scene);
-        Platform.runLater(() -> {
-            double headerHeight = headerBar.getHeight();
-            HeaderBar.setPrefButtonHeight(this, headerHeight);
-            System.out.println("HeaderBar height: " + headerHeight);
-        });
+        stage.setScene(scene);
+        
+        // 4. Globale Handler
         initKeyBindings();
+        
+        // 5. Initiales Füllen der UI
+        buildStyledUi();
     }
     
-    public void createMenuBar() {
+    /**
+     * Baut die UI-Inhalte neu auf basierend auf dem aktuellen Skin.
+     * Wird im Konstruktor und bei Skin-Wechsel aufgerufen.
+     */
+    public void buildStyledUi() {
         Skin skin = SkinService.get();
         
+        // A. Styling
+        skin.styleScene(stage.getScene());
+        
+        // B. Content Pane (Neu erstellen & setzen)
+        contentPane = skin.createContentPane();
+        contentPane.getStyleClass().add("thorstens-pane");
+        root.setCenter(contentPane);
+        
+        // C. Header & Menü (Neu erstellen & setzen)
+        // Hinweis: createMenuBar müssen wir noch so anpassen, dass es die Bar zurückgibt!
+        MenuBar menuBar = buildMenuBar(skin); 
+        
+        headerBar = skin.createHeaderBar(stage, menuBar);
+        headerBar.getStyleClass().add("thorstens-bar");
+        
+        // D. Das Wiring (Listener an die NEUE Instanz hängen)
+        headerBar.heightProperty().addListener((obs, oldVal, newVal) -> 
+            HeaderBar.setPrefButtonHeight(stage, newVal.doubleValue())
+        );
+        
+        root.setTop(headerBar);
+        
+        // E. Fenstergröße anpassen (vom Skin vorgegeben)
+        skin.redecorateMainWindow(this);
+    }
+    
+ // Refactoring: Gibt MenuBar zurück statt void
+    private MenuBar buildMenuBar(Skin skin) {
         MenuBar menuBar = skin.createMenuBar();
-	    HeaderBar.setDragType(menuBar, HeaderDragType.DRAGGABLE_SUBTREE);
+        HeaderBar.setDragType(menuBar, HeaderDragType.DRAGGABLE_SUBTREE);
         
         // DATEI-MENÜ
         Menu menuFile = skin.createMenu("Datei");
@@ -130,14 +155,7 @@ public class MainWindow extends Stage {
         
         // Menüs zur MenuBar hinzufügen
         menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuView);
-        
-     // HeaderBar komplett vom Skin aufbauen lassen
-        skin.setupHeaderBar(headerBar, this, menuBar);
-        
-        headerBar.heightProperty().addListener((obs, oldVal, newVal) -> {
-            System.out.println("HeaderBar height changed: " + oldVal + " -> " + newVal);
-            HeaderBar.setPrefButtonHeight(this, newVal.doubleValue());
-        });
+        return menuBar;
     }
     
     private void updateLearnMenuItems() {
@@ -179,7 +197,7 @@ public class MainWindow extends Stage {
     
     private void initKeyBindings() {
         // TODO: ESC und PAUSE KeyBindings
-        getScene().setOnKeyPressed(event -> {
+    	stage.getScene().setOnKeyPressed(event -> {
             switch (event.getCode()) {
                 case ESCAPE:
                     if (onEscPressed != null) onEscPressed.run();
@@ -222,4 +240,24 @@ public class MainWindow extends Stage {
     private Color toFXColor(java.awt.Color awtColor) {
         return Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
     }
+
+	public void show() {
+		stage.show();		
+	}
+
+	public void setWidth(int width) {
+		stage.setWidth(width);
+	}
+
+	public void setHeight(int height) {
+		stage.setHeight(height);
+	}
+
+	public ObservableList<Image> getIcons() {
+		return stage.getIcons();
+	}
+
+	public void centerOnScreen() {
+		stage.centerOnScreen();
+	}
 }

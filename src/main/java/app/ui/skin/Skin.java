@@ -29,7 +29,9 @@ import app.ui.components.ImageMapPanel;
 import app.ui.components.MultipleChoicePanel;
 import app.ui.components.ShapeMapPanel;
 import app.ui.skin.params.BorderParams;
-import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.ObjectBinding;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -174,12 +176,6 @@ public abstract class Skin {
 		configureUiManager();
 	}
 
-	public MainWindow createMainWindow() {
-		MainWindow mainWindow = new MainWindow();
-		// redecorateMainWindow(mainWindow);
-		return mainWindow;
-	}
-
 	public void redecorateMainWindow(MainWindow window) {
 		// window.setTitleBarColor(UIUtils.toHex(menuBarBackground));
 		window.setWidth(getContentSize().width);
@@ -201,8 +197,73 @@ public abstract class Skin {
 		return new MenuItem(text);
 	}
 	
-	public HeaderBar createHeaderBar() {
-	    return new HeaderBar();
+	// app.ui.skin.Skin.java
+
+	public HeaderBar createHeaderBar(Stage stage, MenuBar menuBar) {
+	    HeaderBar headerBar = new HeaderBar();
+	    
+	    // CENTER: Title
+	    Label titleLabel = new Label("Thos Suite");
+	    titleLabel.getStyleClass().add("thorstens-title");
+	    headerBar.setCenter(titleLabel);
+	    
+	    // LEADING: Icon + MenuBar (Logik direkt hier)
+	    // Wir nutzen Bindings statt runLater!
+	    
+	    // 1. Icon View erstellen (bindet sich an die Header-Höhe)
+	    ImageView iconView = createResponsiveHeaderIcon(stage, headerBar);
+	    
+	    // 2. Layout zusammenbauen
+	    double spacing = font.getSize() * 0.5;
+	    HBox leftBox = new HBox(0); // Items kommen rein, sobald verfügbar
+	    leftBox.setAlignment(Pos.CENTER_LEFT);
+	    leftBox.setPadding(new javafx.geometry.Insets(0, 0, 0, spacing));
+	    
+	    if (iconView != null) {
+	        leftBox.getChildren().add(iconView);
+	    }
+	    leftBox.getChildren().add(menuBar);
+	    
+	    headerBar.setLeading(leftBox);
+	    
+	    return headerBar;
+	}
+
+	// Hilfsmethode für das responsive Icon
+	private ImageView createResponsiveHeaderIcon(Stage stage, HeaderBar headerBar) {
+	    ObservableList<Image> icons = stage.getIcons();
+	    if (icons.isEmpty()) return null;
+
+	    ImageView iconView = new ImageView();
+	    iconView.setPreserveRatio(true);
+	    iconView.setSmooth(true); // Wichtig, aber bei passender Icon-Wahl weniger kritisch
+
+	    // 1. Die Zielgröße berechnen (Live-Wert)
+	    DoubleBinding targetSize = headerBar.heightProperty().multiply(0.55);
+
+	    // 2. Binding für das "beste Bild" definieren
+	    // Das aktualisiert sich automatisch, sobald targetSize sich ändert!
+	    ObjectBinding<Image> bestIconBinding = Bindings.createObjectBinding(() -> {
+	        double neededHeight = targetSize.get();
+	        
+	        // Initialer Layout-Pass kann 0 sein
+	        if (neededHeight <= 0) return icons.get(0); 
+
+	        return icons.stream()
+	            // Nimm alle Icons, die mindestens so groß sind wie benötigt
+	            .filter(img -> img.getHeight() >= neededHeight)
+	            // Von denen nimm das kleinste (um unnötiges Downscaling zu vermeiden)
+	            .min((a, b) -> Double.compare(a.getHeight(), b.getHeight()))
+	            // Fallback: Wenn alle kleiner sind als benötigt, nimm das größte was da ist
+	            .orElse(icons.get(icons.size() - 1));
+	            
+	    }, targetSize); // <--- WICHTIG: Abhängigkeit angeben!
+
+	    // 3. Verkabeln
+	    iconView.imageProperty().bind(bestIconBinding);
+	    iconView.fitHeightProperty().bind(targetSize);
+
+	    return iconView;
 	}
 	
 	/**
@@ -263,51 +324,10 @@ public abstract class Skin {
 	    //css = addCssRule(css, ".menu-item", "-fx-font-size", "10px");  // Hat Einfluss auf den vertikalen Abstand zwischen Deutschland und Multiple Choice. Aber nicht auf die Fontgröße!
 	    //css = addCssRule(css, ".menu-item:disabled", "-fx-text-fill", UIUtils.toHex(Color.RED)); Kein Effekt
 	    
-	 // Als Data-URL zur Scene hinzufügen
+	    // Alte StyleSheets entfernen
+	    scene.getStylesheets().clear();
+	    // Neues als Data-URL zur Scene hinzufügen
 	    scene.getStylesheets().add("data:text/css," + css);
-	}
-		
-	private ImageView createHeaderIconView(Stage stage, double minSize) {
-	    ObservableList<Image> icons = stage.getIcons();
-	    if (icons.isEmpty()) return null;
-	    
-	    // Finde Icon >= 20px (gut für Downscaling)
-	    Image bestIcon = icons.stream()
-	        .filter(img -> img.getWidth() >= minSize)
-	        .min((a, b) -> Double.compare(a.getWidth(), b.getWidth()))
-	        .orElse(icons.get(icons.size() - 1));  // Fallback: größtes
-	    
-	    ImageView iconView = new ImageView(bestIcon);
-	    iconView.setPreserveRatio(true);
-	    iconView.setSmooth(true);
-	    return iconView;
-	}
-	
-	public void setupHeaderBar(HeaderBar headerBar, Stage stage, MenuBar menuBar) {
-	    // CENTER: Title
-	    Label titleLabel = new Label("Thos Suite");
-	    titleLabel.getStyleClass().add("thorstens-title");
-	    headerBar.setCenter(titleLabel);
-	    
-	    // LEADING: Icon + MenuBar (nach Layout, wenn Höhe bekannt)
-	    Platform.runLater(() -> {
-	        double height = headerBar.getHeight();
-	        double targetIconSize = height * 0.55;
-	        
-	        // Icon mit richtiger Größe wählen
-	        ImageView icon = createHeaderIconView(stage, targetIconSize);
-	        if (icon != null) {
-	            icon.setFitHeight(targetIconSize);
-	            icon.setFitWidth(targetIconSize);
-	            
-	            double spacing = font.getSize() * 0.5;
-	            HBox leftBox = new HBox(0, icon, menuBar);
-	            leftBox.setAlignment(Pos.CENTER_LEFT);
-	            leftBox.setPadding(new javafx.geometry.Insets(0, 0, 0, spacing));
-	            
-	            headerBar.setLeading(leftBox);
-	        }
-	    });
 	}
 
 	public BackgroundPanel createBackgroundPanel(DeckType type) {

@@ -92,7 +92,7 @@ public class ThosSuiteApp extends Application {
 
         // Skin holen und MainWindow erstellen
         Skin skin = SkinService.get();
-        mainWindow = skin.createMainWindow();
+        mainWindow = new MainWindow(primaryStage);
         
         // Icons setzen
         try {
@@ -108,7 +108,7 @@ public class ThosSuiteApp extends Application {
         } catch (Exception e) {
             throw new RuntimeException("Probleme beim Laden der Icons", e);
         }
-        mainWindow.createMenuBar();
+        mainWindow.buildStyledUi();
 
         // Controller erstellen
         controller = new Controller(mainWindow);
