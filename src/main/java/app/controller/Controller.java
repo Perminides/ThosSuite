@@ -30,14 +30,14 @@ public class Controller{
     	mainWindow.setEscPressedRunnable(this::escPressed);
     	mainWindow.setPausePressedRunnable(this::pausePressed);
     	mainWindow.setSaveRunnable(this::saveMenuItemSelected);
-    	mainWindow.setLearnSessionConsumer(this::onLearnMenuItemSelected);
+    	/**mainWindow.setLearnSessionConsumer(this::onLearnMenuItemSelected);
     	mainWindow.setSortConsumer(this::cardSortOrderSelected);
-    	mainWindow.setSkinChangeConsumer(this::newSkinSelected);
+    	mainWindow.setSkinChangeConsumer(this::newSkinSelected);**/
     	mainWindow.showPanel(SkinService.get().createBackgroundPanel(null));
     	ankiDeckService = new AnkiDeckService();
     	regionDeckService = new RegionDeckService();
     	setLearnMenuItemLabels();
-    	mainWindow.setVisible(true); // Alles läuft im EDT, wenn dieser Call vor dem langen new MapCardDeckService(); kommen würde, dann blockiert dieser die paint-Events des JFrame und das wird in halbfertigem Zustand angezeigt.
+    	mainWindow.show(); // Alles läuft im EDT, wenn dieser Call vor dem langen new MapCardDeckService(); kommen würde, dann blockiert dieser die paint-Events des JFrame und das wird in halbfertigem Zustand angezeigt.
     }
     
     public void sessionEnded() {
