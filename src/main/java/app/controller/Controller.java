@@ -92,7 +92,7 @@ public class Controller{
 			return;
 		
 		SkinService.set(newSkin);
-		mainWindow.createMenuBar();
+		mainWindow.buildStyledUi();
 		
 		if (currentSession != null) {
 			currentSession.refresh();
