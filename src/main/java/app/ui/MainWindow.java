@@ -1,37 +1,35 @@
 package app.ui;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import javax.swing.AbstractAction;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JRootPane;
-import javax.swing.KeyStroke;
 
 import app.data.CardSortOrder;
 import app.data.LearnSessionInfo;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.application.Platform;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HeaderBar;
+import javafx.scene.layout.HeaderDragType;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
-public class MainWindow extends JFrame {
+public class MainWindow extends Stage {
 
-    /**
-	 * Zeigt immer ein BackgroundPanel an, welches entweder ein SessionPanel beherbergt oder halt auch nicht.
-	 */
-	private static final long serialVersionUID = 1L;
-    private JMenuBar myMenuBar = null;
-    private JMenu menuLearn = null;
-    private JMenu menuOptions = null;
-    private JMenu menuSort = null;
-    private JMenuItem itemSave = null;
+    private MenuItem itemSave = null;
+    private Menu menuLearn = null;
+    private Menu menuOptions = null;
+    private Menu menuSort = null;
+    private List<LearnSessionInfo> todaysLearnSessions;
     
     private Consumer<LearnSessionInfo> onSessionSelected = null;
     private Consumer<CardSortOrder> onSortSelected = null;
@@ -39,114 +37,177 @@ public class MainWindow extends JFrame {
     private Runnable onSaveSelected = null;
     private Runnable onEscPressed = null;
     private Runnable onPausePressed = null;
-    private List<LearnSessionInfo> todaysLearnSessions;
+    
+    private HeaderBar headerBar;
+    private BorderPane root;
+    private Pane contentPane;
 
     public MainWindow() {
-        super("Thos Suite");
-
-        initKeyBindings();
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        createMenuBar();
+        initStyle(StageStyle.EXTENDED);
+        setTitle("Thos Suite");
         setResizable(false);
+        
+        Skin skin = SkinService.get();
+        
+        // Alles vom Skin holen - kein Styling hier!
+        headerBar = skin.createHeaderBar();
+        headerBar.getStyleClass().add("thorstens-bar");  // Style-Class setzen!
+
+        contentPane = skin.createContentPane();
+        contentPane.getStyleClass().add("thorstens-pane");
+        
+        root = new BorderPane();
+        root.getStyleClass().add("thorstens-root");
+        root.setTop(headerBar);
+        root.setCenter(contentPane);
+        
+        Scene scene = new Scene(root);
+        skin.styleScene(scene);
+        setScene(scene);
+        Platform.runLater(() -> {
+            double headerHeight = headerBar.getHeight();
+            HeaderBar.setPrefButtonHeight(this, headerHeight);
+            System.out.println("HeaderBar height: " + headerHeight);
+        });
+        initKeyBindings();
     }
     
     public void createMenuBar() {
-    	Skin skin = SkinService.get();
-    	skin.redecorateMainWindow(this);
-    	if (myMenuBar != null)
-    		remove(myMenuBar);
-    	myMenuBar = skin.createJMenuBar();
-    	JMenu menuFile = skin.createJMenu("Datei");
-    	itemSave = skin.createJMenuItem("Speichern und beenden");
-    	itemSave.addActionListener(_ -> onSaveSelected.run());
-    	itemSave.setEnabled(false);
-    	menuFile.add(itemSave);
-    	
-    	menuSort = skin.createJMenu("Anzeigereihenfolge");
-    	JMenuItem item = null;
-    	for (CardSortOrder order : CardSortOrder.values()) {
-    		item = skin.createJMenuItem(order.getDisplayName());
-    		if (order == CardSortOrder.BY_WRONG_COUNT_DESC) // !Später: Wenn aus config gelesen wird, dann natürlich anders...
-    			item.setEnabled(false);
-    		item.addActionListener(e -> {
-    			onSortSelected.accept(order);
-    			for (java.awt.Component comp : menuSort.getMenuComponents()) {
-    				comp.setEnabled(comp != e.getSource()); 
-    			}
-    		});
-    		menuSort.add(item);
-    	}
-    	menuOptions = skin.createJMenu("Optionen");
-    	menuOptions.add(menuSort);
-    	
-    	menuLearn = skin.createJMenu("Lernen");
-    	if (todaysLearnSessions != null)
-    		setLearnItems();
-    	
-    	JMenu menuView = skin.createJMenu("Ansicht");
-
-    	List<JMenuItem> skinMenuItems = new ArrayList<>();
-    	Skin currentSkin = SkinService.get();
-
-    	for (Skin availableSkin : SkinService.getAllSkins()) {
-    	    String displayName = availableSkin.getDisplayName();
-    	    
-    	    // Checkmark wenn aktueller Skin
-    	    boolean isCurrentSkin = availableSkin.getClass() == currentSkin.getClass();
-    	    String menuText = (isCurrentSkin ? "✓ " : "  ") + displayName;
-    	    
-    	    item = skin.createJMenuItem(menuText);
-    	    item.addActionListener(_ -> {
-    	    	if (availableSkin == currentSkin) return;
-    	    	onNewSkinSelected.accept(availableSkin);
-    	    });
-    	    
-    	    skinMenuItems.add(item);
-    	    menuView.add(item);
-    	}
-    	
-    	myMenuBar.add(menuFile);
-    	myMenuBar.add(menuOptions);
-        myMenuBar.add(menuLearn);
-        myMenuBar.add(menuView);
-        myMenuBar.setOpaque(true);        
-        setJMenuBar(myMenuBar);
-        pack(); // Falls die Schriftgröße sich geändert hat, wird das Menu höher und soll ja keinen Platz vom Spielfeld klauen, deswegen hier das pack
-        revalidate();
-        repaint();
+        Skin skin = SkinService.get();
+        
+        MenuBar menuBar = skin.createMenuBar();
+	    HeaderBar.setDragType(menuBar, HeaderDragType.DRAGGABLE_SUBTREE);
+        
+        // DATEI-MENÜ
+        Menu menuFile = skin.createMenu("Datei");
+        itemSave = skin.createMenuItem("Speichern und beenden");
+        itemSave.setOnAction(_ -> onSaveSelected.run());
+        itemSave.setDisable(true);
+        menuFile.getItems().add(itemSave);
+        
+        // OPTIONEN-MENÜ
+        menuOptions = skin.createMenu("Optionen");
+        menuSort = skin.createMenu("Anzeigereihenfolge");
+        
+        for (CardSortOrder order : CardSortOrder.values()) {
+            MenuItem item = skin.createMenuItem(order.getDisplayName());
+            if (order == CardSortOrder.BY_WRONG_COUNT_DESC) {
+                item.setDisable(true);
+            }
+            item.setOnAction(e -> {
+                onSortSelected.accept(order);
+                // Alle anderen enablen, dieses disablen
+                for (MenuItem menuItem : menuSort.getItems()) {
+                    menuItem.setDisable(menuItem == e.getSource());
+                }
+            });
+            menuSort.getItems().add(item);
+        }
+        menuOptions.getItems().add(menuSort);
+        
+        // LERNEN-MENÜ
+        menuLearn = skin.createMenu("Lernen");
+        if (todaysLearnSessions != null) {
+            updateLearnMenuItems();
+        }
+        
+        // ANSICHT-MENÜ
+        Menu menuView = skin.createMenu("Ansicht");
+        Skin currentSkin = SkinService.get();
+        
+        for (Skin availableSkin : SkinService.getAllSkins()) {
+            String displayName = availableSkin.getDisplayName();
+            boolean isCurrentSkin = availableSkin.getClass() == currentSkin.getClass();
+            String menuText = (isCurrentSkin ? "✓ " : "  ") + displayName;
+            
+            MenuItem item = skin.createMenuItem(menuText);
+            item.setOnAction(_ -> {
+                if (availableSkin == currentSkin) return;
+                onNewSkinSelected.accept(availableSkin);
+            });
+            menuView.getItems().add(item);
+        }
+        
+        // Menüs zur MenuBar hinzufügen
+        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuView);
+        
+     // HeaderBar komplett vom Skin aufbauen lassen
+        skin.setupHeaderBar(headerBar, this, menuBar);
+        
+        headerBar.heightProperty().addListener((obs, oldVal, newVal) -> {
+            System.out.println("HeaderBar height changed: " + oldVal + " -> " + newVal);
+            HeaderBar.setPrefButtonHeight(this, newVal.doubleValue());
+        });
     }
     
-    public void updateLearnItems(List<LearnSessionInfo> infoList) {
-        menuLearn.removeAll();
-        addLearnItems(infoList);
-        menuLearn.revalidate();
+    private void updateLearnMenuItems() {
+        menuLearn.getItems().clear();
+        for (LearnSessionInfo info : todaysLearnSessions) {
+            MenuItem item = new MenuItem(info.formatForMenu());
+            if (!info.isStillDueToday()) {
+                item.setDisable(true);
+            } else {
+                item.setOnAction(_ -> onSessionSelected.accept(info));
+            }
+            menuLearn.getItems().add(item);
+        }
     }
     
     public void setLearnItems(List<LearnSessionInfo> infoList) {
-    	todaysLearnSessions = infoList;
-    	setLearnItems();
+        todaysLearnSessions = infoList;
+        updateLearnMenuItems();
     }
     
     public void addLearnItems(List<LearnSessionInfo> infoList) {
-    	todaysLearnSessions.addAll(infoList);
-    	setLearnItems();
+        todaysLearnSessions.addAll(infoList);
+        updateLearnMenuItems();
     }
     
+    public void updateLearnItems(List<LearnSessionInfo> infoList) {
+        todaysLearnSessions = infoList;
+        updateLearnMenuItems();
+    }
+    
+    public void showSaveSession(boolean enabled) {
+        itemSave.setDisable(!enabled);
+    }
+    
+    public void showPanel(JPanel panel) {
+        // TODO: Panel-System später
+        System.out.println("TODO: showPanel() - " + panel.getClass().getSimpleName());
+    }
+    
+    private void initKeyBindings() {
+        // TODO: ESC und PAUSE KeyBindings
+        getScene().setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case ESCAPE:
+                    if (onEscPressed != null) onEscPressed.run();
+                    break;
+                case PAUSE:
+                    if (onPausePressed != null) onPausePressed.run();
+                    break;
+                default:
+                    break;
+            }
+        });
+    }
+    
+    // Callback Setter
     public void setSaveRunnable(Runnable action) {
-    	this.onSaveSelected  = action;
+        this.onSaveSelected = action;
     }
     
     public void setLearnSessionConsumer(Consumer<LearnSessionInfo> consumer) {
-    	this.onSessionSelected  = consumer;
+        this.onSessionSelected = consumer;
     }
     
     public void setSkinChangeConsumer(Consumer<Skin> consumer) {
-    	this.onNewSkinSelected  = consumer;
+        this.onNewSkinSelected = consumer;
     }
     
     public void setSortConsumer(Consumer<CardSortOrder> consumer) {
-    	this.onSortSelected  = consumer;
+        this.onSortSelected = consumer;
     }
     
     public void setEscPressedRunnable(Runnable action) {
@@ -157,54 +218,8 @@ public class MainWindow extends JFrame {
         this.onPausePressed = action;
     }
     
-    public void showPanel(JPanel panel) {
-    	getContentPane().removeAll();
-    	add(panel, BorderLayout.CENTER);
-    	pack();
-        revalidate();
-        repaint();
-    }
-
-	public void showSaveSession(boolean b) {
-		itemSave.setEnabled(b);
-	}
-	
-	private void setLearnItems() {
-		menuLearn.removeAll();
-		for (LearnSessionInfo info : todaysLearnSessions) {
-    		JMenuItem item = new JMenuItem(info.formatForMenu());
-    		if (!info.isStillDueToday())
-    			item.setEnabled(false);
-    		else
-    			item.addActionListener(_ -> onSessionSelected.accept(info));
-    		menuLearn.add(item);
-    	}
-
-	}
-    
-    private void initKeyBindings() {
-        JRootPane root = getRootPane();
-
-        // ESC
-        root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-            .put(KeyStroke.getKeyStroke("ESCAPE"), "escPressed");
-        root.getActionMap().put("escPressed", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (onEscPressed != null)
-                    onEscPressed.run();
-            }
-        });
-
-        // PAUSE
-        root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-            .put(KeyStroke.getKeyStroke("PAUSE"), "pausePressed");
-        root.getActionMap().put("pausePressed", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (onPausePressed != null)
-                    onPausePressed.run();
-            }
-        });
+    // Helper
+    private Color toFXColor(java.awt.Color awtColor) {
+        return Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
     }
 }
