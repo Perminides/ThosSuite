@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputAdapter;
@@ -20,64 +19,86 @@ import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.MainWindow;
 import app.ui.MapElementListener;
-import app.ui.components.BackgroundPanel;
+import app.ui.components.BackgroundPanel; // Swing!
 import app.ui.components.CustomButtonLabel;
 import app.ui.components.CustomButtonLabel.CLBState;
 import app.ui.components.CustomTextLabel;
 import app.ui.components.MultipleChoicePanel;
-import app.ui.components.ShapeMapPanel;
+import app.ui.components.ShapeMapPane; // NEU: JavaFX Pane
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.scene.layout.Pane; // NEU: JavaFX Basis
 
-public class GermanySessionPanel extends JPanel implements AnkiSessionPanel {
-	private static final long serialVersionUID = 1L;
+public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Extends Pane (FX)
+	// private static final long serialVersionUID = 1L; // Braucht Pane nicht
 	private static final DeckType DECKTYPE = DeckType.GERMANY_CARDS; 
 
 	private final MainWindow mainWindow;
 	private final AnkiSessionPresenter presenter;
+	
+    // --- Swing Altlasten (stehen lassen, wie gewünscht) ---
     private JTextField textInputField;
     private CustomTextLabel questionArea;
     private CustomTextLabel progressArea;
     private CustomTextLabel cardHistoryArea;
     private MultipleChoicePanel mcPanel;
     private CustomButtonLabel backButton;
-    private ShapeMapPanel deutschlandkarte;
     private JLabel imageLabel;
+    
+    // --- NEU: Die JavaFX Map ---
+    private ShapeMapPane deutschlandkarte; // Typ geändert!
+    
     private boolean batch = false;
 
-    public GermanySessionPanel(MainWindow mainWindow, AnkiSessionPresenter presenter) {
+    public GermanySessionPane(MainWindow mainWindow, AnkiSessionPresenter presenter) {
         this.mainWindow = mainWindow;
         this.presenter = presenter;
-        setLayout(null);
-        setOpaque(false);
-        setSize(SkinService.get().getContentSize());
+        // setLayout(null); // Gibt es in FX Pane nicht (ist default)
+        // setOpaque(false); // Gibt es in FX Pane nicht
+        // setSize(SkinService.get().getContentSize()); // Muss anders gelöst werden (in FX meist via PrefSize)
         initUI();
     }
     
     @Override
     public void show() {
-    	BackgroundPanel bg = SkinService.get().createBackgroundPanel(DECKTYPE);
-    	bg.add(this);
-        mainWindow.showPanel(bg);
+        Skin skin = SkinService.get();
+        
+        // 1. Hintergrund holen (Deine Methode!)
+        Pane background = skin.createBackgroundPane(DECKTYPE);
+        
+        // 2. Uns selbst (die Map-Layer) darauf legen
+        // Da 'background' ein Pane ist und wir (this) auch ein Pane sind
+        // und absolute Koordinaten nutzen, passt das perfekt aufeinander.
+        background.getChildren().add(this);
+        
+        // 3. Anzeigen
+        mainWindow.showView(background);
     }  
 
     private void initUI() {
         Skin skin = SkinService.get();
-    	deutschlandkarte = skin.createShapeMapPanel(DECKTYPE);
-    	deutschlandkarte.setListener(new MapElementListener() {
-    	    @Override
-    	    public void mouseClicked(String id) {
-    	        mapElementClicked(id);  // ← Über Helper
-    	    }
-    	});
-    	add(deutschlandkarte);
-    	//deutschlandkarte.drawRegionShapes(); !Sofort: Es gibt Kreise, da fehlt offenbar die deckID und außerdem haben wir jetzt bayern getrennt in nord und süd, hehe...
-    	deutschlandkarte.makeEveryShapeActive(); // Bei Anki sind alle Shapes von Interesse!
+        
+        // --- START NEUER MAP CODE ---
+    	// Wir nutzen die neue Factory im Skin (die wir eben besprochen haben)
+    	deutschlandkarte = skin.createShapeMapPane(DECKTYPE);
     	
+    	// Listener: JavaFX Consumer Style
+    	deutschlandkarte.setListener(id -> mapElementClicked(id));
+    	
+    	// Hinzufügen zum SceneGraph
+    	getChildren().add(deutschlandkarte);
+    	
+    	// Initialisierung: Alle aktiv
+    	deutschlandkarte.makeEveryShapeActive();
+    	// --- ENDE NEUER MAP CODE ---
+    	
+    	
+    	// --- AB HIER ALTER SWING CODE (UNVERÄNDERT) ---
+    	/**
     	questionArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
     	questionArea.setNameForDebug("QuestionLabel");
     	questionArea.setText("");
-    	add(questionArea);
+    	add(questionArea); // FEHLER: Pane hat kein add(Component)
     	
     	textInputField = skin.createInputField(DECKTYPE);
     	textInputField.setEnabled(false);
@@ -88,10 +109,10 @@ public class GermanySessionPanel extends JPanel implements AnkiSessionPanel {
     		}
     		
 		});
-    	add(textInputField);
+    	add(textInputField); // FEHLER
     	
     	imageLabel = skin.createImageLabel(DECKTYPE);
-    	add(imageLabel);
+    	add(imageLabel); // FEHLER
     	
     	mcPanel = skin.createMultipleChoicePanel(DECKTYPE);
     	mcPanel.addListener(
@@ -103,17 +124,17 @@ public class GermanySessionPanel extends JPanel implements AnkiSessionPanel {
     		}
     	);
     	mcPanel.disableAllButtons();
-    	add(mcPanel);
+    	add(mcPanel); // FEHLER
     	
     	progressArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
     	progressArea.setNameForDebug("SessionProgressLabel");
     	progressArea.setText("");
-    	add(progressArea);
+    	add(progressArea); // FEHLER
     	
     	cardHistoryArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
     	cardHistoryArea.setNameForDebug("CardHistoryLabel");
     	cardHistoryArea.setText("");
-    	add(cardHistoryArea);
+    	add(cardHistoryArea); // FEHLER
     	
     	backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
     	backButton.addMouseListener(new MouseInputAdapter() {
@@ -122,7 +143,7 @@ public class GermanySessionPanel extends JPanel implements AnkiSessionPanel {
    			 	backButtonClicked();
             }
 		});
-    	add(backButton);
+    	add(backButton); // FEHLER**/
     }
 	
 	// ========================================
@@ -135,43 +156,36 @@ public class GermanySessionPanel extends JPanel implements AnkiSessionPanel {
     
     public void endTx() {
     	batch = false;
-    	deutschlandkarte.repaint();
+    	// deutschlandkarte.repaint(); // GIBT ES NICHT MEHR (FX ist reaktiv)
     }
     
     // Question
 	
     public void setQuestion(String text) {
-    	questionArea.setText(text); 
+    	//questionArea.setText(text); 
     }
     
 	// Image
 	
     public void setImage(String imagePath) {
-    	imageLabel.setIcon(imagePath == null ? null : new ImageIcon(imagePath));
+    	//imageLabel.setIcon(imagePath == null ? null : new ImageIcon(imagePath));
     }
     
     // Multiple Choice
     
 	public void setMultipleChoice(List<String> answers) {
-		mcPanel.initiateMultipleChoice(answers);
+		//mcPanel.initiateMultipleChoice(answers);
 	}
 	
-	/**
-	 * Setzt aktive Buttons auf inaktiv
-	 * @param active
-	 */
 	public void setMCPanelActive(boolean active) {
-		if (active)
+		/**if (active)
 			throw new RuntimeException("Das habe ich nicht vorhergesehen.");
 		else
-			mcPanel.inactivateAllActiveButtons();
+			mcPanel.inactivateAllActiveButtons();**/
 	}
 	
-	/**
-	 * Setzt alle Buttons auf disabled. Für wenn MC gerade überhaupt nicht gebraucht wird...
-	 */
 	public void disableMcPanel() {
-		mcPanel.disableAllButtons();
+		//mcPanel.disableAllButtons();
 	}
 	
     public void setMcCorrect(int id, boolean correct) {
@@ -187,55 +201,49 @@ public class GermanySessionPanel extends JPanel implements AnkiSessionPanel {
 		}
 	}
 	
-	// Map
+	// Map - HIER WURDE ANGEPASST (Delegation an ShapeMapPane)
 	
     public void resetMarkers() {
-    	deutschlandkarte.moveAllToActive();
-    	if (!batch)
-    		deutschlandkarte.repaint();
+    	deutschlandkarte.makeEveryShapeActive();
+    	// repaint entfällt
     }
 	
 	public void addIdsToCorrect(Set<String> elements) {
     	deutschlandkarte.addToCorrect(elements);
-    	if (!batch)
-    		deutschlandkarte.repaint();
+    	// repaint entfällt
     }
 	
 	@Override
 	public void setMarkedIds(Set<String> elements) {
 		deutschlandkarte.addToMarked(elements);
-		if (!batch)
-    		deutschlandkarte.repaint();
+		// repaint entfällt
 	}
     
     @Override
     public void setIdToIncorrect(String element) {
     	deutschlandkarte.addToIncorrect(element);
-    	if (!batch)
-    		deutschlandkarte.repaint();
+    	// repaint entfällt
     }
     
     public void setMapActive(boolean active) {
-    	deutschlandkarte.setActive(active);
-    	if (!batch)
-    		deutschlandkarte.repaint();
+    	deutschlandkarte.setInteractive(active); // Methode heißt jetzt setInteractive
+    	// repaint entfällt
     }
     
     // Input
     
 	public void setTextFieldActive(boolean active) {
-		if (active) {
+		/**if (active) {
 			textInputField.setText("");
 			textInputField.setEnabled(true);
 			textInputField.requestFocusInWindow();
 		} else {
 			textInputField.setEnabled(false);
-			// Text bleibt stehen (z.B. für Lösungs-Anzeige)
-		}
+		}**/
 	}
     
 	public void setTextInTextField(String text) {
-		textInputField.setText(text); 
+		//textInputField.setText(text); 
 	}	
 	
 	// ========================================
@@ -264,7 +272,7 @@ public class GermanySessionPanel extends JPanel implements AnkiSessionPanel {
 				+ progress.incorrect() + "<br/>Offen: "
 				+ (progress.details().size()-progress.correct()-progress.incorrect());
 
-		SwingUtilities.invokeLater(() -> progressArea.setText(text));
+		//SwingUtilities.invokeLater(() -> progressArea.setText(text));
 	}
 
 
@@ -276,7 +284,7 @@ public class GermanySessionPanel extends JPanel implements AnkiSessionPanel {
 			+ "<br/>Level: " + stats.getCurrentLevel()
 			+ "<br/>Falsch beantwortet: " + stats.getWrongCount();
 		}
-		cardHistoryArea.setText(text);
+		//cardHistoryArea.setText(text);
 	}
 	
 	public DeckType getType() {

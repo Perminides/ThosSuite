@@ -1,9 +1,10 @@
 package app.data;
 
-import java.awt.Shape;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javafx.scene.shape.Shape;
 
 public record MapShape(String id, String deckId, String regionName, String capitalName, Set<String> altRegionNames, Set<String> altCapitalNames, String fixedColorSet,
 		Shape shape) {

@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
 import java.awt.Rectangle;
+import java.io.File;
 import java.io.FileInputStream;
 import java.lang.reflect.Field;
 import java.util.Properties;
@@ -18,16 +19,14 @@ import app.config.Config;
 import app.data.DeckType;
 import app.data.GeoMap;
 import app.data.MapService;
-import app.ui.MainWindow;
 import app.ui.UIUtils;
-import app.ui.components.BackgroundPanel;
 import app.ui.components.CustomButtonLabel;
 import app.ui.components.CustomImageLabel;
 import app.ui.components.CustomTextField;
 import app.ui.components.CustomTextLabel;
 import app.ui.components.ImageMapPanel;
 import app.ui.components.MultipleChoicePanel;
-import app.ui.components.ShapeMapPanel;
+import app.ui.components.ShapeMapPane;
 import app.ui.skin.params.BorderParams;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -41,6 +40,11 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.Pane;
@@ -176,16 +180,10 @@ public abstract class Skin {
 		configureUiManager();
 	}
 
-	public void redecorateMainWindow(MainWindow window) {
-		// window.setTitleBarColor(UIUtils.toHex(menuBarBackground));
-		window.setWidth(getContentSize().width);
-		window.setHeight(getContentSize().height);
-	}
-
 	public MenuBar createMenuBar() {
 		MenuBar menuBar = new MenuBar();
 		// !Sofort: Ich glaube das macht gar nix...
-		menuBar.setStyle("-fx-background-color: " + UIUtils.toHex(menuBarBackground) + ";");
+		menuBar.setStyle("-fx-background-color: " + UIUtils.toHex(menuBarBackground) + ";"); // Hintergrund rechts vom Icon, hinter den Top-Menüs
 		return menuBar;
 	}
 
@@ -231,7 +229,7 @@ public abstract class Skin {
 
 	// Hilfsmethode für das responsive Icon
 	private ImageView createResponsiveHeaderIcon(Stage stage, HeaderBar headerBar) {
-	    ObservableList<Image> icons = stage.getIcons();
+	    ObservableList<Image> icons = stage.getIcons(); // Schön, dass die Observable ist, aber für uns hier nicht von Belang!
 	    if (icons.isEmpty()) return null;
 
 	    ImageView iconView = new ImageView();
@@ -240,6 +238,7 @@ public abstract class Skin {
 
 	    // 1. Die Zielgröße berechnen (Live-Wert)
 	    DoubleBinding targetSize = headerBar.heightProperty().multiply(0.55);
+	    iconView.fitHeightProperty().bind(targetSize);
 
 	    // 2. Binding für das "beste Bild" definieren
 	    // Das aktualisiert sich automatisch, sobald targetSize sich ändert!
@@ -258,20 +257,10 @@ public abstract class Skin {
 	            .orElse(icons.get(icons.size() - 1));
 	            
 	    }, targetSize); // <--- WICHTIG: Abhängigkeit angeben!
-
 	    // 3. Verkabeln
 	    iconView.imageProperty().bind(bestIconBinding);
-	    iconView.fitHeightProperty().bind(targetSize);
 
 	    return iconView;
-	}
-	
-	/**
-	 * !Sofort Anpassen an createBackgroundPanel mit dem entsprechenden Hintergrundbild!
-	 * @return
-	 */
-	public Pane createContentPane() {
-	    return new Pane();
 	}
 	
 	// In SkinService:
@@ -285,17 +274,25 @@ public abstract class Skin {
 	    
 	    // CSS generieren
 	    String css = "";
+	    // 1. Der "klebende" Fokus wird unsichtbar mit "transparent" und Hover mit UIUtils.toHex(menuBarHoverBackground). Diesen klebenden Fokus gibt es allerdings nur beim Öffnen eines Untermnüs, nicht beim Öffnen eines Top-Menüs. Ich bin noch nicht überzeugt, dass man dieses Verhalten akzeptieren muss tbh...
+	    // Ok, Gemini hat mir folgenden Link geschickt, das überzeugt mich nun zu 90% dass es ein JavaFX-Problem ist: https://bugs.openjdk.org/browse/JDK-8227679
+	    // Auch wenn hier von ContextMenus gesprochen wird. Aber This is a minor annoyance, but not a serious issue. Lowering priority to P4. → Really???
+	    css = addCssRule(css, ".menu-item:focused", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground));
+	    
 	    css = addCssRule(css, ".menu .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Lernen
 	    css = addCssRule(css, ".menu .label", "-fx-font-size", "" + font.getSize() + "px");  // Schriftgröße Lernen
 	    css = addCssRule(css, ".menu:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover über Lernen
 	    css = addCssRule(css, ".menu:showing", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hintergrund von Lernen, wenn ich über ein Untermenü hovere, wie Multiple Choice oder so.
+	    css = addCssRule(css, ".menu:focused", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hintergrund von Anzeigereihenfolge, wenn ich über ein Untermenü hovere, wie Zufällig oder so.
 	    css = addCssRule(css, ".menu", "-fx-font-family", "'" + font.getFamily() + "'"); // Lernen
+	    
 	    
 	    css = addCssRule(css, ".menu-item .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Multiple Choice unter Lernen
 	    css = addCssRule(css, ".menu-item .label", "-fx-font-size", "" + font.getSize() + "px");  // Schriftgröße Multiple Choice unter Lernen
 	    css = addCssRule(css, ".menu-item", "-fx-padding", "2px 10px"); // Vertikaler Zeilenabstand und Padding links/rechts von Multiple Choice
 	    css = addCssRule(css, ".menu-item:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover über Multiple Choice unter Lernen
 	    css = addCssRule(css, ".menu-item:disabled:hover", "-fx-background-color", "transparent"); // Schaltet den Hover für disabled Items aus.
+	    
 	    css = addCssRule(css, ".context-menu", "-fx-background-color", UIUtils.toHex(menuBarBackground));  // Untermenüs (Multiple Choice unter Lernen)
 	    css = addCssRule(css, ".menu-item", "-fx-font-family", "'" + font.getFamily() + "'"); // Multiple Choice
 	    css = addCssRule(css, ".menu-item:disabled .label", "-fx-text-fill", UIUtils.toHex(textColor)); // JavaFX macht das eigenständig entsättigt. Also selbst Color.Red setzen würde nur ein schmutziges graurot erzeugen.
@@ -306,32 +303,97 @@ public abstract class Skin {
 	    css = addCssRule(css, ".thorstens-bar", "-fx-border-color", UIUtils.toHex(thinBorderColor));
 	    css = addCssRule(css, ".thorstens-bar", "-fx-border-width", "0 0 1 0");
 	    
-	    css = addCssRule(css, ".thorstens-pane", "-fx-background-color", UIUtils.toHex(menuBarBackground));
-	    css = addCssRule(css, ".thorstens-pane", "-fx-pref-width", getContentSize().width + "px");
-	    css = addCssRule(css, ".thorstens-pane", "-fx-pref-height", getContentSize().height + "px");
-	    
-	    css = addCssRule(css, ".thorstens-title", "-fx-font-family", "'Aptos'");
+	    css = addCssRule(css, ".thorstens-title", "-fx-font-family", "'" + font.getFamily() + "'");
 	    css = addCssRule(css, ".thorstens-title", "-fx-font-size", font.getSize() + "px");  // Vom Skin-Font!
 	    css = addCssRule(css, ".thorstens-title", "-fx-text-fill", UIUtils.toHex(textColor));
 	    
 	    css = addCssRule(css, ".thorstens-root", "-fx-border-color", "white");
 	    css = addCssRule(css, ".thorstens-root", "-fx-border-width", "1px");
 	    
-	    //css = addCssRule(css, ".menu-bar", "-fx-background-color", UIUtils.toHex(Color.RED)); Kein Effekt
-	    //css = addCssRule(css, ".menu", "-fx-text-fill", UIUtils.toHex(Color.RED)); Kein Effekt
-	    //css = addCssRule(css, ".menu", "-fx-font-size", "20px");  // Kein Effekt
-	    //css = addCssRule(css, ".menu-item", "-fx-text-fill", UIUtils.toHex(Color.red)); Kein Effekt
-	    //css = addCssRule(css, ".menu-item", "-fx-font-size", "10px");  // Hat Einfluss auf den vertikalen Abstand zwischen Deutschland und Multiple Choice. Aber nicht auf die Fontgröße!
-	    //css = addCssRule(css, ".menu-item:disabled", "-fx-text-fill", UIUtils.toHex(Color.RED)); Kein Effekt
+	 // --- ShapeMap Styles ---
+	    
+	    // 1. Basis-Styling für alle Shapes (Standard: Inaktiv/Grau)
+	    // Wir nutzen hier disabledComponentBgColor, das entspricht deinem bisherigen "inactiveColor"
+	    css = addCssRule(css, ".map-shape", "-fx-fill", UIUtils.toHex(disabledComponentBgColor));
+	    css = addCssRule(css, ".map-shape", "-fx-stroke", UIUtils.toHex(borderColor));
+	    css = addCssRule(css, ".map-shape", "-fx-stroke-width", "1.8px"); // Dein Wert aus dem alten Panel
+	    
+	 // Anstatt globalem Hover definieren wir Hover spezifisch für den Spiel-Zustand!
+	    
+	    // 1. Zuerst den normalen Active-State
+	    css = addCssRule(css, ".map-shape:active-game", "-fx-fill", UIUtils.toHex(activeComponentBgColor));
+	    
+	    // 2. DANN den Hover für Active-State (gewinnt durch Reihenfolge UND Spezifität)
+	    // Das entspricht deiner Swing-Logik: "Nur wenn aktiv, dann Hover-Effekt"
+	    css = addCssRule(css, ".map-shape:active-game:hover", "-fx-fill", UIUtils.toHex(activeComponentHoverColor));
+
+	    // 3. Andere Zustände (Correct/Incorrect)
+	    // Da diese Shapes NICHT :active-game sind (die States sind exklusiv),
+	    // greift der Hover von oben hier nicht. Perfekt!
+	    css = addCssRule(css, ".map-shape:correct", "-fx-fill", UIUtils.toHex(correctColor));
+	    css = addCssRule(css, ".map-shape:incorrect", "-fx-fill", UIUtils.toHex(incorrectColor));
+	    
+	    // :marked = Markiert (z.B. bei Elimination) -> markedColor
+	    css = addCssRule(css, ".map-shape:marked", "-fx-fill", UIUtils.toHex(markedColor));
+
+	    // 4. Dekorationen (Kontext-Shapes wie Meer oder Nachbarländer)
+	    // Basis-Regel für Deko (keine Interaktion)
+	    css = addCssRule(css, ".decoration", "-fx-mouse-transparent", "true"); // Klicks gehen durch
+	    
+	    // Spezifische Farben für Deko-Sets
+	    if (shapeMapColor0 != null) {
+	        css = addCssRule(css, ".decoration-0", "-fx-fill", UIUtils.toHex(shapeMapColor0));
+	    }
+	    if (shapeMapColor1 != null) {
+	        css = addCssRule(css, ".decoration-1", "-fx-fill", UIUtils.toHex(shapeMapColor1));
+	    }
+
+	    // Optional: Hover-Effekt bei Deko ausschalten (falls nötig, aber mouse-transparent regelt das eh)
+	    css = addCssRule(css, ".decoration:hover", "-fx-fill", "derive(-fx-fill, 0%)"); // Farbe beibehalten
 	    
 	    // Alte StyleSheets entfernen
 	    scene.getStylesheets().clear();
-	    // Neues als Data-URL zur Scene hinzufügen
-	    scene.getStylesheets().add("data:text/css," + css);
+	    
+	    // Wir maskieren kritische Zeichen für die Data-URI
+	    String encodedCss = css.replace("%", "%25")  // % muss zu %25 werden
+	                           .replace("#", "%23"); // # muss zu %23 werden (sicher ist sicher)
+	                           
+	    scene.getStylesheets().add("data:text/css," + encodedCss);
 	}
 
-	public BackgroundPanel createBackgroundPanel(DeckType type) {
-		return new BackgroundPanel(getBackgroundImagePath(type), getContentSize());
+	public Pane createBackgroundPane(DeckType type) {
+	    Pane pane = new Pane();
+	    
+	    // Größe setzen
+	    Dimension size = getContentSize();
+	    pane.setPrefSize(size.width, size.height);
+	    pane.setMinSize(size.width, size.height);
+	    pane.setMaxSize(size.width, size.height);
+	    
+	    // Hintergrundbild setzen
+	    String bgPath = getBackgroundImagePath(type);
+	    try {
+	        Image bgImage = new Image(new File(bgPath).toURI().toString());
+	        BackgroundImage background = new BackgroundImage(
+	            bgImage,
+	            BackgroundRepeat.NO_REPEAT,
+	            BackgroundRepeat.NO_REPEAT,
+	            BackgroundPosition.CENTER,
+	            new BackgroundSize(
+	                BackgroundSize.AUTO, 
+	                BackgroundSize.AUTO, 
+	                false, 
+	                false, 
+	                true,  // contain (Bild wird skaliert um reinzupassen. Ändert die Proportionen nicht)
+	                true // cover (Bild wird hochskaliert um alles auszufüllen. Auch gestreckt wenn es sein muss)
+	            )
+	        );
+	        pane.setBackground(new Background(background));
+	    } catch (Exception e) {
+	        throw new RuntimeException("Konnte Hintergrundbild nicht laden: " + bgPath, e);
+	    }
+	    
+	    return pane;
 	}
 
 	public CustomTextField createInputField(DeckType type) {
@@ -409,17 +471,24 @@ public abstract class Skin {
 	 * Erstellt ein Deutschlandpanel. Aktuell noch ohne Hintergrundbild. Die Größe berechnet sich aus: Höhe = height + 2 * yPadding. Der scale findet ohne
 	 * Verzerrung statt, von daher ist die width dann auch aus diesen Parametern und der Auflösung der Map bestimmt.
 	 */
-	public ShapeMapPanel createShapeMapPanel(DeckType type) {
-		GeoMap map = MapService.getInstance().getMap(type);
-		Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMapPanel");
-		if (bounds == null)
-			bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionMapPanel");
-		// !Später: Magic Numbers
-		ShapeMapPanel result = new ShapeMapPanel(map, bounds.height, activeComponentBgColor, borderColor, activeComponentHoverColor, correctColor,
-				incorrectColor, disabledComponentBgColor, markedColor, 1.8f, 3.5f, 10, false, shapeMapColor0, shapeMapColor1);
-		result.setLocation(bounds.x, bounds.y);
-		return result;
-	}
+	public ShapeMapPane createShapeMapPane(DeckType type) {
+        // 1. Daten holen
+        GeoMap map = MapService.getInstance().getMap(type);
+        
+        // 2. Bounds via Reflection holen (AWT Rectangle)
+        Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMapPanel");
+        if (bounds == null) 
+            bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionMapPanel");
+            
+        // 3. Komponente erstellen (Skin bestimmt die Ziel-Höhe für den Zoom!)
+        ShapeMapPane pane = new ShapeMapPane(map, bounds.height);
+        
+        // 4. Positionieren (Absolut)
+        pane.setLayoutX(bounds.x);
+        pane.setLayoutY(bounds.y);
+        
+        return pane;
+    }
 
 	public ImageMapPanel createImageMapPanel(DeckType type) {
 		GeoMap map = MapService.getInstance().getMap(type);

@@ -47,7 +47,7 @@ public class MainWindow {
     	this.stage = stage;
         // 1. Fenster-Basics (unabhängig vom Skin)
         stage.initStyle(StageStyle.EXTENDED);
-        stage.setTitle("Thos Suite");
+        stage.setTitle("Thos Suite"); // → Für Windows, nicht für unsere Anzeige. Wenn Du über das Taskleisten-Icon hoverst, liest Du das, was hier steht...
         stage.setResizable(false);
         
         // 2. Struktur anlegen (Container überleben den Skin-Wechsel)
@@ -75,11 +75,6 @@ public class MainWindow {
         // A. Styling
         skin.styleScene(stage.getScene());
         
-        // B. Content Pane (Neu erstellen & setzen)
-        contentPane = skin.createContentPane();
-        contentPane.getStyleClass().add("thorstens-pane");
-        root.setCenter(contentPane);
-        
         // C. Header & Menü (Neu erstellen & setzen)
         // Hinweis: createMenuBar müssen wir noch so anpassen, dass es die Bar zurückgibt!
         MenuBar menuBar = buildMenuBar(skin); 
@@ -87,15 +82,12 @@ public class MainWindow {
         headerBar = skin.createHeaderBar(stage, menuBar);
         headerBar.getStyleClass().add("thorstens-bar");
         
-        // D. Das Wiring (Listener an die NEUE Instanz hängen)
+        // D. Sicherstellen, dass Minimize und Close-Button die ganze Höhe ausnutzen...
         headerBar.heightProperty().addListener((obs, oldVal, newVal) -> 
             HeaderBar.setPrefButtonHeight(stage, newVal.doubleValue())
         );
         
         root.setTop(headerBar);
-        
-        // E. Fenstergröße anpassen (vom Skin vorgegeben)
-        skin.redecorateMainWindow(this);
     }
     
  // Refactoring: Gibt MenuBar zurück statt void
@@ -171,6 +163,10 @@ public class MainWindow {
         }
     }
     
+    public void showPane(Pane panel) {
+        root.setCenter(panel);
+    }
+    
     public void setLearnItems(List<LearnSessionInfo> infoList) {
         todaysLearnSessions = infoList;
         updateLearnMenuItems();
@@ -190,9 +186,12 @@ public class MainWindow {
         itemSave.setDisable(!enabled);
     }
     
-    public void showPanel(JPanel panel) {
-        // TODO: Panel-System später
-        System.out.println("TODO: showPanel() - " + panel.getClass().getSimpleName());
+    public void showView(Pane view) {
+        // Wir tauschen den Inhalt im Zentrum des BorderPane aus
+        root.setCenter(view);
+        
+        // Optional: Fokus anfordern, damit KeyListener (z.B. für Input) greifen
+        view.requestFocus();
     }
     
     private void initKeyBindings() {

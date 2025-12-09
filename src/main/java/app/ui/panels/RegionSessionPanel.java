@@ -14,7 +14,7 @@ import app.ui.MapElementListener;
 import app.ui.components.BackgroundPanel;
 import app.ui.components.CustomTextField;
 import app.ui.components.CustomTextLabel;
-import app.ui.components.ShapeMapPanel;
+import app.ui.components.ShapeMapPane;
 import app.ui.components.ShapeMapState;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
@@ -25,7 +25,7 @@ public class RegionSessionPanel extends JPanel{
 	private final MainWindow mainWindow;
 	private final RegionSessionPresenter presenter;
 	private final DeckType deckType;
-    private ShapeMapPanel karte;
+    private ShapeMapPane karte;
     private CustomTextLabel questionArea;
     private CustomTextField textInputField;
     private boolean batch = false;
@@ -40,10 +40,10 @@ public class RegionSessionPanel extends JPanel{
         initUI(questionAreaVisible);
 	}
 	
-	public void show() {
+	public void show() {/**
 		BackgroundPanel bg = SkinService.get().createBackgroundPanel(DeckType.MC_CARDS); // !Später vielleicht eigenes Hintergrundbild? Platz wäre ja genug!
     	bg.add(this);
-        mainWindow.showPanel(bg);
+        mainWindow.showPanel(bg);**/
 	}
 	
 	private void initUI(boolean questionAreaVisible) {

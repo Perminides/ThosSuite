@@ -1,13 +1,15 @@
 package app.data;
 
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Path2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javafx.scene.image.Image;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 
 /**
  * Nur eine dünne Datenklasse, nichts wildes hier.
@@ -46,12 +48,12 @@ public class GeoMap {
 	
     private final Map<String, MapShape> shapes; 
     private final MapType type;
-    private final BufferedImage backgroundImage;
-    private final BufferedImage overlayImage;
-    private final BufferedImage inactiveBackgroundImage;
-    private final BufferedImage inactiveOverlayImage;
+    private final Image backgroundImage;
+    private final Image overlayImage;
+    private final Image inactiveBackgroundImage;
+    private final Image inactiveOverlayImage;
     
-    public GeoMap(List<MapShape> shapes, MapType type, BufferedImage backgroundImage, BufferedImage overlayImage, BufferedImage inactiveImage, BufferedImage inactiveOverlayImage) {
+    public GeoMap(List<MapShape> shapes, MapType type, Image backgroundImage, Image overlayImage, Image inactiveImage, Image inactiveOverlayImage) {
     	this.shapes = new HashMap<>();
     	for (MapShape shape : shapes)
     		this.shapes.put(shape.id(), shape);
@@ -95,19 +97,19 @@ public class GeoMap {
 		throw new RuntimeException("Keine Idee, was ich mit dieser ID machen soll tbh..." + id);
 	}
 
-	public BufferedImage getBackgroundImage() {
+	public Image getBackgroundImage() {
 		return backgroundImage;
 	}
 	
-	public BufferedImage getOverlayImage() {
+	public Image getOverlayImage() {
 		return overlayImage;
 	}
 	
-	public BufferedImage getInactiveImage() {
+	public Image getInactiveImage() {
 		return inactiveBackgroundImage;
 	}
 	
-	public BufferedImage getInactiveOverlayImage() {
+	public Image getInactiveOverlayImage() {
 		return inactiveOverlayImage;
 	}
 	
@@ -115,15 +117,25 @@ public class GeoMap {
 		return createCircle("", size.getName(), x, y);
 	}
 	
-    private MapShape createCircle(String id, String sizeString, int x, int y) {
+	public MapShape createCircle(String id, String sizeString, int x, int y) {
         CircleSizes circleSize = CircleSizes.fromCsvName(sizeString);
-        int radius = circleSize != null ? circleSize.getSize() : 65; //!Später: Fallback weg, wenn alle Shapes erstellt sind bei Welt (und Hannover)
-        Path2D circle;
-        if (radius != 65)
-        	circle = new Path2D.Float(new Ellipse2D.Float(x - radius, y - radius, radius * 2, radius * 2));
-        else
-        	circle = new Path2D.Float(new Rectangle2D.Float(x - radius/2, y - radius/2, radius, radius));
-        return new MapShape(circle, id, null, null, null, null, null, null);
+        int radius = circleSize != null ? circleSize.getSize() : 65;
+        
+        Shape shape;
+        if (radius != 65) {
+            // JavaFX Circle: Zentrum X, Zentrum Y, Radius
+            shape = new Circle(x, y, radius);
+        } else {
+            // Fallback !Sofort muss raus, wenn die Welt.geojsons fertig sind!
+            // JavaFX Rectangle: Links, Oben, Breite, Höhe
+            shape = new Rectangle(x - radius/2.0, y - radius/2.0, radius, radius);
+        }
+        
+        // CSS-Klasse gleich mitgeben, damit es gestylt werden kann
+        shape.getStyleClass().add("map-shape");
+        shape.getStyleClass().add("decoration");
+
+        return new MapShape(id, null, null, null, null, null, null, shape);
     }
 
 	public void setShapes(List<MapShape> transformed) {
