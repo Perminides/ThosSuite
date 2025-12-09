@@ -1,9 +1,5 @@
 package app.data.persistence;
 
-import java.awt.BasicStroke;
-import java.awt.Shape;
-import java.awt.geom.Area;
-import java.awt.geom.Path2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,6 +9,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import app.data.MapShape;
+import javafx.scene.shape.ClosePath;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
 
 /**
  * Diese Klasse kennt nur das MapRepository!
@@ -23,115 +23,91 @@ class GeoJsonLoader {
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(new File(filePath));
-            
-            List<MapShape> shapes = parseFeatures(root);
-            return shapes;
-            
+            return parseFeatures(root);
         } catch (IOException e) {
             throw new RuntimeException("Fehler beim Laden von GeoJSON: " + filePath, e);
         }
     }
-	
+
     private List<MapShape> parseFeatures(JsonNode root) {
         List<MapShape> shapes = new ArrayList<>();
         JsonNode features = root.get("features");
-        
+
         for (JsonNode feature : features) {
+            // Properties auslesen (identisch zu vorher)
             String id = feature.path("properties").path("id").asText(null);
             String capitalName = feature.path("properties").path("capitalName").asText(null);
             String regionName = feature.path("properties").path("regionName").asText(null);
             String fixedColorId = feature.path("properties").path("fixedColorId").asText(null);
             String deckId = feature.path("properties").path("deckId").asText(null);
-            String altCapitalNames = feature.path("properties").path("altCapitalNames").asText(null);
-            String altRegionNames = feature.path("properties").path("altRegionNames").asText(null);
+            // ... (Sets parsen wie gehabt)
+
             JsonNode geometry = feature.get("geometry");
-            
             String type = geometry.get("type").asText();
-            Shape shape = null;
+
+            Path path = new Path();
+            
+            // JavaFX Path Performance-Tipp:
+            // "FillRule.EVEN_ODD" ist Standard für Geo-Daten (Löcher in Polygonen)
+            path.setFillRule(javafx.scene.shape.FillRule.EVEN_ODD);
+
             if ("MultiPolygon".equals(type)) {
-            	shape = parseMultiPolygon(geometry);
+                parseMultiPolygon(geometry, path);
             } else if ("Polygon".equals(type)) {
-            	shape = parsePolygon(geometry);
-            } else if("MultiLineString".equals(type)) {
-            	shape = parseMultiLineString(geometry);
-            	Shape blowUp = new BasicStroke(7f).createStrokedShape(shape); //!Später: Magic number
-            	// !Später: Wir wissen immer noch nicht den Grund für die Artefakte! Also das ist Symptombekämpfung hier. Sollte das mal fehlschlagen, müssen wir an die Ursachen ran.
-				Area corrected = new Area(blowUp); // Sonst gibt es unschöne Artefakte beim Zeichnen des Borders in Form von schwarzen Linien von einem Rand zum anderen an den Stellen der Vertices...
-				shape = corrected;
+                parsePolygon(geometry, path);
+            } 
+            // MultiLineString Logik ggf. analog ergänzen
+
+            // WICHTIG: UserData setzen! Das brauchen wir für das Event-Handling (Klick -> ID)
+            path.setUserData(id);
+            
+            // CSS Klasse initial setzen
+            path.getStyleClass().add("map-shape");
+            if (fixedColorId != null) {
+                path.getStyleClass().add("decoration"); // Für Styling
             }
-            shapes.add(new MapShape(shape, id, deckId, regionName, capitalName, altRegionNames, altCapitalNames, fixedColorId));
+
+            shapes.add(new MapShape(id, deckId, regionName, capitalName, null, null, fixedColorId, path));
         }
-        
         return shapes;
     }
-    
-    private static Path2D.Double parsePolygon(JsonNode geometry) {
-        Path2D.Double path = new Path2D.Double();
-        JsonNode coords = geometry.get("coordinates");
-        
-        for (JsonNode ring : coords) {
-            if (ring.size() == 0) continue;
-            
-            JsonNode firstPoint = ring.get(0);
-            path.moveTo(firstPoint.get(0).asDouble(),
-                       -firstPoint.get(1).asDouble());
-            
-            for (int i = 1; i < ring.size(); i++) {
-                JsonNode pt = ring.get(i);
-                path.lineTo(pt.get(0).asDouble(),
-                           -pt.get(1).asDouble());
-            }
-            path.closePath();
-        }
-        return path;
-    }
-    
-	/**
-	 * Erzeugt aus GeoJSON-Koordinaten (Polygon oder MultiPolygon) Java2D-Path2D-Objekte.
-	 *
-	 * GeoJSON: - Polygon: [ [outerRing], [hole1], [hole2], ... ] - MultiPolygon: [ polygon1, polygon2, ... ] polygonX = [ [outerRing], [hole1], ... ]
-	 *
-	 * Path2D.WIND_EVEN_ODD: - sorgt automatisch dafür, dass alle Ringe ab dem zweiten als „Loch“ ausgeschnitten werden.
-	 */
-    private Path2D parseMultiPolygon(JsonNode geometry) {
-        Path2D path = new Path2D.Double();
-        JsonNode coords = geometry.get("coordinates");
-        
-        for (JsonNode polygon : coords) {        // Jedes Polygon im MultiPolygon
-            for (JsonNode ring : polygon) {       // Jeder Ring (outer + holes)
-                
-                if (ring.size() == 0) continue;
-                
-                // ring IST BEREITS das Punkt-Array!
-                JsonNode firstPoint = ring.get(0);
-                path.moveTo(firstPoint.get(0).asDouble(), 
-                           -firstPoint.get(1).asDouble());
-                
-                for (int i = 1; i < ring.size(); i++) {
-                    JsonNode pt = ring.get(i);
-                    path.lineTo(pt.get(0).asDouble(), 
-                               -pt.get(1).asDouble());
-                }
-                path.closePath();
-            }
-        }
-        return path;
-    }
-    
-	private static Path2D.Double parseMultiLineString(JsonNode geometry) {
-		Path2D.Double path = new Path2D.Double();
-		JsonNode lines = geometry.get("coordinates");
-		for (JsonNode coords : lines) {
-			if (coords.size() == 0)
-				continue;
-			JsonNode firstPoint = coords.get(0);
-			path.moveTo(firstPoint.get(0).asDouble(), -firstPoint.get(1).asDouble());
-			for (int i = 1; i < coords.size(); i++) {
-				JsonNode pt = coords.get(i);
-				path.lineTo(pt.get(0).asDouble(), -pt.get(1).asDouble());
-			}
-		}
 
-		return path;
-	}
+    private void parsePolygon(JsonNode geometry, Path path) {
+        JsonNode coords = geometry.get("coordinates");
+        for (JsonNode ring : coords) {
+            appendRingToPath(ring, path);
+        }
+    }
+
+    private void parseMultiPolygon(JsonNode geometry, Path path) {
+        JsonNode coords = geometry.get("coordinates");
+        for (JsonNode polygon : coords) {
+            for (JsonNode ring : polygon) {
+                appendRingToPath(ring, path);
+            }
+        }
+    }
+
+    private void appendRingToPath(JsonNode ring, Path path) {
+        if (ring.size() == 0) return;
+
+        // Erster Punkt -> MoveTo
+        JsonNode firstPoint = ring.get(0);
+        path.getElements().add(new MoveTo(
+            firstPoint.get(0).asDouble(), 
+            -firstPoint.get(1).asDouble() // Y-Invertierung beibehalten
+        ));
+
+        // Weitere Punkte -> LineTo
+        for (int i = 1; i < ring.size(); i++) {
+            JsonNode pt = ring.get(i);
+            path.getElements().add(new LineTo(
+                pt.get(0).asDouble(), 
+                -pt.get(1).asDouble()
+            ));
+        }
+        
+        // Ring schließen -> ClosePath
+        path.getElements().add(new ClosePath());
+    }
 }

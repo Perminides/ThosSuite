@@ -169,11 +169,11 @@ public class MCSessionPanel extends JPanel implements AnkiSessionPanel{
 
 	// Claude zu der Duplizierung der Methode in den SessionPanels: Lass es wie es ist. Die Duplizierung ist minimal, die Methode ist stabil, und du hältst deine Kapselung sauber. Das ist pragmatischer als die Sichtbarkeit zu opfern oder eine Basisklasse einzuführen.
     @Override
-    public void show() { 
+    public void show() { /**
     	BackgroundPanel bg = SkinService.get().createBackgroundPanel(DECKTYPE);
     	bg.add(this);
         mainWindow.showPanel(bg);
         revalidate();
-        repaint();
+        repaint();**/
     }
 }

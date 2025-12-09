@@ -53,12 +53,12 @@ public class WorldSessionPanel extends JPanel implements AnkiSessionPanel {
     }
     
     @Override
-    public void show() {
+    public void show() {/**
     	BackgroundPanel bg = SkinService.get().createBackgroundPanel(DECKTYPE);
     	bg.add(this);
         mainWindow.showPanel(bg);
         revalidate();
-        repaint();
+        repaint();**/
     }    
 
     private void initUI() {

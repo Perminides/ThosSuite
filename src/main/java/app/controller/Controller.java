@@ -30,10 +30,10 @@ public class Controller{
     	mainWindow.setEscPressedRunnable(this::escPressed);
     	mainWindow.setPausePressedRunnable(this::pausePressed);
     	mainWindow.setSaveRunnable(this::saveMenuItemSelected);
-    	/**mainWindow.setLearnSessionConsumer(this::onLearnMenuItemSelected);
+    	mainWindow.setLearnSessionConsumer(this::onLearnMenuItemSelected);
     	mainWindow.setSortConsumer(this::cardSortOrderSelected);
-    	mainWindow.setSkinChangeConsumer(this::newSkinSelected);**/
-    	mainWindow.showPanel(SkinService.get().createBackgroundPanel(null));
+    	mainWindow.setSkinChangeConsumer(this::newSkinSelected);
+    	mainWindow.showPane(SkinService.get().createBackgroundPane(null));
     	ankiDeckService = new AnkiDeckService();
     	regionDeckService = new RegionDeckService();
     	setLearnMenuItemLabels();
@@ -45,7 +45,7 @@ public class Controller{
     	//!Architektur Gehört das PopUp hierhin? Oder in die Session wie aktuell?
     	setLearnMenuItemLabels();
     	mainWindow.showSaveSession(false);
-    	mainWindow.showPanel(SkinService.get().createBackgroundPanel(null));
+    	mainWindow.showPane(SkinService.get().createBackgroundPane(null));
     	currentSession = null;
     	// !Erweiterung im Popup auch fragen ob eine neue Session gestartet werden soll
     }
@@ -98,7 +98,7 @@ public class Controller{
 			currentSession.refresh();
 			mainWindow.showSaveSession(true); // !Später Ach, das ist aber etwas unschön hier, oder? Ist die Frage wie wichtig eine cleverere Logik hier ist. Man kann es auch so lassen...
 		} else {
-			mainWindow.showPanel(SkinService.get().createBackgroundPanel(null)); // !Architektur: Sollte der Controller sich hier it UI-Krams herumschlagen?
+			mainWindow.showPane(SkinService.get().createBackgroundPane(null)); // !Architektur: Sollte der Controller sich hier it UI-Krams herumschlagen?
 		}
 	}
 	
