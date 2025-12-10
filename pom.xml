@@ -57,5 +57,12 @@
 			<version>${javafx.version}</version>
 			<classifier>win</classifier>
 		</dependency>
+		
+		<!-- Wird von ScenicView gebraucht -->
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-swing</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
 	</dependencies>
 </project>

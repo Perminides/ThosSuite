@@ -21,6 +21,9 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 public class ThosSuiteApp extends Application {
+	
+	// TODO: In Amerika fehlt ein Strich zwischen Utah und Arizona
+	// TODO: Vergiss das Bilder verkleinern nicht. JavaFX sollte das besser können...
 
     private MainWindow mainWindow;
     @SuppressWarnings("unused")

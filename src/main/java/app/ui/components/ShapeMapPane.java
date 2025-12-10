@@ -11,9 +11,7 @@ import app.ui.MapElementListener;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.scene.Group;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Shape;
 import javafx.scene.transform.Scale;
 
@@ -68,19 +66,6 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         scale.setPivotY(0);
         
         contentGroup.getTransforms().add(scale);
-        
-        // !Sofort: Den neuen 3D-Hover mal ausprobieren
-        // Ein DropShadow ist performant und sieht schick aus. Farbe kann man via CSS anpassen, wenn man will.
-        DropShadow dropShadow = new DropShadow();
-        dropShadow.setRadius(5.0);
-        dropShadow.setColor(Color.rgb(0, 0, 0, 0.4)); // Leicht transparentes Schwarz
-        // Wir binden den Effekt nur an den Hover-Zustand, um Performance zu sparen? 
-        // Oder global für 3D-Look? Hier erstmal global für den "Retro-Hover" Ersatz.
-        // Besser: Wir aktivieren ihn per CSS nur bei Hover! (Siehe Skin-Erweiterung später)
-        // Aber da du sagtest "mit einer Zeile Code":
-        // contentGroup.setEffect(dropShadow); // Würde alles schattieren.
-        
-        // Alternativ: Per CSS .map-shape:hover { -fx-effect: dropshadow(...) } -> Das ist der JavaFX Weg!
     }
     
     private void initShape(MapShape mapShape) {
@@ -116,7 +101,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     
     private void setupInteractions(Shape shape) {
         shape.setOnMouseClicked(e -> {
-            if (isInteractive && listener != null) {
+            if (listener != null) {
                 String id = (String) shape.getUserData();
                 listener.mouseClicked(id);
             }
@@ -128,11 +113,16 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     }
     
     // --- State Management via Pseudo-Klassen ---
-
     public void setInteractive(boolean interactive) {
         this.isInteractive = interactive;
-        // Optional: Visuelles Feedback für "Karte ist aktiv"
-        // contentGroup.setOpacity(interactive ? 1.0 : 0.8); 
+        
+        if (interactive) {
+            this.getStyleClass().remove("game-paused");
+        } else {
+            if (!this.getStyleClass().contains("game-paused")) {
+                this.getStyleClass().add("game-paused");
+            }
+        }
     }
 
     public void addToCorrect(Set<String> ids) {
@@ -193,7 +183,6 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
             // oder CSS regelt die Priorität. Hier resetten wir sicherheitshalber die anderen.
             resetShapeState(shape);
             shape.pseudoClassStateChanged(state, true);
-            shape.toFront(); // Wichtig: Markierte/Richtige nach vorne holen (wegen Overlap)!
         }
     }
     

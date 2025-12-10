@@ -1,6 +1,5 @@
 package app.ui.skin;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
@@ -10,9 +9,7 @@ import java.io.FileInputStream;
 import java.lang.reflect.Field;
 import java.util.Properties;
 
-import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 
 import app.config.Config;
@@ -48,6 +45,7 @@ import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 /**
@@ -265,12 +263,7 @@ public abstract class Skin {
 	
 	// In SkinService:
 	public void styleScene(Scene scene) {
-	    // Background Fill
-	    scene.setFill(javafx.scene.paint.Color.rgb(
-	    		menuBarBackground.getRed(), 
-	    		menuBarBackground.getGreen(), 
-	    		menuBarBackground.getBlue()
-	    ));
+	    scene.setFill(menuBarBackground);
 	    
 	    // CSS generieren
 	    String css = "";
@@ -312,7 +305,7 @@ public abstract class Skin {
 	    
 	 // --- ShapeMap Styles ---
 	    
-	    // 1. Basis-Styling für alle Shapes (Standard: Inaktiv/Grau)
+	    // Basis-Styling für alle Shapes (Standard: Inaktiv/Grau)
 	    // Wir nutzen hier disabledComponentBgColor, das entspricht deinem bisherigen "inactiveColor"
 	    css = addCssRule(css, ".map-shape", "-fx-fill", UIUtils.toHex(disabledComponentBgColor));
 	    css = addCssRule(css, ".map-shape", "-fx-stroke", UIUtils.toHex(borderColor));
@@ -320,14 +313,21 @@ public abstract class Skin {
 	    
 	 // Anstatt globalem Hover definieren wir Hover spezifisch für den Spiel-Zustand!
 	    
-	    // 1. Zuerst den normalen Active-State
+	    // Zuerst den normalen Active-State
 	    css = addCssRule(css, ".map-shape:active-game", "-fx-fill", UIUtils.toHex(activeComponentBgColor));
 	    
-	    // 2. DANN den Hover für Active-State (gewinnt durch Reihenfolge UND Spezifität)
+	    // DANN den Hover für Active-State (gewinnt durch Reihenfolge UND Spezifität)
 	    // Das entspricht deiner Swing-Logik: "Nur wenn aktiv, dann Hover-Effekt"
 	    css = addCssRule(css, ".map-shape:active-game:hover", "-fx-fill", UIUtils.toHex(activeComponentHoverColor));
 
-	    // 3. Andere Zustände (Correct/Incorrect)
+	    // --- DER 3D HOVER EFFEKT ---
+	    css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.5), 15, 0, 0, 0)");
+	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "innershadow(one-pass-box, rgba(0,0,0,0.6), 4, 1.0, 3, 3)");
+	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "bloom(0.1)");
+	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "lighting(light(distant, -45, 45, white), 5.0, 1.5, 20, bump-input)");
+	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "reflection(top-offset 0, fraction 0.7, top-opacity 0.5, bottom-opacity 0.0)");
+	    
+	    // Andere Zustände (Correct/Incorrect)
 	    // Da diese Shapes NICHT :active-game sind (die States sind exklusiv),
 	    // greift der Hover von oben hier nicht. Perfekt!
 	    css = addCssRule(css, ".map-shape:correct", "-fx-fill", UIUtils.toHex(correctColor));
@@ -335,8 +335,22 @@ public abstract class Skin {
 	    
 	    // :marked = Markiert (z.B. bei Elimination) -> markedColor
 	    css = addCssRule(css, ".map-shape:marked", "-fx-fill", UIUtils.toHex(markedColor));
+	    
+	 // --- PAUSE LOGIK ---
+	    // Wenn das Spiel pausiert ist (.game-paused auf dem Parent),
+	    // sollen aktive Shapes (.map-shape:active-game) aussehen wie inaktive (disabledComponentBgColor).
+	    // Wichtig: Correct/Incorrect Shapes bleiben unberührt, da sie den Status :active-game nicht haben!
+	    String pausedColor = UIUtils.toHex(disabledComponentBgColor);
+	    
+	    // Farbe überschreiben
+	    css = addCssRule(css, ".game-paused .map-shape:active-game", "-fx-fill", pausedColor);
+	    
+	    // Hover-Effekt im Pause-Modus unterdrücken (sonst würden sie beim Drüberfahren wieder bunt/leuchtend)
+	    css = addCssRule(css, ".game-paused .map-shape:active-game:hover", "-fx-fill", pausedColor);
+	    css = addCssRule(css, ".game-paused .map-shape:active-game:hover", "-fx-effect", "null"); // 3D Effekt aus
+	    //css = addCssRule(css, ".game-paused .map-shape:active-game:hover", "-fx-cursor", "default"); // Hand aus
 
-	    // 4. Dekorationen (Kontext-Shapes wie Meer oder Nachbarländer)
+	    // Dekorationen (Kontext-Shapes wie Meer oder Nachbarländer)
 	    // Basis-Regel für Deko (keine Interaktion)
 	    css = addCssRule(css, ".decoration", "-fx-mouse-transparent", "true"); // Klicks gehen durch
 	    
@@ -359,6 +373,7 @@ public abstract class Skin {
 	                           .replace("#", "%23"); // # muss zu %23 werden (sicher ist sicher)
 	                           
 	    scene.getStylesheets().add("data:text/css," + encodedCss);
+	    System.out.println(css);
 	}
 
 	public Pane createBackgroundPane(DeckType type) {
@@ -402,17 +417,17 @@ public abstract class Skin {
 			bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionTextInputPanel");
 		Color textC = textActiveComponentColor == null ? textColor : textActiveComponentColor;
 		Color incorrectText = incorrectTextColor == null ? incorrectColor : incorrectTextColor;
-		CustomTextField result = new CustomTextField(font, textC, incorrectText, activeComponentBgColor, disabledComponentBgColor, SwingConstants.CENTER,
+		/**CustomTextField result = new CustomTextField(font, textC, incorrectText, activeComponentBgColor, disabledComponentBgColor, SwingConstants.CENTER,
 				borderSmallComponent);
-		result.setBounds(bounds.x, bounds.y, bounds.width, result.getPreferredSize().height);
-		return result;
+		result.setBounds(bounds.x, bounds.y, bounds.width, result.getPreferredSize().height);**/
+		return null;
 	}
 
 	public CustomImageLabel createImageLabel(DeckType type) {
 		Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionImagePanel");
-		CustomImageLabel result = new CustomImageLabel(borderBigComponent, imageLabelBgColor);
-		result.setBounds(bounds);
-		return result;
+		//CustomImageLabel result = new CustomImageLabel(borderBigComponent, imageLabelBgColor);
+		//result.setBounds(bounds);
+		return null;
 	}
 
 	public CustomButtonLabel createAnswerButton() {
@@ -422,28 +437,23 @@ public abstract class Skin {
 		Color disabledBg = disabledButtonBgColor == null ? disabledComponentBgColor : disabledButtonBgColor;
 		Color textC = textActiveComponentColor == null ? textColor : textActiveComponentColor;
 
-		return new CustomButtonLabel(font, smallFont, textC, activeBg, hoverBg, inactiveBg, correctColor, incorrectColor, disabledBg, borderSmallComponent,
-				null);
+		return null; //new CustomButtonLabel(font, smallFont, textC, activeBg, hoverBg, inactiveBg, correctColor, incorrectColor, disabledBg, borderSmallComponent,null);
 	}
 
 	public CustomButtonLabel createIconButton(DeckType type, IconButtonType buttonType) {
 		switch (buttonType) {
 		case BACK: {
 			Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionBackButton");
-			CustomButtonLabel result = new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null,
-					disabledComponentBgColor, borderBackButton, backButtonIcon);
-			result.setLocation(bounds.x, bounds.y);
-			return result;
+			/**CustomButtonLabel result = new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor, borderBackButton, backButtonIcon);
+			result.setLocation(bounds.x, bounds.y);**/
+			return null;
 		}
 		case SKIP:
-			return new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor,
-					borderBackButton, skipButtonIcon);
+			//return new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor,borderBackButton, skipButtonIcon);
 		case PLAY:
-			return new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor,
-					borderBackButton, playButtonIcon);
+			// return new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor, borderBackButton, playButtonIcon);
 		case CANCEL:
-			return new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor,
-					borderBackButton, cancelButtonIcon);
+			//return new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor, borderBackButton, cancelButtonIcon);
 		default:
 			throw new RuntimeException("Was ist denn das für ein ButtonType: " + type);
 		}
@@ -455,9 +465,9 @@ public abstract class Skin {
 			bounds = (Rectangle) getFieldValue(deckType.getCategory().toString() + "Session" + labelType + "Panel");
 		Color bg = (Color) getFieldValue("displayText" + labelType + "BgColor");
 		bg = bg == null ? displayTextBgColor : bg;
-		CustomTextLabel result = new CustomTextLabel(bg, borderMediumComponent, font, textColor);
-		result.setBounds(bounds);
-		return result;
+		/**CustomTextLabel result = new CustomTextLabel(bg, borderMediumComponent, font, textColor);
+		result.setBounds(bounds);**/
+		return null;
 	}
 
 	public MultipleChoicePanel createMultipleChoicePanel(DeckType type) {
@@ -493,10 +503,9 @@ public abstract class Skin {
 	public ImageMapPanel createImageMapPanel(DeckType type) {
 		GeoMap map = MapService.getInstance().getMap(type);
 		Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMapPanel");
-		ImageMapPanel result = new ImageMapPanel(map, bounds.width, bounds.height, borderBigComponent, correctColor, incorrectColor, markedColor, 2,
-				borderColor, borderBackButton, new Rectangle(11, 11, 410, 254));
-		result.setLocation(bounds.x, bounds.y);
-		return result;
+		/**ImageMapPanel result = new ImageMapPanel(map, bounds.width, bounds.height, borderBigComponent, correctColor, incorrectColor, markedColor, 2, borderColor, borderBackButton, new Rectangle(11, 11, 410, 254));
+		result.setLocation(bounds.x, bounds.y);**/
+		return null;
 	}
 
 	/**
@@ -561,29 +570,36 @@ public abstract class Skin {
 	 * @return
 	 */
 	public static Color adjustBrightness(Color c, int intensity) {
-		if (c == null)
-			return null; // Das kann in der Tat passieren z.B. im Konstruktor von Skin hier :)
-		if (intensity < 0 || intensity > 100)
-			throw new RuntimeException("Das soll ein Prozentwert sein für die adjustBrightness, du Witzbold :)");
-		float intensityF = (float) intensity / 100;
-		float threshold = 1 - intensityF;
-		float[] hsb = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), null);
-		float brightness = hsb[2];
-		if (brightness > threshold) {
-			brightness = Math.max(0, brightness - intensityF); // abdunkeln
-		} else {
-			brightness = Math.min(1, brightness + intensityF); // aufhellen
-		}
+	    if (c == null) {
+	        return null; 
+	    }
+	    
+	    if (intensity < 0 || intensity > 100) {
+	        throw new RuntimeException("Das soll ein Prozentwert sein für die adjustBrightness, du Witzbold :)");
+	    }
 
-		Color adjusted = Color.getHSBColor(hsb[0], hsb[1], brightness);
-		return new Color(adjusted.getRed(), adjusted.getGreen(), adjusted.getBlue(), c.getAlpha());
+	    double intensityF = intensity / 100.0;
+	    double threshold = 1.0 - intensityF;
+
+	    double brightness = c.getBrightness();
+	    double newBrightness;
+
+	    if (brightness > threshold) {
+	        newBrightness = Math.max(0.0, brightness - intensityF); // abdunkeln
+	    } else {
+	        newBrightness = Math.min(1.0, brightness + intensityF); // aufhellen
+	    }
+
+	    // Neue Farbe erstellen via HSB-Factory
+	    // Wichtig: c.getOpacity() übernimmt den Alpha-Wert (0.0 - 1.0)
+	    return Color.hsb(c.getHue(), c.getSaturation(), newBrightness, c.getOpacity());
 	}
 
 	protected void configureUiManager() {
 
 		// Titelzeile, alles auch rechts von den Menüs (Farben gehen nur über putClientProperty)
 		UIManager.put("TitlePane.font", font); // Titel des Hauptfensters
-		UIManager.put("MenuBar.border", BorderFactory.createMatteBorder(0, 0, 1, 0, thinBorderColor)); // Farbe der Linie unter der Titel / Menüzeile des
+		//UIManager.put("MenuBar.border", BorderFactory.createMatteBorder(0, 0, 1, 0, thinBorderColor)); // Farbe der Linie unter der Titel / Menüzeile des
 																										// JFrames.
 
 		// Menüpunkte der ersten Ebene (Datei)
@@ -595,7 +611,7 @@ public abstract class Skin {
 		UIManager.put("Menu.selectionBackground", menuBarHoverBackground); // Hintergrund wenn aufgeklickt
 
 		// Menüpunkte 2. Ebene (Deutschland Hints (19 / 33)
-		UIManager.put("PopupMenu.border", BorderFactory.createMatteBorder(1, 1, 1, 1, thinBorderColor)); // Um jeden einzelnen Menüpunkt in der zweiten Ebene
+		//UIManager.put("PopupMenu.border", BorderFactory.createMatteBorder(1, 1, 1, 1, thinBorderColor)); // Um jeden einzelnen Menüpunkt in der zweiten Ebene
 		UIManager.put("PopupMenu.background", menuBarBackground); // Hintergrund
 		UIManager.put("MenuItem.font", font); // Schrift
 		UIManager.put("MenuItem.foreground", textColor); // Schriftfarbe
@@ -689,13 +705,13 @@ public abstract class Skin {
 	protected Color parseColor(String value) {
 		String[] values = value.split(",");
 		if (values.length == 1 && value.length() == 7)
-			return Color.decode(value);
+			return Color.web(value);
 		else if (values.length == 1 && value.length() == 9) {
-			Color result = Color.decode(value.substring(0, 7));
+			Color result = Color.web(value.substring(0, 7));
 			int alpha = Integer.parseInt(value.substring(7), 16);
 			return new Color(result.getRed(), result.getGreen(), result.getBlue(), alpha);
 		} else if (values.length == 4)
-			return new Color(Integer.parseInt(values[0]), Integer.parseInt(values[1]), Integer.parseInt(values[2]), Integer.parseInt(values[3]));
+			return new Color(Integer.parseInt(values[0]), Integer.parseInt(values[1]), Integer.parseInt(values[2]), (Float.parseFloat(values[3]) / 255));
 		else
 			throw new RuntimeException("Das Color-Format kenne ich nicht: " + value);
 	}

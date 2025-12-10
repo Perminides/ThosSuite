@@ -60,6 +60,7 @@ class GeoJsonLoader {
 
             // WICHTIG: UserData setzen! Das brauchen wir für das Event-Handling (Klick -> ID)
             path.setUserData(id);
+            path.setId("pathId-"+id); // Für debugging mit ScenicView
             
             // CSS Klasse initial setzen
             path.getStyleClass().add("map-shape");
