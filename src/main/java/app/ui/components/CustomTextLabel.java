@@ -1,77 +1,85 @@
 package app.ui.components;
 
-import java.awt.Color;
-import java.awt.Font;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import javax.swing.JLabel;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
+public class CustomTextLabel extends TextFlow {
 
-import com.formdev.flatlaf.ui.FlatLineBorder;
+    private String rawText = "";
+    private Font baseFont = Font.getDefault();
+    private Paint textFill = Color.BLACK;
 
-import app.ui.skin.params.BorderParams;
-
-public class CustomTextLabel extends JLabel {
-	private static final long serialVersionUID = 1L;
-	private boolean ignoreRepaints;
-
-	public CustomTextLabel(Color backgroundColor, BorderParams borderParams, Font font, Color textColor) {
-        setBackground(backgroundColor);
-        
-        // FlatLineBorder malt übrigens den Background, selbst wenn Du opaque auf false setzen würdest. Also zumindest bei arc > 0.
-        setBorder(new FlatLineBorder(
-            borderParams.insets(),
-            borderParams.color(),
-            borderParams.width(),
-            borderParams.arc()
-        ));
-        System.out.println(borderParams.insets());
-        System.out.println(borderParams.color());
-        System.out.println(borderParams.width());
-        System.out.println(borderParams.arc());
-        
-        setFont(font);
-        setForeground(textColor);
-        setHorizontalAlignment(SwingConstants.CENTER);
-        setVerticalAlignment(SwingConstants.CENTER);
-        // Wenn FlatLineBorder nicht einen Border mit abgerundeten Ecken zeichnet, muss Opaque auf true gesetzt werden...
-        if (borderParams.arc() == 0 || borderParams.color().getAlpha() == 0) 
-        	setOpaque(true);
-        
-        setHorizontalAlignment(SwingConstants.LEFT); // !Später konfigurierbar?
+    public CustomTextLabel(String text) {
+        // Diese CSS-Klasse ist wichtig für die Skin-Generierung später
+        getStyleClass().add("custom-text-label");
+        setText(text);
     }
-    
-	public void setText(String text) {
-		/**
-		 * Swing's HTML-Rendering macht bei Text mit Umbruch zwei Layout-Durchläufe:
-		 * 1. Erster Render: HTML-Text wird geparst und umgebrochen, aber noch NICHT vertikal im Label positioniert
-		 * 2. Zweiter Render: FlowView.layout berechnet Umbrüche, Text wird neu positioniert
-		 * 
-		 * Problem: Beide Durchläufe werden gerendert → sichtbares Flackern bei Umbruch.
-		 * 
-		 * Lösung:
-		 * - ignoreRepaints blockiert die 6+ internen repaint()-Aufrufe während HTML-Layout
-		 * - SwingUtilities.invokeLater() verzögert unser eigenes repaint() bis HTML-Layout fertig
-		 * - Resultat: Nur der finale, korrekt umgebrochene Text wird gerendert
-		 * 
-		 * Bekanntes Swing-Problem ohne offizielle Lösung, siehe:
-		 * https://stackoverflow.com/questions/16227877/how-to-update-a-jcomponent-with-html-without-flickering
-		 * https://coderanch.com/t/513635/java/flickering-html-jlabel-text
-		 */
-	    ignoreRepaints = true;
-	    super.setText("<html><div style='text-align:left;'>" + text + "</div></html>");
-	    //super.setText("<html>" + text + "</html>");
-	    ignoreRepaints = false;
-	    SwingUtilities.invokeLater(() -> {repaint();});
-	}
-    
-	@Override
-	public void repaint() {
-	    if (ignoreRepaints) return;   
-	    super.repaint();
-	}
-    
-    public void setNameForDebug(String name) {
-    	this.setName(name);
+
+    public void setText(String text) {
+        this.rawText = text != null ? text : "";
+        rebuildChildren();
+    }
+
+    public void setFont(Font font) {
+        this.baseFont = font;
+        rebuildChildren();
+    }
+
+    public void setTextFill(Paint fill) {
+        this.textFill = fill;
+        rebuildChildren();
+    }
+
+    /**
+     * WICHTIG: Setzt die Breite für das Null-Layout.
+     * TextFlow bricht automatisch am Ende der prefWidth um.
+     */
+    public void setFixedWidth(double width) {
+        setPrefWidth(width);
+        setMaxWidth(width);
+        // Hinweis: Padding wird vom TextFlow automatisch berücksichtigt
+    }
+
+    private void rebuildChildren() {
+        getChildren().clear();
+
+        // Parser für <b> Tags
+        Pattern pattern = Pattern.compile("<b>(.*?)</b>");
+        Matcher matcher = pattern.matcher(rawText);
+        List<Text> nodes = new ArrayList<>();
+        int lastEnd = 0;
+
+        while (matcher.find()) {
+            if (matcher.start() > lastEnd) {
+                nodes.add(createNode(rawText.substring(lastEnd, matcher.start()), false));
+            }
+            nodes.add(createNode(matcher.group(1), true)); // Fett
+            lastEnd = matcher.end();
+        }
+        if (lastEnd < rawText.length()) {
+            nodes.add(createNode(rawText.substring(lastEnd), false));
+        }
+
+        getChildren().addAll(nodes);
+    }
+
+    private Text createNode(String content, boolean bold) {
+        Text node = new Text(content);
+        node.setFill(textFill);
+        if (bold) {
+            // Fett basierend auf dem aktuellen Font
+            node.setFont(Font.font(baseFont.getFamily(), FontWeight.BOLD, baseFont.getSize()));
+        } else {
+            node.setFont(baseFont);
+        }
+        return node;
     }
 }

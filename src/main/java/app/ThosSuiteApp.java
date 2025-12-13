@@ -24,6 +24,15 @@ public class ThosSuiteApp extends Application {
 	
 	// TODO: In Amerika fehlt ein Strich zwischen Utah und Arizona
 	// TODO: Vergiss das Bilder verkleinern nicht. JavaFX sollte das besser können...
+	
+	/** JavaFX-Nachteile
+	 * 
+	 * Font-Rendering schlechter
+	 * Icon-Spacing umständlich
+     * Kein HTML in Labels. Keine einzelnen Wörte fett
+     * Anfangsruckler beim Hovereffekt in der Deutschlandkarte
+     * 
+	 */
 
     private MainWindow mainWindow;
     @SuppressWarnings("unused")
@@ -71,13 +80,14 @@ public class ThosSuiteApp extends Application {
 
         // Font laden (JavaFX-Style)
         try {
-            Font.loadFont(
-                ThosSuiteApp.class.getClassLoader().getResourceAsStream("ARCADECLASSIC.TTF"), 
-                10
-            );
-            System.out.println("ARCADECLASSIC Font geladen");
+            Font font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos.TTF"), 20);
+            System.out.println(font != null ? "Aptos Font geladen" : "Aptos nicht geladen");
+            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-SemiBold.TTF"), 20);
+            System.out.println(font != null ? "Aptos-SemiBold Font geladen" : "Aptos-SemiBold nicht geladen");
+            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-Black.TTF"), 20);
+            System.out.println(font != null ? "Aptos-Black Font geladen" : "Aptos-Black nicht geladen");
         } catch (Exception e) {
-            throw new RuntimeException("Probleme beim Laden der Font: ARCADECLASSIC", e);
+            throw new RuntimeException("Probleme beim Laden der Fonts: Aptos", e);
         }
     }
 

@@ -1,25 +1,16 @@
 package app.ui.panels;
 
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
-import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.event.MouseInputAdapter;
 
 import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.MainWindow;
-import app.ui.MapElementListener;
-import app.ui.components.BackgroundPanel; // Swing!
 import app.ui.components.CustomButtonLabel;
 import app.ui.components.CustomButtonLabel.CLBState;
 import app.ui.components.CustomTextLabel;
@@ -27,6 +18,7 @@ import app.ui.components.MultipleChoicePanel;
 import app.ui.components.ShapeMapPane; // NEU: JavaFX Pane
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Pane; // NEU: JavaFX Basis
 
 public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Extends Pane (FX)
@@ -38,17 +30,15 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
 	
     // --- Swing Altlasten (stehen lassen, wie gewünscht) ---
     private JTextField textInputField;
-    private CustomTextLabel questionArea;
-    private CustomTextLabel progressArea;
-    private CustomTextLabel cardHistoryArea;
+    private Label questionArea;
+    private Label progressArea;
+    private Label cardHistoryArea;
     private MultipleChoicePanel mcPanel;
     private CustomButtonLabel backButton;
     private JLabel imageLabel;
     
     // --- NEU: Die JavaFX Map ---
     private ShapeMapPane deutschlandkarte; // Typ geändert!
-    
-    private boolean batch = false;
 
     public GermanySessionPane(MainWindow mainWindow, AnkiSessionPresenter presenter) {
         this.mainWindow = mainWindow;
@@ -93,13 +83,11 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
     	// --- ENDE NEUER MAP CODE ---
     	
     	
-    	// --- AB HIER ALTER SWING CODE (UNVERÄNDERT) ---
-    	/**
-    	questionArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
-    	questionArea.setNameForDebug("QuestionLabel");
-    	questionArea.setText("");
-    	add(questionArea); // FEHLER: Pane hat kein add(Component)
+    	questionArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
+    	questionArea.setText(""); // Initial leer
+        getChildren().add(questionArea);
     	
+    	/**
     	textInputField = skin.createInputField(DECKTYPE);
     	textInputField.setEnabled(false);
     	textInputField.addKeyListener(new KeyAdapter() {
@@ -124,19 +112,17 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
     		}
     	);
     	mcPanel.disableAllButtons();
-    	add(mcPanel); // FEHLER
+    	add(mcPanel); // FEHLER**/
     	
-    	progressArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
-    	progressArea.setNameForDebug("SessionProgressLabel");
+    	progressArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
     	progressArea.setText("");
-    	add(progressArea); // FEHLER
+    	getChildren().add(progressArea); // FEHLER
     	
-    	cardHistoryArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
-    	cardHistoryArea.setNameForDebug("CardHistoryLabel");
+    	cardHistoryArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
     	cardHistoryArea.setText("");
-    	add(cardHistoryArea); // FEHLER
+    	getChildren().add(cardHistoryArea); // FEHLER
     	
-    	backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
+    	/**backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
     	backButton.addMouseListener(new MouseInputAdapter() {
    		 @Override
             public void mousePressed(MouseEvent e) {
@@ -150,19 +136,10 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
 	// Called from presenter
 	// ========================================
     
-    public void beginTx() {
-    	batch = true;
-    }
-    
-    public void endTx() {
-    	batch = false;
-    	// deutschlandkarte.repaint(); // GIBT ES NICHT MEHR (FX ist reaktiv)
-    }
-    
     // Question
 	
     public void setQuestion(String text) {
-    	//questionArea.setText(text); 
+        questionArea.setText(text);
     }
     
 	// Image
@@ -268,11 +245,10 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
 
 	@Override
 	public void sessionProgressChanged(SessionProgress progress) {
-		String text = "<p>Korrekt: " + progress.correct() + "<br/>Falsch: "
-				+ progress.incorrect() + "<br/>Offen: "
+		String text = "Korrekt: " + progress.correct() + "\nFalsch: "
+				+ progress.incorrect() + "\nOffen: "
 				+ (progress.details().size()-progress.correct()-progress.incorrect());
-
-		//SwingUtilities.invokeLater(() -> progressArea.setText(text));
+		progressArea.setText(text);
 	}
 
 
@@ -281,10 +257,11 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
 		String text = "";
 		if (stats != null) {
 		text = "Zuletzt gespielt: " + stats.getLastPlayed()
-			+ "<br/>Level: " + stats.getCurrentLevel()
-			+ "<br/>Falsch beantwortet: " + stats.getWrongCount();
+			+ "\nLevel: " + stats.getCurrentLevel()
+			+ "\nFalsch beantwortet: " + stats.getWrongCount();
 		}
-		//cardHistoryArea.setText(text);
+		System.out.println(text);
+		cardHistoryArea.setText(text);
 	}
 	
 	public DeckType getType() {

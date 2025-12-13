@@ -32,7 +32,7 @@ class CsvAnkiDeckCardSource {
 			List<AnkiCard> result = new ArrayList<AnkiCard>();
 			File deckFile = bundles.get(type);
 			try  {
-				BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(deckFile), Charset.forName("Cp1252")));
+				BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(deckFile), Charset.forName("UTF-8")));
 				br.lines().skip(1).forEach(p -> {
 					String[] tokens = p.split(";");
 					result.add(new AnkiCard(Arrays.asList(tokens)));
