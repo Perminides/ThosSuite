@@ -20,7 +20,6 @@ import app.ui.UIUtils;
 import app.ui.components.CustomButtonLabel;
 import app.ui.components.CustomImageLabel;
 import app.ui.components.CustomTextField;
-import app.ui.components.CustomTextLabel;
 import app.ui.components.ImageMapPanel;
 import app.ui.components.MultipleChoicePanel;
 import app.ui.components.ShapeMapPane;
@@ -46,6 +45,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 /**
@@ -267,6 +267,20 @@ public abstract class Skin {
 	    
 	    // CSS generieren
 	    String css = "";
+	    //css = addCssRule(css, ".label", "-fx-opacity", "0.92"); //!Sofort Sieht nen Tick besser aus mit -Dprism.lcdtext=false als JVM-Argument
+	    
+	 // 1. LCD muss an sein (also KEIN -Dprism.lcdtext=false Argument!)
+	 // Damit hast du die Schärfe und die "blauen Ränder".
+
+	 // 2. Wir dicken die Schrift künstlich an:
+	 // Setze die Kontur-Farbe auf die Textfarbe
+	/** css = addCssRule(css, ".label .text", "-fx-stroke", UIUtils.toHex(textColor)); 
+
+	 // Wähle eine Dicke. 
+	 // 0.3px bis 0.5px entspricht meist dem Sprung von "Thin" zu "Normal" oder "Normal" zu "Medium".
+	 // Experimentiere hier: 0.2px, 0.4px, 0.6px...
+	 css = addCssRule(css, ".label .text", "-fx-stroke-width", "0.01px");**/
+	    
 	    // 1. Der "klebende" Fokus wird unsichtbar mit "transparent" und Hover mit UIUtils.toHex(menuBarHoverBackground). Diesen klebenden Fokus gibt es allerdings nur beim Öffnen eines Untermnüs, nicht beim Öffnen eines Top-Menüs. Ich bin noch nicht überzeugt, dass man dieses Verhalten akzeptieren muss tbh...
 	    // Ok, Gemini hat mir folgenden Link geschickt, das überzeugt mich nun zu 90% dass es ein JavaFX-Problem ist: https://bugs.openjdk.org/browse/JDK-8227679
 	    // Auch wenn hier von ContextMenus gesprochen wird. Aber This is a minor annoyance, but not a serious issue. Lowering priority to P4. → Really???
@@ -459,15 +473,69 @@ public abstract class Skin {
 		}
 	}
 
-	public CustomTextLabel createTextLabel(DeckType deckType, TextLabelType labelType) {
-		Rectangle bounds = (Rectangle) getFieldValue(deckType.getId() + "Session" + labelType + "Panel");
-		if (bounds == null)
-			bounds = (Rectangle) getFieldValue(deckType.getCategory().toString() + "Session" + labelType + "Panel");
-		Color bg = (Color) getFieldValue("displayText" + labelType + "BgColor");
-		bg = bg == null ? displayTextBgColor : bg;
-		/**CustomTextLabel result = new CustomTextLabel(bg, borderMediumComponent, font, textColor);
-		result.setBounds(bounds);**/
-		return null;
+	public Label createCustomTextLabel(DeckType type, TextLabelType labelType) {
+	    // 1. Bounds & Colors
+	    Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "Session" + labelType + "Panel");
+	    if (bounds == null)
+	        bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "Session" + labelType + "Panel");
+	    
+	    Color bg = (Color) getFieldValue("displayText" + labelType + "BgColor");
+	    bg = bg == null ? displayTextBgColor : bg;
+	    
+	    // 2. BorderParams (enthalten bereits JavaFX Color und AWT Insets)
+	    BorderParams border = borderMediumComponent;
+	    
+	    // 3. Label konfigurieren
+	    Label label = new Label();
+	    label.setLayoutX(bounds.x);
+	    label.setLayoutY(bounds.y);
+	    label.setPrefWidth(bounds.width);
+	    label.setPrefHeight(bounds.height);
+	    
+	    label.setWrapText(true);
+	    // Linksbündig, aber vertikal zentriert (entspricht meistens dem Swing-Default für TextAreas/Labels mit Border)
+	    label.setAlignment(Pos.CENTER_LEFT); 
+	    
+	    // 4. Insets aus BorderParams holen
+	    // Hinweis: BorderParams nutzt java.awt.Insets (top, left, bottom, right)
+	    java.awt.Insets insets = border.insets();
+
+	    // 5. CSS bauen
+	    String style = String.format(
+	            "-fx-background-color: %s;" +
+	            "-fx-text-fill: %s;" +
+	            
+	            // HIER: Hart 'Aptos Medium' erzwingen.
+	            // Falls das nicht greift, probier auch mal "Aptos SemiBold" oder "Aptos Display Medium"
+	            "-fx-font-family: 'Aptos';" + //"-fx-font-family: 'Aptos SemiBold';"
+	            
+	            // Optional zur Sicherheit (falls er die Family nicht findet, fällt er auf Regular zurück und wir versuchen es nochmal via CSS)
+	            //"-fx-font-weight: 700;" + 
+	            
+	            "-fx-font-size: %dpx;" +
+	            "-fx-border-color: %s;" +
+	            "-fx-border-width: %dpx;" +
+	            "-fx-border-radius: %dpx;" +
+	            "-fx-background-radius: %dpx;" +
+	            "-fx-padding: %dpx %dpx %dpx %dpx;", 
+	            
+	            UIUtils.toHex(bg),
+	            UIUtils.toHex(textColor),
+	            // font.getFamily(),  <-- Das hier fliegt raus für den Test!
+	            font.getSize(),
+	            UIUtils.toHex(border.color()), 
+	            border.width(),
+	            border.arc(),
+	            border.arc(),
+	            insets.top, insets.right, insets.bottom, insets.left
+	        );
+	    
+	    System.out.println("Arc: " + border.arc());
+	    
+	    label.setStyle(style);
+	    label.setId(labelType.toString() + "Label");
+	    
+	    return label;
 	}
 
 	public MultipleChoicePanel createMultipleChoicePanel(DeckType type) {
@@ -724,14 +792,20 @@ public abstract class Skin {
 			throw new RuntimeException("Das Font-Format kenne ich nicht: " + value);
 	}
 
+	/**
+	 * Rechnet den arc / 2, weil FlatLaf nimmt das als Durchmesser und JavaFX als Radius...
+	 * 
+	 * @param value
+	 * @return
+	 */
 	protected BorderParams parseBorderParams(String value) {
 		String[] values = value.split(",");
 		if (values.length == 7)
 			return BorderParams.of(Integer.parseInt(values[0]), parseColor(values[1]),
 					new Insets(Integer.parseInt(values[2]), Integer.parseInt(values[3]), Integer.parseInt(values[4]), Integer.parseInt(values[5])),
-					Integer.parseInt(values[6]));
+					Integer.parseInt(values[6]) / 2);
 		else if (values.length == 3)
-			return BorderParams.of(Integer.parseInt(values[0]), parseColor(values[1]), Integer.parseInt(values[2]));
+			return BorderParams.of(Integer.parseInt(values[0]), parseColor(values[1]), Integer.parseInt(values[2]) / 2);
 		else
 			throw new RuntimeException("Das Borderparams-Format kenne ich nicht: " + value);
 	}
