@@ -87,7 +87,7 @@ public class WorldSessionPanel extends JPanel implements AnkiSessionPanel {
 		});
     	add(textInputField);
     	
-    	imageLabel = skin.createImageLabel(DECKTYPE);
+    	imageLabel = skin.createImageRegion(DECKTYPE);
     	add(imageLabel);
     	
     	mcPanel = skin.createMultipleChoicePanel(DECKTYPE);

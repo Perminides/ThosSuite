@@ -1,9 +1,10 @@
 package app.ui.panels;
 
+import java.io.File;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
-import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import app.data.DeckType;
@@ -11,15 +12,13 @@ import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.MainWindow;
-import app.ui.components.CustomButtonLabel;
-import app.ui.components.CustomButtonLabel.CLBState;
-import app.ui.components.CustomTextLabel;
-import app.ui.components.MultipleChoicePanel;
+import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane; // NEU: JavaFX Pane
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane; // NEU: JavaFX Basis
+import javafx.scene.layout.Region;
 
 public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Extends Pane (FX)
 	// private static final long serialVersionUID = 1L; // Braucht Pane nicht
@@ -33,9 +32,9 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
     private Label questionArea;
     private Label progressArea;
     private Label cardHistoryArea;
-    private MultipleChoicePanel mcPanel;
-    private CustomButtonLabel backButton;
-    private JLabel imageLabel;
+    private MultipleChoicePane mcPane;
+    //private CustomButtonLabel backButton;
+    private Region imageRegion;
     
     // --- NEU: Die JavaFX Map ---
     private ShapeMapPane deutschlandkarte; // Typ geändert!
@@ -97,13 +96,13 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
     		}
     		
 		});
-    	add(textInputField); // FEHLER
+    	add(textInputField); // FEHLER**/
     	
-    	imageLabel = skin.createImageLabel(DECKTYPE);
-    	add(imageLabel); // FEHLER
+    	imageRegion = skin.createImageRegion(DECKTYPE);
+    	getChildren().add(imageRegion); // FEHLER 
     	
-    	mcPanel = skin.createMultipleChoicePanel(DECKTYPE);
-    	mcPanel.addListener(
+    	mcPane = skin.createMultipleChoicePane(DECKTYPE);
+    	mcPane.addListener(
     		new Consumer<Integer>() {
 				@Override
 				public void accept(Integer i) {
@@ -111,8 +110,7 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
 				}
     		}
     	);
-    	mcPanel.disableAllButtons();
-    	add(mcPanel); // FEHLER**/
+    	getChildren().add(mcPane);
     	
     	progressArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
     	progressArea.setText("");
@@ -145,37 +143,33 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
 	// Image
 	
     public void setImage(String imagePath) {
-    	//imageLabel.setIcon(imagePath == null ? null : new ImageIcon(imagePath));
+        if (imagePath == null) {
+            imageRegion.setStyle("");
+        } else {
+            String uri = new File(imagePath).toURI().toString();
+            imageRegion.setStyle("-fx-background-image: url('" + uri + "');");
+        }
     }
     
     // Multiple Choice
     
 	public void setMultipleChoice(List<String> answers) {
-		//mcPanel.initiateMultipleChoice(answers);
+		mcPane.initiateMultipleChoice(answers);
 	}
 	
 	public void setMCPanelActive(boolean active) {
-		/**if (active)
+		if (active)
 			throw new RuntimeException("Das habe ich nicht vorhergesehen.");
 		else
-			mcPanel.inactivateAllActiveButtons();**/
-	}
-	
-	public void disableMcPanel() {
-		//mcPanel.disableAllButtons();
+			mcPane.clearAndSetInactive();
 	}
 	
     public void setMcCorrect(int id, boolean correct) {
-    	if (correct)
-    		mcPanel.setState(id, CLBState.CORRECT);
-    	else
-    		mcPanel.setState(id, CLBState.INCORRECT);
+    	mcPane.setCorrect(id, correct);
     }
     
 	public void setMcSolution(Set<Integer> correctIds) {
-		for (int id : correctIds) {
-			mcPanel.setState(id, CLBState.CORRECT);
-		}
+		mcPane.setCorrectAndInactive(correctIds);
 	}
 	
 	// Map - HIER WURDE ANGEPASST (Delegation an ShapeMapPane)

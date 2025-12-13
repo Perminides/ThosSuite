@@ -1,63 +1,69 @@
 package app.ui.panels;
 
-import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.event.MouseInputAdapter;
 
 import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.MainWindow;
-import app.ui.components.BackgroundPanel;
-import app.ui.components.CustomButtonLabel;
-import app.ui.components.CustomButtonLabel.CLBState;
-import app.ui.components.CustomTextLabel;
-import app.ui.components.MultipleChoicePanel;
+import app.ui.components.MultipleChoicePane;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 
-public class MCSessionPanel extends JPanel implements AnkiSessionPanel{
-	private static final long serialVersionUID = 1L;
+public class MCSessionPanel extends Pane implements AnkiSessionPanel{
 	private static final DeckType DECKTYPE = DeckType.MC_CARDS; 
 
 	private final MainWindow mainWindow;
 	private final AnkiSessionPresenter presenter;
     private Skin skin;
-    private CustomTextLabel questionArea;
-    private CustomTextLabel progressArea;
-    private CustomTextLabel cardHistoryArea;
-    private MultipleChoicePanel mcPanel;
-    private CustomButtonLabel backButton;
-    private JLabel imageLabel;
+    private Label questionArea;
+    private Label progressArea;
+    private Label cardHistoryArea;
+    private MultipleChoicePane mcPane;
+    //private CustomButtonLabel backButton;
+    private Region imageRegion;
 
     public MCSessionPanel (MainWindow mainWindow, AnkiSessionPresenter presenter) {
         this.mainWindow = mainWindow;
         this.presenter = presenter;
-        this.skin = SkinService.get();
-        setLayout(null);
-        setOpaque(false);
-        setSize(skin.getContentSize());
         initUI();
     }
     
+    @Override
+    public void show() {
+        Skin skin = SkinService.get();
+        
+        // 1. Hintergrund holen (Deine Methode!)
+        Pane background = skin.createBackgroundPane(DECKTYPE);
+        
+        // 2. Uns selbst (die Map-Layer) darauf legen
+        // Da 'background' ein Pane ist und wir (this) auch ein Pane sind
+        // und absolute Koordinaten nutzen, passt das perfekt aufeinander.
+        background.getChildren().add(this);
+        
+        // 3. Anzeigen
+        mainWindow.showView(background);
+    }  
+    
     private void initUI() {
+    	Skin skin = SkinService.get();
     	
-    	questionArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
-    	questionArea.setText("");
-    	add(questionArea);
+    	questionArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
+    	questionArea.setText(""); // Initial leer
+        getChildren().add(questionArea);
     	
-    	imageLabel = skin.createImageLabel(DECKTYPE);
-    	add(imageLabel);
+    	imageRegion = skin.createImageRegion(DECKTYPE);
+    	getChildren().add(imageRegion);
     	
-    	mcPanel = skin.createMultipleChoicePanel(DECKTYPE);
-    	mcPanel.addListener(
+    	mcPane = skin.createMultipleChoicePane(DECKTYPE);
+    	mcPane.addListener(
         		new Consumer<Integer>() {
     				@Override
     				public void accept(Integer i) {
@@ -65,25 +71,24 @@ public class MCSessionPanel extends JPanel implements AnkiSessionPanel{
     				}
         		}
         	);
-    	mcPanel.disableAllButtons();
-    	add(mcPanel);
+    	getChildren().add(mcPane);
     	
-    	progressArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
+    	progressArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
     	progressArea.setText("");
-    	add(progressArea);
+    	getChildren().add(progressArea);
     	
-    	cardHistoryArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
+    	cardHistoryArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
     	cardHistoryArea.setText("");
-    	add(cardHistoryArea);
+    	getChildren().add(cardHistoryArea);
     	
-    	backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
+    	/**backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
     	backButton.addMouseListener(new MouseInputAdapter() {
    		 @Override
             public void mousePressed(MouseEvent e) {
    			 	backButtonClicked();
             }
 		});
-    	add(backButton);
+    	getChildren().add(backButton);**/
     }
     
 	// ========================================
@@ -99,13 +104,18 @@ public class MCSessionPanel extends JPanel implements AnkiSessionPanel{
 	// Image
 	
     public void setImage(String imagePath) {
-    	imageLabel.setIcon(imagePath == null ? null : new ImageIcon(imagePath));
+        if (imagePath == null) {
+            imageRegion.setStyle("");
+        } else {
+            String uri = new File(imagePath).toURI().toString();
+            imageRegion.setStyle("-fx-background-image: url('" + uri + "');");
+        }
     }
     
     // Multiple Choice
     
 	public void setMultipleChoice(List<String> answers) {
-		mcPanel.initiateMultipleChoice(answers);
+		mcPane.initiateMultipleChoice(answers);
 	}
 	
 	/**
@@ -113,30 +123,25 @@ public class MCSessionPanel extends JPanel implements AnkiSessionPanel{
 	 * @param active
 	 */
 	public void setMCPanelActive(boolean active) {
-		if (active)
+		/**if (active)
 			throw new RuntimeException("Das habe ich nicht vorhergesehen.");
 		else
-			mcPanel.inactivateAllActiveButtons();
+			mcPanel.inactivateAllActiveButtons();**/
 	}
 	
 	/**
 	 * Setzt alle Buttons auf disabled. Für wenn MC gerade überhaupt nicht gebraucht wird...
 	 */
 	public void disableMcPanel() {
-		mcPanel.disableAllButtons();
+		/**mcPanel.disableAllButtons();**/
 	}
 	
     public void setMcCorrect(int id, boolean correct) {
-    	if (correct)
-    		mcPanel.setState(id, CLBState.CORRECT);
-    	else
-    		mcPanel.setState(id, CLBState.INCORRECT);
+    	mcPane.setCorrect(id, correct);
     }
     
 	public void setMcSolution(Set<Integer> correctIds) {
-		for (int id : correctIds) {
-			mcPanel.setState(id, CLBState.CORRECT);
-		}
+		mcPane.setCorrectAndInactive(correctIds);
 	}
 
 	public void onAnswerSelected(int index) {
@@ -166,14 +171,4 @@ public class MCSessionPanel extends JPanel implements AnkiSessionPanel{
 		}
 		cardHistoryArea.setText(text);
 	}
-
-	// Claude zu der Duplizierung der Methode in den SessionPanels: Lass es wie es ist. Die Duplizierung ist minimal, die Methode ist stabil, und du hältst deine Kapselung sauber. Das ist pragmatischer als die Sichtbarkeit zu opfern oder eine Basisklasse einzuführen.
-    @Override
-    public void show() { /**
-    	BackgroundPanel bg = SkinService.get().createBackgroundPanel(DECKTYPE);
-    	bg.add(this);
-        mainWindow.showPanel(bg);
-        revalidate();
-        repaint();**/
-    }
 }

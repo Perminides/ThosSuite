@@ -9,20 +9,19 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import app.data.MultipleChoiceAnswers.AnswerOption;
-
 /**
  * Aktueller Ansatz: Jede Karte gibt es genau 1x im Speicher!
  */
 public class AnkiCard {
     public sealed interface Step permits Image, ClickZone, ClickMapElements, Output, Input, MC, MarkZone, MarkMapElements, Pause {}
-
+    
+    public record AnswerOption(String text, boolean correct) {}
     public record Image(String file) implements Step {}
     public record ClickZone(String file, Point point) implements Step {}
     public record ClickMapElements(Set<String> mandatory, Set<String> optional) implements Step {}
     public record Output(String text) implements Step {}
     public record Input(List<String> parts) implements Step {}
-    public record MC(MultipleChoiceAnswers mcAnswers) implements Step {}
+    public record MC(Set<AnswerOption> options) implements Step {}
     public record MarkZone(String file, Point point) implements Step {}
     public record MarkMapElements(Set<String> left, Set<String> right) implements Step {} // Momentan ist right immer leer. Vielleicht will ich später aber auch mal die optionalen Shapes berücksichtigen...
     public record Pause() implements Step {}
@@ -100,35 +99,10 @@ public class AnkiCard {
 				throw new RuntimeException("Problem beim parsen des Hints " + id + " in Step" + raw + " in " + csvTokens, e);
 			}
 		}
-		
-		for (Step step : out) {
-		    if (step instanceof MC mcStep) {
-		        if (lastMCStep != null) {
-		            // Prüfen ob gleiche Antworten (textuell)
-		            Set<String> lastTexts = lastMCStep.mcAnswers().getAnswerOptions().stream()
-		                .map(AnswerOption::text)
-		                .collect(Collectors.toSet());
-		            
-		            Set<String> currentTexts = mcStep.mcAnswers().getAnswerOptions().stream()
-		                .map(AnswerOption::text)
-		                .collect(Collectors.toSet());
-		            
-		            if (lastTexts.equals(currentTexts)) {
-		                // Gleiche Antworten! Reihenfolge vom ersten übernehmen
-		                List<String> targetOrder = lastMCStep.mcAnswers().getAnswerOptions().stream()
-		                    .map(AnswerOption::text)
-		                    .toList();
-		                
-		                mcStep.mcAnswers().reorderToMatch(targetOrder);
-		            }
-		        }
-		        lastMCStep = mcStep;
-		    }
-		}
 		steps = List.copyOf(out);
 	}
-
-    // --- Parsing eines einzelnen Step-Strings (ohne Marker) ---
+	
+	   // --- Parsing eines einzelnen Step-Strings (ohne Marker) ---
     private static Step parseStep(String s) {
         String[] p = s.split(":", 2);
         String kind = p[0];
@@ -138,12 +112,36 @@ public class AnkiCard {
             case "Image" -> new Image(body);
             case "Output"  -> new Output(body);
             case "Input"  -> new Input(Arrays.asList(body.split("\\|")));
-            case "MC"    -> new MC(new MultipleChoiceAnswers(body));
+            case "MC"    -> new MC(parseMcAnswers(body));
             case "Click" -> parseClickOrMark(body, true);
             case "Mark"  -> parseClickOrMark(body, false);
             case "Pause" -> new Pause();
             default      -> throw new RuntimeException("Unbekannter Step: " + kind);
         };
+    }
+
+    // Multiple Choice
+    private static Set<AnswerOption> parseMcAnswers(String mcStepString) {
+        Set<AnswerOption> options = new HashSet<>();
+        String[] split = mcStepString.split("\\*");
+        
+        // Teil 1: Die korrekten Antworten (vor dem Sternchen)
+        Arrays.stream(split[0].split("\\|"))
+            .map(String::trim) // Sicherheitshalber Leerzeichen entfernen
+            .filter(s -> !s.isEmpty())
+            .map(x -> new AnswerOption(x, true))
+            .forEach(options::add);
+        
+        // Teil 2: Die falschen Antworten (nach dem Sternchen, falls vorhanden)
+        if (split.length > 1) {
+            Arrays.stream(split[1].split("\\|"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(x -> new AnswerOption(x, false))
+                .forEach(options::add);
+        }
+        
+        return options;
     }
 
 	// --- Click/Mark

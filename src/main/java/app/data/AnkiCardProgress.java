@@ -4,8 +4,10 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import app.controller.AnkiDeckSession;
+import app.data.AnkiCard.AnswerOption;
 import app.data.AnkiCard.ClickMapElements;
 import app.data.AnkiCard.Image;
 import app.data.AnkiCard.Input;
@@ -14,7 +16,6 @@ import app.data.AnkiCard.MarkMapElements;
 import app.data.AnkiCard.Output;
 import app.data.AnkiCard.Pause;
 import app.data.AnkiCard.Step;
-import app.data.MultipleChoiceAnswers.AnswerOption;
 import app.presenter.AnkiSessionPresenter;
 
 
@@ -37,6 +38,9 @@ public class AnkiCardProgress implements Progress{
 	private Set<String> clickedIds = new HashSet<>();
 	private Set<Integer> clickedMcAnswers = new HashSet<>();
 	private boolean isPaused = false;
+	
+	private List<String> lastMcOrder = null;
+	private MultipleChoiceAnswers activeSessionMC = null;
 	
 	public AnkiCardProgress(AnkiCard hint, AnkiSessionPresenter presenter, AnkiDeckSession session) {
 		this.card = hint;
@@ -139,12 +143,12 @@ public class AnkiCardProgress implements Progress{
 	        return;
 	    }
 	    
-	    // User hat auf eine inaktive geklickt.
-	    if (mc.mcAnswers().getAnswerOptions().size() <= index)
+	    // Prüfen gegen das Session-Objekt (das max 8 Antworten hat), nicht gegen das Original im Step!
+	    if (activeSessionMC == null || activeSessionMC.getAnswerOptions().size() <= index)
 	    	return;
 	    
 	    clickedMcAnswers.add(index);
-	    boolean correct = mc.mcAnswers().isCorrectSoFar(clickedMcAnswers);
+	    boolean correct = activeSessionMC.isCorrectSoFar(clickedMcAnswers);
 	    presenter.mcClickChecked(index, correct);
 	    
 	    // ----- FALSCH -----
@@ -152,13 +156,14 @@ public class AnkiCardProgress implements Progress{
 	    	playedTimestamp = LocalDateTime.now();
 	    	correctlyAnswered = false;
 	    	clickedMcAnswers.clear();
-	        presenter.setCorrectMc(mc.mcAnswers().getCorrectIndexes());
+	    	// Lösung für die aktuell angezeigten Optionen anzeigen
+	        presenter.setCorrectMc(activeSessionMC.getCorrectIndexes());
 	        isPaused = true;
 	        return;
 	    }
 	    
 	    // ----- NOCH NICHT VOLLSTÄNDIG -----
-	    if (!mc.mcAnswers().isFinallyCorrect(clickedMcAnswers)) {
+	    if (!activeSessionMC.isFinallyCorrect(clickedMcAnswers)) {
 	        return; // Noch nicht alle Pflicht-Elemente geklickt
 	    }
 	    
@@ -263,10 +268,35 @@ public class AnkiCardProgress implements Progress{
 			case Input _ -> presenter.waitForText();
 			case Pause _ -> {	presenter.pause();
 								isPaused = true;}
-			case MC multipleChoiceAnswers -> presenter.showMultipleChoice(
-					multipleChoiceAnswers.mcAnswers().getAnswerOptions().stream()
-				    .map(AnswerOption::text)
-				    .toList());
+			case MC mcStep -> {
+				// 1. Alle Texte des aktuellen Steps holen (um Vergleichbarkeit zu haben)
+				Set<String> currentTexts = mcStep.options().stream()
+						.map(AnswerOption::text)
+						.collect(Collectors.toSet());
+				
+				MultipleChoiceAnswers sessionMc;
+
+				// 2. Check: Sind es dieselben Texte wie beim letzten Mal? (Stabilität)
+				if (lastMcOrder != null && currentTexts.equals(new HashSet<>(lastMcOrder))) {
+					// JA -> Wir nehmen die Daten vom neuen Step (wegen Correct-Flags), erzwingen aber die alte Reihenfolge
+					sessionMc = new MultipleChoiceAnswers(mcStep.options(), 8); // Copy-Konstruktor
+					sessionMc.reorderToMatch(lastMcOrder);
+				} else {
+					// NEIN -> Neu würfeln und auf max 8 begrenzen
+					sessionMc = new MultipleChoiceAnswers(mcStep.options(), 8); // Konstruktor mit Liste
+					
+					// Merken für den nächsten Step
+					lastMcOrder = sessionMc.getAnswerOptions().stream()
+							.map(AnswerOption::text)
+							.toList();
+				}
+				
+				activeSessionMC = sessionMc;
+				presenter.showMultipleChoice(sessionMc.getAnswerOptions().stream()
+					    .map(AnswerOption::text)
+					    .toList());
+			}
+			
 			case MarkMapElements left -> presenter.markMapElements(left.left());
 			default -> throw new IllegalStateException("Unsupported step: " + step);
 		}

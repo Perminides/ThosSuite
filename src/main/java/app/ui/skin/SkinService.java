@@ -16,7 +16,6 @@ public final class SkinService {
     static {
         // Beim Klassenloading ersten Skin aktivieren
         current = AVAILABLE_SKINS.get(0);
-        current.activate(); // <-- Explizit aktivieren
     }
 
     private SkinService() {} // keine Instanz erlaubt
@@ -26,7 +25,6 @@ public final class SkinService {
     		return;
     	
         current = skin;
-        current.activate();
     }
 
     public static Skin get() {

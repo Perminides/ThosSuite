@@ -12,7 +12,6 @@ public interface AnkiSessionPanel extends DeckSessionPanel{
 	
 	public void setMcSolution(Set<Integer> correctIds);
 	public void setMcCorrect(int id, boolean correct);
-	public void disableMcPanel();
 	public void setMCPanelActive(boolean active);
 	public void setMultipleChoice(List<String> answers);
 	

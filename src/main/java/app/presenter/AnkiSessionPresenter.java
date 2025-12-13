@@ -9,9 +9,9 @@ import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.ui.MainWindow;
+import app.ui.panels.AnkiSessionPanel;
 import app.ui.panels.GermanySessionPane;
 import app.ui.panels.MCSessionPanel;
-import app.ui.panels.AnkiSessionPanel;
 import app.ui.panels.WorldSessionPanel;
 
 // !Später auch mal ein DeckPresenter und Presenter-Interface wenn es Sinn ergibt? Stay tuned...
@@ -77,12 +77,12 @@ public class AnkiSessionPresenter {
 		panel.endTx();
 		panel.setTextInTextField("");
 		panel.setTextFieldActive(false);
-		panel.disableMcPanel();
+		panel.setMCPanelActive(false);
 	}
 	public void waitForText() {
 		panel.setTextFieldActive(true);
 		panel.setMapActive(false);
-		panel.disableMcPanel();
+		panel.setMCPanelActive(false);
 	}
 		
 	// ========================================
