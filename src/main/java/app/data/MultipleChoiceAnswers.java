@@ -11,26 +11,52 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import app.data.AnkiCard.AnswerOption;
+
 public class MultipleChoiceAnswers {
 
-    public record AnswerOption(String text, boolean correct) {}
-
     private final List<AnswerOption> options = new ArrayList<>();
+    
+ // Konstruktor A: Zufällige Auswahl (für neue Fragen)
+    public MultipleChoiceAnswers(Set<AnswerOption> pool, int maxOptions) {
+    	// 1. Alle korrekten Antworten finden (Die MÜSSEN rein)
+        List<AnswerOption> correctOnes = pool.stream()
+            .filter(AnswerOption::correct)
+            .collect(Collectors.toList());
 
-    public MultipleChoiceAnswers(String mcStepString) {
+        // 2. Alle falschen Antworten finden und mischen (Pool für Distraktoren)
+        List<AnswerOption> wrongOnes = pool.stream()
+            .filter(opt -> !opt.correct())
+            .collect(Collectors.toList());
+        Collections.shuffle(wrongOnes);
+
+        // 3. Liste zusammenbauen
+        List<AnswerOption> selection = new ArrayList<>(correctOnes);
+
+        // 4. Auffüllen bis maxOptions (falls noch Platz ist)
+        int slotsFree = maxOptions - selection.size();
+        if (slotsFree > 0) {
+            // Nimm so viele falsche, wie reinpassen (oder so viele wie da sind)
+            selection.addAll(wrongOnes.subList(0, Math.min(wrongOnes.size(), slotsFree)));
+        }
         
-        String[] split = mcStepString.split("\\*");
+        // 5. Die finale Auswahl mischen, damit die richtigen Antworten nicht immer oben stehen
+        Collections.shuffle(selection);
         
-        Arrays.stream(split[0].split("\\|"))
-            .map(x -> new AnswerOption(x, true))
-            .forEach(options::add);
-        
-        if (split.length > 1)
-        	Arrays.stream(split[1].split("\\|"))
-            	.map(x -> new AnswerOption(x, false))
-            	.forEach(options::add);
-        
-        Collections.shuffle(options);
+        options.addAll(selection);
+    }
+    
+ // Konstruktor B: Vorgegebene Reihenfolge von dem Step davor
+    public MultipleChoiceAnswers(Set<AnswerOption> pool, List<String> targetOrder) {
+        Map<String, Boolean> correctness = pool.stream()
+            .collect(Collectors.toMap(AnswerOption::text, AnswerOption::correct));
+            
+        for (String text : targetOrder) {
+            // Wir bauen die Optionen exakt so auf, wie das UI sie erwartet
+            // Aber wir holen uns die "Korrektheit" frisch aus dem Pool (falls sich die Wahrheit geändert hat!)
+            boolean isCorrect = correctness.getOrDefault(text, false);
+            options.add(new AnswerOption(text, isCorrect));
+        }
     }
 
     public List<AnswerOption> getAnswerOptions() {
@@ -39,7 +65,7 @@ public class MultipleChoiceAnswers {
 
     public boolean isCorrectSoFar(Set<Integer> clickedIds) {
         for (Integer clickedId : clickedIds) {
-        	if (!options.get(clickedId).correct)
+        	if (!options.get(clickedId).correct())
         		return false;
         }
         return true;

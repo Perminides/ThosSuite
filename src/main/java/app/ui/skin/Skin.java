@@ -1,7 +1,6 @@
 package app.ui.skin;
 
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.io.File;
@@ -10,18 +9,15 @@ import java.lang.reflect.Field;
 import java.util.Properties;
 
 import javax.swing.ImageIcon;
-import javax.swing.UIManager;
 
 import app.config.Config;
 import app.data.DeckType;
 import app.data.GeoMap;
 import app.data.MapService;
 import app.ui.UIUtils;
-import app.ui.components.CustomButtonLabel;
-import app.ui.components.CustomImageLabel;
 import app.ui.components.CustomTextField;
 import app.ui.components.ImageMapPanel;
-import app.ui.components.MultipleChoicePanel;
+import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane;
 import app.ui.skin.params.BorderParams;
 import javafx.beans.binding.Bindings;
@@ -44,8 +40,12 @@ import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
-import javafx.scene.text.TextAlignment;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 /**
@@ -75,6 +75,8 @@ public abstract class Skin {
 	}
 
 	public abstract String getDisplayName();
+	
+	// !Sofort: alle Methodenaufruf von adjustBrightness werfen hier null. Wie an welcher stelle kann ich die wirklich sauber setzen?
 
 	protected Color textColor; // Standard-TextFarbe. Arbeite möglichst nur mit einer, wenn es geht.
 	protected Color textActiveComponentColor;
@@ -169,13 +171,6 @@ public abstract class Skin {
 	 */
 	public Dimension getContentSize() {
 		return new Dimension(1910, 1000);
-	}
-
-	/**
-	 * Falls wir doch mal UIManager.puts benötigen, dann dürfen die erst nach Auswahl des skins gesetzt werden...
-	 */
-	public void activate() {
-		configureUiManager();
 	}
 
 	public MenuBar createMenuBar() {
@@ -379,13 +374,59 @@ public abstract class Skin {
 	    // Optional: Hover-Effekt bei Deko ausschalten (falls nötig, aber mouse-transparent regelt das eh)
 	    css = addCssRule(css, ".decoration:hover", "-fx-fill", "derive(-fx-fill, 0%)"); // Farbe beibehalten
 	    
+	 // --- MC Button Styling ---
+	    
+	    // Padding dynamisch aus BorderParams
+	    java.awt.Insets mcInsets = borderSmallComponent.insets();
+	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", 
+	        mcInsets.top, mcInsets.right, mcInsets.bottom, mcInsets.left);
+	    css = addCssRule(css, ".mc-button", "-fx-padding", paddingCss);
+	    
+	    // Basis-Rahmen und Radius
+	    css = addCssRule(css, ".mc-button", "-fx-background-radius", borderSmallComponent.arc() + "px");
+	    css = addCssRule(css, ".mc-button", "-fx-border-radius", borderSmallComponent.arc() + "px");
+	    css = addCssRule(css, ".mc-button", "-fx-border-width", borderSmallComponent.width() + "px");
+	    css = addCssRule(css, ".mc-button", "-fx-border-color", UIUtils.toHex(borderSmallComponent.color()));
+
+	    // 1. ZUSTAND: :active (Das Spiel läuft)
+	    // Normale Farbe + Hover-Effekt
+	    css = addCssRule(css, ".mc-button:active", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
+	    css = addCssRule(css, ".mc-button:active", "-fx-text-fill", UIUtils.toHex(textColor));
+	    
+	    // Hover nur im :active Zustand!
+	    css = addCssRule(css, ".mc-button:active:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
+	    System.out.println("activeButtonHoverColor: " + activeComponentHoverColor);
+
+	    // 2. ZUSTAND: :inactive (Pause / Leer / Nicht gewählt)
+	    // Sieht aus wie disabled (grau), kein Hover, kein Hand-Cursor
+	    css = addCssRule(css, ".mc-button:inactive", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
+	    css = addCssRule(css, ".mc-button:inactive", "-fx-text-fill", UIUtils.toHex(textColor)); 
+	    // css = addCssRule(css, ".mc-button:inactive", "-fx-opacity", "1.0"); // Optional, falls Opacity Probleme macht
+
+	    // 3. ZUSTAND: :correct
+	    css = addCssRule(css, ".mc-button:correct", "-fx-background-color", UIUtils.toHex(correctColor));
+	    css = addCssRule(css, ".mc-button:correct", "-fx-text-fill", UIUtils.toHex(textColor));
+
+	    // 4. ZUSTAND: :incorrect
+	    css = addCssRule(css, ".mc-button:incorrect", "-fx-background-color", UIUtils.toHex(incorrectColor));
+	    css = addCssRule(css, ".mc-button:incorrect", "-fx-text-fill", UIUtils.toHex(textColor));
+	    
 	    // Alte StyleSheets entfernen
 	    scene.getStylesheets().clear();
 	    
+	 // Image-Label Styling
+	    css = addCssRule(css, ".image-label", "-fx-background-size", "contain");
+	    css = addCssRule(css, ".image-label", "-fx-background-position", "center");
+	    css = addCssRule(css, ".image-label", "-fx-background-repeat", "no-repeat");
+	    css = addCssRule(css, ".image-label", "-fx-background-radius", borderBigComponent.arc() + "px");
+	    css = addCssRule(css, ".image-label", "-fx-border-radius", borderBigComponent.arc() + "px");
+	    css = addCssRule(css, ".image-label", "-fx-border-width", borderBigComponent.width() + "px");
+	    css = addCssRule(css, ".image-label", "-fx-border-color", UIUtils.toHex(borderBigComponent.color()));
+	    css = addCssRule(css, ".image-label", "-fx-background-color", UIUtils.toHex(imageLabelBgColor));
+
 	    // Wir maskieren kritische Zeichen für die Data-URI
 	    String encodedCss = css.replace("%", "%25")  // % muss zu %25 werden
 	                           .replace("#", "%23"); // # muss zu %23 werden (sicher ist sicher)
-	                           
 	    scene.getStylesheets().add("data:text/css," + encodedCss);
 	    System.out.println(css);
 	}
@@ -437,29 +478,24 @@ public abstract class Skin {
 		return null;
 	}
 
-	public CustomImageLabel createImageLabel(DeckType type) {
-		Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionImagePanel");
-		//CustomImageLabel result = new CustomImageLabel(borderBigComponent, imageLabelBgColor);
-		//result.setBounds(bounds);
-		return null;
+	public Region createImageRegion(DeckType type) {
+	    Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionImagePanel");
+	    
+	    Region label = new Region();
+	    label.getStyleClass().add("image-label");
+	    label.setPrefSize(bounds.width, bounds.height);
+	    label.setLayoutX(bounds.x);
+	    label.setLayoutY(bounds.y);
+	    
+	    return label;
 	}
 
-	public CustomButtonLabel createAnswerButton() {
-		Color activeBg = activeButtonBgColor == null ? activeComponentBgColor : activeButtonBgColor;
-		Color hoverBg = activeButtonHoverColor == null ? activeComponentHoverColor : activeButtonHoverColor;
-		Color inactiveBg = inactiveButtonBgColor == null ? displayTextBgColor : inactiveButtonBgColor;
-		Color disabledBg = disabledButtonBgColor == null ? disabledComponentBgColor : disabledButtonBgColor;
-		Color textC = textActiveComponentColor == null ? textColor : textActiveComponentColor;
-
-		return null; //new CustomButtonLabel(font, smallFont, textC, activeBg, hoverBg, inactiveBg, correctColor, incorrectColor, disabledBg, borderSmallComponent,null);
-	}
-
-	public CustomButtonLabel createIconButton(DeckType type, IconButtonType buttonType) {
+/**	public CustomButtonLabel createIconButton(DeckType type, IconButtonType buttonType) {
 		switch (buttonType) {
 		case BACK: {
 			Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionBackButton");
-			/**CustomButtonLabel result = new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor, borderBackButton, backButtonIcon);
-			result.setLocation(bounds.x, bounds.y);**/
+			//CustomButtonLabel result = new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor, borderBackButton, backButtonIcon);
+			//result.setLocation(bounds.x, bounds.y);
 			return null;
 		}
 		case SKIP:
@@ -471,7 +507,7 @@ public abstract class Skin {
 		default:
 			throw new RuntimeException("Was ist denn das für ein ButtonType: " + type);
 		}
-	}
+	}**/
 
 	public Label createCustomTextLabel(DeckType type, TextLabelType labelType) {
 	    // 1. Bounds & Colors
@@ -507,12 +543,12 @@ public abstract class Skin {
 	            
 	            // HIER: Hart 'Aptos Medium' erzwingen.
 	            // Falls das nicht greift, probier auch mal "Aptos SemiBold" oder "Aptos Display Medium"
-	            "-fx-font-family: 'Aptos';" + //"-fx-font-family: 'Aptos SemiBold';"
+	            "-fx-font-family: '%s';" + //"-fx-font-family: 'Aptos SemiBold';"
 	            
 	            // Optional zur Sicherheit (falls er die Family nicht findet, fällt er auf Regular zurück und wir versuchen es nochmal via CSS)
 	            //"-fx-font-weight: 700;" + 
 	            
-	            "-fx-font-size: %dpx;" +
+	            "-fx-font-size: %fpx;" +
 	            "-fx-border-color: %s;" +
 	            "-fx-border-width: %dpx;" +
 	            "-fx-border-radius: %dpx;" +
@@ -521,7 +557,7 @@ public abstract class Skin {
 	            
 	            UIUtils.toHex(bg),
 	            UIUtils.toHex(textColor),
-	            // font.getFamily(),  <-- Das hier fliegt raus für den Test!
+	            font.getFamily(),
 	            font.getSize(),
 	            UIUtils.toHex(border.color()), 
 	            border.width(),
@@ -538,11 +574,41 @@ public abstract class Skin {
 	    return label;
 	}
 
-	public MultipleChoicePanel createMultipleChoicePanel(DeckType type) {
-		Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMcPanel");
-		MultipleChoicePanel result = new MultipleChoicePanel(bounds.width, font, smallFont, verticalGapMC);
-		result.setLocation(bounds.x, bounds.y);
-		return result;
+	public MultipleChoicePane createMultipleChoicePane(DeckType type) {
+	    // 1. Bounds holen
+	    Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMcPanel");
+	    if (bounds == null) 
+	        bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionMcPanel");
+	    
+	    // 2. Button-Höhe berechnen (Swing-Style: Text + Padding + Border)
+	    Text dummyText = new Text("Q");
+	    dummyText.setFont(font);
+	    
+	    java.awt.Insets insets = borderSmallComponent.insets();
+	    double verticalPadding = insets.top + insets.bottom;
+	    double borderWidth = borderSmallComponent.width() * 2;
+	    
+	    double fixedButtonHeight = dummyText.getLayoutBounds().getHeight() + verticalPadding + borderWidth;
+	    
+	    // 3. Max Text Höhe für Font-Switch berechnen
+	    // "Reinquetschen": Wir erlauben 2 Pixel Toleranz über den rechnerischen Platz hinaus
+	    double maxTextHeight = fixedButtonHeight - borderWidth - verticalPadding + 2.0;
+
+	    // 4. Pane erstellen
+	    MultipleChoicePane result = new MultipleChoicePane(
+	        bounds.width, 
+	        fixedButtonHeight, 
+	        maxTextHeight,
+	        font, 
+	        smallFont, 
+	        verticalGapMC
+	    );
+	    
+	    // 5. Absolute Positionierung
+	    result.setLayoutX(bounds.x);
+	    result.setLayoutY(bounds.y);
+	    
+	    return result;
 	}
 
 	/**
@@ -639,7 +705,7 @@ public abstract class Skin {
 	 */
 	public static Color adjustBrightness(Color c, int intensity) {
 	    if (c == null) {
-	        return null; 
+	        return null; // Das kann in der Tat passieren z.B. im Konstruktor von Skin hier :)
 	    }
 	    
 	    if (intensity < 0 || intensity > 100) {
@@ -661,77 +727,6 @@ public abstract class Skin {
 	    // Neue Farbe erstellen via HSB-Factory
 	    // Wichtig: c.getOpacity() übernimmt den Alpha-Wert (0.0 - 1.0)
 	    return Color.hsb(c.getHue(), c.getSaturation(), newBrightness, c.getOpacity());
-	}
-
-	protected void configureUiManager() {
-
-		// Titelzeile, alles auch rechts von den Menüs (Farben gehen nur über putClientProperty)
-		UIManager.put("TitlePane.font", font); // Titel des Hauptfensters
-		//UIManager.put("MenuBar.border", BorderFactory.createMatteBorder(0, 0, 1, 0, thinBorderColor)); // Farbe der Linie unter der Titel / Menüzeile des
-																										// JFrames.
-
-		// Menüpunkte der ersten Ebene (Datei)
-		UIManager.put("MenuBar.background", menuBarBackground); // Hintergrund
-		UIManager.put("MenuBar.font", font); // Schrift
-		UIManager.put("MenuBar.foreground", textColor); // Schriftfarbe
-		UIManager.put("MenuBar.hoverBackground", menuBarHoverBackground); // Hintergrund beim Hovern vor(!) dem Click
-		// UIManager.put("MenuBar.hoverForeground", Color.RED); -> Gibt es nicht. Aus welchem UIKey wird das bloß gezogen?
-		UIManager.put("Menu.selectionBackground", menuBarHoverBackground); // Hintergrund wenn aufgeklickt
-
-		// Menüpunkte 2. Ebene (Deutschland Hints (19 / 33)
-		//UIManager.put("PopupMenu.border", BorderFactory.createMatteBorder(1, 1, 1, 1, thinBorderColor)); // Um jeden einzelnen Menüpunkt in der zweiten Ebene
-		UIManager.put("PopupMenu.background", menuBarBackground); // Hintergrund
-		UIManager.put("MenuItem.font", font); // Schrift
-		UIManager.put("MenuItem.foreground", textColor); // Schriftfarbe
-		UIManager.put("MenuItem.disabledForeground", menuDisabledForeground);
-		UIManager.put("MenuItem.selectionBackground", menuBarHoverBackground); // Hintergrund beim Hovern
-
-		// Submenüs 2. Ebene (Anzeigereihenfolge)
-		UIManager.put("Menu.font", font); // Schrift
-
-		// !Architektur: Wir wollten setzen auf 1) Swings set-Methoden, 2) FlatLafStyles und 3) UIManager.puts wo es nicht anders geht. Das refactoring fehlt
-		// noch!
-		// Dieser ganze Block wird für die JOptionPane und Ihre Buttons benötigt.
-		UIManager.put("OptionPane.background", menuBarBackground); // Hintergrundfarbe der Hauptarea der JOptionPane
-		UIManager.put("OptionPane.messageFont", font); // Font in der Hauptarea der JOptionPane
-		UIManager.put("TitlePane.unifiedBackground", false); // Sonst funktioniert TitlePane.background nicht.
-		UIManager.put("TitlePane.background", menuBarBackground); // Titelzeile im JDialog...
-		UIManager.put("TitlePane.borderColor", Color.WHITE); // Farbe der Linie unter der Titelzeile eines JDialogs.
-		UIManager.put("Button.default.background", activeComponentBgColor); // Hintergrundfarbe des Default-Buttons (OK) wenn er nicht fokussiert ist, also nach
-																			// Click auf einen anderen Button und dann Wegziehen der Maus...
-		UIManager.put("Button.default.focusedBackground", activeComponentBgColor); // Hintergrund des fokussierten Buttons (OK)
-		UIManager.put("Button.default.pressedBackground", activeComponentHoverColor); // Ok Button während des Drückens
-		UIManager.put("Button.background", activeComponentBgColor); // Hintergrundfarbe der Nicht-Default Buttons (Abbrechen) wenn nicht im Fokus oder Pressed
-		UIManager.put("Button.focusedBackground", activeComponentBgColor); // Abbrechen Buttons wenn im Fokus
-		UIManager.put("Button.pressedBackground", activeComponentHoverColor); // Abbrechen Button während des Drückens
-
-		UIManager.put("Button.hoverBackground", activeComponentHoverColor); // Hoverfarbe für nicht aktive Buttons (Abbrechen)
-		UIManager.put("Button.default.hoverBackground", activeComponentHoverColor); // Hover Hintergrund des Buttons mit Fokus (OK)
-
-		Color textC = textActiveComponentColor == null ? textColor : textActiveComponentColor;
-		UIManager.put("Button.foreground", textC); // Schriftfarbe der Nicht-Default-Buttons (Abbrechen)
-		UIManager.put("Button.default.foreground", textC); // Schriftfarbe des Default-Buttons (OK)
-
-		UIManager.put("Button.default.borderColor", textC); // Default Button Border Color wenn nicht fokussiert
-		UIManager.put("Button.default.hoverBorderColor", textC); // Default Button Borderfarbe beim Hovern
-		UIManager.put("Button.default.pressedBorderColor", textC); // Default Button Borderfarbe beim Drücken
-		UIManager.put("Button.default.focusedBorderColor", textC); // Default Button Borderfarbe wenn fokussiert
-		UIManager.put("Button.borderColor", textC); // Nicht-Default Button nicht fokussiert
-		UIManager.put("Button.hoverBorderColor", textC); // Nicht-Default Button Borderfarbe beim Hovern
-		UIManager.put("Button.pressedBorderColor", textC); // Nicht-Default Button Borderfarbe beim Drücken
-		UIManager.put("Button.focusedBorderColor", textC); // Nicht-Default Button Borderfarbe wenn fokussiert
-
-		UIManager.put("Button.font", font); // Schriftart aller Buttons
-
-		UIManager.put("Button.arc", borderSmallComponent.arc()); // Rundung der Ecken für alle Buttons
-
-		UIManager.put("Button.default.borderWidth", borderSmallComponent.width()); // DefaultButton (OK) in allen Status
-		UIManager.put("Button.borderWidth", borderSmallComponent.width()); // Nicht Default Buttons in allen Status**/
-
-		/**
-		 * MenuBar direkt setzen für die Exceptions JMenuBar menuBar = mainWindow.getJMenuBar(); menuBar.setForeground(newSkin.getTextColor());
-		 * menuBar.setBackground(newSkin.getMenuBarColor());
-		 **/
 	}
 
 	protected void loadAllConfigs(String configPath) {
@@ -785,11 +780,21 @@ public abstract class Skin {
 	}
 
 	protected Font parseFont(String value) {
-		String[] values = value.split(",");
-		if (values.length == 3)
-			return new Font(values[0], Integer.parseInt(values[1]), Integer.parseInt(values[2]));
-		else
-			throw new RuntimeException("Das Font-Format kenne ich nicht: " + value);
+	    String[] values = value.split(",");
+	    if (values.length == 3) {
+	        String family = values[0];
+	        int style = Integer.parseInt(values[1]); // Swing-Logik: 0=Plain, 1=Bold, 2=Italic
+	        double size = Double.parseDouble(values[2]); // JavaFX nutzt double für Größe
+
+	        // Wir übersetzen die Swing-Bitmaske in JavaFX Enums
+	        // 1 = Bold, 2 = Italic, 3 = Bold + Italic
+	        FontWeight weight = (style & 1) != 0 ? FontWeight.BOLD : FontWeight.NORMAL;
+	        FontPosture posture = (style & 2) != 0 ? FontPosture.ITALIC : FontPosture.REGULAR;
+
+	        return Font.font(family, weight, posture, size);
+	    } else {
+	        throw new RuntimeException("Das Font-Format kenne ich nicht: " + value);
+	    }
 	}
 
 	/**
@@ -842,6 +847,8 @@ public abstract class Skin {
 	private String addCssRule(String existingCss, String selector, String property, String value) {
 	    return existingCss + String.format("%s { %s: %s; }", selector, property, value);
 	}
+	
+	
 
 	/**
 	 * Funktioniert zumindest für Buttons ohne html. Für andere Komponenten noch ungetestet.
