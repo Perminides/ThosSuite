@@ -11,7 +11,7 @@ import app.data.SessionProgress;
 import app.ui.MainWindow;
 import app.ui.panels.AnkiSessionPanel;
 import app.ui.panels.GermanySessionPane;
-import app.ui.panels.MCSessionPanel;
+import app.ui.panels.MCSessionPane;
 import app.ui.panels.WorldSessionPanel;
 
 // !Später auch mal ein DeckPresenter und Presenter-Interface wenn es Sinn ergibt? Stay tuned...
@@ -37,7 +37,7 @@ public class AnkiSessionPresenter {
     private AnkiSessionPanel createPanelForType(DeckType type, MainWindow mainWindow) {
         return switch(type) {
             case GERMANY_CARDS -> new GermanySessionPane(mainWindow, this);
-            case MC_CARDS -> new MCSessionPanel(mainWindow, this);
+            case MC_CARDS -> new MCSessionPane(mainWindow, this);
             case WORLD_CARDS -> new WorldSessionPanel(mainWindow, this);
             default -> null; // oder throw new IllegalArgumentException?
         };

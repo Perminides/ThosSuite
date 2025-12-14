@@ -2,7 +2,7 @@ package app.data;
 
 public enum DeckType {
     GERMANY_CARDS("germany", "Deutschland", DeckCategory.ANKI_DECK, "germanDeckJavaFX.csv", MapMetadata.GERMANY, "newGermanCardsPerDay"),
-    MC_CARDS("mc", "Multiple Choice", DeckCategory.ANKI_DECK, "mcDeck.csv", null, "newMCCardsPerDay"),
+    MC_CARDS("mc", "Multiple Choice", DeckCategory.ANKI_DECK, "mcDeckJavaFX Zeilenumbruch.csv", null, "newMCCardsPerDay"),
 	WORLD_CARDS("world", "Welt", DeckCategory.ANKI_DECK, "weltDeck.csv", MapMetadata.WORLD, "newWorldCardsPerDay"),
 	BUNDESLAND_SH("lk_sh", "Schleswig-Holstein", DeckCategory.REGION_DECK, null, MapMetadata.GERMANY, null),
 	BUNDESLAND_BW("lk_bw", "Baden-Württemberg", DeckCategory.REGION_DECK, null, MapMetadata.GERMANY, null),

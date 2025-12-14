@@ -51,8 +51,11 @@ public record MapShape(String id, String deckId, String regionName, String capit
 	    }
 	    
 	    // Check alternative region names
-	    return altRegionNames.stream()
-	        .anyMatch(alt -> alt.toLowerCase().trim().equals(normalized));
+	    if (altRegionNames != null)
+	    	return altRegionNames.stream()
+	    		.anyMatch(alt -> alt.toLowerCase().trim().equals(normalized));
+	    
+	    return false;
 	}
 	
 	public boolean isMatching(String text) {

@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import javax.swing.JTextField;
-
 import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
@@ -16,28 +14,25 @@ import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane; // NEU: JavaFX Pane
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane; // NEU: JavaFX Basis
-import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
 
-public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Extends Pane (FX)
-	// private static final long serialVersionUID = 1L; // Braucht Pane nicht
+public class GermanySessionPane extends Pane implements AnkiSessionPanel {
 	private static final DeckType DECKTYPE = DeckType.GERMANY_CARDS; 
 
 	private final MainWindow mainWindow;
 	private final AnkiSessionPresenter presenter;
-	
-    // --- Swing Altlasten (stehen lassen, wie gewünscht) ---
-    private JTextField textInputField;
+    private TextField textInputField;
     private Label questionArea;
     private Label progressArea;
     private Label cardHistoryArea;
     private MultipleChoicePane mcPane;
-    //private CustomButtonLabel backButton;
-    private Region imageRegion;
-    
-    // --- NEU: Die JavaFX Map ---
-    private ShapeMapPane deutschlandkarte; // Typ geändert!
+    private Button backButton;
+    private Rectangle imageComponent;
+    private ShapeMapPane deutschlandkarte;
 
     public GermanySessionPane(MainWindow mainWindow, AnkiSessionPresenter presenter) {
         this.mainWindow = mainWindow;
@@ -51,55 +46,30 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
     @Override
     public void show() {
         Skin skin = SkinService.get();
-        
-        // 1. Hintergrund holen (Deine Methode!)
         Pane background = skin.createBackgroundPane(DECKTYPE);
-        
-        // 2. Uns selbst (die Map-Layer) darauf legen
-        // Da 'background' ein Pane ist und wir (this) auch ein Pane sind
-        // und absolute Koordinaten nutzen, passt das perfekt aufeinander.
         background.getChildren().add(this);
-        
-        // 3. Anzeigen
         mainWindow.showView(background);
     }  
 
     private void initUI() {
         Skin skin = SkinService.get();
         
-        // --- START NEUER MAP CODE ---
-    	// Wir nutzen die neue Factory im Skin (die wir eben besprochen haben)
     	deutschlandkarte = skin.createShapeMapPane(DECKTYPE);
-    	
-    	// Listener: JavaFX Consumer Style
     	deutschlandkarte.setListener(id -> mapElementClicked(id));
-    	
-    	// Hinzufügen zum SceneGraph
     	getChildren().add(deutschlandkarte);
-    	
-    	// Initialisierung: Alle aktiv
     	deutschlandkarte.makeEveryShapeActive();
-    	// --- ENDE NEUER MAP CODE ---
     	
     	
     	questionArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
     	questionArea.setText(""); // Initial leer
         getChildren().add(questionArea);
     	
-    	/**
-    	textInputField = skin.createInputField(DECKTYPE);
-    	textInputField.setEnabled(false);
-    	textInputField.addKeyListener(new KeyAdapter() {
-    		@Override
-    		public void keyReleased(KeyEvent e) {
-    			textInputChanged();
-    		}
-    		
-		});
-    	add(textInputField); // FEHLER**/
+        textInputField = skin.createInputField(DECKTYPE);
+        textInputField.setOnKeyReleased(_ -> textInputChanged());
+        getChildren().add(textInputField);
     	
-    	imageRegion = skin.createImageRegion(DECKTYPE);
-    	getChildren().add(imageRegion); // FEHLER 
+    	imageComponent = skin.createImageComponent(DECKTYPE);
+    	getChildren().add(imageComponent); // FEHLER 
     	
     	mcPane = skin.createMultipleChoicePane(DECKTYPE);
     	mcPane.addListener(
@@ -120,14 +90,9 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
     	cardHistoryArea.setText("");
     	getChildren().add(cardHistoryArea); // FEHLER
     	
-    	/**backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
-    	backButton.addMouseListener(new MouseInputAdapter() {
-   		 @Override
-            public void mousePressed(MouseEvent e) {
-   			 	backButtonClicked();
-            }
-		});
-    	add(backButton); // FEHLER**/
+    	backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
+    	backButton.setOnAction(_ -> backButtonClicked());
+    	getChildren().add(backButton);
     }
 	
 	// ========================================
@@ -144,10 +109,12 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
 	
     public void setImage(String imagePath) {
         if (imagePath == null) {
-            imageRegion.setStyle("");
+            // Falls kein Bild: Transparent machen oder null setzen (CSS Fallback greift evtl. nicht bei null)
+        	imageComponent.setFill(null); 
         } else {
+        	// Wir nutzen setStyle statt setFill, damit es das CSS aus dem Skin überschreibt
             String uri = new File(imagePath).toURI().toString();
-            imageRegion.setStyle("-fx-background-image: url('" + uri + "');");
+            imageComponent.setStyle("-fx-fill: url('" + uri + "');");
         }
     }
     
@@ -197,24 +164,23 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel { // Ex
     }
     
     public void setMapActive(boolean active) {
-    	deutschlandkarte.setInteractive(active); // Methode heißt jetzt setInteractive
-    	// repaint entfällt
+    	deutschlandkarte.setInteractive(active);
     }
     
     // Input
     
-	public void setTextFieldActive(boolean active) {
-		/**if (active) {
-			textInputField.setText("");
-			textInputField.setEnabled(true);
-			textInputField.requestFocusInWindow();
-		} else {
-			textInputField.setEnabled(false);
-		}**/
-	}
+    public void setTextFieldActive(boolean active) {
+        if (active) {
+            textInputField.setText("");
+            textInputField.setDisable(false);
+            textInputField.requestFocus();
+        } else {
+            textInputField.setDisable(true);
+        }
+    }
     
 	public void setTextInTextField(String text) {
-		//textInputField.setText(text); 
+		textInputField.setText(text); 
 	}	
 	
 	// ========================================

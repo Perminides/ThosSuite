@@ -40,7 +40,8 @@ class GeoJsonLoader {
             String regionName = feature.path("properties").path("regionName").asText(null);
             String fixedColorId = feature.path("properties").path("fixedColorId").asText(null);
             String deckId = feature.path("properties").path("deckId").asText(null);
-            // ... (Sets parsen wie gehabt)
+            String altCapitalNames = feature.path("properties").path("altCapitalNames").asText(null);
+            String altRegionNames = feature.path("properties").path("altRegionNames").asText(null);
 
             JsonNode geometry = feature.get("geometry");
             String type = geometry.get("type").asText();

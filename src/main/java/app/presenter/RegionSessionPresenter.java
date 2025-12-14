@@ -79,18 +79,15 @@ public class RegionSessionPresenter {
 		if (correct) {
 			if (hard) {
 				panel.moveCorrectToActive();
-				panel.addIdsToCorrect(Set.of(id));
 			}
-			else {
-				panel.addIdsToCorrect(Set.of(id));
-			}
+			panel.addIdsToCorrect(Set.of(id));
+			panel.addIdsToCorrect(Set.of(id));
+
 		} else {
 			savedState = new SavedState(panel.getState(), panel.getQuestion());
-			panel.beginTx();
 			panel.moveAllToActive();
 			panel.setIdToIncorrect(id);
 			panel.addIdsToCorrect(Set.of(correctId));
-			panel.endTx();
 		}
 	}
 	

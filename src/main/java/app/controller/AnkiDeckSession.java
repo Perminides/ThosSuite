@@ -20,9 +20,13 @@ import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.MainWindow;
+import app.ui.skin.Skin;
+import app.ui.skin.SkinService;
+import javafx.scene.control.Alert;
 
 public class AnkiDeckSession implements Session{
 
+	private final MainWindow mainWindow; // !Architektur. Also so richtig nice finde ich nicht, dass das hier gehalten werden muss. Aber wenn Du hier einen Alert showst...
 	private final AnkiSessionPresenter presenter;
 	private final AnkiDeckService service;
     private final Controller controller;
@@ -40,6 +44,7 @@ public class AnkiDeckSession implements Session{
      * @param type
      */
     public AnkiDeckSession(MainWindow mainWindow, List<AnkiCard> cards, Controller controller, AnkiDeckService service, DeckType type, Consumer<List<AnkiCard>> sorter) {
+    	this.mainWindow = mainWindow;
     	this.sorter = sorter;
     	this.type = type;
     	this.cards = cards;
@@ -89,10 +94,8 @@ public class AnkiDeckSession implements Session{
      * Gibt an die Session ab
      */
     public void end() {
-    	// Mit den show-Convenience-Methoden kann man die Hintergrundfarbe der Titelzeile nicht anpassen...
-    	JOptionPane pane = new JOptionPane(createSummary(), JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, null);
-    	JDialog dialog = pane.createDialog(null, "Zusammenfassung");
-    	dialog.setVisible(true);
+    	Alert alert = SkinService.get().createAlert(mainWindow.getStage(), "Zusammenfassung", createSummary());
+    	alert.showAndWait();
     	
     	for (AnkiCard card : cards) {
     		LearnStat learnStat = card.getLearnStat();
@@ -220,9 +223,9 @@ public class AnkiDeckSession implements Session{
 	
 	private String createSummary() {
 		SessionProgress progress = createSessionProgress();
-		String text = "<html>Du hast " + (progress.correct() + progress.incorrect()) + " von " + progress.details().size() + " Karten gelernt.";
-		text += "<br><br>Davon hast Du " + progress.correct() + " richtig und " + progress.incorrect() + " falsch beantwortet.";
-		text+= "<br><br>Der Fortschritt wird nun gespeichert.</html>";
+		String text = "Du hast " + (progress.correct() + progress.incorrect()) + " von " + progress.details().size() + " Karten gelernt.";
+		text += "\n\nDavon hast Du " + progress.correct() + " richtig und " + progress.incorrect() + " falsch beantwortet.";
+		text+= "\n\nDer Fortschritt wird nun gespeichert.";
 		return text;
 	}
 
