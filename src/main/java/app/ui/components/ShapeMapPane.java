@@ -142,7 +142,6 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     }
     
     public void makeActive(Set<String> ids) {
-        resetAllStates(); // Erstmal alles sauber machen
         for (String id : ids) {
             updateShapeState(id, ACTIVE_GAME);
         }

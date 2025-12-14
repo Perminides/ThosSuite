@@ -80,6 +80,7 @@ public class MultipleChoicePane extends Pane {
                 String text = answers.get(i);
                 
                 // Font-Logik
+                // !Sofort Woher kommt die 24 und wieso wird hier setFont aufgerufen? Ich dachte, wir machen css...
                 double textAreaWidth = btn.getPrefWidth() - 24; 
                 Text measure = new Text(text);
                 measure.setFont(font);

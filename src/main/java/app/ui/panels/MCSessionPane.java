@@ -13,24 +13,24 @@ import app.ui.MainWindow;
 import app.ui.components.MultipleChoicePane;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
 
-public class MCSessionPanel extends Pane implements AnkiSessionPanel{
+public class MCSessionPane extends Pane implements AnkiSessionPanel{
 	private static final DeckType DECKTYPE = DeckType.MC_CARDS; 
 
 	private final MainWindow mainWindow;
 	private final AnkiSessionPresenter presenter;
-    private Skin skin;
     private Label questionArea;
     private Label progressArea;
     private Label cardHistoryArea;
     private MultipleChoicePane mcPane;
-    //private CustomButtonLabel backButton;
-    private Region imageRegion;
+    private Button backButton;
+    private Rectangle imageComponent;
 
-    public MCSessionPanel (MainWindow mainWindow, AnkiSessionPresenter presenter) {
+    public MCSessionPane (MainWindow mainWindow, AnkiSessionPresenter presenter) {
         this.mainWindow = mainWindow;
         this.presenter = presenter;
         initUI();
@@ -59,8 +59,8 @@ public class MCSessionPanel extends Pane implements AnkiSessionPanel{
     	questionArea.setText(""); // Initial leer
         getChildren().add(questionArea);
     	
-    	imageRegion = skin.createImageRegion(DECKTYPE);
-    	getChildren().add(imageRegion);
+        imageComponent = skin.createImageComponent(DECKTYPE);
+    	getChildren().add(imageComponent);
     	
     	mcPane = skin.createMultipleChoicePane(DECKTYPE);
     	mcPane.addListener(
@@ -81,14 +81,9 @@ public class MCSessionPanel extends Pane implements AnkiSessionPanel{
     	cardHistoryArea.setText("");
     	getChildren().add(cardHistoryArea);
     	
-    	/**backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
-    	backButton.addMouseListener(new MouseInputAdapter() {
-   		 @Override
-            public void mousePressed(MouseEvent e) {
-   			 	backButtonClicked();
-            }
-		});
-    	getChildren().add(backButton);**/
+    	backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
+    	backButton.setOnAction(_ -> backButtonClicked());
+    	getChildren().add(backButton);
     }
     
 	// ========================================
@@ -102,13 +97,14 @@ public class MCSessionPanel extends Pane implements AnkiSessionPanel{
     }
     
 	// Image
-	
     public void setImage(String imagePath) {
         if (imagePath == null) {
-            imageRegion.setStyle("");
+            // Falls kein Bild: Transparent machen oder null setzen (CSS Fallback greift evtl. nicht bei null)
+        	imageComponent.setFill(null); 
         } else {
+        	// Wir nutzen setStyle statt setFill, damit es das CSS aus dem Skin überschreibt
             String uri = new File(imagePath).toURI().toString();
-            imageRegion.setStyle("-fx-background-image: url('" + uri + "');");
+            imageComponent.setStyle("-fx-fill: url('" + uri + "');");
         }
     }
     
@@ -155,20 +151,22 @@ public class MCSessionPanel extends Pane implements AnkiSessionPanel{
 	// !Architektur Wenn das jetzt jedes Panel für sich implementiert, dann doch besser ins Interface? Aber das hat keinen Zugriff auf progressArea...
 	@Override
 	public void sessionProgressChanged(SessionProgress progress) {
-		String text = "<p>Korrekt: " + progress.correct() + "<br/>Falsch: "
-				+ progress.incorrect() + "<br/>Offen: "
+		String text = "Korrekt: " + progress.correct() + "\nFalsch: "
+				+ progress.incorrect() + "\nOffen: "
 				+ (progress.details().size()-progress.correct()-progress.incorrect());
 		progressArea.setText(text);
 	}
+
 
 	@Override
 	public void updateCardStats(LearnStat stats) {
 		String text = "";
 		if (stats != null) {
 		text = "Zuletzt gespielt: " + stats.getLastPlayed()
-			+ "<br/>Level: " + stats.getCurrentLevel()
-			+ "<br/>Falsch beantwortet: " + stats.getWrongCount();
+			+ "\nLevel: " + stats.getCurrentLevel()
+			+ "\nFalsch beantwortet: " + stats.getWrongCount();
 		}
+		System.out.println(text);
 		cardHistoryArea.setText(text);
 	}
 }

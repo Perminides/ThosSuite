@@ -8,14 +8,11 @@ import java.io.FileInputStream;
 import java.lang.reflect.Field;
 import java.util.Properties;
 
-import javax.swing.ImageIcon;
-
 import app.config.Config;
 import app.data.DeckType;
 import app.data.GeoMap;
 import app.data.MapService;
 import app.ui.UIUtils;
-import app.ui.components.CustomTextField;
 import app.ui.components.ImageMapPanel;
 import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane;
@@ -26,10 +23,14 @@ import javafx.beans.binding.ObjectBinding;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
@@ -40,13 +41,14 @@ import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
 
 /**
  * Ja, das ist hier heftige Reflection, es tut mir leid. Aber was ich wollte ist: - Skins, die voneinander erben können - Jedes Skin hat seine eigene
@@ -113,14 +115,13 @@ public abstract class Skin {
 	protected BorderParams borderSmallComponent; // MC Buttons, InputField
 	protected BorderParams borderMediumComponent; // QuestionLabel
 	protected BorderParams borderBigComponent; // Für das Bild
-	protected BorderParams borderBackButton; // BackButton
 	protected Color borderColor; // TextField, Panels, Karten, ...
 	protected Color thinBorderColor; // Um contentPane und unten die MenuBar
 
-	protected ImageIcon backButtonIcon;
-	protected ImageIcon skipButtonIcon;
-	protected ImageIcon playButtonIcon;
-	protected ImageIcon cancelButtonIcon;
+	protected String backButtonIcon;
+	protected String skipButtonIcon;
+	protected String playButtonIcon;
+	protected String cancelButtonIcon;
 
 	protected String worldMapImageName;
 	protected String worldMapInactiveImageName;
@@ -276,38 +277,49 @@ public abstract class Skin {
 	 // Experimentiere hier: 0.2px, 0.4px, 0.6px...
 	 css = addCssRule(css, ".label .text", "-fx-stroke-width", "0.01px");**/
 	    
+	    // !Sofort Du musst hier so dringend aufräumen. Setze mehr global vielleicht(?) und überschreibe nur, wenn es sein muss z. B.
+	    // !Sofort Alle custom styles müssen einen identischen präfix haben. thorsten oder besser custom... 
+	 // === GLOBALE STYLES (für ALLES) ===
+	    css = addCssRule(css, "*", "-fx-font-family", "'" + font.getFamily() + "'");
+	    css = addCssRule(css, "*", "-fx-font-size", font.getSize() + "px");
+	    css = addCssRule(css, "*", "-fx-text-fill", UIUtils.toHex(textColor));
+	    
+	    css = addCssRule(css, ".menu-button", "-fx-padding", 
+	    		font.getSize() * 0.1 + "px " + font.getSize() * 0.4 + "px"); // Wenn fontsize global gesetzt wird, berechnet javafx daraus paddings und die sind einfach zu groß...
+	    
 	    // 1. Der "klebende" Fokus wird unsichtbar mit "transparent" und Hover mit UIUtils.toHex(menuBarHoverBackground). Diesen klebenden Fokus gibt es allerdings nur beim Öffnen eines Untermnüs, nicht beim Öffnen eines Top-Menüs. Ich bin noch nicht überzeugt, dass man dieses Verhalten akzeptieren muss tbh...
 	    // Ok, Gemini hat mir folgenden Link geschickt, das überzeugt mich nun zu 90% dass es ein JavaFX-Problem ist: https://bugs.openjdk.org/browse/JDK-8227679
 	    // Auch wenn hier von ContextMenus gesprochen wird. Aber This is a minor annoyance, but not a serious issue. Lowering priority to P4. → Really???
 	    css = addCssRule(css, ".menu-item:focused", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground));
 	    
-	    css = addCssRule(css, ".menu .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Lernen
+	    //css = addCssRule(css, ".menu .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Lernen
 	    css = addCssRule(css, ".menu .label", "-fx-font-size", "" + font.getSize() + "px");  // Schriftgröße Lernen
 	    css = addCssRule(css, ".menu:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover über Lernen
 	    css = addCssRule(css, ".menu:showing", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hintergrund von Lernen, wenn ich über ein Untermenü hovere, wie Multiple Choice oder so.
 	    css = addCssRule(css, ".menu:focused", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hintergrund von Anzeigereihenfolge, wenn ich über ein Untermenü hovere, wie Zufällig oder so.
-	    css = addCssRule(css, ".menu", "-fx-font-family", "'" + font.getFamily() + "'"); // Lernen
+	    //css = addCssRule(css, ".menu", "-fx-font-family", "'" + font.getFamily() + "'"); // Lernen
 	    
 	    
-	    css = addCssRule(css, ".menu-item .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Multiple Choice unter Lernen
+	    //css = addCssRule(css, ".menu-item .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Multiple Choice unter Lernen
 	    css = addCssRule(css, ".menu-item .label", "-fx-font-size", "" + font.getSize() + "px");  // Schriftgröße Multiple Choice unter Lernen
 	    css = addCssRule(css, ".menu-item", "-fx-padding", "2px 10px"); // Vertikaler Zeilenabstand und Padding links/rechts von Multiple Choice
 	    css = addCssRule(css, ".menu-item:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover über Multiple Choice unter Lernen
 	    css = addCssRule(css, ".menu-item:disabled:hover", "-fx-background-color", "transparent"); // Schaltet den Hover für disabled Items aus.
 	    
 	    css = addCssRule(css, ".context-menu", "-fx-background-color", UIUtils.toHex(menuBarBackground));  // Untermenüs (Multiple Choice unter Lernen)
-	    css = addCssRule(css, ".menu-item", "-fx-font-family", "'" + font.getFamily() + "'"); // Multiple Choice
-	    css = addCssRule(css, ".menu-item:disabled .label", "-fx-text-fill", UIUtils.toHex(textColor)); // JavaFX macht das eigenständig entsättigt. Also selbst Color.Red setzen würde nur ein schmutziges graurot erzeugen.
+	    //css = addCssRule(css, ".menu-item", "-fx-font-family", "'" + font.getFamily() + "'"); // Multiple Choice
+	    //css = addCssRule(css, ".menu-item:disabled .label", "-fx-text-fill", UIUtils.toHex(textColor)); // JavaFX macht das eigenständig entsättigt. Also selbst Color.Red setzen würde nur ein schmutziges graurot erzeugen.
 	    
 	    css = addCssRule(css, ".context-menu", "-fx-border-color", UIUtils.toHex(thinBorderColor));
 	    css = addCssRule(css, ".context-menu", "-fx-border-width", "1px");
+	    
 	    css = addCssRule(css, ".thorstens-bar", "-fx-background-color", UIUtils.toHex(menuBarBackground));
 	    css = addCssRule(css, ".thorstens-bar", "-fx-border-color", UIUtils.toHex(thinBorderColor));
 	    css = addCssRule(css, ".thorstens-bar", "-fx-border-width", "0 0 1 0");
 	    
-	    css = addCssRule(css, ".thorstens-title", "-fx-font-family", "'" + font.getFamily() + "'");
+	    //css = addCssRule(css, ".thorstens-title", "-fx-font-family", "'" + font.getFamily() + "'");
 	    css = addCssRule(css, ".thorstens-title", "-fx-font-size", font.getSize() + "px");  // Vom Skin-Font!
-	    css = addCssRule(css, ".thorstens-title", "-fx-text-fill", UIUtils.toHex(textColor));
+	    //css = addCssRule(css, ".thorstens-title", "-fx-text-fill", UIUtils.toHex(textColor));
 	    
 	    css = addCssRule(css, ".thorstens-root", "-fx-border-color", "white");
 	    css = addCssRule(css, ".thorstens-root", "-fx-border-width", "1px");
@@ -383,50 +395,86 @@ public abstract class Skin {
 	    css = addCssRule(css, ".mc-button", "-fx-padding", paddingCss);
 	    
 	    // Basis-Rahmen und Radius
-	    css = addCssRule(css, ".mc-button", "-fx-background-radius", borderSmallComponent.arc() + "px");
-	    css = addCssRule(css, ".mc-button", "-fx-border-radius", borderSmallComponent.arc() + "px");
-	    css = addCssRule(css, ".mc-button", "-fx-border-width", borderSmallComponent.width() + "px");
-	    css = addCssRule(css, ".mc-button", "-fx-border-color", UIUtils.toHex(borderSmallComponent.color()));
+	    css = addCssRule(css, ".button", "-fx-background-radius", borderSmallComponent.arc() + "px");
+	    css = addCssRule(css, ".button", "-fx-background-insets", "0");
+	    css = addCssRule(css, ".button", "-fx-border-radius", borderSmallComponent.arc() + "px");
+	    css = addCssRule(css, ".button", "-fx-border-width", borderSmallComponent.width() + "px");
+	    css = addCssRule(css, ".button", "-fx-border-color", UIUtils.toHex(borderSmallComponent.color()));
+	    css = addCssRule(css, ".button", "-fx-text-fill", UIUtils.toHex(textActiveComponentColor == null ? textColor : textActiveComponentColor));
 
-	    // 1. ZUSTAND: :active (Das Spiel läuft)
-	    // Normale Farbe + Hover-Effekt
+	    // MC Buttons
 	    css = addCssRule(css, ".mc-button:active", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
-	    css = addCssRule(css, ".mc-button:active", "-fx-text-fill", UIUtils.toHex(textColor));
-	    
-	    // Hover nur im :active Zustand!
 	    css = addCssRule(css, ".mc-button:active:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
-	    System.out.println("activeButtonHoverColor: " + activeComponentHoverColor);
-
-	    // 2. ZUSTAND: :inactive (Pause / Leer / Nicht gewählt)
-	    // Sieht aus wie disabled (grau), kein Hover, kein Hand-Cursor
+	    //css = addCssRule(css, ".mc-button:active:pressed", "-fx-translate-y", "1px");
+	    //css = addCssRule(css, ".mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
+	    css = addCssRule(css, ".mc-button:active:pressed", "-fx-background-color", UIUtils.toHex(adjustBrightness(activeComponentHoverColor, 8)));
 	    css = addCssRule(css, ".mc-button:inactive", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
-	    css = addCssRule(css, ".mc-button:inactive", "-fx-text-fill", UIUtils.toHex(textColor)); 
-	    // css = addCssRule(css, ".mc-button:inactive", "-fx-opacity", "1.0"); // Optional, falls Opacity Probleme macht
-
-	    // 3. ZUSTAND: :correct
 	    css = addCssRule(css, ".mc-button:correct", "-fx-background-color", UIUtils.toHex(correctColor));
-	    css = addCssRule(css, ".mc-button:correct", "-fx-text-fill", UIUtils.toHex(textColor));
-
-	    // 4. ZUSTAND: :incorrect
 	    css = addCssRule(css, ".mc-button:incorrect", "-fx-background-color", UIUtils.toHex(incorrectColor));
-	    css = addCssRule(css, ".mc-button:incorrect", "-fx-text-fill", UIUtils.toHex(textColor));
 	    
-	    // Alte StyleSheets entfernen
-	    scene.getStylesheets().clear();
+	    // --- Image-Label Styling (Vektor-Shape) ---
+	    // Rahmen-Farbe und Dicke
+	    css = addCssRule(css, ".image-label", "-fx-stroke", UIUtils.toHex(borderBigComponent.color()));
+	    css = addCssRule(css, ".image-label", "-fx-stroke-width", borderBigComponent.width() + "px");
+	    // WICHTIG: Rahmen nach INNEN zeichnen (Verdeckt Pixel-Kanten & erhält Größe)
+	    css = addCssRule(css, ".image-label", "-fx-stroke-type", "inside");
+	    // Fallback-Hintergrund (falls kein Bild gesetzt ist) via Fill
+	    css = addCssRule(css, ".image-label", "-fx-fill", UIUtils.toHex(imageLabelBgColor));
 	    
-	 // Image-Label Styling
-	    css = addCssRule(css, ".image-label", "-fx-background-size", "contain");
-	    css = addCssRule(css, ".image-label", "-fx-background-position", "center");
-	    css = addCssRule(css, ".image-label", "-fx-background-repeat", "no-repeat");
-	    css = addCssRule(css, ".image-label", "-fx-background-radius", borderBigComponent.arc() + "px");
-	    css = addCssRule(css, ".image-label", "-fx-border-radius", borderBigComponent.arc() + "px");
-	    css = addCssRule(css, ".image-label", "-fx-border-width", borderBigComponent.width() + "px");
-	    css = addCssRule(css, ".image-label", "-fx-border-color", UIUtils.toHex(borderBigComponent.color()));
-	    css = addCssRule(css, ".image-label", "-fx-background-color", UIUtils.toHex(imageLabelBgColor));
+	    // 3. Radius-Synchronisation: Hintergrund und Border bekommen exakt denselben Radius!
+	    // Dadurch wird das Bild an den Ecken "rund abgeschnitten", obwohl es die volle Größe hat.
+	    String radius = borderBigComponent.arc() + "px";
+	    css = addCssRule(css, ".image-label", "-fx-background-radius", radius);
+	    css = addCssRule(css, ".image-label", "-fx-border-radius", radius);
+	    
+	 // Icon-Button Styling
+	    css = addCssRule(css, ".icon-button", "-fx-padding", "0");
+	    css = addCssRule(css, ".icon-button", "-fx-background-insets", "0");
+	    css = addCssRule(css, ".icon-button", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
+	    css = addCssRule(css, ".icon-button", "-fx-border-color", UIUtils.toHex(borderSmallComponent.color()));
+	    css = addCssRule(css, ".icon-button", "-fx-border-width", borderSmallComponent.width() + "px");
+	    css = addCssRule(css, ".icon-button", "-fx-border-radius", borderSmallComponent.arc() + "px");
+	    css = addCssRule(css, ".icon-button", "-fx-background-radius", borderSmallComponent.arc() + "px");
+	    // Hover
+	    css = addCssRule(css, ".icon-button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
+	    css = addCssRule(css, ".icon-button:hover", "-fx-cursor", "hand");
+	    // Disabled (falls nötig)
+	    css = addCssRule(css, ".icon-button:disabled", "-fx-opacity", "1.0");
+	    css = addCssRule(css, ".icon-button:disabled", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
 
+	 // --- TextField Styling ---;
+	    // Basis
+	    //css = addCssRule(css, ".input-field", "-fx-font-family", "'" + font.getFamily() + "'");
+	    //css = addCssRule(css, ".input-field", "-fx-font-size", font.getSize() + "px");
+	    //css = addCssRule(css, ".input-field", "-fx-text-fill", UIUtils.toHex(textColor));
+	    css = addCssRule(css, ".input-field", "-fx-alignment", "center");
+	    // Padding
+	    paddingCss = String.format("%dpx %dpx %dpx %dpx", 
+	        borderSmallComponent.insets().top, borderSmallComponent.insets().right, borderSmallComponent.insets().bottom, borderSmallComponent.insets().left);
+	    css = addCssRule(css, ".input-field", "-fx-padding", paddingCss);
+	    // Background & Border (Active)
+	    css = addCssRule(css, ".input-field", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
+	    css = addCssRule(css, ".input-field", "-fx-background-radius", borderSmallComponent.arc() + "px");
+	    css = addCssRule(css, ".input-field", "-fx-border-color", UIUtils.toHex(borderSmallComponent.color()));
+	    css = addCssRule(css, ".input-field", "-fx-border-width", borderSmallComponent.width() + "px");
+	    css = addCssRule(css, ".input-field", "-fx-border-radius", borderSmallComponent.arc() + "px");
+	    // Disabled State
+	    css = addCssRule(css, ".input-field:disabled", "-fx-opacity", "1.0");
+	    css = addCssRule(css, ".input-field:disabled", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
+	    css = addCssRule(css, ".input-field:disabled", "-fx-border-color", UIUtils.toHex(borderSmallComponent.disabledColor()));
+	    css = addCssRule(css, ".input-field:disabled", "-fx-text-fill", UIUtils.toHex(incorrectTextColor));
+	    css = addCssRule(css, ".input-field:disabled", "-fx-font-weight", "bold");
+	    
+	    // Alert und Dialog
+	    css = addCssRule(css, ".dialog-pane", "-fx-background-color", UIUtils.toHex(menuBarBackground));
+	    css = addCssRule(css, ".dialog-pane", "-fx-border-color", UIUtils.toHex(thinBorderColor));
+	    css = addCssRule(css, ".dialog-pane", "-fx-border-width", borderSmallComponent.width() + "px");
+	    css = addCssRule(css, ".dialog-pane .button:focused", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
+	    
 	    // Wir maskieren kritische Zeichen für die Data-URI
 	    String encodedCss = css.replace("%", "%25")  // % muss zu %25 werden
 	                           .replace("#", "%23"); // # muss zu %23 werden (sicher ist sicher)
+	    scene.getStylesheets().clear();
 	    scene.getStylesheets().add("data:text/css," + encodedCss);
 	    System.out.println(css);
 	}
@@ -466,48 +514,39 @@ public abstract class Skin {
 	    return pane;
 	}
 
-	public CustomTextField createInputField(DeckType type) {
-		Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionTextInputPanel");
-		if (bounds == null)
+	public TextField createInputField(DeckType type) {
+	    Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionTextInputPanel");
+	    if (bounds == null)
 			bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionTextInputPanel");
-		Color textC = textActiveComponentColor == null ? textColor : textActiveComponentColor;
-		Color incorrectText = incorrectTextColor == null ? incorrectColor : incorrectTextColor;
-		/**CustomTextField result = new CustomTextField(font, textC, incorrectText, activeComponentBgColor, disabledComponentBgColor, SwingConstants.CENTER,
-				borderSmallComponent);
-		result.setBounds(bounds.x, bounds.y, bounds.width, result.getPreferredSize().height);**/
-		return null;
+	    
+	    TextField textField = new TextField();
+	    textField.getStyleClass().add("input-field");
+	    textField.setLayoutX(bounds.x);
+	    textField.setLayoutY(bounds.y);
+	    textField.setPrefWidth(bounds.width);
+	    // Höhe wird von Font + Padding bestimmt
+	    
+	    return textField;
 	}
 
-	public Region createImageRegion(DeckType type) {
-	    Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionImagePanel");
+	public javafx.scene.shape.Rectangle createImageComponent(DeckType type) {
+	    // 1. Config laden (Fail-Fast: Bounds MÜSSEN da sein)
+	    java.awt.Rectangle bounds = (java.awt.Rectangle) getFieldValue(type.getId() + "SessionImagePanel");
 	    
-	    Region label = new Region();
-	    label.getStyleClass().add("image-label");
-	    label.setPrefSize(bounds.width, bounds.height);
-	    label.setLayoutX(bounds.x);
-	    label.setLayoutY(bounds.y);
+	    // 2. Vektor-Shape erstellen
+	    javafx.scene.shape.Rectangle rect = new javafx.scene.shape.Rectangle(bounds.width, bounds.height);
+	    rect.setLayoutX(bounds.x);
+	    rect.setLayoutY(bounds.y);
 	    
-	    return label;
+	    // 3. Runde Ecken setzen (Durchmesser = Radius * 2)
+	    rect.setArcWidth(borderBigComponent.arc() * 2);
+	    rect.setArcHeight(borderBigComponent.arc() * 2);
+	    
+	    // 4. CSS-Klasse zuweisen
+	    rect.getStyleClass().add("image-label");
+	    
+	    return rect;
 	}
-
-/**	public CustomButtonLabel createIconButton(DeckType type, IconButtonType buttonType) {
-		switch (buttonType) {
-		case BACK: {
-			Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionBackButton");
-			//CustomButtonLabel result = new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor, borderBackButton, backButtonIcon);
-			//result.setLocation(bounds.x, bounds.y);
-			return null;
-		}
-		case SKIP:
-			//return new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor,borderBackButton, skipButtonIcon);
-		case PLAY:
-			// return new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor, borderBackButton, playButtonIcon);
-		case CANCEL:
-			//return new CustomButtonLabel(null, null, textColor, activeComponentBgColor, activeComponentHoverColor, null, null, null, disabledComponentBgColor, borderBackButton, cancelButtonIcon);
-		default:
-			throw new RuntimeException("Was ist denn das für ein ButtonType: " + type);
-		}
-	}**/
 
 	public Label createCustomTextLabel(DeckType type, TextLabelType labelType) {
 	    // 1. Bounds & Colors
@@ -588,7 +627,7 @@ public abstract class Skin {
 	    double verticalPadding = insets.top + insets.bottom;
 	    double borderWidth = borderSmallComponent.width() * 2;
 	    
-	    double fixedButtonHeight = dummyText.getLayoutBounds().getHeight() + verticalPadding + borderWidth;
+	    double fixedButtonHeight = Math.round(dummyText.getLayoutBounds().getHeight() + verticalPadding + borderWidth);
 	    
 	    // 3. Max Text Höhe für Font-Switch berechnen
 	    // "Reinquetschen": Wir erlauben 2 Pixel Toleranz über den rechnerischen Platz hinaus
@@ -609,6 +648,47 @@ public abstract class Skin {
 	    result.setLayoutY(bounds.y);
 	    
 	    return result;
+	}
+	
+	public Button createIconButton(DeckType type, IconButtonType buttonType) {
+	    // Icon laden
+		String iconPath = switch (buttonType) {
+			case BACK -> backButtonIcon;
+			case SKIP -> skipButtonIcon;
+			case PLAY -> playButtonIcon;
+			case CANCEL -> cancelButtonIcon;
+		};
+
+		ImageView icon = new ImageView(new Image(new File(Config.get("iconFolder") + File.separator + iconPath).toURI().toString()));
+	    
+	    // Button erstellen
+	    Button button = new Button();
+	    button.setGraphic(icon); // Icon setzen
+	    button.getStyleClass().add("icon-button");
+	    
+	    // Bounds holen
+	    Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionBackButton");
+	    button.setPrefSize(bounds.width, bounds.height);
+	    button.setLayoutX(bounds.x);
+	    button.setLayoutY(bounds.y);
+	    
+	    return button;
+	}
+	
+	public Alert createAlert (Window parent, String title, String message) {
+		Alert alert = new Alert(Alert.AlertType.INFORMATION);
+		alert.setTitle(title);
+		alert.setHeaderText(null);
+		alert.setContentText(message);
+		alert.initOwner(parent);
+		
+		DialogPane dialogPane = alert.getDialogPane();
+		Scene dialogScene = dialogPane.getScene();
+		styleScene(dialogScene);
+		
+		alert.setGraphic(null);
+		alert.initStyle(StageStyle.UNDECORATED);
+		return alert;
 	}
 
 	/**
@@ -749,8 +829,6 @@ public abstract class Skin {
 						field.set(this, parseFont(value));
 					} else if (field.getType() == BorderParams.class) {
 						field.set(this, parseBorderParams(value));
-					} else if (field.getType() == ImageIcon.class) {
-						field.set(this, new ImageIcon(Config.get("iconFolder") + value));
 					} else if (field.getType() == Integer.class || field.getType() == int.class) {
 						field.set(this, Integer.parseInt(value));
 					} else if (field.getType() == Rectangle.class) {

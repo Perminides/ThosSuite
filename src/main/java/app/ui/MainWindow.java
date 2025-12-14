@@ -1,16 +1,18 @@
 package app.ui;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
-
-import javax.swing.JPanel;
 
 import app.data.CardSortOrder;
 import app.data.LearnSessionInfo;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Labeled;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -19,9 +21,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.HeaderDragType;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.Window;
 
 public class MainWindow {
 
@@ -132,21 +136,8 @@ public class MainWindow {
         Menu menuView = skin.createMenu("Ansicht");
         Skin currentSkin = SkinService.get();
         
-        for (Skin availableSkin : SkinService.getAllSkins()) {
-            String displayName = availableSkin.getDisplayName();
-            boolean isCurrentSkin = availableSkin.getClass() == currentSkin.getClass();
-            String menuText = (isCurrentSkin ? "✓ " : "  ") + displayName;
-            
-            MenuItem item = skin.createMenuItem(menuText);
-            item.setOnAction(_ -> {
-                if (availableSkin == currentSkin) return;
-                onNewSkinSelected.accept(availableSkin);
-            });
-            menuView.getItems().add(item);
-        }
-        
         // Menüs zur MenuBar hinzufügen
-        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuView);
+        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuView);        
         return menuBar;
     }
     
@@ -258,5 +249,9 @@ public class MainWindow {
 
 	public void centerOnScreen() {
 		stage.centerOnScreen();
+	}
+
+	public Window getStage() {
+		return stage;
 	}
 }
