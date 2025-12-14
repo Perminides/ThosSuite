@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
  * Aktueller Ansatz: Jede Karte gibt es genau 1x im Speicher!
  */
 public class AnkiCard {
+	private static Integer debug = 0; 
     public sealed interface Step permits Image, ClickZone, ClickMapElements, Output, Input, MC, MarkZone, MarkMapElements, Pause {}
     
     public record AnswerOption(String text, boolean correct) {}
@@ -139,8 +140,13 @@ public class AnkiCard {
                 .filter(s -> !s.isEmpty())
                 .map(x -> new AnswerOption(x, false))
                 .forEach(options::add);
+            for (String answer : split[1].split("\\|")) {
+            	if (answer.length() > debug) {
+            		debug = answer.length();
+            		System.out.println("Lange MC Antwort: " + answer);
+            	}
+            }
         }
-        
         return options;
     }
 

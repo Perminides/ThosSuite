@@ -279,11 +279,7 @@ public abstract class Skin {
 	    
 	    // !Sofort Du musst hier so dringend aufräumen. Setze mehr global vielleicht(?) und überschreibe nur, wenn es sein muss z. B.
 	    // !Sofort Alle custom styles müssen einen identischen präfix haben. thorsten oder besser custom... 
-	 // === GLOBALE STYLES (für ALLES) ===
-	    css = addCssRule(css, "*", "-fx-font-family", "'" + font.getFamily() + "'");
-	    css = addCssRule(css, "*", "-fx-font-size", font.getSize() + "px");
-	    css = addCssRule(css, "*", "-fx-text-fill", UIUtils.toHex(textColor));
-	    
+	    // !Sofort: Leider nein! Kein * weil: Wir müssen aufhören, * für Schriftgrößen zu benutzen. Der Stern-Selektor ist in JavaFX extrem aggressiv, weil er wirklich bis in die tiefsten Eingeweide der Komponenten (Scrollbars, Text-Nodes, Pfeile in ComboBoxen) greift und dort Eigenschaften hart setzt, die eigentlich vererbt werden sollten.   
 	    css = addCssRule(css, ".menu-button", "-fx-padding", 
 	    		font.getSize() * 0.1 + "px " + font.getSize() * 0.4 + "px"); // Wenn fontsize global gesetzt wird, berechnet javafx daraus paddings und die sind einfach zu groß...
 	    
@@ -292,23 +288,23 @@ public abstract class Skin {
 	    // Auch wenn hier von ContextMenus gesprochen wird. Aber This is a minor annoyance, but not a serious issue. Lowering priority to P4. → Really???
 	    css = addCssRule(css, ".menu-item:focused", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground));
 	    
-	    //css = addCssRule(css, ".menu .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Lernen
+	    css = addCssRule(css, ".menu .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Lernen
 	    css = addCssRule(css, ".menu .label", "-fx-font-size", "" + font.getSize() + "px");  // Schriftgröße Lernen
 	    css = addCssRule(css, ".menu:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover über Lernen
 	    css = addCssRule(css, ".menu:showing", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hintergrund von Lernen, wenn ich über ein Untermenü hovere, wie Multiple Choice oder so.
 	    css = addCssRule(css, ".menu:focused", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hintergrund von Anzeigereihenfolge, wenn ich über ein Untermenü hovere, wie Zufällig oder so.
-	    //css = addCssRule(css, ".menu", "-fx-font-family", "'" + font.getFamily() + "'"); // Lernen
+	    css = addCssRule(css, ".menu", "-fx-font-family", "'" + font.getFamily() + "'"); // Lernen
 	    
 	    
-	    //css = addCssRule(css, ".menu-item .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Multiple Choice unter Lernen
+	    css = addCssRule(css, ".menu-item .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Multiple Choice unter Lernen
 	    css = addCssRule(css, ".menu-item .label", "-fx-font-size", "" + font.getSize() + "px");  // Schriftgröße Multiple Choice unter Lernen
 	    css = addCssRule(css, ".menu-item", "-fx-padding", "2px 10px"); // Vertikaler Zeilenabstand und Padding links/rechts von Multiple Choice
 	    css = addCssRule(css, ".menu-item:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover über Multiple Choice unter Lernen
 	    css = addCssRule(css, ".menu-item:disabled:hover", "-fx-background-color", "transparent"); // Schaltet den Hover für disabled Items aus.
 	    
 	    css = addCssRule(css, ".context-menu", "-fx-background-color", UIUtils.toHex(menuBarBackground));  // Untermenüs (Multiple Choice unter Lernen)
-	    //css = addCssRule(css, ".menu-item", "-fx-font-family", "'" + font.getFamily() + "'"); // Multiple Choice
-	    //css = addCssRule(css, ".menu-item:disabled .label", "-fx-text-fill", UIUtils.toHex(textColor)); // JavaFX macht das eigenständig entsättigt. Also selbst Color.Red setzen würde nur ein schmutziges graurot erzeugen.
+	    css = addCssRule(css, ".menu-item", "-fx-font-family", "'" + font.getFamily() + "'"); // Multiple Choice
+	    css = addCssRule(css, ".menu-item:disabled .label", "-fx-text-fill", UIUtils.toHex(textColor)); // JavaFX macht das eigenständig entsättigt. Also selbst Color.Red setzen würde nur ein schmutziges graurot erzeugen.
 	    
 	    css = addCssRule(css, ".context-menu", "-fx-border-color", UIUtils.toHex(thinBorderColor));
 	    css = addCssRule(css, ".context-menu", "-fx-border-width", "1px");
@@ -317,9 +313,9 @@ public abstract class Skin {
 	    css = addCssRule(css, ".thorstens-bar", "-fx-border-color", UIUtils.toHex(thinBorderColor));
 	    css = addCssRule(css, ".thorstens-bar", "-fx-border-width", "0 0 1 0");
 	    
-	    //css = addCssRule(css, ".thorstens-title", "-fx-font-family", "'" + font.getFamily() + "'");
+	    css = addCssRule(css, ".thorstens-title", "-fx-font-family", "'" + font.getFamily() + "'");
 	    css = addCssRule(css, ".thorstens-title", "-fx-font-size", font.getSize() + "px");  // Vom Skin-Font!
-	    //css = addCssRule(css, ".thorstens-title", "-fx-text-fill", UIUtils.toHex(textColor));
+	    css = addCssRule(css, ".thorstens-title", "-fx-text-fill", UIUtils.toHex(textColor));
 	    
 	    css = addCssRule(css, ".thorstens-root", "-fx-border-color", "white");
 	    css = addCssRule(css, ".thorstens-root", "-fx-border-width", "1px");
@@ -395,6 +391,9 @@ public abstract class Skin {
 	    css = addCssRule(css, ".mc-button", "-fx-padding", paddingCss);
 	    
 	    // Basis-Rahmen und Radius
+	    css = addCssRule(css, ".button", "-fx-font-family", "'" + font.getFamily() + "'");
+	    css = addCssRule(css, ".button", "-fx-font-size", font.getSize() + "px");
+	    css = addCssRule(css, ".button", "-fx-text-fill", UIUtils.toHex(textColor));
 	    css = addCssRule(css, ".button", "-fx-background-radius", borderSmallComponent.arc() + "px");
 	    css = addCssRule(css, ".button", "-fx-background-insets", "0");
 	    css = addCssRule(css, ".button", "-fx-border-radius", borderSmallComponent.arc() + "px");
@@ -411,6 +410,30 @@ public abstract class Skin {
 	    css = addCssRule(css, ".mc-button:inactive", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
 	    css = addCssRule(css, ".mc-button:correct", "-fx-background-color", UIUtils.toHex(correctColor));
 	    css = addCssRule(css, ".mc-button:incorrect", "-fx-background-color", UIUtils.toHex(incorrectColor));
+	    
+	    // --- MC Button Layout Varianten (Pseudo-Klassen) ---
+	    
+	    // Padding für mehrzeilige Buttons berechnen (nur 1px oben/unten, damit 2 Zeilen passen)
+	    // Horizontal lassen wir das normale Padding (insets.right/left), damit es optisch gleich aussieht
+	    java.awt.Insets i = borderSmallComponent.insets();
+	    String densePadding = String.format("1px %dpx 1px %dpx", i.right, i.left);
+
+	    // ZWISCHENSTUFE: Squeezed (Normaler Font, aber extrem kompakt)
+	    // 1. Wir nehmen das vertikale Padding komplett weg (0px)
+	    // 2. Wir ziehen die Zeilen enger zusammen (-3px Line Spacing)
+	    String squeezedPadding = String.format("0px %dpx 0px %dpx", i.right, i.left);
+	    css = addCssRule(css, ".mc-button:squeezed", "-fx-wrap-text", "true");
+	    css = addCssRule(css, ".mc-button:squeezed", "-fx-padding", squeezedPadding);
+	    css = addCssRule(css, ".mc-button:squeezed", "-fx-line-spacing", "-6px"); // Zieht Zeilen zusammen
+	    css = addCssRule(css, ".mc-button:squeezed", "-fx-text-alignment", "center");
+	    
+	    // VARIANTE B: Tiny (Kleiner Font, enges Padding & Umbruch)
+	    // Hier setzen wir explizit die kleine Schriftgröße. Da diese Regel spezifischer ist
+	    // als dein globaler "*" Selektor, gewinnt sie!
+	    css = addCssRule(css, ".mc-button:tiny", "-fx-wrap-text", "true");
+	    css = addCssRule(css, ".mc-button:tiny", "-fx-padding", squeezedPadding);
+	    css = addCssRule(css, ".mc-button:tiny", "-fx-line-spacing", "-6px"); // Zieht Zeilen zusammen
+	    css = addCssRule(css, ".mc-button:tiny", "-fx-font-size", smallFont.getSize() + "px");
 	    
 	    // --- Image-Label Styling (Vektor-Shape) ---
 	    // Rahmen-Farbe und Dicke
@@ -444,9 +467,9 @@ public abstract class Skin {
 
 	 // --- TextField Styling ---;
 	    // Basis
-	    //css = addCssRule(css, ".input-field", "-fx-font-family", "'" + font.getFamily() + "'");
-	    //css = addCssRule(css, ".input-field", "-fx-font-size", font.getSize() + "px");
-	    //css = addCssRule(css, ".input-field", "-fx-text-fill", UIUtils.toHex(textColor));
+	    css = addCssRule(css, ".input-field", "-fx-font-family", "'" + font.getFamily() + "'");
+	    css = addCssRule(css, ".input-field", "-fx-font-size", font.getSize() + "px");
+	    css = addCssRule(css, ".input-field", "-fx-text-fill", UIUtils.toHex(textColor));
 	    css = addCssRule(css, ".input-field", "-fx-alignment", "center");
 	    // Padding
 	    paddingCss = String.format("%dpx %dpx %dpx %dpx", 
@@ -476,7 +499,7 @@ public abstract class Skin {
 	                           .replace("#", "%23"); // # muss zu %23 werden (sicher ist sicher)
 	    scene.getStylesheets().clear();
 	    scene.getStylesheets().add("data:text/css," + encodedCss);
-	    System.out.println(css);
+	    System.out.println(css.replaceAll("}", "}\n"));
 	}
 
 	public Pane createBackgroundPane(DeckType type) {
@@ -619,31 +642,40 @@ public abstract class Skin {
 	    if (bounds == null) 
 	        bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionMcPanel");
 	    
-	    // 2. Button-Höhe berechnen (Swing-Style: Text + Padding + Border)
+	    // 2. Padding und Border Werte holen (Single source of truth!)
+	    java.awt.Insets insets = borderSmallComponent.insets(); // Das ist dein Padding
+	    double verticalPadding = insets.top + insets.bottom;
+	    double horizontalPadding = insets.left + insets.right;
+	    double borderWidth = borderSmallComponent.width(); // Rahmenbreite
+	    
+	    // Die ehemals "magische" 24:
+	    // Wie viel Breite verliert der Text durch Rahmen (links+rechts) und Padding (links+rechts)?
+	    double horizontalOverhead = horizontalPadding + (borderWidth * 2);
+
+	    // 3. Button-Höhe berechnen
 	    Text dummyText = new Text("Q");
 	    dummyText.setFont(font);
 	    
-	    java.awt.Insets insets = borderSmallComponent.insets();
-	    double verticalPadding = insets.top + insets.bottom;
-	    double borderWidth = borderSmallComponent.width() * 2;
+	    // Höhe = Text + Padding Oben/Unten + Border Oben/Unten
+	    double fixedButtonHeight = Math.ceil(dummyText.getLayoutBounds().getHeight() + verticalPadding + (borderWidth * 2));
 	    
-	    double fixedButtonHeight = Math.round(dummyText.getLayoutBounds().getHeight() + verticalPadding + borderWidth);
-	    
-	    // 3. Max Text Höhe für Font-Switch berechnen
-	    // "Reinquetschen": Wir erlauben 2 Pixel Toleranz über den rechnerischen Platz hinaus
-	    double maxTextHeight = fixedButtonHeight - borderWidth - verticalPadding + 2.0;
+	    // 4. Max Text Höhe berechnen
+	    // Wir ziehen Border und Padding ab, um den "Netto-Platz" für Text zu kennen.
+	    // +2.0 Toleranz fürs Rendering
+	    double maxTextHeight = fixedButtonHeight - (borderWidth * 2) - verticalPadding + 2.0;
 
-	    // 4. Pane erstellen
+	    // 5. Pane erstellen
 	    MultipleChoicePane result = new MultipleChoicePane(
 	        bounds.width, 
 	        fixedButtonHeight, 
 	        maxTextHeight,
+	        horizontalOverhead,
+	        borderWidth, // <--- HIER NEU ÜBERGEBEN
 	        font, 
 	        smallFont, 
 	        verticalGapMC
 	    );
 	    
-	    // 5. Absolute Positionierung
 	    result.setLayoutX(bounds.x);
 	    result.setLayoutY(bounds.y);
 	    
