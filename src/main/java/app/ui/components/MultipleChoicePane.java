@@ -15,23 +15,34 @@ import javafx.scene.text.TextAlignment;
 
 public class MultipleChoicePane extends Pane {
 
-    // Die 4 exklusiven Zustände (wie von dir definiert)
+    // --- Logik-Zustände (Exklusiv) ---
     private static final PseudoClass STATE_INACTIVE = PseudoClass.getPseudoClass("inactive");
     private static final PseudoClass STATE_ACTIVE = PseudoClass.getPseudoClass("active");
     private static final PseudoClass STATE_CORRECT = PseudoClass.getPseudoClass("correct");
     private static final PseudoClass STATE_INCORRECT = PseudoClass.getPseudoClass("incorrect");
 
+    // --- Layout-Zustände (Additiv zu Logik-Zuständen) ---
+    // multiline: Text umbrechen, Padding reduzieren
+    private static final PseudoClass STATE_SQUEEZED = PseudoClass.getPseudoClass("squeezed"); // NEU
+    // tiny: Text umbrechen, Padding reduzieren UND Schrift verkleinern
+    private static final PseudoClass STATE_TINY = PseudoClass.getPseudoClass("tiny");
+
     private final List<Button> buttons = new ArrayList<>();
     private final Font font;
     private final Font smallFont;
     private final double maxTextHeight;
+    private final double borderWidth; // NEU: Damit wir das absolute Limit kennen
+    private final double horizontalOverhead; // Ersatz für die Magic Number "24"
     
     private Consumer<Integer> listener;
 
-    public MultipleChoicePane(double width, double fixedButtonHeight, double maxTextHeight, Font font, Font smallFont, int verticalGap) {
+    // Neuer Konstruktor-Parameter: horizontalOverhead
+    public MultipleChoicePane(double width, double fixedButtonHeight, double maxTextHeight, double horizontalOverhead, double borderWidth, Font font, Font smallFont, int verticalGap) {
         this.font = font;
         this.smallFont = smallFont;
         this.maxTextHeight = maxTextHeight;
+        this.horizontalOverhead = horizontalOverhead;
+        this.borderWidth = borderWidth;
         
         double totalHeight = (fixedButtonHeight * 8) + (verticalGap * 7);
         this.setPrefSize(width, totalHeight);
@@ -53,107 +64,100 @@ public class MultipleChoicePane extends Pane {
         btn.setMinSize(width, height);
         btn.setMaxSize(width, height);
         btn.getStyleClass().add("mc-button");
-        btn.setWrapText(true);
+        
+        // WrapText muss für alle an sein, damit es wirkt, wenn wir es brauchen.
+        // Gesteuert wird das Aussehen aber über CSS (Padding/Font).
+        btn.setWrapText(true); 
         btn.setTextAlignment(TextAlignment.CENTER);
         btn.setAlignment(Pos.CENTER);
         
-        // WICHTIG: Button feuert IMMER Events. Der Presenter entscheidet.
-        // Wir nutzen kein setDisable(true) mehr!
-        btn.setOnAction(_ -> {
+        btn.setOnAction(e -> {
             if (listener != null) listener.accept(index);
         });
         
-        // Initial: Leer und Inaktiv
         btn.setText("");
-        setButtonState(btn, STATE_INACTIVE);
+        setButtonLogicState(btn, STATE_INACTIVE);
         
         return btn;
     }
 
-    
     public void initiateMultipleChoice(List<String> answers) {
         for (int i = 0; i < 8; i++) {
             Button btn = buttons.get(i);
             
+            // Reset aller Layout-States
+            btn.pseudoClassStateChanged(STATE_SQUEEZED, false);
+            btn.pseudoClassStateChanged(STATE_TINY, false);
+            
             if (i < answers.size()) {
-                // SLOT BELEGT: Text setzen + Zustand ACTIVE
                 String text = answers.get(i);
+                btn.setText(text);
                 
-                // Font-Logik
-                // !Sofort Woher kommt die 24 und wieso wird hier setFont aufgerufen? Ich dachte, wir machen css...
-                double textAreaWidth = btn.getPrefWidth() - 24; 
+                double availableTextWidth = btn.getPrefWidth() - horizontalOverhead;
+                
                 Text measure = new Text(text);
                 measure.setFont(font);
-                measure.setWrappingWidth(textAreaWidth);
-                
-                if (measure.getLayoutBounds().getHeight() > maxTextHeight) {
-                    btn.setFont(smallFont);
-                } else {
-                    btn.setFont(font);
+
+                // SCHRITT 1: Passt es einzeilig?
+                if (measure.getLayoutBounds().getWidth() > availableTextWidth) {
+                    
+                    // Nein. Passt es "gequetscht" zweizeilig?
+                    measure.setWrappingWidth(availableTextWidth);
+                    measure.setLineSpacing(-6); // WICHTIG: Muss zum CSS passen! !Sofort Keine Magic Numbers hier!
+                    
+                    // Limit: ButtonHöhe - (Rahmen Oben + Rahmen Unten). Kein Padding!
+                    double absoluteMaxHeight = btn.getPrefHeight() - (borderWidth * 2);
+                    
+                    if (measure.getLayoutBounds().getHeight() <= absoluteMaxHeight) {
+                        // JA! Es passt mit Quetschen.
+                        btn.pseudoClassStateChanged(STATE_SQUEEZED, true);
+                    } else {
+                        // NEIN! Selbst Quetschen reicht nicht -> Tiny Mode.
+                        btn.pseudoClassStateChanged(STATE_TINY, true);
+                    }
                 }
                 
-                btn.setText(text);
-                setButtonState(btn, STATE_ACTIVE);
-                
+                setButtonLogicState(btn, STATE_ACTIVE);
             } else {
-                // SLOT UNBENUTZT: Text weg + Zustand INACTIVE
                 btn.setText("");
-                setButtonState(btn, STATE_INACTIVE);
+                setButtonLogicState(btn, STATE_INACTIVE);
             }
         }
     }
 
-    /**
-     * Setzt das gesamte Panel in den "Schlafmodus" (z.B. zwischen Fragen).
-     * Alle Texte werden gelöscht, alles wird inactive.
-     */
     public void clearAndSetInactive() {
         for (Button btn : buttons) {
             btn.setText("");
-            setButtonState(btn, STATE_INACTIVE);
+            setButtonLogicState(btn, STATE_INACTIVE);
         }
     }
 
-    /**
-     * Zeigt das Ergebnis an (Feedback/Pause Modus).
-     * - Der geklickte (falsche) Button wird rot.
-     * - Der korrekte Button wird grün.
-     * - Alle anderen gehen auf INACTIVE (behalten aber ihren Text!).
-     */
     public void setCorrectAndInactive(Collection<Integer> correctIndices) {
         for (int i = 0; i < buttons.size(); i++) {
             Button btn = buttons.get(i);
-            
             if (correctIndices.contains(i)) {
-                // Button ist Teil der korrekten Lösung
-            	setButtonState(btn, STATE_CORRECT);
+                setButtonLogicState(btn, STATE_CORRECT);
             } else if (btn.getPseudoClassStates().contains(STATE_INCORRECT)) {
-            	//Da machen wir mal nix :-)
+                // Bleibt incorrect
             } else {
-                // Die restlichen Buttons gehen in den inaktiven visuellen Zustand
-                // (Text bleibt stehen, nur CSS ändert sich)
-            	setButtonState(btn, STATE_INACTIVE);
+                setButtonLogicState(btn, STATE_INACTIVE);
             }
         }
     }
     
-    // Hilfsmethode für reine Anzeige der Lösung (ohne Fehler)
     public void setCorrect(int index, boolean correct) {
-    	setButtonState(buttons.get(index), correct ? STATE_CORRECT : STATE_INCORRECT);
-    }
-
-    /**
-     * Zentrale State-Maschine.
-     * Garantiert, dass IMMER GENAU EIN Zustand aktiv ist (kein "Mischmasch").
-     */
-    private void setButtonState(Button btn, PseudoClass state) {
-        btn.pseudoClassStateChanged(STATE_INACTIVE, state == STATE_INACTIVE);
-        btn.pseudoClassStateChanged(STATE_ACTIVE, state == STATE_ACTIVE);
-        btn.pseudoClassStateChanged(STATE_CORRECT, state == STATE_CORRECT);
-        btn.pseudoClassStateChanged(STATE_INCORRECT, state == STATE_INCORRECT);
+        setButtonLogicState(buttons.get(index), correct ? STATE_CORRECT : STATE_INCORRECT);
     }
 
     public void addListener(Consumer<Integer> listener) {
         this.listener = listener;
+    }
+
+    // Nur für Farben/Logik zuständig, fasst Layout nicht an!
+    private void setButtonLogicState(Button btn, PseudoClass state) {
+        btn.pseudoClassStateChanged(STATE_INACTIVE, state == STATE_INACTIVE);
+        btn.pseudoClassStateChanged(STATE_ACTIVE, state == STATE_ACTIVE);
+        btn.pseudoClassStateChanged(STATE_CORRECT, state == STATE_CORRECT);
+        btn.pseudoClassStateChanged(STATE_INCORRECT, state == STATE_INCORRECT);
     }
 }
