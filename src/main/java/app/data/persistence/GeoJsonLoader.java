@@ -69,7 +69,7 @@ class GeoJsonLoader {
                 path.getStyleClass().add("decoration"); // Für Styling
             }
 
-            shapes.add(new MapShape(id, deckId, regionName, capitalName, null, null, fixedColorId, path));
+            shapes.add(new MapShape(path, id, deckId, regionName, capitalName, altRegionNames, altCapitalNames, fixedColorId));
         }
         return shapes;
     }

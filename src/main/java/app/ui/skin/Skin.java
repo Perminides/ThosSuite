@@ -279,9 +279,11 @@ public abstract class Skin {
 	    
 	    // !Sofort Du musst hier so dringend aufräumen. Setze mehr global vielleicht(?) und überschreibe nur, wenn es sein muss z. B.
 	    // !Sofort Alle custom styles müssen einen identischen präfix haben. thorsten oder besser custom... 
-	    // !Sofort: Leider nein! Kein * weil: Wir müssen aufhören, * für Schriftgrößen zu benutzen. Der Stern-Selektor ist in JavaFX extrem aggressiv, weil er wirklich bis in die tiefsten Eingeweide der Komponenten (Scrollbars, Text-Nodes, Pfeile in ComboBoxen) greift und dort Eigenschaften hart setzt, die eigentlich vererbt werden sollten.   
+	    // !Sofort: Leider nein! Kein * weil: Wir müssen aufhören, * für Schriftgrößen zu benutzen. Der Stern-Selektor ist in JavaFX extrem aggressiv, weil er wirklich bis in die tiefsten Eingeweide der Komponenten (Scrollbars, Text-Nodes, Pfeile in ComboBoxen) greift und dort Eigenschaften hart setzt, die eigentlich vererbt werden sollten.
+	    // !Sofort: Naja, aber vielleicht können wir statt *, der sich ja iwie komisch verhält, auch einfach root nehmen? :-)
+	    // https://stackoverflow.com/questions/79307490/the-universal-selector-overrides-more-specific-selectors-in-css-for-javafx-fxm
 	    css = addCssRule(css, ".menu-button", "-fx-padding", 
-	    		font.getSize() * 0.1 + "px " + font.getSize() * 0.4 + "px"); // Wenn fontsize global gesetzt wird, berechnet javafx daraus paddings und die sind einfach zu groß...
+	    		font.getSize() * 0.3 + "px " + font.getSize() * 0.4 + "px"); // Wenn fontsize global gesetzt wird, berechnet javafx daraus paddings und die sind einfach zu groß...
 	    
 	    // 1. Der "klebende" Fokus wird unsichtbar mit "transparent" und Hover mit UIUtils.toHex(menuBarHoverBackground). Diesen klebenden Fokus gibt es allerdings nur beim Öffnen eines Untermnüs, nicht beim Öffnen eines Top-Menüs. Ich bin noch nicht überzeugt, dass man dieses Verhalten akzeptieren muss tbh...
 	    // Ok, Gemini hat mir folgenden Link geschickt, das überzeugt mich nun zu 90% dass es ein JavaFX-Problem ist: https://bugs.openjdk.org/browse/JDK-8227679
@@ -417,22 +419,25 @@ public abstract class Skin {
 	    // Horizontal lassen wir das normale Padding (insets.right/left), damit es optisch gleich aussieht
 	    java.awt.Insets i = borderSmallComponent.insets();
 	    String densePadding = String.format("1px %dpx 1px %dpx", i.right, i.left);
+	 // Berechnung des Spacings basierend auf der Font-Größe (ca. -40% der Größe sorgt für enges Layout)
+	    double lineSpacingSqueezed = font.getSize() * -0.4;
+	    double lineSpacingTiny = smallFont.getSize() * -0.4;
 
-	    // ZWISCHENSTUFE: Squeezed (Normaler Font, aber extrem kompakt)
-	    // 1. Wir nehmen das vertikale Padding komplett weg (0px)
-	    // 2. Wir ziehen die Zeilen enger zusammen (-3px Line Spacing)
+	 // ZWISCHENSTUFE: Squeezed (Normaler Font, aber extrem kompakt)
 	    String squeezedPadding = String.format("0px %dpx 0px %dpx", i.right, i.left);
 	    css = addCssRule(css, ".mc-button:squeezed", "-fx-wrap-text", "true");
 	    css = addCssRule(css, ".mc-button:squeezed", "-fx-padding", squeezedPadding);
-	    css = addCssRule(css, ".mc-button:squeezed", "-fx-line-spacing", "-6px"); // Zieht Zeilen zusammen
+	    
+	    // NEU: Berechneter Wert statt harter "-6px"
+	    css = addCssRule(css, ".mc-button:squeezed", "-fx-line-spacing", lineSpacingSqueezed + "px"); 
 	    css = addCssRule(css, ".mc-button:squeezed", "-fx-text-alignment", "center");
 	    
 	    // VARIANTE B: Tiny (Kleiner Font, enges Padding & Umbruch)
-	    // Hier setzen wir explizit die kleine Schriftgröße. Da diese Regel spezifischer ist
-	    // als dein globaler "*" Selektor, gewinnt sie!
 	    css = addCssRule(css, ".mc-button:tiny", "-fx-wrap-text", "true");
 	    css = addCssRule(css, ".mc-button:tiny", "-fx-padding", squeezedPadding);
-	    css = addCssRule(css, ".mc-button:tiny", "-fx-line-spacing", "-6px"); // Zieht Zeilen zusammen
+	    
+	    // NEU: Berechneter Wert statt harter "-6px"
+	    css = addCssRule(css, ".mc-button:tiny", "-fx-line-spacing", lineSpacingTiny + "px"); 
 	    css = addCssRule(css, ".mc-button:tiny", "-fx-font-size", smallFont.getSize() + "px");
 	    
 	    // --- Image-Label Styling (Vektor-Shape) ---
@@ -460,7 +465,6 @@ public abstract class Skin {
 	    css = addCssRule(css, ".icon-button", "-fx-background-radius", borderSmallComponent.arc() + "px");
 	    // Hover
 	    css = addCssRule(css, ".icon-button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
-	    css = addCssRule(css, ".icon-button:hover", "-fx-cursor", "hand");
 	    // Disabled (falls nötig)
 	    css = addCssRule(css, ".icon-button:disabled", "-fx-opacity", "1.0");
 	    css = addCssRule(css, ".icon-button:disabled", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
@@ -492,7 +496,13 @@ public abstract class Skin {
 	    css = addCssRule(css, ".dialog-pane", "-fx-background-color", UIUtils.toHex(menuBarBackground));
 	    css = addCssRule(css, ".dialog-pane", "-fx-border-color", UIUtils.toHex(thinBorderColor));
 	    css = addCssRule(css, ".dialog-pane", "-fx-border-width", borderSmallComponent.width() + "px");
+	    css = addCssRule(css, ".dialog-pane", "-fx-font-family", "'" + font.getFamily() + "'");
+	    css = addCssRule(css, ".dialog-pane", "-fx-font-size", font.getSize() + "px");
+	    css = addCssRule(css, ".dialog-pane", "-fx-text-fill", UIUtils.toHex(textColor));
+	    css = addCssRule(css, ".dialog-pane .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Auf dialog-pane reicht nicht für die Schriftfarbe in der Pane....
 	    css = addCssRule(css, ".dialog-pane .button:focused", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
+	    css = addCssRule(css, ".dialog-pane .button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
+	    css = addCssRule(css, ".dialog-pane .button:pressed", "-fx-background-color", UIUtils.toHex(adjustBrightness(activeComponentHoverColor, 8)));
 	    
 	    // Wir maskieren kritische Zeichen für die Data-URI
 	    String encodedCss = css.replace("%", "%25")  // % muss zu %25 werden
@@ -637,50 +647,50 @@ public abstract class Skin {
 	}
 
 	public MultipleChoicePane createMultipleChoicePane(DeckType type) {
-	    // 1. Bounds holen
-	    Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMcPanel");
-	    if (bounds == null) 
-	        bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionMcPanel");
-	    
-	    // 2. Padding und Border Werte holen (Single source of truth!)
-	    java.awt.Insets insets = borderSmallComponent.insets(); // Das ist dein Padding
-	    double verticalPadding = insets.top + insets.bottom;
-	    double horizontalPadding = insets.left + insets.right;
-	    double borderWidth = borderSmallComponent.width(); // Rahmenbreite
-	    
-	    // Die ehemals "magische" 24:
-	    // Wie viel Breite verliert der Text durch Rahmen (links+rechts) und Padding (links+rechts)?
-	    double horizontalOverhead = horizontalPadding + (borderWidth * 2);
+        // 1. Bounds holen
+        Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMcPanel");
+        if (bounds == null) 
+            bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionMcPanel");
+        
+        // 2. Padding und Border Werte holen
+        java.awt.Insets insets = borderSmallComponent.insets();
+        double verticalPadding = insets.top + insets.bottom;
+        double horizontalPadding = insets.left + insets.right;
+        double borderWidth = borderSmallComponent.width();
+        
+        double horizontalOverhead = horizontalPadding + (borderWidth * 2);
 
-	    // 3. Button-Höhe berechnen
-	    Text dummyText = new Text("Q");
-	    dummyText.setFont(font);
-	    
-	    // Höhe = Text + Padding Oben/Unten + Border Oben/Unten
-	    double fixedButtonHeight = Math.ceil(dummyText.getLayoutBounds().getHeight() + verticalPadding + (borderWidth * 2));
-	    
-	    // 4. Max Text Höhe berechnen
-	    // Wir ziehen Border und Padding ab, um den "Netto-Platz" für Text zu kennen.
-	    // +2.0 Toleranz fürs Rendering
-	    double maxTextHeight = fixedButtonHeight - (borderWidth * 2) - verticalPadding + 2.0;
+        // 3. Button-Höhe berechnen
+        Text dummyText = new Text("Q");
+        dummyText.setFont(font);
+        
+        double fixedButtonHeight = Math.ceil(dummyText.getLayoutBounds().getHeight() + verticalPadding + (borderWidth * 2));
+        
+        double maxTextHeight = fixedButtonHeight - (borderWidth * 2) - verticalPadding + 2.0;
 
-	    // 5. Pane erstellen
-	    MultipleChoicePane result = new MultipleChoicePane(
-	        bounds.width, 
-	        fixedButtonHeight, 
-	        maxTextHeight,
-	        horizontalOverhead,
-	        borderWidth, // <--- HIER NEU ÜBERGEBEN
-	        font, 
-	        smallFont, 
-	        verticalGapMC
-	    );
-	    
-	    result.setLayoutX(bounds.x);
-	    result.setLayoutY(bounds.y);
-	    
-	    return result;
-	}
+        // NEU: Berechnung des Spacings (identisch zur Logik in styleScene!)
+        double lineSpacingSqueezed = font.getSize() * -0.4;
+        double lineSpacingTiny = smallFont.getSize() * -0.4;
+
+        // 5. Pane erstellen mit neuen Parametern
+        MultipleChoicePane result = new MultipleChoicePane(
+            bounds.width, 
+            fixedButtonHeight, 
+            maxTextHeight,
+            horizontalOverhead,
+            borderWidth,
+            font, 
+            smallFont, 
+            verticalGapMC,
+            lineSpacingSqueezed, // NEU übergeben
+            lineSpacingTiny      // NEU übergeben
+        );
+        
+        result.setLayoutX(bounds.x);
+        result.setLayoutY(bounds.y);
+        
+        return result;
+    }
 	
 	public Button createIconButton(DeckType type, IconButtonType buttonType) {
 	    // Icon laden

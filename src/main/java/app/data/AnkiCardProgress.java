@@ -61,7 +61,7 @@ public class AnkiCardProgress implements Progress{
 
 	public void checkTextInput(String text) {
 	    if (isPaused)
-	    	throw new RuntimeException("Aha, das kann also passieren. Na dann hier lieber einfach return machen :-)");
+	    	return;
 	    
 	    Step step = steps.get(currentIndex);
 	    
