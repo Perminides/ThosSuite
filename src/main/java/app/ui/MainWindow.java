@@ -1,18 +1,15 @@
 package app.ui;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import app.data.CardSortOrder;
 import app.data.LearnSessionInfo;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
-import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Labeled;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -21,8 +18,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.HeaderDragType;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
@@ -46,6 +41,8 @@ public class MainWindow {
     private HeaderBar headerBar;
     private BorderPane root;
     private Pane contentPane;
+    
+    private long lastEscapeTime;
 
     public MainWindow(Stage stage) {
     	this.stage = stage;
@@ -134,7 +131,6 @@ public class MainWindow {
         
         // ANSICHT-MENÜ
         Menu menuView = skin.createMenu("Ansicht");
-        Skin currentSkin = SkinService.get();
         
         // Menüs zur MenuBar hinzufügen
         menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuView);        
@@ -186,12 +182,22 @@ public class MainWindow {
     }
     
     private void initKeyBindings() {
-        // TODO: ESC und PAUSE KeyBindings
+    	final String instanceId = Integer.toHexString(System.identityHashCode(this));
     	stage.getScene().setOnKeyPressed(event -> {
             switch (event.getCode()) {
-                case ESCAPE:
+                case ESCAPE: {
+                	long now = System.currentTimeMillis();
+                	System.out.println("[Instance: " + instanceId + "] Escaped pressed: " + LocalDateTime.now());
+                    // Ignoriere wenn weniger als 300ms seit letztem ESC
+                    if (now - lastEscapeTime < 500) {
+                    	System.out.println("Oha, wohl ein Tastatur-Glitsch...");
+                        event.consume();
+                        return;
+                    }
+                    lastEscapeTime = now;
                     if (onEscPressed != null) onEscPressed.run();
                     break;
+                }
                 case PAUSE:
                     if (onPausePressed != null) onPausePressed.run();
                     break;
@@ -224,11 +230,6 @@ public class MainWindow {
 
     public void setPausePressedRunnable(Runnable action) {
         this.onPausePressed = action;
-    }
-    
-    // Helper
-    private Color toFXColor(java.awt.Color awtColor) {
-        return Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
     }
 
 	public void show() {

@@ -1,6 +1,7 @@
 package app.ui.panels;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -14,6 +15,7 @@ import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane; // NEU: JavaFX Pane
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -109,13 +111,11 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel {
 	
     public void setImage(String imagePath) {
         if (imagePath == null) {
-            // Falls kein Bild: Transparent machen oder null setzen (CSS Fallback greift evtl. nicht bei null)
-        	imageComponent.setFill(null); 
+            imageComponent.setStyle("");
         } else {
-        	// Wir nutzen setStyle statt setFill, damit es das CSS aus dem Skin überschreibt
             String uri = new File(imagePath).toURI().toString();
             imageComponent.setStyle("-fx-fill: url('" + uri + "');");
-        }
+        }        
     }
     
     // Multiple Choice

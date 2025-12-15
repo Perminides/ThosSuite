@@ -35,8 +35,11 @@ public record MapShape(String id, String deckId, String regionName, String capit
 	    }
 	    
 	    // Check alternative capital names
-	    return altCapitalNames.stream()
-	        .anyMatch(alt -> alt.toLowerCase().trim().equals(normalized));
+	    if (altCapitalNames != null)
+	    	return altCapitalNames.stream()
+	    			.anyMatch(alt -> alt.toLowerCase().trim().equals(normalized));
+	    
+	    return false;
 	}
 	
 	public boolean isMatchingRegion(String text) {

@@ -7,9 +7,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
-
 import app.data.AnkiCard;
 import app.data.AnkiCardProgress;
 import app.data.AnkiDeckService;
@@ -20,7 +17,6 @@ import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.MainWindow;
-import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Alert;
 

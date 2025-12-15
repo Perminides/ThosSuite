@@ -33,16 +33,19 @@ public class MultipleChoicePane extends Pane {
     private final double maxTextHeight;
     private final double borderWidth; // NEU: Damit wir das absolute Limit kennen
     private final double horizontalOverhead; // Ersatz für die Magic Number "24"
+    private final double lineSpacingSqueezed;
+    private final double lineSpacingTiny;
     
     private Consumer<Integer> listener;
 
-    // Neuer Konstruktor-Parameter: horizontalOverhead
-    public MultipleChoicePane(double width, double fixedButtonHeight, double maxTextHeight, double horizontalOverhead, double borderWidth, Font font, Font smallFont, int verticalGap) {
+    public MultipleChoicePane(double width, double fixedButtonHeight, double maxTextHeight, double horizontalOverhead, double borderWidth, Font font, Font smallFont, int verticalGap, double lineSpacingSqueezed, double lineSpacingTiny) {
         this.font = font;
         this.smallFont = smallFont;
         this.maxTextHeight = maxTextHeight;
         this.horizontalOverhead = horizontalOverhead;
         this.borderWidth = borderWidth;
+        this.lineSpacingSqueezed = lineSpacingSqueezed;
+        this.lineSpacingTiny = lineSpacingTiny;
         
         double totalHeight = (fixedButtonHeight * 8) + (verticalGap * 7);
         this.setPrefSize(width, totalHeight);
@@ -103,7 +106,9 @@ public class MultipleChoicePane extends Pane {
                     
                     // Nein. Passt es "gequetscht" zweizeilig?
                     measure.setWrappingWidth(availableTextWidth);
-                    measure.setLineSpacing(-6); // WICHTIG: Muss zum CSS passen! !Sofort Keine Magic Numbers hier!
+                    
+                    // NEU: Variable statt Magic Number -6
+                    measure.setLineSpacing(lineSpacingSqueezed); 
                     
                     // Limit: ButtonHöhe - (Rahmen Oben + Rahmen Unten). Kein Padding!
                     double absoluteMaxHeight = btn.getPrefHeight() - (borderWidth * 2);
