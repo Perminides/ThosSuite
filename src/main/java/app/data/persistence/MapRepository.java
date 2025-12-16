@@ -31,8 +31,12 @@ public class MapRepository {
         
         if (meta.getMapType() == MapType.SHAPE) {
             // SHAPE MAP (Deutschland, Spanien)
-            String geoJsonPath = Config.get("geoJsonFolder") + meta.getGeoJsonFiles()[0];
-            List<MapShape> shapes = loader.load(geoJsonPath);
+        	String folder = Config.get("geoJsonFolder");
+            String[] fileNames = meta.getGeoJsonFiles();
+            List<MapShape> shapes = new ArrayList<>();
+            for (String fileName : fileNames) {
+                shapes.addAll(loader.load(folder + fileName));
+            }
             return new GeoMap(shapes, MapType.SHAPE, null, null, null, null);
             
         } else {

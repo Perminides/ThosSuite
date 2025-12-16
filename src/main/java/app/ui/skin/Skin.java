@@ -380,6 +380,10 @@ public abstract class Skin {
 	    if (shapeMapColor1 != null) {
 	        css = addCssRule(css, ".decoration-1", "-fx-fill", UIUtils.toHex(shapeMapColor1));
 	    }
+	    // Bundesländer z. B.
+	    css = addCssRule(css, ".map-shape.decoration-2", "-fx-fill", "transparent");
+	    css = addCssRule(css, ".decoration-2", "-fx-stroke", UIUtils.toHex(borderColor));
+		css = addCssRule(css, ".decoration-2", "-fx-stroke-width", "3px"); // !Sofort Magic Number
 
 	    // Optional: Hover-Effekt bei Deko ausschalten (falls nötig, aber mouse-transparent regelt das eh)
 	    css = addCssRule(css, ".decoration:hover", "-fx-fill", "derive(-fx-fill, 0%)"); // Farbe beibehalten
