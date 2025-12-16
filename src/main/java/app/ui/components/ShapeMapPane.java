@@ -87,8 +87,10 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
             // Spezifische Deko-Klassen für 0 und 1
             if ("0".equals(mapShape.fixedColorSet())) {
                 shape.getStyleClass().add("decoration-0");
-            } else {
+            } else if ("1".equals(mapShape.fixedColorSet())){
                 shape.getStyleClass().add("decoration-1");
+            } else {
+            	shape.getStyleClass().add("decoration-2");
             }
             shape.setMouseTransparent(true); // Deko fängt keine Klicks ab
         } else {
@@ -164,6 +166,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     
     public void moveAllToActive() {
         shapeMap.values().forEach(shape -> {
+        	System.out.println(shape.getId());
             resetShapeState(shape);
             shape.pseudoClassStateChanged(ACTIVE_GAME, true);
         });
