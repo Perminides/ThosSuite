@@ -37,14 +37,29 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     private boolean isInteractive = false;
 
     public ShapeMapPane(GeoMap map, int targetHeight) {
-        this.contentGroup = new Group();
+    	this.contentGroup = new Group();
+    	
+    	// !Sofort: Das ist alles etwas unschön gewachsen. Lieber ein neues Attribut "Layer" einführen? Und zumindest "fixedColorId" umbenennen in "decorationID" oder so? Denk dir ws schönes aus!
+    	// Layer könntest DU dann gleich flexibel gestalten und solange durchloopen un immer den nächsthöheren Layer nehmen, bis alle drin sind...!
         
         // 1. Shapes initialisieren
+        // HIER IST DIE ÄNDERUNG: Aufteilung in zwei Phasen für korrekte Z-Sortierung.
+        
+        // Phase 1: Alles zeichnen, was KEINE Overlay-Grenze ("2") ist.
+        // Das sind die normalen Spiel-Shapes und Hintergründe.
         for (MapShape mapShape : map.getShapes()) {
-            initShape(mapShape);
+            if (!"2".equals(mapShape.fixedColorSet())) {
+                initShape(mapShape);
+            }
         }
         
-        // !Später: Bundesländergrenzen (Hier würden wir die Overlay-Shapes laden und als nicht-interaktiv markieren)
+        // Phase 2: Die Overlay-Grenzen ("2") nachträglich zeichnen.
+        // Da sie als letztes in die 'contentGroup' kommen, liegen sie visuell obenauf.
+        for (MapShape mapShape : map.getShapes()) {
+            if ("2".equals(mapShape.fixedColorSet())) {
+                initShape(mapShape);
+            }
+        }
         
         // 2. Inhalt zusammenbauen
         this.getChildren().add(contentGroup);
