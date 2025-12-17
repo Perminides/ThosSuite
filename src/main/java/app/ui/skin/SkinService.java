@@ -9,7 +9,8 @@ public final class SkinService {
     private static final List<Skin> AVAILABLE_SKINS = List.of(
             new BlueGradientSkin(),
             new RedGradientSkin(),
-            new FlatWebSkin()
+            new FlatWebSkin(),
+            new NSFWSkin()
             // Neuer Skin? Eine Zeile hier hinzufügen!
         );
     private static Skin current = AVAILABLE_SKINS.get(0); // !Erweiterung Später über config-Datei...

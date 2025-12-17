@@ -140,12 +140,6 @@ public class AnkiCard {
                 .filter(s -> !s.isEmpty())
                 .map(x -> new AnswerOption(x, false))
                 .forEach(options::add);
-            for (String answer : split[1].split("\\|")) {
-            	if (answer.length() > debug) {
-            		debug = answer.length();
-            		System.out.println("Lange MC Antwort: " + answer);
-            	}
-            }
         }
         return options;
     }

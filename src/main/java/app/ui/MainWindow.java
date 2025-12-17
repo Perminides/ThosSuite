@@ -8,6 +8,7 @@ import app.data.CardSortOrder;
 import app.data.LearnSessionInfo;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
@@ -18,6 +19,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.HeaderDragType;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
@@ -131,6 +133,20 @@ public class MainWindow {
         
         // ANSICHT-MENÜ
         Menu menuView = skin.createMenu("Ansicht");
+        Skin currentSkin = SkinService.get();
+        
+        for (Skin availableSkin : SkinService.getAllSkins()) {
+            String displayName = availableSkin.getDisplayName();
+            boolean isCurrentSkin = availableSkin.getClass() == currentSkin.getClass();
+            String menuText = (isCurrentSkin ? "✓ " : "  ") + displayName;
+            
+            MenuItem item = skin.createMenuItem(menuText);
+            item.setOnAction(_ -> {
+                if (availableSkin == currentSkin) return;
+                onNewSkinSelected.accept(availableSkin);
+            });
+            menuView.getItems().add(item);
+        }
         
         // Menüs zur MenuBar hinzufügen
         menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuView);        

@@ -20,7 +20,6 @@ import javafx.scene.shape.Path;
  */
 class GeoJsonLoader {
 	public List<MapShape> load(String filePath) {
-		System.out.println("Lade geojson: " + filePath);
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(new File(filePath));
