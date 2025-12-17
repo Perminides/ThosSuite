@@ -70,6 +70,7 @@ public class RegionSession implements Session {
 	
 	public void end(boolean correct, String wrongId, String text, boolean allowResume) {
 		if (!correct && allowResume) {
+			//!Sofort: Swing dann mal raus, was ;-)
 			JOptionPane pane = new JOptionPane("<html>Schade. Wir speichern nun?<br/><br/>" + text + "</html>", JOptionPane.PLAIN_MESSAGE,
 					JOptionPane.YES_NO_OPTION, null);
 			JDialog dialog = pane.createDialog(null, "Nicht korrekt");
