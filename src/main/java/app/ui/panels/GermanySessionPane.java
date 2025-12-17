@@ -1,7 +1,6 @@
 package app.ui.panels;
 
 import java.io.File;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -11,16 +10,15 @@ import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.MainWindow;
+import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane; // NEU: JavaFX Pane
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
-import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane; // NEU: JavaFX Basis
-import javafx.scene.shape.Rectangle;
 
 public class GermanySessionPane extends Pane implements AnkiSessionPanel {
 	private static final DeckType DECKTYPE = DeckType.GERMANY_CARDS; 
@@ -33,7 +31,7 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel {
     private Label cardHistoryArea;
     private MultipleChoicePane mcPane;
     private Button backButton;
-    private Rectangle imageComponent;
+    private ImagePane imageComponent;
     private ShapeMapPane deutschlandkarte;
 
     public GermanySessionPane(MainWindow mainWindow, AnkiSessionPresenter presenter) {
@@ -110,12 +108,7 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel {
 	// Image
 	
     public void setImage(String imagePath) {
-        if (imagePath == null) {
-            imageComponent.setStyle("");
-        } else {
-            String uri = new File(imagePath).toURI().toString();
-            imageComponent.setStyle("-fx-fill: url('" + uri + "');");
-        }        
+        imageComponent.setImage(imagePath);
     }
     
     // Multiple Choice

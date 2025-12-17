@@ -10,13 +10,13 @@ import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.MainWindow;
+import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
-import javafx.scene.shape.Rectangle;
 
 public class MCSessionPane extends Pane implements AnkiSessionPanel{
 	private static final DeckType DECKTYPE = DeckType.MC_CARDS; 
@@ -28,7 +28,7 @@ public class MCSessionPane extends Pane implements AnkiSessionPanel{
     private Label cardHistoryArea;
     private MultipleChoicePane mcPane;
     private Button backButton;
-    private Rectangle imageComponent;
+    private ImagePane imageComponent;
 
     public MCSessionPane (MainWindow mainWindow, AnkiSessionPresenter presenter) {
         this.mainWindow = mainWindow;
@@ -98,14 +98,7 @@ public class MCSessionPane extends Pane implements AnkiSessionPanel{
     
 	// Image
     public void setImage(String imagePath) {
-        if (imagePath == null) {
-            // Falls kein Bild: Transparent machen oder null setzen (CSS Fallback greift evtl. nicht bei null)
-        	imageComponent.setFill(null); 
-        } else {
-        	// Wir nutzen setStyle statt setFill, damit es das CSS aus dem Skin überschreibt
-            String uri = new File(imagePath).toURI().toString();
-            imageComponent.setStyle("-fx-fill: url('" + uri + "');");
-        }
+    	imageComponent.setImage(imagePath);
     }
     
     // Multiple Choice

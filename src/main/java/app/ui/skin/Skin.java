@@ -14,6 +14,7 @@ import app.data.GeoMap;
 import app.data.MapService;
 import app.ui.UIUtils;
 import app.ui.components.ImageMapPanel;
+import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane;
 import app.ui.skin.params.BorderParams;
@@ -76,6 +77,10 @@ public abstract class Skin {
 		}
 	}
 
+	// !Sofort: Wenn Du die borderColor auch in den borderParams angibst, kannst Du sie mit borderColor nicht mehr global setzen! Das muss da raus oder borderColor überschreibt das. Eins von beiden
+	// !Sofort: Mal aktuelleres Design ausprobieren: Button mit runden Ecken, ohne Border und mit box-shadow. Sicher sehr interessant, aber ich fürchte das wird ein Refactoring-Alptraum, weil Du immer den Platz für den Schatten brauchst überall...
+	// !Sofort: Einfacher als box-shadow wäre ein Design mit transparenten Hintergründen der Buttons und TextFields und so und ohne Border. Hehe...
+	
 	public abstract String getDisplayName();
 	
 	// !Sofort: alle Methodenaufruf von adjustBrightness werfen hier null. Wie an welcher stelle kann ich die wirklich sauber setzen?
@@ -83,6 +88,8 @@ public abstract class Skin {
 	protected Color textColor; // Standard-TextFarbe. Arbeite möglichst nur mit einer, wenn es geht.
 	protected Color textActiveComponentColor;
 	protected Color incorrectTextColor; // Fürs Textfeld natürlich
+	protected Color mcIncorrectTextColor;
+	protected Color mcCorrectTextColor;
 
 	protected Color incorrectColor; // Für MC, Deutschlandkarte, Welt
 	protected Color correctColor; // Für MC, Deutschlandkarte
@@ -414,6 +421,10 @@ public abstract class Skin {
 	    //css = addCssRule(css, ".mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
 	    css = addCssRule(css, ".mc-button:active:pressed", "-fx-background-color", UIUtils.toHex(adjustBrightness(activeComponentHoverColor, 8)));
 	    css = addCssRule(css, ".mc-button:inactive", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
+	    if (mcIncorrectTextColor != null) {
+	    	css = addCssRule(css, ".mc-button:correct", "-fx-text-fill", UIUtils.toHex(mcCorrectTextColor));
+	    	css = addCssRule(css, ".mc-button:incorrect", "-fx-text-fill", UIUtils.toHex(mcIncorrectTextColor));
+	    }
 	    css = addCssRule(css, ".mc-button:correct", "-fx-background-color", UIUtils.toHex(correctColor));
 	    css = addCssRule(css, ".mc-button:incorrect", "-fx-background-color", UIUtils.toHex(incorrectColor));
 	    
@@ -444,20 +455,22 @@ public abstract class Skin {
 	    css = addCssRule(css, ".mc-button:tiny", "-fx-line-spacing", lineSpacingTiny + "px"); 
 	    css = addCssRule(css, ".mc-button:tiny", "-fx-font-size", smallFont.getSize() + "px");
 	    
-	    // --- Image-Label Styling (Vektor-Shape) ---
-	    // Rahmen-Farbe und Dicke
-	    css = addCssRule(css, ".image-label", "-fx-stroke", UIUtils.toHex(borderBigComponent.color()));
-	    css = addCssRule(css, ".image-label", "-fx-stroke-width", borderBigComponent.width() + "px");
-	    // WICHTIG: Rahmen nach INNEN zeichnen (Verdeckt Pixel-Kanten & erhält Größe)
-	    css = addCssRule(css, ".image-label", "-fx-stroke-type", "inside");
-	    // Fallback-Hintergrund (falls kein Bild gesetzt ist) via Fill
-	    css = addCssRule(css, ".image-label", "-fx-fill", UIUtils.toHex(imageLabelBgColor));
+	 // --- Image Styling (Rectangle Version) ---
 	    
-	    // 3. Radius-Synchronisation: Hintergrund und Border bekommen exakt denselben Radius!
-	    // Dadurch wird das Bild an den Ecken "rund abgeschnitten", obwohl es die volle Größe hat.
-	    String radius = borderBigComponent.arc() + "px";
-	    css = addCssRule(css, ".image-label", "-fx-background-radius", radius);
-	    css = addCssRule(css, ".image-label", "-fx-border-radius", radius);
+	    // 1. Hintergrund-Layer (Das untere Rectangle)
+	    // Hier definieren wir Füllfarbe (Gold) und den Rahmen.
+	    // Da es ein Rectangle ist, nutzen wir wieder -fx-fill und -fx-stroke!
+	    
+	    // Farbe
+	    css = addCssRule(css, ".image-background-layer", "-fx-fill", UIUtils.toHex(imageLabelBgColor));
+	    
+	    // Rahmen (Stroke)
+	    // Da das backgroundRect unten liegt, sieht man den Stroke evtl. nur zur Hälfte,
+	    // aber bei StrokeType.INSIDE (Default ist Centered) ist das wichtig.
+	    // Besser: Wir geben dem backgroundRect auch den Rahmen.
+	    css = addCssRule(css, ".image-border-layer", "-fx-stroke", UIUtils.toHex(borderBigComponent.color()));
+	    css = addCssRule(css, ".image-border-layer", "-fx-stroke-width", borderBigComponent.width() + "px");
+	    css = addCssRule(css, ".image-border-layer", "-fx-stroke-type", "inside"); // WICHTIG für saubere Kanten!
 	    
 	 // Icon-Button Styling
 	    css = addCssRule(css, ".icon-button", "-fx-padding", "0");
@@ -566,23 +579,28 @@ public abstract class Skin {
 	    return textField;
 	}
 
-	public javafx.scene.shape.Rectangle createImageComponent(DeckType type) {
-	    // 1. Config laden (Fail-Fast: Bounds MÜSSEN da sein)
+	// Rückgabetyp angepasst
+	public ImagePane createImageComponent(DeckType type) {
+	    // 1. Config laden (wie vorher)
 	    java.awt.Rectangle bounds = (java.awt.Rectangle) getFieldValue(type.getId() + "SessionImagePanel");
+	    if (bounds == null) 
+	         bounds = (java.awt.Rectangle) getFieldValue(type.getCategory().toString() + "SessionImagePanel");
+
+	    // 2. Parameter für Konstruktor vorbereiten
+	    // Wir holen den Radius direkt aus der Config, da Rectangles ihn im Konstruktor wollen
+	    double arc = borderBigComponent.arc() * 2; // JavaFX Arc ist Durchmesser, Config oft Radius? Prüf das kurz! 
+	    // In deinem Upload BorderParams steht "arc". Bei Rectangle ist arcWidth der Durchmesser.
+	    // Wenn borderBigComponent.arc() = 20 ist (Radius), braucht Rectangle 40.
 	    
-	    // 2. Vektor-Shape erstellen
-	    javafx.scene.shape.Rectangle rect = new javafx.scene.shape.Rectangle(bounds.width, bounds.height);
-	    rect.setLayoutX(bounds.x);
-	    rect.setLayoutY(bounds.y);
-	    
-	    // 3. Runde Ecken setzen (Durchmesser = Radius * 2)
-	    rect.setArcWidth(borderBigComponent.arc() * 2);
-	    rect.setArcHeight(borderBigComponent.arc() * 2);
-	    
-	    // 4. CSS-Klasse zuweisen
-	    rect.getStyleClass().add("image-label");
-	    
-	    return rect;
+	    // Instanz erstellen
+	    var pane = new ImagePane(bounds.width, bounds.height, arc);
+	    pane.setLayoutX(bounds.x);
+	    pane.setLayoutY(bounds.y);
+
+	    // 3. Styling ist jetzt in der Klasse via "image-background-layer" vorbereitet.
+	    // Wir müssen nur sicherstellen, dass die CSS-Regeln stimmen.
+
+	    return pane;
 	}
 
 	public Label createCustomTextLabel(DeckType type, TextLabelType labelType) {
