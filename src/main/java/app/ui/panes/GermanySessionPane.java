@@ -1,6 +1,5 @@
-package app.ui.panels;
+package app.ui.panes;
 
-import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -10,25 +9,25 @@ import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.MainWindow;
+import app.ui.components.CustomTextLabel;
 import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane; // NEU: JavaFX Pane
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane; // NEU: JavaFX Basis
 
-public class GermanySessionPane extends Pane implements AnkiSessionPanel {
+public class GermanySessionPane extends Pane implements AnkiSessionPane {
 	private static final DeckType DECKTYPE = DeckType.GERMANY_CARDS; 
 
 	private final MainWindow mainWindow;
 	private final AnkiSessionPresenter presenter;
     private TextField textInputField;
-    private Label questionArea;
-    private Label progressArea;
-    private Label cardHistoryArea;
+    private CustomTextLabel questionArea;
+    private CustomTextLabel progressArea;
+    private CustomTextLabel cardHistoryArea;
     private MultipleChoicePane mcPane;
     private Button backButton;
     private ImagePane imageComponent;
@@ -69,7 +68,7 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel {
         getChildren().add(textInputField);
     	
     	imageComponent = skin.createImageComponent(DECKTYPE);
-    	getChildren().add(imageComponent); // FEHLER 
+    	getChildren().add(imageComponent); 
     	
     	mcPane = skin.createMultipleChoicePane(DECKTYPE);
     	mcPane.addListener(
@@ -213,7 +212,6 @@ public class GermanySessionPane extends Pane implements AnkiSessionPanel {
 			+ "\nLevel: " + stats.getCurrentLevel()
 			+ "\nFalsch beantwortet: " + stats.getWrongCount();
 		}
-		System.out.println(text);
 		cardHistoryArea.setText(text);
 	}
 	

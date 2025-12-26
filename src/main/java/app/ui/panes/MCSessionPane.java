@@ -1,6 +1,5 @@
-package app.ui.panels;
+package app.ui.panes;
 
-import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -10,22 +9,22 @@ import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.MainWindow;
+import app.ui.components.CustomTextLabel;
 import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 
-public class MCSessionPane extends Pane implements AnkiSessionPanel{
+public class MCSessionPane extends Pane implements AnkiSessionPane{
 	private static final DeckType DECKTYPE = DeckType.MC_CARDS; 
 
 	private final MainWindow mainWindow;
 	private final AnkiSessionPresenter presenter;
-    private Label questionArea;
-    private Label progressArea;
-    private Label cardHistoryArea;
+    private CustomTextLabel questionArea;
+    private CustomTextLabel progressArea;
+    private CustomTextLabel cardHistoryArea;
     private MultipleChoicePane mcPane;
     private Button backButton;
     private ImagePane imageComponent;

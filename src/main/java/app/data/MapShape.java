@@ -4,16 +4,32 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javafx.scene.shape.Shape;
+import javafx.scene.Node;
 
 public record MapShape(String id, String deckId, String regionName, String capitalName, Set<String> altRegionNames, Set<String> altCapitalNames, String fixedColorSet,
-		Shape shape) {
+		Node shape, boolean isShapeMap) {
 	
-	public MapShape(Shape shape, String id, String deckId, String regionName, String capital, String altRegionNames, String altCapitalNames,
-			String fixedColorSet) {
+	public MapShape(Node shape, String id, String deckId, String regionName, String capital, String altRegionNames, String altCapitalNames,
+			String fixedColorSet, boolean isShapeMap) {
 		this(id, deckId, regionName, capital, parseToSet(altRegionNames), // String -> Set
 				parseToSet(altCapitalNames), // String -> Set
-				fixedColorSet, shape);
+				fixedColorSet, shape, isShapeMap);
+		if (isShapeMap)
+			shape.getStyleClass().add("map-shape");
+		else
+			shape.getStyleClass().add("image-map-shape");
+        if (isDecoration()) {
+            shape.getStyleClass().add("decoration");
+            // Spezifische Deko-Klassen für 0 und 1
+            if ("0".equals(fixedColorSet())) {
+                shape.getStyleClass().add("decoration-0");
+            } else if ("1".equals(fixedColorSet())){
+                shape.getStyleClass().add("decoration-1");
+            } else {
+            	shape.getStyleClass().add("decoration-2");
+            }
+            shape.setMouseTransparent(true); // Deko fängt keine Klicks ab
+        }
 	}
 
 	private static Set<String> parseToSet(String commaSeparated) {

@@ -7,9 +7,12 @@ import javafx.scene.paint.Color;
 
 public class ImagePane extends StackPane {
 
-    // Wir nutzen Shapes (Rectangle), weil die sauber clippen!
+    // Layer 1: Hintergrundfarbe (wenn kein Bild da ist oder Transparenz im Bild)
     private final Rectangle backgroundRect;
+    // Layer 2: Das eigentliche Bild
     private final Rectangle imageRect;
+    // Layer 3: Der Rahmen (liegt ganz oben)
+    private final Rectangle borderRect;
 
     public ImagePane(double width, double height, double arcDiameter) {
         // 1. Container-Größe fixieren
@@ -17,25 +20,39 @@ public class ImagePane extends StackPane {
         setMinSize(width, height);
         setMaxSize(width, height);
 
-        // 2. Hintergrund-Layer (Shape für die Farbe Gold)
+        // ---------------------------------------------------------
+        // Layer 1: Hintergrund (Unten)
+        // ---------------------------------------------------------
         backgroundRect = new Rectangle(width, height);
         backgroundRect.setArcWidth(arcDiameter);
         backgroundRect.setArcHeight(arcDiameter);
-        // Weist dem Shape die CSS-Klasse für die Füllfarbe zu
         backgroundRect.getStyleClass().add("image-background-layer");
+        // HIER WICHTIG: Den Border-Style entfernen wir hier!
 
-        // 3. Bild-Layer (Shape für das PNG)
+        // ---------------------------------------------------------
+        // Layer 2: Bild (Mitte)
+        // ---------------------------------------------------------
         imageRect = new Rectangle(width, height);
         imageRect.setArcWidth(arcDiameter);
         imageRect.setArcHeight(arcDiameter);
-        imageRect.setFill(Color.TRANSPARENT); // Erstmal leer/durchsichtig
-        
-        // WICHTIG: Kein Rahmen am Bild-Rect, damit es nicht doppelt gemalt wird.
-        // Der Rahmen kommt entweder an den backgroundRect oder an den StackPane.
-        backgroundRect.getStyleClass().add("image-border-layer");
+        imageRect.setFill(Color.TRANSPARENT);
 
-        // 4. Stapeln: Gold unten, Bild oben
-        getChildren().addAll(backgroundRect, imageRect);
+        // ---------------------------------------------------------
+        // Layer 3: Rahmen (Oben)
+        // ---------------------------------------------------------
+        borderRect = new Rectangle(width, height);
+        borderRect.setArcWidth(arcDiameter);
+        borderRect.setArcHeight(arcDiameter);
+        borderRect.setFill(Color.TRANSPARENT); // Innen komplett durchsichtig!
+        borderRect.setMouseTransparent(true);  // Klicks sollen durchgehen (optional, aber sauber)
+        
+        // Der Rahmen-Style wandert auf dieses neue Rechteck:
+        borderRect.getStyleClass().add("image-border-layer");
+
+        // ---------------------------------------------------------
+        // Stapeln: Hintergrund -> Bild -> Rahmen
+        // ---------------------------------------------------------
+        getChildren().addAll(backgroundRect, imageRect, borderRect);
     }
 
     public void setImage(String imagePath) {
@@ -43,14 +60,17 @@ public class ImagePane extends StackPane {
             imageRect.setStyle(""); 
             imageRect.setFill(Color.TRANSPARENT);
         } else {
-            String uri = new File(imagePath).toURI().toString();
-            // Hier nutzen wir CSS beim Shape. JavaFX macht daraus intern ein ImagePattern.
-            // Das Bild wird auf die Größe des Rectangles gestreckt (Stretch).
-            // Da das Rectangle die Ecken abschneidet, wird auch das Bild abgeschnitten.
+        	File imageFile = new File(imagePath);
+        	if (!imageFile.exists())
+        		throw new RuntimeException("Konnte das Bild nicht finden: " + imagePath);
+            String uri = imageFile.toURI().toString();
             imageRect.setStyle("-fx-fill: url('" + uri + "');");
         }
     }
     
-    // Getter für den Skin (falls nötig)
+    // Getter: Falls jemand Zugriff auf den Hintergrund braucht
     public Rectangle getBackgroundRect() { return backgroundRect; }
+    
+    // Falls du später mal Zugriff auf den Rahmen brauchst, könntest du das hier ergänzen:
+    public Rectangle getBorderRect() { return borderRect; }
 }

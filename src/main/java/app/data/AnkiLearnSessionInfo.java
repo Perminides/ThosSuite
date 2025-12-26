@@ -16,11 +16,6 @@ public class AnkiLearnSessionInfo extends LearnSessionInfo {
 	}
 
 	@Override
-	public DeckCategory getCategory() {
-		return DeckCategory.ANKI_DECK;
-	}
-
-	@Override
 	public boolean isStillDueToday() {
 		return (dueNow != 0);
 	}

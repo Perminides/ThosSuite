@@ -1,4 +1,4 @@
-package app.ui.panels;
+package app.ui.panes;
 
 import java.util.List;
 import java.util.Set;
@@ -6,7 +6,7 @@ import java.util.Set;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 
-public interface AnkiSessionPanel extends DeckSessionPanel{
+public interface AnkiSessionPane extends DeckSessionPane{
 
 	public void show();
 	

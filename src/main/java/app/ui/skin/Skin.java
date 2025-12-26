@@ -13,7 +13,8 @@ import app.data.DeckType;
 import app.data.GeoMap;
 import app.data.MapService;
 import app.ui.UIUtils;
-import app.ui.components.ImageMapPanel;
+import app.ui.components.CustomTextLabel;
+import app.ui.components.ImageMapPane;
 import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane;
@@ -47,6 +48,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextBoundsType;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
@@ -122,7 +124,7 @@ public abstract class Skin {
 	protected BorderParams borderSmallComponent; // MC Buttons, InputField
 	protected BorderParams borderMediumComponent; // QuestionLabel
 	protected BorderParams borderBigComponent; // Für das Bild
-	protected Color borderColor; // TextField, Panels, Karten, ...
+	protected Color borderColor; // Karten
 	protected Color thinBorderColor; // Um contentPane und unten die MenuBar
 
 	protected String backButtonIcon;
@@ -139,6 +141,7 @@ public abstract class Skin {
 	protected String mcWallpaperName;
 	protected String worldWallpaperName;
 	protected String germanyWallpaperName;
+	protected String lk_bbWallpaperName;
 
 	protected Rectangle mcSessionQuestionPanel;
 	protected Rectangle mcSessionImagePanel;
@@ -202,7 +205,7 @@ public abstract class Skin {
 	    HeaderBar headerBar = new HeaderBar();
 	    
 	    // CENTER: Title
-	    Label titleLabel = new Label("Thos Suite");
+	    Label titleLabel = new Label("Thos Suite (FX)");
 	    titleLabel.getStyleClass().add("thorstens-title");
 	    headerBar.setCenter(titleLabel);
 	    
@@ -264,6 +267,7 @@ public abstract class Skin {
 	    return iconView;
 	}
 	
+	// !Sofort: Hier gibt es natürlich so einige Magic Numbers noch, die müssen dann leider perspektivisch raus? Oder machen wir das, wann immer ich das mal für andere Auflösungen brauche? Keine Ahnung, ob das je passiert tbh
 	// In SkinService:
 	public void styleScene(Scene scene) {
 	    scene.setFill(menuBarBackground);
@@ -329,11 +333,94 @@ public abstract class Skin {
 	    css = addCssRule(css, ".thorstens-root", "-fx-border-color", "white");
 	    css = addCssRule(css, ".thorstens-root", "-fx-border-width", "1px");
 	    
+	 // Generierung der Rules für CustomTextLabels
+        for (TextLabelType type : TextLabelType.values()) {
+            String selector = "#" + type.toString() + "Label"; // z.B. #QuestionLabel
+            
+            String fieldName = "displayText" + type.toString() + "BgColor";
+            Color bg = (Color) getFieldValue(fieldName);
+            if (bg == null) bg = displayTextBgColor;
+            
+            BorderParams border = borderMediumComponent;
+            java.awt.Insets insets = border.insets();
+            
+            // 1. Container Styles (StackPane)
+            // Background, Border, Padding etc. gehören auf den Container
+            css = addCssRule(css, selector, "-fx-background-color", UIUtils.toHex(bg));
+            
+            // Font wird vererbt, kann also auch auf den Container
+            css = addCssRule(css, selector, "-fx-font-family", "'" + font.getFamily() + "'");
+            css = addCssRule(css, selector, "-fx-font-size", font.getSize() + "px");
+            
+            css = addCssRule(css, selector, "-fx-border-color", UIUtils.toHex(border.color()));
+            css = addCssRule(css, selector, "-fx-border-width", border.width() + "px");
+            css = addCssRule(css, selector, "-fx-border-radius", border.arc() + "px");
+            css = addCssRule(css, selector, "-fx-background-radius", border.arc() + "px");
+            
+            String padding = String.format("%dpx %dpx %dpx %dpx", 
+                insets.top, insets.right, insets.bottom, insets.left);
+            css = addCssRule(css, selector, "-fx-padding", padding);
+            
+            // 2. Text Styles (Text-Nodes) - NEU!
+            // Ein StackPane vererbt die Textfarbe NICHT automatisch an Text-Nodes.
+            // Wir müssen "Jeder Text innerhalb von selector" ansprechen.
+            css = addCssRule(css, selector + " Text", "-fx-fill", UIUtils.toHex(textColor));
+        }
+        
+     // --- ImageMap Shapes: Basis ---
+
+     // First Path (wird zuerst gezeichnet, unten)
+     css = addCssRule(css, ".first", "-fx-fill", "transparent");
+     css = addCssRule(css, ".first", "-fx-stroke", "transparent");
+     css = addCssRule(css, ".first", "-fx-mouse-transparent", "true");
+     css = addCssRule(css, ".first", "-fx-stroke-line-cap", "round");
+     css = addCssRule(css, ".first", "-fx-stroke-line-join", "round");
+
+     // Second Path (wird danach gezeichnet, oben)
+     css = addCssRule(css, ".second", "-fx-fill", "transparent");
+     css = addCssRule(css, ".second", "-fx-stroke", "transparent");
+     css = addCssRule(css, ".second", "-fx-stroke-width", 2 + "px");
+     css = addCssRule(css, ".second", "-fx-stroke-line-cap", "round");
+     css = addCssRule(css, ".second", "-fx-stroke-line-join", "round");
+
+     // Rivers: Andere Basis-Breiten
+     css = addCssRule(css, ".river .first", "-fx-stroke-width", "11px");
+     css = addCssRule(css, ".river .second", "-fx-stroke-width", "7px");
+
+     // --- CORRECT State ---
+     // First = Fill (grün), Second = Border (schwarz)
+     css = addCssRule(css, ".image-map-shape:correct .first", "-fx-fill", UIUtils.toHex(correctColor));
+     css = addCssRule(css, ".image-map-shape:correct .second", "-fx-stroke", UIUtils.toHex(borderColor));
+     // Rivers bei correct: Erst dicken Border malen und dann kleiner darein korrekt malen
+     css = addCssRule(css, ".image-map-shape:correct.river .first", "-fx-stroke", UIUtils.toHex(borderColor));
+     css = addCssRule(css, ".image-map-shape:correct.river .first", "-fx-stroke", UIUtils.toHex(correctColor));
+     
+     // --- INCORRECT State ---
+     // First = Fill (rot), Second = Border (schwarz)
+     css = addCssRule(css, ".image-map-shape:incorrect .first", "-fx-fill", UIUtils.toHex(incorrectColor));
+     css = addCssRule(css, ".image-map-shape:incorrect .second", "-fx-stroke", UIUtils.toHex(borderColor));
+     
+
+     // --- MARKED State ---
+     // First = Border (schwarz dick), Second = Fill (gelb dünner)
+     css = addCssRule(css, ".image-map-shape:marked .first", "-fx-fill", "transparent");
+     css = addCssRule(css, ".image-map-shape:marked .first", "-fx-stroke", UIUtils.toHex(borderColor));
+     css = addCssRule(css, ".image-map-shape:marked .first", "-fx-stroke-width", (7) + "px"); // ~9px
+     css = addCssRule(css, ".image-map-shape:marked .second", "-fx-fill", "transparent");
+     css = addCssRule(css, ".image-map-shape:marked .second", "-fx-stroke", UIUtils.toHex(markedColor));
+     css = addCssRule(css, ".image-map-shape:marked .second", "-fx-stroke-width", (4) + "px"); // ~7.2px
+
+     // Rivers bei marked: Siehe correct
+     css = addCssRule(css, ".image-map-shape:marked.river .first", "-fx-stroke-width", "11px");
+     css = addCssRule(css, ".image-map-shape:marked.river .second", "-fx-stroke-width", "7px");
+     css = addCssRule(css, ".image-map-shape:marked.river .first", "-fx-stroke", UIUtils.toHex(borderColor));
+     css = addCssRule(css, ".image-map-shape:marked.river .second", "-fx-stroke", UIUtils.toHex(markedColor));
+	    
 	 // --- ShapeMap Styles ---
 	    
 	    // Basis-Styling für alle Shapes (Standard: Inaktiv/Grau)
 	    // Wir nutzen hier disabledComponentBgColor, das entspricht deinem bisherigen "inactiveColor"
-	    css = addCssRule(css, ".map-shape", "-fx-fill", UIUtils.toHex(disabledComponentBgColor));
+	    //css = addCssRule(css, ".map-shape", "-fx-fill", UIUtils.toHex(disabledComponentBgColor));
 	    css = addCssRule(css, ".map-shape", "-fx-stroke", UIUtils.toHex(borderColor));
 	    css = addCssRule(css, ".map-shape", "-fx-stroke-width", "1.8px"); // Dein Wert aus dem alten Panel
 	    
@@ -388,9 +475,14 @@ public abstract class Skin {
 	        css = addCssRule(css, ".decoration-1", "-fx-fill", UIUtils.toHex(shapeMapColor1));
 	    }
 	    // Bundesländer z. B.
-	    css = addCssRule(css, ".map-shape.decoration-2", "-fx-fill", "transparent"); // Ohne "map-shape" würde hier sonst .map-shape:active-game gewinnen!
+	    // DEBUG NUR!
+	    /**css = addCssRule(css, ".map-shape.decoration.decoration-2", "-fx-fill", "transparent");
+	    //css = addCssRule(css, ".map-shape.decoration-2", "-fx-fill", "transparent"); // Ohne "map-shape" würde hier sonst .map-shape:active-game gewinnen!
 	    css = addCssRule(css, ".decoration-2", "-fx-stroke", UIUtils.toHex(borderColor));
-		css = addCssRule(css, ".decoration-2", "-fx-stroke-width", "2.8px"); // !Sofort Magic Number
+		css = addCssRule(css, ".decoration-2", "-fx-stroke-width", "2.8px"); // !Sofort Magic Number**/
+		css = addCssRule(css, ".map-shape.decoration-2", "-fx-fill", "transparent");
+		css = addCssRule(css, ".map-shape.decoration-2", "-fx-stroke", UIUtils.toHex(borderColor));
+		css = addCssRule(css, ".map-shape.decoration-2", "-fx-stroke-width", "2.8px");
 
 	    // Optional: Hover-Effekt bei Deko ausschalten (falls nötig, aber mouse-transparent regelt das eh)
 	    css = addCssRule(css, ".decoration:hover", "-fx-fill", "derive(-fx-fill, 0%)"); // Farbe beibehalten
@@ -490,7 +582,7 @@ public abstract class Skin {
 	    // Basis
 	    css = addCssRule(css, ".input-field", "-fx-font-family", "'" + font.getFamily() + "'");
 	    css = addCssRule(css, ".input-field", "-fx-font-size", font.getSize() + "px");
-	    css = addCssRule(css, ".input-field", "-fx-text-fill", UIUtils.toHex(textColor));
+	    css = addCssRule(css, ".input-field", "-fx-text-fill", UIUtils.toHex(textActiveComponentColor == null ? textColor : textActiveComponentColor));
 	    css = addCssRule(css, ".input-field", "-fx-alignment", "center");
 	    // Padding
 	    paddingCss = String.format("%dpx %dpx %dpx %dpx", 
@@ -525,6 +617,7 @@ public abstract class Skin {
 	    String encodedCss = css.replace("%", "%25")  // % muss zu %25 werden
 	                           .replace("#", "%23"); // # muss zu %23 werden (sicher ist sicher)
 	    scene.getStylesheets().clear();
+	    
 	    scene.getStylesheets().add("data:text/css," + encodedCss);
 	    System.out.println(css.replaceAll("}", "}\n"));
 	}
@@ -602,8 +695,28 @@ public abstract class Skin {
 
 	    return pane;
 	}
+	
+	// --- Bereinigte Factory-Methode ---
+	public CustomTextLabel createCustomTextLabel(DeckType type, TextLabelType labelType) {
+        Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "Session" + labelType + "Panel");
+        if (bounds == null)
+            bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "Session" + labelType + "Panel");
+        
+        CustomTextLabel label = new CustomTextLabel("");
+        label.setLayoutX(bounds.x);
+        label.setLayoutY(bounds.y);
+        
+        // StackPane braucht Breite & Höhe für Layout/Zentrierung
+        label.setFixedWidth(bounds.width); 
+        label.setFixedHeight(bounds.height); 
+        
+        // ID setzen, damit das CSS oben greift
+        label.setId(labelType.toString() + "Label");
+        
+        return label;
+    }
 
-	public Label createCustomTextLabel(DeckType type, TextLabelType labelType) {
+	/**public Label createCustomTextLabel(DeckType type, TextLabelType labelType) {
 	    // 1. Bounds & Colors
 	    Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "Session" + labelType + "Panel");
 	    if (bounds == null)
@@ -666,7 +779,7 @@ public abstract class Skin {
 	    label.setId(labelType.toString() + "Label");
 	    
 	    return label;
-	}
+	}**/
 
 	public MultipleChoicePane createMultipleChoicePane(DeckType type) {
         // 1. Bounds holen
@@ -687,18 +800,19 @@ public abstract class Skin {
         dummyText.setFont(font);
         
         double fixedButtonHeight = Math.ceil(dummyText.getLayoutBounds().getHeight() + verticalPadding + (borderWidth * 2));
-        
-        double maxTextHeight = fixedButtonHeight - (borderWidth * 2) - verticalPadding + 2.0;
+        // JavaFX ist ein bisschen sehr generös bei der Höhe. Ein bissi weniger tut es auch...
+        // Ja, das ist ein Hack. Aber ich vermute, einer der mich nie wieder stören wird, also sei es drum...
+        fixedButtonHeight = Math.round(fixedButtonHeight * 0.95745f);
+        System.out.println("Höhe der Buttons gesetzt auf: " + fixedButtonHeight);
 
         // NEU: Berechnung des Spacings (identisch zur Logik in styleScene!)
         double lineSpacingSqueezed = font.getSize() * -0.4;
         double lineSpacingTiny = smallFont.getSize() * -0.4;
 
-        // 5. Pane erstellen mit neuen Parametern
+        // 5. Pane erstellen mit neuen Parametern0
         MultipleChoicePane result = new MultipleChoicePane(
             bounds.width, 
             fixedButtonHeight, 
-            maxTextHeight,
             horizontalOverhead,
             borderWidth,
             font, 
@@ -723,7 +837,7 @@ public abstract class Skin {
 			case CANCEL -> cancelButtonIcon;
 		};
 
-		ImageView icon = new ImageView(new Image(new File(Config.get("iconFolder") + File.separator + iconPath).toURI().toString()));
+		ImageView icon = new ImageView(new Image(new File(Config.get("iconFolder") + iconPath).toURI().toString()));
 	    
 	    // Button erstellen
 	    Button button = new Button();
@@ -778,12 +892,14 @@ public abstract class Skin {
         return pane;
     }
 
-	public ImageMapPanel createImageMapPanel(DeckType type) {
+	public ImageMapPane createImageMapPanel(DeckType type) {
 		GeoMap map = MapService.getInstance().getMap(type);
-		Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMapPanel");
-		/**ImageMapPanel result = new ImageMapPanel(map, bounds.width, bounds.height, borderBigComponent, correctColor, incorrectColor, markedColor, 2, borderColor, borderBackButton, new Rectangle(11, 11, 410, 254));
-		result.setLocation(bounds.x, bounds.y);**/
-		return null;
+		java.awt.Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMapPanel");
+		BorderParams borderForRectangle = new BorderParams(borderBigComponent.width(), borderBigComponent.color(), borderBigComponent.insets(), borderBigComponent.arc()*2, borderBigComponent.focusWidth(), borderBigComponent.focusedColor(), borderBigComponent.disabledColor());
+		ImageMapPane result = new ImageMapPane(map, bounds.width, bounds.height, borderForRectangle, new Rectangle(11, 11, 410, 254));
+		result.setLayoutX(bounds.x);
+		result.setLayoutY(bounds.y);
+		return result;
 	}
 
 	/**

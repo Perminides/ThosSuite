@@ -18,12 +18,6 @@ public class RegionLearnSessionInfo extends LearnSessionInfo {
 	}
 
 	@Override
-	public DeckCategory getCategory() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public boolean isStillDueToday() {
 		return isDueToday;
 	}

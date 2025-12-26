@@ -30,7 +30,6 @@ public class MultipleChoicePane extends Pane {
     private final List<Button> buttons = new ArrayList<>();
     private final Font font;
     private final Font smallFont;
-    private final double maxTextHeight;
     private final double borderWidth; // NEU: Damit wir das absolute Limit kennen
     private final double horizontalOverhead; // Ersatz für die Magic Number "24"
     private final double lineSpacingSqueezed;
@@ -38,10 +37,9 @@ public class MultipleChoicePane extends Pane {
     
     private Consumer<Integer> listener;
 
-    public MultipleChoicePane(double width, double fixedButtonHeight, double maxTextHeight, double horizontalOverhead, double borderWidth, Font font, Font smallFont, int verticalGap, double lineSpacingSqueezed, double lineSpacingTiny) {
+    public MultipleChoicePane(double width, double fixedButtonHeight, double horizontalOverhead, double borderWidth, Font font, Font smallFont, int verticalGap, double lineSpacingSqueezed, double lineSpacingTiny) {
         this.font = font;
         this.smallFont = smallFont;
-        this.maxTextHeight = maxTextHeight;
         this.horizontalOverhead = horizontalOverhead;
         this.borderWidth = borderWidth;
         this.lineSpacingSqueezed = lineSpacingSqueezed;

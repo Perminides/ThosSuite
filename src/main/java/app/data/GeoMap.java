@@ -1,11 +1,11 @@
 package app.data;
 
-import java.awt.image.BufferedImage;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javafx.scene.Group;
 import javafx.scene.image.Image;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -117,26 +117,35 @@ public class GeoMap {
 		return createCircle("", size.getName(), x, y);
 	}
 	
-	public MapShape createCircle(String id, String sizeString, int x, int y) {
-        CircleSizes circleSize = CircleSizes.fromCsvName(sizeString);
-        int radius = circleSize != null ? circleSize.getSize() : 65;
-        
-        Shape shape;
-        if (radius != 65) {
-            // JavaFX Circle: Zentrum X, Zentrum Y, Radius
-            shape = new Circle(x, y, radius);
-        } else {
-            // Fallback !Sofort muss raus, wenn die Welt.geojsons fertig sind!
-            // JavaFX Rectangle: Links, Oben, Breite, Höhe
-            shape = new Rectangle(x - radius/2.0, y - radius/2.0, radius, radius);
-        }
-        
-        // CSS-Klasse gleich mitgeben, damit es gestylt werden kann
-        shape.getStyleClass().add("map-shape");
-        shape.getStyleClass().add("decoration");
+	private MapShape createCircle(String id, String sizeString, int x, int y) {
+	    CircleSizes circleSize = CircleSizes.fromCsvName(sizeString);
+	    int radius = circleSize != null ? circleSize.getSize() : 65;
 
-        return new MapShape(id, null, null, null, null, null, null, shape);
-    }
+	    Shape fillShape;
+	    Shape borderShape;
+	    
+	    if (radius != 65) {
+	        // JavaFX Circle
+	        fillShape = new Circle(x, y, radius);
+	        borderShape = new Circle(x, y, radius);
+	    } else {
+	        // Fallback Rectangle
+	        fillShape = new Rectangle(x - radius/2.0, y - radius/2.0, radius, radius);
+	        borderShape = new Rectangle(x - radius/2.0, y - radius/2.0, radius, radius);
+	    }
+	    
+	    // CSS-Klassen setzen
+	    fillShape.getStyleClass().add("first");
+	    borderShape.getStyleClass().add("second");
+	    
+	    // Group erstellen (Fill zuerst, dann Border)
+	    Group group = new Group(fillShape, borderShape);
+	    group.getStyleClass().add("image-map-shape");
+	    group.setUserData(id);
+	    group.setId("groupId-" + id);
+	    
+	    return new MapShape(id, null, null, null, null, null, null, group, true);
+	}
 
 	public void setShapes(List<MapShape> transformed) {
 		// !Sofort. Das muss wieder final. Nur wegen Normalisiserung für Internet-Karten, das überzeugt mich nicht!
