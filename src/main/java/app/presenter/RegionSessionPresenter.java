@@ -6,8 +6,8 @@ import app.data.RegionMode;
 import app.data.RegionSessionProgress;
 import app.data.RegionSessionSpec;
 import app.ui.MainWindow;
-import app.ui.components.ShapeMapState;
-import app.ui.panels.RegionSessionPanel;
+import app.ui.components.ShapeMapPane.ShapeMapState;
+import app.ui.panes.RegionSessionPane;
 
 public class RegionSessionPresenter {
 	
@@ -17,12 +17,12 @@ public class RegionSessionPresenter {
 	private final RegionSessionSpec spec; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 	private final RegionSessionProgress progress;
 	private final boolean hard;
-	private RegionSessionPanel panel;
+	private RegionSessionPane panel;
 	private SavedState savedState;
 	
 	public RegionSessionPresenter(MainWindow  mainWindow, RegionSessionProgress progress, RegionSessionSpec spec) {
 		progress.setPresenter(this);
-		this.panel = new RegionSessionPanel(mainWindow, this, spec.getDeckType(), spec.getMode().getSubCategory() == RegionMode.SubCategory.CLICK);
+		this.panel = new RegionSessionPane(mainWindow, this, spec.getDeckType(), spec.getMode().getSubCategory() == RegionMode.SubCategory.CLICK);
 		this.mainWindow = mainWindow;
 		this.progress = progress;
 		this.spec = spec;
@@ -39,7 +39,7 @@ public class RegionSessionPresenter {
 	
 	public void refresh() {
 		savedState = new SavedState(panel.getState(), panel.getQuestion());
-		this.panel = new RegionSessionPanel(mainWindow, this, spec.getDeckType(), spec.getMode().getSubCategory() == RegionMode.SubCategory.CLICK);
+		this.panel = new RegionSessionPane(mainWindow, this, spec.getDeckType(), spec.getMode().getSubCategory() == RegionMode.SubCategory.CLICK);
 		panel.setState(savedState.mapState);
 		panel.setQuestion(savedState.text);
 		panel.show();

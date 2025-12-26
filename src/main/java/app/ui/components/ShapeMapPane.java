@@ -11,8 +11,8 @@ import app.ui.MapElementListener;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Shape;
 import javafx.scene.transform.Scale;
 
 /**
@@ -20,15 +20,24 @@ import javafx.scene.transform.Scale;
  * Nutzt JavaFX Scene Graph statt manuellem Painting.
  */
 public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt automatisch!
+	
+	public static record ShapeMapState(
+		    Set<String> correctShapes,
+		    Set<String> incorrectShapes,
+		    Set<String> markedShapes,
+		    Set<String> activeShapes,
+		    boolean interactive
+		) {}
 
     // CSS Pseudo-Klassen für den State-Transfer zum Skin
+	// Achtung!!! Die müssen alle gleich auf false gesetzt werden. Wenn du hier eine hinzufügst, dann denk daran!
     private static final PseudoClass CORRECT = PseudoClass.getPseudoClass("correct");
     private static final PseudoClass INCORRECT = PseudoClass.getPseudoClass("incorrect");
     private static final PseudoClass MARKED = PseudoClass.getPseudoClass("marked");
     private static final PseudoClass ACTIVE_GAME = PseudoClass.getPseudoClass("active-game");
     
     // Hält alle Shapes im Zugriff für Updates per ID
-    private final Map<String, Shape> shapeMap = new HashMap<>();
+    private final Map<String, Node> shapeMap = new HashMap<>();
     
     // Container für alle Shapes (wird skaliert)
     private final Group contentGroup;
@@ -48,6 +57,10 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         // Phase 1: Alles zeichnen, was KEINE Overlay-Grenze ("2") ist.
         // Das sind die normalen Spiel-Shapes und Hintergründe.
         for (MapShape mapShape : map.getShapes()) {
+        	mapShape.shape().pseudoClassStateChanged(CORRECT, false);
+        	mapShape.shape().pseudoClassStateChanged(INCORRECT, false);
+        	mapShape.shape().pseudoClassStateChanged(MARKED, false);
+        	mapShape.shape().pseudoClassStateChanged(ACTIVE_GAME, false);
             if (!"2".equals(mapShape.fixedColorSet())) {
                 initShape(mapShape);
             }
@@ -81,10 +94,20 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         scale.setPivotY(0);
         
         contentGroup.getTransforms().add(scale);
+        
+        /**contentGroup.getChildren().forEach(node -> {
+            if (node instanceof Shape shape) {
+                System.out.println("Shape: " + shape.getUserData() + 
+                                  " | Fill: " + shape.getFill() + 
+                                  " | Classes: " + shape.getStyleClass() +
+                                  " | PseudoClasses: " + shape.getPseudoClassStates())
+                ;
+            }
+        });**/
     }
     
     private void initShape(MapShape mapShape) {
-        Shape shape = mapShape.shape();
+        Node shape = mapShape.shape();
         String id = mapShape.id();
         
         // ID für Lookup speichern
@@ -93,22 +116,8 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         // UserData für Click-Listener
         shape.setUserData(id);
         
-        // CSS-Klassen setzen
-        shape.getStyleClass().add("map-shape");
-        
         // Deko-Logik
-        if (mapShape.isDecoration()) {
-            shape.getStyleClass().add("decoration");
-            // Spezifische Deko-Klassen für 0 und 1
-            if ("0".equals(mapShape.fixedColorSet())) {
-                shape.getStyleClass().add("decoration-0");
-            } else if ("1".equals(mapShape.fixedColorSet())){
-                shape.getStyleClass().add("decoration-1");
-            } else {
-            	shape.getStyleClass().add("decoration-2");
-            }
-            shape.setMouseTransparent(true); // Deko fängt keine Klicks ab
-        } else {
+        if (!mapShape.isDecoration()) {
             // Interaktion nur für spielbare Shapes
             setupInteractions(shape);
         }
@@ -116,7 +125,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         contentGroup.getChildren().add(shape);
     }
     
-    private void setupInteractions(Shape shape) {
+    private void setupInteractions(Node shape) {
         shape.setOnMouseClicked(e -> {
             if (listener != null) {
                 String id = (String) shape.getUserData();
@@ -181,9 +190,11 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     
     public void moveAllToActive() {
         shapeMap.values().forEach(shape -> {
-        	System.out.println(shape.getId());
             resetShapeState(shape);
-            shape.pseudoClassStateChanged(ACTIVE_GAME, true);
+            // !Sofort: Das ist ein undurchdachter Hack. Der funktioniert, aber sauber durchgedacht ist das noch nicht...
+            if (!shape.getStyleClass().contains("decoration-2")) {
+                shape.pseudoClassStateChanged(ACTIVE_GAME, true);
+            }
         });
     }
 
@@ -194,7 +205,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     // --- State Helpers ---
     
     private void updateShapeState(String id, PseudoClass state) {
-        Shape shape = shapeMap.get(id);
+        Node shape = shapeMap.get(id);
         if (shape != null) {
             // Exklusiv-Logik: Ein Shape hat idealerweise nur einen dominanten State
             // oder CSS regelt die Priorität. Hier resetten wir sicherheitshalber die anderen.
@@ -207,7 +218,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         shapeMap.values().forEach(this::resetShapeState);
     }
     
-    private void resetShapeState(Shape shape) {
+    private void resetShapeState(Node shape) {
         shape.pseudoClassStateChanged(CORRECT, false);
         shape.pseudoClassStateChanged(INCORRECT, false);
         shape.pseudoClassStateChanged(MARKED, false);

@@ -1,17 +1,8 @@
-package app.ui.panels;
+package app.ui.panes;
 
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.event.MouseInputAdapter;
 
 import app.data.DeckType;
 import app.data.LearnStat;
@@ -19,46 +10,42 @@ import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.MainWindow;
 import app.ui.MapElementListener;
-import app.ui.components.BackgroundPanel;
-import app.ui.components.CustomButtonLabel;
-import app.ui.components.CustomButtonLabel.CLBState;
 import app.ui.components.CustomTextLabel;
-import app.ui.components.ImageMapPanel;
-import app.ui.components.MultipleChoicePanel;
+import app.ui.components.ImageMapPane;
+import app.ui.components.ImagePane;
+import app.ui.components.MultipleChoicePane;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.Pane;
 
-public class WorldSessionPanel extends JPanel implements AnkiSessionPanel {
-	private static final long serialVersionUID = 1L;
+public class WorldSessionPane extends Pane implements AnkiSessionPane {
 	private static final DeckType DECKTYPE = DeckType.WORLD_CARDS; 
 
 	private final MainWindow mainWindow;
 	private final AnkiSessionPresenter presenter;
-    private JTextField textInputField;
+    private TextField textInputField;
     private CustomTextLabel questionArea;
     private CustomTextLabel progressArea;
     private CustomTextLabel cardHistoryArea;
-    private MultipleChoicePanel mcPanel;
-    private CustomButtonLabel backButton;
-    private ImageMapPanel weltkarte;
-    private JLabel imageLabel;
+    private MultipleChoicePane mcPane;
+    private Button backButton;
+    private ImageMapPane weltkarte;
+    private ImagePane imageComponent;
 
-    public WorldSessionPanel(MainWindow mainWindow, AnkiSessionPresenter presenter) {
+    public WorldSessionPane(MainWindow mainWindow, AnkiSessionPresenter presenter) {
         this.mainWindow = mainWindow;
         this.presenter = presenter;
-        setLayout(null);
-        setOpaque(false);
-        setSize(SkinService.get().getContentSize());
         initUI();
     }
     
     @Override
-    public void show() {/**
-    	BackgroundPanel bg = SkinService.get().createBackgroundPanel(DECKTYPE);
-    	bg.add(this);
-        mainWindow.showPanel(bg);
-        revalidate();
-        repaint();**/
+    public void show() {
+    	Skin skin = SkinService.get();
+        Pane background = skin.createBackgroundPane(DECKTYPE);
+        background.getChildren().add(this);
+        mainWindow.showView(background);
     }    
 
     private void initUI() {
@@ -70,54 +57,41 @@ public class WorldSessionPanel extends JPanel implements AnkiSessionPanel {
     	        mapElementClicked(id);  // ← Über Helper
     	    }
     	});
-    	add(weltkarte);
+    	getChildren().add(weltkarte);
     	
-    	questionArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
+    	questionArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
     	questionArea.setText("");
-    	add(questionArea);
+    	getChildren().add(questionArea);
     	
     	textInputField = skin.createInputField(DECKTYPE);
-    	textInputField.setEnabled(false);
-    	textInputField.addKeyListener(new KeyAdapter() {
-    		@Override
-    		public void keyReleased(KeyEvent e) {
-    			textInputChanged();
+        textInputField.setOnKeyReleased(_ -> textInputChanged());
+        getChildren().add(textInputField);
+    	
+        imageComponent = skin.createImageComponent(DECKTYPE);
+    	getChildren().add(imageComponent);
+    	
+    	mcPane = skin.createMultipleChoicePane(DECKTYPE);
+    	mcPane.addListener(
+    		new Consumer<Integer>() {
+				@Override
+				public void accept(Integer i) {
+					onAnswerSelected(i);
+				}
     		}
-    		
-		});
-    	add(textInputField);
+    	);
+    	getChildren().add(mcPane);
     	
-    	imageLabel = skin.createImageRegion(DECKTYPE);
-    	add(imageLabel);
-    	
-    	mcPanel = skin.createMultipleChoicePanel(DECKTYPE);
-    	mcPanel.addListener(
-        		new Consumer<Integer>() {
-    				@Override
-    				public void accept(Integer i) {
-    					onAnswerSelected(i);
-    				}
-        		}
-        	);
-    	mcPanel.disableAllButtons();
-    	add(mcPanel);
-    	
-    	progressArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.PROGRESS); 
+    	progressArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
     	progressArea.setText("");
-    	add(progressArea);
+    	getChildren().add(progressArea); // FEHLER
     	
-    	cardHistoryArea = skin.createTextLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
+    	cardHistoryArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
     	cardHistoryArea.setText("");
-    	add(cardHistoryArea);
+    	getChildren().add(cardHistoryArea); // FEHLER
     	
     	backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
-    	backButton.addMouseListener(new MouseInputAdapter() {
-   		 @Override
-            public void mousePressed(MouseEvent e) {
-   			 	backButtonClicked();
-            }
-		});
-    	add(backButton);
+    	backButton.setOnAction(_ -> backButtonClicked());
+    	getChildren().add(backButton);
     }
 	
 	// ========================================
@@ -133,13 +107,13 @@ public class WorldSessionPanel extends JPanel implements AnkiSessionPanel {
 	// Image
 	
     public void setImage(String imagePath) {
-    	imageLabel.setIcon(imagePath == null ? null : new ImageIcon(imagePath));
+    	imageComponent.setImage(imagePath);
     }
     
     // Multiple Choice
     
 	public void setMultipleChoice(List<String> answers) {
-		mcPanel.initiateMultipleChoice(answers);
+		mcPane.initiateMultipleChoice(answers);
 	}
 	
 	/**
@@ -150,27 +124,15 @@ public class WorldSessionPanel extends JPanel implements AnkiSessionPanel {
 		if (active)
 			throw new RuntimeException("Das habe ich nicht vorhergesehen.");
 		else
-			mcPanel.inactivateAllActiveButtons();
-	}
-	
-	/**
-	 * Setzt alle Buttons auf disabled. Für wenn MC gerade überhaupt nicht gebraucht wird...
-	 */
-	public void disableMcPanel() {
-		mcPanel.disableAllButtons();
+			mcPane.clearAndSetInactive();
 	}
 	
     public void setMcCorrect(int id, boolean correct) {
-    	if (correct)
-    		mcPanel.setState(id, CLBState.CORRECT);
-    	else
-    		mcPanel.setState(id, CLBState.INCORRECT);
+    	mcPane.setCorrect(id, correct);
     }
     
 	public void setMcSolution(Set<Integer> correctIds) {
-		for (int id : correctIds) {
-			mcPanel.setState(id, CLBState.CORRECT);
-		}
+		mcPane.setCorrectAndInactive(correctIds);
 	}
 	
 	// Map
@@ -206,16 +168,15 @@ public class WorldSessionPanel extends JPanel implements AnkiSessionPanel {
     
     // Input
     
-	public void setTextFieldActive(boolean active) {
-		if (active) {
-			textInputField.setText("");
-			textInputField.setEnabled(true);
-			textInputField.requestFocusInWindow();
-		} else {
-			textInputField.setEnabled(false);
-			// Text bleibt stehen (z.B. für Lösungs-Anzeige)
-		}
-	}
+    public void setTextFieldActive(boolean active) {
+        if (active) {
+            textInputField.setText("");
+            textInputField.setDisable(false);
+            textInputField.requestFocus();
+        } else {
+            textInputField.setDisable(true);
+        }
+    }
     
 	public void setTextInTextField(String text) {
 		textInputField.setText(text); 
@@ -234,12 +195,9 @@ public class WorldSessionPanel extends JPanel implements AnkiSessionPanel {
 	}
 
 	private void mapElementClicked(String id) {
+		System.out.println("Clicked on Map!");
 	    presenter.clickedMapElement(id);
 	}
-	
-	/**private void missedAllShapes() {
-		presenter.mapClicked();
-	}**/
 	
 	private void backButtonClicked() {
 	    presenter.clickedBack();
@@ -247,8 +205,8 @@ public class WorldSessionPanel extends JPanel implements AnkiSessionPanel {
 
 	@Override
 	public void sessionProgressChanged(SessionProgress progress) {
-		String text = "<p>Korrekt: " + progress.correct() + "<br/>Falsch: "
-				+ progress.incorrect() + "<br/>Offen: "
+		String text = "Korrekt: " + progress.correct() + "\nFalsch: "
+				+ progress.incorrect() + "\nOffen: "
 				+ (progress.details().size()-progress.correct()-progress.incorrect());
 		progressArea.setText(text);
 	}
@@ -259,9 +217,10 @@ public class WorldSessionPanel extends JPanel implements AnkiSessionPanel {
 		String text = "";
 		if (stats != null) {
 		text = "Zuletzt gespielt: " + stats.getLastPlayed()
-			+ "<br/>Level: " + stats.getCurrentLevel()
-			+ "<br/>Falsch beantwortet: " + stats.getWrongCount();
+			+ "\nLevel: " + stats.getCurrentLevel()
+			+ "\nFalsch beantwortet: " + stats.getWrongCount();
 		}
+		System.out.println(text);
 		cardHistoryArea.setText(text);
 	}
 }

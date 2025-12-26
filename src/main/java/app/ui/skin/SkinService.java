@@ -10,7 +10,8 @@ public final class SkinService {
             new BlueGradientSkin(),
             new RedGradientSkin(),
             new FlatWebSkin(),
-            new SpicySkin()
+            new SpicySkin(),
+            new DarkMode()
             // Neuer Skin? Eine Zeile hier hinzufügen!
         );
     private static Skin current = AVAILABLE_SKINS.get(0); // !Erweiterung Später über config-Datei...

@@ -9,15 +9,15 @@ import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.ui.MainWindow;
-import app.ui.panels.AnkiSessionPanel;
-import app.ui.panels.GermanySessionPane;
-import app.ui.panels.MCSessionPane;
-import app.ui.panels.WorldSessionPanel;
+import app.ui.panes.AnkiSessionPane;
+import app.ui.panes.GermanySessionPane;
+import app.ui.panes.MCSessionPane;
+import app.ui.panes.WorldSessionPane;
 
 // !Später auch mal ein DeckPresenter und Presenter-Interface wenn es Sinn ergibt? Stay tuned...
 public class AnkiSessionPresenter {
 
-    private AnkiSessionPanel panel; //!Später MapDeckGamePanel!
+    private AnkiSessionPane panel; //!Später MapDeckGamePanel!
     private AnkiDeckSession session;
     private final DeckType type; // Benötigt für den Neuaufbau eines Panels bei skinChanged
     private final MainWindow mainWindow; // Benötigt für den Neuaufbau eines Panels bei skinChanged
@@ -34,11 +34,11 @@ public class AnkiSessionPresenter {
         panel.show();
     }
 
-    private AnkiSessionPanel createPanelForType(DeckType type, MainWindow mainWindow) {
+    private AnkiSessionPane createPanelForType(DeckType type, MainWindow mainWindow) {
         return switch(type) {
             case GERMANY_CARDS -> new GermanySessionPane(mainWindow, this);
             case MC_CARDS -> new MCSessionPane(mainWindow, this);
-            case WORLD_CARDS -> new WorldSessionPanel(mainWindow, this);
+            case WORLD_CARDS -> new WorldSessionPane(mainWindow, this);
             default -> null; // oder throw new IllegalArgumentException?
         };
     }

@@ -1,28 +1,27 @@
-package app.ui.panels;
+package app.ui.panes;
 
 import java.util.Set;
 
 import app.data.DeckType;
 import app.presenter.RegionSessionPresenter;
 import app.ui.MainWindow;
+import app.ui.components.CustomTextLabel;
 import app.ui.components.ShapeMapPane;
-import app.ui.components.ShapeMapState;
+import app.ui.components.ShapeMapPane.ShapeMapState;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
-import javafx.application.Platform;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 
-public class RegionSessionPanel extends Pane {
+public class RegionSessionPane extends Pane {
 	private final MainWindow mainWindow;
 	private final RegionSessionPresenter presenter;
 	private final DeckType deckType;
     private ShapeMapPane karte;
-    private Label questionArea;
+    private CustomTextLabel questionArea;
     private TextField textInputField;
 	
-	public RegionSessionPanel(MainWindow mainWindow, RegionSessionPresenter presenter, DeckType deckType, boolean questionAreaVisible) {
+	public RegionSessionPane(MainWindow mainWindow, RegionSessionPresenter presenter, DeckType deckType, boolean questionAreaVisible) {
         this.mainWindow = mainWindow;
         this.presenter = presenter;
         this.deckType = deckType;
@@ -31,7 +30,7 @@ public class RegionSessionPanel extends Pane {
 	
 	public void show() {
         Skin skin = SkinService.get();
-        Pane background = skin.createBackgroundPane(DeckType.MC_CARDS);
+        Pane background = skin.createBackgroundPane(DeckType.BUNDESLAND_BRANDENBURG);
         background.getChildren().add(this);
         mainWindow.showView(background);
         if (textInputField != null)
@@ -115,11 +114,15 @@ public class RegionSessionPanel extends Pane {
     }
     
     public void setQuestion(String text) {
-    	questionArea.setText(text); 
+    	if (questionArea != null)
+    		questionArea.setText(text); 
     }
     
 	public String getQuestion() {
-		return questionArea.getText();
+		if (questionArea != null)
+			return questionArea.getText();
+		else
+			return null;
 	}
     
     /**

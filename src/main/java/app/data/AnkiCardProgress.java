@@ -89,6 +89,8 @@ public class AnkiCardProgress implements Progress{
 
 	public void elementClicked(String id) {
 
+		System.out.println("Element clicked");
+		
 	    clickedIds.add(id);
 	    Step step = steps.get(currentIndex);
 	    

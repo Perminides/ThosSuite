@@ -35,7 +35,7 @@ public class MapRepository {
             String[] fileNames = meta.getGeoJsonFiles();
             List<MapShape> shapes = new ArrayList<>();
             for (String fileName : fileNames) {
-                shapes.addAll(loader.load(folder + fileName));
+                shapes.addAll(loader.load(folder + fileName, true));
             }
             return new GeoMap(shapes, MapType.SHAPE, null, null, null, null);
             
@@ -52,7 +52,7 @@ public class MapRepository {
                 String[] fileNames = meta.getGeoJsonFiles();
                 List<MapShape> shapes = new ArrayList<>();
                 for (String fileName : fileNames) {
-                    shapes.addAll(loader.load(folder + fileName));
+                    shapes.addAll(loader.load(folder + fileName, false));
                 }
                 
                 return new GeoMap(shapes, MapType.IMAGE, bg, ov, bgia, ovia);

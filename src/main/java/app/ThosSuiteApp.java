@@ -27,10 +27,11 @@ public class ThosSuiteApp extends Application {
 	
 	/** JavaFX-Nachteile
 	 * 
-	 * Font-Rendering schlechter
+	 * Font-Rendering schlechter → Wäre ein Showstopper gewesen, aber ist seit "Adjust Clear Type Text" nicht mehr vorhanden und konnte auch auf anderen Laptops nicht reproduziert werden...
 	 * Icon-Spacing umständlich
-     * Kein HTML in Labels. Keine einzelnen Wörte fett
+     * Kein HTML in Labels. Keine einzelnen Wörte fett. Wir haben einen Work-Around implementiert. Glaube, dass man das so nennen muss...
      * Anfangsruckler beim Hovereffekt in der Deutschlandkarte
+     * Für Soft-Hyphens hat auch JavaFX keine vernünftige Lösung. Und naja, siehe oben zu HTML in Labels...
      * 
 	 */
 
@@ -80,12 +81,14 @@ public class ThosSuiteApp extends Application {
 
         // Font laden (JavaFX-Style)
         try {
-            Font font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos.TTF"), 20);
+            Font font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos.ttf"), 20);
             System.out.println(font != null ? "Aptos Font geladen" : "Aptos nicht geladen");
-            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-SemiBold.TTF"), 20);
-            System.out.println(font != null ? "Aptos-SemiBold Font geladen" : "Aptos-SemiBold nicht geladen");
-            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-Black.TTF"), 20);
-            System.out.println(font != null ? "Aptos-Black Font geladen" : "Aptos-Black nicht geladen");
+            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-Bold.ttf"), 20);
+            System.out.println(font != null ? "Aptos-Bold Font geladen" : "Aptos-Bold nicht geladen");
+            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-Bold-Italic.ttf"), 20);
+            System.out.println(font != null ? "Aptos-Bold-Italic Font geladen" : "Aptos-Bold-Italic nicht geladen");
+            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-Italic.ttf"), 20);
+            System.out.println(font != null ? "Aptos-Italic Font geladen" : "Aptos-Italic nicht geladen");
         } catch (Exception e) {
             throw new RuntimeException("Probleme beim Laden der Fonts: Aptos", e);
         }
