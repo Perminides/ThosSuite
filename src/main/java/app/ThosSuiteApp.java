@@ -27,6 +27,7 @@ public class ThosSuiteApp extends Application {
 	
 	/** JavaFX-Nachteile
 	 * 
+	 * https://bugs.openjdk.org/browse/JDK-8227679
 	 * Font-Rendering schlechter → Wäre ein Showstopper gewesen, aber ist seit "Adjust Clear Type Text" nicht mehr vorhanden und konnte auch auf anderen Laptops nicht reproduziert werden...
 	 * Icon-Spacing umständlich
      * Kein HTML in Labels. Keine einzelnen Wörte fett. Wir haben einen Work-Around implementiert. Glaube, dass man das so nennen muss...

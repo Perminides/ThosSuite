@@ -8,7 +8,6 @@ import app.data.CardSortOrder;
 import app.data.LearnSessionInfo;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
@@ -19,7 +18,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.HeaderDragType;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
@@ -63,14 +61,11 @@ public class MainWindow {
         
         // 4. Globale Handler
         initKeyBindings();
-        
-        // 5. Initiales Füllen der UI
-        buildStyledUi();
     }
     
     /**
      * Baut die UI-Inhalte neu auf basierend auf dem aktuellen Skin.
-     * Wird im Konstruktor und bei Skin-Wechsel aufgerufen.
+     * Wird in der Startklasse und bei Skin-Wechsel aufgerufen.
      */
     public void buildStyledUi() {
         Skin skin = SkinService.get();

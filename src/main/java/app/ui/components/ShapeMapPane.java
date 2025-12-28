@@ -15,10 +15,6 @@ import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
 import javafx.scene.transform.Scale;
 
-/**
- * Das neue Herzstück der Karten-Anzeige.
- * Nutzt JavaFX Scene Graph statt manuellem Painting.
- */
 public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt automatisch!
 	
 	public static record ShapeMapState(
@@ -48,7 +44,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     public ShapeMapPane(GeoMap map, int targetHeight) {
     	this.contentGroup = new Group();
     	
-    	// !Sofort: Das ist alles etwas unschön gewachsen. Lieber ein neues Attribut "Layer" einführen? Und zumindest "fixedColorId" umbenennen in "decorationID" oder so? Denk dir ws schönes aus!
+    	// !Sofort: Das ist alles etwas unschön gewachsen. Lieber ein neues Attribut "Layer" einführen? Und zumindest "fixedColorId" umbenennen in "decorationID" oder so? Denk dir was schönes aus!
     	// Layer könntest DU dann gleich flexibel gestalten und solange durchloopen un immer den nächsthöheren Layer nehmen, bis alle drin sind...!
         
         // 1. Shapes initialisieren
@@ -94,16 +90,6 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         scale.setPivotY(0);
         
         contentGroup.getTransforms().add(scale);
-        
-        /**contentGroup.getChildren().forEach(node -> {
-            if (node instanceof Shape shape) {
-                System.out.println("Shape: " + shape.getUserData() + 
-                                  " | Fill: " + shape.getFill() + 
-                                  " | Classes: " + shape.getStyleClass() +
-                                  " | PseudoClasses: " + shape.getPseudoClassStates())
-                ;
-            }
-        });**/
     }
     
     private void initShape(MapShape mapShape) {
@@ -174,12 +160,6 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     }
     
     public void moveCorrectToActive() {
-       // Logik: Suche alle CORRECT shapes und mache sie ACTIVE
-       // Da wir den State nicht speichern, iterieren wir über alle Shapes und prüfen PseudoClassState?
-       // Einfacher: Wir iterieren über alle und resetten, das Presenter-Modell weiß ja, was aktiv sein soll.
-       // Aber hier sollen wir ja nur Visuals machen.
-       // Swing-Logik war: activeShapes.addAll(correctShapes); correctShapes.clear();
-       
        shapeMap.values().forEach(shape -> {
            if (shape.getPseudoClassStates().contains(CORRECT)) {
                shape.pseudoClassStateChanged(CORRECT, false);
