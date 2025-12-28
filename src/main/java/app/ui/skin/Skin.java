@@ -48,7 +48,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextBoundsType;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
@@ -84,8 +83,6 @@ public abstract class Skin {
 	// !Sofort: Einfacher als box-shadow wäre ein Design mit transparenten Hintergründen der Buttons und TextFields und so und ohne Border. Hehe...
 	
 	public abstract String getDisplayName();
-	
-	// !Sofort: alle Methodenaufruf von adjustBrightness werfen hier null. Wie an welcher stelle kann ich die wirklich sauber setzen?
 
 	protected Color textColor; // Standard-TextFarbe. Arbeite möglichst nur mit einer, wenn es geht.
 	protected Color textActiveComponentColor;
@@ -107,16 +104,22 @@ public abstract class Skin {
 	protected Color displayTextQuestionBgColor;
 	protected Color displayTextProgressBgColor;
 	protected Color displayTextHistoryBgColor;
-	protected Color activeButtonBgColor; // MCLabels !Später Das ergibt wenig Sinn. Ein Button ist auch ein InputElement und sollte somit
-											// activeComponentBackgroundColor nutzen!
-	protected Color activeButtonHoverColor = adjustBrightness(activeButtonBgColor, 20); // MCLabels, Karte !Später siehe oben
-	protected Color inactiveButtonBgColor;
 	protected Color disabledButtonBgColor;
 	protected Color imageLabelBgColor = new Color(0, 0, 0, 0); // In der Regel soll das ImagePanel transparent sein..,
 
 	protected Color menuBarBackground;
-	protected Color menuBarHoverBackground = adjustBrightness(menuBarBackground, 20);
-	protected Color menuDisabledForeground = adjustBrightness(textColor, 90);
+	protected Color menuBarHoverBackground; // default = adjustBrightness(menuBarBackground, 20);
+	protected Color menuDisabledForeground; // default = adjustBrightness(textColor, 90);
+	protected String menuButtonPadding; // default = font.getSize() * 0.3 + "px " + font.getSize() * 0.4 + "px";
+	protected String menuItemPadding; // default = font.getSize() * 0.1 + "px " + font.getSize() * 0.5 + "px";
+	
+	protected Integer imageMapShapeBorderWidth; // default = 2;
+	protected Integer imageMapLineShapeInnerWidth; // default = 12. Nur für den unsichtbaren Click-Bereich!
+	protected Integer imageMapShapeMarkedOuterWidth; // default = 7
+	protected Integer imageMapShapeMarkedInnerWidth; // default = 4
+	
+	protected Double shapeMapStandardBorderWidth; // default = 1.8;
+	protected Double shapeMapFederalStateBorderWidth; // default 2.8 für Niedersachsen z. B.
 
 	protected Font font;
 	protected Font smallFont;
@@ -126,6 +129,7 @@ public abstract class Skin {
 	protected BorderParams borderBigComponent; // Für das Bild
 	protected Color borderColor; // Karten
 	protected Color thinBorderColor; // Um contentPane und unten die MenuBar
+	protected Integer thinBorderWidth; // default = 1
 
 	protected String backButtonIcon;
 	protected String skipButtonIcon;
@@ -186,7 +190,6 @@ public abstract class Skin {
 
 	public MenuBar createMenuBar() {
 		MenuBar menuBar = new MenuBar();
-		// !Sofort: Ich glaube das macht gar nix...
 		menuBar.setStyle("-fx-background-color: " + UIUtils.toHex(menuBarBackground) + ";"); // Hintergrund rechts vom Icon, hinter den Top-Menüs
 		return menuBar;
 	}
@@ -198,8 +201,6 @@ public abstract class Skin {
 	public MenuItem createMenuItem(String text) {
 		return new MenuItem(text);
 	}
-	
-	// app.ui.skin.Skin.java
 
 	public HeaderBar createHeaderBar(Stage stage, MenuBar menuBar) {
 	    HeaderBar headerBar = new HeaderBar();
@@ -270,348 +271,31 @@ public abstract class Skin {
 	// !Sofort: Hier gibt es natürlich so einige Magic Numbers noch, die müssen dann leider perspektivisch raus? Oder machen wir das, wann immer ich das mal für andere Auflösungen brauche? Keine Ahnung, ob das je passiert tbh
 	// In SkinService:
 	public void styleScene(Scene scene) {
+		menuBarHoverBackground = menuBarHoverBackground == null ? adjustBrightness(menuBarBackground, 20) : menuBarBackground;
+		menuDisabledForeground = menuDisabledForeground == null ? adjustBrightness(textColor, 90) : menuDisabledForeground;
+		menuButtonPadding = menuButtonPadding == null ? font.getSize() * 0.3 + "px " + font.getSize() * 0.4 + "px" : menuButtonPadding;
+		menuItemPadding = menuItemPadding == null ? font.getSize() * 0.1 + "px " + font.getSize() * 0.5 + "px" : menuItemPadding;
+		thinBorderWidth = thinBorderWidth == null ? 1 : thinBorderWidth;
+		imageMapShapeBorderWidth = imageMapShapeBorderWidth == null ? 2 : imageMapShapeBorderWidth;
+		imageMapLineShapeInnerWidth = imageMapLineShapeInnerWidth == null ? 7 : imageMapLineShapeInnerWidth;
+		imageMapShapeMarkedOuterWidth = imageMapShapeMarkedOuterWidth == null ? 7 : imageMapShapeMarkedOuterWidth;
+		imageMapShapeMarkedInnerWidth = imageMapShapeMarkedInnerWidth == null ? 4 : imageMapShapeMarkedInnerWidth;
+		shapeMapStandardBorderWidth = shapeMapStandardBorderWidth == null ? 1.8 : shapeMapStandardBorderWidth;
+		shapeMapFederalStateBorderWidth = shapeMapFederalStateBorderWidth == null ? 2.8 : shapeMapFederalStateBorderWidth;
+		
 	    scene.setFill(menuBarBackground);
 	    
 	    // CSS generieren
 	    String css = "";
-	    //css = addCssRule(css, ".label", "-fx-opacity", "0.92"); //!Sofort Sieht nen Tick besser aus mit -Dprism.lcdtext=false als JVM-Argument
-	    
-	 // 1. LCD muss an sein (also KEIN -Dprism.lcdtext=false Argument!)
-	 // Damit hast du die Schärfe und die "blauen Ränder".
-
-	 // 2. Wir dicken die Schrift künstlich an:
-	 // Setze die Kontur-Farbe auf die Textfarbe
-	/** css = addCssRule(css, ".label .text", "-fx-stroke", UIUtils.toHex(textColor)); 
-
-	 // Wähle eine Dicke. 
-	 // 0.3px bis 0.5px entspricht meist dem Sprung von "Thin" zu "Normal" oder "Normal" zu "Medium".
-	 // Experimentiere hier: 0.2px, 0.4px, 0.6px...
-	 css = addCssRule(css, ".label .text", "-fx-stroke-width", "0.01px");**/
-	    
-	    // !Sofort Du musst hier so dringend aufräumen. Setze mehr global vielleicht(?) und überschreibe nur, wenn es sein muss z. B.
-	    // !Sofort Alle custom styles müssen einen identischen präfix haben. thorsten oder besser custom... 
-	    // !Sofort: Leider nein! Kein * weil: Wir müssen aufhören, * für Schriftgrößen zu benutzen. Der Stern-Selektor ist in JavaFX extrem aggressiv, weil er wirklich bis in die tiefsten Eingeweide der Komponenten (Scrollbars, Text-Nodes, Pfeile in ComboBoxen) greift und dort Eigenschaften hart setzt, die eigentlich vererbt werden sollten.
-	    // !Sofort: Naja, aber vielleicht können wir statt *, der sich ja iwie komisch verhält, auch einfach root nehmen? :-)
-	    // https://stackoverflow.com/questions/79307490/the-universal-selector-overrides-more-specific-selectors-in-css-for-javafx-fxm
-	    css = addCssRule(css, ".menu-button", "-fx-padding", 
-	    		font.getSize() * 0.3 + "px " + font.getSize() * 0.4 + "px"); // Wenn fontsize global gesetzt wird, berechnet javafx daraus paddings und die sind einfach zu groß...
-	    
-	    // 1. Der "klebende" Fokus wird unsichtbar mit "transparent" und Hover mit UIUtils.toHex(menuBarHoverBackground). Diesen klebenden Fokus gibt es allerdings nur beim Öffnen eines Untermnüs, nicht beim Öffnen eines Top-Menüs. Ich bin noch nicht überzeugt, dass man dieses Verhalten akzeptieren muss tbh...
-	    // Ok, Gemini hat mir folgenden Link geschickt, das überzeugt mich nun zu 90% dass es ein JavaFX-Problem ist: https://bugs.openjdk.org/browse/JDK-8227679
-	    // Auch wenn hier von ContextMenus gesprochen wird. Aber This is a minor annoyance, but not a serious issue. Lowering priority to P4. → Really???
-	    css = addCssRule(css, ".menu-item:focused", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground));
-	    
-	    css = addCssRule(css, ".menu .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Lernen
-	    css = addCssRule(css, ".menu .label", "-fx-font-size", "" + font.getSize() + "px");  // Schriftgröße Lernen
-	    css = addCssRule(css, ".menu:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover über Lernen
-	    css = addCssRule(css, ".menu:showing", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hintergrund von Lernen, wenn ich über ein Untermenü hovere, wie Multiple Choice oder so.
-	    css = addCssRule(css, ".menu:focused", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hintergrund von Anzeigereihenfolge, wenn ich über ein Untermenü hovere, wie Zufällig oder so.
-	    css = addCssRule(css, ".menu", "-fx-font-family", "'" + font.getFamily() + "'"); // Lernen
-	    
-	    
-	    css = addCssRule(css, ".menu-item .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Multiple Choice unter Lernen
-	    css = addCssRule(css, ".menu-item .label", "-fx-font-size", "" + font.getSize() + "px");  // Schriftgröße Multiple Choice unter Lernen
-	    css = addCssRule(css, ".menu-item", "-fx-padding", "2px 10px"); // Vertikaler Zeilenabstand und Padding links/rechts von Multiple Choice
-	    css = addCssRule(css, ".menu-item:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover über Multiple Choice unter Lernen
-	    css = addCssRule(css, ".menu-item:disabled:hover", "-fx-background-color", "transparent"); // Schaltet den Hover für disabled Items aus.
-	    
-	    css = addCssRule(css, ".context-menu", "-fx-background-color", UIUtils.toHex(menuBarBackground));  // Untermenüs (Multiple Choice unter Lernen)
-	    css = addCssRule(css, ".menu-item", "-fx-font-family", "'" + font.getFamily() + "'"); // Multiple Choice
-	    css = addCssRule(css, ".menu-item:disabled .label", "-fx-text-fill", UIUtils.toHex(textColor)); // JavaFX macht das eigenständig entsättigt. Also selbst Color.Red setzen würde nur ein schmutziges graurot erzeugen.
-	    
-	    css = addCssRule(css, ".context-menu", "-fx-border-color", UIUtils.toHex(thinBorderColor));
-	    css = addCssRule(css, ".context-menu", "-fx-border-width", "1px");
-	    
-	    css = addCssRule(css, ".thorstens-bar", "-fx-background-color", UIUtils.toHex(menuBarBackground));
-	    css = addCssRule(css, ".thorstens-bar", "-fx-border-color", UIUtils.toHex(thinBorderColor));
-	    css = addCssRule(css, ".thorstens-bar", "-fx-border-width", "0 0 1 0");
-	    
-	    css = addCssRule(css, ".thorstens-title", "-fx-font-family", "'" + font.getFamily() + "'");
-	    css = addCssRule(css, ".thorstens-title", "-fx-font-size", font.getSize() + "px");  // Vom Skin-Font!
-	    css = addCssRule(css, ".thorstens-title", "-fx-text-fill", UIUtils.toHex(textColor));
-	    
-	    css = addCssRule(css, ".thorstens-root", "-fx-border-color", "white");
-	    css = addCssRule(css, ".thorstens-root", "-fx-border-width", "1px");
-	    
-	 // Generierung der Rules für CustomTextLabels
-        for (TextLabelType type : TextLabelType.values()) {
-            String selector = "#" + type.toString() + "Label"; // z.B. #QuestionLabel
-            
-            String fieldName = "displayText" + type.toString() + "BgColor";
-            Color bg = (Color) getFieldValue(fieldName);
-            if (bg == null) bg = displayTextBgColor;
-            
-            BorderParams border = borderMediumComponent;
-            java.awt.Insets insets = border.insets();
-            
-            // 1. Container Styles (StackPane)
-            // Background, Border, Padding etc. gehören auf den Container
-            css = addCssRule(css, selector, "-fx-background-color", UIUtils.toHex(bg));
-            
-            // Font wird vererbt, kann also auch auf den Container
-            css = addCssRule(css, selector, "-fx-font-family", "'" + font.getFamily() + "'");
-            css = addCssRule(css, selector, "-fx-font-size", font.getSize() + "px");
-            
-            css = addCssRule(css, selector, "-fx-border-color", UIUtils.toHex(border.color()));
-            css = addCssRule(css, selector, "-fx-border-width", border.width() + "px");
-            css = addCssRule(css, selector, "-fx-border-radius", border.arc() + "px");
-            css = addCssRule(css, selector, "-fx-background-radius", border.arc() + "px");
-            
-            String padding = String.format("%dpx %dpx %dpx %dpx", 
-                insets.top, insets.right, insets.bottom, insets.left);
-            css = addCssRule(css, selector, "-fx-padding", padding);
-            
-            // 2. Text Styles (Text-Nodes) - NEU!
-            // Ein StackPane vererbt die Textfarbe NICHT automatisch an Text-Nodes.
-            // Wir müssen "Jeder Text innerhalb von selector" ansprechen.
-            css = addCssRule(css, selector + " Text", "-fx-fill", UIUtils.toHex(textColor));
-        }
-        
-     // --- ImageMap Shapes: Basis ---
-
-     // First Path (wird zuerst gezeichnet, unten)
-     css = addCssRule(css, ".first", "-fx-fill", "transparent");
-     css = addCssRule(css, ".first", "-fx-stroke", "transparent");
-     css = addCssRule(css, ".first", "-fx-mouse-transparent", "true");
-     css = addCssRule(css, ".first", "-fx-stroke-line-cap", "round");
-     css = addCssRule(css, ".first", "-fx-stroke-line-join", "round");
-
-     // Second Path (wird danach gezeichnet, oben)
-     css = addCssRule(css, ".second", "-fx-fill", "transparent");
-     css = addCssRule(css, ".second", "-fx-stroke", "transparent");
-     css = addCssRule(css, ".second", "-fx-stroke-width", 2 + "px");
-     css = addCssRule(css, ".second", "-fx-stroke-line-cap", "round");
-     css = addCssRule(css, ".second", "-fx-stroke-line-join", "round");
-
-     // Rivers: Andere Basis-Breiten
-     css = addCssRule(css, ".river .first", "-fx-stroke-width", "11px");
-     css = addCssRule(css, ".river .second", "-fx-stroke-width", "7px");
-
-     // --- CORRECT State ---
-     // First = Fill (grün), Second = Border (schwarz)
-     css = addCssRule(css, ".image-map-shape:correct .first", "-fx-fill", UIUtils.toHex(correctColor));
-     css = addCssRule(css, ".image-map-shape:correct .second", "-fx-stroke", UIUtils.toHex(borderColor));
-     // Rivers bei correct: Erst dicken Border malen und dann kleiner darein korrekt malen
-     css = addCssRule(css, ".image-map-shape:correct.river .first", "-fx-stroke", UIUtils.toHex(borderColor));
-     css = addCssRule(css, ".image-map-shape:correct.river .first", "-fx-stroke", UIUtils.toHex(correctColor));
-     
-     // --- INCORRECT State ---
-     // First = Fill (rot), Second = Border (schwarz)
-     css = addCssRule(css, ".image-map-shape:incorrect .first", "-fx-fill", UIUtils.toHex(incorrectColor));
-     css = addCssRule(css, ".image-map-shape:incorrect .second", "-fx-stroke", UIUtils.toHex(borderColor));
-     
-
-     // --- MARKED State ---
-     // First = Border (schwarz dick), Second = Fill (gelb dünner)
-     css = addCssRule(css, ".image-map-shape:marked .first", "-fx-fill", "transparent");
-     css = addCssRule(css, ".image-map-shape:marked .first", "-fx-stroke", UIUtils.toHex(borderColor));
-     css = addCssRule(css, ".image-map-shape:marked .first", "-fx-stroke-width", (7) + "px"); // ~9px
-     css = addCssRule(css, ".image-map-shape:marked .second", "-fx-fill", "transparent");
-     css = addCssRule(css, ".image-map-shape:marked .second", "-fx-stroke", UIUtils.toHex(markedColor));
-     css = addCssRule(css, ".image-map-shape:marked .second", "-fx-stroke-width", (4) + "px"); // ~7.2px
-
-     // Rivers bei marked: Siehe correct
-     css = addCssRule(css, ".image-map-shape:marked.river .first", "-fx-stroke-width", "11px");
-     css = addCssRule(css, ".image-map-shape:marked.river .second", "-fx-stroke-width", "7px");
-     css = addCssRule(css, ".image-map-shape:marked.river .first", "-fx-stroke", UIUtils.toHex(borderColor));
-     css = addCssRule(css, ".image-map-shape:marked.river .second", "-fx-stroke", UIUtils.toHex(markedColor));
-	    
-	 // --- ShapeMap Styles ---
-	    
-	    // Basis-Styling für alle Shapes (Standard: Inaktiv/Grau)
-	    // Wir nutzen hier disabledComponentBgColor, das entspricht deinem bisherigen "inactiveColor"
-	    //css = addCssRule(css, ".map-shape", "-fx-fill", UIUtils.toHex(disabledComponentBgColor));
-	    css = addCssRule(css, ".map-shape", "-fx-stroke", UIUtils.toHex(borderColor));
-	    css = addCssRule(css, ".map-shape", "-fx-stroke-width", "1.8px"); // Dein Wert aus dem alten Panel
-	    
-	 // Anstatt globalem Hover definieren wir Hover spezifisch für den Spiel-Zustand!
-	    
-	    // Zuerst den normalen Active-State
-	    css = addCssRule(css, ".map-shape:active-game", "-fx-fill", UIUtils.toHex(activeComponentBgColor));
-	    
-	    // DANN den Hover für Active-State (gewinnt durch Reihenfolge UND Spezifität)
-	    // Das entspricht deiner Swing-Logik: "Nur wenn aktiv, dann Hover-Effekt"
-	    css = addCssRule(css, ".map-shape:active-game:hover", "-fx-fill", UIUtils.toHex(activeComponentHoverColor));
-
-	    // --- DER 3D HOVER EFFEKT ---
-	    css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.5), 15, 0, 0, 0)");
-	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "innershadow(one-pass-box, rgba(0,0,0,0.6), 4, 1.0, 3, 3)");
-	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "bloom(0.1)");
-	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "lighting(light(distant, -45, 45, white), 5.0, 1.5, 20, bump-input)");
-	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "reflection(top-offset 0, fraction 0.7, top-opacity 0.5, bottom-opacity 0.0)");
-	    
-	    // Andere Zustände (Correct/Incorrect)
-	    // Da diese Shapes NICHT :active-game sind (die States sind exklusiv),
-	    // greift der Hover von oben hier nicht. Perfekt!
-	    css = addCssRule(css, ".map-shape:correct", "-fx-fill", UIUtils.toHex(correctColor));
-	    css = addCssRule(css, ".map-shape:incorrect", "-fx-fill", UIUtils.toHex(incorrectColor));
-	    
-	    // :marked = Markiert (z.B. bei Elimination) -> markedColor
-	    css = addCssRule(css, ".map-shape:marked", "-fx-fill", UIUtils.toHex(markedColor));
-	    
-	 // --- PAUSE LOGIK ---
-	    // Wenn das Spiel pausiert ist (.game-paused auf dem Parent),
-	    // sollen aktive Shapes (.map-shape:active-game) aussehen wie inaktive (disabledComponentBgColor).
-	    // Wichtig: Correct/Incorrect Shapes bleiben unberührt, da sie den Status :active-game nicht haben!
-	    String pausedColor = UIUtils.toHex(disabledComponentBgColor);
-	    
-	    // Farbe überschreiben
-	    css = addCssRule(css, ".game-paused .map-shape:active-game", "-fx-fill", pausedColor);
-	    
-	    // Hover-Effekt im Pause-Modus unterdrücken (sonst würden sie beim Drüberfahren wieder bunt/leuchtend)
-	    css = addCssRule(css, ".game-paused .map-shape:active-game:hover", "-fx-fill", pausedColor);
-	    css = addCssRule(css, ".game-paused .map-shape:active-game:hover", "-fx-effect", "null"); // 3D Effekt aus
-	    //css = addCssRule(css, ".game-paused .map-shape:active-game:hover", "-fx-cursor", "default"); // Hand aus
-
-	    // Dekorationen (Kontext-Shapes wie Meer oder Nachbarländer)
-	    // Basis-Regel für Deko (keine Interaktion)
-	    css = addCssRule(css, ".decoration", "-fx-mouse-transparent", "true"); // Klicks gehen durch
-	    
-	    // Spezifische Farben für Deko-Sets
-	    if (shapeMapColor0 != null) {
-	        css = addCssRule(css, ".decoration-0", "-fx-fill", UIUtils.toHex(shapeMapColor0));
-	    }
-	    if (shapeMapColor1 != null) {
-	        css = addCssRule(css, ".decoration-1", "-fx-fill", UIUtils.toHex(shapeMapColor1));
-	    }
-	    // Bundesländer z. B.
-	    // DEBUG NUR!
-	    /**css = addCssRule(css, ".map-shape.decoration.decoration-2", "-fx-fill", "transparent");
-	    //css = addCssRule(css, ".map-shape.decoration-2", "-fx-fill", "transparent"); // Ohne "map-shape" würde hier sonst .map-shape:active-game gewinnen!
-	    css = addCssRule(css, ".decoration-2", "-fx-stroke", UIUtils.toHex(borderColor));
-		css = addCssRule(css, ".decoration-2", "-fx-stroke-width", "2.8px"); // !Sofort Magic Number**/
-		css = addCssRule(css, ".map-shape.decoration-2", "-fx-fill", "transparent");
-		css = addCssRule(css, ".map-shape.decoration-2", "-fx-stroke", UIUtils.toHex(borderColor));
-		css = addCssRule(css, ".map-shape.decoration-2", "-fx-stroke-width", "2.8px");
-
-	    // Optional: Hover-Effekt bei Deko ausschalten (falls nötig, aber mouse-transparent regelt das eh)
-	    css = addCssRule(css, ".decoration:hover", "-fx-fill", "derive(-fx-fill, 0%)"); // Farbe beibehalten
-	    
-	 // --- MC Button Styling ---
-	    
-	    // Padding dynamisch aus BorderParams
-	    java.awt.Insets mcInsets = borderSmallComponent.insets();
-	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", 
-	        mcInsets.top, mcInsets.right, mcInsets.bottom, mcInsets.left);
-	    css = addCssRule(css, ".mc-button", "-fx-padding", paddingCss);
-	    
-	    // Basis-Rahmen und Radius
-	    css = addCssRule(css, ".button", "-fx-font-family", "'" + font.getFamily() + "'");
-	    css = addCssRule(css, ".button", "-fx-font-size", font.getSize() + "px");
-	    css = addCssRule(css, ".button", "-fx-text-fill", UIUtils.toHex(textColor));
-	    css = addCssRule(css, ".button", "-fx-background-radius", borderSmallComponent.arc() + "px");
-	    css = addCssRule(css, ".button", "-fx-background-insets", "0");
-	    css = addCssRule(css, ".button", "-fx-border-radius", borderSmallComponent.arc() + "px");
-	    css = addCssRule(css, ".button", "-fx-border-width", borderSmallComponent.width() + "px");
-	    css = addCssRule(css, ".button", "-fx-border-color", UIUtils.toHex(borderSmallComponent.color()));
-	    css = addCssRule(css, ".button", "-fx-text-fill", UIUtils.toHex(textActiveComponentColor == null ? textColor : textActiveComponentColor));
-
-	    // MC Buttons
-	    css = addCssRule(css, ".mc-button:active", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
-	    css = addCssRule(css, ".mc-button:active:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
-	    //css = addCssRule(css, ".mc-button:active:pressed", "-fx-translate-y", "1px");
-	    //css = addCssRule(css, ".mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
-	    css = addCssRule(css, ".mc-button:active:pressed", "-fx-background-color", UIUtils.toHex(adjustBrightness(activeComponentHoverColor, 8)));
-	    css = addCssRule(css, ".mc-button:inactive", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
-	    if (mcIncorrectTextColor != null) {
-	    	css = addCssRule(css, ".mc-button:correct", "-fx-text-fill", UIUtils.toHex(mcCorrectTextColor));
-	    	css = addCssRule(css, ".mc-button:incorrect", "-fx-text-fill", UIUtils.toHex(mcIncorrectTextColor));
-	    }
-	    css = addCssRule(css, ".mc-button:correct", "-fx-background-color", UIUtils.toHex(correctColor));
-	    css = addCssRule(css, ".mc-button:incorrect", "-fx-background-color", UIUtils.toHex(incorrectColor));
-	    
-	    // --- MC Button Layout Varianten (Pseudo-Klassen) ---
-	    
-	    // Padding für mehrzeilige Buttons berechnen (nur 1px oben/unten, damit 2 Zeilen passen)
-	    // Horizontal lassen wir das normale Padding (insets.right/left), damit es optisch gleich aussieht
-	    java.awt.Insets i = borderSmallComponent.insets();
-	    String densePadding = String.format("1px %dpx 1px %dpx", i.right, i.left);
-	 // Berechnung des Spacings basierend auf der Font-Größe (ca. -40% der Größe sorgt für enges Layout)
-	    double lineSpacingSqueezed = font.getSize() * -0.4;
-	    double lineSpacingTiny = smallFont.getSize() * -0.4;
-
-	 // ZWISCHENSTUFE: Squeezed (Normaler Font, aber extrem kompakt)
-	    String squeezedPadding = String.format("0px %dpx 0px %dpx", i.right, i.left);
-	    css = addCssRule(css, ".mc-button:squeezed", "-fx-wrap-text", "true");
-	    css = addCssRule(css, ".mc-button:squeezed", "-fx-padding", squeezedPadding);
-	    
-	    // NEU: Berechneter Wert statt harter "-6px"
-	    css = addCssRule(css, ".mc-button:squeezed", "-fx-line-spacing", lineSpacingSqueezed + "px"); 
-	    css = addCssRule(css, ".mc-button:squeezed", "-fx-text-alignment", "center");
-	    
-	    // VARIANTE B: Tiny (Kleiner Font, enges Padding & Umbruch)
-	    css = addCssRule(css, ".mc-button:tiny", "-fx-wrap-text", "true");
-	    css = addCssRule(css, ".mc-button:tiny", "-fx-padding", squeezedPadding);
-	    
-	    // NEU: Berechneter Wert statt harter "-6px"
-	    css = addCssRule(css, ".mc-button:tiny", "-fx-line-spacing", lineSpacingTiny + "px"); 
-	    css = addCssRule(css, ".mc-button:tiny", "-fx-font-size", smallFont.getSize() + "px");
-	    
-	 // --- Image Styling (Rectangle Version) ---
-	    
-	    // 1. Hintergrund-Layer (Das untere Rectangle)
-	    // Hier definieren wir Füllfarbe (Gold) und den Rahmen.
-	    // Da es ein Rectangle ist, nutzen wir wieder -fx-fill und -fx-stroke!
-	    
-	    // Farbe
-	    css = addCssRule(css, ".image-background-layer", "-fx-fill", UIUtils.toHex(imageLabelBgColor));
-	    
-	    // Rahmen (Stroke)
-	    // Da das backgroundRect unten liegt, sieht man den Stroke evtl. nur zur Hälfte,
-	    // aber bei StrokeType.INSIDE (Default ist Centered) ist das wichtig.
-	    // Besser: Wir geben dem backgroundRect auch den Rahmen.
-	    css = addCssRule(css, ".image-border-layer", "-fx-stroke", UIUtils.toHex(borderBigComponent.color()));
-	    css = addCssRule(css, ".image-border-layer", "-fx-stroke-width", borderBigComponent.width() + "px");
-	    css = addCssRule(css, ".image-border-layer", "-fx-stroke-type", "inside"); // WICHTIG für saubere Kanten!
-	    
-	 // Icon-Button Styling
-	    css = addCssRule(css, ".icon-button", "-fx-padding", "0");
-	    css = addCssRule(css, ".icon-button", "-fx-background-insets", "0");
-	    css = addCssRule(css, ".icon-button", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
-	    css = addCssRule(css, ".icon-button", "-fx-border-color", UIUtils.toHex(borderSmallComponent.color()));
-	    css = addCssRule(css, ".icon-button", "-fx-border-width", borderSmallComponent.width() + "px");
-	    css = addCssRule(css, ".icon-button", "-fx-border-radius", borderSmallComponent.arc() + "px");
-	    css = addCssRule(css, ".icon-button", "-fx-background-radius", borderSmallComponent.arc() + "px");
-	    // Hover
-	    css = addCssRule(css, ".icon-button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
-	    // Disabled (falls nötig)
-	    css = addCssRule(css, ".icon-button:disabled", "-fx-opacity", "1.0");
-	    css = addCssRule(css, ".icon-button:disabled", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
-
-	 // --- TextField Styling ---;
-	    // Basis
-	    css = addCssRule(css, ".input-field", "-fx-font-family", "'" + font.getFamily() + "'");
-	    css = addCssRule(css, ".input-field", "-fx-font-size", font.getSize() + "px");
-	    css = addCssRule(css, ".input-field", "-fx-text-fill", UIUtils.toHex(textActiveComponentColor == null ? textColor : textActiveComponentColor));
-	    css = addCssRule(css, ".input-field", "-fx-alignment", "center");
-	    // Padding
-	    paddingCss = String.format("%dpx %dpx %dpx %dpx", 
-	        borderSmallComponent.insets().top, borderSmallComponent.insets().right, borderSmallComponent.insets().bottom, borderSmallComponent.insets().left);
-	    css = addCssRule(css, ".input-field", "-fx-padding", paddingCss);
-	    // Background & Border (Active)
-	    css = addCssRule(css, ".input-field", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
-	    css = addCssRule(css, ".input-field", "-fx-background-radius", borderSmallComponent.arc() + "px");
-	    css = addCssRule(css, ".input-field", "-fx-border-color", UIUtils.toHex(borderSmallComponent.color()));
-	    css = addCssRule(css, ".input-field", "-fx-border-width", borderSmallComponent.width() + "px");
-	    css = addCssRule(css, ".input-field", "-fx-border-radius", borderSmallComponent.arc() + "px");
-	    // Disabled State
-	    css = addCssRule(css, ".input-field:disabled", "-fx-opacity", "1.0");
-	    css = addCssRule(css, ".input-field:disabled", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
-	    css = addCssRule(css, ".input-field:disabled", "-fx-border-color", UIUtils.toHex(borderSmallComponent.disabledColor()));
-	    css = addCssRule(css, ".input-field:disabled", "-fx-text-fill", UIUtils.toHex(incorrectTextColor));
-	    css = addCssRule(css, ".input-field:disabled", "-fx-font-weight", "bold");
-	    
-	    // Alert und Dialog
-	    css = addCssRule(css, ".dialog-pane", "-fx-background-color", UIUtils.toHex(menuBarBackground));
-	    css = addCssRule(css, ".dialog-pane", "-fx-border-color", UIUtils.toHex(thinBorderColor));
-	    css = addCssRule(css, ".dialog-pane", "-fx-border-width", borderSmallComponent.width() + "px");
-	    css = addCssRule(css, ".dialog-pane", "-fx-font-family", "'" + font.getFamily() + "'");
-	    css = addCssRule(css, ".dialog-pane", "-fx-font-size", font.getSize() + "px");
-	    css = addCssRule(css, ".dialog-pane", "-fx-text-fill", UIUtils.toHex(textColor));
-	    css = addCssRule(css, ".dialog-pane .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Auf dialog-pane reicht nicht für die Schriftfarbe in der Pane....
-	    css = addCssRule(css, ".dialog-pane .button:focused", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
-	    css = addCssRule(css, ".dialog-pane .button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
-	    css = addCssRule(css, ".dialog-pane .button:pressed", "-fx-background-color", UIUtils.toHex(adjustBrightness(activeComponentHoverColor, 8)));
+	    css = addMenuStyles(css);
+	    css = addCustomTextLabelStyles(css);
+	    css = addImageMapStyles(css);
+	    css = addShapeMapStyles(css);
+	    css = addMultipleChoiceStyles(css);
+	    css = addImageStyles(css);
+	    css = addIconButtonStyles(css);
+	    css = addTextInputFieldStyles(css);
+	    css = addAlertAndDialogStyles(css);
 	    
 	    // Wir maskieren kritische Zeichen für die Data-URI
 	    String encodedCss = css.replace("%", "%25")  // % muss zu %25 werden
@@ -716,71 +400,6 @@ public abstract class Skin {
         return label;
     }
 
-	/**public Label createCustomTextLabel(DeckType type, TextLabelType labelType) {
-	    // 1. Bounds & Colors
-	    Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "Session" + labelType + "Panel");
-	    if (bounds == null)
-	        bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "Session" + labelType + "Panel");
-	    
-	    Color bg = (Color) getFieldValue("displayText" + labelType + "BgColor");
-	    bg = bg == null ? displayTextBgColor : bg;
-	    
-	    // 2. BorderParams (enthalten bereits JavaFX Color und AWT Insets)
-	    BorderParams border = borderMediumComponent;
-	    
-	    // 3. Label konfigurieren
-	    Label label = new Label();
-	    label.setLayoutX(bounds.x);
-	    label.setLayoutY(bounds.y);
-	    label.setPrefWidth(bounds.width);
-	    label.setPrefHeight(bounds.height);
-	    
-	    label.setWrapText(true);
-	    // Linksbündig, aber vertikal zentriert (entspricht meistens dem Swing-Default für TextAreas/Labels mit Border)
-	    label.setAlignment(Pos.CENTER_LEFT); 
-	    
-	    // 4. Insets aus BorderParams holen
-	    // Hinweis: BorderParams nutzt java.awt.Insets (top, left, bottom, right)
-	    java.awt.Insets insets = border.insets();
-
-	    // 5. CSS bauen
-	    String style = String.format(
-	            "-fx-background-color: %s;" +
-	            "-fx-text-fill: %s;" +
-	            
-	            // HIER: Hart 'Aptos Medium' erzwingen.
-	            // Falls das nicht greift, probier auch mal "Aptos SemiBold" oder "Aptos Display Medium"
-	            "-fx-font-family: '%s';" + //"-fx-font-family: 'Aptos SemiBold';"
-	            
-	            // Optional zur Sicherheit (falls er die Family nicht findet, fällt er auf Regular zurück und wir versuchen es nochmal via CSS)
-	            //"-fx-font-weight: 700;" + 
-	            
-	            "-fx-font-size: %fpx;" +
-	            "-fx-border-color: %s;" +
-	            "-fx-border-width: %dpx;" +
-	            "-fx-border-radius: %dpx;" +
-	            "-fx-background-radius: %dpx;" +
-	            "-fx-padding: %dpx %dpx %dpx %dpx;", 
-	            
-	            UIUtils.toHex(bg),
-	            UIUtils.toHex(textColor),
-	            font.getFamily(),
-	            font.getSize(),
-	            UIUtils.toHex(border.color()), 
-	            border.width(),
-	            border.arc(),
-	            border.arc(),
-	            insets.top, insets.right, insets.bottom, insets.left
-	        );
-	    
-	    System.out.println("Arc: " + border.arc());
-	    
-	    label.setStyle(style);
-	    label.setId(labelType.toString() + "Label");
-	    
-	    return label;
-	}**/
-
 	public MultipleChoicePane createMultipleChoicePane(DeckType type) {
         // 1. Bounds holen
         Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMcPanel");
@@ -806,6 +425,7 @@ public abstract class Skin {
         System.out.println("Höhe der Buttons gesetzt auf: " + fixedButtonHeight);
 
         // NEU: Berechnung des Spacings (identisch zur Logik in styleScene!)
+        // Sofort! Wieso wird das hier nochmal übergeben, wenn es in styleScene doch bereits als css definiert wurde???
         double lineSpacingSqueezed = font.getSize() * -0.4;
         double lineSpacingTiny = smallFont.getSize() * -0.4;
 
@@ -963,11 +583,7 @@ public abstract class Skin {
 	 *            an int value between 0 (no change) and 100 (maximal change will lead to white or black...)
 	 * @return
 	 */
-	public static Color adjustBrightness(Color c, int intensity) {
-	    if (c == null) {
-	        return null; // Das kann in der Tat passieren z.B. im Konstruktor von Skin hier :)
-	    }
-	    
+	public static Color adjustBrightness(Color c, int intensity) {	    
 	    if (intensity < 0 || intensity > 100) {
 	        throw new RuntimeException("Das soll ein Prozentwert sein für die adjustBrightness, du Witzbold :)");
 	    }
@@ -1102,21 +718,299 @@ public abstract class Skin {
 		return null;
 	}
 	
+	private String addMenuStyles(String css) {
+		// Wir müssen aufhören, * für Schriftgrößen zu benutzen. Der Stern-Selektor ist in JavaFX extrem aggressiv, weil er wirklich bis in die tiefsten Eingeweide der Komponenten (Scrollbars, Text-Nodes, Pfeile in ComboBoxen) greift und dort Eigenschaften hart setzt, die eigentlich vererbt werden sollten.
+	    // https://stackoverflow.com/questions/79307490/the-universal-selector-overrides-more-specific-selectors-in-css-for-javafx-fxm
+	    css = addCssRule(css, ".menu-button", "-fx-padding", menuButtonPadding); // Für die Top-Level-Menüs wie Lernen, Datei, ... Wenn fontsize global gesetzt wird, berechnet javafx daraus paddings und die sind einfach zu groß...
+	    
+	    // 1. Der "klebende" Fokus wird unsichtbar mit "transparent" und Hover mit UIUtils.toHex(menuBarHoverBackground). Diesen klebenden Fokus gibt es allerdings nur beim Öffnen eines Untermnüs, nicht beim Öffnen eines Top-Menüs. Ich bin noch nicht überzeugt, dass man dieses Verhalten akzeptieren muss tbh...
+	    // Ok, Gemini hat mir folgenden Link geschickt, das überzeugt mich nun zu 90% dass es ein JavaFX-Problem ist: https://bugs.openjdk.org/browse/JDK-8227679
+	    // Auch wenn hier von ContextMenus gesprochen wird. Aber This is a minor annoyance, but not a serious issue. Lowering priority to P4. → Really???
+	    css = addCssRule(css, ".menu-item:focused", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground));
+	    
+	    css = addCssRule(css, ".menu .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Lernen
+	    css = addCssRule(css, ".menu .label", "-fx-font-size", "" + font.getSize() + "px");  // Schriftgröße Lernen
+	    css = addCssRule(css, ".menu:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover über Lernen
+	    css = addCssRule(css, ".menu:showing", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hintergrund von Lernen, wenn ich über ein Untermenü hovere, wie Multiple Choice oder so.
+	    css = addCssRule(css, ".menu:focused", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hintergrund von Anzeigereihenfolge, wenn ich über ein Untermenü hovere, wie Zufällig oder so.
+	    css = addCssRule(css, ".menu", "-fx-font-family", "'" + font.getFamily() + "'"); // Lernen
+	    
+	    
+	    css = addCssRule(css, ".menu-item .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Multiple Choice unter Lernen
+	    css = addCssRule(css, ".menu-item .label", "-fx-font-size", "" + font.getSize() + "px");  // Schriftgröße Multiple Choice unter Lernen
+	    css = addCssRule(css, ".menu-item", "-fx-padding", menuItemPadding); // Vertikaler Zeilenabstand und Padding links/rechts von Multiple Choice
+	    css = addCssRule(css, ".menu-item:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover über Multiple Choice unter Lernen
+	    css = addCssRule(css, ".menu-item:disabled:hover", "-fx-background-color", "transparent"); // Schaltet den Hover für disabled Items aus.
+	    
+	    css = addCssRule(css, ".context-menu", "-fx-background-color", UIUtils.toHex(menuBarBackground));  // Untermenüs (Multiple Choice unter Lernen)
+	    css = addCssRule(css, ".menu-item", "-fx-font-family", "'" + font.getFamily() + "'"); // Multiple Choice
+	    css = addCssRule(css, ".menu-item:disabled .label", "-fx-text-fill", UIUtils.toHex(textColor)); // JavaFX macht das eigenständig entsättigt. Also selbst Color.Red setzen würde nur ein schmutziges graurot erzeugen.
+	    
+	    css = addCssRule(css, ".context-menu", "-fx-border-color", UIUtils.toHex(thinBorderColor));
+	    css = addCssRule(css, ".context-menu", "-fx-border-width", thinBorderWidth + "px");
+	    
+	    // Sofort! Du wolltest sofort erkennen was javafx attribute sind und welche custom von mir. Aber es ist nicht durchgezogen und vielleicht wä#re "my" statt "thorsten" auch ausreichend.
+	    css = addCssRule(css, ".thorstens-bar", "-fx-background-color", UIUtils.toHex(menuBarBackground));
+	    css = addCssRule(css, ".thorstens-bar", "-fx-border-color", UIUtils.toHex(thinBorderColor));
+	    css = addCssRule(css, ".thorstens-bar", "-fx-border-width", "0 0 " + thinBorderWidth + " 0");
+	    
+	    css = addCssRule(css, ".thorstens-title", "-fx-font-family", "'" + font.getFamily() + "'");
+	    css = addCssRule(css, ".thorstens-title", "-fx-font-size", font.getSize() + "px");  // Vom Skin-Font!
+	    css = addCssRule(css, ".thorstens-title", "-fx-text-fill", UIUtils.toHex(textColor));
+	    
+	    css = addCssRule(css, ".thorstens-root", "-fx-border-color", "white");
+	    css = addCssRule(css, ".thorstens-root", "-fx-border-width", thinBorderWidth + "px");
+	    
+	    return css;
+	}
+	
+	private String addCustomTextLabelStyles(String css) {
+		// History, Progress und Question
+        for (TextLabelType type : TextLabelType.values()) {
+            String selector = "#" + type.toString() + "Label";
+            
+            String fieldName = "displayText" + type.toString() + "BgColor";
+            Color bg = (Color) getFieldValue(fieldName);
+            if (bg == null) bg = displayTextBgColor;
+            
+            BorderParams border = borderMediumComponent;
+            java.awt.Insets insets = border.insets();
+            
+            // 1. Container Styles (StackPane)
+            // Background, Border, Padding etc. gehören auf den Container
+            css = addCssRule(css, selector, "-fx-background-color", UIUtils.toHex(bg));
+            
+            // Font wird vererbt, kann also auch auf den Container
+            css = addCssRule(css, selector, "-fx-font-family", "'" + font.getFamily() + "'");
+            css = addCssRule(css, selector, "-fx-font-size", font.getSize() + "px");
+            
+            css = addCssRule(css, selector, "-fx-border-color", UIUtils.toHex(border.color()));
+            css = addCssRule(css, selector, "-fx-border-width", border.width() + "px");
+            css = addCssRule(css, selector, "-fx-border-radius", border.arc() + "px");
+            css = addCssRule(css, selector, "-fx-background-radius", border.arc() + "px");
+
+            String padding = String.format("%dpx %dpx %dpx %dpx", insets.top, insets.right, insets.bottom, insets.left);
+            css = addCssRule(css, selector, "-fx-padding", padding);
+            
+            // 2. Text Styles (Text-Nodes)
+            // Ein StackPane vererbt die Textfarbe NICHT automatisch an Text-Nodes. Wir müssen "Jeden javafx.scene.text.Text innerhalb von selector" ansprechen.
+            css = addCssRule(css, selector + " Text", "-fx-fill", UIUtils.toHex(textColor));
+        }
+        return css;
+	}
+	
+	private String addImageMapStyles(String css) {
+		// First Path (wird zuerst gezeichnet, unten). Transparent zum Raten. Mausclick wird ignoriert
+	     css = addCssRule(css, ".first", "-fx-fill", "transparent");
+	     css = addCssRule(css, ".first", "-fx-stroke", "transparent");
+	     css = addCssRule(css, ".first", "-fx-mouse-transparent", "true");
+	     css = addCssRule(css, ".first", "-fx-stroke-line-cap", "round");
+	     css = addCssRule(css, ".first", "-fx-stroke-line-join", "round");
+
+	     // Second Path (wird danach gezeichnet, oben) Transparent zum Raten. Mausclick wird registriert
+	     css = addCssRule(css, ".second", "-fx-fill", "transparent");
+	     css = addCssRule(css, ".second", "-fx-stroke", "transparent");
+	     css = addCssRule(css, ".second", "-fx-stroke-width", imageMapShapeBorderWidth + "px");
+	     css = addCssRule(css, ".second", "-fx-stroke-line-cap", "round");
+	     css = addCssRule(css, ".second", "-fx-stroke-line-join", "round");
+
+	     // Rivers: Breite fürs Registrieren eines Klicks
+	     css = addCssRule(css, ".river .second", "-fx-stroke-width", imageMapLineShapeInnerWidth + "px");
+
+	     // --- CORRECT State ---
+	     // First = Fill (grün), Second = Border (schwarz)
+	     css = addCssRule(css, ".image-map-shape:correct .first", "-fx-fill", UIUtils.toHex(correctColor));
+	     css = addCssRule(css, ".image-map-shape:correct .second", "-fx-stroke", UIUtils.toHex(borderColor));
+	     // Rivers bei correct: Erst dicken Border malen und dann kleiner darein korrekt malen
+	     css = addCssRule(css, ".image-map-shape:correct.river .first", "-fx-stroke", UIUtils.toHex(borderColor));
+	     css = addCssRule(css, ".image-map-shape:correct.river .second", "-fx-stroke", UIUtils.toHex(correctColor));
+	     
+	     // --- INCORRECT State --- Gibt es aktuell nur für einen immer gleich großen Kreis...
+	     // First = Fill (rot), Second = Border (schwarz)
+	     css = addCssRule(css, ".image-map-shape:incorrect .first", "-fx-fill", UIUtils.toHex(incorrectColor));
+	     css = addCssRule(css, ".image-map-shape:incorrect .second", "-fx-stroke", UIUtils.toHex(borderColor));
+	     
+
+	     // --- MARKED State ---
+	     // First = Border (schwarz dick), Second = Fill (gelb dünner)
+	     css = addCssRule(css, ".image-map-shape:marked .first", "-fx-fill", "transparent");
+	     css = addCssRule(css, ".image-map-shape:marked .first", "-fx-stroke", UIUtils.toHex(borderColor));
+	     css = addCssRule(css, ".image-map-shape:marked .first", "-fx-stroke-width", imageMapShapeMarkedOuterWidth + "px");
+	     css = addCssRule(css, ".image-map-shape:marked .second", "-fx-fill", "transparent");
+	     css = addCssRule(css, ".image-map-shape:marked .second", "-fx-stroke", UIUtils.toHex(markedColor));
+	     css = addCssRule(css, ".image-map-shape:marked .second", "-fx-stroke-width", imageMapShapeMarkedInnerWidth + "px");
+	     
+	     return css;
+	}
+	
+	private String addShapeMapStyles (String css) {
+	    // Basis-Styling für alle Shapes (Border wird gezeichnet)
+	    css = addCssRule(css, ".map-shape", "-fx-stroke", UIUtils.toHex(borderColor));
+	    css = addCssRule(css, ".map-shape", "-fx-stroke-width", shapeMapStandardBorderWidth + "px");
+	    
+	    // Aktive werden gefüllt und haben Hover
+	    css = addCssRule(css, ".map-shape:active-game", "-fx-fill", UIUtils.toHex(activeComponentBgColor));
+	    css = addCssRule(css, ".map-shape:active-game:hover", "-fx-fill", UIUtils.toHex(activeComponentHoverColor));
+	    css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.5), 15, 0, 0, 0)");
+	    // Alternative Effekte (für andere Skins):
+	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "innershadow(one-pass-box, rgba(0,0,0,0.6), 4, 1.0, 3, 3)");
+	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "bloom(0.1)");
+	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "lighting(light(distant, -45, 45, white), 5.0, 1.5, 20, bump-input)");
+	    //css = addCssRule(css, ".map-shape:active-game:hover", "-fx-effect", "reflection(top-offset 0, fraction 0.7, top-opacity 0.5, bottom-opacity 0.0)");
+	    
+	    // Korrekte, markierte und inkorrekte werden auch gefüllt aber haben keinen Hover...
+	    css = addCssRule(css, ".map-shape:correct", "-fx-fill", UIUtils.toHex(correctColor));
+	    css = addCssRule(css, ".map-shape:incorrect", "-fx-fill", UIUtils.toHex(incorrectColor));
+	    css = addCssRule(css, ".map-shape:marked", "-fx-fill", UIUtils.toHex(markedColor));
+
+	    // Wenn Spiel pausiert ist (.game-paused auf dem Parent) bekommen aktive die disabledComponentBgColor und keinen Hover-Effekt
+	    css = addCssRule(css, ".game-paused .map-shape:active-game", "-fx-fill", UIUtils.toHex(disabledComponentBgColor));
+	    css = addCssRule(css, ".game-paused .map-shape:active-game:hover", "-fx-fill", UIUtils.toHex(disabledComponentBgColor));
+	    css = addCssRule(css, ".game-paused .map-shape:active-game:hover", "-fx-effect", "null"); // 3D Effekt aus
+
+	    // Dekorationen (Kontext-Shapes wie Meer oder Nachbarländer) Basis-Regel für Deko (keine Interaktion, kein Hover)
+	    css = addCssRule(css, ".decoration", "-fx-mouse-transparent", "true"); // Klicks gehen durch
+	    
+	    // Spezifische Farben für Deko-Sets
+	    if (shapeMapColor0 != null) {
+	        css = addCssRule(css, ".decoration-0", "-fx-fill", UIUtils.toHex(shapeMapColor0)); // Länder
+	    }
+	    if (shapeMapColor1 != null) {
+	        css = addCssRule(css, ".decoration-1", "-fx-fill", UIUtils.toHex(shapeMapColor1)); // Gewässer
+	    }
+	    // Bundesländer z. B.
+		css = addCssRule(css, ".map-shape.decoration-2", "-fx-fill", "transparent");
+		css = addCssRule(css, ".map-shape.decoration-2", "-fx-stroke", UIUtils.toHex(borderColor));
+		css = addCssRule(css, ".map-shape.decoration-2", "-fx-stroke-width", shapeMapFederalStateBorderWidth + "px");
+		
+		return css;
+	}
+	
+	private String addMultipleChoiceStyles (String css) {
+	    // Padding dynamisch aus BorderParams
+	    java.awt.Insets mcInsets = borderSmallComponent.insets();
+	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", 
+	        mcInsets.top, mcInsets.right, mcInsets.bottom, mcInsets.left);
+	    css = addCssRule(css, ".mc-button", "-fx-padding", paddingCss);
+	    
+	    // Basis-Rahmen und Radius
+	    css = addCssRule(css, ".button", "-fx-font-family", "'" + font.getFamily() + "'");
+	    css = addCssRule(css, ".button", "-fx-font-size", font.getSize() + "px");
+	    css = addCssRule(css, ".button", "-fx-background-radius", borderSmallComponent.arc() + "px");
+	    css = addCssRule(css, ".button", "-fx-background-insets", "0");
+	    css = addCssRule(css, ".button", "-fx-border-radius", borderSmallComponent.arc() + "px");
+	    css = addCssRule(css, ".button", "-fx-border-width", borderSmallComponent.width() + "px");
+	    css = addCssRule(css, ".button", "-fx-border-color", UIUtils.toHex(borderSmallComponent.color()));
+	    css = addCssRule(css, ".button", "-fx-text-fill", UIUtils.toHex(textActiveComponentColor == null ? textColor : textActiveComponentColor));
+
+	    // MC Buttons
+	    css = addCssRule(css, ".mc-button:active", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
+	    css = addCssRule(css, ".mc-button:active:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
+	    css = addCssRule(css, ".mc-button:active:pressed", "-fx-background-color", UIUtils.toHex(adjustBrightness(activeComponentHoverColor, 8)));
+	    // Alternative Effekte (für andere Skins):
+	    //css = addCssRule(css, ".mc-button:active:pressed", "-fx-translate-y", "1px");
+	    //css = addCssRule(css, ".mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
+	    css = addCssRule(css, ".mc-button:inactive", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
+	    if (mcIncorrectTextColor != null) {
+	    	css = addCssRule(css, ".mc-button:correct", "-fx-text-fill", UIUtils.toHex(mcCorrectTextColor));
+	    	css = addCssRule(css, ".mc-button:incorrect", "-fx-text-fill", UIUtils.toHex(mcIncorrectTextColor));
+	    }
+	    css = addCssRule(css, ".mc-button:correct", "-fx-background-color", UIUtils.toHex(correctColor));
+	    css = addCssRule(css, ".mc-button:incorrect", "-fx-background-color", UIUtils.toHex(incorrectColor));
+	    
+	    // --- MC Button Layout Varianten (Pseudo-Klassen) ---
+	    
+	    // Padding für mehrzeilige Buttons berechnen (nur 1px oben/unten, damit 2 Zeilen passen)
+	    // Horizontal lassen wir das normale Padding (insets.right/left), damit es optisch gleich aussieht
+	    java.awt.Insets i = borderSmallComponent.insets();
+	    double lineSpacingSqueezed = font.getSize() * -0.4;
+	    double lineSpacingTiny = smallFont.getSize() * -0.4;
+	    String squeezedPadding = String.format("0px %dpx 0px %dpx", i.right, i.left);
+
+	    // ZWISCHENSTUFE: Squeezed (Normaler Font, aber extrem kompakt)
+	    css = addCssRule(css, ".mc-button:squeezed", "-fx-wrap-text", "true");
+	    css = addCssRule(css, ".mc-button:squeezed", "-fx-padding", squeezedPadding);
+	    css = addCssRule(css, ".mc-button:squeezed", "-fx-line-spacing", lineSpacingSqueezed + "px"); 
+	    css = addCssRule(css, ".mc-button:squeezed", "-fx-text-alignment", "center");
+	    
+	    // EXTREM: Tiny (Kleiner Font, enges Padding & Umbruch)
+	    css = addCssRule(css, ".mc-button:tiny", "-fx-wrap-text", "true");
+	    css = addCssRule(css, ".mc-button:tiny", "-fx-padding", squeezedPadding);
+	    css = addCssRule(css, ".mc-button:tiny", "-fx-line-spacing", lineSpacingTiny + "px"); 
+	    css = addCssRule(css, ".mc-button:tiny", "-fx-font-size", smallFont.getSize() + "px");
+	    
+	    return css;
+	}
+	
+	private String addImageStyles(String css) {
+	    css = addCssRule(css, ".image-background-layer", "-fx-fill", UIUtils.toHex(imageLabelBgColor));
+	    css = addCssRule(css, ".image-border-layer", "-fx-stroke", UIUtils.toHex(borderBigComponent.color()));
+	    css = addCssRule(css, ".image-border-layer", "-fx-stroke-width", borderBigComponent.width() + "px");
+	    css = addCssRule(css, ".image-border-layer", "-fx-stroke-type", "inside");
+	    
+	    return css;
+	}
+	
+	private String addIconButtonStyles (String css) {
+	    css = addCssRule(css, ".icon-button", "-fx-padding", "0");
+	    css = addCssRule(css, ".icon-button", "-fx-background-insets", "0");
+	    css = addCssRule(css, ".icon-button", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
+	    css = addCssRule(css, ".icon-button", "-fx-border-color", UIUtils.toHex(borderSmallComponent.color()));
+	    css = addCssRule(css, ".icon-button", "-fx-border-width", borderSmallComponent.width() + "px");
+	    css = addCssRule(css, ".icon-button", "-fx-border-radius", borderSmallComponent.arc() + "px");
+	    css = addCssRule(css, ".icon-button", "-fx-background-radius", borderSmallComponent.arc() + "px");
+	    
+	    css = addCssRule(css, ".icon-button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
+	    css = addCssRule(css, ".icon-button:disabled", "-fx-opacity", "1.0"); // JavaFX setzt da sonst per se einen Default von 40% oder so für disabled...
+	    css = addCssRule(css, ".icon-button:disabled", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
+	    
+	    return css;
+	}
+	
+	private String addTextInputFieldStyles (String css) {
+		 // --- TextField Styling ---;
+	    // Basis
+	    css = addCssRule(css, ".input-field", "-fx-font-family", "'" + font.getFamily() + "'");
+	    css = addCssRule(css, ".input-field", "-fx-font-size", font.getSize() + "px");
+	    css = addCssRule(css, ".input-field", "-fx-text-fill", UIUtils.toHex(textActiveComponentColor == null ? textColor : textActiveComponentColor));
+	    css = addCssRule(css, ".input-field", "-fx-alignment", "center");
+	    // Padding
+	    Insets i = borderSmallComponent.insets();
+	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", i.top, i.right, i.bottom, i.left);
+	    css = addCssRule(css, ".input-field", "-fx-padding", paddingCss);
+	    // Background & Border (Active)
+	    css = addCssRule(css, ".input-field", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
+	    css = addCssRule(css, ".input-field", "-fx-background-radius", borderSmallComponent.arc() + "px");
+	    css = addCssRule(css, ".input-field", "-fx-border-color", UIUtils.toHex(borderSmallComponent.color()));
+	    css = addCssRule(css, ".input-field", "-fx-border-width", borderSmallComponent.width() + "px");
+	    css = addCssRule(css, ".input-field", "-fx-border-radius", borderSmallComponent.arc() + "px");
+	    // Disabled State
+	    css = addCssRule(css, ".input-field:disabled", "-fx-opacity", "1.0"); // JavaFX setzt da sonst einen Wert von 40% oder so...
+	    css = addCssRule(css, ".input-field:disabled", "-fx-background-color", UIUtils.toHex(disabledComponentBgColor));
+	    css = addCssRule(css, ".input-field:disabled", "-fx-border-color", UIUtils.toHex(borderSmallComponent.disabledColor()));
+	    css = addCssRule(css, ".input-field:disabled", "-fx-text-fill", UIUtils.toHex(incorrectTextColor));
+	    css = addCssRule(css, ".input-field:disabled", "-fx-font-weight", "bold");
+	    
+	    return css;
+	}
+	
+	private String addAlertAndDialogStyles (String css) {
+		// Alert und Dialog
+	    css = addCssRule(css, ".dialog-pane", "-fx-background-color", UIUtils.toHex(menuBarBackground));
+	    css = addCssRule(css, ".dialog-pane", "-fx-border-color", UIUtils.toHex(thinBorderColor));
+	    css = addCssRule(css, ".dialog-pane", "-fx-border-width", borderSmallComponent.width() + "px");
+	    css = addCssRule(css, ".dialog-pane", "-fx-font-family", "'" + font.getFamily() + "'");
+	    css = addCssRule(css, ".dialog-pane", "-fx-font-size", font.getSize() + "px");
+	    css = addCssRule(css, ".dialog-pane", "-fx-text-fill", UIUtils.toHex(textColor));
+	    css = addCssRule(css, ".dialog-pane .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Auf dialog-pane reicht nicht für die Schriftfarbe in der Pane....
+	    css = addCssRule(css, ".dialog-pane .button:focused", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
+	    css = addCssRule(css, ".dialog-pane .button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
+	    css = addCssRule(css, ".dialog-pane .button:pressed", "-fx-background-color", UIUtils.toHex(adjustBrightness(activeComponentHoverColor, 8)));
+	    
+	    return css;
+	}
+	
 	private String addCssRule(String existingCss, String selector, String property, String value) {
 	    return existingCss + String.format("%s { %s: %s; }", selector, property, value);
 	}
-	
-	
-
-	/**
-	 * Funktioniert zumindest für Buttons ohne html. Für andere Komponenten noch ungetestet.
-	 * 
-	 * @param component
-	 * @param bgColor
-	 * @param fgColor
-	 */
-	/**
-	 * public default void addDisabledColors(JComponent component, Color bgColor, Color fgColor) { Map<String, String> updates = Map.of( "disabledBackground",
-	 * toHex(bgColor), "disabledText", toHex(fgColor) ); updateFlatLafStyle(component, updates); }
-	 **/
 }

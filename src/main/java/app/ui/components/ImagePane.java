@@ -14,6 +14,7 @@ public class ImagePane extends StackPane {
     // Layer 3: Der Rahmen (liegt ganz oben)
     private final Rectangle borderRect;
 
+    // Sofort! Wieso definieren wir die arcs und so nicht über CSS????
     public ImagePane(double width, double height, double arcDiameter) {
         // 1. Container-Größe fixieren
         setPrefSize(width, height);
