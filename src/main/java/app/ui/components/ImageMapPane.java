@@ -5,7 +5,6 @@ import java.util.Set;
 import app.data.GeoMap;
 import app.data.MapShape;
 import app.ui.MapElementListener;
-import app.ui.UIUtils;
 import app.ui.skin.params.BorderParams;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
@@ -22,6 +21,27 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
+/**
+ * A map that is basically a very large image. The image can be dragged and dropped. Shapes can be placed on the
+ * image. They are invisible when a click on them is expected and after the click they are shown as correct.
+ * Shapes can also be marked (What mountain range is this?). Shapes consist of two Paths organized in a group.
+ * A shape can be a polygon (countries) or a line (rivers).
+ * 
+ * ImageMapPane
+ * |-- Pane viewport (clipped und mit prefSize)
+ *     |-- Group contentGroup
+ *         |-- ImageView
+ *         |-- Group shapeLayer
+ *      |-- ImageView miniMap
+ *      |-- Region borderOverlay
+ *      
+ * CSS:
+ * 		ImageMapPane	= ".image-map-pane",
+ * 		borderOverlay	= "#borderOverlay"
+ * 		Shape (group)	= ".image-map-shape", ".river"
+ * 		Shape (group)	= ":correct", ":incorrect", ":marked"
+ * 		Shape (path)	= ".first", ".second"
+ */
 public class ImageMapPane extends StackPane {
 
 	// Pseudo-Klassen für CSS
@@ -58,16 +78,7 @@ public class ImageMapPane extends StackPane {
 		this.map = map;
 		this.overlayContentBounds = overlayContentBounds;
 		this.cardShapes = new ShapesWrapper();
-		
-		/**
-		 * ImageMapPane
-		 * |-- Pane viewport (clipped und mit prefSize)
-		 *     |-- Group contentGroup
-		 *         |-- ImageView
-		 *         |-- Group shapeLayer
-		 *      |-- ImageView miniMap
-		 *      |-- Region borderOverlay
-		 */
+		this.getStyleClass().add("image-map-pane");
 
 		// 1. Größe fixieren
 		setPrefSize(width, height);
@@ -102,8 +113,6 @@ public class ImageMapPane extends StackPane {
 		borderOverlay = new Region();
 		borderOverlay.setId("borderOverlay");
 		borderOverlay.setMouseTransparent(true);
-		borderOverlay.setStyle("-fx-border-color: " + UIUtils.toHex(panelBorder.color()) + ";" + "-fx-border-width: " + panelBorder.width() + "px;"
-				+ "-fx-border-radius: " + (panelBorder.arc() / 2) + "px;");
 
 		getChildren().addAll(viewport, miniMapImageView, borderOverlay);
 
@@ -145,14 +154,9 @@ public class ImageMapPane extends StackPane {
 		});
 
 		viewport.setOnMouseClicked(e -> {
-		    System.out.println("=== viewport.setOnMouseClicked ===");
-		    System.out.println("isDragging: " + isDragging);
-		    System.out.println("active: " + active);
-		    
 		    if (!isDragging && listener != null) {
 		        Point2D localPoint = contentGroup.sceneToLocal(e.getSceneX(), e.getSceneY());
 		        lastClick = localPoint;
-		        System.out.println("Calling listener.mouseClicked(null)");
 		        listener.mouseClicked(null);
 		    }
 		});
@@ -272,6 +276,11 @@ public class ImageMapPane extends StackPane {
 	    for (String id : shapeIds) {
 	        Node node = cardShapes.getNode(id);
 	        if (node != null) {
+	        	// Wir nutzen getBoundsInParent(), weil wir die effektive Position im Koordinatensystem 
+	        	// des Parents (shapeLayer) benötigen.
+	        	// Auch wenn aktuell keine Transforms (Scale/Translate) auf den Shapes liegen,
+	        	// wäre getBoundsInLocal() falsch, sobald wir z.B. Pulsier-Effekte (Scale) 
+	        	// oder Korrektur-Offsets hinzufügen. Parent-Bounds sind "What you see is what you get".
 	            Bounds b = node.getBoundsInParent(); // ← HIER!
 	            double centerX = b.getMinX() + b.getWidth() / 2.0;
 	            double centerY = b.getMinY() + b.getHeight() / 2.0;	            
@@ -357,7 +366,9 @@ public class ImageMapPane extends StackPane {
 				// Prüfen: Liegt das Shape schon auf der Karte?
 				boolean alreadyInLayer = shapeLayer.getChildren().contains(shape);
 
-				// 2. Handler setzen (immer nötig) !Sofort: Das sehe ich nicht so. Wenn alreadyInLayer, ist das hier doch unnötig?
+				// 2. Handler setzen. Wenn alreadyInLayer, ist das hier unnötig, aber schadet auch nicht ;-)
+				// Wenn Du auf den Border klickst reagiert der second-Path. Innerhalb reagiert der first-Path. Aber egal
+				// welcher, es wird nur ein(!) Klick registriert und der bubbelt immer nach oben zur Gruppe.
 				shape.setOnMouseClicked(e -> {
 					if (!isDragging && active) {
 						handleShapeClick(id);
@@ -376,7 +387,6 @@ public class ImageMapPane extends StackPane {
 					shape.pseudoClassStateChanged(CORRECT, false);
 					shape.pseudoClassStateChanged(INCORRECT, false);
 					shape.pseudoClassStateChanged(MARKED, false);
-					// !Sofort: Bei anderen hast Du es im CSS-Code. Mischmasch will ich hier nicht!
 					shape.setMouseTransparent(false);
 					shapeLayer.getChildren().add(shape);
 				}

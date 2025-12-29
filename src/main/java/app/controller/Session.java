@@ -10,5 +10,5 @@ public interface Session {
 	public void refresh();
 	
 	public default void endPause() {};
-	public default void sort(CardSortOrder order) {}; // !Architektur: Wieso Card?
+	public default void sort(CardSortOrder order) {};
 }

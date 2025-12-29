@@ -13,6 +13,15 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 
+/**
+ * A pane that shows up to 8 Multiple-Choice-Buttons. Three different layouts depending on font-size:
+ * 		- Single line normal font for short text
+ * 		- 2 lines normal font with reduced padding for longer text
+ * 		- up to 3 lines in small font for very long text
+ * 
+ * CSS-classes
+ * 		Button	= "mc-button"
+ */
 public class MultipleChoicePane extends Pane {
 
     // --- Logik-Zustände (Exklusiv) ---
@@ -29,21 +38,17 @@ public class MultipleChoicePane extends Pane {
 
     private final List<Button> buttons = new ArrayList<>();
     private final Font font;
-    private final Font smallFont;
     private final double borderWidth; // NEU: Damit wir das absolute Limit kennen
     private final double horizontalOverhead; // Ersatz für die Magic Number "24"
     private final double lineSpacingSqueezed;
-    private final double lineSpacingTiny;
     
     private Consumer<Integer> listener;
 
-    public MultipleChoicePane(double width, double fixedButtonHeight, double horizontalOverhead, double borderWidth, Font font, Font smallFont, int verticalGap, double lineSpacingSqueezed, double lineSpacingTiny) {
+    public MultipleChoicePane(double width, double fixedButtonHeight, double horizontalOverhead, double borderWidth, Font font, int verticalGap, double lineSpacingSqueezed) {
         this.font = font;
-        this.smallFont = smallFont;
         this.horizontalOverhead = horizontalOverhead;
         this.borderWidth = borderWidth;
         this.lineSpacingSqueezed = lineSpacingSqueezed;
-        this.lineSpacingTiny = lineSpacingTiny;
         
         double totalHeight = (fixedButtonHeight * 8) + (verticalGap * 7);
         this.setPrefSize(width, totalHeight);

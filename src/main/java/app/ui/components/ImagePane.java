@@ -5,6 +5,17 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
 
+
+/**
+ * Used to show an image. Consists of three Rectangles:
+ * 		- backgroundRect	-> Used when no image is shown.
+ * 		- imageRect			-> The image to display
+ * 		- borderRect		-> Optional border
+ * 
+ * CSS-classes:
+ * 		backgroundRect	= "image-background-layer"
+ * 		borderRect		= "image-border-layer"
+ */
 public class ImagePane extends StackPane {
 
     // Layer 1: Hintergrundfarbe (wenn kein Bild da ist oder Transparenz im Bild)

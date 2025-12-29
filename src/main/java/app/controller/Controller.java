@@ -98,7 +98,7 @@ public class Controller{
 			currentSession.refresh();
 			mainWindow.showSaveSession(true); // !Später Ach, das ist aber etwas unschön hier, oder? Ist die Frage wie wichtig eine cleverere Logik hier ist. Man kann es auch so lassen...
 		} else {
-			mainWindow.showPane(SkinService.get().createBackgroundPane(null)); // !Architektur: Sollte der Controller sich hier it UI-Krams herumschlagen?
+			mainWindow.showPane(SkinService.get().createBackgroundPane(null));
 		}
 	}
 	

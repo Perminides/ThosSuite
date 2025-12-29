@@ -39,11 +39,18 @@ public class MapService {
         return cache.computeIfAbsent(type.getMapMetadata(), _ -> repository.load(type, skin));
     }
 
+    /**
+     * Returns the mapShapes that are playable in this session
+     * E.g. Only the shapes from Lower Saxony...
+     * 
+     * @param type
+     * @return
+     */
     public Set<MapShape> getPlayableShapesForDeck(DeckType type) {
         GeoMap map = getMap(type);
         return map.getShapes().stream()
             .filter(shape -> type.getId().equals(shape.deckId()))
-            .filter(shape -> shape.fixedColorSet() == null)  // nur spielbare
+            .filter(shape -> shape.isInteractive())  // nur spielbare
             .collect(Collectors.toSet());
     }
 }

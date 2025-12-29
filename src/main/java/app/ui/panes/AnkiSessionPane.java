@@ -12,7 +12,7 @@ public interface AnkiSessionPane extends DeckSessionPane{
 	
 	public void setMcSolution(Set<Integer> correctIds);
 	public void setMcCorrect(int id, boolean correct);
-	public void setMCPanelActive(boolean active);
+	public void disableMcPanel();
 	public void setMultipleChoice(List<String> answers);
 	
 	public void setImage(String imagePath);

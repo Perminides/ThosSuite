@@ -120,11 +120,8 @@ public class WorldSessionPane extends Pane implements AnkiSessionPane {
 	 * Setzt aktive Buttons auf inaktiv. Nach falschem Klick z.B.
 	 * @param active
 	 */
-	public void setMCPanelActive(boolean active) {
-		if (active)
-			throw new RuntimeException("Das habe ich nicht vorhergesehen.");
-		else
-			mcPane.clearAndSetInactive();
+	public void disableMcPanel() {
+		mcPane.clearAndSetInactive();
 	}
 	
     public void setMcCorrect(int id, boolean correct) {
