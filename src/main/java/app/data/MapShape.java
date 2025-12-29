@@ -3,34 +3,48 @@ package app.data;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javafx.scene.Node;
 
-public record MapShape(String id, String deckId, String regionName, String capitalName, Set<String> altRegionNames, Set<String> altCapitalNames, String fixedColorSet,
-		Node shape, boolean isShapeMap) {
+/**
+ * Enthält den javafx.scene.Node und die Attribute aus der geojson. Der Node hat die "map-shape" oder "image-map-shape" CSS-Klasse gesetzt.
+ * Und die entsprechende ShapeLayer-enum.
+ */
+public record MapShape(String id, String deckId, String regionName, String capitalName, Set<String> altRegionNames,
+		Set<String> altCapitalNames, String type, Node shape, boolean isShapeMap) {
 	
 	public MapShape(Node shape, String id, String deckId, String regionName, String capital, String altRegionNames, String altCapitalNames,
-			String fixedColorSet, boolean isShapeMap) {
+			String type, boolean isShapeMap) {
 		this(id, deckId, regionName, capital, parseToSet(altRegionNames), // String -> Set
 				parseToSet(altCapitalNames), // String -> Set
-				fixedColorSet, shape, isShapeMap);
-		if (isShapeMap)
-			shape.getStyleClass().add("map-shape");
-		else
-			shape.getStyleClass().add("image-map-shape");
-        if (isDecoration()) {
-            shape.getStyleClass().add("decoration");
-            // Spezifische Deko-Klassen für 0 und 1
-            if ("0".equals(fixedColorSet())) {
-                shape.getStyleClass().add("decoration-0");
-            } else if ("1".equals(fixedColorSet())){
-                shape.getStyleClass().add("decoration-1");
-            } else {
-            	shape.getStyleClass().add("decoration-2");
+				type, shape, isShapeMap);
+
+		// --- A. Basis-Styling ---
+        if (isShapeMap) {
+            shape.getStyleClass().add("map-shape");
+            // --- B. Layer-Logik anwenden
+            ShapeLayer layer = ShapeLayer.fromJsonId(type);
+
+            // 1. Spezifische CSS-Klasse setzen ("layer-water", "layer-neighbor" etc.)
+            shape.getStyleClass().add(layer.styleClass);
+
+            // 2. Interaktion steuern (Klicks durchlassen oder fangen)
+            // Wir setzen es direkt am Node -> ShapeMapPane muss nichts mehr prüfen!
+            if (!layer.interactive) {
+                shape.setMouseTransparent(true);
             }
-            shape.setMouseTransparent(true); // Deko fängt keine Klicks ab
-        }
+        } else {
+            shape.getStyleClass().add("image-map-shape");
+        }        
+        shape.setUserData(id);
 	}
+	
+	public int getZIndex() {
+        return ShapeLayer.fromJsonId(this.type).zIndex;
+    }
+
+    public boolean isInteractive() {
+        return ShapeLayer.fromJsonId(this.type).interactive;
+    }
 
 	private static Set<String> parseToSet(String commaSeparated) {
 		if (commaSeparated == null || commaSeparated.isEmpty()) {
@@ -80,10 +94,6 @@ public record MapShape(String id, String deckId, String regionName, String capit
 	public boolean isMatching(String text) {
 		return isMatchingCapital(text) || isMatchingRegion(text);
 	}
-	
-	public boolean isDecoration() {
-		return (fixedColorSet != null);
-	}
 
 	@Override
 	public int hashCode() {
@@ -108,5 +118,35 @@ public record MapShape(String id, String deckId, String regionName, String capit
 		} else if (!id.equals(other.id))
 			return false;
 		return true;
+	}
+	
+	private enum ShapeLayer {
+	    // Definition: (GeoJsonId, Z-Index, Css-Klasse, Interaktiv?)
+	    INTERACTIVE("0", 0, "layer-region", true), // null = Standard
+	    NEIGHBOR("1", 10, "layer-neighbor", false),
+	    WATER("2", 20, "layer-water", false),
+	    OVERLAY("3", 30, "layer-overlay", false); // z.B. Bundeslandgrenzen
+
+	    private final String jsonId;
+	    private final int zIndex;
+	    private final String styleClass;
+	    private final boolean interactive;
+
+	    ShapeLayer(String jsonId, int zIndex, String styleClass, boolean interactive) {
+	        this.jsonId = jsonId;
+	        this.zIndex = zIndex;
+	        this.styleClass = styleClass;
+	        this.interactive = interactive;
+	    }
+
+	    // Statische Lookup-Methode
+	    public static ShapeLayer fromJsonId(String id) {
+	    	if (id == null)
+	    		System.out.println("Aha");
+	        for (ShapeLayer layer : values()) {
+	            if (id != null && id.equals(layer.jsonId)) return layer;
+	        }
+	        throw new RuntimeException("Unerwarteter Value im Typen eines Shapes: " + id);
+	    }
 	}
 }

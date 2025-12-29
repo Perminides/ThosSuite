@@ -22,6 +22,13 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
+/**
+ * A wrapper around the stage (the window) of the application.
+ * CSS-classes:
+ * 		root 		= "my-root",
+ * 		headerBar 	= "my-header-bar",
+ * 		titleLabel	= "my-title"
+ */
 public class MainWindow {
 
     private MenuItem itemSave = null;
@@ -53,7 +60,7 @@ public class MainWindow {
         
         // 2. Struktur anlegen (Container überleben den Skin-Wechsel)
         root = new BorderPane();
-        root.getStyleClass().add("thorstens-root");
+        root.getStyleClass().add("my-root");
         
         // 3. Scene erstellen
         Scene scene = new Scene(root);
@@ -78,7 +85,7 @@ public class MainWindow {
         MenuBar menuBar = buildMenuBar(skin); 
         
         headerBar = skin.createHeaderBar(stage, menuBar);
-        headerBar.getStyleClass().add("thorstens-bar");
+        headerBar.getStyleClass().add("my-header-bar");
         
         // D. Sicherstellen, dass Minimize und Close-Button die ganze Höhe ausnutzen...
         headerBar.heightProperty().addListener((obs, oldVal, newVal) -> 

@@ -37,7 +37,7 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 		}
 		quizElements = new ArrayList<>();
 		for (MapShape region : regions) {
-			if (region.isDecoration())
+			if (!region.isInteractive())
 				continue;
 			
 			String name = spec.getMode().getCapitalOrRegion() == RegionMode.CapitalOrRegion.CAPITAL ? region.capitalName() : region.regionName();

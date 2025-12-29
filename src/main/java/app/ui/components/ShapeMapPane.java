@@ -1,8 +1,10 @@
 package app.ui.components;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import app.data.GeoMap;
@@ -15,6 +17,15 @@ import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
 import javafx.scene.transform.Scale;
 
+/**
+ * An interactive map that consists entirely of shapes. Some are interactive, some are not.
+ * 
+ * CSS:
+ * 		ShapeMapPane	= ".shape-map-pane"
+ * 		ShapeMapPane	= ":paused"
+ * 		Shape			= ".map-shape"
+ * 		Shape			= ":corrrect", ":incorrect", ":marked", ":active-game"
+ */
 public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt automatisch!
 	
 	public static record ShapeMapState(
@@ -25,6 +36,8 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
 		    boolean interactive
 		) {}
 
+	private static final PseudoClass PAUSED = PseudoClass.getPseudoClass("paused");
+	
     // CSS Pseudo-Klassen für den State-Transfer zum Skin
 	// Achtung!!! Die müssen alle gleich auf false gesetzt werden. Wenn du hier eine hinzufügst, dann denk daran!
     private static final PseudoClass CORRECT = PseudoClass.getPseudoClass("correct");
@@ -33,50 +46,43 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     private static final PseudoClass ACTIVE_GAME = PseudoClass.getPseudoClass("active-game");
     
     // Hält alle Shapes im Zugriff für Updates per ID
-    private final Map<String, Node> shapeMap = new HashMap<>();
+    private final Map<String, MapShape> shapeMap = new HashMap<>();
     
     // Container für alle Shapes (wird skaliert)
     private final Group contentGroup;
     
     private MapElementListener listener;
-    private boolean isInteractive = false;
+    private boolean isInteractive = false; // Benötigt für den ShapeMapState
 
     public ShapeMapPane(GeoMap map, int targetHeight) {
     	this.contentGroup = new Group();
-    	
-    	// !Sofort: Das ist alles etwas unschön gewachsen. Lieber ein neues Attribut "Layer" einführen? Und zumindest "fixedColorId" umbenennen in "decorationID" oder so? Denk dir was schönes aus!
-    	// Layer könntest DU dann gleich flexibel gestalten und solange durchloopen un immer den nächsthöheren Layer nehmen, bis alle drin sind...!
+    	getStyleClass().add("shape-map-pane");
         
-        // 1. Shapes initialisieren
-        // HIER IST DIE ÄNDERUNG: Aufteilung in zwei Phasen für korrekte Z-Sortierung.
+        map.getShapes().stream()
+           // 1. Sortieren nach Z-Index (niedrig zuerst = unten)
+           .sorted(Comparator.comparingInt(s -> s.getZIndex()))
+           .forEach(mapShape -> {
+               Node node = mapShape.shape();
+               String id = mapShape.id();
+               
+               // 1. Lookup füllen
+               shapeMap.put(id, mapShape);
+               
+               // 2. Listener auf interaktive Shapes
+               if (mapShape.isInteractive())
+            	   node.setOnMouseClicked(_ -> {
+            		   if (listener != null) {
+            			   listener.mouseClicked(id);
+            		   }
+            	   });
+               
+               // 3. In Z-Order-Reihenfolge die shapes hinzufügen
+               contentGroup.getChildren().add(node);
+          });
         
-        // Phase 1: Alles zeichnen, was KEINE Overlay-Grenze ("2") ist.
-        // Das sind die normalen Spiel-Shapes und Hintergründe.
-        for (MapShape mapShape : map.getShapes()) {
-        	mapShape.shape().pseudoClassStateChanged(CORRECT, false);
-        	mapShape.shape().pseudoClassStateChanged(INCORRECT, false);
-        	mapShape.shape().pseudoClassStateChanged(MARKED, false);
-        	mapShape.shape().pseudoClassStateChanged(ACTIVE_GAME, false);
-            if (!"2".equals(mapShape.fixedColorSet())) {
-                initShape(mapShape);
-            }
-        }
-        
-        // Phase 2: Die Overlay-Grenzen ("2") nachträglich zeichnen.
-        // Da sie als letztes in die 'contentGroup' kommen, liegen sie visuell obenauf.
-        for (MapShape mapShape : map.getShapes()) {
-            if ("2".equals(mapShape.fixedColorSet())) {
-                initShape(mapShape);
-            }
-        }
-        
-        // 2. Inhalt zusammenbauen
+        // Inhalt zusammenbauen
         this.getChildren().add(contentGroup);
-        
-        // 3. Skalierung (Autopilot dank normierter GeoJSONs)
-        // Wir warten bis das Layout steht, oder berechnen es initial basierend auf den Bounds der Shapes
-        // Da StackPane zentriert, müssen wir nur den Scale-Faktor setzen.
-        
+    
         // Initialer Layout-Pass für Bounds
         contentGroup.applyCss(); 
         contentGroup.layout();
@@ -91,50 +97,16 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         
         contentGroup.getTransforms().add(scale);
     }
-    
-    private void initShape(MapShape mapShape) {
-        Node shape = mapShape.shape();
-        String id = mapShape.id();
-        
-        // ID für Lookup speichern
-        shapeMap.put(id, shape);
-        
-        // UserData für Click-Listener
-        shape.setUserData(id);
-        
-        // Deko-Logik
-        if (!mapShape.isDecoration()) {
-            // Interaktion nur für spielbare Shapes
-            setupInteractions(shape);
-        }
-        
-        contentGroup.getChildren().add(shape);
-    }
-    
-    private void setupInteractions(Node shape) {
-        shape.setOnMouseClicked(e -> {
-            if (listener != null) {
-                String id = (String) shape.getUserData();
-                listener.mouseClicked(id);
-            }
-        });
-    }
 
     public void setListener(MapElementListener listener) {
-        this.listener = listener;
+    	// Ich wollte das mal ausprobieren. Aber sind wir ehrlich: this.listener = listener ist ja mal 3x einfacher zu verstehen...!
+        this.listener = Objects.requireNonNull(listener, "Wolltest Du ernsthaft gerade null als Listener setzen?");
     }
     
-    // --- State Management via Pseudo-Klassen ---
+    // --- State Management via Pseudo-Klasse ---
     public void setInteractive(boolean interactive) {
         this.isInteractive = interactive;
-        
-        if (interactive) {
-            this.getStyleClass().remove("game-paused");
-        } else {
-            if (!this.getStyleClass().contains("game-paused")) {
-                this.getStyleClass().add("game-paused");
-            }
-        }
+        this.pseudoClassStateChanged(PAUSED, !interactive);
     }
 
     public void addToCorrect(Set<String> ids) {
@@ -161,36 +133,32 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     
     public void moveCorrectToActive() {
        shapeMap.values().forEach(shape -> {
-           if (shape.getPseudoClassStates().contains(CORRECT)) {
-               shape.pseudoClassStateChanged(CORRECT, false);
-               shape.pseudoClassStateChanged(ACTIVE_GAME, true);
+           if (shape.shape().getPseudoClassStates().contains(CORRECT)) {
+               shape.shape().pseudoClassStateChanged(CORRECT, false);
+               shape.shape().pseudoClassStateChanged(ACTIVE_GAME, true);
            }
        });
     }
     
     public void moveAllToActive() {
-        shapeMap.values().forEach(shape -> {
-            resetShapeState(shape);
+        shapeMap.values().forEach(mapShape -> {
+            resetShapeState(mapShape);
             // !Sofort: Das ist ein undurchdachter Hack. Der funktioniert, aber sauber durchgedacht ist das noch nicht...
-            if (!shape.getStyleClass().contains("decoration-2")) {
-                shape.pseudoClassStateChanged(ACTIVE_GAME, true);
+            if (mapShape.isInteractive()) {
+                mapShape.shape().pseudoClassStateChanged(ACTIVE_GAME, true);
             }
         });
-    }
-
-    public void makeEveryShapeActive() {
-        moveAllToActive();
     }
     
     // --- State Helpers ---
     
     private void updateShapeState(String id, PseudoClass state) {
-        Node shape = shapeMap.get(id);
-        if (shape != null) {
+        MapShape mapShape = shapeMap.get(id);
+        if (mapShape != null) {
             // Exklusiv-Logik: Ein Shape hat idealerweise nur einen dominanten State
             // oder CSS regelt die Priorität. Hier resetten wir sicherheitshalber die anderen.
-            resetShapeState(shape);
-            shape.pseudoClassStateChanged(state, true);
+            resetShapeState(mapShape);
+            mapShape.shape().pseudoClassStateChanged(state, true);
         }
     }
     
@@ -198,11 +166,11 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         shapeMap.values().forEach(this::resetShapeState);
     }
     
-    private void resetShapeState(Node shape) {
-        shape.pseudoClassStateChanged(CORRECT, false);
-        shape.pseudoClassStateChanged(INCORRECT, false);
-        shape.pseudoClassStateChanged(MARKED, false);
-        shape.pseudoClassStateChanged(ACTIVE_GAME, false);
+    private void resetShapeState(MapShape shape) {
+        shape.shape().pseudoClassStateChanged(CORRECT, false);
+        shape.shape().pseudoClassStateChanged(INCORRECT, false);
+        shape.shape().pseudoClassStateChanged(MARKED, false);
+        shape.shape().pseudoClassStateChanged(ACTIVE_GAME, false);
     }
     
     // Für Resume/Restore State (ShapeMapState Record)
@@ -213,8 +181,8 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         Set<String> marked = new HashSet<>();
         Set<String> active = new HashSet<>();
         
-        shapeMap.forEach((id, shape) -> {
-            Set<PseudoClass> states = shape.getPseudoClassStates();
+        shapeMap.forEach((id, mapShape) -> {
+            Set<PseudoClass> states = mapShape.shape().getPseudoClassStates();
             if (states.contains(CORRECT)) correct.add(id);
             if (states.contains(INCORRECT)) incorrect.add(id);
             if (states.contains(MARKED)) marked.add(id);

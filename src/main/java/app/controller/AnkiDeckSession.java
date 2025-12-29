@@ -158,6 +158,22 @@ public class AnkiDeckSession implements Session{
 		getCurrentProgress().endPause();
 	}
 	
+	public void goBack() {
+		if (currentIndex > 0) {
+			presenter.cardFinished(null);
+			cards.get(currentIndex).setProgress(new AnkiCardProgress(cards.get(currentIndex), presenter, this));
+			currentIndex--;
+			cards.get(currentIndex).setProgress(new AnkiCardProgress(cards.get(currentIndex), presenter, this));
+			presenter.sessionProgressChanged(createSessionProgress());
+			presenter.newCardIncoming(cards.get(currentIndex).getLearnStat());
+			getCurrentProgress().start();
+		}
+	}
+	
+	// ========================================
+	// From Controller
+	// ========================================	
+	
 	/**
 	 * Hier findet sich die Session-Logik für einen SkinChange.
 	 * Für den Moment: Reset der aktuellen Karte
@@ -170,18 +186,6 @@ public class AnkiDeckSession implements Session{
 		presenter.sessionProgressChanged(createSessionProgress());
 		presenter.newCardIncoming(cards.get(currentIndex).getLearnStat());
 		getCurrentProgress().start();
-	}
-	
-	public void goBack() {
-		if (currentIndex > 0) {
-			presenter.cardFinished(null);
-			cards.get(currentIndex).setProgress(new AnkiCardProgress(cards.get(currentIndex), presenter, this));
-			currentIndex--;
-			cards.get(currentIndex).setProgress(new AnkiCardProgress(cards.get(currentIndex), presenter, this));
-			presenter.sessionProgressChanged(createSessionProgress());
-			presenter.newCardIncoming(cards.get(currentIndex).getLearnStat());
-			getCurrentProgress().start();
-		}
 	}
 	
 	public void cancel() {

@@ -77,12 +77,12 @@ public class AnkiSessionPresenter {
 		panel.endTx();
 		panel.setTextInTextField("");
 		panel.setTextFieldActive(false);
-		panel.setMCPanelActive(false);
+		panel.disableMcPanel();
 	}
 	public void waitForText() {
 		panel.setTextFieldActive(true);
 		panel.setMapActive(false);
-		panel.setMCPanelActive(false);
+		panel.disableMcPanel();
 	}
 		
 	// ========================================
@@ -110,7 +110,7 @@ public class AnkiSessionPresenter {
 			panel.beginTx();
 			panel.setIdToIncorrect(id);
 			panel.addIdsToCorrect(corectSet);
-			pause(); // !Architektur: Wir verlassen uns darauf, dass auch der Progress in Pause geht. Ist das clever?
+			pause(); 
 			panel.endTx();
 		}
 	}
@@ -196,7 +196,7 @@ public class AnkiSessionPresenter {
 	public void pause() { // Von außen wegen Pause: im csv...
 		panel.setMapActive(false);
 		panel.setTextFieldActive(false);
-		panel.setMCPanelActive(false);
+		panel.disableMcPanel();
 	}
 
 }

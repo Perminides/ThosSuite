@@ -9,6 +9,15 @@ import javafx.scene.text.TextFlow;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * A custom TextLabel that can parse simple html without using the expensive browser-engine.
+ * Supported html-tags are: <br />, <b>, <i>. Child nodes are used for this.
+ * Soft hyphening is not possible but if there is a hyphen in a word then it can be wrapped there
+ * 
+ *  Css-classes:
+ *  		CustomTextLabel	= "custom-text-label"
+ *  		text in Nodes	= "text"
+ */
 public class CustomTextLabel extends StackPane {
 
     private final TextFlow textFlow;

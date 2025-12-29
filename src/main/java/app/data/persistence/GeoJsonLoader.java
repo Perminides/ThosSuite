@@ -40,22 +40,22 @@ class GeoJsonLoader {
 	        String id = feature.path("properties").path("id").asText(null);
 	        String capitalName = feature.path("properties").path("capitalName").asText(null);
 	        String regionName = feature.path("properties").path("regionName").asText(null);
-	        String fixedColorId = feature.path("properties").path("fixedColorId").asText(null);
+	        String shapeType = feature.path("properties").path("type").asText(null);
 	        String deckId = feature.path("properties").path("deckId").asText(null);
 	        String altCapitalNames = feature.path("properties").path("altCapitalNames").asText(null);
 	        String altRegionNames = feature.path("properties").path("altRegionNames").asText(null);
 
 	        JsonNode geometry = feature.get("geometry");
-	        String type = geometry.get("type").asText();
+	        String geometryType = geometry.get("type").asText();
 
 	        javafx.scene.Node shapeNode;
 
-	        if ("MultiPolygon".equals(type) || "Polygon".equals(type)) {
+	        if ("MultiPolygon".equals(geometryType) || "Polygon".equals(geometryType)) {
 	            // Parse Geometrie
 	            Path geometryPath = new Path();
 	            geometryPath.setFillRule(FillRule.EVEN_ODD);
 	            
-	            if ("MultiPolygon".equals(type)) {
+	            if ("MultiPolygon".equals(geometryType)) {
 	                parseMultiPolygon(geometry, geometryPath);
 	            } else {
 	                parsePolygon(geometry, geometryPath);
@@ -92,7 +92,7 @@ class GeoJsonLoader {
 	                shapeNode = group;
 	            }
 	            
-	        } else if ("MultiLineString".equals(type)) {
+	        } else if ("MultiLineString".equals(geometryType)) {
 	            // Parse LineString
 	            Path linePath = new Path();
 	            linePath.setFillRule(FillRule.EVEN_ODD);
@@ -121,11 +121,11 @@ class GeoJsonLoader {
 	            shapeNode = group;
 	            
 	        } else {
-	            throw new RuntimeException("Unerwarteter Typ: " + type);
+	            throw new RuntimeException("Unerwarteter Typ: " + geometryType);
 	        }
 
 	        shapes.add(new MapShape(shapeNode, id, deckId, regionName, capitalName, 
-	                                altRegionNames, altCapitalNames, fixedColorId, isShapeMap));
+	                                altRegionNames, altCapitalNames, shapeType, isShapeMap));
 	    }
 	    return shapes;
 	}
