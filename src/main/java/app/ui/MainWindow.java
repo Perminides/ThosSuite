@@ -1,5 +1,6 @@
 package app.ui;
 
+import java.awt.Dimension;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Consumer;
@@ -18,12 +19,13 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.HeaderDragType;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
 /**
- * A wrapper around the stage (the window) of the application.
+ * A wrapper around the stage (the window) of the application. Holds a StackPane as its contentPane, the anchor.
  * CSS-classes:
  * 		root 		= "my-root",
  * 		headerBar 	= "my-header-bar",
@@ -31,6 +33,8 @@ import javafx.stage.Window;
  */
 public class MainWindow {
 
+	private final StackPane contentPane;
+	
     private MenuItem itemSave = null;
     private Menu menuLearn = null;
     private Menu menuOptions = null;
@@ -47,7 +51,6 @@ public class MainWindow {
     private Stage stage;
     private HeaderBar headerBar;
     private BorderPane root;
-    private Pane contentPane;
     
     private long lastEscapeTime;
 
@@ -62,11 +65,15 @@ public class MainWindow {
         root = new BorderPane();
         root.getStyleClass().add("my-root");
         
-        // 3. Scene erstellen
+        // 3. Unseren Anker direkt hier bauen und einhängen
+        contentPane = new StackPane();
+        root.setCenter(contentPane);
+        
+        // 4. Scene erstellen
         Scene scene = new Scene(root);
         stage.setScene(scene);
         
-        // 4. Globale Handler
+        // 5. Globale Handler
         initKeyBindings();
     }
     
@@ -77,7 +84,13 @@ public class MainWindow {
     public void buildStyledUi() {
         Skin skin = SkinService.get();
         
-        // A. Styling
+        // A. Sizing unserer contentPane
+        Dimension size = skin.getContentSize();
+        contentPane.setPrefSize(size.width, size.height);
+        contentPane.setMinSize(size.width, size.height);
+        contentPane.setMaxSize(size.width, size.height);
+        
+        // B. Styling
         skin.styleScene(stage.getScene());
         
         // C. Header & Menü (Neu erstellen & setzen)
@@ -168,10 +181,6 @@ public class MainWindow {
         }
     }
     
-    public void showPane(Pane panel) {
-        root.setCenter(panel);
-    }
-    
     public void setLearnItems(List<LearnSessionInfo> infoList) {
         todaysLearnSessions = infoList;
         updateLearnMenuItems();
@@ -191,12 +200,8 @@ public class MainWindow {
         itemSave.setDisable(!enabled);
     }
     
-    public void showView(Pane view) {
-        // Wir tauschen den Inhalt im Zentrum des BorderPane aus
-        root.setCenter(view);
-        
-        // Optional: Fokus anfordern, damit KeyListener (z.B. für Input) greifen
-        view.requestFocus();
+    public void showPane(Pane view) {
+    	contentPane.getChildren().setAll(view);
     }
     
     private void initKeyBindings() {

@@ -5,100 +5,106 @@ import java.util.Set;
 import app.data.RegionMode;
 import app.data.RegionSessionProgress;
 import app.data.RegionSessionSpec;
-import app.ui.MainWindow;
 import app.ui.components.ShapeMapPane.ShapeMapState;
 import app.ui.panes.RegionSessionPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 
+/**
+ * Intermediary between RegionSessionPane and the RegionSessionProgress.
+ * Also holds a final sessionPaneContainer, which is shown in the MainWindow. In case of a skin change,
+ * the sessionPane inside this container is recreated. The MainWindow won't realize this :-)
+ */
 public class RegionSessionPresenter {
 	
 	private record SavedState (ShapeMapState mapState, String text) {};
 	
-	private final MainWindow mainWindow; // Benötigt für den Neuaufbau eines Panels bei skinChanged
+	private final StackPane sessionPaneContainer = new StackPane();
+	private RegionSessionPane sessionPane;
 	private final RegionSessionSpec spec; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 	private final RegionSessionProgress progress;
 	private final boolean hard;
-	private RegionSessionPane panel;
 	private SavedState savedState;
 	
-	public RegionSessionPresenter(MainWindow  mainWindow, RegionSessionProgress progress, RegionSessionSpec spec) {
+	public RegionSessionPresenter(RegionSessionProgress progress, RegionSessionSpec spec) {
 		progress.setPresenter(this);
-		this.panel = new RegionSessionPane(mainWindow, this, spec.getDeckType(), spec.getMode().getSubCategory() == RegionMode.SubCategory.CLICK);
-		this.mainWindow = mainWindow;
+		sessionPane = new RegionSessionPane(this, spec.getDeckType(), spec.getMode().getSubCategory() == RegionMode.SubCategory.CLICK);
+		sessionPaneContainer.getChildren().add(sessionPane);
 		this.progress = progress;
 		this.spec = spec;
 		this.hard = spec.getMode().getEasyHard() == RegionMode.EasyHard.HARD;
 	}
 	
+	public Pane getView() {
+		return sessionPaneContainer;
+	}
+	
 	// ========================================
 	// STEP EXECUTION (from Progress)
 	// ========================================
-
-	public void start() {
-		panel.show();
-	}
 	
 	public void refresh() {
-		savedState = new SavedState(panel.getState(), panel.getQuestion());
-		this.panel = new RegionSessionPane(mainWindow, this, spec.getDeckType(), spec.getMode().getSubCategory() == RegionMode.SubCategory.CLICK);
-		panel.setState(savedState.mapState);
-		panel.setQuestion(savedState.text);
-		panel.show();
+		savedState = new SavedState(sessionPane.getState(), sessionPane.getQuestion());
+		this.sessionPane = new RegionSessionPane(this, spec.getDeckType(), spec.getMode().getSubCategory() == RegionMode.SubCategory.CLICK);
+		sessionPane.setState(savedState.mapState);
+		sessionPane.setQuestion(savedState.text);
+		sessionPaneContainer.getChildren().setAll(sessionPane);
 		savedState = null;
 	}
 
 	public void weWaitForClick(Set<String> ids) {
-		panel.addIdsToActive(ids);
-		panel.setMapActive(true);
+		sessionPane.addIdsToActive(ids);
+		sessionPane.setMapActive(true);
 	}
 	
 	public void weWaitForEliminationText(Set<String> ids) {
-		panel.addIdsToMarked(ids);
-		panel.setMapActive(false);
+		sessionPane.addIdsToMarked(ids);
+		sessionPane.setMapActive(false);
 	}
 	
 	public void weWaitForWriteText(String id) {
-		panel.addIdsToActive(Set.of(id));
-		panel.setMapActive(true);
+		sessionPane.addIdsToActive(Set.of(id));
+		sessionPane.setMapActive(true);
 	}
 	
 	public void prepareWriteSession(Set<String> ids) {
-		panel.addIdsToMarked(ids);
-		panel.setMapActive(false);
+		sessionPane.addIdsToMarked(ids);
+		sessionPane.setMapActive(false);
 	}
 	
 	public void setCorrectText(String correctText) {
-		panel.setTextInTextField(correctText);
-		panel.setTextFieldActive(false);
+		sessionPane.setTextInTextField(correctText);
+		sessionPane.setTextFieldActive(false);
 	}
 	
 	public void showQuestion(String text) {
-		panel.setQuestion(text);
+		sessionPane.setQuestion(text);
 	}
 	
 	public void handleClickResult(String id, boolean correct, String correctId) {
 		if (correct) {
 			if (hard) {
-				panel.moveCorrectToActive();
+				sessionPane.moveCorrectToActive();
 			}
-			panel.addIdsToCorrect(Set.of(id));
-			panel.addIdsToCorrect(Set.of(id));
+			sessionPane.addIdsToCorrect(Set.of(id));
+			sessionPane.addIdsToCorrect(Set.of(id));
 
 		} else {
-			savedState = new SavedState(panel.getState(), panel.getQuestion());
-			panel.moveAllToActive();
-			panel.setIdToIncorrect(id);
-			panel.addIdsToCorrect(Set.of(correctId));
+			savedState = new SavedState(sessionPane.getState(), sessionPane.getQuestion());
+			sessionPane.moveAllToActive();
+			sessionPane.setIdToIncorrect(id);
+			sessionPane.addIdsToCorrect(Set.of(correctId));
 		}
 	}
 	
 	public void handleCorrectAnswers(Set<String> matches) {
-		panel.addIdsToCorrect(matches);
-		panel.setTextInTextField("");
+		sessionPane.addIdsToCorrect(matches);
+		sessionPane.setTextInTextField("");
 	}
 	
 	public void undoClick() {
-		panel.setState(savedState.mapState);
-		panel.setQuestion(savedState.text);
+		sessionPane.setState(savedState.mapState);
+		sessionPane.setQuestion(savedState.text);
 		savedState = null;
 	}
 	

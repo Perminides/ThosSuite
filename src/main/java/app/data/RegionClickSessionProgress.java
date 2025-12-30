@@ -48,7 +48,6 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 
 	@Override
 	public void start() {
-		presenter.start();
 		nextStep();
 	}
 	

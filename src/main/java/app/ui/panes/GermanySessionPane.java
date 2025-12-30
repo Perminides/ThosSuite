@@ -8,7 +8,6 @@ import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
-import app.ui.MainWindow;
 import app.ui.components.CustomTextLabel;
 import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
@@ -17,12 +16,12 @@ import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
 public class GermanySessionPane extends Pane implements AnkiSessionPane {
 	private static final DeckType DECKTYPE = DeckType.GERMANY_CARDS; 
 
-	private final MainWindow mainWindow;
 	private final AnkiSessionPresenter presenter;
     private TextField textInputField;
     private CustomTextLabel questionArea;
@@ -33,19 +32,11 @@ public class GermanySessionPane extends Pane implements AnkiSessionPane {
     private ImagePane imageComponent;
     private ShapeMapPane deutschlandkarte;
 
-    public GermanySessionPane(MainWindow mainWindow, AnkiSessionPresenter presenter) {
-        this.mainWindow = mainWindow;
+    public GermanySessionPane(AnkiSessionPresenter presenter) {
         this.presenter = presenter;
+        this.setBackground(new Background(SkinService.get().getWallpaper(DECKTYPE)));
         initUI();
     }
-    
-    @Override
-    public void show() {
-        Skin skin = SkinService.get();
-        Pane background = skin.createBackgroundPane(DECKTYPE);
-        background.getChildren().add(this);
-        mainWindow.showView(background);
-    }  
 
     private void initUI() {
         Skin skin = SkinService.get();
@@ -203,5 +194,10 @@ public class GermanySessionPane extends Pane implements AnkiSessionPane {
 			+ "\nFalsch beantwortet: " + stats.getWrongCount();
 		}
 		cardHistoryArea.setText(text);
+	}
+	
+	@Override
+	public Pane asPane() {
+		return this;
 	}
 }

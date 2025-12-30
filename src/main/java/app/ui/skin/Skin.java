@@ -310,21 +310,20 @@ public abstract class Skin {
 	    
 	    System.out.println(encodedCss);
 	}
-
-	public Pane createBackgroundPane(DeckType type) {
-	    Pane pane = new Pane();
-	    
-	    // Größe setzen
-	    Dimension size = getContentSize();
-	    pane.setPrefSize(size.width, size.height);
-	    pane.setMinSize(size.width, size.height);
-	    pane.setMaxSize(size.width, size.height);
-	    
-	    // Hintergrundbild setzen
-	    String bgPath = getBackgroundImagePath(type);
+	
+	/**
+	 * Holt das passende Hintergrundbild zur laufenden Session bzw das "leere", wenn keine Session läuft.
+	 * Packt dieses in ein javafx.scene.layout.BackgroundImage. Kleinere werden hochskaliert damit sie passen.
+	 * 
+	 * @param type Darf null sein!
+	 * @return
+	 */
+	public BackgroundImage getWallpaper(DeckType type) {
+		String bgPath = getBackgroundImagePath(type);
+		BackgroundImage background;
 	    try {
 	        Image bgImage = new Image(new File(bgPath).toURI().toString());
-	        BackgroundImage background = new BackgroundImage(
+	        background = new BackgroundImage(
 	            bgImage,
 	            BackgroundRepeat.NO_REPEAT,
 	            BackgroundRepeat.NO_REPEAT,
@@ -338,12 +337,10 @@ public abstract class Skin {
 	                true // cover (Bild wird hochskaliert um alles auszufüllen. Auch gestreckt wenn es sein muss)
 	            )
 	        );
-	        pane.setBackground(new Background(background));
 	    } catch (Exception e) {
 	        throw new RuntimeException("Konnte Hintergrundbild nicht laden: " + bgPath, e);
 	    }
-	    
-	    return pane;
+	    return background;
 	}
 
 	/**
@@ -572,7 +569,12 @@ public abstract class Skin {
 		}
 	}
 
-	// --- Hintergrund / Farben ---
+	/**
+	 * Holt das passende Hintergrundbild zur laufenden Session bzw das "leere", wenn keine Session läuft
+	 * 
+	 * @param type Darf null sein!
+	 * @return
+	 */
 	protected String getBackgroundImagePath(DeckType type) {
 		if (type == null)
 			return Config.get("wallpaperFolder") + (emptyWallpaperName == null ? defaultWallpaperName : emptyWallpaperName);

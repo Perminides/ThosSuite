@@ -16,13 +16,12 @@ import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
-import app.ui.MainWindow;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Alert;
+import javafx.scene.layout.Pane;
 
 public class AnkiDeckSession implements Session{
 
-	private final MainWindow mainWindow; // !Architektur. Also so richtig nice finde ich nicht, dass das hier gehalten werden muss. Aber wenn Du hier einen Alert showst...
 	private final AnkiSessionPresenter presenter;
 	private final AnkiDeckService service;
     private final Controller controller;
@@ -39,13 +38,12 @@ public class AnkiDeckSession implements Session{
      * @param service
      * @param type
      */
-    public AnkiDeckSession(MainWindow mainWindow, List<AnkiCard> cards, Controller controller, AnkiDeckService service, DeckType type, Consumer<List<AnkiCard>> sorter) {
-    	this.mainWindow = mainWindow;
+    public AnkiDeckSession(List<AnkiCard> cards, Controller controller, AnkiDeckService service, DeckType type, Consumer<List<AnkiCard>> sorter) {
     	this.sorter = sorter;
     	this.type = type;
     	this.cards = cards;
     	this.service = service;
-    	this.presenter = new AnkiSessionPresenter(mainWindow, type, this);
+    	this.presenter = new AnkiSessionPresenter(type, this);
     	for (AnkiCard card : cards) {
     		card.setProgress(new AnkiCardProgress(card, presenter, this));
     	}
@@ -66,7 +64,6 @@ public class AnkiDeckSession implements Session{
     	sorter.accept(cards);
     	cards = Stream.concat(newCards.stream(), cards.stream()).collect(Collectors.toCollection(ArrayList::new));
         currentIndex = 0;
-        presenter.start();
         presenter.sessionProgressChanged(createSessionProgress());
         presenter.newCardIncoming(cards.get(currentIndex).getLearnStat());
         getCurrentProgress().start();
@@ -90,7 +87,7 @@ public class AnkiDeckSession implements Session{
      * Gibt an die Session ab
      */
     public void end() {
-    	Alert alert = SkinService.get().createAlert(mainWindow.getStage(), "Zusammenfassung", createSummary());
+    	Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Zusammenfassung", createSummary());
     	alert.showAndWait();
     	
     	for (AnkiCard card : cards) {
@@ -227,6 +224,15 @@ public class AnkiDeckSession implements Session{
 		text += "\n\nDavon hast Du " + progress.correct() + " richtig und " + progress.incorrect() + " falsch beantwortet.";
 		text+= "\n\nDer Fortschritt wird nun gespeichert.";
 		return text;
+	}
+	
+	/**
+	 * Damit das MainWindow auch die Session anzeigen kann. Im Falle eines SkinChanges, werden innerhalb dieser StackPane
+	 * die Kinder vom Presenter ausgetauscht. 
+	 * @return
+	 */
+	public Pane getView() {
+		return presenter.getView();
 	}
 
 }

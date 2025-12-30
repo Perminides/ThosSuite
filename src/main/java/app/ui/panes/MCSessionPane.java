@@ -8,19 +8,18 @@ import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
-import app.ui.MainWindow;
 import app.ui.components.CustomTextLabel;
 import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Button;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
 public class MCSessionPane extends Pane implements AnkiSessionPane{
 	private static final DeckType DECKTYPE = DeckType.MC_CARDS; 
 
-	private final MainWindow mainWindow;
 	private final AnkiSessionPresenter presenter;
     private CustomTextLabel questionArea;
     private CustomTextLabel progressArea;
@@ -29,27 +28,11 @@ public class MCSessionPane extends Pane implements AnkiSessionPane{
     private Button backButton;
     private ImagePane imageComponent;
 
-    public MCSessionPane (MainWindow mainWindow, AnkiSessionPresenter presenter) {
-        this.mainWindow = mainWindow;
+    public MCSessionPane (AnkiSessionPresenter presenter) {
         this.presenter = presenter;
+        this.setBackground(new Background(SkinService.get().getWallpaper(DECKTYPE)));
         initUI();
     }
-    
-    @Override
-    public void show() {
-        Skin skin = SkinService.get();
-        
-        // 1. Hintergrund holen (Deine Methode!)
-        Pane background = skin.createBackgroundPane(DECKTYPE);
-        
-        // 2. Uns selbst (die Map-Layer) darauf legen
-        // Da 'background' ein Pane ist und wir (this) auch ein Pane sind
-        // und absolute Koordinaten nutzen, passt das perfekt aufeinander.
-        background.getChildren().add(this);
-        
-        // 3. Anzeigen
-        mainWindow.showView(background);
-    }  
     
     private void initUI() {
     	Skin skin = SkinService.get();
@@ -160,5 +143,10 @@ public class MCSessionPane extends Pane implements AnkiSessionPane{
 		}
 		System.out.println(text);
 		cardHistoryArea.setText(text);
+	}
+	
+	@Override
+	public Pane asPane() {
+		return this;
 	}
 }

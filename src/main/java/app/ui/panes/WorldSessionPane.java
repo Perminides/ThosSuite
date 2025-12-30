@@ -8,7 +8,6 @@ import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
-import app.ui.MainWindow;
 import app.ui.MapElementListener;
 import app.ui.components.CustomTextLabel;
 import app.ui.components.ImageMapPane;
@@ -18,12 +17,12 @@ import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
 public class WorldSessionPane extends Pane implements AnkiSessionPane {
 	private static final DeckType DECKTYPE = DeckType.WORLD_CARDS; 
 
-	private final MainWindow mainWindow;
 	private final AnkiSessionPresenter presenter;
     private TextField textInputField;
     private CustomTextLabel questionArea;
@@ -34,19 +33,11 @@ public class WorldSessionPane extends Pane implements AnkiSessionPane {
     private ImageMapPane weltkarte;
     private ImagePane imageComponent;
 
-    public WorldSessionPane(MainWindow mainWindow, AnkiSessionPresenter presenter) {
-        this.mainWindow = mainWindow;
+    public WorldSessionPane(AnkiSessionPresenter presenter) {
         this.presenter = presenter;
+        this.setBackground(new Background(SkinService.get().getWallpaper(DECKTYPE)));
         initUI();
-    }
-    
-    @Override
-    public void show() {
-    	Skin skin = SkinService.get();
-        Pane background = skin.createBackgroundPane(DECKTYPE);
-        background.getChildren().add(this);
-        mainWindow.showView(background);
-    }    
+    }   
 
     private void initUI() {
         Skin skin = SkinService.get();
@@ -219,5 +210,10 @@ public class WorldSessionPane extends Pane implements AnkiSessionPane {
 		}
 		System.out.println(text);
 		cardHistoryArea.setText(text);
+	}
+	
+	@Override
+	public Pane asPane() {
+		return this;
 	}
 }

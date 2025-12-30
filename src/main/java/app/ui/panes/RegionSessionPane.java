@@ -4,37 +4,27 @@ import java.util.Set;
 
 import app.data.DeckType;
 import app.presenter.RegionSessionPresenter;
-import app.ui.MainWindow;
 import app.ui.components.CustomTextLabel;
 import app.ui.components.ShapeMapPane;
 import app.ui.components.ShapeMapPane.ShapeMapState;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
 public class RegionSessionPane extends Pane {
-	private final MainWindow mainWindow;
 	private final RegionSessionPresenter presenter;
 	private final DeckType deckType;
     private ShapeMapPane karte;
     private CustomTextLabel questionArea;
     private TextField textInputField;
 	
-	public RegionSessionPane(MainWindow mainWindow, RegionSessionPresenter presenter, DeckType deckType, boolean questionAreaVisible) {
-        this.mainWindow = mainWindow;
+	public RegionSessionPane(RegionSessionPresenter presenter, DeckType deckType, boolean questionAreaVisible) {
         this.presenter = presenter;
         this.deckType = deckType;
+        this.setBackground(new Background(SkinService.get().getWallpaper(deckType)));
         initUI(questionAreaVisible);
-	}
-	
-	public void show() {
-        Skin skin = SkinService.get();
-        Pane background = skin.createBackgroundPane(DeckType.BUNDESLAND_BRANDENBURG);
-        background.getChildren().add(this);
-        mainWindow.showView(background);
-        if (textInputField != null)
-        	textInputField.requestFocus();
 	}
 	
 	private void initUI(boolean questionAreaVisible) {
