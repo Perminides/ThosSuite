@@ -8,81 +8,88 @@ import app.controller.AnkiDeckSession;
 import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
-import app.ui.MainWindow;
 import app.ui.panes.AnkiSessionPane;
 import app.ui.panes.GermanySessionPane;
 import app.ui.panes.MCSessionPane;
 import app.ui.panes.WorldSessionPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 
-// !Später auch mal ein DeckPresenter und Presenter-Interface wenn es Sinn ergibt? Stay tuned...
+/**
+ * Calls AnkiSessionPane and the Session (which forwards most calls to the current Progress of course).
+ * Is called by the current progress directly.
+ * 
+ * Also holds a final sessionPaneContainer, which is shown in the MainWindow. In case of a skin change,
+ * the sessionPane inside this container is recreated. The MainWindow won't realize this :-)
+ */
 public class AnkiSessionPresenter {
 
-    private AnkiSessionPane panel; //!Später MapDeckGamePanel!
+	private final StackPane sessionPaneContainer = new StackPane();
+    private AnkiSessionPane sessionPane; //!Später MapDeckGamePanel!
     private AnkiDeckSession session;
     private final DeckType type; // Benötigt für den Neuaufbau eines Panels bei skinChanged
-    private final MainWindow mainWindow; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 
-    public AnkiSessionPresenter(MainWindow mainWindow, DeckType type, AnkiDeckSession session) {
+    public AnkiSessionPresenter(DeckType type, AnkiDeckSession session) {
     	this.type = type;
-    	this.mainWindow = mainWindow;
     	this.session = session;
-        this.panel = createPanelForType(type, mainWindow);
+        sessionPane = createPanelForType(type);
+        sessionPaneContainer.getChildren().setAll(sessionPane.asPane());
     }
 
     public void refresh() {
-        panel = createPanelForType(type, mainWindow);
-        panel.show();
+        sessionPane = createPanelForType(type);
+        sessionPaneContainer.getChildren().setAll(sessionPane.asPane());
     }
 
-    private AnkiSessionPane createPanelForType(DeckType type, MainWindow mainWindow) {
+    private AnkiSessionPane createPanelForType(DeckType type) {
         return switch(type) {
-            case GERMANY_CARDS -> new GermanySessionPane(mainWindow, this);
-            case MC_CARDS -> new MCSessionPane(mainWindow, this);
-            case WORLD_CARDS -> new WorldSessionPane(mainWindow, this);
+            case GERMANY_CARDS -> new GermanySessionPane(this);
+            case MC_CARDS -> new MCSessionPane(this);
+            case WORLD_CARDS -> new WorldSessionPane(this);
             default -> null; // oder throw new IllegalArgumentException?
         };
-    }
-
-    public void start() {
-        panel.show();
     }
     
     public void end() {
         session = null;
     }
+    
+	public Pane getView() {
+		return sessionPaneContainer;
+	}
 	
 	// ========================================
 	// STEP EXECUTION (from Progress)
 	// ========================================
 	
 	public void showImage(String imagePath) {
-		panel.setImage(Config.get("imageFolder") + imagePath);
+		sessionPane.setImage(Config.get("imageFolder") + imagePath);
 	}
 
 	public void showQuestion(String text) {
-		panel.setQuestion(text);
+		sessionPane.setQuestion(text);
 	}
 	
 	public void showMultipleChoice (List<String> answers) {
-		panel.setMapActive(false);
-		panel.setTextInTextField("");
-		panel.setTextFieldActive(false);
-		panel.setMultipleChoice(answers);
+		sessionPane.setMapActive(false);
+		sessionPane.setTextInTextField("");
+		sessionPane.setTextFieldActive(false);
+		sessionPane.setMultipleChoice(answers);
 	}
  
 	public void waitForClick(Set<String> idsInQuestion) {
-		panel.beginTx();
-		panel.setIdsInQuestion(idsInQuestion);
-		panel.setMapActive(true);
-		panel.endTx();
-		panel.setTextInTextField("");
-		panel.setTextFieldActive(false);
-		panel.disableMcPanel();
+		sessionPane.beginTx();
+		sessionPane.setIdsInQuestion(idsInQuestion);
+		sessionPane.setMapActive(true);
+		sessionPane.endTx();
+		sessionPane.setTextInTextField("");
+		sessionPane.setTextFieldActive(false);
+		sessionPane.disableMcPanel();
 	}
 	public void waitForText() {
-		panel.setTextFieldActive(true);
-		panel.setMapActive(false);
-		panel.disableMcPanel();
+		sessionPane.setTextFieldActive(true);
+		sessionPane.setMapActive(false);
+		sessionPane.disableMcPanel();
 	}
 		
 	// ========================================
@@ -92,45 +99,45 @@ public class AnkiSessionPresenter {
 	// Input
 		
 	public void setCorrectText(String correctText) {
-		panel.setTextInTextField(correctText);
-		panel.setTextFieldActive(false);
+		sessionPane.setTextInTextField(correctText);
+		sessionPane.setTextFieldActive(false);
 	}
 	
 	public void textIsCorrect() {
-		panel.setTextInTextField("");
+		sessionPane.setTextInTextField("");
 	}
 	
 	// Map
 	
 	public void mapClickChecked(String id, boolean correct, Set<String> corectSet) {
 		if (correct) {
-			panel.addIdsToCorrect(Set.of(id));
+			sessionPane.addIdsToCorrect(Set.of(id));
 		}
 		else {
-			panel.beginTx();
-			panel.setIdToIncorrect(id);
-			panel.addIdsToCorrect(corectSet);
+			sessionPane.beginTx();
+			sessionPane.setIdToIncorrect(id);
+			sessionPane.addIdsToCorrect(corectSet);
 			pause(); 
-			panel.endTx();
+			sessionPane.endTx();
 		}
 	}
 	
 	public void setCorrectMapElements(Set<String> correctIds) {
-		panel.addIdsToCorrect(correctIds); 
+		sessionPane.addIdsToCorrect(correctIds); 
 	}
 	
 	public void markMapElements(Set<String> elements) {
-		panel.setMarkedIds(elements);
+		sessionPane.setMarkedIds(elements);
 	}
 	
 	// MC
 	
 	public void mcClickChecked(int id, boolean correct) {
-		panel.setMcCorrect(id, correct);
+		sessionPane.setMcCorrect(id, correct);
 	}
 	
 	public void setCorrectMc(Set<Integer> correctIds) {
-		panel.setMcSolution(correctIds); 
+		sessionPane.setMcSolution(correctIds); 
 	}
 	
 	// ========================================
@@ -175,11 +182,11 @@ public class AnkiSessionPresenter {
 	// ========================================
 	
 	public void sessionProgressChanged(SessionProgress progress) {
-		panel.sessionProgressChanged(progress);
+		sessionPane.sessionProgressChanged(progress);
 	}
 	
 	public void newCardIncoming(LearnStat stats) {
-		panel.updateCardStats(stats);
+		sessionPane.updateCardStats(stats);
 	}
 	
 	/**
@@ -187,16 +194,16 @@ public class AnkiSessionPresenter {
 	 * @param correct can be null in case of back button!
 	 */
 	public void cardFinished(Boolean correct) {
-		panel.resetMarkers();
-		panel.setImage(null);
-		panel.setTextInTextField("");
-		panel.setQuestion("");
+		sessionPane.resetMarkers();
+		sessionPane.setImage(null);
+		sessionPane.setTextInTextField("");
+		sessionPane.setQuestion("");
 	}
 	
 	public void pause() { // Von außen wegen Pause: im csv...
-		panel.setMapActive(false);
-		panel.setTextFieldActive(false);
-		panel.disableMcPanel();
+		sessionPane.setMapActive(false);
+		sessionPane.setTextFieldActive(false);
+		sessionPane.disableMcPanel();
 	}
 
 }

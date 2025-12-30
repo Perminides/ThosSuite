@@ -5,11 +5,11 @@ import java.util.Set;
 
 import app.data.LearnStat;
 import app.data.SessionProgress;
+import javafx.scene.layout.Pane;
 
 public interface AnkiSessionPane extends DeckSessionPane{
-
-	public void show();
 	
+	public Pane asPane();
 	public void setMcSolution(Set<Integer> correctIds);
 	public void setMcCorrect(int id, boolean correct);
 	public void disableMcPanel();

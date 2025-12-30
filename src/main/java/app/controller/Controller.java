@@ -15,6 +15,8 @@ import app.data.RegionLearnSessionInfo;
 import app.ui.MainWindow;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.Pane;
 
 public class Controller{
 	private final AnkiDeckService ankiDeckService;
@@ -33,11 +35,11 @@ public class Controller{
     	mainWindow.setLearnSessionConsumer(this::onLearnMenuItemSelected);
     	mainWindow.setSortConsumer(this::cardSortOrderSelected);
     	mainWindow.setSkinChangeConsumer(this::newSkinSelected);
-    	mainWindow.showPane(SkinService.get().createBackgroundPane(null));
+    	showEmptyBackground();
     	ankiDeckService = new AnkiDeckService();
     	regionDeckService = new RegionDeckService();
     	setLearnMenuItemLabels();
-    	mainWindow.show(); // Alles läuft im EDT, wenn dieser Call vor dem langen new MapCardDeckService(); kommen würde, dann blockiert dieser die paint-Events des JFrame und das wird in halbfertigem Zustand angezeigt.
+    	mainWindow.show(); 
     }
     
     public void sessionEnded() {
@@ -45,7 +47,7 @@ public class Controller{
     	//!Architektur Gehört das PopUp hierhin? Oder in die Session wie aktuell?
     	setLearnMenuItemLabels();
     	mainWindow.showSaveSession(false);
-    	mainWindow.showPane(SkinService.get().createBackgroundPane(null));
+    	showEmptyBackground();
     	currentSession = null;
     	// !Erweiterung im Popup auch fragen ob eine neue Session gestartet werden soll
     }
@@ -53,15 +55,15 @@ public class Controller{
 	public void onLearnMenuItemSelected(LearnSessionInfo info) {
 		if (info instanceof AnkiLearnSessionInfo anki) {
 			List<AnkiCard> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // !Später: Wenn Session schon den Service bekommt, um die Session zu speichern, warum holt sie sich nicht auch die Karten zum Spielen. Beantwortung muss erfolgen, wenn freies Spiel implementiert wird!
-			currentSession = new AnkiDeckSession(mainWindow, dueCards, this, ankiDeckService, anki.getDeckType(), currentSortOrder == null ? Collections::shuffle : currentSortOrder::sort);
+			currentSession = new AnkiDeckSession(dueCards, this, ankiDeckService, anki.getDeckType(), currentSortOrder == null ? Collections::shuffle : currentSortOrder::sort);
 			mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
-			currentSession.start();
 	    } else if (info instanceof RegionLearnSessionInfo region) {
 	    	Set<MapShape> regions = regionDeckService.getRegions(region.getSpec().getDeckType());
-	        currentSession = new RegionSession(mainWindow, region.getSpec(), regions, this, regionDeckService);
+	        currentSession = new RegionSession(region.getSpec(), regions, this, regionDeckService);
 	        mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
-	        currentSession.start();
 	    }
+		mainWindow.showPane(currentSession.getView());
+		currentSession.start();
 	}
 	
 	public void saveMenuItemSelected() {
@@ -98,12 +100,23 @@ public class Controller{
 			currentSession.refresh();
 			mainWindow.showSaveSession(true); // !Später Ach, das ist aber etwas unschön hier, oder? Ist die Frage wie wichtig eine cleverere Logik hier ist. Man kann es auch so lassen...
 		} else {
-			mainWindow.showPane(SkinService.get().createBackgroundPane(null));
+			showEmptyBackground();
 		}
 	}
 	
     private void setLearnMenuItemLabels() {
         mainWindow.setLearnItems(ankiDeckService.getDueGameInfos());
         mainWindow.addLearnItems(regionDeckService.getDueGameInfos());
+    }
+    
+    private void showEmptyBackground() {
+        // 1. Eine dumme, leere Pane erzeugen
+        Pane emptyView = new Pane();
+        
+        // 2. Den "Null"-Hintergrund (Standard-Wallpaper) draufkleben
+        emptyView.setBackground(new Background(SkinService.get().getWallpaper(null)));
+        
+        // 3. In den Anker hängen
+        mainWindow.showPane(emptyView);
     }
 }

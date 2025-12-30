@@ -16,7 +16,7 @@ import app.data.RegionSessionProgress;
 import app.data.RegionSessionSpec;
 import app.data.RegionWriteSessionProgress;
 import app.presenter.RegionSessionPresenter;
-import app.ui.MainWindow;
+import javafx.scene.layout.Pane;
 
 public class RegionSession implements Session {
 	
@@ -26,7 +26,7 @@ public class RegionSession implements Session {
     private final RegionSessionSpec spec;
     private final RegionSessionProgress progress;
 
-	public RegionSession(MainWindow mainWindow, RegionSessionSpec spec, Set<MapShape> regions, Controller controller, RegionDeckService regionService) {
+	public RegionSession(RegionSessionSpec spec, Set<MapShape> regions, Controller controller, RegionDeckService regionService) {
     	this.spec = spec;
     	this.service = regionService;
     	switch (spec.getMode().getSubCategory()) {
@@ -44,12 +44,11 @@ public class RegionSession implements Session {
     		}
     		default: throw new RuntimeException("Das ist leider noch nicht implementiert :-)");
     	}
-    	this.presenter = new RegionSessionPresenter(mainWindow, progress, spec);
+    	this.presenter = new RegionSessionPresenter(progress, spec);
         this.controller = controller;
 	}
 	
     public void start() {
-        presenter.start();
         progress.start();
     }
 
@@ -104,4 +103,7 @@ public class RegionSession implements Session {
 		presenter.refresh();
 	}
 	
+	public Pane getView() {
+		return presenter.getView();
+	}
 }
