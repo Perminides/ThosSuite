@@ -26,6 +26,7 @@ import javafx.stage.Window;
 
 /**
  * A wrapper around the stage (the window) of the application. Holds a StackPane as its contentPane, the anchor.
+ * The Stack Pane is sized correctly according to the current skin. All children will be sized by the contentPane.
  * CSS-classes:
  * 		root 		= "my-root",
  * 		headerBar 	= "my-header-bar",

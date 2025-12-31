@@ -30,7 +30,7 @@ public class MCSessionPane extends Pane implements AnkiSessionPane{
 
     public MCSessionPane (AnkiSessionPresenter presenter) {
         this.presenter = presenter;
-        this.setBackground(new Background(SkinService.get().getWallpaper(DECKTYPE)));
+        this.setBackground(new Background(SkinService.get().getBackgroundImage(DECKTYPE)));
         initUI();
     }
     

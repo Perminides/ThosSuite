@@ -18,6 +18,15 @@ import app.ui.skin.SkinService;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
+/**
+ * Orchestrates session lifecycle:
+ * 1. Creates session (which creates presenter + view container and progress)
+ * 2. Shows view container in MainWindow once
+ * 3. Starts session logic
+ * 
+ * On skin change: session.refresh() rebuilds the pane inside the container.
+ * MainWindow continues showing the same container - no re-wiring needed.
+ */
 public class Controller{
 	private final AnkiDeckService ankiDeckService;
 	private final RegionDeckService regionDeckService;
@@ -114,7 +123,7 @@ public class Controller{
         Pane emptyView = new Pane();
         
         // 2. Den "Null"-Hintergrund (Standard-Wallpaper) draufkleben
-        emptyView.setBackground(new Background(SkinService.get().getWallpaper(null)));
+        emptyView.setBackground(new Background(SkinService.get().getBackgroundImage(null)));
         
         // 3. In den Anker hängen
         mainWindow.showPane(emptyView);

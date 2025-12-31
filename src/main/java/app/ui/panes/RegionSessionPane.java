@@ -23,7 +23,7 @@ public class RegionSessionPane extends Pane {
 	public RegionSessionPane(RegionSessionPresenter presenter, DeckType deckType, boolean questionAreaVisible) {
         this.presenter = presenter;
         this.deckType = deckType;
-        this.setBackground(new Background(SkinService.get().getWallpaper(deckType)));
+        this.setBackground(new Background(SkinService.get().getBackgroundImage(deckType)));
         initUI(questionAreaVisible);
 	}
 	
