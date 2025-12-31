@@ -37,14 +37,12 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.HeaderBar;
-import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
@@ -147,7 +145,9 @@ public abstract class Skin {
 	protected String mcWallpaperName;
 	protected String worldWallpaperName;
 	protected String germanyWallpaperName;
+	protected String regionWallpaperName;
 	protected String lk_bbWallpaperName;
+	protected String itWallpaperName;
 
 	protected Rectangle mcSessionQuestionPanel;
 	protected Rectangle mcSessionImagePanel;
@@ -177,6 +177,9 @@ public abstract class Skin {
 	protected Rectangle esSessionQuestionPanel;
 	protected Rectangle esSessionMapPanel;
 	protected Rectangle esSessionTextInputPanel;
+	protected Rectangle itSessionQuestionPanel;
+	protected Rectangle itSessionMapPanel;
+	protected Rectangle itSessionTextInputPanel;
 
 	protected Integer verticalGapMC;
 
@@ -318,7 +321,7 @@ public abstract class Skin {
 	 * @param type Darf null sein!
 	 * @return
 	 */
-	public BackgroundImage getWallpaper(DeckType type) {
+	public BackgroundImage getBackgroundImage(DeckType type) {
 		String bgPath = getBackgroundImagePath(type);
 		BackgroundImage background;
 	    try {
@@ -579,11 +582,12 @@ public abstract class Skin {
 		if (type == null)
 			return Config.get("wallpaperFolder") + (emptyWallpaperName == null ? defaultWallpaperName : emptyWallpaperName);
 		String bgName = (String) getFieldValue(type.getId() + "WallpaperName");
-		if (bgName == null)
-			return Config.get("wallpaperFolder") + defaultWallpaperName;
-		else
+		if (bgName != null)
 			return Config.get("wallpaperFolder") + bgName;
-
+		bgName = (String) getFieldValue(type.getCategory().toString() + "WallpaperName");
+		if (bgName != null)
+			return Config.get("wallpaperFolder") + bgName;
+		return Config.get("wallpaperFolder") + defaultWallpaperName;
 	}
 
 	/**

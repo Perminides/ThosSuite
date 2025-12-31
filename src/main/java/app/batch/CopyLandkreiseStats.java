@@ -22,7 +22,7 @@ public class CopyLandkreiseStats {
 	private static final String statsFile = "C:/Users/Markgraf/OneDrive/Geographie Suite/Spielstand/regionsStats.csv";
 	private static final String logFile = "C:/Users/Markgraf/OneDrive/Geographie Suite/Spielstand/played.log";
 	private static final Map<String, DeckType> lkNameMap = Map.ofEntries(
-		    entry("Spanien", DeckType.SPANIEN)
+		    entry("Italien", DeckType.ITALIEN)
 		);
 	private static final Map<String, RegionMode> modeMap = Map.ofEntries(
 			entry("recognise_both", RegionMode.WRITE_BOTH),

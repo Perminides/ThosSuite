@@ -19,6 +19,14 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
+
+/**
+ * UI for the Germany quiz session. Sets its own background from Skin.
+ * Size is determined by MainWindow's contentPane.
+ * 
+ * This pane can be recreated during skin changes (via presenter.refresh()).
+ * The Presenter handles state preservation across recreations.
+ */
 public class GermanySessionPane extends Pane implements AnkiSessionPane {
 	private static final DeckType DECKTYPE = DeckType.GERMANY_CARDS; 
 
@@ -34,7 +42,7 @@ public class GermanySessionPane extends Pane implements AnkiSessionPane {
 
     public GermanySessionPane(AnkiSessionPresenter presenter) {
         this.presenter = presenter;
-        this.setBackground(new Background(SkinService.get().getWallpaper(DECKTYPE)));
+        this.setBackground(new Background(SkinService.get().getBackgroundImage(DECKTYPE)));
         initUI();
     }
 

@@ -35,7 +35,7 @@ public class WorldSessionPane extends Pane implements AnkiSessionPane {
 
     public WorldSessionPane(AnkiSessionPresenter presenter) {
         this.presenter = presenter;
-        this.setBackground(new Background(SkinService.get().getWallpaper(DECKTYPE)));
+        this.setBackground(new Background(SkinService.get().getBackgroundImage(DECKTYPE)));
         initUI();
     }   
 

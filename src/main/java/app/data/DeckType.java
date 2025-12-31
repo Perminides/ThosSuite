@@ -18,7 +18,8 @@ public enum DeckType {
 	BUNDESLAND_SACHSEN("lk_sc", "Sachsen", DeckCategory.REGION_DECK, null, MapMetadata.GERMANY, null),
 	BUNDESLAND_SA("lk_sa", "Sachsen-Anhalt", DeckCategory.REGION_DECK, null, MapMetadata.GERMANY, null),
 	BUNDESLAND_THÜRINGEN("lk_th", "Thüringen", DeckCategory.REGION_DECK, null, MapMetadata.GERMANY, null),
-	SPANIEN("es", "Spanien", DeckCategory.REGION_DECK, null, MapMetadata.SPAIN, null);
+	SPANIEN("es", "Spanien", DeckCategory.REGION_DECK, null, MapMetadata.SPAIN, null),
+	ITALIEN("it", "Italien", DeckCategory.REGION_DECK, null, MapMetadata.ITALY, null);
 
 	private final String id; // UI properties-Dateien, stats und log Tabelle
     private final String displayName; // Im Menü
