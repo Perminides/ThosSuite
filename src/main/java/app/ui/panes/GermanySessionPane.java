@@ -51,6 +51,7 @@ public class GermanySessionPane extends Pane implements AnkiSessionPane {
         
     	deutschlandkarte = skin.createShapeMapPane(DECKTYPE);
     	deutschlandkarte.setListener(id -> mapElementClicked(id));
+    	deutschlandkarte.resetAllStates();
     	getChildren().add(deutschlandkarte);
     	deutschlandkarte.moveAllToActive();
     	

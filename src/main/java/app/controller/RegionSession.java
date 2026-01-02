@@ -75,7 +75,6 @@ public class RegionSession implements Session {
 	public void end(boolean correct, String wrongId, String text, boolean allowResume) {
 		if (!correct) {
 			Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Titelzeile wird aktuell nicht angezeigt...", text, true, allowResume);
-	    	alert.showAndWait();
 	    	Optional<ButtonType> result = alert.showAndWait();
 	    		if (!result.isPresent() || result.get().getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) {
 	    	        controller.sessionEnded();
@@ -88,16 +87,19 @@ public class RegionSession implements Session {
 					return;
 	    	    }
 		}
-		LearnStat stats = service.getLearnStat(spec);
-		stats.setLevel(progress.calculateNewLevel(stats.getLastPlayed(), correct, false));
-		stats.setLastPlayed(AppClock.TODAY);
-		if (!correct)
-			stats.incrementWrongCount();
-		service.savePlayedCards(spec, stats, correct, wrongId);
-		// !Sofort: Also mal abgesehen davon, dass wir hier Swing nutzen, solltest Du dich schon entscheiden, wo diese PopUps erstellt werden. Ach so, ja ok, die Entscheidung ist wohl "in der session" und zumindest konsequent, oder"
-		JOptionPane pane = new JOptionPane("Wir sehen uns wieder am: " + stats.getDueDate(), JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, null);
-    	JDialog dialog = pane.createDialog(null, "Abschluss");
-    	dialog.setVisible(true);
+		if (!spec.isPlaySession()) {
+			LearnStat stats = service.getLearnStat(spec);
+			stats.setLevel(progress.calculateNewLevel(stats.getLastPlayed(), correct, false));
+			stats.setLastPlayed(AppClock.TODAY);
+			if (!correct)
+				stats.incrementWrongCount();
+			service.savePlayedCards(spec, stats, correct, wrongId);
+			// !Sofort: Also mal abgesehen davon, dass wir hier Swing nutzen, solltest Du dich schon entscheiden, wo diese PopUps erstellt werden. Ach so, ja
+			// ok, die Entscheidung ist wohl "in der session" und zumindest konsequent, oder"
+			JOptionPane pane = new JOptionPane("Wir sehen uns wieder am: " + stats.getDueDate(), JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, null);
+			JDialog dialog = pane.createDialog(null, "Abschluss");
+			dialog.setVisible(true);
+		}
 		controller.sessionEnded();
 	}
 

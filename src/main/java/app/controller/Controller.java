@@ -1,6 +1,8 @@
 package app.controller;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -8,11 +10,18 @@ import app.data.AnkiCard;
 import app.data.AnkiDeckService;
 import app.data.AnkiLearnSessionInfo;
 import app.data.CardSortOrder;
+import app.data.DeckCategory;
+import app.data.DeckType;
 import app.data.LearnSessionInfo;
 import app.data.MapShape;
 import app.data.RegionDeckService;
 import app.data.RegionLearnSessionInfo;
+import app.data.RegionMode;
+import app.data.RegionSessionSpec;
 import app.ui.MainWindow;
+import app.ui.PlayMenuItem;
+import app.ui.PlayMenuNode;
+import app.ui.RegionPlayConfigDialog;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.scene.layout.Background;
@@ -48,6 +57,8 @@ public class Controller{
     	ankiDeckService = new AnkiDeckService();
     	regionDeckService = new RegionDeckService();
     	setLearnMenuItemLabels();
+    	setPlayMenuItemLabels();
+    	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);
     	mainWindow.show(); 
     }
     
@@ -67,7 +78,7 @@ public class Controller{
 			currentSession = new AnkiDeckSession(dueCards, this, ankiDeckService, anki.getDeckType(), currentSortOrder == null ? Collections::shuffle : currentSortOrder::sort);
 			mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
 	    } else if (info instanceof RegionLearnSessionInfo region) {
-	    	Set<MapShape> regions = regionDeckService.getRegions(region.getSpec().getDeckType());
+	    	Set<MapShape> regions = regionDeckService.getRegions(region.getSpec());
 	        currentSession = new RegionSession(region.getSpec(), regions, this, regionDeckService);
 	        mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
 	    }
@@ -111,6 +122,66 @@ public class Controller{
 		} else {
 			showEmptyBackground();
 		}
+	}
+	
+	private void setPlayMenuItemLabels() {
+	    List<PlayMenuNode> items = new ArrayList<>();
+	    
+	    // Anki-Decks aus Enum holen
+	    for (DeckType type : DeckType.values()) {
+	        if (type.getCategory() == DeckCategory.ANKI_DECK) {
+	            items.add(new PlayMenuItem(type.getDisplayName(), type));
+	        }
+	    }
+	    
+	    // Region-Config-Eintrag hinzufügen
+	    items.add(new PlayMenuItem("Regionen", DeckCategory.REGION_DECK));
+	    
+	    mainWindow.setPlayItems(items);
+	}
+
+	public void onPlayMenuItemSelected(PlayMenuItem item) {
+	    Object payload = item.payload();
+	    
+	    if (payload instanceof DeckType deckType) {
+	        showAnkiConfigDialog(deckType);
+	    } else if (payload == DeckCategory.REGION_DECK) {
+	        showRegionConfigDialog();
+	    }
+	}
+
+	private void showRegionConfigDialog() {
+	    RegionPlayConfigDialog dialog = new RegionPlayConfigDialog(mainWindow.getStage(), SkinService.get());
+	    
+	    dialog.showAndWait().ifPresent(config -> {
+	        Set<DeckType> selectedDecks = config.selectedDecks();
+	        RegionMode mode = config.mode();
+	        
+	        // Erstes Deck als primäres, Rest als additional
+	        DeckType primaryDeck = selectedDecks.iterator().next();
+	        Set<DeckType> additionalDecks = new HashSet<>(selectedDecks);
+	        additionalDecks.remove(primaryDeck);
+	        
+	        // Spec erstellen (mit isPlaySession flag)
+	        RegionSessionSpec spec = new RegionSessionSpec(
+	            primaryDeck, 
+	            mode, 
+	            additionalDecks.isEmpty() ? null : additionalDecks,
+	            true  // isPlaySession
+	        );
+	        
+	        Set<MapShape> regions = regionDeckService.getRegions(spec);
+	        
+	        // Session starten
+	        currentSession = new RegionSession(spec, regions, this, regionDeckService);
+	        mainWindow.showPane(currentSession.getView());
+	        mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
+	        currentSession.start();
+	    });
+	}
+
+	private void showAnkiConfigDialog(DeckType type) {
+	    // TODO: Implementierung folgt in Schritt 4
 	}
 	
     private void setLearnMenuItemLabels() {
