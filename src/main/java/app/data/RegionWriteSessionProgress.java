@@ -84,7 +84,15 @@ public class RegionWriteSessionProgress implements RegionSessionProgress {
 	public void endPause() {
 		if (!isEndPause)
 			return;
-		session.end(false, toLearnRegions.get(currentIndex).id(), null, false);
+		MapShape currentRegion = toLearnRegions.get(currentIndex);
+		String result = "Folgendes Element nicht erkannt: \n\n";
+		if (mode == RegionMode.WRITE_BOTH)
+			result += currentRegion.regionName() + " (" + currentRegion.capitalName() + ")";
+		else if (mode == RegionMode.WRITE_CAPITAL)
+			result += currentRegion.capitalName();
+		else
+			result += currentRegion.regionName();
+		session.end(false, toLearnRegions.get(currentIndex).id(), result, false);
 		
 	}
 }

@@ -1,5 +1,6 @@
 package app.controller;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.swing.JDialog;
@@ -16,6 +17,10 @@ import app.data.RegionSessionProgress;
 import app.data.RegionSessionSpec;
 import app.data.RegionWriteSessionProgress;
 import app.presenter.RegionSessionPresenter;
+import app.ui.skin.SkinService;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.Pane;
 
 public class RegionSession implements Session {
@@ -68,22 +73,20 @@ public class RegionSession implements Session {
 	}
 	
 	public void end(boolean correct, String wrongId, String text, boolean allowResume) {
-		if (!correct && allowResume) {
-			//!Sofort: Swing dann mal raus, was ;-)
-			JOptionPane pane = new JOptionPane("<html>Schade. Wir speichern nun?<br/><br/>" + text + "</html>", JOptionPane.PLAIN_MESSAGE,
-					JOptionPane.YES_NO_OPTION, null);
-			JDialog dialog = pane.createDialog(null, "Nicht korrekt");
-			dialog.setVisible(true);
-			Object selectedValue = pane.getValue();
-			int result = -1;
-			if (selectedValue == null)
-				result = JOptionPane.YES_OPTION;
-			else
-				result = (Integer) selectedValue;
-			if (result == JOptionPane.NO_OPTION) {
-				progress.resume();
-				return;
-			}
+		if (!correct) {
+			Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Titelzeile wird aktuell nicht angezeigt...", text, true, allowResume);
+	    	alert.showAndWait();
+	    	Optional<ButtonType> result = alert.showAndWait();
+	    		if (!result.isPresent() || result.get().getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) {
+	    	        controller.sessionEnded();
+	    	        return;
+	    	    } else if (result.get().getButtonData() == ButtonBar.ButtonData.YES) {
+	    	        System.out.println("User hat 'OK' geklickt.");
+	    	        // Nichts weiter zu tun...
+	    	    } else if (result.get().getButtonData() == ButtonBar.ButtonData.OTHER) {
+	    	    	progress.resume();
+					return;
+	    	    }
 		}
 		LearnStat stats = service.getLearnStat(spec);
 		stats.setLevel(progress.calculateNewLevel(stats.getLastPlayed(), correct, false));

@@ -67,6 +67,7 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 			nextStep();
 		} else {
 			wrongClicked = id;
+			// Wir haben keinen expliziten internen Pause-Modus. Wenn wrongClicked != "" ist, dann reagieren wir auf endPause... 
 			presenter.handleClickResult(id, false, quizElements.get(currentIndex).getShapeId());
 		}
 	}
@@ -74,7 +75,7 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 	@Override
 	public void endPause() {
 		if (!wrongClicked.isEmpty())
-			session.end(false, wrongClicked, "", true);
+			session.end(false, wrongClicked, "Statt " + quizElements.get(currentIndex).toFind() + " wurde " + getNameForId(wrongClicked) + " geklickt.", true);
 	}
 	
 	@Override
@@ -95,5 +96,13 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 			presenter.showQuestion(quizElements.get(currentIndex).getToFind());
 			presenter.weWaitForClick(sessionRegions);
 		}
+	}
+	
+	private String getNameForId(String id) {
+		for (QuizElement element : quizElements) {
+			if (element.shapeId.equals(id))
+				return element.toFind();
+		}
+		return "";
 	}
 }
