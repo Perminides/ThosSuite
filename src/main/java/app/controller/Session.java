@@ -7,7 +7,7 @@ public interface Session {
 
 	public void start();
 	public void cancel();
-	public void end();
+	public void end(); // !Sofort: Nicht implementiert von RegionSession. Raus aus dem Interface?
 	public void refresh();
 	public Pane getView();
 	

@@ -87,7 +87,7 @@ public class AnkiDeckSession implements Session{
      * Gibt an die Session ab
      */
     public void end() {
-    	Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Zusammenfassung", createSummary());
+    	Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Zusammenfassung", createSummary(), false, false);
     	alert.showAndWait();
     	
     	for (AnkiCard card : cards) {

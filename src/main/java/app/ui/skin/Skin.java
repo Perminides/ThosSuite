@@ -29,6 +29,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -480,21 +482,38 @@ public abstract class Skin {
 	    
 	    return button;
 	}
-	
-	public Alert createAlert (Window parent, String title, String message) {
-		Alert alert = new Alert(Alert.AlertType.INFORMATION);
-		alert.setTitle(title);
-		alert.setHeaderText(null);
-		alert.setContentText(message);
-		alert.initOwner(parent);
-		
-		DialogPane dialogPane = alert.getDialogPane();
-		Scene dialogScene = dialogPane.getScene();
-		styleScene(dialogScene);
-		
-		alert.setGraphic(null);
-		alert.initStyle(StageStyle.UNDECORATED);
-		return alert;
+
+	public Alert createAlert(Window parent, String title, String message, boolean showCancelOption, boolean showResumeOption) {
+	    Alert alert = new Alert(Alert.AlertType.NONE);
+	    alert.setTitle(title);
+	    alert.setHeaderText(null);
+	    alert.setContentText(message);
+	    alert.initOwner(parent);
+
+	    // Erstmal aufräumen
+	    alert.getButtonTypes().clear();
+
+	    // 1. Der Standard-Button (Ist immer da)
+	    ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.YES);
+	    alert.getButtonTypes().add(btnOk);
+
+	    // 2. Die optionalen Zusatz-Optionen
+	    if (showCancelOption) {
+	    	ButtonType btnCancel = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
+	        alert.getButtonTypes().add(btnCancel);
+	    }
+	    if (showResumeOption) {
+	    	ButtonType btnResume = new ButtonType("Fortsetzen", ButtonBar.ButtonData.OTHER);
+	        alert.getButtonTypes().add(btnResume);
+	    }
+
+	    // Styling
+	    DialogPane dialogPane = alert.getDialogPane();
+	    styleScene(dialogPane.getScene());
+	    alert.setGraphic(null);
+	    alert.initStyle(StageStyle.UNDECORATED); // Sofort! Wenn Du den Titel eh nicht anzeigst, dann sollte er auch nicht übergeben werden. Alternative: Nutze EXTTENDED
+
+	    return alert;
 	}
 
 	/**

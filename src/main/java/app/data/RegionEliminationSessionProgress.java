@@ -34,24 +34,16 @@ public class RegionEliminationSessionProgress implements RegionSessionProgress {
 
 	@Override
 	public void cancel() {
-		String text = "<p>Folgende Regionen / Orte fehlten noch:</p><p>";
-		List<MapShape> sorted = new ArrayList<>(sessionRegions);
-		// Dynamische Sortierung je nach Modus
-	    if (mode == RegionMode.ELIMINATION_CITY) {
-	        sorted.sort(Comparator.comparing(MapShape::capitalName));
-	    } else {
-	        sorted.sort(Comparator.comparing(MapShape::regionName));
-	    }
-		for (MapShape region : sorted) {
-			if (mode == RegionMode.ELIMINATION_BOTH)
-				text += region.regionName() + " (" + region.capitalName() + ")<br/>";
-			else if (mode == RegionMode.ELIMINATION_CITY)
-				text += region.capitalName() + "<br/>";
-			else
-				text += region.regionName() + "<br/>";
+		String result = "Folgende Elemente wurden nicht eliminiert: \n\n";
+		for (MapShape mapShape : sessionRegions) {
+			switch (mode) {
+            	case ELIMINATION_BOTH -> result = result + mapShape.regionName() + " - " + mapShape.capitalName() + "\n";
+            	case ELIMINATION_CITY -> result = result + mapShape.capitalName() + "\n";
+            	case ELIMINATION_REGION -> result = result + mapShape.regionName() + "\n";
+            	default -> throw new RuntimeException("Das kommt jetzt einigermaßen unerwartet :)");
+			};
 		}
-		text += "</p>";
-		session.end(false, null, text, false);
+		session.end(false, null, result, false);
 	}
 
 	@Override

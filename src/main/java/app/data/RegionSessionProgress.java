@@ -9,7 +9,7 @@ public interface RegionSessionProgress extends Progress {
 
 	void setPresenter(RegionSessionPresenter regionSessionPresenter);
 	void start();
-	default void resume() {}; // Elimination nicht implementiert
+	default void resume() {}; // Elimination und Write nicht implementiert
 	default void endPause() {}; // Elimination nicht implementiert
 	default boolean isPause() {return false;}; // Elimination nicht implementiert
 	default void cancel() {};  // Elimination nicht implementiert
