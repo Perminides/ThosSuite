@@ -40,6 +40,9 @@ public class MainWindow {
     private Menu menuLearn = null;
     private Menu menuOptions = null;
     private Menu menuSort = null;
+    private Menu menuPlay = null;
+    private List<PlayMenuNode> playMenuNodes;
+    private Consumer<PlayMenuItem> onPlayItemSelected = null;
     private List<LearnSessionInfo> todaysLearnSessions;
     
     private Consumer<LearnSessionInfo> onSessionSelected = null;
@@ -147,6 +150,12 @@ public class MainWindow {
             updateLearnMenuItems();
         }
         
+        // SPIELEN-MENÜ
+        menuPlay = skin.createMenu("Spielen");
+        if (playMenuNodes != null) {
+            updatePlayMenuItems();
+        }
+        
         // ANSICHT-MENÜ
         Menu menuView = skin.createMenu("Ansicht");
         Skin currentSkin = SkinService.get();
@@ -165,7 +174,7 @@ public class MainWindow {
         }
         
         // Menüs zur MenuBar hinzufügen
-        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuView);        
+        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuPlay, menuView);        
         return menuBar;
     }
     
@@ -179,6 +188,24 @@ public class MainWindow {
                 item.setOnAction(_ -> onSessionSelected.accept(info));
             }
             menuLearn.getItems().add(item);
+        }
+    }
+    
+ // Methoden
+    public void setPlayItems(List<PlayMenuNode> nodes) {
+        playMenuNodes = nodes;
+        updatePlayMenuItems();
+    }
+
+    private void updatePlayMenuItems() {
+        if (menuPlay == null) return;
+        
+        menuPlay.getItems().clear();
+        for (PlayMenuNode node : playMenuNodes) {
+            PlayMenuItem item = (PlayMenuItem) node; // Cast ist sicher dank sealed interface
+            MenuItem menuItem = new MenuItem(item.label());
+            menuItem.setOnAction(_ -> onPlayItemSelected.accept(item));
+            menuPlay.getItems().add(menuItem);
         }
     }
     
@@ -238,6 +265,11 @@ public class MainWindow {
     
     public void setLearnSessionConsumer(Consumer<LearnSessionInfo> consumer) {
         this.onSessionSelected = consumer;
+    }
+    
+
+    public void setPlayItemConsumer(Consumer<PlayMenuItem> consumer) {
+        this.onPlayItemSelected = consumer;
     }
     
     public void setSkinChangeConsumer(Consumer<Skin> consumer) {

@@ -162,7 +162,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         }
     }
     
-    private void resetAllStates() {
+    public void resetAllStates() {
         shapeMap.values().forEach(this::resetShapeState);
     }
     

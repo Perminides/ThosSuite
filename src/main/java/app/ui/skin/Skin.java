@@ -31,11 +31,13 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -45,6 +47,7 @@ import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.HeaderBar;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
@@ -313,7 +316,7 @@ public abstract class Skin {
 	    scene.getStylesheets().clear();
 	    scene.getStylesheets().add("data:text/css," + encodedCss);
 	    
-	    System.out.println(encodedCss);
+	    //System.out.println(encodedCss);
 	}
 	
 	/**
@@ -483,37 +486,75 @@ public abstract class Skin {
 	    return button;
 	}
 
+	/**
+	 * 
+	 * We struggled quite a bit with having a maxHeight, having it always positioned on center and only having the
+	 * maxHeight if really needed. This made the code quite ugly. But it works for now...
+	 * 
+	 * !Sofort CSS styles für das Alert! Schau dir die Buttons im DarkMode an, Alter!
+	 * 
+	 * @param parent
+	 * @param title
+	 * @param message
+	 * @param showCancelOption
+	 * @param showResumeOption
+	 * @return
+	 */
 	public Alert createAlert(Window parent, String title, String message, boolean showCancelOption, boolean showResumeOption) {
 	    Alert alert = new Alert(Alert.AlertType.NONE);
 	    alert.setTitle(title);
-	    alert.setHeaderText(null);
-	    alert.setContentText(message);
 	    alert.initOwner(parent);
 
-	    // Erstmal aufräumen
+	    Label label = new Label(message);
+	    label.setWrapText(true);
+	    label.setMaxWidth(Double.MAX_VALUE); 
+
+	    // Wir erstellen eine "schlaue" ScrollPane.
+	    // Sie berechnet ihre Wunschgröße normal, kappt sie aber hart bei 1000.
+	    // Dadurch denkt der Alert beim Positionieren: "Aha, das Fenster wird maximal 1000px hoch."
+	    ScrollPane scroll = new ScrollPane(label) {
+	        @Override
+	        protected double computePrefHeight(double width) {
+	            // Berechne, wie hoch der Inhalt sein will (z.B. 5000px oder 200px)
+	            double contentHeight = super.computePrefHeight(width);
+	            // Gib das Minimum zurück (entweder die echte Höhe oder max 1000)
+	            return Math.min(contentHeight, 1000);
+	        }
+	    };
+	    
+	    scroll.setFitToWidth(true);
+	    scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+	    // Wichtig: VBar Policy auf AS_NEEDED lassen, damit der Balken kommt, 
+	    // wenn contentHeight > 1000 ist.
+	    scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+	    alert.getDialogPane().setContent(scroll);
+
+	    // Standard Buttons
 	    alert.getButtonTypes().clear();
-
-	    // 1. Der Standard-Button (Ist immer da)
-	    ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.YES);
-	    alert.getButtonTypes().add(btnOk);
-
-	    // 2. Die optionalen Zusatz-Optionen
+	    alert.getButtonTypes().add(new ButtonType("OK", ButtonBar.ButtonData.YES));
 	    if (showCancelOption) {
-	    	ButtonType btnCancel = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
-	        alert.getButtonTypes().add(btnCancel);
+	        alert.getButtonTypes().add(new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE));
 	    }
 	    if (showResumeOption) {
-	    	ButtonType btnResume = new ButtonType("Fortsetzen", ButtonBar.ButtonData.OTHER);
-	        alert.getButtonTypes().add(btnResume);
+	        alert.getButtonTypes().add(new ButtonType("Fortsetzen", ButtonBar.ButtonData.OTHER));
 	    }
 
-	    // Styling
-	    DialogPane dialogPane = alert.getDialogPane();
-	    styleScene(dialogPane.getScene());
 	    alert.setGraphic(null);
-	    alert.initStyle(StageStyle.UNDECORATED); // Sofort! Wenn Du den Titel eh nicht anzeigst, dann sollte er auch nicht übergeben werden. Alternative: Nutze EXTTENDED
-
+	    alert.initStyle(StageStyle.UNDECORATED);
+	    
 	    return alert;
+	}
+	
+	public Dialog<?> createDialog(Window parent) {
+	    Dialog<?> dialog = new Dialog<>();
+	    dialog.initOwner(parent);
+	    
+	    DialogPane dialogPane = dialog.getDialogPane();
+	    styleScene(dialogPane.getScene());
+	    dialog.initStyle(StageStyle.UNDECORATED);
+	    
+	    return dialog;
 	}
 
 	/**

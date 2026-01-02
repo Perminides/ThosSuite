@@ -3,6 +3,7 @@ package app.ui.panes;
 import java.util.Set;
 
 import app.data.DeckType;
+import app.data.MapMetadata;
 import app.presenter.RegionSessionPresenter;
 import app.ui.components.CustomTextLabel;
 import app.ui.components.ShapeMapPane;
@@ -22,7 +23,8 @@ public class RegionSessionPane extends Pane {
 	
 	public RegionSessionPane(RegionSessionPresenter presenter, DeckType deckType, boolean questionAreaVisible) {
         this.presenter = presenter;
-        this.deckType = deckType;
+        // All germany regions can be styled for my skins by styling lk_bb. A hack, I know...
+        this.deckType = deckType.getMapMetadata() == MapMetadata.GERMANY ? DeckType.BUNDESLAND_BRANDENBURG : deckType;
         this.setBackground(new Background(SkinService.get().getBackgroundImage(deckType)));
         initUI(questionAreaVisible);
 	}
@@ -31,6 +33,7 @@ public class RegionSessionPane extends Pane {
         Skin skin = SkinService.get();
         
         karte = skin.createShapeMapPane(deckType);
+        karte.resetAllStates();
         karte.setListener(id -> mapElementClicked(id));
     	getChildren().add(karte);
     	

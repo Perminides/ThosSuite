@@ -62,8 +62,15 @@ public class RegionDeckService {
 		return result;
 	}
 
-	public Set<MapShape> getRegions(DeckType deckType) {
-		return new HashSet<>(regionCache.get(deckType)); // Die Original-Sets bleiben HIER!
+	public Set<MapShape> getRegions(RegionSessionSpec spec) {
+		Set<MapShape> result = new HashSet<>(regionCache.get(spec.getDeckType())); // Die Original-Sets bleiben HIER!
+		// For play sessions more than one deck can be combined...
+		if (spec.getAdditonalDeckTypesForPlay() != null) {
+			for (DeckType deckType : spec.getAdditonalDeckTypesForPlay()) {
+				result.addAll(regionCache.get(deckType));
+			}
+		}
+		return result;
 	}
 	
 	public LearnStat getLearnStat(RegionSessionSpec spec) {
