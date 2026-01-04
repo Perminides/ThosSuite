@@ -105,4 +105,9 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 		}
 		return "";
 	}
+
+	@Override
+	public boolean hasProgressed() {
+		return currentIndex > 0;
+	}
 }

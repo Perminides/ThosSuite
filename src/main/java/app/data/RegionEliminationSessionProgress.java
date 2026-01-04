@@ -1,9 +1,6 @@
 package app.data;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import app.controller.RegionSession;
@@ -15,6 +12,7 @@ public class RegionEliminationSessionProgress implements RegionSessionProgress {
 	private final Set<MapShape> sessionRegions;
 	private RegionSessionPresenter presenter;
 	private RegionMode mode;
+	private boolean hasProgressed = false;
 
 	public RegionEliminationSessionProgress(Set<MapShape> regions, RegionSessionSpec spec, RegionSession regionSession) {
 		this.sessionRegions = regions;
@@ -68,8 +66,14 @@ public class RegionEliminationSessionProgress implements RegionSessionProgress {
 	    
 	    sessionRegions.removeAll(matches);
 	    presenter.handleCorrectAnswers(getIds(matches));
+	    hasProgressed = true;
 	    
 	    if (sessionRegions.isEmpty())
 	        session.end(true, null, null, true);
+	}
+
+	@Override
+	public boolean hasProgressed() {
+		return hasProgressed;
 	}
 }

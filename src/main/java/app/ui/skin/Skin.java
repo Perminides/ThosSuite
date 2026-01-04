@@ -6,7 +6,9 @@ import java.awt.Rectangle;
 import java.io.File;
 import java.io.FileInputStream;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -497,12 +499,11 @@ public abstract class Skin {
 	    return button;
 	}
 
+
 	/**
 	 * 
 	 * We struggled quite a bit with having a maxHeight, having it always positioned on center and only having the
 	 * maxHeight if really needed. This made the code quite ugly. But it works for now...
-	 * 
-	 * !Sofort CSS styles für das Alert! Schau dir die Buttons im DarkMode an, Alter!
 	 * 
 	 * @param parent
 	 * @param title
@@ -511,51 +512,70 @@ public abstract class Skin {
 	 * @param showResumeOption
 	 * @return
 	 */
-	public Alert createAlert(Window parent, String title, String message, boolean showCancelOption, boolean showResumeOption) {
+	public Alert createAlert(Window parent, String title, String message, ButtonType... buttonTypes) {
 	    Alert alert = new Alert(Alert.AlertType.NONE);
-	    //alert.setTitle(title);
+	    alert.setTitle(title);
 	    alert.initOwner(parent);
 
+	    // --- Content Aufbau (identisch zu vorher) ---
 	    Label label = new Label(message);
 	    label.setWrapText(true);
-	    label.setMaxWidth(Double.MAX_VALUE); 
+	    label.setMaxWidth(Double.MAX_VALUE);
 
-	    // Wir erstellen eine "schlaue" ScrollPane.
-	    // Sie berechnet ihre Wunschgröße normal, kappt sie aber hart bei getContentSize().height.
-	    // Dadurch denkt der Alert beim Positionieren: "Aha, das Fenster wird maximal getContentSize().height hoch."
 	    ScrollPane scroll = new ScrollPane(label) {
 	        @Override
 	        protected double computePrefHeight(double width) {
-	            // Berechne, wie hoch der Inhalt sein will (z.B. 5000px oder 200px)
 	            double contentHeight = super.computePrefHeight(width);
-	            // Gib das Minimum zurück (entweder die echte Höhe oder max 1000)
-	            return Math.min(contentHeight, getContentSize().height);
+	            return Math.min(contentHeight, 1000);
 	        }
 	    };
 	    
 	    scroll.setFitToWidth(true);
 	    scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-	    // Wichtig: VBar Policy auf AS_NEEDED lassen, damit der Balken kommt, 
-	    // wenn contentHeight > getContentSize().height ist.
 	    scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
 	    alert.getDialogPane().setContent(scroll);
 
-	    // Standard Buttons
-	    alert.getButtonTypes().clear();
-	    alert.getButtonTypes().add(new ButtonType("OK", ButtonBar.ButtonData.YES));
-	    if (showCancelOption) {
-	        alert.getButtonTypes().add(new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE));
-	    }
-	    if (showResumeOption) {
-	        alert.getButtonTypes().add(new ButtonType("Fortsetzen", ButtonBar.ButtonData.OTHER));
-	    }
+	    // --- Buttons hinzufügen ---
+	    alert.getButtonTypes().setAll(buttonTypes);
 
+	    // --- Styling ---
 	    alert.setGraphic(null);
 	    alert.initStyle(StageStyle.UNDECORATED);
-	    styleScene(alert.getDialogPane().getScene());
 	    
+	    // WICHTIG: CSS Styles auch auf den Dialog anwenden!
+	    // Da createAlert oft aufgerufen wird, bevor der Dialog sichtbar ist, 
+	    // müssen wir sicherstellen, dass die Scene gestyled wird.
+	    // (Hinweis: JavaFX Alerts erstellen ihre Scene lazy, daher greifen wir hier auf den DialogPane zu)
+	    DialogPane dialogPane = alert.getDialogPane();
+	    // Hier rufen wir deine styleScene Methode auf, aber Achtung: dialogPane.getScene() 
+	    // ist hier oft noch null. Wir stylen also besser das Pane direkt oder warten.
+	    // Da deine styleScene auf 'Scene' arbeitet, müssen wir tricksen oder sicherstellen,
+	    // dass das CSS global geladen ist.
+	    // Aber für dein aktuelles Setup (Inline-CSS via Data-URL auf Scene):
+	    dialogPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+	        if (newScene != null) styleScene(newScene);
+	    });
+
 	    return alert;
+	}
+
+	/**
+	 * Convenience-Methode für Standard-Alerts (OK / Abbrechen / Fortsetzen)
+	 */
+	public Alert createAlert(Window parent, String title, String message, boolean showCancelOption, boolean showResumeOption) {
+	    List<ButtonType> buttons = new ArrayList<>();
+	    buttons.add(new ButtonType("OK", ButtonBar.ButtonData.YES));
+	    
+	    if (showCancelOption) {
+	        buttons.add(new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE));
+	    }
+	    if (showResumeOption) {
+	        buttons.add(new ButtonType("Fortsetzen", ButtonBar.ButtonData.OTHER));
+	    }
+	    
+	    // Aufruf der neuen generischen Methode
+	    return createAlert(parent, title, message, buttons.toArray(new ButtonType[0]));
 	}
 	
 	public Dialog<?> createDialog(Window parent) {
@@ -893,7 +913,7 @@ public abstract class Skin {
 	    builder.rule(".menu-item:focused", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground));
 	    builder.rule(".menu-item:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover über Multiple Choice unter Lernen
 	    builder.rule(".menu-item:disabled:hover", "-fx-background-color", "transparent"); // Schaltet den Hover für disabled Items aus.
-	    builder.rule(".menu-item:disabled .label", "-fx-text-fill", UIUtils.toHex(Color.RED)); // "Speichern und beenden" ohne Session. JavaFX entsättigt die gewählte Farbe hier nochmal. Also selbst Color.Red setzen würde nur ein schmutziges graurot erzeugen. Ist aber ok für mich.
+	    builder.rule(".menu-item:disabled .label", "-fx-text-fill", UIUtils.toHex(textColor)); // "Speichern und beenden" ohne Session. JavaFX entsättigt die gewählte Farbe hier nochmal. Also selbst Color.Red setzen würde nur ein schmutziges graurot erzeugen. Ist aber ok für mich.
 	    builder.rule(".menu:hover", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hover. Standard ist sonst einfach ein wahlloses blau. Scheint auch von nix abgeleitet zu sein, soweit ich es sehe.
 	    builder.rule(".menu:showing", "-fx-background-color", UIUtils.toHex(menuBarHoverBackground)); // Hintergrund von Lernen, wenn ich über ein Untermenü hovere, wie Multiple Choice oder so. Standard ist das oben genannte wahllose blau.
 	    

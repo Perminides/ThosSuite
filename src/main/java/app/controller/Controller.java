@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
-import app.CssInspector;
 import app.data.AnkiCard;
 import app.data.AnkiDeckService;
 import app.data.AnkiLearnSessionInfo;
@@ -26,7 +26,9 @@ import app.ui.components.AnkiPlayConfigDialog;
 import app.ui.components.RegionPlayConfigDialog;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
-import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
@@ -46,6 +48,12 @@ public class Controller{
     private MainWindow mainWindow;
     private Session currentSession; //!Später natürlich nicht mehr nur MapDeckSessions...
     private CardSortOrder currentSortOrder = CardSortOrder.BY_WRONG_COUNT_DESC; //!Architektur Sofort: Momentan muss die Anfangssortorder an 2 Stellen gesetzt werden. Gruselig!
+    
+    public enum SessionSwitchAction {
+        SAVE_AND_SWITCH,
+        DISCARD_AND_SWITCH,
+        CANCEL
+    }
     
     public Controller(MainWindow mainWindow) {
     	this.mainWindow = mainWindow;
@@ -74,19 +82,21 @@ public class Controller{
     	currentSession = null;
     	// !Erweiterung im Popup auch fragen ob eine neue Session gestartet werden soll
     }
-
+	
 	public void onLearnMenuItemSelected(LearnSessionInfo info) {
-		if (info instanceof AnkiLearnSessionInfo anki) {
-			List<AnkiCard> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // !Später: Wenn Session schon den Service bekommt, um die Session zu speichern, warum holt sie sich nicht auch die Karten zum Spielen. Beantwortung muss erfolgen, wenn freies Spiel implementiert wird!
-			currentSession = new AnkiDeckSession(dueCards, this, ankiDeckService, anki.getDeckType(), currentSortOrder == null ? Collections::shuffle : currentSortOrder::sort, false);
-			mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
-	    } else if (info instanceof RegionLearnSessionInfo region) {
-	    	Set<MapShape> regions = regionDeckService.getRegions(region.getSpec());
-	        currentSession = new RegionSession(region.getSpec(), regions, this, regionDeckService);
-	        mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
-	    }
-		mainWindow.showPane(currentSession.getView());
-		currentSession.start();
+	    requestSessionSwitch(() -> {
+	    	if (info instanceof AnkiLearnSessionInfo anki) {
+				List<AnkiCard> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // !Später: Wenn Session schon den Service bekommt, um die Session zu speichern, warum holt sie sich nicht auch die Karten zum Spielen. Beantwortung muss erfolgen, wenn freies Spiel implementiert wird!
+				currentSession = new AnkiDeckSession(dueCards, this, ankiDeckService, anki.getDeckType(), currentSortOrder == null ? Collections::shuffle : currentSortOrder::sort, false);
+				mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
+		    } else if (info instanceof RegionLearnSessionInfo region) {
+		    	Set<MapShape> regions = regionDeckService.getRegions(region.getSpec());
+		        currentSession = new RegionSession(region.getSpec(), regions, this, regionDeckService);
+		        mainWindow.showSaveSession(false);
+		    }
+	        mainWindow.showPane(currentSession.getView());
+	        currentSession.start();
+	    });
 	}
 	
 	public void saveMenuItemSelected() {
@@ -144,12 +154,57 @@ public class Controller{
 	}
 
 	public void onPlayMenuItemSelected(PlayMenuItem item) {
-	    Object payload = item.payload();
-	    
-	    if (payload instanceof DeckType deckType) {
-	        showAnkiConfigDialog(deckType);
-	    } else if (payload == DeckCategory.REGION_DECK) {
-	        showRegionConfigDialog();
+		requestSessionSwitch(() -> {
+			Object payload = item.payload();
+			if (payload instanceof DeckType deckType) {
+				showAnkiConfigDialog(deckType);
+			} else if (payload == DeckCategory.REGION_DECK) {
+				showRegionConfigDialog();
+			}
+		});
+	}
+	
+	/**
+	 * Man könnte das einigermaßen kompliziert finden, wieso nicht einfach die Session übergeben?
+	 * Nun, dann müsste die neue Session ja komplett aufgebaut werden. Was umsonst wäre, wenn der
+	 * User gleich Abbrechen klickt...
+	 * 
+	 * @param startNewSessionRoutine
+	 */
+	private void requestSessionSwitch(Runnable startNewSessionRoutine) {
+	    if (currentSession == null) {
+	        startNewSessionRoutine.run();
+	        return;
+	    }
+
+	    switch (currentSession.getSwitchStrategy()) {
+	        case IMMEDIATE:
+	            currentSession.close(false);
+	            startNewSessionRoutine.run();
+	            break;
+
+	        case OFFER_SAVE:
+	            // Der komplexe Dialog: Speichern / Verwerfen / Abbrechen
+	            var decision = showSaveDiscardCancelDialog();
+	            if (decision == SessionSwitchAction.SAVE_AND_SWITCH) {
+	                currentSession.close(true);
+	                setLearnMenuItemLabels();
+	                startNewSessionRoutine.run();
+	            } else if (decision == SessionSwitchAction.DISCARD_AND_SWITCH) {
+	                currentSession.close(false);
+	                startNewSessionRoutine.run();
+	            }
+	            // bei CANCEL passiert nichts
+	            break;
+
+	        case CONFIRM_DISCARD:
+	            // Der simple Dialog: "Achtung, Fortschritt geht verloren! OK / Abbrechen"
+	            boolean reallyQuit = showConfirmDiscardDialog();
+	            if (reallyQuit) {
+	                currentSession.close(false); // Nicht speichern, nur schließen
+	                startNewSessionRoutine.run();
+	            }
+	            break;
 	    }
 	}
 
@@ -223,6 +278,46 @@ public class Controller{
 	        //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
 	        currentSession.start();
 	    });
+	}
+	
+	private SessionSwitchAction showSaveDiscardCancelDialog() {
+	    // 1. Buttons definieren
+	    ButtonType btnSave = new ButtonType("Speichern", ButtonBar.ButtonData.YES);
+	    ButtonType btnDiscard = new ButtonType("Verwerfen", ButtonBar.ButtonData.NO);
+	    ButtonType btnCancel = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+	    // 2. Alert direkt mit den Buttons erzeugen
+	    Alert alert = SkinService.get().createAlert(
+	        mainWindow.getStage(), 
+	        "Ungespeicherte Änderungen", 
+	        "Du hast ungespeicherten Lernfortschritt...\nSpeichern?", 
+	        btnSave, btnDiscard, btnCancel // <--- Viel sauberer!
+	    );
+
+	    // 3. Ergebnis auswerten
+	    Optional<ButtonType> result = alert.showAndWait();
+
+	    if (result.isEmpty()) return SessionSwitchAction.CANCEL;
+
+	    ButtonType chosen = result.get();
+	    if (chosen == btnSave)      return SessionSwitchAction.SAVE_AND_SWITCH;
+	    if (chosen == btnDiscard)   return SessionSwitchAction.DISCARD_AND_SWITCH;
+	    
+	    return SessionSwitchAction.CANCEL;
+	}
+	
+	private boolean showConfirmDiscardDialog() {
+	    ButtonType btnConfirm = new ButtonType("Trotzdem beenden", ButtonBar.ButtonData.YES);
+	    ButtonType btnCancel = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+	    Alert alert = SkinService.get().createAlert(
+	        mainWindow.getStage(), 
+	        "Sitzung abbrechen?", 
+	        "Achtung: Der Fortschritt geht verloren.", 
+	        btnConfirm, btnCancel
+	    );
+
+	    return alert.showAndWait().orElse(btnCancel) == btnConfirm;
 	}
 	
     private void setLearnMenuItemLabels() {
