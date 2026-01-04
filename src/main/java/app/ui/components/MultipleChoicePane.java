@@ -69,7 +69,7 @@ public class MultipleChoicePane extends Pane {
         btn.setPrefSize(width, height);
         btn.setMinSize(width, height);
         btn.setMaxSize(width, height);
-        btn.getStyleClass().add("mc-button");
+        btn.getStyleClass().add("my-mc-button");
         
         // WrapText muss für alle an sein, damit es wirkt, wenn wir es brauchen.
         // Gesteuert wird das Aussehen aber über CSS (Padding/Font).

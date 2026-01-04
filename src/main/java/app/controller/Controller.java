@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import app.CssInspector;
 import app.data.AnkiCard;
 import app.data.AnkiDeckService;
 import app.data.AnkiLearnSessionInfo;
@@ -21,9 +22,11 @@ import app.data.RegionSessionSpec;
 import app.ui.MainWindow;
 import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
-import app.ui.RegionPlayConfigDialog;
+import app.ui.components.AnkiPlayConfigDialog;
+import app.ui.components.RegionPlayConfigDialog;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import javafx.scene.Node;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
@@ -75,7 +78,7 @@ public class Controller{
 	public void onLearnMenuItemSelected(LearnSessionInfo info) {
 		if (info instanceof AnkiLearnSessionInfo anki) {
 			List<AnkiCard> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // !Später: Wenn Session schon den Service bekommt, um die Session zu speichern, warum holt sie sich nicht auch die Karten zum Spielen. Beantwortung muss erfolgen, wenn freies Spiel implementiert wird!
-			currentSession = new AnkiDeckSession(dueCards, this, ankiDeckService, anki.getDeckType(), currentSortOrder == null ? Collections::shuffle : currentSortOrder::sort);
+			currentSession = new AnkiDeckSession(dueCards, this, ankiDeckService, anki.getDeckType(), currentSortOrder == null ? Collections::shuffle : currentSortOrder::sort, false);
 			mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
 	    } else if (info instanceof RegionLearnSessionInfo region) {
 	    	Set<MapShape> regions = regionDeckService.getRegions(region.getSpec());
@@ -175,13 +178,51 @@ public class Controller{
 	        // Session starten
 	        currentSession = new RegionSession(spec, regions, this, regionDeckService);
 	        mainWindow.showPane(currentSession.getView());
-	        mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
+	        //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
 	        currentSession.start();
 	    });
 	}
 
 	private void showAnkiConfigDialog(DeckType type) {
-	    // TODO: Implementierung folgt in Schritt 4
+	    Set<String> availableLabels = ankiDeckService.getAvailableLabels(type);
+	    AnkiPlayConfigDialog dialog = new AnkiPlayConfigDialog(
+	        mainWindow.getStage(), 
+	        SkinService.get(), 
+	        type, 
+	        availableLabels
+	    );
+	    
+	    /**dialog.getDialog().setOnShown(e -> {
+	        // Schnapp dir die Wurzel (DialogPane)
+	        Node root = dialog.getDialog().getDialogPane();
+	        
+	        // Dump alles!
+	        CssInspector.dumpRecursive(root);
+	        
+	        // Falls du den Hack von vorhin noch drin hast, hier auch centerOnScreen
+	        // window.centerOnScreen(); 
+	    });**/
+	    
+	    dialog.showAndWait().ifPresent(config -> {
+	        List<AnkiCard> cards = ankiDeckService.getCardsForPlay(
+	            type,
+	            config.minIndex(),
+	            config.maxIndex(),
+	            config.maxCards(),
+	            config.selectedLabels()
+	        );
+	        
+	        if (cards.isEmpty()) {
+	            SkinService.get().createAlert(mainWindow.getStage(), null, "Keine Karten gefunden", false, false).showAndWait();
+	            return;
+	        }
+	        
+	        // Session starten (ohne Sortierung, gemischt)
+	        currentSession = new AnkiDeckSession(cards, this, ankiDeckService, type, Collections::shuffle, true);
+	        mainWindow.showPane(currentSession.getView());
+	        //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
+	        currentSession.start();
+	    });
 	}
 	
     private void setLearnMenuItemLabels() {

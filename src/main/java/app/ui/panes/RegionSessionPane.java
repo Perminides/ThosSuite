@@ -33,7 +33,6 @@ public class RegionSessionPane extends Pane {
         Skin skin = SkinService.get();
         
         karte = skin.createShapeMapPane(deckType);
-        karte.resetAllStates();
         karte.setListener(id -> mapElementClicked(id));
     	getChildren().add(karte);
     	

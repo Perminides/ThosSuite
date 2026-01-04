@@ -1,13 +1,14 @@
 package app.ui.components;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * A custom TextLabel that can parse simple html without using the expensive browser-engine.
@@ -33,7 +34,8 @@ public class CustomTextLabel extends StackPane {
     public CustomTextLabel(String text) {
         this.textFlow = new TextFlow();
 
-        getStyleClass().add("custom-text-label");
+        //getStyleClass().add("custom-text-label"); Wird gerade nicht genutzt anscheinend.
+        //this.pseudoClassStateChanged(PseudoClass.getPseudoClass("meine-klasse"), true);
         setAlignment(Pos.CENTER_LEFT);
 
         // Verhindert, dass das StackPane unnötig Platz einnimmt

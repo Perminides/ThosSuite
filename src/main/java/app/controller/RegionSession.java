@@ -89,6 +89,10 @@ public class RegionSession implements Session {
 		}
 		if (!spec.isPlaySession()) {
 			LearnStat stats = service.getLearnStat(spec);
+			
+    		if (!stats.isDueToday())
+    			throw new RuntimeException("Sicherheitsnetz eingebaut. Diese Region war gar nicht dran. Und ich soll den Fortschritt überschreiben? Mache ich ungern!");
+			
 			stats.setLevel(progress.calculateNewLevel(stats.getLastPlayed(), correct, false));
 			stats.setLastPlayed(AppClock.TODAY);
 			if (!correct)

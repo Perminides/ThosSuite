@@ -32,13 +32,13 @@ import javafx.scene.shape.Rectangle;
  *     |-- Group contentGroup
  *         |-- ImageView
  *         |-- Group shapeLayer
- *      |-- ImageView miniMap
- *      |-- Region borderOverlay
+ *     |-- ImageView miniMap
+ *     |-- Region borderOverlay
  *      
  * CSS:
  * 		ImageMapPane	= ".image-map-pane",
  * 		borderOverlay	= "#borderOverlay"
- * 		Shape (group)	= ".image-map-shape", ".river"
+ * 		Shape (group)	= ".my-image-map-shape", ".river"
  * 		Shape (group)	= ":correct", ":incorrect", ":marked"
  * 		Shape (path)	= ".first", ".second"
  */
@@ -78,7 +78,6 @@ public class ImageMapPane extends StackPane {
 		this.map = map;
 		this.overlayContentBounds = overlayContentBounds;
 		this.cardShapes = new ShapesWrapper();
-		this.getStyleClass().add("image-map-pane");
 
 		// 1. Größe fixieren
 		setPrefSize(width, height);
