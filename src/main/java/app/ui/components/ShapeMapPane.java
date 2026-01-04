@@ -55,9 +55,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     private boolean isInteractive = false; // Benötigt für den ShapeMapState
 
     public ShapeMapPane(GeoMap map, int targetHeight) {
-    	this.contentGroup = new Group();
-    	getStyleClass().add("shape-map-pane");
-        
+    	this.contentGroup = new Group();        
         map.getShapes().stream()
            // 1. Sortieren nach Z-Index (niedrig zuerst = unten)
            .sorted(Comparator.comparingInt(s -> s.getZIndex()))
@@ -79,6 +77,8 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
                // 3. In Z-Order-Reihenfolge die shapes hinzufügen
                contentGroup.getChildren().add(node);
           });
+        
+        resetAllStates();
         
         // Inhalt zusammenbauen
         this.getChildren().add(contentGroup);
@@ -162,7 +162,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         }
     }
     
-    public void resetAllStates() {
+    protected void resetAllStates() {
         shapeMap.values().forEach(this::resetShapeState);
     }
     

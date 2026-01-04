@@ -140,7 +140,7 @@ public class GeoMap {
 	    
 	    // Group erstellen (Fill zuerst, dann Border)
 	    Group group = new Group(fillShape, borderShape);
-	    group.getStyleClass().add("image-map-shape");
+	    group.getStyleClass().add("my-image-map-shape");
 	    group.setUserData(id);
 	    group.setId("groupId-" + id);
 	    

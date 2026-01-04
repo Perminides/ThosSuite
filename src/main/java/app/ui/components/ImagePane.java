@@ -38,7 +38,7 @@ public class ImagePane extends StackPane {
         backgroundRect = new Rectangle(width, height);
         backgroundRect.setArcWidth(arcDiameter);
         backgroundRect.setArcHeight(arcDiameter);
-        backgroundRect.getStyleClass().add("image-background-layer");
+        backgroundRect.getStyleClass().add("my-image-background-layer");
         // HIER WICHTIG: Den Border-Style entfernen wir hier!
 
         // ---------------------------------------------------------
@@ -59,7 +59,7 @@ public class ImagePane extends StackPane {
         borderRect.setMouseTransparent(true);  // Klicks sollen durchgehen (optional, aber sauber)
         
         // Der Rahmen-Style wandert auf dieses neue Rechteck:
-        borderRect.getStyleClass().add("image-border-layer");
+        borderRect.getStyleClass().add("my-image-border-layer");
 
         // ---------------------------------------------------------
         // Stapeln: Hintergrund -> Bild -> Rahmen

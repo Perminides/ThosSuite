@@ -20,7 +20,7 @@ public record MapShape(String id, String deckId, String regionName, String capit
 
 		// --- A. Basis-Styling ---
         if (isShapeMap) {
-            shape.getStyleClass().add("map-shape");
+            shape.getStyleClass().add("my-map-shape");
             // --- B. Layer-Logik anwenden
             ShapeLayer layer = ShapeLayer.fromJsonId(type);
 
@@ -33,7 +33,7 @@ public record MapShape(String id, String deckId, String regionName, String capit
                 shape.setMouseTransparent(true);
             }
         } else {
-            shape.getStyleClass().add("image-map-shape");
+            shape.getStyleClass().add("my-image-map-shape");
         }        
         shape.setUserData(id);
 	}

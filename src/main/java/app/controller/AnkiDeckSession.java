@@ -25,6 +25,7 @@ public class AnkiDeckSession implements Session{
 	private final AnkiSessionPresenter presenter;
 	private final AnkiDeckService service;
     private final Controller controller;
+    private final boolean isFreePlay;
     private int currentIndex = -1;
     private final DeckType type;
     private List<AnkiCard> cards;
@@ -38,7 +39,7 @@ public class AnkiDeckSession implements Session{
      * @param service
      * @param type
      */
-    public AnkiDeckSession(List<AnkiCard> cards, Controller controller, AnkiDeckService service, DeckType type, Consumer<List<AnkiCard>> sorter) {
+    public AnkiDeckSession(List<AnkiCard> cards, Controller controller, AnkiDeckService service, DeckType type, Consumer<List<AnkiCard>> sorter, boolean isFreePlay) {
     	this.sorter = sorter;
     	this.type = type;
     	this.cards = cards;
@@ -48,6 +49,7 @@ public class AnkiDeckSession implements Session{
     		card.setProgress(new AnkiCardProgress(card, presenter, this));
     	}
         this.controller = controller;
+        this.isFreePlay = isFreePlay;
     }
 
     public void start() {
@@ -90,6 +92,12 @@ public class AnkiDeckSession implements Session{
     	Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Zusammenfassung", createSummary(), false, false);
     	alert.showAndWait();
     	
+    	if (isFreePlay) {
+    		presenter.end();
+            controller.sessionEnded();
+    	}
+    		
+    	
     	for (AnkiCard card : cards) {
     		LearnStat learnStat = card.getLearnStat();
     		AnkiCardProgress progress = card.getProgress();
@@ -103,6 +111,9 @@ public class AnkiDeckSession implements Session{
     			card.setLearnStat(new LearnStat(AppClock.TODAY, AppClock.TODAY, progress.isCorrectlyAnswered() ? 1 : 0, progress.isCorrectlyAnswered() ? 0 : 1));
     			continue;
     		}
+    		
+    		if (!learnStat.isDueToday())
+    			throw new RuntimeException("Sicherheitsnetz eingebaut. Diese Karte war gar nicht dran. Und ich soll den Fortschritt überschreiben? Mache ich ungern!");
     		
     		learnStat.setLevel(progress.calculateNewLevel(learnStat.getLastPlayed(), progress.isCorrectlyAnswered(), true));
     		learnStat.setLastPlayed(AppClock.TODAY);
