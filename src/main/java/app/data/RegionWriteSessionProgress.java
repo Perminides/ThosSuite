@@ -95,4 +95,9 @@ public class RegionWriteSessionProgress implements RegionSessionProgress {
 		session.end(false, toLearnRegions.get(currentIndex).id(), result, false);
 		
 	}
+
+	@Override
+	public boolean hasProgressed() {
+		return currentIndex > 0;
+	}
 }

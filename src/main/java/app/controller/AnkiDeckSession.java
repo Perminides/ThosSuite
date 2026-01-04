@@ -15,6 +15,7 @@ import app.data.CardSortOrder;
 import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
+import app.data.SessionSwitchStrategy;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Alert;
@@ -83,11 +84,16 @@ public class AnkiDeckSession implements Session{
     	cards = fixed;
     }
     
+    @Override
+    public void close(boolean save) {
+    	if (save)
+    		save();
+    }
+    
     /**
-     * Updatet die LearnStats 
-     * Speichert den Fortschritt
-     * Gibt an die Session ab
+     * Updatet die LearnStats. Speichert den Fortschritt. Gibt an den Controller ab
      */
+    @Override
     public void end() {
     	Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Zusammenfassung", createSummary(), false, false);
     	alert.showAndWait();
@@ -97,34 +103,7 @@ public class AnkiDeckSession implements Session{
             controller.sessionEnded();
     	}
     		
-    	
-    	for (AnkiCard card : cards) {
-    		LearnStat learnStat = card.getLearnStat();
-    		AnkiCardProgress progress = card.getProgress();
-    		
-    		// Karte wurde nicht gespielt
-    		if (progress.isCorrectlyAnswered() == null)
-    			continue;
-    		
-    		// Es ist eine neue Karte
-    		if (learnStat == null) {
-    			card.setLearnStat(new LearnStat(AppClock.TODAY, AppClock.TODAY, progress.isCorrectlyAnswered() ? 1 : 0, progress.isCorrectlyAnswered() ? 0 : 1));
-    			continue;
-    		}
-    		
-    		if (!learnStat.isDueToday())
-    			throw new RuntimeException("Sicherheitsnetz eingebaut. Diese Karte war gar nicht dran. Und ich soll den Fortschritt überschreiben? Mache ich ungern!");
-    		
-    		learnStat.setLevel(progress.calculateNewLevel(learnStat.getLastPlayed(), progress.isCorrectlyAnswered(), true));
-    		learnStat.setLastPlayed(AppClock.TODAY);
-    		if (!progress.isCorrectlyAnswered())
-    				learnStat.incrementWrongCount();
-    	}
-		service.savePlayedCards(type, cards);
-        for (AnkiCard card : cards) {
-        	card.setProgress(null);
-        }
-        presenter.end();
+    	save();
         controller.sessionEnded();
     }
 
@@ -196,6 +175,7 @@ public class AnkiDeckSession implements Session{
 		getCurrentProgress().start();
 	}
 	
+	@Override
 	public void cancel() {
 		getCurrentProgress().cancel();
 	}
@@ -206,6 +186,36 @@ public class AnkiDeckSession implements Session{
 	
 	public boolean isPaused() {
 		return getCurrentProgress().isPaused();
+	}
+	
+	private void save() {
+    	for (AnkiCard card : cards) {
+    		LearnStat learnStat = card.getLearnStat();
+    		AnkiCardProgress progress = card.getProgress();
+    		
+    		// Karte wurde nicht gespielt
+    		if (progress.isCorrectlyAnswered() == null)
+    			continue;
+    		
+    		// Es ist eine neue Karte
+    		if (learnStat == null) {
+    			card.setLearnStat(new LearnStat(AppClock.TODAY, AppClock.TODAY, progress.isCorrectlyAnswered() ? 1 : 0, progress.isCorrectlyAnswered() ? 0 : 1));
+    			continue;
+    		}
+    		
+    		if (!learnStat.isDueToday())
+    			throw new RuntimeException("Sicherheitsnetz eingebaut. Diese Karte war gar nicht dran. Und ich soll den Fortschritt überschreiben? Mache ich ungern!");
+    		
+    		learnStat.setLevel(progress.calculateNewLevel(learnStat.getLastPlayed(), progress.isCorrectlyAnswered(), true));
+    		learnStat.setLastPlayed(AppClock.TODAY);
+    		if (!progress.isCorrectlyAnswered())
+    				learnStat.incrementWrongCount();
+    	}
+		service.savePlayedCards(type, cards);
+        for (AnkiCard card : cards) {
+        	card.setProgress(null);
+        }
+        presenter.end();
 	}
 	
 	private AnkiCardProgress getCurrentProgress() {
@@ -244,6 +254,14 @@ public class AnkiDeckSession implements Session{
 	 */
 	public Pane getView() {
 		return presenter.getView();
+	}
+
+	@Override
+	public SessionSwitchStrategy getSwitchStrategy() {
+		if (currentIndex <= 0 || isFreePlay)
+			return SessionSwitchStrategy.IMMEDIATE;
+		else
+			return SessionSwitchStrategy.OFFER_SAVE;
 	}
 
 }

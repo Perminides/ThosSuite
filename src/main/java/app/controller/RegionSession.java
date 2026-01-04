@@ -16,6 +16,7 @@ import app.data.RegionMode;
 import app.data.RegionSessionProgress;
 import app.data.RegionSessionSpec;
 import app.data.RegionWriteSessionProgress;
+import app.data.SessionSwitchStrategy;
 import app.presenter.RegionSessionPresenter;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Alert;
@@ -63,8 +64,11 @@ public class RegionSession implements Session {
 	}
 
 	@Override
-	public void end() {
-		// TODO Auto-generated method stub
+	public SessionSwitchStrategy getSwitchStrategy() {
+		if (!progress.hasProgressed() || spec.isPlaySession())
+			return SessionSwitchStrategy.IMMEDIATE;
+		else
+			return SessionSwitchStrategy.CONFIRM_DISCARD;	
 	}
 	
 	@Override
@@ -114,5 +118,10 @@ public class RegionSession implements Session {
 	
 	public Pane getView() {
 		return presenter.getView();
+	}
+	
+	public void close(boolean save) {
+		if (save)
+			throw new RuntimeException("Damit habe ich nun so gar nicht gerechnet. Wieso sollte ich eine unfertige Regionssession speichern?");
 	}
 }
