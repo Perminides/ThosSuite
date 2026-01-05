@@ -189,6 +189,9 @@ public abstract class Skin {
 	protected Rectangle itSessionQuestionPanel;
 	protected Rectangle itSessionMapPanel;
 	protected Rectangle itSessionTextInputPanel;
+	protected Rectangle usSessionQuestionPanel;
+	protected Rectangle usSessionMapPanel;
+	protected Rectangle usSessionTextInputPanel;
 
 	protected Integer verticalGapMC;
 
@@ -541,7 +544,7 @@ public abstract class Skin {
 
 	    // --- Styling ---
 	    alert.setGraphic(null);
-	    alert.initStyle(StageStyle.UNDECORATED);
+	    alert.initStyle(StageStyle.EXTENDED);
 	    
 	    // WICHTIG: CSS Styles auch auf den Dialog anwenden!
 	    // Da createAlert oft aufgerufen wird, bevor der Dialog sichtbar ist, 
@@ -561,7 +564,7 @@ public abstract class Skin {
 	}
 
 	/**
-	 * Convenience-Methode für Standard-Alerts (OK / Abbrechen / Fortsetzen)
+	 * Convenience-Methode für Standard-Alerts (OK und optional: Abbrechen / Fortsetzen)
 	 */
 	public Alert createAlert(Window parent, String title, String message, boolean showCancelOption, boolean showResumeOption) {
 	    List<ButtonType> buttons = new ArrayList<>();

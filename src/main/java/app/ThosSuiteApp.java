@@ -42,9 +42,9 @@ public class ThosSuiteApp extends Application {
 
     public static void main(String[] args) {
         System.out.println("Start Suite: " + LocalDateTime.now());
-        // JavaFX Application.launch() startet die App
-        launch(args);
+        launch(args); // JavaFX Application.launch() startet die App und den JavaFX Application Thread
         System.out.println("End Suite: " + LocalDateTime.now());
+        System.exit(0);
     }
 
     @Override
@@ -135,6 +135,13 @@ public class ThosSuiteApp extends Application {
         mainWindow.show();
         
         System.out.println("Hauptfenster ist da: " + LocalDateTime.now());
+    }
+    
+    @Override
+    public void stop() throws Exception {
+        System.out.println("App wird gestoppt, räume auf...");
+        app.data.persistence.DB.closeConnection();
+        super.stop();
     }
 
     private String getDataFolder() {
