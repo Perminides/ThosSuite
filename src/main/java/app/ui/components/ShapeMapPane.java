@@ -57,16 +57,18 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     public ShapeMapPane(GeoMap map, int targetHeight) {
     	this.contentGroup = new Group();        
         map.getShapes().stream()
-           // 1. Sortieren nach Z-Index (niedrig zuerst = unten)
            .sorted(Comparator.comparingInt(s -> s.getZIndex()))
            .forEach(mapShape -> {
                Node node = mapShape.shape();
                String id = mapShape.id();
                
-               // 1. Lookup füllen
+               // OPTIMIERUNG: Altlasten direkt entfernen!
+               // Da die Node-Objekte wiederverwendet werden, entfernen wir hier 
+               // eventuelle Inline-Styles (z.B. fette Ränder) aus der letzten Session.
+               node.setStyle(""); 
+               
                shapeMap.put(id, mapShape);
                
-               // 2. Listener auf interaktive Shapes
                if (mapShape.isInteractive())
             	   node.setOnMouseClicked(_ -> {
             		   if (listener != null) {
@@ -74,28 +76,61 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
             		   }
             	   });
                
-               // 3. In Z-Order-Reihenfolge die shapes hinzufügen
                contentGroup.getChildren().add(node);
           });
         
         resetAllStates();
-        
-        // Inhalt zusammenbauen
         this.getChildren().add(contentGroup);
     
-        // Initialer Layout-Pass für Bounds
+        // 1. Initiales Layout für Bounds-Berechnung
+        // Hier greift meist nur der Default-Style (z.B. 1.0px), da noch keine Scene existiert.
+        // Das ist aber okay, da wir dank node.setStyle("") oben "sauber" messen.
         contentGroup.applyCss(); 
         contentGroup.layout();
         Bounds bounds = contentGroup.getBoundsInLocal();
         
-        double scaleFactor = targetHeight / bounds.getHeight();
+        // final für Zugriff im Listener
+        final double scaleFactor = targetHeight / bounds.getHeight();
         
         Scale scale = new Scale(scaleFactor, scaleFactor);
-        // Pivot auf 0,0 (Links oben der Group) - StackPane zentriert das Ergebnis dann
         scale.setPivotX(0);
         scale.setPivotY(0);
-        
         contentGroup.getTransforms().add(scale);
+        
+        // FIX: "Inverse Scaling" für konstante Strichdicken
+        // Problem: Durch die Skalierung der Gruppe (z.B. auf 10%) werden auch die Linien 10x dünner.
+        // Lösung: Wir warten, bis die Scene da ist (und damit der Skin), lesen die gewünschte Dicke
+        // und setzen sie "künstlich" hoch (z.B. mal 10), damit sie optisch gleich bleibt.
+        // WICHTIG: Inline-Style blockiert zukünftige CSS-Änderungen für stroke-width.
+        // Falls später dynamische Stroke-Anpassungen nötig werden, muss diese Lösung überdacht werden.
+        this.sceneProperty().addListener(new javafx.beans.value.ChangeListener<javafx.scene.Scene>() {
+            @Override
+            public void changed(javafx.beans.value.ObservableValue<? extends javafx.scene.Scene> observable, javafx.scene.Scene oldValue, javafx.scene.Scene newScene) {
+                if (newScene != null) {
+                    // 2. Skin-Werte laden (jetzt wo die Scene da ist)
+                    // Zwingend nötig, um z.B. die "1.8px" aus dem CSS zu erfahren.
+                    contentGroup.applyCss();
+                    
+                    // 3. Strichdicken anpassen
+                    for (Node node : contentGroup.getChildren()) {
+                        if (node instanceof javafx.scene.shape.Shape s) {
+                            double originalWidth = s.getStrokeWidth();
+                            if (originalWidth > 0) {
+                                // Berechnung: Skin-Wert / Skalierung = Nötige technische Dicke
+                                double newWidth = originalWidth / scaleFactor;
+                                
+                                // Wir nutzen setStyle (Inline-CSS), da dies Priorität vor dem Skin-CSS hat.
+                                // Sonst würde JavaFX den Wert beim nächsten Pulse wieder überschreiben.
+                                s.setStyle("-fx-stroke-width: " + String.format(java.util.Locale.US, "%.4f", newWidth) + "px;");
+                            }
+                        }
+                    }
+                    
+                    // Listener entfernen, da der Job erledigt ist.
+                    ShapeMapPane.this.sceneProperty().removeListener(this);
+                }
+            }
+        });
     }
 
     public void setListener(MapElementListener listener) {

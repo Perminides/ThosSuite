@@ -1,6 +1,7 @@
 package app.ui.components;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -46,33 +47,7 @@ public class RegionPlayConfigDialog {
         // Mode-Auswahl (mittig oben)
         modeComboBox.getItems().addAll(RegionMode.values());
         modeComboBox.setValue(RegionMode.CLICK_CITY_BLANK);
-        modeComboBox.setOnAction(_ -> updateCheckBoxStates());
-        modeComboBox.setOnShown(event -> {
-            javafx.application.Platform.runLater(() -> {
-                System.out.println("--- Suche offene Popups... ---");
-                boolean found = false;
-                
-                for (Window window : Window.getWindows()) {
-                    // Wir nehmen JEDES sichtbare Popup, egal wie es heißt
-                    if (window instanceof javafx.stage.PopupWindow && window.isShowing()) {
-                        System.out.println(">> Popup Window gefunden: " + window.getClass().getSimpleName());
-                        
-                        if (window.getScene() != null && window.getScene().getRoot() != null) {
-                            found = true;
-                            // Deinen Inspector auf die Wurzel loslassen
-                            CssInspector.dumpRecursive(window.getScene().getRoot());
-                        } else {
-                            System.out.println(">> Hat aber keine Scene/Root!");
-                        }
-                    }
-                }
-                
-                if (!found) {
-                    System.out.println(">> KEIN passendes Popup in Window.getWindows() gefunden!");
-                }
-            });
-        });
-        
+        modeComboBox.setOnAction(_ -> updateCheckBoxStates());        
         mainContent.getChildren().add(modeComboBox);
         
         // Decks gruppieren
@@ -109,6 +84,7 @@ public class RegionPlayConfigDialog {
             VBox groupBox = new VBox(5);
             groupBox.setAlignment(Pos.TOP_LEFT);
             
+            group.sort(Comparator.comparing(DeckType::getDisplayName));
             for (DeckType type : group) {
                 CheckBox checkBox = new CheckBox(type.getDisplayName());
                 checkBox.setOnAction(_ -> onDeckCheckBoxChanged());

@@ -5,6 +5,8 @@ public enum MapMetadata {
 	GERMANY(MapType.SHAPE, "germany.geojson;germany states.geojson", null),
 	ITALY(MapType.SHAPE, "italy.geojson", null),
 	SPAIN(MapType.SHAPE, "spain.geojson", null),
+	USA(MapType.SHAPE, "usa states.geojson", null),
+	
 	WORLD(MapType.IMAGE, "worldAreas.geojson;worldCountries.geojson;worldLines.geojson", "world.png");
 
 	private final String[] geoJsonFile;
