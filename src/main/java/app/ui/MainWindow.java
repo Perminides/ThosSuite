@@ -9,6 +9,7 @@ import app.data.CardSortOrder;
 import app.data.LearnSessionInfo;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import app.util.Log;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
@@ -238,10 +239,9 @@ public class MainWindow {
             switch (event.getCode()) {
                 case ESCAPE: {
                 	long now = System.currentTimeMillis();
-                	System.out.println("[Instance: " + instanceId + "] Escaped pressed: " + LocalDateTime.now());
                     // Ignoriere wenn weniger als 300ms seit letztem ESC
                     if (now - lastEscapeTime < 500) {
-                    	System.out.println("Oha, wohl ein Tastatur-Glitsch...");
+                    	Log.debug(this, "Oha, wohl ein Tastatur-Glitsch, so schnell hintereinander 2x ESC...");
                         event.consume();
                         return;
                     }

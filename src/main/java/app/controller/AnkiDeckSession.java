@@ -18,6 +18,7 @@ import app.data.SessionProgress;
 import app.data.SessionSwitchStrategy;
 import app.presenter.AnkiSessionPresenter;
 import app.ui.skin.SkinService;
+import app.util.Log;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.Pane;
 
@@ -69,6 +70,7 @@ public class AnkiDeckSession implements Session{
         currentIndex = 0;
         presenter.sessionProgressChanged(createSessionProgress());
         presenter.newCardIncoming(cards.get(currentIndex).getLearnStat());
+        Log.info(this, "Starte AnkiSession " + type.getDisplayName());
         getCurrentProgress().start();
     }
     

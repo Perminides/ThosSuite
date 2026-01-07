@@ -3,14 +3,22 @@ package app;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import java.util.logging.StreamHandler;
 
 import app.config.Config;
 import app.controller.Controller;
 import app.data.AppClock;
 import app.ui.MainWindow;
-import app.ui.skin.Skin;
-import app.ui.skin.SkinService;
+import app.util.Log;
 import javafx.application.Application;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -41,32 +49,35 @@ public class ThosSuiteApp extends Application {
     private Controller controller;
 
     public static void main(String[] args) {
-        System.out.println("Start Suite: " + LocalDateTime.now());
         launch(args); // JavaFX Application.launch() startet die App und den JavaFX Application Thread
-        System.out.println("End Suite: " + LocalDateTime.now());
-        System.exit(0);
+        Log.info(ThosSuiteApp.class, "End Suite");
     }
 
     @Override
     public void init() throws Exception {
-        // Wird VOR start() aufgerufen, aber NACH JavaFX-Initialisierung
-        // Hier können wir die nicht-UI Sachen machen
-        
         AppClock.init();
 
-        // UncaughtExceptionHandler für JavaFX
-        Thread.setDefaultUncaughtExceptionHandler((_, ex) -> {
-            StringWriter sw = new StringWriter();
-            ex.printStackTrace(new PrintWriter(sw));
-            String trace = sw.toString();
+        // UncaughtExceptionHandler mit JUL-Check
+        Thread.setDefaultUncaughtExceptionHandler((thread, ex) -> {
+            // Prüfen ob JUL konfiguriert ist
+            boolean julConfigured = java.util.logging.LogManager.getLogManager().getLogger("").getHandlers().length > 0;
             
-            // JavaFX Alert statt JOptionPane
+            if (julConfigured) {
+                Log.error(ThosSuiteApp.class, "Uncaught exception in thread " + thread.getName(), ex);
+            } else {
+                System.err.println("Uncaught exception in thread " + thread.getName());
+                ex.printStackTrace(System.err);
+            }
+            
             javafx.application.Platform.runLater(() -> {
                 Alert alert = new Alert(AlertType.ERROR);
                 alert.setTitle("ThosSuite Fehler");
                 alert.setHeaderText("Ein Fehler ist aufgetreten");
                 
-                TextArea textArea = new TextArea(trace);
+                StringWriter sw = new StringWriter();
+                ex.printStackTrace(new PrintWriter(sw));
+                
+                TextArea textArea = new TextArea(sw.toString());
                 textArea.setEditable(false);
                 textArea.setWrapText(true);
                 textArea.setPrefRowCount(40);
@@ -75,43 +86,46 @@ public class ThosSuiteApp extends Application {
                 alert.getDialogPane().setContent(textArea);
                 alert.showAndWait();
                 
-                ex.printStackTrace();
                 System.exit(1);
             });
         });
-
-        // Font laden (JavaFX-Style)
-        try {
-            Font font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos.ttf"), 20);
-            System.out.println(font != null ? "Aptos Font geladen" : "Aptos nicht geladen");
-            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-Bold.ttf"), 20);
-            System.out.println(font != null ? "Aptos-Bold Font geladen" : "Aptos-Bold nicht geladen");
-            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-Bold-Italic.ttf"), 20);
-            System.out.println(font != null ? "Aptos-Bold-Italic Font geladen" : "Aptos-Bold-Italic nicht geladen");
-            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-Italic.ttf"), 20);
-            System.out.println(font != null ? "Aptos-Italic Font geladen" : "Aptos-Italic nicht geladen");
-        } catch (Exception e) {
-            throw new RuntimeException("Probleme beim Laden der Fonts: Aptos", e);
-        }
     }
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage) {  	
         // DataFolder aus Parametern oder DirectoryChooser
         String dataFolder = getDataFolder();
         if (dataFolder == null) {
             System.exit(-1);
             return;
         }
+     // Log-Verzeichnis erstellen
+        File logDir = new File(dataFolder + "log");
+        if (!logDir.exists()) {
+            logDir.mkdirs();
+        }
 
         // Config initialisieren (MUSS vor SkinService passieren!)
         Config.init(dataFolder);
-
-        // Skin holen und MainWindow erstellen
-        Skin skin = SkinService.get();
-        mainWindow = new MainWindow(primaryStage);
+        initLog(dataFolder);
+        Log.info(ThosSuiteApp.class, "Start Suite (Logging finally enabled :))");
         
-        // Icons setzen
+     // Font laden (JavaFX-Style)
+        try {
+            Font font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos.ttf"), 20);
+            Log.debug(this, font != null ? "Aptos Font geladen" : "Aptos nicht geladen");
+            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-Bold.ttf"), 20);
+            Log.debug(this, font != null ? "Aptos-Bold Font geladen" : "Aptos-Bold nicht geladen");
+            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-Bold-Italic.ttf"), 20);
+            Log.debug(this, font != null ? "Aptos-Bold-Italic Font geladen" : "Aptos-Bold-Italic nicht geladen");
+            font = Font.loadFont(ThosSuiteApp.class.getClassLoader().getResourceAsStream("Aptos-Italic.ttf"), 20);
+            Log.debug(this, font != null ? "Aptos-Italic Font geladen" : "Aptos-Italic nicht geladen");
+        } catch (Exception e) {
+            throw new RuntimeException("Probleme beim Laden der Fonts: Aptos", e);
+        }
+        
+        mainWindow = new MainWindow(primaryStage);
+        // mainWindow wird gleich gestylet, aber erst noch: Icons setzen
         try {
             String iconFolder = Config.get("iconFolder") + "suite_icon/";
             mainWindow.getIcons().addAll(
@@ -133,13 +147,75 @@ public class ThosSuiteApp extends Application {
         // Fenster zentrieren und anzeigen
         mainWindow.centerOnScreen();
         mainWindow.show();
-        
-        System.out.println("Hauptfenster ist da: " + LocalDateTime.now());
     }
     
-    @Override
+    private void initLog(String dataFolder) {
+    	// Debug-Mode prüfen
+    	Parameters params = getParameters();
+    	boolean debugMode = params.getRaw().contains("--debug");
+    	
+    	// GEMEINSAMER Formatter für File UND Console
+        Formatter commonFormatter = new Formatter() {
+            @Override
+            public String format(LogRecord record) {
+            	return String.format("%1$tF %1$tT [%2$s] %3$s - %4$s%n",
+            		    LocalDateTime.ofInstant(
+            		        Instant.ofEpochMilli(record.getMillis()), 
+            		        ZoneId.systemDefault()
+            		    ),
+            		    record.getLevel().getName(),
+            		    record.getLoggerName(),
+            		    formatMessage(record)
+            		);
+            }
+        };
+
+        // JUL programmatisch konfigurieren
+        try {
+            // FileHandler mit korrektem Pfad
+            String logPattern = dataFolder + "log/thossuite%u.log";
+            FileHandler fileHandler = new FileHandler(logPattern, 10485760, 5, true);
+            fileHandler.setLevel(debugMode ? Level.FINE : Level.INFO);
+            fileHandler.setFormatter(commonFormatter); // <- Gemeinsamer Formatter
+            
+            // StreamHandler für Console (stdout statt stderr)
+            StreamHandler consoleHandler = new StreamHandler(System.out, commonFormatter) { // <- Gemeinsamer Formatter
+                @Override
+                public synchronized void publish(LogRecord record) {
+                    super.publish(record);
+                    flush();
+                }
+            };
+            consoleHandler.setLevel(Level.ALL);
+            
+            // Root-Logger konfigurieren
+            Logger rootLogger = Logger.getLogger("");
+            rootLogger.setLevel(Level.FINE);
+            
+            // Alte Handler entfernen
+            for (Handler handler : rootLogger.getHandlers()) {
+                rootLogger.removeHandler(handler);
+            }
+            
+            // Neue Handler hinzufügen
+            rootLogger.addHandler(fileHandler);
+            rootLogger.addHandler(consoleHandler);
+            
+            // Java-interne Messages unterdrücken
+            Logger.getLogger("java").setLevel(Level.WARNING);
+            Logger.getLogger("javafx").setLevel(Level.WARNING);
+            
+            Log.debug(ThosSuiteApp.class, "Logging initialisiert");
+            
+        } catch (Exception e) {
+        	e.printStackTrace();
+            throw new RuntimeException("Fehler beim Initialisieren von Logging:", e);
+        }		
+	}
+
+	@Override
     public void stop() throws Exception {
-        System.out.println("App wird gestoppt, räume auf...");
+        Log.debug(this, "App wird gestoppt, räume auf...");
         app.data.persistence.DB.closeConnection();
         super.stop();
     }

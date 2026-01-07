@@ -141,8 +141,6 @@ public record MapShape(String id, String deckId, String regionName, String capit
 
 	    // Statische Lookup-Methode
 	    public static ShapeLayer fromJsonId(String id) {
-	    	if (id == null)
-	    		System.out.println("Aha");
 	        for (ShapeLayer layer : values()) {
 	            if (id != null && id.equals(layer.jsonId)) return layer;
 	        }

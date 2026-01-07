@@ -6,7 +6,7 @@
 
 	<groupId>de.tmarkgraf</groupId>
 	<artifactId>thossuite-app</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>2.1</version>
 
 	<properties>
 		<maven.compiler.source>25</maven.compiler.source>
@@ -57,12 +57,130 @@
 			<version>${javafx.version}</version>
 			<classifier>win</classifier>
 		</dependency>
-		
+
 		<!-- Wird von ScenicView gebraucht -->
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-swing</artifactId>
 			<version>${javafx.version}</version>
 		</dependency>
+		
 	</dependencies>
+	<build>
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>3.5.0</version>
+				<configuration>
+					<force>true</force>
+					<filesets>
+						<fileset>
+							<directory>${project.build.directory}</directory>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
+
+			<!-- Dependency Plugin: Kopiert alle JARs nach target/libs -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.6.0</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/libs</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Maven Resources Plugin: Bereitet jpackage-input vor -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.3.1</version>
+				<executions>
+					<execution>
+						<id>copy-jars-to-jpackage-input</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>
+								${project.build.directory}/jpackage-input</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.build.directory}</directory>
+									<includes>
+										<include>
+											thossuite-app-${project.version}.jar</include>
+									</includes>
+								</resource>
+								<resource>
+									<directory>${project.build.directory}/libs</directory>
+									<includes>
+										<include>*.jar</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- jpackage Plugin: Erstellt die EXE -->
+			<plugin>
+				<groupId>org.panteleyev</groupId>
+				<artifactId>jpackage-maven-plugin</artifactId>
+				<version>1.6.5</version>
+				<configuration>
+					<name>ThosSuite-JavaFX</name>
+					<appVersion>2.1</appVersion>
+					<vendor>TMarkgraf</vendor>
+					<destination>${project.build.directory}/build</destination>
+
+					<input>${project.build.directory}/jpackage-input</input>
+					<mainJar>thossuite-app-${project.version}.jar</mainJar>
+					<mainClass>app.ThosSuiteApp</mainClass>
+
+					<type>APP_IMAGE</type>
+					<icon>${project.basedir}/mondrian.ico</icon>
+
+					<addModules>
+						<addModule>javafx.controls</addModule>
+						<addModule>javafx.fxml</addModule>
+						<addModule>javafx.graphics</addModule>
+						<addModule>javafx.swing</addModule>
+						<addModule>java.sql</addModule>
+					</addModules>
+
+					<modulePaths>
+						<modulePath>${project.build.directory}/jpackage-input</modulePath>
+					</modulePaths>
+
+					<javaOptions>
+						<option>-Dprism.allowhidpi=false</option>
+						<option>-Xms512M</option>
+						<option>-Xmx4g</option>
+						<option>-Djavafx.enablePreview=true</option>
+						<option>-Dprism.lcdtext=false</option>
+						<option>
+							--enable-native-access=javafx.graphics,ALL-UNNAMED</option>
+					</javaOptions>
+
+					<arguments>
+						<argument>C:/Users/Markgraf/OneDrive/ThosSuite/</argument>
+					</arguments>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
