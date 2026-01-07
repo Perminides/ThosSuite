@@ -183,7 +183,6 @@ public class WorldSessionPane extends Pane implements AnkiSessionPane {
 	}
 
 	private void mapElementClicked(String id) {
-		System.out.println("Clicked on Map!");
 	    presenter.clickedMapElement(id);
 	}
 	
@@ -208,7 +207,6 @@ public class WorldSessionPane extends Pane implements AnkiSessionPane {
 			+ "\nLevel: " + stats.getCurrentLevel()
 			+ "\nFalsch beantwortet: " + stats.getWrongCount();
 		}
-		System.out.println(text);
 		cardHistoryArea.setText(text);
 	}
 	

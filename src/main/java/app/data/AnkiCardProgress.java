@@ -17,6 +17,7 @@ import app.data.AnkiCard.Output;
 import app.data.AnkiCard.Pause;
 import app.data.AnkiCard.Step;
 import app.presenter.AnkiSessionPresenter;
+import app.util.Log;
 
 
 /**
@@ -50,7 +51,7 @@ public class AnkiCardProgress implements Progress{
 	}
 	
 	public void start() {
-		System.out.println("Los geht es mit Karte: " + card.getId());
+		Log.info(this, "Los geht es mit Karte: " + card.getId());
 	    currentIndex = 0;
 	    runSteps();
 	}
@@ -88,9 +89,6 @@ public class AnkiCardProgress implements Progress{
 	// ========================================
 
 	public void elementClicked(String id) {
-
-		System.out.println("Element clicked");
-		
 	    clickedIds.add(id);
 	    Step step = steps.get(currentIndex);
 	    

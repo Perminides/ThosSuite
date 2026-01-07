@@ -141,7 +141,6 @@ public class MCSessionPane extends Pane implements AnkiSessionPane{
 			+ "\nLevel: " + stats.getCurrentLevel()
 			+ "\nFalsch beantwortet: " + stats.getWrongCount();
 		}
-		System.out.println(text);
 		cardHistoryArea.setText(text);
 	}
 	

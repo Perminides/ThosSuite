@@ -1,1 +1,31 @@
-/target/
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Build
+build/
+ThosSuite-JavaFX/
+jpackage-input/
+
+# Eclipse
+.settings/
+.classpath
+.project
+bin/
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini

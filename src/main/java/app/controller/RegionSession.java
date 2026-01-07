@@ -19,6 +19,7 @@ import app.data.RegionWriteSessionProgress;
 import app.data.SessionSwitchStrategy;
 import app.presenter.RegionSessionPresenter;
 import app.ui.skin.SkinService;
+import app.util.Log;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -55,6 +56,7 @@ public class RegionSession implements Session {
 	}
 	
     public void start() {
+    	Log.info(this, "Starte RegionsSession " + spec.getDeckType().getDisplayName() + " (play = " + spec.isPlaySession() + ")");
         progress.start();
     }
 
@@ -84,7 +86,6 @@ public class RegionSession implements Session {
 	    	        controller.sessionEnded();
 	    	        return;
 	    	    } else if (result.get().getButtonData() == ButtonBar.ButtonData.YES) {
-	    	        System.out.println("User hat 'OK' geklickt.");
 	    	        // Nichts weiter zu tun...
 	    	    } else if (result.get().getButtonData() == ButtonBar.ButtonData.OTHER) {
 	    	    	progress.resume();

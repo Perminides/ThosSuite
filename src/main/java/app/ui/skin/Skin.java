@@ -23,6 +23,7 @@ import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane;
 import app.ui.skin.params.BorderParams;
+import app.util.Log;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -332,8 +333,7 @@ public abstract class Skin {
 	    scene.getStylesheets().clear();
 	    scene.getStylesheets().add("data:text/css," + encodedCss);
 	    
-	    System.out.println(rawCss);
-	    //System.out.println(encodedCss);
+	    Log.debug(this, rawCss);
 	}
 	
 	/**
@@ -454,7 +454,6 @@ public abstract class Skin {
         // JavaFX ist ein bisschen sehr generös bei der Höhe. Ein bissi weniger tut es auch...
         // Ja, das ist ein Hack. Aber ich vermute, einer der mich nie wieder stören wird, also sei es drum...
         fixedButtonHeight = Math.round(fixedButtonHeight * 0.95745f);
-        System.out.println("Höhe der Buttons gesetzt auf: " + fixedButtonHeight);
 
         // NEU: Berechnung des Spacings (identisch zur Logik in styleScene!)
         // Sofort! Wieso wird das hier nochmal übergeben, wenn es in styleScene doch bereits als css definiert wurde???
@@ -581,6 +580,13 @@ public abstract class Skin {
 	    return createAlert(parent, title, message, buttons.toArray(new ButtonType[0]));
 	}
 	
+	/**
+	 * For just text with standard buttons, we use alerts. For more sophisticated popups
+	 * like the playConfigDialogs, we create a simple dialog and leave the rest to the caller.
+	 * 
+	 * @param parent
+	 * @return
+	 */
 	public Dialog<?> createDialog(Window parent) {
 	    Dialog<?> dialog = new Dialog<>();
 	    dialog.initOwner(parent);
