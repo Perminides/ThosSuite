@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import app.CssInspector;
 import app.data.DeckCategory;
 import app.data.DeckType;
 import app.data.MapMetadata;
 import app.data.RegionMode;
+import app.misc.CssInspector;
 import app.ui.skin.Skin;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

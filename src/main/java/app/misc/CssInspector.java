@@ -1,4 +1,4 @@
-package app;
+package app.misc;
 
 import javafx.css.CssMetaData;
 import javafx.css.StyleOrigin;
