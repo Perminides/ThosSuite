@@ -36,7 +36,7 @@ public class RegionPlayConfigDialog {
 
     @SuppressWarnings("unchecked")
     public RegionPlayConfigDialog(Window parent, Skin skin) {
-        this.dialog = (Dialog<RegionPlayConfig>) skin.createDialog(parent);
+        this.dialog = (Dialog<RegionPlayConfig>) skin.createDialog(parent, "Filter");
         
         dialog.setTitle("Regionen spielen");
         

@@ -68,7 +68,7 @@
 	</dependencies>
 	<build>
 		<plugins>
-
+			<!-- Nötig weil jpackage die exe schreibgeschützt erstellt: https://bugs.openjdk.org/browse/JDK-8261845 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-clean-plugin</artifactId>

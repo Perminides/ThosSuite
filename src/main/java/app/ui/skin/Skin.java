@@ -205,85 +205,6 @@ public abstract class Skin {
 	public Dimension getContentSize() {
 		return new Dimension(1910, 1000);
 	}
-
-	public MenuBar createMenuBar() {
-		MenuBar menuBar = new MenuBar();
-		return menuBar;
-	}
-
-	public Menu createMenu(String text) {
-		return new Menu(text);
-	}
-
-	public MenuItem createMenuItem(String text) {
-		return new MenuItem(text);
-	}
-
-	public HeaderBar createHeaderBar(Stage stage, MenuBar menuBar) {
-	    HeaderBar headerBar = new HeaderBar();
-	    
-	    // CENTER: Title
-	    Label titleLabel = new Label("Thos Suite (FX)");
-	    titleLabel.getStyleClass().add("my-title");
-	    headerBar.setCenter(titleLabel);
-	    
-	    // LEADING: Icon + MenuBar (Logik direkt hier)
-	    // Wir nutzen Bindings statt runLater!
-	    
-	    // 1. Icon View erstellen (bindet sich an die Header-Höhe)
-	    ImageView iconView = createResponsiveHeaderIcon(stage, headerBar);
-	    
-	    // 2. Layout zusammenbauen
-	    double spacing = font.getSize() * 0.5;
-	    HBox leftBox = new HBox(0); // Items kommen rein, sobald verfügbar
-	    leftBox.setAlignment(Pos.CENTER_LEFT);
-	    leftBox.setPadding(new javafx.geometry.Insets(0, 0, 0, spacing));
-	    
-	    if (iconView != null) {
-	        leftBox.getChildren().add(iconView);
-	    }
-	    leftBox.getChildren().add(menuBar);
-	    
-	    headerBar.setLeading(leftBox);
-	    
-	    return headerBar;
-	}
-
-	// Hilfsmethode für das responsive Icon
-	private ImageView createResponsiveHeaderIcon(Stage stage, HeaderBar headerBar) {
-	    ObservableList<Image> icons = stage.getIcons(); // Schön, dass die Observable ist, aber für uns hier nicht von Belang!
-	    if (icons.isEmpty()) return null;
-
-	    ImageView iconView = new ImageView();
-	    iconView.setPreserveRatio(true);
-	    iconView.setSmooth(true); // Wichtig, aber bei passender Icon-Wahl weniger kritisch
-
-	    // 1. Die Zielgröße berechnen (Live-Wert)
-	    DoubleBinding targetSize = headerBar.heightProperty().multiply(0.55);
-	    iconView.fitHeightProperty().bind(targetSize);
-
-	    // 2. Binding für das "beste Bild" definieren
-	    // Das aktualisiert sich automatisch, sobald targetSize sich ändert!
-	    ObjectBinding<Image> bestIconBinding = Bindings.createObjectBinding(() -> {
-	        double neededHeight = targetSize.get();
-	        
-	        // Initialer Layout-Pass kann 0 sein
-	        if (neededHeight <= 0) return icons.get(0); 
-
-	        return icons.stream()
-	            // Nimm alle Icons, die mindestens so groß sind wie benötigt
-	            .filter(img -> img.getHeight() >= neededHeight)
-	            // Von denen nimm das kleinste (um unnötiges Downscaling zu vermeiden)
-	            .min((a, b) -> Double.compare(a.getHeight(), b.getHeight()))
-	            // Fallback: Wenn alle kleiner sind als benötigt, nimm das größte was da ist
-	            .orElse(icons.get(icons.size() - 1));
-	            
-	    }, targetSize); // <--- WICHTIG: Abhängigkeit angeben!
-	    // 3. Verkabeln
-	    iconView.imageProperty().bind(bestIconBinding);
-
-	    return iconView;
-	}
 	
 	// !Sofort: Hier gibt es natürlich so einige Magic Numbers noch, die müssen dann leider perspektivisch raus? Oder machen wir das, wann immer ich das mal für andere Auflösungen brauche? Keine Ahnung, ob das je passiert tbh
 	// In SkinService:
@@ -334,6 +255,19 @@ public abstract class Skin {
 	    scene.getStylesheets().add("data:text/css," + encodedCss);
 	    
 	    Log.debug(this, rawCss);
+	}
+	
+	public MenuBar createMenuBar() {
+		MenuBar menuBar = new MenuBar();
+		return menuBar;
+	}
+
+	public Menu createMenu(String text) {
+		return new Menu(text);
+	}
+
+	public MenuItem createMenuItem(String text) {
+		return new MenuItem(text);
 	}
 	
 	/**
@@ -501,6 +435,71 @@ public abstract class Skin {
 	    return button;
 	}
 
+	public HeaderBar createMainWindowHeaderBar(Stage stage, MenuBar menuBar) {
+	    HeaderBar headerBar = new HeaderBar();
+	    
+	    // CENTER: Title
+	    Label titleLabel = new Label("Thos Suite (FX)");
+	    titleLabel.getStyleClass().add("my-title");
+	    headerBar.setCenter(titleLabel);
+	    
+	    // LEADING: Icon + MenuBar (Logik direkt hier)
+	    // Wir nutzen Bindings statt runLater!
+	    
+	    // 1. Icon View erstellen (bindet sich an die Header-Höhe)
+	    ImageView iconView = createResponsiveHeaderIcon(stage, headerBar);
+	    
+	    // 2. Layout zusammenbauen
+	    double spacing = font.getSize() * 0.5;
+	    HBox leftBox = new HBox(0); // Items kommen rein, sobald verfügbar
+	    leftBox.setAlignment(Pos.CENTER_LEFT);
+	    leftBox.setPadding(new javafx.geometry.Insets(0, 0, 0, spacing));
+	    
+	    if (iconView != null) {
+	        leftBox.getChildren().add(iconView);
+	    }
+	    leftBox.getChildren().add(menuBar);
+	    
+	    headerBar.setLeading(leftBox);
+	    
+	    return headerBar;
+	}
+
+	// Hilfsmethode für das responsive Icon
+	private ImageView createResponsiveHeaderIcon(Stage stage, HeaderBar headerBar) {
+	    ObservableList<Image> icons = stage.getIcons(); // Schön, dass die Observable ist, aber für uns hier nicht von Belang!
+	    if (icons.isEmpty()) return null;
+
+	    ImageView iconView = new ImageView();
+	    iconView.setPreserveRatio(true);
+	    iconView.setSmooth(true); // Wichtig, aber bei passender Icon-Wahl weniger kritisch
+
+	    // 1. Die Zielgröße berechnen (Live-Wert) Wir nehmen mal 55% der Höhe, zu groß soll das Icon ja auch nicht sein...
+	    DoubleBinding targetSize = headerBar.heightProperty().multiply(0.55);
+	    iconView.fitHeightProperty().bind(targetSize);
+
+	    // 2. Binding für das "beste Bild" definieren
+	    // Das aktualisiert sich automatisch, sobald targetSize sich ändert!
+	    ObjectBinding<Image> bestIconBinding = Bindings.createObjectBinding(() -> {
+	        double neededHeight = targetSize.get();
+	        
+	        // Initialer Layout-Pass kann 0 sein
+	        if (neededHeight <= 0) return icons.get(0); 
+
+	        return icons.stream()
+	            // Nimm alle Icons, die mindestens so groß sind wie benötigt
+	            .filter(img -> img.getHeight() >= neededHeight)
+	            // Von denen nimm das kleinste (um unnötiges Downscaling zu vermeiden)
+	            .min((a, b) -> Double.compare(a.getHeight(), b.getHeight()))
+	            // Fallback: Wenn alle kleiner sind als benötigt, nimm das größte was da ist
+	            .orElse(icons.get(icons.size() - 1));
+	            
+	    }, targetSize); // <--- WICHTIG: Abhängigkeit angeben!
+	    // 3. Verkabeln
+	    iconView.imageProperty().bind(bestIconBinding);
+
+	    return iconView;
+	}
 
 	/**
 	 * 
@@ -515,11 +514,15 @@ public abstract class Skin {
 	 * @return
 	 */
 	public Alert createAlert(Window parent, String title, String message, ButtonType... buttonTypes) {
-	    Alert alert = new Alert(Alert.AlertType.NONE);
-	    alert.setTitle(title);
+	    Alert alert = new Alert(Alert.AlertType.NONE); 
 	    alert.initOwner(parent);
+	    alert.initStyle(StageStyle.EXTENDED);
 
-	    // --- Content Aufbau (identisch zu vorher) ---
+	    // HeaderBar hinzufügen
+	    HeaderBar headerBar = createDialogHeaderBar(title);
+	    alert.getDialogPane().setHeader(headerBar);
+	    
+	    // --- Content Aufbau ---
 	    Label label = new Label(message);
 	    label.setWrapText(true);
 	    label.setMaxWidth(Double.MAX_VALUE);
@@ -537,27 +540,19 @@ public abstract class Skin {
 	    scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
 	    alert.getDialogPane().setContent(scroll);
-
-	    // --- Buttons hinzufügen ---
 	    alert.getButtonTypes().setAll(buttonTypes);
-
-	    // --- Styling ---
 	    alert.setGraphic(null);
-	    alert.initStyle(StageStyle.EXTENDED);
-	    
-	    // WICHTIG: CSS Styles auch auf den Dialog anwenden!
-	    // Da createAlert oft aufgerufen wird, bevor der Dialog sichtbar ist, 
-	    // müssen wir sicherstellen, dass die Scene gestyled wird.
-	    // (Hinweis: JavaFX Alerts erstellen ihre Scene lazy, daher greifen wir hier auf den DialogPane zu)
+	   
 	    DialogPane dialogPane = alert.getDialogPane();
-	    // Hier rufen wir deine styleScene Methode auf, aber Achtung: dialogPane.getScene() 
-	    // ist hier oft noch null. Wir stylen also besser das Pane direkt oder warten.
-	    // Da deine styleScene auf 'Scene' arbeitet, müssen wir tricksen oder sicherstellen,
-	    // dass das CSS global geladen ist.
-	    // Aber für dein aktuelles Setup (Inline-CSS via Data-URL auf Scene):
 	    dialogPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
 	        if (newScene != null) styleScene(newScene);
 	    });
+	    
+	    // Oder lieber gar kein Windows Close-Button oben rechts? Dann 0 setzen!
+		headerBar.heightProperty().addListener((obs, oldVal, newVal) -> {
+			if (alert.getDialogPane().getScene().getWindow() instanceof Stage)
+				HeaderBar.setPrefButtonHeight((Stage) alert.getDialogPane().getScene().getWindow(), (double)newVal);
+		});
 
 	    return alert;
 	}
@@ -587,15 +582,39 @@ public abstract class Skin {
 	 * @param parent
 	 * @return
 	 */
-	public Dialog<?> createDialog(Window parent) {
+	public Dialog<?> createDialog(Window parent, String title) {
 	    Dialog<?> dialog = new Dialog<>();
 	    dialog.initOwner(parent);
-	    
-	    DialogPane dialogPane = dialog.getDialogPane();
-	    styleScene(dialogPane.getScene());
 	    dialog.initStyle(StageStyle.EXTENDED);
 	    
+	    DialogPane dialogPane = dialog.getDialogPane();
+	    
+	    HeaderBar headerBar = createDialogHeaderBar(title);
+	    dialogPane.setHeader(headerBar);
+	    // Oder lieber gar kein Windows Close-Button oben rechts? Dann 0 setzen!
+	    headerBar.heightProperty().addListener((obs, oldVal, newVal) -> {
+			if (dialog.getDialogPane().getScene().getWindow() instanceof Stage)
+				HeaderBar.setPrefButtonHeight((Stage) dialog.getDialogPane().getScene().getWindow(), (double)newVal);
+		});
+	    
+	    styleScene(dialogPane.getScene());
+	    
 	    return dialog;
+	}
+	
+	private HeaderBar createDialogHeaderBar(String title) {
+	    HeaderBar headerBar = new HeaderBar();
+	    headerBar.getStyleClass().add("my-header-bar");
+	    
+	    // Vertikales Padding für mehr Platz
+	    double verticalPadding = font.getSize() * 0.3;
+	    headerBar.setPadding(new javafx.geometry.Insets(verticalPadding, 0, verticalPadding, 0));
+	    
+	    Label titleLabel = new Label(title);
+	    titleLabel.getStyleClass().add("my-title");
+	    headerBar.setCenter(titleLabel);
+	    
+	    return headerBar;
 	}
 
 	/**

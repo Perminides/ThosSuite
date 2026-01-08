@@ -103,9 +103,7 @@ public class RegionSession implements Session {
 			if (!correct)
 				stats.incrementWrongCount();
 			service.savePlayedCards(spec, stats, correct, wrongId);
-			// !Sofort: Also mal abgesehen davon, dass wir hier Swing nutzen, solltest Du dich schon entscheiden, wo diese PopUps erstellt werden. Ach so, ja
-			// ok, die Entscheidung ist wohl "in der session" und zumindest konsequent, oder"
-			Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Titelzeile wird aktuell nicht angezeigt...", "Wir sehen uns wieder am: " + stats.getDueDate(), false, false);
+			Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Ausblick", "Wir sehen uns wieder am: " + stats.getDueDate(), false, false);
 	    	Optional<ButtonType> result = alert.showAndWait();
 		}
 		controller.sessionEnded();
