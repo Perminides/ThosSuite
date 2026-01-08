@@ -70,7 +70,7 @@ public class Controller{
     	setLearnMenuItemLabels();
     	setPlayMenuItemLabels();
     	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);
-    	mainWindow.show(); 
+    	mainWindow.show();    	
     }
     
     public void sessionEnded() {

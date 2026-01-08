@@ -606,14 +606,13 @@ public abstract class Skin {
 	    HeaderBar headerBar = new HeaderBar();
 	    headerBar.getStyleClass().add("my-header-bar");
 	    
-	    // Vertikales Padding für mehr Platz
-	    double verticalPadding = font.getSize() * 0.3;
-	    headerBar.setPadding(new javafx.geometry.Insets(verticalPadding, 0, verticalPadding, 0));
-	    
 	    Label titleLabel = new Label(title);
 	    titleLabel.getStyleClass().add("my-title");
-	    headerBar.setCenter(titleLabel);
 	    
+	    double verticalPadding = font.getSize() * 0.3;
+	    titleLabel.setPadding(new javafx.geometry.Insets(verticalPadding, 0, verticalPadding, 0));
+	    
+	    headerBar.setCenter(titleLabel);
 	    return headerBar;
 	}
 
