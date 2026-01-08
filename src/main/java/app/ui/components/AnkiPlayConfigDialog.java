@@ -34,7 +34,7 @@ public class AnkiPlayConfigDialog {
     public AnkiPlayConfigDialog(Window parent, Skin skin, DeckType deckType, Set<String> availableLabelsSet) {
     	List<String> availableLabels = new ArrayList<>(availableLabelsSet);
     	Collections.sort(availableLabels);
-        this.dialog = (Dialog<AnkiPlayConfig>) skin.createDialog(parent);
+        this.dialog = (Dialog<AnkiPlayConfig>) skin.createDialog(parent, "Filter");
         
         dialog.setTitle(deckType.getDisplayName() + " spielen");
         

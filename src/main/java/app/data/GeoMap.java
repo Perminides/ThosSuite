@@ -17,7 +17,7 @@ import javafx.scene.shape.Shape;
  */
 public class GeoMap {
 	public enum CircleSizes {
-		ULTRA_SMALL("utlra small", 4),
+		ULTRA_SMALL("ultra small", 4),
 		SMALL("small", 10),
 		MIDDLE_SMALL("middle small", 18),
 		MIDDLE("middle", 25),

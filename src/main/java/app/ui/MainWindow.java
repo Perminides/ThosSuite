@@ -102,11 +102,14 @@ public class MainWindow {
         // Hinweis: createMenuBar müssen wir noch so anpassen, dass es die Bar zurückgibt!
         MenuBar menuBar = buildMenuBar(skin); 
         
-        headerBar = skin.createHeaderBar(stage, menuBar);
+        headerBar = skin.createMainWindowHeaderBar(stage, menuBar);
         headerBar.getStyleClass().add("my-header-bar");
         
         // D. Sicherstellen, dass Minimize und Close-Button die ganze Höhe ausnutzen...
-        headerBar.heightProperty().addListener((obs, oldVal, newVal) -> 
+        // Einigermaßen gefährlich, weil aus der Doku zu Dialogs:
+        // this essentially means that the DialogPane is shown to users inside a Stage,
+        // but future releases may offer alternative options (such as 'lightweight' or 'internal' dialogs).
+        headerBar.heightProperty().addListener((obs, oldVal, newVal) ->
             HeaderBar.setPrefButtonHeight(stage, newVal.doubleValue())
         );
         
