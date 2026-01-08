@@ -64,6 +64,7 @@ public class Controller{
     	mainWindow.setLearnSessionConsumer(this::onLearnMenuItemSelected);
     	mainWindow.setSortConsumer(this::cardSortOrderSelected);
     	mainWindow.setSkinChangeConsumer(this::newSkinSelected);
+    	mainWindow.setReloadSkinRunnable(this::triggerSkinRefresh);
     	showEmptyBackground();
     	ankiDeckService = new AnkiDeckService();
     	regionDeckService = new RegionDeckService();
@@ -122,20 +123,30 @@ public class Controller{
 		
 	}
 	
-	public void newSkinSelected(Skin newSkin) {
-		if (newSkin == SkinService.get())
-			return;
-		
-		SkinService.set(newSkin);
-		mainWindow.buildStyledUi();
-		
-		if (currentSession != null) {
-			currentSession.refresh();
-			mainWindow.showSaveSession(true); // !Später Ach, das ist aber etwas unschön hier, oder? Ist die Frage wie wichtig eine cleverere Logik hier ist. Man kann es auch so lassen...
-		} else {
-			showEmptyBackground();
-		}
-	}
+	// NEU: Die Refresh-Methode
+    private void triggerSkinRefresh() {
+        SkinService.refresh();
+        updateUiAfterSkinChange();
+    }
+
+    public void newSkinSelected(Skin newSkin) {
+        if (newSkin == SkinService.get())
+            return;
+        
+        SkinService.set(newSkin);
+        updateUiAfterSkinChange();
+    }
+    
+    private void updateUiAfterSkinChange() {
+        mainWindow.buildStyledUi();
+        
+        if (currentSession != null) {
+            currentSession.refresh();
+            mainWindow.showSaveSession(true); 
+        } else {
+            showEmptyBackground();
+        }
+    }
 	
 	private void setPlayMenuItemLabels() {
 	    List<PlayMenuNode> items = new ArrayList<>();

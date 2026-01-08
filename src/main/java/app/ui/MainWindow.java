@@ -1,7 +1,6 @@
 package app.ui;
 
 import java.awt.Dimension;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -15,6 +14,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HeaderBar;
@@ -43,7 +43,6 @@ public class MainWindow {
     private Menu menuSort = null;
     private Menu menuPlay = null;
     private List<PlayMenuNode> playMenuNodes;
-    private Consumer<PlayMenuItem> onPlayItemSelected = null;
     private List<LearnSessionInfo> todaysLearnSessions;
     
     private Consumer<LearnSessionInfo> onSessionSelected = null;
@@ -52,6 +51,8 @@ public class MainWindow {
     private Runnable onSaveSelected = null;
     private Runnable onEscPressed = null;
     private Runnable onPausePressed = null;
+    private Consumer<PlayMenuItem> onPlayItemSelected = null;
+    private Runnable onReloadSkin = null;
     
     private Stage stage;
     private HeaderBar headerBar;
@@ -167,7 +168,7 @@ public class MainWindow {
         for (Skin availableSkin : SkinService.getAllSkins()) {
             String displayName = availableSkin.getDisplayName();
             boolean isCurrentSkin = availableSkin.getClass() == currentSkin.getClass();
-            String menuText = (isCurrentSkin ? "✓ " : "  ") + displayName;
+            String menuText = (isCurrentSkin ? "✓ " : "") + displayName;
             
             MenuItem item = skin.createMenuItem(menuText);
             item.setOnAction(_ -> {
@@ -176,6 +177,23 @@ public class MainWindow {
             });
             menuView.getItems().add(item);
         }
+        // Trenner und Aktualisieren-Button
+        SeparatorMenuItem separator = new SeparatorMenuItem();
+        MenuItem spacer = new MenuItem(""); // Leerer Text
+        spacer.setDisable(true);
+        spacer.getStyleClass().add("my-spacer");
+        menuView.getItems().add(spacer);
+        menuView.getItems().add(separator);
+        MenuItem spacer2 = new MenuItem("");
+        spacer2.setDisable(true);
+        spacer2.getStyleClass().add("my-spacer");
+        menuView.getItems().add(spacer2);
+        MenuItem itemReload = skin.createMenuItem("Aktualisieren");
+        itemReload.setOnAction(_ -> {
+            if (onReloadSkin != null) onReloadSkin.run();
+        });
+        // !Sofort: Ein bisschen mehr Padding und oben wäre nice, kann doch nciht so schwer sein?
+        menuView.getItems().add(itemReload);
         
         // Menüs zur MenuBar hinzufügen
         menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuPlay, menuView);        
@@ -289,6 +307,10 @@ public class MainWindow {
 
     public void setPausePressedRunnable(Runnable action) {
         this.onPausePressed = action;
+    }
+    
+    public void setReloadSkinRunnable(Runnable action) {
+        this.onReloadSkin = action;
     }
 
 	public void show() {

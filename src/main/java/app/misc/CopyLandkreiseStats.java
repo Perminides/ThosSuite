@@ -1,4 +1,4 @@
-package app.batch;
+package app.misc;
 
 import static java.util.Map.entry;
 

@@ -586,6 +586,7 @@ public abstract class Skin {
 	    Dialog<?> dialog = new Dialog<>();
 	    dialog.initOwner(parent);
 	    dialog.initStyle(StageStyle.EXTENDED);
+	    dialog.getDialogPane().setPrefWidth(1910);
 	    
 	    DialogPane dialogPane = dialog.getDialogPane();
 	    
@@ -927,12 +928,17 @@ public abstract class Skin {
 	
 	private void addMenuStyles(CssBuilder builder) {   
 		builder.rule(".menu-bar", "-fx-background-color", UIUtils.toHex(menuBarBackground)); // Hintergrund rechts vom Icon, hinter den Top-Menüs hinter dem Schrifthintergrund (Labels). Default ist hellgrau
-	    
+		
 		builder.rule(".menu-button", "-fx-padding", menuButtonPadding); // Für die Top-Level-Menüs wie Lernen, Datei, ... Wenn fontsize global gesetzt wird, berechnet javafx daraus paddings und die sind einfach zu groß...
 	    builder.start(".menu-item")
 	    		.add("-fx-padding", menuItemPadding) // Vertikaler Zeilenabstand und Padding links/rechts von Multiple Choice
 	    		.add("-fx-font-family", "'" + font.getFamily() + "'") // Multiple Choice
 	    		.end();
+	    
+	    builder.start(".my-spacer")
+	    	.add("-fx-opacity", "0")
+	    	.add("-fx-pref-height", "" + font.getSize() * 0.3 + "px")
+	    	.end();
 	    
 	    // Der "klebende" Fokus wird unsichtbar mit "transparent" und Hover mit UIUtils.toHex(menuBarHoverBackground). Diesen klebenden Fokus gibt es allerdings nur beim Öffnen eines Untermnüs, nicht beim Öffnen eines Top-Menüs. Ich bin noch nicht überzeugt, dass man dieses Verhalten akzeptieren muss tbh...
 	    // Ok, Gemini hat mir folgenden Link geschickt, das überzeugt mich nun zu 90% dass es ein JavaFX-Problem ist: https://bugs.openjdk.org/browse/JDK-8227679
