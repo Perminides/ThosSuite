@@ -148,7 +148,6 @@ public class GeoMap {
 	}
 
 	public void setShapes(List<MapShape> transformed) {
-		// !Sofort. Das muss wieder final. Nur wegen Normalisiserung für Internet-Karten, das überzeugt mich nicht!
 		this.shapes.clear();
 		for (MapShape ms : transformed)
 			this.shapes.put(ms.id(), ms);

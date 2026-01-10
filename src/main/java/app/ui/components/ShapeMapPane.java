@@ -24,7 +24,7 @@ import javafx.scene.transform.Scale;
  * 		ShapeMapPane	= ".shape-map-pane"
  * 		ShapeMapPane	= ":paused"
  * 		Shape			= ".map-shape"
- * 		Shape			= ":corrrect", ":incorrect", ":marked", ":active-game"
+ * 		Shape			= ":corrrect", ":incorrect", ":marked", ":active"
  */
 public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt automatisch!
 	
@@ -43,7 +43,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     private static final PseudoClass CORRECT = PseudoClass.getPseudoClass("correct");
     private static final PseudoClass INCORRECT = PseudoClass.getPseudoClass("incorrect");
     private static final PseudoClass MARKED = PseudoClass.getPseudoClass("marked");
-    private static final PseudoClass ACTIVE_GAME = PseudoClass.getPseudoClass("active-game");
+    private static final PseudoClass ACTIVE = PseudoClass.getPseudoClass("active");
     
     // Hält alle Shapes im Zugriff für Updates per ID
     private final Map<String, MapShape> shapeMap = new HashMap<>();
@@ -162,7 +162,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     
     public void makeActive(Set<String> ids) {
         for (String id : ids) {
-            updateShapeState(id, ACTIVE_GAME);
+            updateShapeState(id, ACTIVE);
         }
     }
     
@@ -170,17 +170,19 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
        shapeMap.values().forEach(shape -> {
            if (shape.shape().getPseudoClassStates().contains(CORRECT)) {
                shape.shape().pseudoClassStateChanged(CORRECT, false);
-               shape.shape().pseudoClassStateChanged(ACTIVE_GAME, true);
+               shape.shape().pseudoClassStateChanged(ACTIVE, true);
            }
        });
     }
     
+    /**
+     * Resettet alle interaktiven Shapes und setzt sie auf ACTIVE
+     */
     public void moveAllToActive() {
         shapeMap.values().forEach(mapShape -> {
             resetShapeState(mapShape);
-            // !Sofort: Das ist ein undurchdachter Hack. Der funktioniert, aber sauber durchgedacht ist das noch nicht...
             if (mapShape.isInteractive()) {
-                mapShape.shape().pseudoClassStateChanged(ACTIVE_GAME, true);
+                mapShape.shape().pseudoClassStateChanged(ACTIVE, true);
             }
         });
     }
@@ -205,7 +207,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         shape.shape().pseudoClassStateChanged(CORRECT, false);
         shape.shape().pseudoClassStateChanged(INCORRECT, false);
         shape.shape().pseudoClassStateChanged(MARKED, false);
-        shape.shape().pseudoClassStateChanged(ACTIVE_GAME, false);
+        shape.shape().pseudoClassStateChanged(ACTIVE, false);
     }
     
     // Für Resume/Restore State (ShapeMapState Record)
@@ -221,7 +223,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
             if (states.contains(CORRECT)) correct.add(id);
             if (states.contains(INCORRECT)) incorrect.add(id);
             if (states.contains(MARKED)) marked.add(id);
-            if (states.contains(ACTIVE_GAME)) active.add(id);
+            if (states.contains(ACTIVE)) active.add(id);
         });
         
         return new ShapeMapState(correct, incorrect, marked, active, isInteractive);

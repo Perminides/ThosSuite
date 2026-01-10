@@ -3,16 +3,6 @@ package app;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.logging.FileHandler;
-import java.util.logging.Formatter;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
-import java.util.logging.StreamHandler;
 
 import app.config.Config;
 import app.controller.Controller;
@@ -107,7 +97,7 @@ public class ThosSuiteApp extends Application {
 
         // Config initialisieren (MUSS vor SkinService passieren!)
         Config.init(dataFolder);
-        initLog(dataFolder);
+        Log.initLog(dataFolder, getParameters());
         Log.info(ThosSuiteApp.class, "Start Suite (Logging finally enabled :))");
         
      // Font laden (JavaFX-Style)
@@ -148,70 +138,6 @@ public class ThosSuiteApp extends Application {
         mainWindow.centerOnScreen();
         mainWindow.show();
     }
-    
-    private void initLog(String dataFolder) {
-    	// Debug-Mode prüfen
-    	Parameters params = getParameters();
-    	boolean debugMode = params.getRaw().contains("--debug");
-    	
-    	// GEMEINSAMER Formatter für File UND Console
-        Formatter commonFormatter = new Formatter() {
-            @Override
-            public String format(LogRecord record) {
-            	return String.format("%1$tF %1$tT [%2$s] %3$s - %4$s%n",
-            		    LocalDateTime.ofInstant(
-            		        Instant.ofEpochMilli(record.getMillis()), 
-            		        ZoneId.systemDefault()
-            		    ),
-            		    record.getLevel().getName(),
-            		    record.getLoggerName(),
-            		    formatMessage(record)
-            		);
-            }
-        };
-
-        // JUL programmatisch konfigurieren
-        try {
-            // FileHandler mit korrektem Pfad
-            String logPattern = dataFolder + "log/thossuite%u.log";
-            FileHandler fileHandler = new FileHandler(logPattern, 10485760, 5, true);
-            fileHandler.setLevel(debugMode ? Level.FINE : Level.INFO);
-            fileHandler.setFormatter(commonFormatter); // <- Gemeinsamer Formatter
-            
-            // StreamHandler für Console (stdout statt stderr)
-            StreamHandler consoleHandler = new StreamHandler(System.out, commonFormatter) { // <- Gemeinsamer Formatter
-                @Override
-                public synchronized void publish(LogRecord record) {
-                    super.publish(record);
-                    flush();
-                }
-            };
-            consoleHandler.setLevel(Level.ALL);
-            
-            // Root-Logger konfigurieren
-            Logger rootLogger = Logger.getLogger("");
-            rootLogger.setLevel(Level.FINE);
-            
-            // Alte Handler entfernen
-            for (Handler handler : rootLogger.getHandlers()) {
-                rootLogger.removeHandler(handler);
-            }
-            
-            // Neue Handler hinzufügen
-            rootLogger.addHandler(fileHandler);
-            rootLogger.addHandler(consoleHandler);
-            
-            // Java-interne Messages unterdrücken
-            Logger.getLogger("java").setLevel(Level.WARNING);
-            Logger.getLogger("javafx").setLevel(Level.WARNING);
-            
-            Log.debug(ThosSuiteApp.class, "Logging initialisiert");
-            
-        } catch (Exception e) {
-        	e.printStackTrace();
-            throw new RuntimeException("Fehler beim Initialisieren von Logging:", e);
-        }		
-	}
 
 	@Override
     public void stop() throws Exception {
