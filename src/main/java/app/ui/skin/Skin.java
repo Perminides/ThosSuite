@@ -158,6 +158,7 @@ public abstract class Skin {
 	protected String lk_bbWallpaperName;
 	protected String itWallpaperName;
 	protected String esWallpaperName;
+	protected String csWallpaperName;
 
 	protected Rectangle mcSessionQuestionPanel;
 	protected Rectangle mcSessionImagePanel;
@@ -193,6 +194,10 @@ public abstract class Skin {
 	protected Rectangle usSessionQuestionPanel;
 	protected Rectangle usSessionMapPanel;
 	protected Rectangle usSessionTextInputPanel;
+	protected Rectangle csSessionQuestionPanel;
+	protected Rectangle csSessionMapPanel;
+	protected Rectangle csSessionTextInputPanel;
+
 
 	protected Integer verticalGapMC;
 
@@ -206,8 +211,7 @@ public abstract class Skin {
 		return new Dimension(1910, 1000);
 	}
 	
-	// !Sofort: Hier gibt es natürlich so einige Magic Numbers noch, die müssen dann leider perspektivisch raus? Oder machen wir das, wann immer ich das mal für andere Auflösungen brauche? Keine Ahnung, ob das je passiert tbh
-	// In SkinService:
+	// !Später: Hier gibt es natürlich so einige Magic Numbers noch, die müssen dann leider perspektivisch raus? Oder machen wir das, wann immer ich das mal für andere Auflösungen brauche? Keine Ahnung, ob das je passiert tbh
 	public void styleScene(Scene scene) {
 		menuBarHoverBackground = menuBarHoverBackground == null ? adjustBrightness(menuBarBackground, 20) : menuBarHoverBackground;
 		menuDisabledForeground = menuDisabledForeground == null ? adjustBrightness(textColor, 90) : menuDisabledForeground;
@@ -215,7 +219,7 @@ public abstract class Skin {
 		menuItemPadding = menuItemPadding == null ? font.getSize() * 0.1 + "px " + font.getSize() * 0.5 + "px" : menuItemPadding;
 		thinBorderWidth = thinBorderWidth == null ? 1 : thinBorderWidth;
 		imageMapShapeBorderWidth = imageMapShapeBorderWidth == null ? 2 : imageMapShapeBorderWidth;
-		imageMapLineShapeInnerWidth = imageMapLineShapeInnerWidth == null ? 7 : imageMapLineShapeInnerWidth;
+		imageMapLineShapeInnerWidth = imageMapLineShapeInnerWidth == null ? 12 : imageMapLineShapeInnerWidth; // Nur für den unsichtbaren Klickbereich
 		imageMapShapeMarkedOuterWidth = imageMapShapeMarkedOuterWidth == null ? 7 : imageMapShapeMarkedOuterWidth;
 		imageMapShapeMarkedInnerWidth = imageMapShapeMarkedInnerWidth == null ? 4 : imageMapShapeMarkedInnerWidth;
 		shapeMapStandardBorderWidth = shapeMapStandardBorderWidth == null ? 1.8 : shapeMapStandardBorderWidth;
@@ -586,13 +590,16 @@ public abstract class Skin {
 	    Dialog<?> dialog = new Dialog<>();
 	    dialog.initOwner(parent);
 	    dialog.initStyle(StageStyle.EXTENDED);
-	    dialog.getDialogPane().setPrefWidth(1910);
 	    
 	    DialogPane dialogPane = dialog.getDialogPane();
 	    
 	    HeaderBar headerBar = createDialogHeaderBar(title);
 	    dialogPane.setHeader(headerBar);
 	    // Oder lieber gar kein Windows Close-Button oben rechts? Dann 0 setzen!
+        // Sicherstellen, dass Minimize und Close-Button die ganze Höhe ausnutzen...
+        // Einigermaßen gefährlich, weil aus der Doku zu Dialogs:
+        // this essentially means that the DialogPane is shown to users inside a Stage,
+        // but future releases may offer alternative options (such as 'lightweight' or 'internal' dialogs).
 	    headerBar.heightProperty().addListener((obs, oldVal, newVal) -> {
 			if (dialog.getDialogPane().getScene().getWindow() instanceof Stage)
 				HeaderBar.setPrefButtonHeight((Stage) dialog.getDialogPane().getScene().getWindow(), (double)newVal);
@@ -857,14 +864,21 @@ public abstract class Skin {
 	private void addRootStyles(CssBuilder builder) {
 	    builder.start(".root")
 	    	.add("-fx-font-family", "'" + font.getFamily() + "'") // Gilt für ALLE Texte in der Header-Bar und im Menü!
-	    	.add("-fx-background-color", UIUtils.toHex(menuBarBackground)) // Ganze Header-Bar außer direkt hinter den Top-Menüs (Datei)
+	    	.add("-fx-background-color", UIUtils.toHex(menuBarBackground)) // Sofort! Ja das geht leider so nicht. Schließlich soll der header des dialogs in flatweb anderen hintergrund haben als unten die buttons, gelle?
 	    	.add("-fx-font-size", "" + font.getSize() + "px") // Alle Texte in Header-Bar und Menüs. Hat Einfluss auf das Padding in den Menüs, wenn hier gesetzt. Wenne erst auf Label-Ebene nicht mehr..
 	    								//.add("-fx-text-base-color", UIUtils.toHex(Color.BLUE)) // Ich habe vergessen wofür genau, aber es zieht durchaus auch manchmal, wen man gar nix überschreibt...
 		.end();
+	    
 	    builder.rule(".text", "-fx-fill", UIUtils.toHex(textColor));
-	    								//builder.rule(":hover", "-fx-background-color", UIUtils.toHex(Color.RED)); // Hover über alles, inkl. Die Spielfäche etc.
+	    //builder.rule(":hover", "-fx-background-color", UIUtils.toHex(Color.RED)); // Hover über alles, inkl. Die Spielfäche etc.
 	    builder.rule(".content", "-fx-background-color", UIUtils.toHex(menuBarBackground)); // ScrollPane z. B.
 	    builder.rule(".viewport", "-fx-background-color", UIUtils.toHex(menuBarBackground)); // Text in der ScrollPane z. B.
+	    
+	    builder.start(".my-root")
+		.add("-fx-border-color", "white") // Border um die ganze Stage!
+		.add("-fx-border-width", thinBorderWidth + "px")
+		.end();
+	    
 	}
 	
 	private void addLabelStyles(CssBuilder builder) {
@@ -960,11 +974,7 @@ public abstract class Skin {
 	    builder.start(".my-header-bar")
 	    		.add("-fx-border-color", UIUtils.toHex(thinBorderColor))
 	    		.add("-fx-border-width", "0 0 " + thinBorderWidth + " 0")
-	    		.end();
-	    
-	    builder.start(".my-root")
-	    		.add("-fx-border-color", "white")
-	    		.add("-fx-border-width", thinBorderWidth + "px")
+	    		.add("-fx-background-color", UIUtils.toHex(menuBarBackground))
 	    		.end();
 	}
 	
@@ -1033,14 +1043,22 @@ public abstract class Skin {
 	    // Rivers: Breite fürs Registrieren eines Klicks
 	    builder.rule(".river .second", "-fx-stroke-width", imageMapLineShapeInnerWidth + "px");
 
-	    // --- CORRECT State ---
+	    // --- CORRECT State für Multipolygone ---
 	    // First = Fill (grün), Second = Border (schwarz)
 	    builder.rule(".my-image-map-shape:correct .first", "-fx-fill", UIUtils.toHex(correctColor));
 	    builder.rule(".my-image-map-shape:correct .second", "-fx-stroke", UIUtils.toHex(borderShapeColor));
 	    
-	    // Rivers bei correct: Erst dicken Border malen und dann kleiner darein korrekt malen
-	    builder.rule(".my-image-map-shape:correct.river .first", "-fx-stroke", UIUtils.toHex(borderShapeColor));
-	    builder.rule(".my-image-map-shape:correct.river .second", "-fx-stroke", UIUtils.toHex(correctColor));
+	    // CORRECT State für Rivers: Erst dicken Border malen und dann kleiner darein korrekt malen
+	    builder.start(".my-image-map-shape:correct.river .first")
+	    	.add("-fx-stroke", UIUtils.toHex(borderShapeColor))
+	    	.add("-fx-fill", "transparent")
+	    	.add("-fx-stroke-width", imageMapShapeMarkedOuterWidth + "px")
+	    	.end();
+	    builder.start(".my-image-map-shape:correct.river .second")
+    		.add("-fx-stroke", UIUtils.toHex(correctColor))
+    		.add("-fx-fill", "transparent")
+    		.add("-fx-stroke-width", imageMapShapeMarkedInnerWidth + "px")
+    		.end();
 	     
 	    // --- INCORRECT State --- Gibt es aktuell nur für einen immer gleich großen Kreis...
 	    // First = Fill (rot), Second = Border (schwarz)
@@ -1070,18 +1088,18 @@ public abstract class Skin {
 	       .end();
 	    
 	    // Aktive werden gefüllt und haben Hover
-	    builder.rule(".my-map-shape:active-game", "-fx-fill", UIUtils.toHex(activeComponentBgColor));
+	    builder.rule(".my-map-shape:active", "-fx-fill", UIUtils.toHex(activeComponentBgColor));
 	    
-	    builder.start(".my-map-shape:active-game:hover")
+	    builder.start(".my-map-shape:active:hover")
 	       .add("-fx-fill", UIUtils.toHex(activeComponentHoverColor))
 	       .add("-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.5), 15, 0, 0, 0)")
 	       .end();
 	       
 	    // Alternative Effekte (für andere Skins):
-	    //css.rule(".my-map-shape:active-game:hover", "-fx-effect", "innershadow(one-pass-box, rgba(0,0,0,0.6), 4, 1.0, 3, 3)");
-	    //css.rule(".my-map-shape:active-game:hover", "-fx-effect", "bloom(0.1)");
-	    //css.rule(".my-map-shape:active-game:hover", "-fx-effect", "lighting(light(distant, -45, 45, white), 5.0, 1.5, 20, bump-input)");
-	    //css.rule(".my-map-shape:active-game:hover", "-fx-effect", "reflection(top-offset 0, fraction 0.7, top-opacity 0.5, bottom-opacity 0.0)");
+	    //css.rule(".my-map-shape:active:hover", "-fx-effect", "innershadow(one-pass-box, rgba(0,0,0,0.6), 4, 1.0, 3, 3)");
+	    //css.rule(".my-map-shape:active:hover", "-fx-effect", "bloom(0.1)");
+	    //css.rule(".my-map-shape:active:hover", "-fx-effect", "lighting(light(distant, -45, 45, white), 5.0, 1.5, 20, bump-input)");
+	    //css.rule(".my-map-shape:active:hover", "-fx-effect", "reflection(top-offset 0, fraction 0.7, top-opacity 0.5, bottom-opacity 0.0)");
 	    
 	    // Korrekte, markierte und inkorrekte werden auch gefüllt aber haben keinen Hover...
 	    builder.rule(".my-map-shape:correct", "-fx-fill", UIUtils.toHex(correctColor));
@@ -1089,9 +1107,9 @@ public abstract class Skin {
 	    builder.rule(".my-map-shape:marked", "-fx-fill", UIUtils.toHex(markedColor));
 
 	    // Wenn Spiel pausiert ist (.game-paused auf dem Parent) bekommen aktive die disabledComponentBgColor und keinen Hover-Effekt
-	    builder.rule(".my-shape-map-pane:paused .my-map-shape:active-game", "-fx-fill", UIUtils.toHex(disabledComponentBgColor));
+	    builder.rule(".my-shape-map-pane:paused .my-map-shape:active", "-fx-fill", UIUtils.toHex(disabledComponentBgColor));
 	    
-	    builder.start(".my-shape-map-pane:paused .my-map-shape:active-game:hover")
+	    builder.start(".my-shape-map-pane:paused .my-map-shape:active:hover")
 	       .add("-fx-fill", UIUtils.toHex(disabledComponentBgColor))
 	       .add("-fx-effect", "null")
 	       .end();
@@ -1224,14 +1242,18 @@ public abstract class Skin {
 	private void addAlertAndDialogStyles(CssBuilder css) {
 	    // Alert und Dialog
 	    css.start(".dialog-pane")
-	       //.add("-fx-background-color", UIUtils.toHex(menuBarBackground)) Erbt von Root. Wir nehmen diese MenuBar-Farbe, wieso nicht?
-	       .add("-fx-border-color", UIUtils.toHex(thinBorderColor))
-	       .add("-fx-border-width", borderSmallComponent.width() + "px")
+	       .add("-fx-border-color", "white") // analog der Stage
+	       .add("-fx-border-width", thinBorderWidth + "px") // analog der Stage
+	       .add("-fx-background-color", UIUtils.toHex(playFieldBackground == null ? menuBarBackground : playFieldBackground)) // Erbt zwar von Root. Aber wir wolllen ja nicht immer die Hintergrundfarbe des Menüs...
 	       //.add("-fx-font-family", "'" + font.getFamily() + "'")
 	       //.add("-fx-font-size", font.getSize() + "px")
 	       //.add("-fx-text-fill", UIUtils.toHex(textColor))
 	       .add("-fx-effect", "dropshadow(gaussian, rgba(255,0,0,1.0), 50, 0, 20, 20)")
 	       .end();
+	    
+	    css.rule(".my-dialog-vbox", "-fx-background-color", UIUtils.toHex(playFieldBackground == null ? menuBarBackground : playFieldBackground));
+	    
+	    System.out.println("playFieldBackground == null ? menuBarBackground : playFieldBackground: " + playFieldBackground == null ? menuBarBackground : playFieldBackground);
 	       
 	    /**
 	    css.rule(".dialog-pane .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Auf dialog-pane reicht nicht für die Schriftfarbe in der Pane....

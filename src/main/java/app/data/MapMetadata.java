@@ -6,6 +6,7 @@ public enum MapMetadata {
 	ITALY(MapType.SHAPE, "italy.geojson", null),
 	SPAIN(MapType.SHAPE, "spain.geojson", null),
 	USA(MapType.SHAPE, "usa states.geojson", null),
+	CARIBBEAN(MapType.SHAPE, "carribean.geojson", null),
 	
 	WORLD(MapType.IMAGE, "worldAreas.geojson;worldCountries.geojson;worldLines.geojson", "world.png");
 

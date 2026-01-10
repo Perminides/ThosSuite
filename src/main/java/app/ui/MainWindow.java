@@ -107,9 +107,6 @@ public class MainWindow {
         headerBar.getStyleClass().add("my-header-bar");
         
         // D. Sicherstellen, dass Minimize und Close-Button die ganze Höhe ausnutzen...
-        // Einigermaßen gefährlich, weil aus der Doku zu Dialogs:
-        // this essentially means that the DialogPane is shown to users inside a Stage,
-        // but future releases may offer alternative options (such as 'lightweight' or 'internal' dialogs).
         headerBar.heightProperty().addListener((obs, oldVal, newVal) ->
             HeaderBar.setPrefButtonHeight(stage, newVal.doubleValue())
         );
@@ -177,9 +174,10 @@ public class MainWindow {
             });
             menuView.getItems().add(item);
         }
-        // Trenner und Aktualisieren-Button
+        // Trenner und Aktualisieren-Button.
+        // Ich habe es nicht hinbekommen, dem Trenner über CSS mehr vertikales Padding zu geben, deswegen der Hack...
         SeparatorMenuItem separator = new SeparatorMenuItem();
-        MenuItem spacer = new MenuItem(""); // Leerer Text
+        MenuItem spacer = new MenuItem("");
         spacer.setDisable(true);
         spacer.getStyleClass().add("my-spacer");
         menuView.getItems().add(spacer);
@@ -192,7 +190,6 @@ public class MainWindow {
         itemReload.setOnAction(_ -> {
             if (onReloadSkin != null) onReloadSkin.run();
         });
-        // !Sofort: Ein bisschen mehr Padding und oben wäre nice, kann doch nciht so schwer sein?
         menuView.getItems().add(itemReload);
         
         // Menüs zur MenuBar hinzufügen

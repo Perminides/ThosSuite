@@ -1,10 +1,9 @@
 package app.controller;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Set;
-
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
 
 import app.data.AppClock;
 import app.data.LearnStat;
@@ -25,6 +24,7 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.Pane;
 
+// !Später: Das RegionSessionBild croppen und dann den korrekten Rand setzen, wenn isComplete==true. Wobei isComplete meint, dasss das ganze Rechteck ausgefüllt ist.
 public class RegionSession implements Session {
 	
 	private final RegionSessionPresenter presenter;
@@ -103,7 +103,7 @@ public class RegionSession implements Session {
 			if (!correct)
 				stats.incrementWrongCount();
 			service.savePlayedCards(spec, stats, correct, wrongId);
-			Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Ausblick", "Wir sehen uns wieder am: " + stats.getDueDate(), false, false);
+			Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Ausblick", getUntilString(stats.getDueDate()), false, false);
 	    	Optional<ButtonType> result = alert.showAndWait();
 		}
 		controller.sessionEnded();
@@ -121,5 +121,23 @@ public class RegionSession implements Session {
 	public void close(boolean save) {
 		if (save)
 			throw new RuntimeException("Damit habe ich nun so gar nicht gerechnet. Wieso sollte ich eine unfertige Regionssession speichern?");
+	}
+	
+	private String getUntilString(LocalDate date) {
+		long dayDiff = AppClock.TODAY.until(date, ChronoUnit.DAYS);
+		long weekDiff = AppClock.TODAY.until(date, ChronoUnit.WEEKS);
+		long monthDiff = AppClock.TODAY.until(date, ChronoUnit.MONTHS);
+		long yearDiff = AppClock.TODAY.until(date, ChronoUnit.YEARS);
+		if (dayDiff == 1l)
+			return "Wir sehen uns morgen wieder.";
+		if (dayDiff == 2l)
+			return "Wir sehen uns übermorgen wieder.";
+		if (dayDiff < 7l)
+			return "Wir sehen uns in " + dayDiff + " Tagen wieder.";
+		if (weekDiff < 10)
+			return "Wir sehen uns in " + weekDiff + " Wochen wieder.";
+		if (monthDiff < 12)
+			return "Wir sehen uns in " + weekDiff + " Monaten wieder.";
+		return "Wir sehen uns in " + yearDiff + " Jahren wieder";
 	}
 }

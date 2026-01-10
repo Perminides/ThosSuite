@@ -39,6 +39,7 @@ public class AnkiPlayConfigDialog {
         dialog.setTitle(deckType.getDisplayName() + " spielen");
         
         VBox mainContent = new VBox(15);
+        mainContent.getStyleClass().add("my-dialog-vbox");
         mainContent.setPadding(new Insets(20));
         mainContent.setAlignment(Pos.TOP_CENTER);
         

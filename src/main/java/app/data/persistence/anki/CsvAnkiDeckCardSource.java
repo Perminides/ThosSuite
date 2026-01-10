@@ -8,8 +8,10 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import app.config.Config;
 import app.data.AnkiCard;
@@ -27,20 +29,32 @@ class CsvAnkiDeckCardSource {
 			}
 		}
 		
-		// !Sofort: Doppelte und fehlende IDs sind schon kein so ganz seltener Fehler. Die sollten dann auch ne Exception werfen. Tun sie das?
 		List<AnkiCard> loadAll(DeckType type) {
-			List<AnkiCard> result = new ArrayList<AnkiCard>();
-			File deckFile = bundles.get(type);
-			try  {
-				BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(deckFile), Charset.forName("UTF-8")));
-				br.lines().skip(1).forEach(p -> {
-					String[] tokens = p.split(";");
-					result.add(new AnkiCard(Arrays.asList(tokens)));
-				});
-				br.close();
-			} catch (Exception e) {
-				throw new RuntimeException("Fehler beim Lesen von " + deckFile, e);
-			}
-			return result;
-		}
+	        List<AnkiCard> result = new ArrayList<>();
+	        File deckFile = bundles.get(type);
+
+	        // Das Set merkt sich alle IDs, die wir in diesem Durchlauf schon gesehen haben
+	        Set<Integer> seenIds = new HashSet<>();
+
+	        // try-with-resources schließt den Reader automatisch am Ende
+	        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(deckFile), Charset.forName("UTF-8")))) {
+	            br.lines().skip(1).forEach(p -> {
+	                String[] tokens = p.split(";");
+	                
+	                // 1. Wir bauen erst das Karten-Objekt (dabei wird die ID geparst)
+	                AnkiCard card = new AnkiCard(Arrays.asList(tokens));
+	                
+	                // 2. add() liefert 'false', wenn die ID schon drin war!
+	                if (!seenIds.add(card.getId())) {
+	                    throw new RuntimeException("Daten-Fehler: Doppelte ID " + card.getId() + " in Datei " + deckFile.getName() + " gefunden!");
+	                }
+	                
+	                // 3. Wenn alles gut ging, ab in die Ergebnisliste
+	                result.add(card);
+	            });
+	        } catch (Exception e) {
+	            throw new RuntimeException("Fehler beim Lesen von " + deckFile, e);
+	        }
+	        return result;
+	    }
 	}
