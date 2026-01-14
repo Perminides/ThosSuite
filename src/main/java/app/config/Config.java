@@ -19,6 +19,8 @@ public class Config {
         props.setProperty("wallpaperFolder", folderPath + "data/wallpapers/");
         props.setProperty("dbFolder", folderPath + "data/");
         props.setProperty("configFolder", folderPath + "config/");
+        props.setProperty("fitbitFolder", folderPath + "fitbit/");
+        props.setProperty("logFolder", folderPath + "log/");
         
         ROOT = 	folderPath;
         

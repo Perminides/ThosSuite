@@ -26,7 +26,7 @@ public enum DeckType {
     SPANIEN("es", "Spanien", DeckCategory.REGION_DECK, null, MapMetadata.SPAIN, null, true),
     ITALIEN("it", "Italien", DeckCategory.REGION_DECK, null, MapMetadata.ITALY, null, true),
 	USA("us", "USA", DeckCategory.REGION_DECK, null, MapMetadata.USA, null, true),
-	CARIBBEAN("cs", "Karibisches Meer", DeckCategory.REGION_DECK, null, MapMetadata.CARIBBEAN, null, true);
+	CARIBBEAN("cs", "Karibik", DeckCategory.REGION_DECK, null, MapMetadata.CARIBBEAN, null, true);
 
     private final String id; 
     private final String displayName; 

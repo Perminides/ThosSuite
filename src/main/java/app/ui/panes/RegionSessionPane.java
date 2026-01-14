@@ -10,6 +10,7 @@ import app.ui.components.ShapeMapPane;
 import app.ui.components.ShapeMapPane.ShapeMapState;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
+import app.util.Log;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
@@ -97,7 +98,7 @@ public class RegionSessionPane extends Pane {
 	
     public void setTextFieldActive(boolean active) {
         if (active) {
-            textInputField.setText("");
+            textInputField.setText(null);
             textInputField.setDisable(false);
             textInputField.requestFocus();
         } else {

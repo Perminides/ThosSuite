@@ -23,12 +23,13 @@ import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane;
 import app.ui.skin.params.BorderParams;
-import app.util.Log;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -55,6 +56,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
@@ -247,6 +249,7 @@ public abstract class Skin {
 	    addIconButtonStyles(builder);
 	    addTextFieldStyles(builder);
 	    addAlertAndDialogStyles(builder);
+	    addTableStyles(builder);
 	    
 	    String rawCss = builder.build(); // Hier kommt sauberes CSS raus: ".rule { color: #fff; }"
 
@@ -258,7 +261,7 @@ public abstract class Skin {
 	    scene.getStylesheets().clear();
 	    scene.getStylesheets().add("data:text/css," + encodedCss);
 	    
-	    Log.debug(this, rawCss);
+	    //Log.debug(this, rawCss);
 	}
 	
 	public MenuBar createMenuBar() {
@@ -548,9 +551,30 @@ public abstract class Skin {
 	    alert.setGraphic(null);
 	   
 	    DialogPane dialogPane = alert.getDialogPane();
-	    dialogPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+	    // !Architektur: Ohne dieses if waren die Alerts bei Fitbit nicht gestylet (die mit parent = null aufgerufen wurden)
+	    if (dialogPane != null && dialogPane.getScene() != null)
+	    	styleScene(dialogPane.getScene());
+	    // !Architektut: Ohne diesen Listener waren der Großteil der Alerts sonst so im Spiel nicht gestylet...
+	    dialogPane.sceneProperty().addListener((_, _, newScene) -> {
 	        if (newScene != null) styleScene(newScene);
 	    });
+	    
+	    if (parent == null && dialogPane.getScene() != null) {
+	        Platform.runLater(() -> {
+	        	Window window = alert.getDialogPane().getScene().getWindow();
+	            window.sizeToScene();
+	            
+	            // Manuelle Zentrierung
+	            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+	            double centerX = (screenBounds.getWidth() - window.getWidth()) / 2;
+	            double centerY = (screenBounds.getHeight() - window.getHeight()) / 2;
+	            
+	            window.setX(centerX);
+	            window.setY(centerY);
+	            
+	            System.out.println("Manually centered to: " + centerX + ", " + centerY);
+	        });
+	    }
 	    
 	    // Oder lieber gar kein Windows Close-Button oben rechts? Dann 0 setzen!
 		headerBar.heightProperty().addListener((obs, oldVal, newVal) -> {
@@ -563,6 +587,7 @@ public abstract class Skin {
 
 	/**
 	 * Convenience-Methode für Standard-Alerts (OK und optional: Abbrechen / Fortsetzen)
+	 * Zeilenumbrüche einfach mit \n.
 	 */
 	public Alert createAlert(Window parent, String title, String message, boolean showCancelOption, boolean showResumeOption) {
 	    List<ButtonType> buttons = new ArrayList<>();
@@ -595,6 +620,18 @@ public abstract class Skin {
 	    
 	    HeaderBar headerBar = createDialogHeaderBar(title);
 	    dialogPane.setHeader(headerBar);
+	    
+	    // Zentrieren wenn kein Parent
+	    if (parent == null) {
+	        Platform.runLater(() -> {
+	            Window window = dialog.getDialogPane().getScene().getWindow();	            
+	            window.sizeToScene();
+	            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+	            window.setX((bounds.getWidth() - window.getWidth()) / 2);
+	            window.setY((bounds.getHeight() - window.getHeight()) / 2);
+	        });
+	    }
+	    
 	    // Oder lieber gar kein Windows Close-Button oben rechts? Dann 0 setzen!
         // Sicherstellen, dass Minimize und Close-Button die ganze Höhe ausnutzen...
         // Einigermaßen gefährlich, weil aus der Doku zu Dialogs:
@@ -872,7 +909,7 @@ public abstract class Skin {
 	    builder.rule(".text", "-fx-fill", UIUtils.toHex(textColor));
 	    //builder.rule(":hover", "-fx-background-color", UIUtils.toHex(Color.RED)); // Hover über alles, inkl. Die Spielfäche etc.
 	    builder.rule(".content", "-fx-background-color", UIUtils.toHex(menuBarBackground)); // ScrollPane z. B.
-	    builder.rule(".viewport", "-fx-background-color", UIUtils.toHex(menuBarBackground)); // Text in der ScrollPane z. B.
+	    builder.rule(".viewport", "-fx-background-color", UIUtils.toHex(menuBarBackground)); // Text in der ScrollPane z. B. !Sofort: Das ist super gefährlich, genau wie oben .content. Das hat mir meine TextArea zerschossen. Du kannst so allgemeine Komponenten nicht stylen, da Du nicht weißt in welchen Zusammenhängen die genutzt werden. Lösung: Du musst VIEL MEHR mit deinen eigenen Klassen arbeiten und darauf css setzen.
 	    
 	    builder.start(".my-root")
 		.add("-fx-border-color", "white") // Border um die ganze Stage!
@@ -1237,6 +1274,33 @@ public abstract class Skin {
 	       	.add("-fx-text-fill", UIUtils.toHex(incorrectTextColor))
 	       	.add("-fx-font-weight", "bold")
 	       	.end();
+	    
+	    // !Sofort: Muss augelagert werden. Aber ich teste gerade nur...
+	    css.start(".text-area")
+       	.add("-fx-font-family", "'" + font.getFamily() + "'")
+       	.add("-fx-font-size", font.getSize() + "px")
+       	.add("-fx-text-fill", UIUtils.toHex(textActiveComponentColor))
+       	.add("-fx-alignment", "center")
+    	// Background & Border (Active)
+    	.add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
+    	.add("-fx-background-radius", borderSmallComponent.arc() + "px")
+    	.add("-fx-border-color", UIUtils.toHex(borderSmallComponent.color()))
+    	.add("-fx-border-width", borderSmallComponent.width() + "px")
+    	.add("-fx-border-radius", borderSmallComponent.arc() + "px")
+    	.end();
+	    
+	    css.start(".text-area .content")
+    	.add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
+    	.add("-fx-background-radius", borderSmallComponent.arc() + "px")
+    	.end();
+	    
+	    css.start(".text-area .viewport")
+    	.add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
+    	.add("-fx-background-radius", borderSmallComponent.arc() + "px")
+    	.end();
+	    
+	    //css.rule(".my-dialog-vbox", "-fx-background-color", UIUtils.toHex(playFieldBackground == null ? menuBarBackground : playFieldBackground));
+
 	}
 
 	private void addAlertAndDialogStyles(CssBuilder css) {
@@ -1252,8 +1316,6 @@ public abstract class Skin {
 	       .end();
 	    
 	    css.rule(".my-dialog-vbox", "-fx-background-color", UIUtils.toHex(playFieldBackground == null ? menuBarBackground : playFieldBackground));
-	    
-	    System.out.println("playFieldBackground == null ? menuBarBackground : playFieldBackground: " + playFieldBackground == null ? menuBarBackground : playFieldBackground);
 	       
 	    /**
 	    css.rule(".dialog-pane .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Auf dialog-pane reicht nicht für die Schriftfarbe in der Pane....
@@ -1263,6 +1325,42 @@ public abstract class Skin {
 	    css.rule(".dialog-pane .button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
 	    css.rule(".dialog-pane .button:pressed", "-fx-background-color", UIUtils.toHex(adjustBrightness(activeComponentHoverColor, 8)));
 	    **/
+	}
+	
+	private void addTableStyles(CssBuilder css) {
+	    css.start(".my-table-view .table-row-cell:odd")
+	       .add("-fx-background-color", UIUtils.toHex(borderColor) + ", " + UIUtils.toHex(playFieldBackground))
+	       .end();
+	    
+	    css.start(".my-table-view .table-row-cell:focused")
+	    	.add("-fx-background-insets", "0, 0 0 1 0")
+	    	.end();
+	    
+	    css.start(".my-table-view .table-row-cell")
+	       .add("-fx-background-color", UIUtils.toHex(borderColor) + ", " + UIUtils.toHex(adjustBrightness(playFieldBackground, 5)))
+	       .end();
+	    
+	    css.start(".my-table-view .table-row-cell:selected")
+	    	.add("-fx-background-color", UIUtils.toHex(borderColor) + ", " + UIUtils.toHex(menuBarHoverBackground))
+	    	.add("-fx-background-insets", "0, 0 0 1 0")
+	    	.end();
+	    
+	    css.start(".my-table-view .column-header-background")
+	    	.add("-fx-background-color", UIUtils.toHex(playFieldBackground))
+	    	.end();
+	    
+	    css.start(".my-table-view .column-header, .my-table-view .filler")
+	    	.add("-fx-background-color", UIUtils.toHex(menuBarBackground))
+	    	.add("-fx-border-color", "transparent " + UIUtils.toHex(borderColor) + " " +  UIUtils.toHex(borderColor) + " transparent")
+	    	.end();
+	    
+	    css.start(".my-table-view .column-header .label")
+	    	.add("-fx-alignment", "CENTER-LEFT")
+	    	.end();
+	    
+	    css.start(".my-table-view .table-cell")
+	       .add("-fx-border-color", "transparent " + UIUtils.toHex(borderColor) + " transparent transparent")
+	       .end();
 	}
 	
 	private static class CssBuilder {
