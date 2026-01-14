@@ -106,6 +106,7 @@ public class RegionSession implements Session {
 			Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Ausblick", getUntilString(stats.getDueDate()), false, false);
 	    	Optional<ButtonType> result = alert.showAndWait();
 		}
+		Log.info(this, "RegionsSession " + spec.getDeckType().getDisplayName() + " (play = " + spec.isPlaySession() + ") beendet.");
 		controller.sessionEnded();
 	}
 

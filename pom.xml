@@ -14,7 +14,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<flatlaf.version>3.6.1</flatlaf.version>
-		<jackson.version>2.17.0</jackson.version>
+		<jackson.version>2.20.0</jackson.version>
 		<sqlite.version>3.45.1.0</sqlite.version>
 		<javafx.version>25</javafx.version>
 	</properties>
@@ -30,6 +30,12 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
 			<version>${jackson.version}</version>
 		</dependency>
 
@@ -64,11 +70,12 @@
 			<artifactId>javafx-swing</artifactId>
 			<version>${javafx.version}</version>
 		</dependency>
-		
+
 	</dependencies>
 	<build>
 		<plugins>
-			<!-- Nötig weil jpackage die exe schreibgeschützt erstellt: https://bugs.openjdk.org/browse/JDK-8261845 -->
+			<!-- Nötig weil jpackage die exe schreibgeschützt erstellt:
+			https://bugs.openjdk.org/browse/JDK-8261845 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-clean-plugin</artifactId>

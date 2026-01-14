@@ -16,10 +16,6 @@ public final class SkinService {
             new DarkMode()
     ));
     private static Skin current = AVAILABLE_SKINS.get(0); // !Erweiterung Später über config-Datei...
-    static {
-        // Beim Klassenloading ersten Skin aktivieren
-        current = AVAILABLE_SKINS.get(0);
-    }
 
     private SkinService() {} // keine Instanz erlaubt
 

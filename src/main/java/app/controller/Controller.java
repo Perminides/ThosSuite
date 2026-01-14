@@ -19,6 +19,7 @@ import app.data.RegionDeckService;
 import app.data.RegionLearnSessionInfo;
 import app.data.RegionMode;
 import app.data.RegionSessionSpec;
+import app.fitbit.FitbitUpdateService;
 import app.ui.MainWindow;
 import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
@@ -70,8 +71,18 @@ public class Controller{
     	regionDeckService = new RegionDeckService();
     	setLearnMenuItemLabels();
     	setPlayMenuItemLabels();
-    	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);
-    	mainWindow.show();    	
+    	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
+    }
+    
+	/**
+	 * Starts the following tasks:
+	 * <ul>
+	 * <li>Fitbit</li>
+	 * </ul>
+	 */
+    public void runStartupTasks() {
+        FitbitUpdateService fitbitService = new FitbitUpdateService();
+        fitbitService.checkAndUpdate(null);
     }
     
     public void sessionEnded() {

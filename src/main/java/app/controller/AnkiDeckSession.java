@@ -103,6 +103,7 @@ public class AnkiDeckSession implements Session{
     	if (isFreePlay) {
     		presenter.end();
             controller.sessionEnded();
+            return;
     	}
     		
     	save();
@@ -245,7 +246,8 @@ public class AnkiDeckSession implements Session{
 		SessionProgress progress = createSessionProgress();
 		String text = "Du hast " + (progress.correct() + progress.incorrect()) + " von " + progress.details().size() + " Karten gelernt.";
 		text += "\n\nDavon hast Du " + progress.correct() + " richtig und " + progress.incorrect() + " falsch beantwortet.";
-		text+= "\n\nDer Fortschritt wird nun gespeichert.";
+		if (!isFreePlay)
+			text+= "\n\nDer Fortschritt wird nun gespeichert.";
 		return text;
 	}
 	

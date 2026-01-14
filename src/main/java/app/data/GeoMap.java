@@ -17,6 +17,7 @@ import javafx.scene.shape.Shape;
  */
 public class GeoMap {
 	public enum CircleSizes {
+		EMPTY("empty", 1),
 		ULTRA_SMALL("ultra small", 4),
 		SMALL("small", 10),
 		MIDDLE_SMALL("middle small", 18),
@@ -92,6 +93,9 @@ public class GeoMap {
             int y = Integer.parseInt(parts[2]);
             
             MapShape circleShape = createCircle(id, size, x, y);
+            // empty = nur Map dahinbewegen. Nichts anzeigen. Also entfernen wir die CSS-Klasse.
+            if (id.startsWith("empty|"))
+            	circleShape.shape().getStyleClass().clear();
             return circleShape;
 		}
 		throw new RuntimeException("Keine Idee, was ich mit dieser ID machen soll tbh..." + id);
@@ -144,7 +148,7 @@ public class GeoMap {
 	    group.setUserData(id);
 	    group.setId("groupId-" + id);
 	    
-	    return new MapShape(id, null, null, null, null, null, null, group, true);
+	    return new MapShape(id, null, null, null, null, null, null, group, false);
 	}
 
 	public void setShapes(List<MapShape> transformed) {
