@@ -148,7 +148,14 @@ public class Controller{
         updateUiAfterSkinChange();
     }
     
+    /**
+     * !Sofort: Das war in Swing halt nötig. Jetzt wo wir mittels CSS stylen, solllte das ohne refresh und Neuaufbau der Session klappen!
+     * Nur Hintergundbild neu laden, musste natürlich selber machen.
+     * Auch die MenuBar stylet sich automatisch mit SkinService.get().styleScene(mainWindow.getStage().getScene());!!!! Alles muss weg
+     * Die MenuBar ist sogar am unproblematischsten *lol*
+     */
     private void updateUiAfterSkinChange() {
+    	
         mainWindow.buildStyledUi();
         
         if (currentSession != null) {

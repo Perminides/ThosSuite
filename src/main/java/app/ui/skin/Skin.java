@@ -66,6 +66,12 @@ import javafx.stage.Window;
  * Konfigurationsdatei - Wenn in einem "niedrigeren" Skin eine Property definiert ist, die weiter oben im Baum auch nochmal definiert ist, gewinnt die untere -
  * Ein Ändern einer Property-Datei wird beim nächsten Neustart automatisch aktiv - Die Werte können in den Skinklassen mittels einfacher Variablen genutzt
  * werden. Kein get("textColor") nötig.
+ * 
+ * !Sofort: Das muss alles refactoret werden!
+ * 		- In jedem Fall musst Du die einzelenen Komponenten einzeln stylen. Vererbung braucht ein wasserdichtes Konzept. Weißt Du genau, in welchen Zusammenhängen ein viewport genutzt wird? Eine Scrollbar? Nein? Dann versuche es doch gar nciht erst!
+ * 		- Ich tendiere dazu keine JavaFX-Klassen mehr zu nutzen aus dem Code heraus sondern nur noch My... Klassen, die dann von den JavaFX erben und im einfachsten Fall nur eine css-Klasse setzen.
+ * 		- Ja, noch nicht komplett durchdacht. Überlege dir ein Konzept mit AI zusammen!
+ * 		- Das Instantiieren der Komponenten und das CSS-Styling entkoppeln? Aber für die Komponenten brauche ich natürlich schon auch ab und an mal Variablen von hier, oder? Naja, wenn alles über CSS geht eigentlich nicht *lol*  
  */
 public abstract class Skin {
 
@@ -397,7 +403,7 @@ public abstract class Skin {
         fixedButtonHeight = Math.round(fixedButtonHeight * 0.95745f);
 
         // NEU: Berechnung des Spacings (identisch zur Logik in styleScene!)
-        // Sofort! Wieso wird das hier nochmal übergeben, wenn es in styleScene doch bereits als css definiert wurde???
+        // !Sofort! Wieso wird das hier nochmal übergeben, wenn es in styleScene doch bereits als css definiert wurde???
         double lineSpacingSqueezed = font.getSize() * -0.4;
 
         // 5. Pane erstellen mit neuen Parametern0
@@ -901,7 +907,7 @@ public abstract class Skin {
 	private void addRootStyles(CssBuilder builder) {
 	    builder.start(".root")
 	    	.add("-fx-font-family", "'" + font.getFamily() + "'") // Gilt für ALLE Texte in der Header-Bar und im Menü!
-	    	.add("-fx-background-color", UIUtils.toHex(menuBarBackground)) // Sofort! Ja das geht leider so nicht. Schließlich soll der header des dialogs in flatweb anderen hintergrund haben als unten die buttons, gelle?
+	    	.add("-fx-background-color", UIUtils.toHex(menuBarBackground)) // !Sofort Ja das geht leider so nicht. Schließlich soll der header des dialogs in flatweb anderen hintergrund haben als unten die buttons, gelle?
 	    	.add("-fx-font-size", "" + font.getSize() + "px") // Alle Texte in Header-Bar und Menüs. Hat Einfluss auf das Padding in den Menüs, wenn hier gesetzt. Wenne erst auf Label-Ebene nicht mehr..
 	    								//.add("-fx-text-base-color", UIUtils.toHex(Color.BLUE)) // Ich habe vergessen wofür genau, aber es zieht durchaus auch manchmal, wen man gar nix überschreibt...
 		.end();
@@ -1308,14 +1314,16 @@ public abstract class Skin {
 	    css.start(".dialog-pane")
 	       .add("-fx-border-color", "white") // analog der Stage
 	       .add("-fx-border-width", thinBorderWidth + "px") // analog der Stage
-	       .add("-fx-background-color", UIUtils.toHex(playFieldBackground == null ? menuBarBackground : playFieldBackground)) // Erbt zwar von Root. Aber wir wolllen ja nicht immer die Hintergrundfarbe des Menüs...
+	       .add("-fx-background-color", playFieldBackground) // Für den Bereich mit den Buttons
 	       //.add("-fx-font-family", "'" + font.getFamily() + "'")
 	       //.add("-fx-font-size", font.getSize() + "px")
 	       //.add("-fx-text-fill", UIUtils.toHex(textColor))
 	       .add("-fx-effect", "dropshadow(gaussian, rgba(255,0,0,1.0), 50, 0, 20, 20)")
 	       .end();
 	    
-	    css.rule(".my-dialog-vbox", "-fx-background-color", UIUtils.toHex(playFieldBackground == null ? menuBarBackground : playFieldBackground));
+	    css.rule(".my-dialog-vbox", "-fx-background-color", playFieldBackground); // Für den anzuzeigenden Text falls in VBox, in komplexeren Dialogen
+	    css.rule(".dialog-pane .scroll-pane", "-fx-background-color", playFieldBackground);
+	    css.rule(".dialog-pane .viewport", "-fx-background-color", playFieldBackground); 
 	       
 	    /**
 	    css.rule(".dialog-pane .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Auf dialog-pane reicht nicht für die Schriftfarbe in der Pane....
@@ -1327,9 +1335,15 @@ public abstract class Skin {
 	    **/
 	}
 	
+	/**
+	 * Uses textColor as borderColor (e. g. because of skins without border)
+	 * 
+	 * @param css
+	 */
 	private void addTableStyles(CssBuilder css) {
+		
 	    css.start(".my-table-view .table-row-cell:odd")
-	       .add("-fx-background-color", UIUtils.toHex(borderColor) + ", " + UIUtils.toHex(playFieldBackground))
+	       .add("-fx-background-color", UIUtils.toHex(textColor) + ", " + UIUtils.toHex(playFieldBackground))
 	       .end();
 	    
 	    css.start(".my-table-view .table-row-cell:focused")
@@ -1337,11 +1351,11 @@ public abstract class Skin {
 	    	.end();
 	    
 	    css.start(".my-table-view .table-row-cell")
-	       .add("-fx-background-color", UIUtils.toHex(borderColor) + ", " + UIUtils.toHex(adjustBrightness(playFieldBackground, 5)))
+	       .add("-fx-background-color", UIUtils.toHex(textColor) + ", " + UIUtils.toHex(adjustBrightness(playFieldBackground, 5)))
 	       .end();
 	    
 	    css.start(".my-table-view .table-row-cell:selected")
-	    	.add("-fx-background-color", UIUtils.toHex(borderColor) + ", " + UIUtils.toHex(menuBarHoverBackground))
+	    	.add("-fx-background-color", UIUtils.toHex(textColor) + ", " + UIUtils.toHex(menuBarHoverBackground))
 	    	.add("-fx-background-insets", "0, 0 0 1 0")
 	    	.end();
 	    
@@ -1351,7 +1365,7 @@ public abstract class Skin {
 	    
 	    css.start(".my-table-view .column-header, .my-table-view .filler")
 	    	.add("-fx-background-color", UIUtils.toHex(menuBarBackground))
-	    	.add("-fx-border-color", "transparent " + UIUtils.toHex(borderColor) + " " +  UIUtils.toHex(borderColor) + " transparent")
+	    	.add("-fx-border-color", "transparent " + UIUtils.toHex(textColor) + " " +  UIUtils.toHex(textColor) + " transparent")
 	    	.end();
 	    
 	    css.start(".my-table-view .column-header .label")
@@ -1359,7 +1373,7 @@ public abstract class Skin {
 	    	.end();
 	    
 	    css.start(".my-table-view .table-cell")
-	       .add("-fx-border-color", "transparent " + UIUtils.toHex(borderColor) + " transparent transparent")
+	       .add("-fx-border-color", "transparent " + UIUtils.toHex(textColor) + " transparent transparent")
 	       .end();
 	}
 	
@@ -1398,6 +1412,10 @@ public abstract class Skin {
 	        sb.append(property).append(": ").append(value).append("; ");
 	        return this;
 	    }
+	    
+	    public CssBuilder add(String property, Color color) {
+	        return add(property, UIUtils.toHex(color));
+	    }
 
 	    /**
 	     * Schließt den Block.
@@ -1419,6 +1437,14 @@ public abstract class Skin {
 	     */
 	    public CssBuilder rule(String selector, String property, String value) {
 	        return start(selector).add(property, value).end();
+	    }
+	    
+	    /**
+	     * Komfort-Methode für Einzeiler (Shortcut).
+	     * Macht intern start().add().end() automatisch.
+	     */
+	    public CssBuilder rule(String selector, String property, Color color) {
+	        return start(selector).add(property, UIUtils.toHex(color)).end();
 	    }
 	    
 	    private void checkSelector(String selector) {

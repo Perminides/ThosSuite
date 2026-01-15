@@ -86,7 +86,7 @@ class DbAnkiDeckProgressSource {
 						        throw e;  // andere SQL-Fehler durchreichen
 						    }
 							/**
-							 * Sofort! SWING! Der Dialog an sich ist aber wichtig. Kam gerade bei einer Karte, wo das MC fehlte, die also sofort als richtig bewertet wurde...
+							 * !Sofort SWING! Der Dialog an sich ist aber wichtig. Kam gerade bei einer Karte, wo das MC fehlte, die also sofort als richtig bewertet wurde...
 							 */
 							JOptionPane.showMessageDialog(null, "" + psLog.getParameterMetaData() + " - " + card.getId() + " Ich versuche es evtl. nochmal...");
 						}
