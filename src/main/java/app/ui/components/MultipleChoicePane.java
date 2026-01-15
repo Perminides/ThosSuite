@@ -20,7 +20,7 @@ import javafx.scene.text.TextAlignment;
  * 		- up to 3 lines in small font for very long text
  * 
  * CSS-classes
- * 		Button	= "mc-button"
+ * 		Button	= "my-mc-button"
  */
 public class MultipleChoicePane extends Pane {
 

@@ -8,7 +8,7 @@ import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
-import app.ui.components.CustomTextLabel;
+import app.ui.components.SessionInfoLabel;
 import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
 import app.ui.components.ShapeMapPane;
@@ -32,9 +32,9 @@ public class GermanySessionPane extends Pane implements AnkiSessionPane {
 
 	private final AnkiSessionPresenter presenter;
     private TextField textInputField;
-    private CustomTextLabel questionArea;
-    private CustomTextLabel progressArea;
-    private CustomTextLabel cardHistoryArea;
+    private SessionInfoLabel questionArea;
+    private SessionInfoLabel progressArea;
+    private SessionInfoLabel cardHistoryArea;
     private MultipleChoicePane mcPane;
     private Button backButton;
     private ImagePane imageComponent;
@@ -55,7 +55,7 @@ public class GermanySessionPane extends Pane implements AnkiSessionPane {
     	deutschlandkarte.moveAllToActive();
     	
     	
-    	questionArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
+    	questionArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
     	questionArea.setText(""); // Initial leer
         getChildren().add(questionArea);
     	
@@ -77,11 +77,11 @@ public class GermanySessionPane extends Pane implements AnkiSessionPane {
     	);
     	getChildren().add(mcPane);
     	
-    	progressArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
+    	progressArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
     	progressArea.setText("");
     	getChildren().add(progressArea);
     	
-    	cardHistoryArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
+    	cardHistoryArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
     	cardHistoryArea.setText("");
     	getChildren().add(cardHistoryArea);
     	

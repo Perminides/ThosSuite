@@ -19,7 +19,7 @@ import javafx.scene.text.TextFlow;
  *  		CustomTextLabel	= "custom-text-label"
  *  		text in Nodes	= "text"
  */
-public class CustomTextLabel extends StackPane {
+public class SessionInfoLabel extends StackPane {
 
     private final TextFlow textFlow;
     private String rawText = "";
@@ -31,7 +31,7 @@ public class CustomTextLabel extends StackPane {
     // <i>|</i>   -> Erkennt Start- und End-Tag für Italic
     private static final Pattern TAG_PATTERN = Pattern.compile("(?i)(<br\\s*/?>|<b>|</b>|<i>|</i>)");
 
-    public CustomTextLabel(String text) {
+    public SessionInfoLabel(String text) {
         this.textFlow = new TextFlow();
 
         //getStyleClass().add("custom-text-label"); Wird gerade nicht genutzt anscheinend.

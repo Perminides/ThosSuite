@@ -10,7 +10,6 @@ import app.data.DeckType;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.application.Platform;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
@@ -38,10 +37,7 @@ public class AnkiPlayConfigDialog {
         
         dialog.setTitle(deckType.getDisplayName() + " spielen");
         
-        VBox mainContent = new VBox(15);
-        mainContent.getStyleClass().add("my-dialog-vbox");
-        mainContent.setPadding(new Insets(20));
-        mainContent.setAlignment(Pos.TOP_CENTER);
+        VBox mainContent = skin.createDialogContent();
         
         // Parameter-Zeile (Min, Max, Anzahl)
         HBox parameterBox = new HBox(10);
