@@ -26,7 +26,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 
-// Sofort: Ist halt überhaupt noch nicht gestylet nach meinem Skin!
+// !Sofort: Ist halt überhaupt noch nicht gestylet nach meinem Skin!
 public class RegionPlayConfigDialog {
     
     private final Dialog<RegionPlayConfig> dialog;

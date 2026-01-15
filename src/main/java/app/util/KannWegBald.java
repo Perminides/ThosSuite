@@ -7,7 +7,7 @@ import javafx.scene.text.Text;
 /**
  * Utility-Klasse für UI-Helfer-Methoden.
  */
-public class UIUtils {
+public class KannWegBald {
     
     /**
      * Padding-Wert für TableColumn-Breiten.

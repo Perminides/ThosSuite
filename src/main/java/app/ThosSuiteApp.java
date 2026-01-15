@@ -189,7 +189,7 @@ public class ThosSuiteApp extends Application {
             double screenWidth = screenBounds.getWidth();
             double screenHeight = screenBounds.getHeight();
 
-            // 2. Zielbreite berechnen (50% vom Monitor)
+            // 2. Zielbreite berechnen (30% vom Monitor)
             double targetWidth = screenWidth * 0.3;
 
             // 3. Bild laden
@@ -213,7 +213,7 @@ public class ThosSuiteApp extends Application {
             Scene scene = new Scene(root, Color.TRANSPARENT);
             splashStage.setScene(scene);
             splashStage.initStyle(StageStyle.TRANSPARENT);
-            splashStage.setAlwaysOnTop(true);
+            //splashStage.setAlwaysOnTop(true);
 
             // 5. WICHTIG: Koordinaten manuell setzen (Zentrieren)
             // Formel: Startpunkt + (Gesamtbreite - Fensterbreite) / 2

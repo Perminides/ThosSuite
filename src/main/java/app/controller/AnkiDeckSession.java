@@ -168,6 +168,7 @@ public class AnkiDeckSession implements Session{
 	 * Hier findet sich die Session-Logik für einen SkinChange.
 	 * Für den Moment: Reset der aktuellen Karte
 	 * Keep it simple für diesen Edge-Case!
+	 * !Sofort: Das sollte überhaupt nicht nötig sein! Wofür haben wir denn CSS-Steuerung?
 	 */
 	public void refresh() {
 		presenter.cardFinished(null);
