@@ -5,7 +5,7 @@ import java.util.Set;
 import app.data.DeckType;
 import app.data.MapMetadata;
 import app.presenter.RegionSessionPresenter;
-import app.ui.components.CustomTextLabel;
+import app.ui.components.SessionInfoLabel;
 import app.ui.components.ShapeMapPane;
 import app.ui.components.ShapeMapPane.ShapeMapState;
 import app.ui.skin.Skin;
@@ -19,7 +19,7 @@ public class RegionSessionPane extends Pane {
 	private final RegionSessionPresenter presenter;
 	private final DeckType deckType;
     private ShapeMapPane karte;
-    private CustomTextLabel questionArea;
+    private SessionInfoLabel questionArea;
     private TextField textInputField;
 	
 	public RegionSessionPane(RegionSessionPresenter presenter, DeckType deckType, boolean questionAreaVisible) {
@@ -38,7 +38,7 @@ public class RegionSessionPane extends Pane {
     	getChildren().add(karte);
     	
     	if (questionAreaVisible) {
-        	questionArea = skin.createCustomTextLabel(deckType, Skin.TextLabelType.QUESTION);
+        	questionArea = skin.createSessionInfoLabel(deckType, Skin.TextLabelType.QUESTION);
         	questionArea.setText(""); // Initial leer
             getChildren().add(questionArea);
     	} else {

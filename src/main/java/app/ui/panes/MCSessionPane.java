@@ -8,7 +8,7 @@ import app.data.DeckType;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
-import app.ui.components.CustomTextLabel;
+import app.ui.components.SessionInfoLabel;
 import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
 import app.ui.skin.Skin;
@@ -21,9 +21,9 @@ public class MCSessionPane extends Pane implements AnkiSessionPane{
 	private static final DeckType DECKTYPE = DeckType.MC_CARDS; 
 
 	private final AnkiSessionPresenter presenter;
-    private CustomTextLabel questionArea;
-    private CustomTextLabel progressArea;
-    private CustomTextLabel cardHistoryArea;
+    private SessionInfoLabel questionArea;
+    private SessionInfoLabel progressArea;
+    private SessionInfoLabel cardHistoryArea;
     private MultipleChoicePane mcPane;
     private Button backButton;
     private ImagePane imageComponent;
@@ -37,7 +37,7 @@ public class MCSessionPane extends Pane implements AnkiSessionPane{
     private void initUI() {
     	Skin skin = SkinService.get();
     	
-    	questionArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
+    	questionArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
     	questionArea.setText(""); // Initial leer
         getChildren().add(questionArea);
     	
@@ -55,11 +55,11 @@ public class MCSessionPane extends Pane implements AnkiSessionPane{
         	);
     	getChildren().add(mcPane);
     	
-    	progressArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
+    	progressArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
     	progressArea.setText("");
     	getChildren().add(progressArea);
     	
-    	cardHistoryArea = skin.createCustomTextLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
+    	cardHistoryArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
     	cardHistoryArea.setText("");
     	getChildren().add(cardHistoryArea);
     	

@@ -1,7 +1,6 @@
 package app.ui.components;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -14,9 +13,7 @@ import app.data.DeckCategory;
 import app.data.DeckType;
 import app.data.MapMetadata;
 import app.data.RegionMode;
-import app.misc.CssInspector;
 import app.ui.skin.Skin;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
@@ -40,10 +37,7 @@ public class RegionPlayConfigDialog {
         
         dialog.setTitle("Regionen spielen");
         
-        VBox mainContent = new VBox(15);
-        mainContent.getStyleClass().add("my-dialog-vbox");
-        mainContent.setPadding(new Insets(20));
-        mainContent.setAlignment(Pos.TOP_CENTER);
+        VBox mainContent = skin.createDialogContent();
         
         // Mode-Auswahl (mittig oben)
         modeComboBox.getItems().addAll(RegionMode.values());

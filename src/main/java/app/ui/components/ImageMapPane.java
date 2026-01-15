@@ -75,6 +75,7 @@ public class ImageMapPane extends StackPane {
 	private static final int MINI_MAP_INSET = 10;
 
 	public ImageMapPane(GeoMap map, int width, int height, BorderParams panelBorder, java.awt.Rectangle overlayContentBounds) {
+		this.getStyleClass().add("my-image-map-pane");
 		this.map = map;
 		this.overlayContentBounds = overlayContentBounds;
 		this.cardShapes = new ShapesWrapper();
