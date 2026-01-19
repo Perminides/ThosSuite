@@ -15,7 +15,7 @@ public final class SkinService {
             new SpicySkin(),
             new DarkMode()
     ));
-    private static Skin current = AVAILABLE_SKINS.get(2); // !Erweiterung Später über config-Datei...
+    private static Skin current = AVAILABLE_SKINS.get(0); // !Erweiterung Später über config-Datei...
 
     private SkinService() {} // keine Instanz erlaubt
 

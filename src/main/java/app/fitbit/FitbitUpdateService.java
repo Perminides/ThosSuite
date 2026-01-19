@@ -35,7 +35,7 @@ public class FitbitUpdateService {
         List<DayImportResult> results = new ArrayList<>();
         
         for (DayData dayData : dataFetcher.getFetchedDays()) {
-            DayImportResult result = showDialogAndSave(dayData, parentWindow);
+            DayImportResult result = showDialogAndSave(dayData);
             
             if (result == null) {
                 // User hat abgebrochen
@@ -57,12 +57,11 @@ public class FitbitUpdateService {
      * 
      * @return Import-Ergebnis, oder null wenn User abgebrochen hat
      */
-    private DayImportResult showDialogAndSave(DayData dayData, Window parentWindow) {
+    private DayImportResult showDialogAndSave(DayData dayData) {
         Log.info(this, "Zeige Dialog für: " + dayData.date());
         
         // Dialog zeigen
         FitbitActivityTableDialog dialog = new FitbitActivityTableDialog(
-            parentWindow,
             dayData.date(),
             dayData.activityLogList().getActivities(),
             dayData.daySummary()

@@ -396,7 +396,7 @@ public abstract class Skin {
 	    // Dialog Container
 	    css.start(".dialog-pane")
 	       .add("-fx-border-color", "white") // analog der Stage
-	       .add("-fx-border-width", thinBorderWidth + "px") // analog der Stage
+	       .add("-fx-border-width", 1 + "px") // analog der Stage
 	       .add("-fx-background-color", UIUtils.toHex(playFieldBackground)) // Für den Bereich mit den Buttons.
 	       .add("-fx-effect", "dropshadow(gaussian, rgba(255,0,0,1.0), 50, 0, 20, 20)")
 	       .end();
@@ -502,10 +502,9 @@ public abstract class Skin {
 	    		.add("-fx-border-width", thinBorderWidth + "px")
 	    		.end();
 	    
-	    // Sofort! Du wolltest sofort erkennen was javafx attribute sind und welche custom von mir. Aber es ist nicht durchgezogen und vielleicht wäre "my" statt "thorsten" auch ausreichend.
 	    builder.start(".my-header-bar")
-	    		.add("-fx-border-color", UIUtils.toHex(thinBorderColor))
-	    		.add("-fx-border-width", "0 0 " + thinBorderWidth + " 0")
+	    		.add("-fx-border-color", thinBorderColor) // Der Strich zwischen Menü und Spielfeld. Ja, transparent wir dnicht gezeichnet.
+	    		.add("-fx-border-width", "0 0 1 0") // Die Dicke dieses Striches :-)
 	    		.add("-fx-background-color", UIUtils.toHex(menuBarBackground))
 	    		.end();
 	}
@@ -641,17 +640,16 @@ public abstract class Skin {
 	private void addMainWindowStyles(CssBuilder css) {
 	    // Root Container (Stage Border)
 	    css.start(".my-root")
-	       .add("-fx-border-color", "white")
-	       .add("-fx-border-width", thinBorderWidth + "px")
+	       .add("-fx-border-color", "white") // Wir wollen einen weißen Rahmen um das gesamte Fenster!
+	       .add("-fx-border-width", "1px") // Einen dünnen.
 	       .end();
 	    
 	    // HeaderBar in MainWindow
-	    // ⚠️ ACHTUNG: Identische Styles auch in addDialogStyles() für .dialog-pane .header-bar
-	    css.start(".my-root .header-bar")
-	       .add("-fx-border-color", UIUtils.toHex(thinBorderColor))
-	       .add("-fx-border-width", "0 0 " + thinBorderWidth + " 0")
-	       .add("-fx-background-color", UIUtils.toHex(menuBarBackground))
-	       .end();
+	    /**css.start(".my-root .header-bar")
+	       .add("-fx-border-color", "aqua")
+	       .add("-fx-border-width", "0 0 1 0")
+	       .add("-fx-background-color", "aqua")
+	       .end();**/
 	}
 
 	private void addShapeMapStyles(CssBuilder builder) {
@@ -757,12 +755,6 @@ public abstract class Skin {
 	private void addAlertAndDialogStyles(CssBuilder css) {
 	    // Alert und Dialog
 	    css.start(".dialog-pane")
-	       .add("-fx-border-color", "white") // analog der Stage
-	       .add("-fx-border-width", thinBorderWidth + "px") // analog der Stage
-	       .add("-fx-background-color", playFieldBackground) // Für den Bereich mit den Buttons
-	       //.add("-fx-font-family", "'" + font.getFamily() + "'")
-	       //.add("-fx-font-size", font.getSize() + "px")
-	       //.add("-fx-text-fill", UIUtils.toHex(textColor))
 	       .add("-fx-effect", "dropshadow(gaussian, rgba(255,0,0,1.0), 50, 0, 20, 20)")
 	       .end();
 	    
@@ -1289,7 +1281,7 @@ public abstract class Skin {
 	 * For just text with standard buttons, we use alerts. For more sophisticated popups
 	 * like the playConfigDialogs, we create a simple dialog and leave the rest to the caller.
 	 * 
-	 * @param parent
+	 * @param parent → Nur übergeben, wenn das Suitefenster bereits sauber angezeigt wird... 
 	 * @return
 	 */
 	public Dialog<?> createDialog(Window parent, String title) {

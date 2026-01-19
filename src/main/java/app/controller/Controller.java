@@ -106,7 +106,7 @@ public void runPostTasks() {
     // Fitbit-Dialoge zeigen
     if (fitbitDataFetcher.hasData()) {
         FitbitUpdateService fitbitService = new FitbitUpdateService(fitbitDataFetcher);
-        fitbitService.showDialogsAndSave(mainWindow.getStage());
+        fitbitService.showDialogsAndSave(null);
     }
     
     // Hier kommen später weitere Post-Tasks (tmdb etc.)
