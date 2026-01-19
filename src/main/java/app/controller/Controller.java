@@ -19,6 +19,7 @@ import app.data.RegionDeckService;
 import app.data.RegionLearnSessionInfo;
 import app.data.RegionMode;
 import app.data.RegionSessionSpec;
+import app.fitbit.FitbitDataFetcher;
 import app.fitbit.FitbitUpdateService;
 import app.ui.MainWindow;
 import app.ui.PlayMenuItem;
@@ -49,6 +50,8 @@ public class Controller{
     private MainWindow mainWindow;
     private Session currentSession; //!Später natürlich nicht mehr nur MapDeckSessions...
     private CardSortOrder currentSortOrder = CardSortOrder.BY_WRONG_COUNT_DESC; //!Architektur Sofort: Momentan muss die Anfangssortorder an 2 Stellen gesetzt werden. Gruselig!
+    private FitbitDataFetcher fitbitDataFetcher;
+
     
     public enum SessionSwitchAction {
         SAVE_AND_SWITCH,
@@ -74,16 +77,40 @@ public class Controller{
     	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
     }
     
-	/**
-	 * Starts the following tasks:
-	 * <ul>
-	 * <li>Fitbit</li>
-	 * </ul>
-	 */
-    public void runStartupTasks() {
-        FitbitUpdateService fitbitService = new FitbitUpdateService();
-        fitbitService.checkAndUpdate(null);
+/**
+ * Wird VOR initializeMainWindow aufgerufen (Splash noch sichtbar).
+ * Holt Daten im UI-Thread, blockiert aber die App - Splash bleibt sichtbar.
+ */
+public void runPreTasks() {
+    fitbitDataFetcher = new FitbitDataFetcher();
+    fitbitDataFetcher.fetch();
+}
+
+/**
+ * Wird NACH splashStage.close() aufgerufen (Splash weg, MainWindow unsichtbar).
+ * Zeigt Dialoge und speichert Daten.
+ */
+public void runPostTasks() {
+    // Fitbit-Fehler behandeln
+    if (fitbitDataFetcher.hasError()) {
+        SkinService.get().createAlert(
+            mainWindow.getStage(),
+            "Fitbit-Fehler",
+            "Fehler beim Laden der Fitbit-Daten:\n" + fitbitDataFetcher.getError().getMessage(),
+            false,
+            false
+        ).showAndWait();
+        return;
     }
+    
+    // Fitbit-Dialoge zeigen
+    if (fitbitDataFetcher.hasData()) {
+        FitbitUpdateService fitbitService = new FitbitUpdateService(fitbitDataFetcher);
+        fitbitService.showDialogsAndSave(mainWindow.getStage());
+    }
+    
+    // Hier kommen später weitere Post-Tasks (tmdb etc.)
+}
     
     public void sessionEnded() {
     	//!Erweiterung Endbedingungen integrieren...

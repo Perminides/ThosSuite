@@ -22,18 +22,14 @@ public class CopyLandkreiseStats {
 	private static final String statsFile = "C:/Users/Markgraf/OneDrive/Geographie Suite/Spielstand/regionsStats.csv";
 	private static final String logFile = "C:/Users/Markgraf/OneDrive/Geographie Suite/Spielstand/played.log";
 	private static final Map<String, DeckType> lkNameMap = Map.ofEntries(
-		    entry("Italien", DeckType.ITALIEN)
+		    entry("Berliner Ortsteile (Mitte)", DeckType.BERLIN_MITTE),
+		    entry("Berliner Ortsteile (Nord)", DeckType.BERLIN_NORD),
+		    entry("Berliner Ortsteile (West)", DeckType.BERLIN_WEST)
 		);
 	private static final Map<String, RegionMode> modeMap = Map.ofEntries(
-			entry("recognise_both", RegionMode.WRITE_BOTH),
 			entry("recognise_circle", RegionMode.WRITE_REGION),
-			entry("recognise_capital", RegionMode.WRITE_CAPITAL),
 			entry("elimination_circle", RegionMode.ELIMINATION_REGION),
-			entry("elimination_both", RegionMode.ELIMINATION_BOTH),
-			entry("elimination_capital", RegionMode.ELIMINATION_CITY),
-			entry("colour_capital", RegionMode.CLICK_CITY_COLORED),
 			entry("colour_circle", RegionMode.CLICK_REGION_COLORED),
-			entry("no_colour_capital", RegionMode.CLICK_CITY_BLANK),
 			entry("no_colour_circle", RegionMode.CLICK_REGION_BLANK)
 			);
 	private static final String insertStatSql = "INSERT INTO region_learn_stat (deck,mode,first_played,last_played,level,wrong_count) VALUES (?, ?, ?, ?, ?, ?)";

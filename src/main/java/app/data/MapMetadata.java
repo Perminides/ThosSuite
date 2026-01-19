@@ -7,6 +7,7 @@ public enum MapMetadata {
 	SPAIN(MapType.SHAPE, "spain.geojson", null),
 	USA(MapType.SHAPE, "usa states.geojson", null),
 	CARIBBEAN(MapType.SHAPE, "carribean.geojson", null),
+	BERLIN(MapType.SHAPE, "berlin.geojson", null), // !Sofort: Willste in Bertlin nicht noch die Bezirksgrenzen hinzufügen? Wäre flott gemacht :)
 	
 	WORLD(MapType.IMAGE, "worldAreas.geojson;worldCountries.geojson;worldLines.geojson", "world.png");
 

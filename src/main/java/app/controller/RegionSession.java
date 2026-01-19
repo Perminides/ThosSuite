@@ -81,7 +81,7 @@ public class RegionSession implements Session {
 	
 	public void end(boolean correct, String wrongId, String text, boolean allowResume) {
 		if (!correct) {
-			Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Titelzeile wird aktuell nicht angezeigt...", text, true, allowResume);
+			Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Nicht korrekt", text, true, allowResume);
 	    	Optional<ButtonType> result = alert.showAndWait();
 	    		if (!result.isPresent() || result.get().getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) {
 	    	        controller.sessionEnded();

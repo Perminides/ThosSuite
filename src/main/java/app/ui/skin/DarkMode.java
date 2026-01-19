@@ -2,6 +2,7 @@ package app.ui.skin;
 
 import app.config.Config;
 
+// !Sofort: Leider ist DarkMode sauhässlich. Da musst Du nochmal ran...
 public class DarkMode extends Skin {
 
 	@Override

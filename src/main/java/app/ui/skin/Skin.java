@@ -68,11 +68,6 @@ import javafx.stage.Window;
  * Ein Ändern einer Property-Datei wird beim nächsten Neustart automatisch aktiv - Die Werte können in den Skinklassen mittels einfacher Variablen genutzt
  * werden. Kein get("textColor") nötig.
  * 
- * !Sofort: Das muss alles refactoret werden!
- * 		- In jedem Fall musst Du die einzelenen Komponenten einzeln stylen. Vererbung braucht ein wasserdichtes Konzept. Weißt Du genau, in welchen Zusammenhängen ein viewport genutzt wird? Eine Scrollbar? Nein? Dann versuche es doch gar nciht erst!
- * 		- Ich tendiere dazu keine JavaFX-Klassen mehr zu nutzen aus dem Code heraus sondern nur noch My... Klassen, die dann von den JavaFX erben und im einfachsten Fall nur eine css-Klasse setzen.
- * 		- Ja, noch nicht komplett durchdacht. Überlege dir ein Konzept mit AI zusammen!
- * 		- Das Instantiieren der Komponenten und das CSS-Styling entkoppeln? Aber für die Komponenten brauche ich natürlich schon auch ab und an mal Variablen von hier, oder? Naja, wenn alles über CSS geht eigentlich nicht *lol*  
  */
 
 /**
@@ -83,7 +78,7 @@ import javafx.stage.Window;
  * <h3>1. Clustering nach Komponenten</h3>
  * <ul>
  *   <li>Jede Komponente hat ihre eigene {@code addXYZStyles()}-Methode</li>
- *   <li>Alles was eine Komponente betrifft, steht in EINER Methode</li>
+ *   <li>Alles was eine Komponente betrifft, steht in EINER add___Styles-Methode</li>
  *   <li>Keine abstrakten "Ebenen" oder "Gruppen"</li>
  * </ul>
  * 
@@ -144,6 +139,9 @@ public abstract class Skin {
 			return text;
 		}
 	}
+	
+	// ========== Instanzvariablen ==========
+	// region
 
 	// !Sofort: Wenn Du die borderColor auch in den borderParams angibst, kannst Du sie mit borderColor nicht mehr global setzen! Das muss da raus oder borderColor überschreibt das. Eins von beiden
 	// !Sofort: Mal aktuelleres Design ausprobieren: Button mit runden Ecken, ohne Border und mit box-shadow. Sicher sehr interessant, aber ich fürchte das wird ein Refactoring-Alptraum, weil Du immer den Platz für den Schatten brauchst überall...
@@ -257,7 +255,9 @@ public abstract class Skin {
 	protected Rectangle csSessionQuestionPanel;
 	protected Rectangle csSessionMapPanel;
 	protected Rectangle csSessionTextInputPanel;
-
+	protected Rectangle beSessionQuestionPanel;
+	protected Rectangle beSessionMapPanel;
+	protected Rectangle beSessionTextInputPanel;
 
 	protected Integer verticalGapMC;
 
@@ -270,6 +270,11 @@ public abstract class Skin {
 	public Dimension getContentSize() {
 		return new Dimension(1910, 1000);
 	}
+	
+	// endregion
+	
+	// ========== CSS ==========
+	// region
 	
 	// !Sofort: Müssen wir nicht weiter oben stylen gleich die ganze Stage? Ne, wahrscheinlich reicht Scene
 	public void styleScene(Scene scene) {
@@ -409,6 +414,16 @@ public abstract class Skin {
 	    .add("-fx-background-color", UIUtils.toHex(playFieldBackground))
 	    .add("-fx-padding", font.getSize() * 0.5 + "px")
 	    .add("-fx-alignment", "top-center") 
+	    .end();
+	    
+	    // Content in ScrollPane
+	    css.start(".my-dialog-scrollpane")
+	    .add("-fx-background-color", UIUtils.toHex(playFieldBackground)) 
+	    .end();
+	    
+	    // Viewport in Dialog
+	    css.start(".dialog-pane .viewport")
+	    .add("-fx-background-color", UIUtils.toHex(playFieldBackground)) 
 	    .end();
 	}
 	
@@ -805,6 +820,22 @@ public abstract class Skin {
 	    css.start(".my-table-view .table-cell")
 	       .add("-fx-border-color", "transparent " + UIUtils.toHex(textColor) + " transparent transparent")
 	       .end();
+	    
+	    css.start(".my-table-view")
+	    .add("-fx-border-color", textColor)
+	    .add("-fx-focus-color", "transparent")
+	    .add("-fx-border-width", "1") 
+	    .add("-fx-faint-focus-color", "transparent")
+	    .add("-fx-background-insets", "0")
+	    .add("-fx-padding", "0")
+	    .end();
+	    
+	    css.start(".my-table-view:focused")
+	    .add("-fx-background-color", "-fx-control-inner-background")
+	    .add("-fx-background-insets", "0")
+	    .add("-fx-padding", "0")
+	    .end();
+	    
 	}
 	
 	private static class CssBuilder {
@@ -908,6 +939,10 @@ public abstract class Skin {
 	    }
 	}
 	
+	// endregion
+
+	// ========== create-Methoden
+	// region
 	public MenuBar createMenuBar() {
 		MenuBar menuBar = new MenuBar();
 		return menuBar;
@@ -960,7 +995,7 @@ public abstract class Skin {
 	 * @return
 	 */
 	public TextField createInputField(DeckType type) {
-	    Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionTextInputPanel");
+	    Rectangle bounds = (Rectangle) getFieldValue((type.getId().contains("_") ? type.getId().substring(0, 2) : type.getId()) + "SessionTextInputPanel");
 	    if (bounds == null)
 			bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionTextInputPanel");
 	    
@@ -999,7 +1034,8 @@ public abstract class Skin {
 	
 	// --- Bereinigte Factory-Methode ---
 	public SessionInfoLabel createSessionInfoLabel(DeckType type, TextLabelType labelType) {
-        Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "Session" + labelType + "Panel");
+		// !Sofort: Den Hack meinst Du nicht ernst, oder? Also da muss natürlich zwangsweise ein weiteres Feld eingeführt werden in DeckType
+        Rectangle bounds = (Rectangle) getFieldValue((type.getId().contains("_") ? type.getId().substring(0, 2) : type.getId()) + "Session" + labelType + "Panel");
         if (bounds == null)
             bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "Session" + labelType + "Panel");
         
@@ -1189,6 +1225,7 @@ public abstract class Skin {
 	    scroll.setFitToWidth(true);
 	    scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 	    scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+	    scroll.getStyleClass().add("my-dialog-scrollpane");
 
 	    alert.getDialogPane().setContent(scroll);
 	    alert.getButtonTypes().setAll(buttonTypes);
@@ -1321,7 +1358,7 @@ public abstract class Skin {
         GeoMap map = MapService.getInstance().getMap(type);
         
         // 2. Bounds via Reflection holen (AWT Rectangle)
-        Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMapPanel");
+        Rectangle bounds = (Rectangle) getFieldValue((type.getId().contains("_") ? type.getId().substring(0, 2) : type.getId()) + "SessionMapPanel");
         if (bounds == null) 
             bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionMapPanel");
             
@@ -1344,6 +1381,8 @@ public abstract class Skin {
 		result.setLayoutY(bounds.y);
 		return result;
 	}
+	
+	// endregion
 
 	/**
 	 * Die Kartenbilder werden vom MapRepositories geholt
@@ -1396,7 +1435,7 @@ public abstract class Skin {
 	protected String getBackgroundImagePath(DeckType type) {
 		if (type == null)
 			return Config.get("wallpaperFolder") + (emptyWallpaperName == null ? defaultWallpaperName : emptyWallpaperName);
-		String bgName = (String) getFieldValue(type.getId() + "WallpaperName");
+		String bgName = (String) getFieldValue((type.getId().contains("_") ? type.getId().substring(0, 2) : type.getId()) + "WallpaperName");
 		if (bgName != null)
 			return Config.get("wallpaperFolder") + bgName;
 		bgName = (String) getFieldValue(type.getCategory().toString() + "WallpaperName");
