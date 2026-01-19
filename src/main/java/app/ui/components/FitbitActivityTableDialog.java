@@ -17,50 +17,37 @@ import app.util.Log;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 
 /**
- * Zeigt Fitbit-Activities in einer auto-sized TableView.
- * Benutzt eine eigene Stage für perfekte Kontrolle.
+ * Zeigt Fitbit-Activities in einer auto-width-sized TableView innerhalb eines Dialogs.
+ * Setzt die Höhe der Table hart auf 400 weil JavaFX das sonst sowieso tun würde. Die JavaFX-Höhe zu nehmen und den Dialog daran anzupassen, gestaltete sich als ein Nightmare. Da ich weiß, dass unabhängig von Inhalt und Schriftgröße etc. die Höhe eh immer auf 400 gesetzt wird, kann ich das auch hardcodieren..
  * 
- * !Sofort (Das ist hingerotzt hier, das kann nicht so bleiben!):
- * 		- Das Styling im Skin der Table-View ist nicht perfekt
- * 		- Wir sollten hier KEINE eigene Stage nutzen sondern einen Dialog. Ja, und irgendwie den Dialog an der Höhe der Tabelle ausrichten. Wenn wir das für eine Stage hinbekommen, warum nicht für einen Diallog auch???
- * 		- Und die Titelzeile sollte schon EXTENDED sein, was wir bei Dialogs geschenkt bekommen würden :)
+ * !Sofort: Das Styling im Skin der Table-View ist nicht perfekt
  * !Später: Also ein Dashboard mit Kennzahlen. Nur ein Überblick, keine Diagramme. Z. B. Durchschnitliche Fitbitpunkte pro Tag für diese Woche noch. Die aktuelle Alk-Zahl
  */
 public class FitbitActivityTableDialog {
     
-    private final Window parent;
     private final LocalDate date;
     private final List<Activity> activities;
     private final ActivityDaySummary daySummary;
     
     private static final int TIMEOUT_SECONDS = 5;
     
-    private DialogResult result = null;
-    
-    public FitbitActivityTableDialog(Window parent, LocalDate date, List<Activity> activities, ActivityDaySummary daySummary) {
-        this.parent = parent;
+    public FitbitActivityTableDialog(LocalDate date, List<Activity> activities, ActivityDaySummary daySummary) {
         this.date = date;
         this.activities = activities;
         this.daySummary = daySummary;
@@ -70,43 +57,18 @@ public class FitbitActivityTableDialog {
      * Zeigt den Dialog mit auto-sized TableView.
      */
     public Optional<DialogResult> showAndWait() {
-        // 1. TableView erstellen
+        // 1. Dialog erstellen
+        Dialog<?> dialog = SkinService.get().createDialog(null, "Aktivitäten bearbeiten vom " + date);
+        
+        // 2. TableView erstellen
         TableView<ActivityRow> tableView = createTableView();
         tableView.getStyleClass().add("my-table-view");
         
-        // 2. Daten laden
+        // 3. Daten laden
         ObservableList<ActivityRow> data = convertToTableData();
         tableView.setItems(data);
         
-        // 3. Stage erstellen
-        Stage stage = new Stage();
-        stage.setTitle("Aktivitäten bearbeiten vom " + date);
-        stage.initModality(Modality.APPLICATION_MODAL);
-        if (parent != null) {
-            stage.initOwner(parent);
-        }
-        
-        // 4. Buttons erstellen
-        Button btnOk = new Button("OK");
-        Button btnCancel = new Button("Abbrechen");
-        
-        btnOk.setOnAction(e -> {
-            result = convertFromTableData(tableView.getItems());
-            stage.close();
-        });
-        
-        btnCancel.setOnAction(e -> {
-            result = null;
-            stage.close();
-        });
-        
-        // Button-Layout
-        HBox buttonBar = new HBox(10);
-        buttonBar.setAlignment(Pos.CENTER_RIGHT);
-        buttonBar.setPadding(new Insets(10));
-        buttonBar.getChildren().addAll(btnOk, btnCancel);
-        
-        // 5. DELETE-Handler für TableView
+        // 4. DELETE-Handler für TableView
         tableView.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.DELETE || event.getCode() == KeyCode.BACK_SPACE) {
                 ActivityRow selected = tableView.getSelectionModel().getSelectedItem();
@@ -116,36 +78,31 @@ public class FitbitActivityTableDialog {
             }
         });
         
-        // 6. Layout zusammenbauen
-        VBox root = new VBox();
-        root.getStyleClass().add("my-dialog-vbox");
-        VBox.setVgrow(tableView, Priority.ALWAYS);
-        root.getChildren().addAll(tableView, buttonBar);
+        // 5. Layout zusammenbauen
+        VBox content = new VBox();
+        content.getStyleClass().add("my-dialog-vbox");
+        content.getChildren().add(tableView);
         
-        Scene scene = new Scene(root, -1, -1);
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         
-        // Styling anwenden
-        SkinService.get().styleScene(scene);
-        
-        stage.setScene(scene);
-        
-        // 7. Auto-Sizing durchführen (Binary Search)
+        // 6. Auto-Sizing für Breite durchführen (Binary Search)
+        // Höhe wird von JavaFX automatisch angepasst (TableView hat 400px Default)
         AtomicInteger currentWidth = new AtomicInteger(750);
         AtomicInteger upperBound = new AtomicInteger(2000);
         AtomicInteger lowerBound = new AtomicInteger(currentWidth.get() - 10);
         
-        stage.setWidth(currentWidth.get());
-        root.layout();
-        root.applyCss();
-        stage.setOpacity(0);
-        
-        final long start = System.currentTimeMillis();
+        Window window = dialog.getDialogPane().getScene().getWindow();
+        window.setWidth(currentWidth.get());
+        content.layout();
+        content.applyCss();
+        window.setOpacity(0);
         
         final double[] lastTableViewWidth = {-2};
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         ScheduledFuture<?> timeout = executor.schedule(() -> {
             Platform.runLater(() -> {
-                stage.close();
+                window.setOpacity(1);
                 Log.warn(this, "Auto-Sizing Timeout nach " + TIMEOUT_SECONDS + " Sekunden");
                 executor.shutdown();
             });
@@ -165,9 +122,9 @@ public class FitbitActivityTableDialog {
             if (upperBound.get() - lowerBound.get() <= 2) {
                 timeout.cancel(false);
                 executor.shutdown();
-                stage.setWidth(upperBound.get());
-                scene.removePostLayoutPulseListener(listenerRef[0]);
-                stage.setOpacity(1);
+                window.setWidth(upperBound.get());
+                dialog.getDialogPane().getScene().removePostLayoutPulseListener(listenerRef[0]);
+                window.setOpacity(1);
             } else {
                 if (sb != null && sb.isVisible()) {
                     lowerBound.set(currentWidth.get());
@@ -176,18 +133,18 @@ public class FitbitActivityTableDialog {
                 }
                 
                 currentWidth.set((lowerBound.get() + upperBound.get()) / 2);
-                stage.setWidth(currentWidth.get());
+                window.setWidth(currentWidth.get());
             }
         };
         
-        scene.addPostLayoutPulseListener(listenerRef[0]);
+        dialog.getDialogPane().getScene().addPostLayoutPulseListener(listenerRef[0]);
         
-        // 8. Stage zeigen und auf Schließen warten
-        stage.showAndWait();
+        // 7. Dialog zeigen und auf Schließen warten
+        Optional<?> result = dialog.showAndWait();
         
-        // 9. Ergebnis zurückgeben
-        if (result != null) {
-            return Optional.of(result);
+        // 8. Ergebnis zurückgeben
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            return Optional.of(convertFromTableData(tableView.getItems()));
         }
         return Optional.empty();
     }
@@ -199,7 +156,7 @@ public class FitbitActivityTableDialog {
     private TableView<ActivityRow> createTableView() {
         TableView<ActivityRow> tableView = new TableView<>();
         tableView.setPrefWidth(TableView.USE_COMPUTED_SIZE);
-        tableView.setPrefHeight(TableView.USE_COMPUTED_SIZE);
+        tableView.setMinHeight(400);
         tableView.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         tableView.setEditable(true);
         tableView.getStyleClass().add("fitbit-activity-table");
