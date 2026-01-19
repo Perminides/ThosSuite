@@ -26,12 +26,18 @@ public enum DeckType {
     SPANIEN("es", "Spanien", DeckCategory.REGION_DECK, null, MapMetadata.SPAIN, null, true),
     ITALIEN("it", "Italien", DeckCategory.REGION_DECK, null, MapMetadata.ITALY, null, true),
 	USA("us", "USA", DeckCategory.REGION_DECK, null, MapMetadata.USA, null, true),
-	CARIBBEAN("cs", "Karibik", DeckCategory.REGION_DECK, null, MapMetadata.CARIBBEAN, null, true);
+	CARIBBEAN("cs", "Karibik", DeckCategory.REGION_DECK, null, MapMetadata.CARIBBEAN, null, true),
+	
+	BERLIN_WEST("be_we", "Berlin West", DeckCategory.REGION_DECK, null, MapMetadata.BERLIN, null, false),
+	BERLIN_NORD("be_no", "Berlin Nord", DeckCategory.REGION_DECK, null, MapMetadata.BERLIN, null, false),
+	BERLIN_MITTE("be_mi", "Berlin Mitte", DeckCategory.REGION_DECK, null, MapMetadata.BERLIN, null, false),
+	BERLIN_OST("be_os", "Berlin Ost", DeckCategory.REGION_DECK, null, MapMetadata.BERLIN, null, false);
+	
 
     private final String id; 
     private final String displayName; 
     private final DeckCategory category;
-    private final String deckFileName;
+    private final String deckFileName; // Only needed for Anki
     private final MapMetadata mapDef; 
     private final String configValueNewCards;
     private final boolean hasCapital;

@@ -39,7 +39,7 @@ public class ThosSuiteApp extends Application {
      * Kein HTML in Labels. Keine einzelnen Wörte fett. Wir haben einen Work-Around implementiert. Glaube, dass man das so nennen muss...
      * Anfangsruckler beim Hovereffekt in der Deutschlandkarte
      * Für Soft-Hyphens hat auch JavaFX keine vernünftige Lösung. Und naja, siehe oben zu HTML in Labels...
-     * Es gibt keine Möglichkeit eine Table ein einem Alert anzuzeigen, der genau so groß ist, wie die Tabelle sein muss. Es ist nicht möglich. Ich habe 1.5 Tage an meinem Fitbit Alert gesessen und muss leider aufgeben.
+     * Es gibt keine Möglichkeit eine Table ein einem Alert anzuzeigen, der genau so groß ist, wie die Tabelle sein muss. Es ist nicht möglich. Ich habe 1.5 Tage an meinem Fitbit Alert gesessen und muss leider aufgeben. Superhack gefunden...
      * 
 	 */
 
@@ -77,6 +77,7 @@ public class ThosSuiteApp extends Application {
         // Wenn kein Argument da ist, müssen wir den User fragen
         if (dataFolder == null) {
             // WICHTIG: Splash verstecken, sonst liegt er über dem Dialog!
+        	// !Sofort: Muss das noch? Ich habe ihn ja nicht mehr als AlwaysOnTop markiert...
             splashStage.hide();
             
             dataFolder = showDirectoryChooser();
@@ -113,26 +114,18 @@ public class ThosSuiteApp extends Application {
                 // C) Zurück in den UI-Thread
                 Platform.runLater(() -> {
                     try {
-                        initializeMainWindow(primaryStage);                      
+                        // Pre-Tasks (Splash noch sichtbar)
+                    	initializeMainWindow(primaryStage);
+                        controller = new Controller(mainWindow);
+                        controller.runPreTasks();
+                        
                         splashStage.close(); // Splash endgültig weg
-                        controller.runStartupTasks();
+                        
+                        // Post-Tasks (Splash weg, MainWindow noch unsichtbar)
+                        controller.runPostTasks();
+                        
                         mainWindow.show();
                         mainWindow.centerOnScreen();
-                        /**!Sofort: Raus, wenn Du irgendeine Lösung gefunden hast...
-                         * List<String[]> data = new ArrayList<>();
-                        data.add(new String[]{"Aktivität", "Dauer", "Punkte"}); // Header
-                        data.add(new String[]{"Joggen im Wald", "45 Min", "350"});
-                        data.add(new String[]{"Spinning", "60 Min", "500"});
-                        data.add(new String[]{"Extrem langer Nachspazierganng im Wald", "120 Min", "1200"});
-                        data.add(new String[]{"Kurz", "10", "5"});
-                        new AutoSizedTableInDialog().showAndWait(null, "Unsere", data);
-                        data = new ArrayList<>();
-                        data.add(new String[]{"Aktivität", "Dauer", "Punkte"}); // Header
-                        data.add(new String[]{"Joggen im Wald", "45 Min", "350"});
-                        data.add(new String[]{"Spinning", "60 Min", "500"});
-                        data.add(new String[]{"Extrem langer Nachspazierganng im Wald", "120 Min", "1200"});
-                        data.add(new String[]{"Kurz", "10", "5"});
-                        new AutoSizedTableGemini().showAndWait(null, "Geminis", data);**/
                     } catch (Exception e) {
                         Log.error(ThosSuiteApp.class, "Fehler beim UI-Start", e);
                         throw new RuntimeException(e);
@@ -250,8 +243,6 @@ public class ThosSuiteApp extends Application {
         }
 
         mainWindow.buildStyledUi();
-        // Controller erstellen
-        controller = new Controller(mainWindow);
     }
 
     private void loadFonts() {

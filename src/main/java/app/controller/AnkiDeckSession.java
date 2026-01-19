@@ -198,6 +198,14 @@ public class AnkiDeckSession implements Session{
     		AnkiCardProgress progress = card.getProgress();
     		
     		// Karte wurde nicht gespielt
+    		// !Sofort: Hier ist ein NPE geflogen weil progress null war! Der Fortschritt ist aber abgespeichert worden. Sehr seltsam. Wurde das danach noch einmal aufgerufen?
+    		/**
+    		 * java.lang.NullPointerException: Cannot invoke "app.data.AnkiCardProgress.isCorrectlyAnswered()" because "progress" is null
+	at app.controller.AnkiDeckSession.save(AnkiDeckSession.java:201)
+	at app.controller.AnkiDeckSession.close(AnkiDeckSession.java:92)
+	at app.controller.Controller.requestSessionSwitch(Controller.java:219)
+	at app.controller.Controller.onLearnMenuItemSelected(Controller.java:99)
+    		 */
     		if (progress.isCorrectlyAnswered() == null)
     			continue;
     		
