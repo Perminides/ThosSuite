@@ -11,20 +11,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.JOptionPane;
-
 import app.data.AnkiCard;
 import app.data.AppClock;
-import app.data.DeckType;
+import app.data.Deck;
 import app.data.LearnStat;
 import app.data.persistence.DB;
+import app.ui.skin.SkinService;
 
 class DbAnkiDeckProgressSource {
 		
 		DbAnkiDeckProgressSource() {
 		}
 
-		Map<String, LearnStat> loadAll(DeckType type) {
+		Map<String, LearnStat> loadAll(Deck type) {
 			Connection conn = DB.getConnection();
 	        String sql = "SELECT * FROM card_learn_stat where deck = '" + type.getDisplayName() + "'";
 	        Map<String, LearnStat> result = new HashMap<>();
@@ -44,7 +43,7 @@ class DbAnkiDeckProgressSource {
 	        return result;
 	    }
 		
-		void saveLearned(DeckType type, List<AnkiCard> cardsFromSession) {
+		void saveLearned(Deck type, List<AnkiCard> cardsFromSession) {
 			Connection conn = DB.getConnection();
 	        String logSQL = "INSERT INTO card_log (deck, card_id, played_timestamp, correct_flag) VALUES (?, ?, ?, ?)";
 	        String learnStatSQL = "INSERT INTO card_learn_stat (deck, card_id, first_played, last_played, level, wrong_count) "
@@ -85,10 +84,7 @@ class DbAnkiDeckProgressSource {
 						    } else {
 						        throw e;  // andere SQL-Fehler durchreichen
 						    }
-							/**
-							 * !Sofort SWING! Der Dialog an sich ist aber wichtig. Kam gerade bei einer Karte, wo das MC fehlte, die also sofort als richtig bewertet wurde...
-							 */
-							JOptionPane.showMessageDialog(null, "" + psLog.getParameterMetaData() + " - " + card.getId() + " Ich versuche es evtl. nochmal...");
+							SkinService.get().createAlert(null, "Achtung!", "" + psLog.getParameterMetaData() + " - " + card.getId() + " Ich versuche es evtl. nochmal...", false, false);
 						}
 					}
 					if (!saved)
@@ -101,7 +97,7 @@ class DbAnkiDeckProgressSource {
 			}
 	    }
 		
-		int getInitialDue(DeckType type) {
+		int getInitialDue(Deck type) {
 			int result = -1;
 			Connection conn = DB.getConnection();
 	        String selectSQL = "select count(*) "

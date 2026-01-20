@@ -75,11 +75,7 @@ public class ThosSuiteApp extends Application {
         String dataFolder = getDataFolderFromArgs();
 
         // Wenn kein Argument da ist, müssen wir den User fragen
-        if (dataFolder == null) {
-            // WICHTIG: Splash verstecken, sonst liegt er über dem Dialog!
-        	// !Sofort: Muss das noch? Ich habe ihn ja nicht mehr als AlwaysOnTop markiert...
-            splashStage.hide();
-            
+        if (dataFolder == null) {            
             dataFolder = showDirectoryChooser();
             
             // Wenn User abbricht -> Ende
@@ -87,9 +83,6 @@ public class ThosSuiteApp extends Application {
                 System.exit(-1);
                 return;
             }
-            
-            // Ordner gewählt -> Splash wieder anzeigen für den Ladevorgang
-            splashStage.show();
         }
         
         // Variable final machen für den Thread

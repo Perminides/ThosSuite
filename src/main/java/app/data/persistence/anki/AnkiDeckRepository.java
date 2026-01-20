@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import app.data.AnkiCard;
-import app.data.DeckType;
+import app.data.Deck;
 import app.data.LearnStat;
 
 /**
@@ -20,7 +20,7 @@ public class AnkiDeckRepository {
     	db = new DbAnkiDeckProgressSource();
     }
 
-	public List<AnkiCard> getAllHints(DeckType type) {
+	public List<AnkiCard> getAllHints(Deck type) {
 		
 		Map<String, LearnStat> statsById = db.loadAll(type);
 		List<AnkiCard> hints = csv.loadAll(type);  // liefert fertige Hints
@@ -32,11 +32,11 @@ public class AnkiDeckRepository {
 	    return hints;
 	}
 	
-	public void savePlayedCards(DeckType type, List<AnkiCard> cards){
+	public void savePlayedCards(Deck type, List<AnkiCard> cards){
 		db.saveLearned(type, cards);
 	}
 	
-	public int getInitialDue(DeckType type) {
+	public int getInitialDue(Deck type) {
 		return db.getInitialDue(type);
 	}
 }

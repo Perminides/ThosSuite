@@ -53,6 +53,7 @@ public class MainWindow {
     private Runnable onPausePressed = null;
     private Consumer<PlayMenuItem> onPlayItemSelected = null;
     private Runnable onReloadSkin = null;
+    private Consumer<String> onStatisticsSelected = null;
     
     private Stage stage;
     private HeaderBar headerBar;
@@ -158,6 +159,13 @@ public class MainWindow {
             updatePlayMenuItems();
         }
         
+        // STATISTIK-MENÜ
+        Menu menuStatistics = skin.createMenu("Statistik");
+        MenuItem itemDashboard = skin.createMenuItem("Dashboard");
+        itemDashboard.setOnAction(_ -> onStatisticsSelected.accept("Dashboard"));
+        menuStatistics.getItems().add(itemDashboard);
+
+        
         // ANSICHT-MENÜ
         Menu menuView = skin.createMenu("Ansicht");
         Skin currentSkin = SkinService.get();
@@ -193,7 +201,7 @@ public class MainWindow {
         menuView.getItems().add(itemReload);
         
         // Menüs zur MenuBar hinzufügen
-        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuPlay, menuView);        
+        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuPlay, menuStatistics, menuView);        
         return menuBar;
     }
     
@@ -308,6 +316,10 @@ public class MainWindow {
     
     public void setReloadSkinRunnable(Runnable action) {
         this.onReloadSkin = action;
+    }
+    
+    public void setStatisticsConsumer(Consumer<String> consumer) {
+        this.onStatisticsSelected = consumer;
     }
 
 	public void show() {

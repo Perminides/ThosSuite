@@ -10,23 +10,23 @@ import java.util.Set;
  * This should only ever be used when gathering the active shapes for a free play session...
  */
 public class RegionSessionSpec {
-	private final DeckType deckType;
+	private final Deck deckType;
 	private final RegionMode mode;
-	private final Set<DeckType> additionalDeckTypesForFreePlay;
+	private final Set<Deck> additionalDeckTypesForFreePlay;
 	private final boolean isPlaySession;
 	
-	public RegionSessionSpec(DeckType deck, RegionMode mode) {
+	public RegionSessionSpec(Deck deck, RegionMode mode) {
 		this(deck, mode, null, false);
 	}
 	
-	public RegionSessionSpec(DeckType deck, RegionMode mode, Set<DeckType> additionals, boolean isPlaySession) {
+	public RegionSessionSpec(Deck deck, RegionMode mode, Set<Deck> additionals, boolean isPlaySession) {
 		this.deckType = deck;
 		this.mode = mode;
 		this.additionalDeckTypesForFreePlay = additionals;
 		this.isPlaySession = isPlaySession;
 	}
 
-	public DeckType getDeckType() {
+	public Deck getDeckType() {
 		return deckType;
 	}
 
@@ -34,7 +34,7 @@ public class RegionSessionSpec {
 		return mode;
 	}
 	
-	public Set<DeckType> getAdditonalDeckTypesForPlay() {
+	public Set<Deck> getAdditonalDeckTypesForPlay() {
 		return additionalDeckTypesForFreePlay;
 	}
 	

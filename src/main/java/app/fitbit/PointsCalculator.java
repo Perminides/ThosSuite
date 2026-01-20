@@ -33,7 +33,7 @@ public class PointsCalculator {
     
     private static final int POINTS_FOR_SPINNING = 300;
     private static final double POINTS_FOR_WORKOUT = 200;
-    private static final double POINTS_FOR_STEP = 0.05; // 20 Schritte = 1 Punkt
+    public static final double POINTS_FOR_STEP = 0.05; // 20 Schritte = 1 Punkt. Benötigen wir fürs Dashboard...
     private static final double POINTS_FOR_KM_BIKE = 19;
     
     /**

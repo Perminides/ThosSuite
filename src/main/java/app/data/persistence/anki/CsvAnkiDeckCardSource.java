@@ -16,20 +16,20 @@ import java.util.Set;
 import app.config.Config;
 import app.data.AnkiCard;
 import app.data.DeckCategory;
-import app.data.DeckType;
+import app.data.Deck;
 
 class CsvAnkiDeckCardSource {
-		private final Map<DeckType, File> bundles = new EnumMap<>(DeckType.class);
+		private final Map<Deck, File> bundles = new EnumMap<>(Deck.class);
 		
 		CsvAnkiDeckCardSource() {
 			File dataDir = new File(Config.get("deckFolder"));
-			for (DeckType type : DeckType.values()) {
+			for (Deck type : Deck.values()) {
 				if (type.getCategory() == DeckCategory.ANKI_DECK)
 					bundles.put(type, new File(dataDir, type.getDeckFileName()));
 			}
 		}
 		
-		List<AnkiCard> loadAll(DeckType type) {
+		List<AnkiCard> loadAll(Deck type) {
 	        List<AnkiCard> result = new ArrayList<>();
 	        File deckFile = bundles.get(type);
 

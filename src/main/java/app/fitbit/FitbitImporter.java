@@ -63,7 +63,7 @@ import app.util.Log;
  */
 public class FitbitImporter {
     
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    public static final ObjectMapper MAPPER = new ObjectMapper();
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
     
     // OAuth2 Authorization für Token-Refresh (bleibt immer gleich)

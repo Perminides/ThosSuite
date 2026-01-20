@@ -33,9 +33,11 @@ public class RegionSession implements Session {
     private final Controller controller;
     private final RegionSessionSpec spec;
     private final RegionSessionProgress progress;
+    private Boolean active;
 
 	public RegionSession(RegionSessionSpec spec, Set<MapShape> regions, Controller controller, RegionDeckService regionService) {
-    	this.spec = spec;
+    	this.active = true;
+		this.spec = spec;
     	this.service = regionService;
     	switch (spec.getMode().getSubCategory()) {
     		case RegionMode.SubCategory.CLICK: {
@@ -57,17 +59,23 @@ public class RegionSession implements Session {
 	}
 	
     public void start() {
+    	if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
     	Log.info(this, "Starte RegionsSession " + spec.getDeckType().getDisplayName() + " (play = " + spec.isPlaySession() + ")");
         progress.start();
     }
 
 	@Override
-	public void cancel() {
+	public void escClicked() {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		progress.cancel();
 	}
 
 	@Override
 	public SessionSwitchStrategy getSwitchStrategy() {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		if (!progress.hasProgressed() || spec.isPlaySession())
 			return SessionSwitchStrategy.IMMEDIATE;
 		else
@@ -76,12 +84,18 @@ public class RegionSession implements Session {
 	
 	@Override
 	public void endPause() {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		progress.endPause();
 	}
 	
 	public void end(boolean correct, String wrongId, String text, boolean allowResume) {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
+		Pane currentPane = getView();
+    	active = false;
 		if (!correct) {
-			Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Nicht korrekt", text, true, allowResume);
+			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Nicht korrekt", text, true, allowResume);
 	    	Optional<ButtonType> result = alert.showAndWait();
 	    		if (!result.isPresent() || result.get().getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) {
 	    	        controller.sessionEnded();
@@ -104,7 +118,7 @@ public class RegionSession implements Session {
 			if (!correct)
 				stats.incrementWrongCount();
 			service.savePlayedCards(spec, stats, correct, wrongId);
-			Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Ausblick", getUntilString(stats.getDueDate()), false, false);
+			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Ausblick", getUntilString(stats.getDueDate()), false, false);
 	    	Optional<ButtonType> result = alert.showAndWait();
 		}
 		Log.info(this, "RegionsSession " + spec.getDeckType().getDisplayName() + " (play = " + spec.isPlaySession() + ") beendet.");
@@ -113,14 +127,21 @@ public class RegionSession implements Session {
 
 	@Override
 	public void refresh() {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		presenter.refresh();
 	}
 	
 	public Pane getView() {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		return presenter.getView();
 	}
 	
-	public void close(boolean save) {
+	public void closeSilent(boolean save) {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
+    	active = false;
 		if (save)
 			throw new RuntimeException("Damit habe ich nun so gar nicht gerechnet. Wieso sollte ich eine unfertige Regionssession speichern?");
 	}

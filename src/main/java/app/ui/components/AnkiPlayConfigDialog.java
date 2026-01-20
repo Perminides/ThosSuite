@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import app.data.DeckType;
+import app.data.Deck;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import javafx.application.Platform;
@@ -30,7 +30,7 @@ public class AnkiPlayConfigDialog {
     private final Set<CheckBox> labelCheckBoxes = new HashSet<>();
 
     @SuppressWarnings("unchecked")
-    public AnkiPlayConfigDialog(Window parent, Skin skin, DeckType deckType, Set<String> availableLabelsSet) {
+    public AnkiPlayConfigDialog(Window parent, Skin skin, Deck deckType, Set<String> availableLabelsSet) {
     	List<String> availableLabels = new ArrayList<>(availableLabelsSet);
     	Collections.sort(availableLabels);
         this.dialog = (Dialog<AnkiPlayConfig>) skin.createDialog(parent, "Filter");

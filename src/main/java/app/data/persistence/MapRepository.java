@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import app.config.Config;
-import app.data.DeckType;
+import app.data.Deck;
 import app.data.GeoMap;
 import app.data.MapMetadata;
 import app.data.MapShape;
@@ -26,7 +26,7 @@ public class MapRepository {
         this.loader = new GeoJsonLoader();
     }
     
-    public GeoMap load(DeckType type, Skin skin) {
+    public GeoMap load(Deck type, Skin skin) {
         MapMetadata meta = type.getMapMetadata();
         
         if (meta.getMapType() == MapType.SHAPE) {

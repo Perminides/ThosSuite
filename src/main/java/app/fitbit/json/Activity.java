@@ -2,8 +2,7 @@ package app.fitbit.json;
 
 import java.time.LocalDate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
+import app.fitbit.FitbitImporter;
 import app.util.Log;
 
 public class Activity extends Parent{
@@ -48,8 +47,9 @@ public class Activity extends Parent{
 		this.distanceUnit = distanceUnit;
 		if (distanceUnit != null && distanceUnit.equals("")) {
 			Log.error(this, "Ich hätte als distance Kilometer erwartet und nicht " + distanceUnit);
-			//!Sofort dann mit dem Mapper anpassen
-			//Log.error(this, FitbitIntegration.MAPPER.writeValueAsString(this));
+			try {
+				Log.error(this, FitbitImporter.MAPPER.writeValueAsString(this));
+			} catch (Exception e) {} 
 			throw new RuntimeException("Ich hätte als distance Kilometer erwartet und nicht " + distanceUnit);
 		}
 	}

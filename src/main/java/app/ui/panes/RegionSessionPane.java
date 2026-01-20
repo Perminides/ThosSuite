@@ -2,30 +2,27 @@ package app.ui.panes;
 
 import java.util.Set;
 
-import app.data.DeckType;
-import app.data.MapMetadata;
+import app.data.Deck;
 import app.presenter.RegionSessionPresenter;
 import app.ui.components.SessionInfoLabel;
 import app.ui.components.ShapeMapPane;
 import app.ui.components.ShapeMapPane.ShapeMapState;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
-import app.util.Log;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
 public class RegionSessionPane extends Pane {
 	private final RegionSessionPresenter presenter;
-	private final DeckType deckType;
+	private final Deck deckType;
     private ShapeMapPane karte;
     private SessionInfoLabel questionArea;
     private TextField textInputField;
 	
-	public RegionSessionPane(RegionSessionPresenter presenter, DeckType deckType, boolean questionAreaVisible) {
+	public RegionSessionPane(RegionSessionPresenter presenter, Deck deckType, boolean questionAreaVisible) {
         this.presenter = presenter;
-        // All germany regions can be styled for my skins by styling lk_bb. A hack, I know...
-        this.deckType = deckType.getMapMetadata() == MapMetadata.GERMANY ? DeckType.BUNDESLAND_BRANDENBURG : deckType;
+        this.deckType = deckType;
         this.setBackground(new Background(SkinService.get().getBackgroundImage(deckType)));
         initUI(questionAreaVisible);
 	}

@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import app.config.Config;
-import app.data.DeckType;
+import app.data.Deck;
 import app.data.RegionMode;
 import app.data.persistence.DB;
 
@@ -21,10 +21,10 @@ public class CopyLandkreiseStats {
 	
 	private static final String statsFile = "C:/Users/Markgraf/OneDrive/Geographie Suite/Spielstand/regionsStats.csv";
 	private static final String logFile = "C:/Users/Markgraf/OneDrive/Geographie Suite/Spielstand/played.log";
-	private static final Map<String, DeckType> lkNameMap = Map.ofEntries(
-		    entry("Berliner Ortsteile (Mitte)", DeckType.BERLIN_MITTE),
-		    entry("Berliner Ortsteile (Nord)", DeckType.BERLIN_NORD),
-		    entry("Berliner Ortsteile (West)", DeckType.BERLIN_WEST)
+	private static final Map<String, Deck> lkNameMap = Map.ofEntries(
+		    entry("Berliner Ortsteile (Mitte)", Deck.BERLIN_MITTE),
+		    entry("Berliner Ortsteile (Nord)", Deck.BERLIN_NORD),
+		    entry("Berliner Ortsteile (West)", Deck.BERLIN_WEST)
 		);
 	private static final Map<String, RegionMode> modeMap = Map.ofEntries(
 			entry("recognise_circle", RegionMode.WRITE_REGION),
@@ -44,7 +44,7 @@ public class CopyLandkreiseStats {
 		while ((line = br.readLine()) != null) {
 			String[] tokens = line.split(";");
 			RegionMode mode = modeMap.get(tokens[2]);
-			DeckType type = lkNameMap.get(tokens[1]);
+			Deck type = lkNameMap.get(tokens[1]);
 			if (mode == null || type == null)
 				continue;
 			
@@ -64,7 +64,7 @@ public class CopyLandkreiseStats {
 		while ((line = br.readLine()) != null) {
 			String[] tokens = line.split(";");
 			RegionMode mode = modeMap.get(tokens[2]);
-			DeckType type = lkNameMap.get(tokens[1]);
+			Deck type = lkNameMap.get(tokens[1]);
 			if (mode == null || type == null)
 				continue;
 			

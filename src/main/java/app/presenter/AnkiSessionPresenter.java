@@ -5,7 +5,7 @@ import java.util.Set;
 
 import app.config.Config;
 import app.controller.AnkiDeckSession;
-import app.data.DeckType;
+import app.data.Deck;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.ui.panes.AnkiSessionPane;
@@ -27,9 +27,9 @@ public class AnkiSessionPresenter {
 	private final StackPane sessionPaneContainer = new StackPane();
     private AnkiSessionPane sessionPane; //!Später MapDeckGamePanel!
     private AnkiDeckSession session;
-    private final DeckType type; // Benötigt für den Neuaufbau eines Panels bei skinChanged
+    private final Deck type; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 
-    public AnkiSessionPresenter(DeckType type, AnkiDeckSession session) {
+    public AnkiSessionPresenter(Deck type, AnkiDeckSession session) {
     	this.type = type;
     	this.session = session;
         sessionPane = createPanelForType(type);
@@ -41,7 +41,7 @@ public class AnkiSessionPresenter {
         sessionPaneContainer.getChildren().setAll(sessionPane.asPane());
     }
 
-    private AnkiSessionPane createPanelForType(DeckType type) {
+    private AnkiSessionPane createPanelForType(Deck type) {
         return switch(type) {
             case GERMANY_CARDS -> new GermanySessionPane(this);
             case MC_CARDS -> new MCSessionPane(this);

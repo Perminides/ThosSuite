@@ -30,7 +30,7 @@ public class MapService {
         return instance;
     }
     
-    public GeoMap getMap(DeckType type) {
+    public GeoMap getMap(Deck type) {
     	Skin skin = SkinService.get();
     	if (skin != skinForCaches) {
     		cache.entrySet().removeIf(e -> e.getValue().getType()==MapType.IMAGE);
@@ -46,7 +46,7 @@ public class MapService {
      * @param type
      * @return
      */
-    public Set<MapShape> getPlayableShapesForDeck(DeckType type) {
+    public Set<MapShape> getPlayableShapesForDeck(Deck type) {
         GeoMap map = getMap(type);
         return map.getShapes().stream()
             .filter(shape -> type.getId().equals(shape.deckId()))
