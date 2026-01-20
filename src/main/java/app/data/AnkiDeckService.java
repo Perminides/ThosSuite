@@ -19,21 +19,21 @@ import app.data.persistence.anki.AnkiDeckRepository;
 public class AnkiDeckService {
 			
 	private final AnkiDeckRepository repo;
-	private final Map<DeckType,List<AnkiCard>> allCards;
-	private final Map<DeckType,Map<Integer, AnkiCard>> dueCards;
-	private final Map<DeckType,Integer> initialDueCounts;
-	private final Map<DeckType, Set<String>> allLabels;
+	private final Map<Deck,List<AnkiCard>> allCards;
+	private final Map<Deck,Map<Integer, AnkiCard>> dueCards;
+	private final Map<Deck,Integer> initialDueCounts;
+	private final Map<Deck, Set<String>> allLabels;
 	
 	/**
 	 * Erstellt einen neuen AnkiDeckService mit Listen von allen und heute fälligen Cards.
 	 */
 	public AnkiDeckService() {
 		repo = new AnkiDeckRepository();
-		allCards = new EnumMap<>(DeckType.class);
-		dueCards = new EnumMap<>(DeckType.class);
-		allLabels = new EnumMap<>(DeckType.class);
-		initialDueCounts = new EnumMap<>(DeckType.class);
-		for (DeckType type : DeckType.values()) {
+		allCards = new EnumMap<>(Deck.class);
+		dueCards = new EnumMap<>(Deck.class);
+		allLabels = new EnumMap<>(Deck.class);
+		initialDueCounts = new EnumMap<>(Deck.class);
+		for (Deck type : Deck.values()) {
 			if (type.getCategory() != DeckCategory.ANKI_DECK)
 				continue;
 			
@@ -69,7 +69,7 @@ public class AnkiDeckService {
 	
 	public List<LearnSessionInfo> getDueGameInfos() {
 		ArrayList<LearnSessionInfo> result = new ArrayList<>();
-		for (DeckType type : DeckType.values()) {
+		for (Deck type : Deck.values()) {
 			if (type.getCategory() != DeckCategory.ANKI_DECK)
 				continue;
 			
@@ -81,11 +81,11 @@ public class AnkiDeckService {
 		return result;
 	}
 	
-	public List<AnkiCard> getDueCards(DeckType type) {
+	public List<AnkiCard> getDueCards(Deck type) {
 		return new ArrayList<AnkiCard>(dueCards.get(type).values());
 	}
 
-	public Set<String> getAvailableLabels(DeckType type) {
+	public Set<String> getAvailableLabels(Deck type) {
 	    return allLabels.get(type);
 	}
 
@@ -98,7 +98,7 @@ public class AnkiDeckService {
 	 * @param labelFilter Ein Set an Labels. Wenn nicht leer, muss die Karte mindestens eines dieser Labels haben (ODER-Verknüpfung).
 	 * @return Eine gemischte Liste passender Karten.
 	 */
-	public List<AnkiCard> getCardsForPlay(DeckType type, int minIndex, int maxIndex, int maxCards, Set<String> labelFilter) {
+	public List<AnkiCard> getCardsForPlay(Deck type, int minIndex, int maxIndex, int maxCards, Set<String> labelFilter) {
 	    List<AnkiCard> candidates = new ArrayList<>();
 	    
 	    for (AnkiCard card : allCards.get(type)) {
@@ -129,7 +129,7 @@ public class AnkiDeckService {
 	    return candidates.subList(0, Math.min(maxCards, candidates.size()));
 	}
 	
-	public void savePlayedCards(DeckType type, List<AnkiCard> cards) {
+	public void savePlayedCards(Deck type, List<AnkiCard> cards) {
 		repo.savePlayedCards(type, cards);
 		// Die Learnstats in den Karten sind bereits aktualisiert.
 		Iterator<AnkiCard> iter = cards.iterator();

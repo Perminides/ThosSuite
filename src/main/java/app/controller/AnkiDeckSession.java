@@ -12,7 +12,7 @@ import app.data.AnkiCardProgress;
 import app.data.AnkiDeckService;
 import app.data.AppClock;
 import app.data.CardSortOrder;
-import app.data.DeckType;
+import app.data.Deck;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.data.SessionSwitchStrategy;
@@ -29,9 +29,10 @@ public class AnkiDeckSession implements Session{
     private final Controller controller;
     private final boolean isFreePlay;
     private int currentIndex = -1;
-    private final DeckType type;
+    private final Deck type;
     private List<AnkiCard> cards;
     private Consumer<List<AnkiCard>> sorter;
+    private Boolean active = null;
 
     /**
      * 
@@ -41,7 +42,9 @@ public class AnkiDeckSession implements Session{
      * @param service
      * @param type
      */
-    public AnkiDeckSession(List<AnkiCard> cards, Controller controller, AnkiDeckService service, DeckType type, Consumer<List<AnkiCard>> sorter, boolean isFreePlay) {
+    public AnkiDeckSession(List<AnkiCard> cards, Controller controller, AnkiDeckService service, Deck type, Consumer<List<AnkiCard>> sorter, boolean isFreePlay) {
+    	Log.info(this, "=== SESSION CONSTRUCTOR === Session@" + System.identityHashCode(this));
+    	this.active = true;
     	this.sorter = sorter;
     	this.type = type;
     	this.cards = cards;
@@ -55,6 +58,9 @@ public class AnkiDeckSession implements Session{
     }
 
     public void start() {
+    	Log.info(this, "=== SESSION START === Session@" + System.identityHashCode(this));
+    	if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
     	// Neue Karten immer zuerst
     	List<AnkiCard> newCards = new ArrayList<>();
     	Iterator<AnkiCard> iter = cards.listIterator();
@@ -75,6 +81,8 @@ public class AnkiDeckSession implements Session{
     }
     
     public void sort(CardSortOrder order) {
+    	if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
     	int index = currentIndex+1;
     	while (index < cards.size() && cards.get(index).isNew()) {
    			index++;
@@ -86,18 +94,31 @@ public class AnkiDeckSession implements Session{
     	cards = fixed;
     }
     
+    // ==== How to end a session ====
+    
     @Override
-    public void close(boolean save) {
+    /**
+     * Beende die Session ohne weitere Dialoge bitte. Je nach Parameter mit oder ohne Save...
+     */
+    public void closeSilent(boolean save) {
+    	if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
+    	active = false;
+    	Log.info(this, "=== CLOSE === Session@" + System.identityHashCode(this) + ", save=" + save);
     	if (save)
     		save();
     }
     
     /**
-     * Updatet die LearnStats. Speichert den Fortschritt. Gibt an den Controller ab
+     * Beende die Session, aber gern sauber schön mit Zusammenfassung und so :)
      */
     @Override
-    public void end() {
-    	Alert alert = SkinService.get().createAlert(getView().getScene().getWindow(), "Zusammenfassung", createSummary(), false, false);
+    public void endGracefully() {
+    	if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
+    	Pane currentPane = getView(); // Muss vor dem inaktiv setzen passieren...
+    	active = false;
+    	Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Zusammenfassung", createSummary(), false, false);
     	alert.showAndWait();
     	
     	if (isFreePlay) {
@@ -111,6 +132,8 @@ public class AnkiDeckSession implements Session{
     }
 
 	public void cardFinished(boolean correct) {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		currentIndex++;
 		if (currentIndex < cards.size()) {
 			presenter.cardFinished(correct);
@@ -118,7 +141,7 @@ public class AnkiDeckSession implements Session{
 			presenter.newCardIncoming(cards.get(currentIndex).getLearnStat());
 			getCurrentProgress().start();
 		} else {
-			end();
+			endGracefully();
 		}
 			
 	}
@@ -128,10 +151,14 @@ public class AnkiDeckSession implements Session{
 	// ========================================
 
 	public void textInputChanged(String text) {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		getCurrentProgress().checkTextInput(text);
 	}
 	
 	public void elementClicked(String id) {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		getCurrentProgress().elementClicked(id);
 	}
 	
@@ -141,14 +168,20 @@ public class AnkiDeckSession implements Session{
 	
 
 	public void mcClicked(int index) {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		getCurrentProgress().mcClicked(index);
 	}
 	
 	public void endPause() {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		getCurrentProgress().endPause();
 	}
 	
 	public void goBack() {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		if (currentIndex > 0) {
 			presenter.cardFinished(null);
 			cards.get(currentIndex).setProgress(new AnkiCardProgress(cards.get(currentIndex), presenter, this));
@@ -166,11 +199,15 @@ public class AnkiDeckSession implements Session{
 	
 	/**
 	 * Hier findet sich die Session-Logik für einen SkinChange.
-	 * Für den Moment: Reset der aktuellen Karte
-	 * Keep it simple für diesen Edge-Case!
-	 * !Sofort: Das sollte überhaupt nicht nötig sein! Wofür haben wir denn CSS-Steuerung?
+	 * Für den Moment: Reset der aktuellen Karte Keep it simple für diesen Edge-Case!
+	 * Logik nötig, da SkinChange nicht nur für Bilder beschneiden problematisch ist,
+	 * sondern ja auch Komponenten anders platzieren könnte und deren Größe ändern.
+	 * Also um einen Neuaufbau kommt man bei meinen mächtigen Skins nicht herum...
 	 */
 	public void refresh() {
+		Log.info(this, "=== REFRESH === Session@" + System.identityHashCode(this) + ", currentIndex=" + currentIndex);
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		presenter.cardFinished(null);
 		presenter.refresh();
 		cards.get(currentIndex).setProgress(new AnkiCardProgress(cards.get(currentIndex), presenter, this));
@@ -180,7 +217,9 @@ public class AnkiDeckSession implements Session{
 	}
 	
 	@Override
-	public void cancel() {
+	public void escClicked() {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		getCurrentProgress().cancel();
 	}
 	
@@ -189,10 +228,20 @@ public class AnkiDeckSession implements Session{
 	// ========================================
 	
 	public boolean isPaused() {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		return getCurrentProgress().isPaused();
 	}
 	
+	/**
+     * Updatet die LearnStats. Speichert den Fortschritt.
+	 */
 	private void save() {
+		Log.info(this, "=== SAVE START === Session@" + System.identityHashCode(this) 
+        + ", cards.size=" + cards.size() 
+        + ", currentIndex=" + currentIndex
+        + ", isFreePlay=" + isFreePlay);
+		
     	for (AnkiCard card : cards) {
     		LearnStat learnStat = card.getLearnStat();
     		AnkiCardProgress progress = card.getProgress();
@@ -200,6 +249,14 @@ public class AnkiDeckSession implements Session{
     		// Karte wurde nicht gespielt
     		// !Sofort: Hier ist ein NPE geflogen weil progress null war! Der Fortschritt ist aber abgespeichert worden. Sehr seltsam. Wurde das danach noch einmal aufgerufen?
     		/**
+    		 * 2026-01-16 22:02:02 [INFO] app.controller.AnkiDeckSession - Starte AnkiSession Deutschland
+2026-01-16 22:02:02 [INFO] app.data.AnkiCardProgress - Los geht es mit Karte: 1160008
+2026-01-16 22:02:07 [INFO] app.data.AnkiCardProgress - Los geht es mit Karte: 1500160
+2026-01-16 22:02:11 [INFO] app.controller.AnkiDeckSession - Starte AnkiSession Multiple Choice
+2026-01-16 22:02:11 [INFO] app.data.AnkiCardProgress - Los geht es mit Karte: 2146
+2026-01-16 22:02:14 [INFO] app.data.AnkiCardProgress - Los geht es mit Karte: 4886 → Mit dem Zeitpunkt wurde 2146 gespeichert
+2026-01-16 22:02:19 [INFO] app.data.AnkiCardProgress - Los geht es mit Karte: 4886
+2026-01-16 22:02:27 [SEVERE] app.ThosSuiteApp - Uncaught exception in thread JavaFX Application Thread
     		 * java.lang.NullPointerException: Cannot invoke "app.data.AnkiCardProgress.isCorrectlyAnswered()" because "progress" is null
 	at app.controller.AnkiDeckSession.save(AnkiDeckSession.java:201)
 	at app.controller.AnkiDeckSession.close(AnkiDeckSession.java:92)
@@ -227,6 +284,7 @@ public class AnkiDeckSession implements Session{
         for (AnkiCard card : cards) {
         	card.setProgress(null);
         }
+        Log.info(this, "=== SAVE END === All progress set to null");
         presenter.end();
 	}
 	
@@ -262,15 +320,19 @@ public class AnkiDeckSession implements Session{
 	
 	/**
 	 * Damit das MainWindow auch die Session anzeigen kann. Im Falle eines SkinChanges, werden innerhalb dieser StackPane
-	 * die Kinder vom Presenter ausgetauscht. 
+	 * die Kinder vom Presenter ausgetauscht. Wird auch intern genutzt beim Anzeigen von PopUps...
 	 * @return
 	 */
 	public Pane getView() {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		return presenter.getView();
 	}
 
 	@Override
 	public SessionSwitchStrategy getSwitchStrategy() {
+		if (!active)
+    		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		if (currentIndex <= 0 || isFreePlay)
 			return SessionSwitchStrategy.IMMEDIATE;
 		else

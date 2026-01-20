@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import app.data.DeckCategory;
-import app.data.DeckType;
+import app.data.Deck;
 import app.data.MapMetadata;
 import app.data.RegionMode;
 import app.ui.skin.Skin;
@@ -23,11 +23,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 
-// !Sofort: Ist halt überhaupt noch nicht gestylet nach meinem Skin!
 public class RegionPlayConfigDialog {
     
     private final Dialog<RegionPlayConfig> dialog;
-    private final Map<DeckType, CheckBox> deckCheckBoxes = new EnumMap<>(DeckType.class);
+    private final Map<Deck, CheckBox> deckCheckBoxes = new EnumMap<>(Deck.class);
     private final ComboBox<RegionMode> modeComboBox = new ComboBox<>();
     private MapMetadata selectedMap = null;
 
@@ -46,17 +45,17 @@ public class RegionPlayConfigDialog {
         mainContent.getChildren().add(modeComboBox);
         
         // Decks gruppieren
-        Map<MapMetadata, List<DeckType>> mapGroups = new HashMap<>();
-        for (DeckType type : DeckType.values()) {
+        Map<MapMetadata, List<Deck>> mapGroups = new HashMap<>();
+        for (Deck type : Deck.values()) {
             if (type.getCategory() != DeckCategory.REGION_DECK) continue;
             mapGroups.computeIfAbsent(type.getMapMetadata(), _ -> new ArrayList<>()).add(type);
         }
         
         // Gruppen erstellen
-        List<List<DeckType>> groups = new ArrayList<>();
-        List<DeckType> exclusiveGroup = new ArrayList<>();
+        List<List<Deck>> groups = new ArrayList<>();
+        List<Deck> exclusiveGroup = new ArrayList<>();
         
-        for (Map.Entry<MapMetadata, List<DeckType>> entry : mapGroups.entrySet()) {
+        for (Map.Entry<MapMetadata, List<Deck>> entry : mapGroups.entrySet()) {
             if (entry.getValue().size() == 1) {
                 exclusiveGroup.add(entry.getValue().get(0));
             } else {
@@ -69,18 +68,18 @@ public class RegionPlayConfigDialog {
         }
         
         // Nach Größe sortieren (größte zuerst)
-        groups.sort(Comparator.comparingInt(List<DeckType>::size).reversed());
+        groups.sort(Comparator.comparingInt(List<Deck>::size).reversed());
         
         // Horizontal Layout
         HBox groupsContainer = new HBox(20);
         groupsContainer.setAlignment(Pos.TOP_CENTER);
         
-        for (List<DeckType> group : groups) {
+        for (List<Deck> group : groups) {
             VBox groupBox = new VBox(5);
             groupBox.setAlignment(Pos.TOP_LEFT);
             
-            group.sort(Comparator.comparing(DeckType::getDisplayName));
-            for (DeckType type : group) {
+            group.sort(Comparator.comparing(Deck::getDisplayName));
+            for (Deck type : group) {
                 CheckBox checkBox = new CheckBox(type.getDisplayName());
                 checkBox.setOnAction(_ -> onDeckCheckBoxChanged());
                 deckCheckBoxes.put(type, checkBox);
@@ -98,8 +97,8 @@ public class RegionPlayConfigDialog {
         // Result Converter
         dialog.setResultConverter(buttonType -> {
             if (buttonType == ButtonType.OK) {
-                Set<DeckType> selectedDecks = new HashSet<>();
-                for (Map.Entry<DeckType, CheckBox> entry : deckCheckBoxes.entrySet()) {
+                Set<Deck> selectedDecks = new HashSet<>();
+                for (Map.Entry<Deck, CheckBox> entry : deckCheckBoxes.entrySet()) {
                     if (entry.getValue().isSelected()) {
                         selectedDecks.add(entry.getKey());
                     }
@@ -123,7 +122,7 @@ public class RegionPlayConfigDialog {
     
     private void onDeckCheckBoxChanged() {
         selectedMap = null;
-        for (Map.Entry<DeckType, CheckBox> entry : deckCheckBoxes.entrySet()) {
+        for (Map.Entry<Deck, CheckBox> entry : deckCheckBoxes.entrySet()) {
             if (entry.getValue().isSelected()) {
                 selectedMap = entry.getKey().getMapMetadata();
                 break;
@@ -136,8 +135,8 @@ public class RegionPlayConfigDialog {
     private void updateCheckBoxStates() {
         RegionMode selectedMode = modeComboBox.getValue();
         
-        for (Map.Entry<DeckType, CheckBox> entry : deckCheckBoxes.entrySet()) {
-            DeckType type = entry.getKey();
+        for (Map.Entry<Deck, CheckBox> entry : deckCheckBoxes.entrySet()) {
+            Deck type = entry.getKey();
             CheckBox checkBox = entry.getValue();
             
             if (checkBox.isSelected()) continue;
@@ -161,5 +160,5 @@ public class RegionPlayConfigDialog {
         return dialog.showAndWait();
     }
     
-    public record RegionPlayConfig(Set<DeckType> selectedDecks, RegionMode mode) {}
+    public record RegionPlayConfig(Set<Deck> selectedDecks, RegionMode mode) {}
 }

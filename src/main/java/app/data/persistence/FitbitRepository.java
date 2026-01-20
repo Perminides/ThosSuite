@@ -8,7 +8,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
 
 import app.config.Config;
@@ -85,6 +87,68 @@ public class FitbitRepository {
             
         } catch (SQLException e) {
             throw new RuntimeException("Fehler beim Speichern der Fitbit-Daten für " + date, e);
+        }
+    }
+    
+    /**
+     * Holt das Wochenziel, das zum gegebenen Datum gültig war.
+     * Sucht den neuesten Eintrag mit valid_from <= date.
+     */
+    public int getWeeklyGoalForDate(LocalDate date) {
+        String sql = """
+            SELECT weekly_goal 
+            FROM fitbit_goal_history 
+            WHERE valid_from <= ?
+            ORDER BY valid_from DESC
+            LIMIT 1
+            """;
+        
+        try (Connection conn = DB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, date.toString());
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("weekly_goal");
+            } else {
+                throw new RuntimeException("Kein Fitbit-Wochenziel gefunden für " + date);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Fehler beim Laden des Fitbit-Wochenziels", e);
+        }
+    }
+    
+    /**
+     * Holt die Fitbit-Punkte für die Woche, die das gegebene Datum enthält.
+     * 
+     * @param date Ein beliebiges Datum innerhalb der gewünschten Woche
+     * @return Die Gesamtpunkte dieser Woche, oder 0 wenn keine Daten vorhanden
+     */
+    public int getPointsForWeek(LocalDate date) {
+        // Montag der Woche berechnen (für week_start Vergleich)
+        LocalDate monday = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        
+        String sql = """
+            SELECT points 
+            FROM fitbit_weekly_points 
+            WHERE week_start = ?
+            """;
+        
+        try (Connection conn = DB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, monday.toString());
+            
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("points");
+            } else {
+                return 0; // Keine Daten für diese Woche
+            }
+            
+        } catch (SQLException e) {
+            throw new RuntimeException("Fehler beim Laden der Fitbit-Wochenpunkte", e);
         }
     }
     

@@ -1,10 +1,10 @@
 package app.data;
 
 public class AnkiLearnSessionInfo extends LearnSessionInfo {
-	private final DeckType deckType;
+	private final Deck deckType;
 	private final int dueNow, dueToday;
 
-	public AnkiLearnSessionInfo(DeckType type, int dueNow, int dueToday) {
+	public AnkiLearnSessionInfo(Deck type, int dueNow, int dueToday) {
 		this.deckType = type;
 		this.dueNow = dueNow;
 		this.dueToday = dueToday;
@@ -20,7 +20,7 @@ public class AnkiLearnSessionInfo extends LearnSessionInfo {
 		return (dueNow != 0);
 	}
 	
-    public DeckType getDeckType() {
+    public Deck getDeckType() {
     	return deckType;
     }
 }

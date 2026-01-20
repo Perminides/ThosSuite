@@ -16,8 +16,8 @@ public class RegionDeckService {
 	
 	private final RegionDeckRepository repo;
 	
-    private final Map<DeckType, Set<MapShape>> regionCache = new HashMap<>();
-    private final Map<DeckType, Map<RegionMode, LearnStat>> statCache = new HashMap<>();
+    private final Map<Deck, Set<MapShape>> regionCache = new HashMap<>();
+    private final Map<Deck, Map<RegionMode, LearnStat>> statCache = new HashMap<>();
 
 	/**
 	 * Erstellt einen neuen RegionDeckService mit RegionSets und LearnStats von allen möglichen RegionSessions.
@@ -25,7 +25,7 @@ public class RegionDeckService {
 	public RegionDeckService() {
 		MapService mapService = MapService.getInstance();
 		this.repo = new RegionDeckRepository();
-		for (DeckType type : DeckType.values()) {
+		for (Deck type : Deck.values()) {
 			if (type.getCategory() != DeckCategory.REGION_DECK)
 				continue;
 
@@ -47,7 +47,7 @@ public class RegionDeckService {
 	
 	public List<LearnSessionInfo> getDueGameInfos() {
 		ArrayList<LearnSessionInfo> result = new ArrayList<>();
-		for (DeckType type : DeckType.values()) {
+		for (Deck type : Deck.values()) {
 			if (type.getCategory() != DeckCategory.REGION_DECK)
 				continue;
 			for (RegionMode mode : RegionMode.values()) {
@@ -66,7 +66,7 @@ public class RegionDeckService {
 		Set<MapShape> result = new HashSet<>(regionCache.get(spec.getDeckType())); // Die Original-Sets bleiben HIER!
 		// For play sessions more than one deck can be combined...
 		if (spec.getAdditonalDeckTypesForPlay() != null) {
-			for (DeckType deckType : spec.getAdditonalDeckTypesForPlay()) {
+			for (Deck deckType : spec.getAdditonalDeckTypesForPlay()) {
 				result.addAll(regionCache.get(deckType));
 			}
 		}

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import app.data.DeckType;
+import app.data.Deck;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
@@ -28,7 +28,7 @@ import javafx.scene.layout.Pane;
  * The Presenter handles state preservation across recreations.
  */
 public class GermanySessionPane extends Pane implements AnkiSessionPane {
-	private static final DeckType DECKTYPE = DeckType.GERMANY_CARDS; 
+	private static final Deck DECKTYPE = Deck.GERMANY_CARDS; 
 
 	private final AnkiSessionPresenter presenter;
     private TextField textInputField;

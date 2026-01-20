@@ -13,8 +13,9 @@ import javafx.scene.paint.Color;
  * 		- borderRect		-> Optional border
  * 
  * CSS-classes:
- * 		backgroundRect	= "image-background-layer"
- * 		borderRect		= "image-border-layer"
+ * 		backgroundRect	= "my-image-background-layer"
+ * 		borderRect		= "my-image-border-layer"
+ * 
  */
 public class ImagePane extends StackPane {
 
@@ -25,7 +26,16 @@ public class ImagePane extends StackPane {
     // Layer 3: Der Rahmen (liegt ganz oben)
     private final Rectangle borderRect;
 
-    // !Sofort Wieso definieren wir die arcs und so nicht über CSS????
+    /**
+     * Ja. Leider brauchen wir diese Parameter. Man kann mittels CSS kein Bild beschneiden.
+     * Das würde sonst also unter abgerundeten Ecken hervorlugen... Siehe RoundedImageTest, falls noch da...
+     * Und nein, das ist jetzt auch kein Riesenproblem: Wir müssen eh das Spielfeld neu aufbauen bei Skinwechsel,
+     * weil sich ja auch Positionen ändern können von Komponenten
+     * 
+     * @param width
+     * @param height
+     * @param arcDiameter
+     */
     public ImagePane(double width, double height, double arcDiameter) {
         // 1. Container-Größe fixieren
         setPrefSize(width, height);

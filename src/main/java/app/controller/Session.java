@@ -11,17 +11,17 @@ public interface Session {
 	/**
 	 * ESC pressed
 	 */
-	public void cancel();
+	public void escClicked();
 	
 	/**
-	 * Für Anki-Sessions, User hat Beenden und Speichern geklickt...
+	 * Für Anki-Sessions, User hat Beenden und Speichern geklickt oder alle Karten gelernt
 	 */
-	default void end() {};
+	default void endGracefully() {};
 	
 	/**
 	 * Bitte schließen ohne weitere Pop-Ups. User möchte eine neue Session starten
 	 */
-	public void close(boolean save);
+	public void closeSilent(boolean save);
 	
 	/**
 	 * User möchte eine neue Session starten, was soll mit dieser passieren?

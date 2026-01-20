@@ -13,10 +13,11 @@ import java.util.Properties;
 import java.util.Set;
 
 import app.config.Config;
-import app.data.DeckType;
+import app.data.Deck;
 import app.data.GeoMap;
 import app.data.MapService;
 import app.ui.UIUtils;
+import app.ui.components.DashboardTile;
 import app.ui.components.ImageMapPane;
 import app.ui.components.ImagePane;
 import app.ui.components.MultipleChoicePane;
@@ -166,9 +167,9 @@ public abstract class Skin {
 	protected Color disabledComponentBgColor; // Default für MCButton, Map, JTextField
 	protected Color displayTextBgColor; // Default für Textfields (Fragen), signalisiert: Hier nichts klickbares!
 
-	protected Color displayTextQuestionBgColor;
-	protected Color displayTextProgressBgColor;
-	protected Color displayTextHistoryBgColor;
+	protected Color displayTextQuestionBgColor; // displayTextBgColor
+	protected Color displayTextProgressBgColor; // displayTextBgColor
+	protected Color displayTextHistoryBgColor; // displayTextBgColor
 	protected Color disabledButtonBgColor;
 	protected Color imageLabelBgColor = new Color(0, 0, 0, 0); // In der Regel soll das ImagePanel transparent sein..,
 
@@ -197,6 +198,12 @@ public abstract class Skin {
 	protected Color borderShapeColor; // Karten
 	protected Color thinBorderColor; // Um contentPane und unten die MenuBar
 	protected Integer thinBorderWidth; // default = 1
+	
+	protected Integer dashBoardTileWidth; // 250
+	protected Integer dashBoardTileTopHeight; // 250
+	protected Integer dashBoardTileBottomHeight; // 100
+	protected Integer dashBoardTileTopFontSize; // font * 4
+	protected Integer dashBoardTileBottomFontSize; // font * 2
 
 	protected String backButtonIcon;
 	protected String skipButtonIcon;
@@ -292,6 +299,15 @@ public abstract class Skin {
 		playFieldBackground = playFieldBackground == null ? menuBarBackground : playFieldBackground;
 		borderShapeColor = borderShapeColor == null ? borderColor : borderShapeColor;
 		textActiveComponentColor = textActiveComponentColor == null ? textColor : textActiveComponentColor;
+		dashBoardTileWidth = dashBoardTileWidth == null ? 300 : dashBoardTileWidth;
+		dashBoardTileTopHeight = dashBoardTileTopHeight == null ? 300 : dashBoardTileTopHeight;
+		dashBoardTileBottomHeight = dashBoardTileBottomHeight == null ? 100 : dashBoardTileBottomHeight;
+		dashBoardTileTopFontSize = dashBoardTileTopFontSize == null ? (int)font.getSize()*4 : dashBoardTileTopFontSize;
+		dashBoardTileBottomFontSize = dashBoardTileBottomFontSize == null ? (int)font.getSize() : dashBoardTileBottomFontSize;
+		displayTextHistoryBgColor = displayTextHistoryBgColor == null ? displayTextBgColor : displayTextHistoryBgColor;
+		displayTextProgressBgColor = displayTextProgressBgColor == null ? displayTextBgColor : displayTextProgressBgColor;
+		displayTextQuestionBgColor = displayTextQuestionBgColor == null ? displayTextBgColor : displayTextQuestionBgColor;
+		
 		
 	    scene.setFill(menuBarBackground);
 	    
@@ -323,6 +339,8 @@ public abstract class Skin {
 	    addMultipleChoiceStyles(css);
 	    addShapeMapStyles(css);
 	    addMyTableStyles(css);
+	    addDashboardStyles(css);
+	    addFitbitChartStyles(css);
 	    
 	    String rawCss = css.build(); // Hier kommt sauberes CSS raus: ".rule { color: #fff; }"
 
@@ -521,7 +539,6 @@ public abstract class Skin {
             
             String fieldName = "displayText" + type.toString() + "BgColor";
             Color bg = (Color) getFieldValue(fieldName);
-            if (bg == null) bg = displayTextBgColor;
             
             BorderParams border = borderMediumComponent;
             java.awt.Insets insets = border.insets();
@@ -751,26 +768,6 @@ public abstract class Skin {
 	       .add("-fx-font-size", smallFont.getSize() + "px")
 	       .end();
 	}
-
-	private void addAlertAndDialogStyles(CssBuilder css) {
-	    // Alert und Dialog
-	    css.start(".dialog-pane")
-	       .add("-fx-effect", "dropshadow(gaussian, rgba(255,0,0,1.0), 50, 0, 20, 20)")
-	       .end();
-	    
-	    css.rule(".my-dialog-vbox", "-fx-background-color", playFieldBackground); // Für den anzuzeigenden Text falls in VBox, in komplexeren Dialogen
-	    css.rule(".dialog-pane .scroll-pane", "-fx-background-color", playFieldBackground);
-	    css.rule(".dialog-pane .viewport", "-fx-background-color", playFieldBackground); 
-	       
-	    /**
-	    css.rule(".dialog-pane .label", "-fx-text-fill", UIUtils.toHex(textColor)); // Auf dialog-pane reicht nicht für die Schriftfarbe in der Pane....
-	    css.rule(".check-box .text", "-fx-fill", UIUtils.toHex(textColor));
-	    
-	    css.rule(".dialog-pane .button:focused", "-fx-background-color", UIUtils.toHex(activeComponentBgColor));
-	    css.rule(".dialog-pane .button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
-	    css.rule(".dialog-pane .button:pressed", "-fx-background-color", UIUtils.toHex(adjustBrightness(activeComponentHoverColor, 8)));
-	    **/
-	}
 	
 	/**
 	 * Uses textColor as borderColor (e. g. because of skins without border)
@@ -827,7 +824,75 @@ public abstract class Skin {
 	    .add("-fx-background-insets", "0")
 	    .add("-fx-padding", "0")
 	    .end();
+	}
+	
+	private void addDashboardStyles(CssBuilder css) {
+	    // === Gesamtes Tile ===
+	    css.start(".dashboard-tile")
+	       .add("-fx-border-color", borderBigComponent.color())
+	       .add("-fx-border-width", borderBigComponent.width() + "px")
+	       .add("-fx-border-radius",  borderBigComponent.arc() + "px")
+	       .add("-fx-background-radius", borderBigComponent.arc() + "px")
+	       .end();
 	    
+	    // === Oberer Bereich (große Zahl) ===
+	    css.start(".dashboard-tile-top")
+	       .add("-fx-background-color", displayTextProgressBgColor)
+	       .add("-fx-pref-height", dashBoardTileTopHeight + "px")
+	       .add("-fx-background-radius", borderBigComponent.arc() + "px " + borderBigComponent.arc() +  "px 0 0") // Nur oben abgerundet
+	       .end();
+	    
+	    // === Unterer Bereich (Beschreibung) ===
+	    css.start(".dashboard-tile-bottom")
+	       .add("-fx-background-color", menuBarBackground) // !Sofort: Was soll denn der Default hier mal sein???
+	       .add("-fx-pref-height", dashBoardTileBottomHeight + "px")
+	       .add("-fx-border-color", borderBigComponent.color())
+	       .add("-fx-border-width", borderBigComponent.width() + "px 0 0 0") // Trennstrich oben
+	       .add("-fx-background-radius", "0 0 " + borderBigComponent.arc() + "px " + borderBigComponent.arc() +  "px") // Nur unten abgerundet
+	       .end();
+	    
+	    // === Schrift oben (große Zahl) ===
+	    css.start(".dashboard-tile-value")
+	       .add("-fx-font-family", "'" + font.getFamily() + "'")
+	       .add("-fx-font-size", dashBoardTileTopFontSize + "px")
+	       .add("-fx-fill", UIUtils.toHex(textColor))
+	       .end();
+	    
+	    // === Schrift unten (Beschreibung) ===
+	    css.start(".dashboard-tile-label")
+	       .add("-fx-font-family", "'" + font.getFamily() + "'")
+	       .add("-fx-font-size", dashBoardTileBottomFontSize + "px")
+	       .add("-fx-fill", UIUtils.toHex(textColor))
+	       .end();
+	}
+	
+	private void addFitbitChartStyles(CssBuilder css) {
+	    // Balken stylen
+	    css.start(".chart-bar")
+	       .add("-fx-bar-fill", UIUtils.toHex(activeComponentBgColor))
+	       .add("-fx-border-color", UIUtils.toHex(borderColor))
+	       .add("-fx-border-width", "1px")
+	       .end();
+	    
+	    // Ziellinie stylen
+	    css.start(".chart-series-line")
+	       .add("-fx-stroke", UIUtils.toHex(markedColor)) // oder eine andere Farbe
+	       .add("-fx-stroke-width", "2px")
+	       .end();
+	    
+	    // Achsen-Beschriftung stylen
+	    css.start(".chart .axis")
+	       .add("-fx-tick-label-font-family", "'" + font.getFamily() + "'")
+	       .add("-fx-tick-label-font-size", font.getSize() + "px")
+	       .add("-fx-tick-label-fill", UIUtils.toHex(textColor))
+	       .end();
+	    
+	    // Achsen-Titel stylen (optional)
+	    css.start(".chart .axis-label")
+	       .add("-fx-font-family", "'" + font.getFamily() + "'")
+	       .add("-fx-font-size", font.getSize() + "px")
+	       .add("-fx-text-fill", UIUtils.toHex(textColor))
+	       .end();
 	}
 	
 	private static class CssBuilder {
@@ -955,7 +1020,7 @@ public abstract class Skin {
 	 * @param type Darf null sein!
 	 * @return
 	 */
-	public BackgroundImage getBackgroundImage(DeckType type) {
+	public BackgroundImage getBackgroundImage(Deck type) {
 		String bgPath = getBackgroundImagePath(type);
 		BackgroundImage background;
 	    try {
@@ -983,13 +1048,13 @@ public abstract class Skin {
 	/**
 	 * Creates a TextField with css-class = "input-field"
 	 * 
-	 * @param type
+	 * @param deck
 	 * @return
 	 */
-	public TextField createInputField(DeckType type) {
-	    Rectangle bounds = (Rectangle) getFieldValue((type.getId().contains("_") ? type.getId().substring(0, 2) : type.getId()) + "SessionTextInputPanel");
+	public TextField createInputField(Deck deck) {
+	    Rectangle bounds = (Rectangle) getFieldValue(deck.getMapName() + "SessionTextInputPanel");
 	    if (bounds == null)
-			bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionTextInputPanel");
+			bounds = (Rectangle) getFieldValue(deck.getCategory().toString() + "SessionTextInputPanel");
 	    
 	    TextField textField = new TextField();
 	    textField.setLayoutX(bounds.x);
@@ -1001,7 +1066,7 @@ public abstract class Skin {
 	}
 
 	// Rückgabetyp angepasst
-	public ImagePane createImageComponent(DeckType type) {
+	public ImagePane createImageComponent(Deck type) {
 	    // 1. Config laden (wie vorher)
 	    java.awt.Rectangle bounds = (java.awt.Rectangle) getFieldValue(type.getId() + "SessionImagePanel");
 	    if (bounds == null) 
@@ -1025,11 +1090,10 @@ public abstract class Skin {
 	}
 	
 	// --- Bereinigte Factory-Methode ---
-	public SessionInfoLabel createSessionInfoLabel(DeckType type, TextLabelType labelType) {
-		// !Sofort: Den Hack meinst Du nicht ernst, oder? Also da muss natürlich zwangsweise ein weiteres Feld eingeführt werden in DeckType
-        Rectangle bounds = (Rectangle) getFieldValue((type.getId().contains("_") ? type.getId().substring(0, 2) : type.getId()) + "Session" + labelType + "Panel");
+	public SessionInfoLabel createSessionInfoLabel(Deck deck, TextLabelType labelType) {
+        Rectangle bounds = (Rectangle) getFieldValue(deck.getMapName() + "Session" + labelType + "Panel");
         if (bounds == null)
-            bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "Session" + labelType + "Panel");
+            bounds = (Rectangle) getFieldValue(deck.getCategory().toString() + "Session" + labelType + "Panel");
         
         SessionInfoLabel label = new SessionInfoLabel("");
         label.setLayoutX(bounds.x);
@@ -1045,11 +1109,11 @@ public abstract class Skin {
         return label;
     }
 
-	public MultipleChoicePane createMultipleChoicePane(DeckType type) {
+	public MultipleChoicePane createMultipleChoicePane(Deck deck) {
         // 1. Bounds holen
-        Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMcPanel");
+        Rectangle bounds = (Rectangle) getFieldValue(deck.getId() + "SessionMcPanel");
         if (bounds == null) 
-            bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionMcPanel");
+            bounds = (Rectangle) getFieldValue(deck.getCategory().toString() + "SessionMcPanel");
         
         // 2. Padding und Border Werte holen
         java.awt.Insets insets = borderSmallComponent.insets();
@@ -1089,7 +1153,7 @@ public abstract class Skin {
         return result;
     }
 	
-	public Button createIconButton(DeckType type, IconButtonType buttonType) {
+	public Button createIconButton(Deck type, IconButtonType buttonType) {
 	    // Icon laden
 		String iconPath = switch (buttonType) {
 			case BACK -> backButtonIcon;
@@ -1345,14 +1409,14 @@ public abstract class Skin {
 	 * Erstellt ein Deutschlandpanel. Aktuell noch ohne Hintergrundbild. Die Größe berechnet sich aus: Höhe = height + 2 * yPadding. Der scale findet ohne
 	 * Verzerrung statt, von daher ist die width dann auch aus diesen Parametern und der Auflösung der Map bestimmt.
 	 */
-	public ShapeMapPane createShapeMapPane(DeckType type) {
+	public ShapeMapPane createShapeMapPane(Deck deck) {
         // 1. Daten holen
-        GeoMap map = MapService.getInstance().getMap(type);
+        GeoMap map = MapService.getInstance().getMap(deck);
         
         // 2. Bounds via Reflection holen (AWT Rectangle)
-        Rectangle bounds = (Rectangle) getFieldValue((type.getId().contains("_") ? type.getId().substring(0, 2) : type.getId()) + "SessionMapPanel");
+        Rectangle bounds = (Rectangle) getFieldValue(deck.getMapName() + "SessionMapPanel");
         if (bounds == null) 
-            bounds = (Rectangle) getFieldValue(type.getCategory().toString() + "SessionMapPanel");
+            bounds = (Rectangle) getFieldValue(deck.getCategory().toString() + "SessionMapPanel");
             
         // 3. Komponente erstellen (Skin bestimmt die Ziel-Höhe für den Zoom!)
         ShapeMapPane pane = new ShapeMapPane(map, bounds.height);
@@ -1364,7 +1428,7 @@ public abstract class Skin {
         return pane;
     }
 
-	public ImageMapPane createImageMapPanel(DeckType type) {
+	public ImageMapPane createImageMapPanel(Deck type) {
 		GeoMap map = MapService.getInstance().getMap(type);
 		java.awt.Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMapPanel");
 		BorderParams borderForRectangle = new BorderParams(borderBigComponent.width(), borderBigComponent.color(), borderBigComponent.insets(), borderBigComponent.arc()*2, borderBigComponent.focusWidth(), borderBigComponent.focusedColor(), borderBigComponent.disabledColor());
@@ -1372,6 +1436,14 @@ public abstract class Skin {
 		result.setLayoutX(bounds.x);
 		result.setLayoutY(bounds.y);
 		return result;
+	}
+	
+	public DashboardTile createDashboardTile(String value, String label) {
+	    DashboardTile tile = new DashboardTile(value, label);
+	    tile.setPrefSize(dashBoardTileWidth, dashBoardTileBottomHeight + dashBoardTileTopHeight);
+	    tile.setMinSize(dashBoardTileWidth, dashBoardTileBottomHeight + dashBoardTileTopHeight);
+	    tile.setMaxSize(dashBoardTileWidth, dashBoardTileBottomHeight + dashBoardTileTopHeight);
+	    return tile;
 	}
 	
 	// endregion
@@ -1382,7 +1454,7 @@ public abstract class Skin {
 	 * @param id
 	 * @return
 	 */
-	public String getMapImagePath(DeckType type) {
+	public String getMapImagePath(Deck type) {
 		switch (type) {
 		case WORLD_CARDS:
 			return Config.get("mapImagesFolder") + worldMapImageName;
@@ -1391,7 +1463,7 @@ public abstract class Skin {
 		}
 	}
 
-	public String getMapInactiveImagePath(DeckType type) {
+	public String getMapInactiveImagePath(Deck type) {
 		switch (type) {
 		case WORLD_CARDS:
 			return Config.get("mapImagesFolder") + worldMapInactiveImageName;
@@ -1400,7 +1472,7 @@ public abstract class Skin {
 		}
 	}
 
-	public String getMapInactiveOverlayImagePath(DeckType type) {
+	public String getMapInactiveOverlayImagePath(Deck type) {
 		switch (type) {
 		case WORLD_CARDS:
 			return Config.get("mapImagesFolder") + worldMapInactiveOverlayImageName;
@@ -1409,7 +1481,7 @@ public abstract class Skin {
 		}
 	}
 
-	public String getMapOverlayImagePath(DeckType type) {
+	public String getMapOverlayImagePath(Deck type) {
 		switch (type) {
 		case WORLD_CARDS:
 			return Config.get("mapImagesFolder") + worldMapOverlayImageName;
@@ -1421,16 +1493,16 @@ public abstract class Skin {
 	/**
 	 * Holt das passende Hintergrundbild zur laufenden Session bzw das "leere", wenn keine Session läuft
 	 * 
-	 * @param type Darf null sein!
+	 * @param deck Darf null sein!
 	 * @return
 	 */
-	protected String getBackgroundImagePath(DeckType type) {
-		if (type == null)
+	protected String getBackgroundImagePath(Deck deck) {
+		if (deck == null)
 			return Config.get("wallpaperFolder") + (emptyWallpaperName == null ? defaultWallpaperName : emptyWallpaperName);
-		String bgName = (String) getFieldValue((type.getId().contains("_") ? type.getId().substring(0, 2) : type.getId()) + "WallpaperName");
+		String bgName = (String) getFieldValue(deck.getMapName() + "WallpaperName");
 		if (bgName != null)
 			return Config.get("wallpaperFolder") + bgName;
-		bgName = (String) getFieldValue(type.getCategory().toString() + "WallpaperName");
+		bgName = (String) getFieldValue(deck.getCategory().toString() + "WallpaperName");
 		if (bgName != null)
 			return Config.get("wallpaperFolder") + bgName;
 		return Config.get("wallpaperFolder") + defaultWallpaperName;

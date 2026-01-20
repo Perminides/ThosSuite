@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import app.data.DeckType;
+import app.data.Deck;
 import app.data.LearnStat;
 import app.data.SessionProgress;
 import app.presenter.AnkiSessionPresenter;
@@ -21,7 +21,7 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
 public class WorldSessionPane extends Pane implements AnkiSessionPane {
-	private static final DeckType DECKTYPE = DeckType.WORLD_CARDS; 
+	private static final Deck DECKTYPE = Deck.WORLD_CARDS; 
 
 	private final AnkiSessionPresenter presenter;
     private TextField textInputField;
