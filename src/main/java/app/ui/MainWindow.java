@@ -164,7 +164,9 @@ public class MainWindow {
         MenuItem itemDashboard = skin.createMenuItem("Dashboard");
         itemDashboard.setOnAction(_ -> onStatisticsSelected.accept("Dashboard"));
         menuStatistics.getItems().add(itemDashboard);
-
+        MenuItem itemFitbit = skin.createMenuItem("Fitbit");
+        itemFitbit.setOnAction(_ -> onStatisticsSelected.accept("Fitbit"));
+        menuStatistics.getItems().add(itemFitbit);
         
         // ANSICHT-MENÜ
         Menu menuView = skin.createMenu("Ansicht");
