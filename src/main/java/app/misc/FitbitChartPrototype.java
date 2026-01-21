@@ -58,7 +58,7 @@ public class FitbitChartPrototype extends Application {
         lineChart.setVerticalGridLinesVisible(false);
         
         XYChart.Series<String, Number> lineSeries = new XYChart.Series<>();
-        lineSeries.getData().add(new XYChart.Data<>("W1", 4000));
+        lineSeries.getData().add(new XYChart.Data<>("2025-01-08", 4000));
         lineSeries.getData().add(new XYChart.Data<>("W2", 4000));
         lineSeries.getData().add(new XYChart.Data<>("W3", 4000));
         lineSeries.getData().add(new XYChart.Data<>("W4", 4000));

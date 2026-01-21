@@ -11,9 +11,13 @@ import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import app.config.Config;
+import app.data.FitbitGoalHistoryEntry;
+import app.data.FitbitWeekData;
 import app.util.Log;
 
 /**
@@ -149,6 +153,78 @@ public class FitbitRepository {
             
         } catch (SQLException e) {
             throw new RuntimeException("Fehler beim Laden der Fitbit-Wochenpunkte", e);
+        }
+    }
+    
+    /**
+     * Lädt die letzten N Wochen mit ihren Punkten aus der Datenbank.
+     * Startet ab der neuesten Woche in der DB und geht N Wochen zurück.
+     * 
+     * @param n Anzahl der Wochen
+     * @return Liste der Wochen, aufsteigend sortiert (älteste zuerst)
+     */
+    public List<FitbitWeekData> getLastNWeeks(int n) {
+        String sql = """
+            SELECT week_start, points 
+            FROM fitbit_weekly_points 
+            ORDER BY week_start DESC 
+            LIMIT ?
+            """;
+        
+        List<FitbitWeekData> result = new ArrayList<>();
+        
+        try (Connection conn = DB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, n);
+            
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                LocalDate weekStart = LocalDate.parse(rs.getString("week_start"));
+                int points = rs.getInt("points");
+                result.add(new FitbitWeekData(weekStart, points));
+            }
+            
+            // Umdrehen: Älteste zuerst (für chronologische Darstellung)
+            result.sort((a, b) -> a.weekStart().compareTo(b.weekStart()));
+            
+            Log.debug(this, "Geladene Wochen: " + result.size());
+            return result;
+            
+        } catch (SQLException e) {
+            throw new RuntimeException("Fehler beim Laden der Fitbit-Wochendaten", e);
+        }
+    }
+    
+    /**
+     * Lädt die komplette Goal-Historie aus der Datenbank.
+     * 
+     * @return Liste aller Goal-Einträge, aufsteigend nach validFrom sortiert
+     */
+    public List<FitbitGoalHistoryEntry> getAllGoalHistory() {
+        String sql = """
+            SELECT valid_from, weekly_goal 
+            FROM fitbit_goal_history 
+            ORDER BY valid_from ASC
+            """;
+        
+        List<FitbitGoalHistoryEntry> result = new ArrayList<>();
+        
+        try (Connection conn = DB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                LocalDate validFrom = LocalDate.parse(rs.getString("valid_from"));
+                int weeklyGoal = rs.getInt("weekly_goal");
+                result.add(new FitbitGoalHistoryEntry(validFrom, weeklyGoal));
+            }
+            
+            Log.debug(this, "Geladene Goal-Einträge: " + result.size());
+            return result;
+            
+        } catch (SQLException e) {
+            throw new RuntimeException("Fehler beim Laden der Fitbit-Goal-Historie", e);
         }
     }
     

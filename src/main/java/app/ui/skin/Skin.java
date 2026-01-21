@@ -340,7 +340,7 @@ public abstract class Skin {
 	    addShapeMapStyles(css);
 	    addMyTableStyles(css);
 	    addDashboardStyles(css);
-	    addFitbitChartStyles(css);
+	    addChartStyles(css);
 	    
 	    String rawCss = css.build(); // Hier kommt sauberes CSS raus: ".rule { color: #fff; }"
 
@@ -356,6 +356,9 @@ public abstract class Skin {
 	}
 	
 	private void addButtonStyles(CssBuilder css) {
+		
+		System.out.println("textActiveComponentColor: " + textActiveComponentColor);
+		
 	    // Standard Button (überall, auch TableView intern)
 	    css.start(".button")
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
@@ -866,18 +869,29 @@ public abstract class Skin {
 	       .end();
 	}
 	
-	private void addFitbitChartStyles(CssBuilder css) {
-	    // Balken stylen
+	// !Später: Naja, so richtig überprüft habe ich nicht, ob die alle nötig sind. Und außerdem hier auch noch tooltip zu verstecken, hm...
+	private void addChartStyles(CssBuilder css) {
+		
+		// Chart an sich
+	    css.start(".chart")
+	    	.add("-fx-background-color", "transparent")
+	    	.add("-fx-category-gap", "3")
+	    .end();
+		
+	    // Balken stylen - Standard (Ziel nicht erreicht)
 	    css.start(".chart-bar")
-	       .add("-fx-bar-fill", UIUtils.toHex(activeComponentBgColor))
-	       .add("-fx-border-color", UIUtils.toHex(borderColor))
+	       .add("-fx-bar-fill", UIUtils.toHex(incorrectColor))
+	       .add("-fx-border-color", UIUtils.toHex(textColor))
 	       .add("-fx-border-width", "1px")
 	       .end();
 	    
+	    // Balken stylen - Ziel erreicht
+	    css.rule(".chart-bar:achieved", "-fx-bar-fill", UIUtils.toHex(correctColor));
+	    
 	    // Ziellinie stylen
 	    css.start(".chart-series-line")
-	       .add("-fx-stroke", UIUtils.toHex(markedColor)) // oder eine andere Farbe
-	       .add("-fx-stroke-width", "2px")
+	       .add("-fx-stroke", UIUtils.toHex(textColor))
+	       .add("-fx-stroke-width", "1px")
 	       .end();
 	    
 	    // Achsen-Beschriftung stylen
@@ -885,7 +899,34 @@ public abstract class Skin {
 	       .add("-fx-tick-label-font-family", "'" + font.getFamily() + "'")
 	       .add("-fx-tick-label-font-size", font.getSize() + "px")
 	       .add("-fx-tick-label-fill", UIUtils.toHex(textColor))
+	       //.add("-fx-tick-label-rotation", "-45")
 	       .end();
+
+	    // Grpße Tick-Marks auf y-Achse
+	    css.start(".chart .axis:left .axis-tick-mark")
+	    	.add("-fx-stroke", UIUtils.toHex(textColor))
+	    	.add("-fx-stroke-width", "1px")
+	    .end();
+
+	    // Minor Tick-Marks weg
+	    css.start(".chart .axis .axis-minor-tick-mark")
+	    	.add("-fx-stroke", "transparent")
+	    	.add("-fx-stroke-width", "0px")
+	    .end();
+	 
+	    // Tick-Marks auf x-Achse weg
+	    css.start(".chart .axis:bottom .axis-tick-mark")
+	    	.add("-fx-stroke", "transparent")
+	    	.add("-fx-stroke-width", "0px")
+	    .end();
+	    
+	    css.start(".chart .axis:bottom")
+	    	.add("-fx-border-color", UIUtils.toHex(textColor) + " transparent transparent transparent") // Es gibt einen Border um die ganze Beschriftung der x-Achse. Der obere Teil dieses Borders ist die x-Achse selbst. Herrje...
+	    .end();
+	    
+	    css.start(".chart .axis:left")
+    		.add("-fx-border-color", "transparent " + UIUtils.toHex(textColor) + " transparent transparent") // Siehe oben. Hier müssen wir dann rechts setzen
+    	.end();
 	    
 	    // Achsen-Titel stylen (optional)
 	    css.start(".chart .axis-label")
@@ -893,6 +934,21 @@ public abstract class Skin {
 	       .add("-fx-font-size", font.getSize() + "px")
 	       .add("-fx-text-fill", UIUtils.toHex(textColor))
 	       .end();
+	    
+	    css.start(".fitbit-chart-container")
+	    	.add("-fx-padding", "150px 200px 150px 200px")
+	    .end();
+
+	    css.rule(".chart-plot-background", "-fx-background-color", "transparent");
+	    css.rule(".chart-content", "-fx-background-color", "transparent");
+	    
+	    css.start(".tooltip")
+	    	.add("-fx-background-color", UIUtils.toHex(activeComponentBgColor)+"88")
+	    .end();
+	    
+	    css.start(".tooltip .text")
+	    	.add("-fx-fill", textActiveComponentColor)
+	    .end();
 	}
 	
 	private static class CssBuilder {

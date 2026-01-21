@@ -150,6 +150,10 @@ public class Controller{
 	            currentSession = new DashboardSession();
 	            mainWindow.showPane(currentSession.getView());
 	            currentSession.start();
+	        } else if ("Fitbit".equals(item)) {
+	            currentSession = new FitbitSession();
+	            mainWindow.showPane(currentSession.getView());
+	            currentSession.start();
 	        }
 	        // Später kommen hier weitere Statistik-Einträge wie "Fitbit" etc.
 	    });
