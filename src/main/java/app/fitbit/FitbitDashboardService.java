@@ -3,8 +3,9 @@ package app.fitbit;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
-import java.util.Map;
+import java.util.List;
 
+import app.data.FitbitWeekData;
 import app.data.persistence.FitbitRepository;
 
 public class FitbitDashboardService {
@@ -53,5 +54,80 @@ public class FitbitDashboardService {
         double stepsNeeded = (z - p) / (t * s);
         
         return (int) Math.round(stepsNeeded);
+    }
+    
+    /**
+     * Berechnet den aktuellen Streak in vollständigen grünen Wochen.
+     * Eine Woche ist grün, wenn ihre Punkte >= dem Wochenziel sind.
+     * Die aktuelle (unvollständige) Woche wird ignoriert.
+     * 
+     * @param today Das heutige Datum
+     * @return Anzahl der aufeinanderfolgenden grünen Wochen (ab der letzten vollständigen Woche)
+     */
+    public int calculateCurrentStreak(LocalDate today) {
+        List<FitbitWeekData> weeks = repository.getLastNWeeks(9999);
+        
+        if (weeks.isEmpty()) {
+            return 0;
+        }
+        
+        // Prüfen ob die neueste Woche die aktuelle (unvollständige) Woche ist
+        LocalDate currentMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        FitbitWeekData newestWeek = weeks.get(weeks.size() - 1);
+        
+        int startIndex = weeks.size() - 1;
+        if (newestWeek.weekStart().equals(currentMonday) && today.getDayOfWeek() != DayOfWeek.MONDAY) {
+            // Aktuelle unvollständige Woche überspringen
+            startIndex = weeks.size() - 2;
+        }
+        
+        if (startIndex < 0) {
+            return 0;
+        }
+        
+        // Von hinten nach vorne durch vollständige Wochen gehen
+        int streak = 0;
+        for (int i = startIndex; i >= 0; i--) {
+            FitbitWeekData week = weeks.get(i);
+            int goal = repository.getWeeklyGoalForDate(week.weekStart());
+            
+            if (week.points() >= goal) {
+                streak++;
+            } else {
+                // Erste rote Woche → Streak endet
+                break;
+            }
+        }
+        
+        return streak;
+    }
+    
+    /**
+     * Berechnet den längsten jemals erreichten Streak in grünen Wochen.
+     * 
+     * @return Die maximale Anzahl aufeinanderfolgender grüner Wochen (All-Time-Rekord)
+     */
+    public int calculateRecordStreak() {
+        List<FitbitWeekData> weeks = repository.getLastNWeeks(9999);
+        
+        if (weeks.isEmpty()) {
+            return 0;
+        }
+        
+        int currentStreak = 0;
+        int maxStreak = 0;
+        
+        for (FitbitWeekData week : weeks) {
+            int goal = repository.getWeeklyGoalForDate(week.weekStart());
+            
+            if (week.points() >= goal) {
+                currentStreak++;
+                maxStreak = Math.max(maxStreak, currentStreak);
+            } else {
+                currentStreak = 0;
+            }
+        }
+        
+        return maxStreak;
     }
 }

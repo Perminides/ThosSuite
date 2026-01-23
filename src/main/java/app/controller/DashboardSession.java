@@ -45,6 +45,14 @@ public class DashboardSession implements Session {
                 "Schritte pro Tag noch nötig"
             )
         );
+        
+        // Tile erstellen
+        view.getChildren().add(
+            SkinService.get().createDashboardTile(
+            	"" + fitbitService.calculateCurrentStreak(AppClock.TODAY), 
+                "Aktueller Fitbit-Streak in Wochen (Rekord: " + fitbitService.calculateRecordStreak() + ")"
+            )
+        );
     }
     
     @Override
