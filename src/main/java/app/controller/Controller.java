@@ -11,8 +11,8 @@ import app.data.AnkiCard;
 import app.data.AnkiDeckService;
 import app.data.AnkiLearnSessionInfo;
 import app.data.CardSortOrder;
-import app.data.DeckCategory;
 import app.data.Deck;
+import app.data.DeckCategory;
 import app.data.LearnSessionInfo;
 import app.data.MapShape;
 import app.data.RegionDeckService;
@@ -25,7 +25,9 @@ import app.ui.MainWindow;
 import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
 import app.ui.components.AnkiPlayConfigDialog;
+import app.ui.components.AnkiPlayConfigDialog.AnkiPlayConfig;
 import app.ui.components.RegionPlayConfigDialog;
+import app.ui.components.RegionPlayConfigDialog.RegionPlayConfig;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import app.util.Log;
@@ -134,14 +136,83 @@ public class Controller{
 	}
 	
 	public void onPlayMenuItemSelected(PlayMenuItem item) {
-		requestSessionSwitch(() -> {
-			Object payload = item.payload();
-			if (payload instanceof Deck deckType) {
-				showAnkiConfigDialog(deckType);
-			} else if (payload == DeckCategory.REGION_DECK) {
-				showRegionConfigDialog();
-			}
-		});
+	    Object payload = item.payload();
+	    
+	    if (payload instanceof Deck deckType) {
+	        Set<String> availableLabels = ankiDeckService.getAvailableLabels(deckType);
+	        AnkiPlayConfigDialog dialog = new AnkiPlayConfigDialog(
+	            mainWindow.getStage(),
+	            SkinService.get(),
+	            deckType,
+	            availableLabels
+	        );
+	        
+	        Optional<AnkiPlayConfig> configOpt = dialog.showAndWait();
+	        if (configOpt.isEmpty()) return;
+	        
+	        AnkiPlayConfig config = configOpt.get();
+	        
+	        List<AnkiCard> cards = ankiDeckService.getCardsForPlay(
+	            deckType,
+	            config.minIndex(),
+	            config.maxIndex(),
+	            config.maxCards(),
+	            config.selectedLabels()
+	        );
+	        
+	        if (cards.isEmpty()) {
+	            SkinService.get().createAlert(mainWindow.getStage(), null, "Keine Karten gefunden", false, false).showAndWait();
+	            return;
+	        }
+	        
+	        requestSessionSwitch(() -> {
+	            // Session starten (ohne Sortierung, gemischt)
+	            currentSession = new AnkiDeckSession(cards, this, ankiDeckService, deckType, Collections::shuffle, true);
+	            mainWindow.showPane(currentSession.getView());
+	            //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
+	            currentSession.start();
+	        });
+	        
+	    } else if (payload == DeckCategory.REGION_DECK) {
+	        RegionPlayConfigDialog dialog = new RegionPlayConfigDialog(mainWindow.getStage(), SkinService.get());
+	        
+	        Optional<RegionPlayConfig> configOpt = dialog.showAndWait();
+	        if (configOpt.isEmpty()) return;
+	        
+	        RegionPlayConfig config = configOpt.get();
+	        
+	        Set<Deck> selectedDecks = config.selectedDecks();
+	        RegionMode mode = config.mode();
+	        
+	        // Erstes Deck als primäres, Rest als additional
+	        Deck primaryDeck = selectedDecks.iterator().next();
+	        Set<Deck> additionalDecks = new HashSet<>(selectedDecks);
+	        additionalDecks.remove(primaryDeck);
+	        
+	        // Spec erstellen
+	        RegionSessionSpec spec = new RegionSessionSpec(
+	            primaryDeck,
+	            mode,
+	            additionalDecks.isEmpty() ? null : additionalDecks,
+	            true  // isPlaySession
+	        );
+	        
+	        // Regionen holen VOR dem Switch
+	        Set<MapShape> regions = regionDeckService.getRegions(spec);
+	        
+	        if (regions.isEmpty()) {
+	            SkinService.get().createAlert(mainWindow.getStage(), null, "Keine Regionen gefunden", false, false).showAndWait();
+	            return;
+	        }
+	        
+	        requestSessionSwitch(() -> {
+	            // Session starten
+	            currentSession = new RegionSession(spec, regions, this, regionDeckService);
+	            mainWindow.showPane(currentSession.getView());
+	            //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
+	            currentSession.start();
+	        });
+	    }
 	}
 	
 	public void onStatisticsMenuItemSelected(String item) {
@@ -273,78 +344,6 @@ public class Controller{
 	            }
 	            break;
 	    }
-	}
-
-	private void showRegionConfigDialog() {
-	    RegionPlayConfigDialog dialog = new RegionPlayConfigDialog(mainWindow.getStage(), SkinService.get());
-	    
-	    dialog.showAndWait().ifPresent(config -> {
-	        Set<Deck> selectedDecks = config.selectedDecks();
-	        RegionMode mode = config.mode();
-	        
-	        // Erstes Deck als primäres, Rest als additional
-	        Deck primaryDeck = selectedDecks.iterator().next();
-	        Set<Deck> additionalDecks = new HashSet<>(selectedDecks);
-	        additionalDecks.remove(primaryDeck);
-	        
-	        // Spec erstellen (mit isPlaySession flag)
-	        RegionSessionSpec spec = new RegionSessionSpec(
-	            primaryDeck, 
-	            mode, 
-	            additionalDecks.isEmpty() ? null : additionalDecks,
-	            true  // isPlaySession
-	        );
-	        
-	        Set<MapShape> regions = regionDeckService.getRegions(spec);
-	        
-	        // Session starten
-	        currentSession = new RegionSession(spec, regions, this, regionDeckService);
-	        mainWindow.showPane(currentSession.getView());
-	        //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
-	        currentSession.start();
-	    });
-	}
-
-	private void showAnkiConfigDialog(Deck type) {
-	    Set<String> availableLabels = ankiDeckService.getAvailableLabels(type);
-	    AnkiPlayConfigDialog dialog = new AnkiPlayConfigDialog(
-	        mainWindow.getStage(), 
-	        SkinService.get(), 
-	        type, 
-	        availableLabels
-	    );
-	    
-	    /**dialog.getDialog().setOnShown(e -> {
-	        // Schnapp dir die Wurzel (DialogPane)
-	        Node root = dialog.getDialog().getDialogPane();
-	        
-	        // Dump alles!
-	        CssInspector.dumpRecursive(root);
-	        
-	        // Falls du den Hack von vorhin noch drin hast, hier auch centerOnScreen
-	        // window.centerOnScreen(); 
-	    });**/
-	    
-	    dialog.showAndWait().ifPresent(config -> {
-	        List<AnkiCard> cards = ankiDeckService.getCardsForPlay(
-	            type,
-	            config.minIndex(),
-	            config.maxIndex(),
-	            config.maxCards(),
-	            config.selectedLabels()
-	        );
-	        
-	        if (cards.isEmpty()) {
-	            SkinService.get().createAlert(mainWindow.getStage(), null, "Keine Karten gefunden", false, false).showAndWait();
-	            return;
-	        }
-	        
-	        // Session starten (ohne Sortierung, gemischt)
-	        currentSession = new AnkiDeckSession(cards, this, ankiDeckService, type, Collections::shuffle, true);
-	        mainWindow.showPane(currentSession.getView());
-	        //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
-	        currentSession.start();
-	    });
 	}
 	
 	private SessionSwitchAction showSaveDiscardCancelDialog() {
