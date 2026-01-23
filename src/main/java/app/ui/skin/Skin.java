@@ -46,12 +46,15 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.HeaderBar;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -308,6 +311,19 @@ public abstract class Skin {
 		displayTextProgressBgColor = displayTextProgressBgColor == null ? displayTextBgColor : displayTextProgressBgColor;
 		displayTextQuestionBgColor = displayTextQuestionBgColor == null ? displayTextBgColor : displayTextQuestionBgColor;
 		
+		// Dieser Code ist natürlich Quatsch. Aber ich bin so angepisst über diese -1 dass ich mir das jetzt gebaut habe.
+		// Siehe auch den Kommentar in der Methode, die die Buttons stylet!
+		Button button = new Button("Test Button");
+        // 1. Der Button braucht eine Scene, um Zugriff auf die User-Agent-Styles (Modena) zu haben
+        Scene dummyScene = new Scene(new StackPane(button));
+        // 2. Jetzt CSS anwenden - JavaFX schaut nun in die Modena-Stylesheets
+        button.applyCss();
+        Background background = button.getBackground();
+			// Wir nehmen den ersten BackgroundFill (wie in ScenicView zu sehen)
+		    BackgroundFill firstFill = background.getFills().get(0);
+		    javafx.geometry.Insets insets = firstFill.getInsets();
+		    if (insets.getBottom() != -1)
+		    	throw new RuntimeException("Alter jetzt ist der bottomInset für den Background plötzlich nicht mehr -1?");
 		
 	    scene.setFill(menuBarBackground);
 	    
@@ -329,6 +345,8 @@ public abstract class Skin {
 	    addTextFieldStyles(css);
 	    addTextAreaStyles(css);
 	    addMenuStyles(css);
+	    addDatePickerStyles(css);
+	    addSpinnerStyles(css);
 	    
 	    // Komponenten mit meiner eigenen Logik:-)
 	    addSessionInfoLabelStyles(css);
@@ -356,25 +374,25 @@ public abstract class Skin {
 	}
 	
 	private void addButtonStyles(CssBuilder css) {
-		
-		System.out.println("textActiveComponentColor: " + textActiveComponentColor);
-		
 	    // Standard Button (überall, auch TableView intern)
-	    css.start(".button")
+		// // Das date-picker muss dadrin stehen, weil es gibt auch arrow-buttons in den Menüs und mit denen wollen wir uns nicht anlegen!
+	    css.start(".button, .date-picker .arrow-button, .spinner .increment-arrow-button, .spinner .decrement-arrow-button")
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
-	       .add("-fx-background-insets", "0")
+	       //.add("-fx-background-insets", "0") // Ohne das lugt der Hintergrund unten raus, weil backgroundINsets per default auf -1 stehen. Wenn ich den erwische, der das verbrochen hat. Ich habe es jetzt anders gelöst, indem ich das auf dem Border auch auf -1 gesetzt habe *lol*
 	       .add("-fx-border-radius", borderSmallComponent.arc() + "px")
 	       .add("-fx-border-width", borderSmallComponent.width() + "px")
 	       .add("-fx-border-color", UIUtils.toHex(borderSmallComponent.color()))
 	       .add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
+	       .add("-fx-border-insets", "0 0 -1 0") // Buttons haben in javafx per default -fx-background-insets = 0, 0, -1, 0. Ich kann es nicht ändern. Also brauchen wir das, wenn der Hintergrund nicht unter dem Border hervorlugen soll. Und diese auf 0 zu setzen macht dann in DatePickern oder so Probleme. Ich versuche jetzt mal diesen Weg!
 	       .end();
 	    
-	    css.rule(".button .text", "-fx-fill", UIUtils.toHex(textActiveComponentColor));
-	    css.rule(".button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
-	    css.rule(".button:pressed", "-fx-background-color", UIUtils.toHex(adjustBrightness(activeComponentHoverColor, 8)));
+	    css.rule(".button .text, .date-picker .arrow-button .text", "-fx-fill", UIUtils.toHex(textActiveComponentColor));
+	    css.rule(".button:hover, .date-picker .arrow-button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
+	    css.rule(".button:pressed, .date-picker .arrow-button:pressed", "-fx-background-color", UIUtils.toHex(adjustBrightness(activeComponentHoverColor, 8)));
 	    // Alternative Effekte (für andere Skins):
 	    //css.rule(".my-mc-button:active:pressed", "-fx-translate-y", "1px");
 	    //css.rule(".my-mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
+	  
 	}
 	
 	private void addCheckBoxStyles(CssBuilder builder) {  
@@ -452,7 +470,7 @@ public abstract class Skin {
 	    Insets i = borderSmallComponent.insets();
 	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", i.top, i.right, i.bottom, i.left);
 	    
-	    css.start(".text-field")
+	  css.start(".text-field")
 	       .add("-fx-text-fill", UIUtils.toHex(textActiveComponentColor))
 	       .add("-fx-alignment", "center")
 	       .add("-fx-padding", paddingCss)
@@ -951,6 +969,100 @@ public abstract class Skin {
 	    .end();
 	}
 	
+	private void addDatePickerStyles(CssBuilder css) {
+		
+		// === Der Datepicker selber hat sonst unsere Borders des Textfelds und Kalenders kaputt gemacht ===
+		css.start(".date-picker")
+		   .add("-fx-background-color", "transparent")  // Kein eigener Background
+		   .add("-fx-border-color", "transparent")      // Kein eigener Border
+		   .add("-fx-background-insets", "0")
+		   .add("-fx-padding", "0")
+		   .end();
+		
+	    // === DatePicker Textfeld (geschlossen) ===
+		css.start(".date-picker .text-field")
+	       .add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
+	       .add("-fx-text-fill", UIUtils.toHex(textActiveComponentColor))
+	       .end();
+	    
+	    // === Arrow Button (Kalender-Icon) ===
+	    css.start(".date-picker .arrow-button")
+	       .add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
+	       .end();
+	    
+	    css.rule(".date-picker .arrow-button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
+	    
+	    css.start(".date-picker .arrow-button .arrow")
+	       .add("-fx-background-color", UIUtils.toHex(textActiveComponentColor))
+	       .end();
+	    
+	    // === Popup Container ===
+	    css.start(".date-picker-popup")
+	       .add("-fx-background-color", UIUtils.toHex(playFieldBackground))
+	       .add("-fx-border-color", UIUtils.toHex(borderColor))
+	       .add("-fx-border-width", thinBorderWidth + "px")
+	       .end();
+	    
+	    // === Month/Year Header ===
+	    css.start(".date-picker-popup .month-year-pane")
+	       .add("-fx-background-color", UIUtils.toHex(menuBarBackground))
+	       .end();
+	    
+	    css.start(".date-picker-popup .month-year-pane .label")
+	       .add("-fx-text-fill", UIUtils.toHex(textColor))
+	       .add("-fx-font-weight", "bold")
+	       .end();
+	    
+	    // === Spinner Buttons (< >) ===
+	    css.start(".date-picker-popup .spinner .button")
+	       .add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
+	       .end();
+	    
+	    css.rule(".date-picker-popup .spinner .button:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
+	    
+	    css.start(".date-picker-popup .spinner .button .left-arrow")
+	       .add("-fx-background-color", UIUtils.toHex(textActiveComponentColor))
+	       .end();
+	    
+	    css.start(".date-picker-popup .spinner .button .right-arrow")
+	       .add("-fx-background-color", UIUtils.toHex(textActiveComponentColor))
+	       .end();
+	    
+	    // === Wochentag-Header ===
+	    css.start(".date-picker-popup .day-name-cell")
+	       .add("-fx-text-fill", UIUtils.toHex(textColor))
+	       .end();
+	    
+	    // === Tages-Zellen ===
+	    css.start(".date-picker-popup .day-cell")
+	       .add("-fx-background-color", UIUtils.toHex(adjustBrightness(playFieldBackground, 5)))
+	       .add("-fx-text-fill", UIUtils.toHex(textColor))
+	       .end();
+	    
+	    css.rule(".date-picker-popup .day-cell:hover", "-fx-background-color", UIUtils.toHex(activeComponentHoverColor));
+	    
+	    // === Heutiges Datum ===
+	    css.start(".date-picker-popup .today")
+	       .add("-fx-border-color", UIUtils.toHex(textColor))
+	       .add("-fx-border-width", "1px")
+	       .end();
+	    
+	    // === Ausgewähltes Datum ===
+	    css.start(".date-picker-popup .selected")
+	       .add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
+	       .end();
+	}
+	
+	public void addSpinnerStyles(CssBuilder css) {
+		css.rule(".spinner .text-field", "-fx-pref-column-count", "3");
+
+		css.start(".spinner").add("-fx-pref-width", "-1").add("-fx-min-width", "-fx-pref-width").end();
+
+		css.start(".spinner .text-field:focused")
+			.add("-fx-background-insets", "0") // Den Fokus-Border auf diesem Fake-TextField bekommt man nur so weg. Gerade keine Nerven da tiefer einzusteigen.
+		.end();
+	}
+	
 	private static class CssBuilder {
 	    private final StringBuilder sb = new StringBuilder();
 	    private boolean insideBlock = false;
@@ -1364,8 +1476,6 @@ public abstract class Skin {
 	            
 	            window.setX(centerX);
 	            window.setY(centerY);
-	            
-	            System.out.println("Manually centered to: " + centerX + ", " + centerY);
 	        });
 	    }
 	    
