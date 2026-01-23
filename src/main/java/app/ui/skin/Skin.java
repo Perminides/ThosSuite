@@ -377,13 +377,12 @@ public abstract class Skin {
 	    // Standard Button (überall, auch TableView intern)
 		// // Das date-picker muss dadrin stehen, weil es gibt auch arrow-buttons in den Menüs und mit denen wollen wir uns nicht anlegen!
 	    css.start(".button, .date-picker .arrow-button, .spinner .increment-arrow-button, .spinner .decrement-arrow-button")
-	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
-	       //.add("-fx-background-insets", "0") // Ohne das lugt der Hintergrund unten raus, weil backgroundINsets per default auf -1 stehen. Wenn ich den erwische, der das verbrochen hat. Ich habe es jetzt anders gelöst, indem ich das auf dem Border auch auf -1 gesetzt habe *lol*
 	       .add("-fx-border-radius", borderSmallComponent.arc() + "px")
+	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
+	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // // Buttons haben in javafx per default -fx-background-insets = 0, 0, -1, 0. Wenn ich den erwische, der das verbrochen hat. Ich bisher keine Probleme sehen können durch das Angleichen an alle anderen Komponenten. Hier dokumentiert: https://www.pragmaticcoding.ca/javafx/elements/buttons
 	       .add("-fx-border-width", borderSmallComponent.width() + "px")
 	       .add("-fx-border-color", UIUtils.toHex(borderSmallComponent.color()))
 	       .add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
-	       .add("-fx-border-insets", "0 0 -1 0") // Buttons haben in javafx per default -fx-background-insets = 0, 0, -1, 0. Ich kann es nicht ändern. Also brauchen wir das, wenn der Hintergrund nicht unter dem Border hervorlugen soll. Und diese auf 0 zu setzen macht dann in DatePickern oder so Probleme. Ich versuche jetzt mal diesen Weg!
 	       .end();
 	    
 	    css.rule(".button .text, .date-picker .arrow-button .text", "-fx-fill", UIUtils.toHex(textActiveComponentColor));
@@ -400,6 +399,7 @@ public abstract class Skin {
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
 	       .add("-fx-background-insets", "0")
 	       .add("-fx-border-radius", borderSmallComponent.arc() + "px")
+	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .add("-fx-border-width", borderSmallComponent.width() + "px")
 	       .add("-fx-border-color", UIUtils.toHex(borderSmallComponent.color()))
 	       .add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
@@ -415,8 +415,8 @@ public abstract class Skin {
 	    css.start(".combo-box-base")
 	       .add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
-	       .add("-fx-background-insets", "0")
 	       .add("-fx-border-radius", borderSmallComponent.arc() + "px")
+	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .add("-fx-border-width", borderSmallComponent.width() + "px")
 	       .add("-fx-border-color", UIUtils.toHex(borderSmallComponent.color()))
 	       .end();
@@ -474,11 +474,12 @@ public abstract class Skin {
 	       .add("-fx-text-fill", UIUtils.toHex(textActiveComponentColor))
 	       .add("-fx-alignment", "center")
 	       .add("-fx-padding", paddingCss)
-	       .add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
+	       .add("-fx-background-color", activeComponentBgColor)
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
 	       .add("-fx-border-color", UIUtils.toHex(borderSmallComponent.color()))
 	       .add("-fx-border-width", borderSmallComponent.width() + "px")
 	       .add("-fx-border-radius", borderSmallComponent.arc() + "px")
+	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .end();
 	    
 	    css.start(".text-field:disabled")
@@ -498,6 +499,7 @@ public abstract class Skin {
 	       .add("-fx-border-color", UIUtils.toHex(borderSmallComponent.color()))
 	       .add("-fx-border-width", borderSmallComponent.width() + "px")
 	       .add("-fx-border-radius", borderSmallComponent.arc() + "px")
+	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .end();
 	    
 	    css.start(".text-area .content")
@@ -572,6 +574,7 @@ public abstract class Skin {
             		.add("-fx-border-color", UIUtils.toHex(border.color()))
             		.add("-fx-border-width", border.width() + "px")
             		.add("-fx-border-radius", border.arc() + "px")
+            		.add("-fx-background-insets", border.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
             		.add("-fx-background-radius", border.arc() + "px")
             		.add("-fx-padding", padding)
             		.end();
@@ -585,11 +588,11 @@ public abstract class Skin {
 	private void addIconButtonStyles(CssBuilder css) {
 	    css.start(".my-icon-button")
 	       .add("-fx-padding", "0")
-	       .add("-fx-background-insets", "0")
 	       .add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
 	       .add("-fx-border-color", UIUtils.toHex(borderSmallComponent.color()))
 	       .add("-fx-border-width", borderSmallComponent.width() + "px")
 	       .add("-fx-border-radius", borderSmallComponent.arc() + "px")
+	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
 	       .end();
 	    
@@ -607,6 +610,7 @@ public abstract class Skin {
 	       .add("-fx-border-color", UIUtils.toHex(borderBigComponent.color()))
 	       .add("-fx-border-width", borderBigComponent.width() + "px")
 	       .add("-fx-border-radius", (borderBigComponent.arc() / 2) + "px")
+	       .add("-fx-background-insets", borderBigComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .end();
 	    
 	    // First Path (wird zuerst gezeichnet, unten). Transparent zum Raten. Mausclick wird ignoriert
@@ -853,6 +857,7 @@ public abstract class Skin {
 	       .add("-fx-border-color", borderBigComponent.color())
 	       .add("-fx-border-width", borderBigComponent.width() + "px")
 	       .add("-fx-border-radius",  borderBigComponent.arc() + "px")
+	       .add("-fx-background-insets", borderBigComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .add("-fx-background-radius", borderBigComponent.arc() + "px")
 	       .end();
 	    
@@ -980,10 +985,10 @@ public abstract class Skin {
 		   .end();
 		
 	    // === DatePicker Textfeld (geschlossen) ===
-		css.start(".date-picker .text-field")
+		/**css.start(".date-picker .text-field")
 	       .add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
 	       .add("-fx-text-fill", UIUtils.toHex(textActiveComponentColor))
-	       .end();
+	       .end();**/
 	    
 	    // === Arrow Button (Kalender-Icon) ===
 	    css.start(".date-picker .arrow-button")
@@ -1054,9 +1059,21 @@ public abstract class Skin {
 	}
 	
 	public void addSpinnerStyles(CssBuilder css) {
-		css.rule(".spinner .text-field", "-fx-pref-column-count", "3");
-
-		css.start(".spinner").add("-fx-pref-width", "-1").add("-fx-min-width", "-fx-pref-width").end();
+		
+		// Siehe Datepicker. Zur Sicherheit setzen wir in dem Container mal alles schön auf 0
+		css.start(".spinner")
+		   .add("-fx-background-color", "transparent")
+		   .add("-fx-border-color", "transparent")
+		   .add("-fx-pref-width", "-1")
+		   .add("-fx-background-insets", "0")
+		   .add("-fx-padding", "0")
+		   .add("-fx-pref-width", "-1") // Tendenziell keine Wirkung, kann wohl weg
+		   .add("-fx-min-width", "-fx-pref-width") // Tendenziell keine Wirkung, kann wohl weg
+		   .end();
+		
+		css.start(".spinner .text-field")
+			.add("-fx-pref-column-count", "5")
+			.end();
 
 		css.start(".spinner .text-field:focused")
 			.add("-fx-background-insets", "0") // Den Fokus-Border auf diesem Fake-TextField bekommt man nur so weg. Gerade keine Nerven da tiefer einzusteigen.
