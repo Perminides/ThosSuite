@@ -40,7 +40,7 @@ public class RegionPlayConfigDialog {
         
         // Mode-Auswahl (mittig oben)
         modeComboBox.getItems().addAll(RegionMode.values());
-        modeComboBox.setValue(RegionMode.CLICK_CITY_BLANK);
+        modeComboBox.setValue(RegionMode.ELIMINATION_REGION);
         modeComboBox.setOnAction(_ -> updateCheckBoxStates());        
         mainContent.getChildren().add(modeComboBox);
         

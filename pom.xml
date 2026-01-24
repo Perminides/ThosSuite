@@ -13,19 +13,12 @@
 		<maven.compiler.target>25</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-		<flatlaf.version>3.6.1</flatlaf.version>
 		<jackson.version>2.20.0</jackson.version>
 		<sqlite.version>3.45.1.0</sqlite.version>
 		<javafx.version>25</javafx.version>
 	</properties>
 
 	<dependencies>
-
-		<dependency>
-			<groupId>com.formdev</groupId>
-			<artifactId>flatlaf</artifactId>
-			<version>${flatlaf.version}</version>
-		</dependency>
 
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -165,8 +158,9 @@
 						<addModule>javafx.controls</addModule>
 						<addModule>javafx.fxml</addModule>
 						<addModule>javafx.graphics</addModule>
-						<addModule>javafx.swing</addModule>
 						<addModule>java.sql</addModule>
+						<addModule>java.net.http</addModule>
+						<addModule>jdk.localedata</addModule> <!-- Vollständige Locale-Daten. Ohne dieses Modul verwendet Java minimale Locale-Daten mit ',' als Tausendertrenner für de_DE, was in Deutschland unüblich ist. Mit jdk.localedata wird der übliche Punkt '.' verwendet. --> 
 					</addModules>
 
 					<modulePaths>

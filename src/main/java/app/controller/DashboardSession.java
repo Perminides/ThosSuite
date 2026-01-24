@@ -1,5 +1,6 @@
 package app.controller;
 
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -8,6 +9,7 @@ import app.data.Deck;
 import app.data.SessionSwitchStrategy;
 import app.fitbit.FitbitDashboardService;
 import app.ui.skin.SkinService;
+import app.util.Log;
 import javafx.geometry.Pos;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.FlowPane;
@@ -36,7 +38,7 @@ public class DashboardSession implements Session {
         int stepsNeeded = fitbitService.calculateRemainingDailySteps(AppClock.TODAY);
         
         // Mit Tausenderpunkt formatieren
-        String formattedSteps = NumberFormat.getInstance(Locale.GERMAN).format(stepsNeeded);
+        String formattedSteps = NumberFormat.getInstance(Locale.GERMANY).format(stepsNeeded);
         
         // Tile erstellen
         view.getChildren().add(

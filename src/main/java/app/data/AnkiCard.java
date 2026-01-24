@@ -1,6 +1,5 @@
 package app.data;
 
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -8,6 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javafx.geometry.Point2D;
 
 /**
  * Aktueller Ansatz: Jede Karte gibt es genau 1x im Speicher!
@@ -18,12 +19,12 @@ public class AnkiCard {
     
     public record AnswerOption(String text, boolean correct) {}
     public record Image(String file) implements Step {}
-    public record ClickZone(String file, Point point) implements Step {}
+    public record ClickZone(String file, Point2D point) implements Step {}
     public record ClickMapElements(Set<String> mandatory, Set<String> optional) implements Step {}
     public record Output(String text) implements Step {}
     public record Input(List<String> parts) implements Step {}
     public record MC(Set<AnswerOption> options) implements Step {}
-    public record MarkZone(String file, Point point) implements Step {}
+    public record MarkZone(String file, Point2D point) implements Step {}
     public record MarkMapElements(Set<String> left, Set<String> right) implements Step {} // Momentan ist right immer leer. Vielleicht will ich später aber auch mal die optionalen Shapes berücksichtigen...
     public record Pause() implements Step {}
 

@@ -10,6 +10,7 @@ import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
@@ -50,7 +51,7 @@ public class ImageMapPane extends StackPane {
 	private static final PseudoClass MARKED = PseudoClass.getPseudoClass("marked");
 
 	private final GeoMap map;
-	private final java.awt.Rectangle overlayContentBounds;
+	private final Rectangle2D overlayContentBounds;
 
 	// UI Nodes
 	private final Pane viewport;
@@ -74,7 +75,7 @@ public class ImageMapPane extends StackPane {
 	// Mini-Map Config
 	private static final int MINI_MAP_INSET = 10;
 
-	public ImageMapPane(GeoMap map, int width, int height, BorderParams panelBorder, java.awt.Rectangle overlayContentBounds) {
+	public ImageMapPane(GeoMap map, double width, double height, BorderParams panelBorder, Rectangle2D overlayContentBounds) {
 		this.getStyleClass().add("my-image-map-pane");
 		this.map = map;
 		this.overlayContentBounds = overlayContentBounds;
@@ -183,11 +184,11 @@ public class ImageMapPane extends StackPane {
 	        return;
 	    }
 
-	    double contentX = e.getX() - overlayContentBounds.x;
-	    double contentY = e.getY() - overlayContentBounds.y;
+	    double contentX = e.getX() - overlayContentBounds.getMinX();
+	    double contentY = e.getY() - overlayContentBounds.getMinY();
 
-	    double scaleX = mainImageView.getImage().getWidth() / overlayContentBounds.width;
-	    double scaleY = mainImageView.getImage().getHeight() / overlayContentBounds.height;
+	    double scaleX = mainImageView.getImage().getWidth() / overlayContentBounds.getWidth();
+	    double scaleY = mainImageView.getImage().getHeight() / overlayContentBounds.getHeight();
 
 	    double mainMapX = contentX * scaleX;
 	    double mainMapY = contentY * scaleY;
