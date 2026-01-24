@@ -54,7 +54,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     private MapElementListener listener;
     private boolean isInteractive = false; // Benötigt für den ShapeMapState
 
-    public ShapeMapPane(GeoMap map, int targetHeight) {
+    public ShapeMapPane(GeoMap map, double targetHeight) {
     	this.getStyleClass().add("my-shape-map-pane");
     	this.contentGroup = new Group();        
         map.getShapes().stream()

@@ -1,7 +1,6 @@
 package app.ui.skin.params;
 
-import java.awt.Insets;
-
+import javafx.geometry.Insets;
 import javafx.scene.paint.Color;
 
 public record BorderParams (

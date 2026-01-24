@@ -1,6 +1,5 @@
 package app.ui;
 
-import java.awt.Dimension;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -10,6 +9,7 @@ import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import app.util.Log;
 import javafx.collections.ObservableList;
+import javafx.geometry.Dimension2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -92,10 +92,10 @@ public class MainWindow {
         Skin skin = SkinService.get();
         
         // A. Sizing unserer contentPane
-        Dimension size = skin.getContentSize();
-        contentPane.setPrefSize(size.width, size.height);
-        contentPane.setMinSize(size.width, size.height);
-        contentPane.setMaxSize(size.width, size.height);
+        Dimension2D size = skin.getContentSize();
+        contentPane.setPrefSize(size.getWidth(), size.getHeight());
+        contentPane.setMinSize(size.getWidth(), size.getHeight());
+        contentPane.setMaxSize(size.getWidth(), size.getHeight());
         
         // B. Styling
         skin.styleScene(stage.getScene());

@@ -1,8 +1,5 @@
 package app.ui.skin;
 
-import java.awt.Dimension;
-import java.awt.Insets;
-import java.awt.Rectangle;
 import java.io.File;
 import java.io.FileInputStream;
 import java.lang.reflect.Field;
@@ -29,6 +26,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.collections.ObservableList;
+import javafx.geometry.Dimension2D;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
@@ -228,46 +227,46 @@ public abstract class Skin {
 	protected String esWallpaperName;
 	protected String csWallpaperName;
 
-	protected Rectangle mcSessionQuestionPanel;
-	protected Rectangle mcSessionImagePanel;
-	protected Rectangle mcSessionMcPanel;
-	protected Rectangle mcSessionProgressPanel;
-	protected Rectangle mcSessionHistoryPanel;
-	protected Rectangle mcSessionBackButton;
-	protected Rectangle worldSessionMapPanel;
-	protected Rectangle worldSessionQuestionPanel;
-	protected Rectangle worldSessionTextInputPanel;
-	protected Rectangle worldSessionImagePanel;
-	protected Rectangle worldSessionMcPanel;
-	protected Rectangle worldSessionProgressPanel;
-	protected Rectangle worldSessionHistoryPanel;
-	protected Rectangle worldSessionBackButton;
-	protected Rectangle germanySessionMapPanel;
-	protected Rectangle germanySessionQuestionPanel;
-	protected Rectangle germanySessionTextInputPanel;
-	protected Rectangle germanySessionImagePanel;
-	protected Rectangle germanySessionMcPanel;
-	protected Rectangle germanySessionProgressPanel;
-	protected Rectangle germanySessionHistoryPanel;
-	protected Rectangle germanySessionBackButton;
-	protected Rectangle regionSessionQuestionPanel;
-	protected Rectangle regionSessionMapPanel;
-	protected Rectangle regionSessionTextInputPanel;
-	protected Rectangle esSessionQuestionPanel;
-	protected Rectangle esSessionMapPanel;
-	protected Rectangle esSessionTextInputPanel;
-	protected Rectangle itSessionQuestionPanel;
-	protected Rectangle itSessionMapPanel;
-	protected Rectangle itSessionTextInputPanel;
-	protected Rectangle usSessionQuestionPanel;
-	protected Rectangle usSessionMapPanel;
-	protected Rectangle usSessionTextInputPanel;
-	protected Rectangle csSessionQuestionPanel;
-	protected Rectangle csSessionMapPanel;
-	protected Rectangle csSessionTextInputPanel;
-	protected Rectangle beSessionQuestionPanel;
-	protected Rectangle beSessionMapPanel;
-	protected Rectangle beSessionTextInputPanel;
+	protected Rectangle2D mcSessionQuestionPanel;
+	protected Rectangle2D mcSessionImagePanel;
+	protected Rectangle2D mcSessionMcPanel;
+	protected Rectangle2D mcSessionProgressPanel;
+	protected Rectangle2D mcSessionHistoryPanel;
+	protected Rectangle2D mcSessionBackButton;
+	protected Rectangle2D worldSessionMapPanel;
+	protected Rectangle2D worldSessionQuestionPanel;
+	protected Rectangle2D worldSessionTextInputPanel;
+	protected Rectangle2D worldSessionImagePanel;
+	protected Rectangle2D worldSessionMcPanel;
+	protected Rectangle2D worldSessionProgressPanel;
+	protected Rectangle2D worldSessionHistoryPanel;
+	protected Rectangle2D worldSessionBackButton;
+	protected Rectangle2D germanySessionMapPanel;
+	protected Rectangle2D germanySessionQuestionPanel;
+	protected Rectangle2D germanySessionTextInputPanel;
+	protected Rectangle2D germanySessionImagePanel;
+	protected Rectangle2D germanySessionMcPanel;
+	protected Rectangle2D germanySessionProgressPanel;
+	protected Rectangle2D germanySessionHistoryPanel;
+	protected Rectangle2D germanySessionBackButton;
+	protected Rectangle2D regionSessionQuestionPanel;
+	protected Rectangle2D regionSessionMapPanel;
+	protected Rectangle2D regionSessionTextInputPanel;
+	protected Rectangle2D esSessionQuestionPanel;
+	protected Rectangle2D esSessionMapPanel;
+	protected Rectangle2D esSessionTextInputPanel;
+	protected Rectangle2D itSessionQuestionPanel;
+	protected Rectangle2D itSessionMapPanel;
+	protected Rectangle2D itSessionTextInputPanel;
+	protected Rectangle2D usSessionQuestionPanel;
+	protected Rectangle2D usSessionMapPanel;
+	protected Rectangle2D usSessionTextInputPanel;
+	protected Rectangle2D csSessionQuestionPanel;
+	protected Rectangle2D csSessionMapPanel;
+	protected Rectangle2D csSessionTextInputPanel;
+	protected Rectangle2D beSessionQuestionPanel;
+	protected Rectangle2D beSessionMapPanel;
+	protected Rectangle2D beSessionTextInputPanel;
 
 	protected Integer verticalGapMC;
 
@@ -277,8 +276,8 @@ public abstract class Skin {
 	 * 
 	 * @return
 	 */
-	public Dimension getContentSize() {
-		return new Dimension(1910, 1000);
+	public Dimension2D getContentSize() {
+		return new Dimension2D(1910, 1000);
 	}
 	
 	// endregion
@@ -468,7 +467,7 @@ public abstract class Skin {
 	
 	private void addTextFieldStyles(CssBuilder css) {
 	    Insets i = borderSmallComponent.insets();
-	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", i.top, i.right, i.bottom, i.left);
+	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", (int)i.getTop(), (int)i.getRight(), (int)i.getBottom(), (int)i.getLeft());
 	    
 	  css.start(".text-field")
 	       .add("-fx-text-fill", UIUtils.toHex(textActiveComponentColor))
@@ -564,8 +563,8 @@ public abstract class Skin {
             Color bg = (Color) getFieldValue(fieldName);
             
             BorderParams border = borderMediumComponent;
-            java.awt.Insets insets = border.insets();
-            String padding = String.format("%dpx %dpx %dpx %dpx", insets.top, insets.right, insets.bottom, insets.left);
+            Insets insets = border.insets();
+            String padding = String.format("%dpx %dpx %dpx %dpx", (int)insets.getTop(), (int)insets.getRight(), (int)insets.getBottom(), (int)insets.getLeft());
             
             // 1. Container Styles (StackPane)
             // Background, Border, Padding etc. gehören auf den Container
@@ -744,9 +743,9 @@ public abstract class Skin {
 
 	private void addMultipleChoiceStyles(CssBuilder builder) {
 	    // Padding dynamisch aus BorderParams
-	    java.awt.Insets mcInsets = borderSmallComponent.insets();
+	    Insets mcInsets = borderSmallComponent.insets();
 	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", 
-	        mcInsets.top, mcInsets.right, mcInsets.bottom, mcInsets.left);
+	    		(int)mcInsets.getTop(), (int)mcInsets.getRight(), (int)mcInsets.getBottom(), (int)mcInsets.getLeft());
 	    
 	    // MC Buttons
 	    builder.rule(".my-mc-button", "-fx-padding", paddingCss);
@@ -772,10 +771,10 @@ public abstract class Skin {
 	    
 	    // Padding für mehrzeilige Buttons berechnen (nur 1px oben/unten, damit 2 Zeilen passen)
 	    // Horizontal lassen wir das normale Padding (insets.right/left), damit es optisch gleich aussieht
-	    java.awt.Insets i = borderSmallComponent.insets();
+	    Insets i = borderSmallComponent.insets();
 	    double lineSpacingSqueezed = font.getSize() * -0.4;
 	    double lineSpacingTiny = smallFont.getSize() * -0.4;
-	    String squeezedPadding = String.format("0px %dpx 0px %dpx", i.right, i.left);
+	    String squeezedPadding = String.format("0px %dpx 0px %dpx", (int)i.getRight(), (int)i.getLeft());
 
 	    // ZWISCHENSTUFE: Squeezed (Normaler Font, aber extrem kompakt)
 	    builder.start(".my-mc-button:squeezed")
@@ -1237,14 +1236,14 @@ public abstract class Skin {
 	 * @return
 	 */
 	public TextField createInputField(Deck deck) {
-	    Rectangle bounds = (Rectangle) getFieldValue(deck.getMapName() + "SessionTextInputPanel");
+	    Rectangle2D bounds = (Rectangle2D) getFieldValue(deck.getMapName() + "SessionTextInputPanel");
 	    if (bounds == null)
-			bounds = (Rectangle) getFieldValue(deck.getCategory().toString() + "SessionTextInputPanel");
+			bounds = (Rectangle2D) getFieldValue(deck.getCategory().toString() + "SessionTextInputPanel");
 	    
 	    TextField textField = new TextField();
-	    textField.setLayoutX(bounds.x);
-	    textField.setLayoutY(bounds.y);
-	    textField.setPrefWidth(bounds.width);
+	    textField.setLayoutX(bounds.getMinX());
+	    textField.setLayoutY(bounds.getMinY());
+	    textField.setPrefWidth(bounds.getWidth());
 	    // Höhe wird von Font + Padding bestimmt
 	    
 	    return textField;
@@ -1253,9 +1252,9 @@ public abstract class Skin {
 	// Rückgabetyp angepasst
 	public ImagePane createImageComponent(Deck type) {
 	    // 1. Config laden (wie vorher)
-	    java.awt.Rectangle bounds = (java.awt.Rectangle) getFieldValue(type.getId() + "SessionImagePanel");
+	    Rectangle2D bounds = (Rectangle2D) getFieldValue(type.getId() + "SessionImagePanel");
 	    if (bounds == null) 
-	         bounds = (java.awt.Rectangle) getFieldValue(type.getCategory().toString() + "SessionImagePanel");
+	         bounds = (Rectangle2D) getFieldValue(type.getCategory().toString() + "SessionImagePanel");
 
 	    // 2. Parameter für Konstruktor vorbereiten
 	    // Wir holen den Radius direkt aus der Config, da Rectangles ihn im Konstruktor wollen
@@ -1264,9 +1263,9 @@ public abstract class Skin {
 	    // Wenn borderBigComponent.arc() = 20 ist (Radius), braucht Rectangle 40.
 	    
 	    // Instanz erstellen
-	    var pane = new ImagePane(bounds.width, bounds.height, arc);
-	    pane.setLayoutX(bounds.x);
-	    pane.setLayoutY(bounds.y);
+	    var pane = new ImagePane(bounds.getWidth(), bounds.getHeight(), arc);
+	    pane.setLayoutX(bounds.getMinX());
+	    pane.setLayoutY(bounds.getMinY());
 
 	    // 3. Styling ist jetzt in der Klasse via "my-image-background-layer" vorbereitet.
 	    // Wir müssen nur sicherstellen, dass die CSS-Regeln stimmen.
@@ -1276,17 +1275,17 @@ public abstract class Skin {
 	
 	// --- Bereinigte Factory-Methode ---
 	public SessionInfoLabel createSessionInfoLabel(Deck deck, TextLabelType labelType) {
-        Rectangle bounds = (Rectangle) getFieldValue(deck.getMapName() + "Session" + labelType + "Panel");
+        Rectangle2D bounds = (Rectangle2D) getFieldValue(deck.getMapName() + "Session" + labelType + "Panel");
         if (bounds == null)
-            bounds = (Rectangle) getFieldValue(deck.getCategory().toString() + "Session" + labelType + "Panel");
+            bounds = (Rectangle2D) getFieldValue(deck.getCategory().toString() + "Session" + labelType + "Panel");
         
         SessionInfoLabel label = new SessionInfoLabel("");
-        label.setLayoutX(bounds.x);
-        label.setLayoutY(bounds.y);
+        label.setLayoutX(bounds.getMinX());
+        label.setLayoutY(bounds.getMinY());
         
         // StackPane braucht Breite & Höhe für Layout/Zentrierung
-        label.setFixedWidth(bounds.width); 
-        label.setFixedHeight(bounds.height); 
+        label.setFixedWidth(bounds.getWidth()); 
+        label.setFixedHeight(bounds.getHeight()); 
         
         // ID setzen, damit das CSS oben greift
         label.setId(labelType.toString() + "Label");
@@ -1296,14 +1295,14 @@ public abstract class Skin {
 
 	public MultipleChoicePane createMultipleChoicePane(Deck deck) {
         // 1. Bounds holen
-        Rectangle bounds = (Rectangle) getFieldValue(deck.getId() + "SessionMcPanel");
+        Rectangle2D bounds = (Rectangle2D) getFieldValue(deck.getId() + "SessionMcPanel");
         if (bounds == null) 
-            bounds = (Rectangle) getFieldValue(deck.getCategory().toString() + "SessionMcPanel");
+            bounds = (Rectangle2D) getFieldValue(deck.getCategory().toString() + "SessionMcPanel");
         
         // 2. Padding und Border Werte holen
-        java.awt.Insets insets = borderSmallComponent.insets();
-        double verticalPadding = insets.top + insets.bottom;
-        double horizontalPadding = insets.left + insets.right;
+        Insets insets = borderSmallComponent.insets();
+        double verticalPadding = insets.getTop() + insets.getBottom();
+        double horizontalPadding = insets.getLeft() + insets.getRight();
         double borderWidth = borderSmallComponent.width();
         
         double horizontalOverhead = horizontalPadding + (borderWidth * 2);
@@ -1323,7 +1322,7 @@ public abstract class Skin {
 
         // 5. Pane erstellen mit neuen Parametern0
         MultipleChoicePane result = new MultipleChoicePane(
-            bounds.width, 
+            bounds.getWidth(), 
             fixedButtonHeight, 
             horizontalOverhead,
             borderWidth,
@@ -1332,8 +1331,8 @@ public abstract class Skin {
             lineSpacingSqueezed // NEU übergeben
         );
         
-        result.setLayoutX(bounds.x);
-        result.setLayoutY(bounds.y);
+        result.setLayoutX(bounds.getMinX());
+        result.setLayoutY(bounds.getMinY());
         
         return result;
     }
@@ -1355,10 +1354,10 @@ public abstract class Skin {
 	    button.getStyleClass().add("my-icon-button");
 	    
 	    // Bounds holen
-	    Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionBackButton");
-	    button.setPrefSize(bounds.width, bounds.height);
-	    button.setLayoutX(bounds.x);
-	    button.setLayoutY(bounds.y);
+	    Rectangle2D bounds = (Rectangle2D) getFieldValue(type.getId() + "SessionBackButton");
+	    button.setPrefSize(bounds.getWidth(), bounds.getHeight());
+	    button.setLayoutX(bounds.getMinX());
+	    button.setLayoutY(bounds.getMinY());
 	    
 	    return button;
 	}
@@ -1597,27 +1596,27 @@ public abstract class Skin {
         GeoMap map = MapService.getInstance().getMap(deck);
         
         // 2. Bounds via Reflection holen (AWT Rectangle)
-        Rectangle bounds = (Rectangle) getFieldValue(deck.getMapName() + "SessionMapPanel");
+        Rectangle2D bounds = (Rectangle2D) getFieldValue(deck.getMapName() + "SessionMapPanel");
         if (bounds == null) 
-            bounds = (Rectangle) getFieldValue(deck.getCategory().toString() + "SessionMapPanel");
+            bounds = (Rectangle2D) getFieldValue(deck.getCategory().toString() + "SessionMapPanel");
             
         // 3. Komponente erstellen (Skin bestimmt die Ziel-Höhe für den Zoom!)
-        ShapeMapPane pane = new ShapeMapPane(map, bounds.height);
+        ShapeMapPane pane = new ShapeMapPane(map, bounds.getHeight());
         
         // 4. Positionieren (Absolut)
-        pane.setLayoutX(bounds.x);
-        pane.setLayoutY(bounds.y);
+        pane.setLayoutX(bounds.getMinX());
+        pane.setLayoutY(bounds.getMinY());
         
         return pane;
     }
 
 	public ImageMapPane createImageMapPanel(Deck type) {
 		GeoMap map = MapService.getInstance().getMap(type);
-		java.awt.Rectangle bounds = (Rectangle) getFieldValue(type.getId() + "SessionMapPanel");
+		Rectangle2D bounds = (Rectangle2D) getFieldValue(type.getId() + "SessionMapPanel");
 		BorderParams borderForRectangle = new BorderParams(borderBigComponent.width(), borderBigComponent.color(), borderBigComponent.insets(), borderBigComponent.arc()*2, borderBigComponent.focusWidth(), borderBigComponent.focusedColor(), borderBigComponent.disabledColor());
-		ImageMapPane result = new ImageMapPane(map, bounds.width, bounds.height, borderForRectangle, new Rectangle(11, 11, 410, 254));
-		result.setLayoutX(bounds.x);
-		result.setLayoutY(bounds.y);
+		ImageMapPane result = new ImageMapPane(map, bounds.getWidth(), bounds.getHeight(), borderForRectangle, new Rectangle2D(11, 11, 410, 254));
+		result.setLayoutX(bounds.getMinX());
+		result.setLayoutY(bounds.getMinY());
 		return result;
 	}
 	
@@ -1742,7 +1741,7 @@ public abstract class Skin {
 						field.set(this, parseBorderParams(value));
 					} else if (field.getType() == Integer.class || field.getType() == int.class) {
 						field.set(this, Integer.parseInt(value));
-					} else if (field.getType() == Rectangle.class) {
+					} else if (field.getType() == Rectangle2D.class) {
 						field.set(this, parseRectangle(value));
 					} else if (field.getType() == String.class) {
 						field.set(this, value);
@@ -1804,10 +1803,10 @@ public abstract class Skin {
 			throw new RuntimeException("Das Borderparams-Format kenne ich nicht: " + value);
 	}
 
-	protected Rectangle parseRectangle(String value) {
+	protected Rectangle2D parseRectangle(String value) {
 		String[] values = value.split(",");
 		if (values.length == 4)
-			return new Rectangle(Integer.parseInt(values[0]), Integer.parseInt(values[1]), Integer.parseInt(values[2]), Integer.parseInt(values[3]));
+			return new Rectangle2D(Integer.parseInt(values[0]), Integer.parseInt(values[1]), Integer.parseInt(values[2]), Integer.parseInt(values[3]));
 		else
 			throw new RuntimeException("Das Bound-Format kenne ich nicht: " + value);
 	}
