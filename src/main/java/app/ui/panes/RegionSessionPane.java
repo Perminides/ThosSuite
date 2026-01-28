@@ -34,6 +34,7 @@ public class RegionSessionPane extends Pane {
         karte.setListener(id -> mapElementClicked(id));
     	getChildren().add(karte);
     	
+    	// !Sofoert: Hier wäre allerdings CENTER schon angesagt
     	if (questionAreaVisible) {
         	questionArea = skin.createSessionInfoLabel(deckType, Skin.TextLabelType.QUESTION);
         	questionArea.setText(""); // Initial leer

@@ -96,12 +96,20 @@ public class ImageMapPane extends StackPane {
 		// 3. Viewport mit Clipping
 		viewport = new Pane(contentGroup); // Einfach weglassen? → Eine StackPane ist ein Layout-Manager. Sie versucht zwanghaft, ihre Kinder (Children) zu positionieren – standardmäßig zentriert in der Mitte. Wenn du später versuchst, deine contentGroup (die Karte) zu verschieben (Panning/Verschieben mit der Maus), kämpfst du gegen die StackPane. Eine reine Pane macht kein Layout-Management. Sie sagt: "Setz deine Kinder hin, wo du willst (x, y), mir egal".
 		viewport.setId("viewport");
-		//viewport.setPrefSize(width, height); // Unnötig
 
-		Rectangle clipRect = new Rectangle(width, height);
+		/**
+		 * Überall wo Border-Radius + Border-Width gesetzt wird, direkt danach .add("-fx-background-insets", borderWidth + "px") hinzufügen
+		 * Das hier ist die Clipping-Variante davon :)
+		 */
+		Rectangle clipRect = new Rectangle(panelBorder.width(),
+				panelBorder.width(), // y
+				width - (2 * panelBorder.width()),
+				height - (2 * panelBorder.width())
+		);
 		clipRect.setArcWidth(panelBorder.arc());
 		clipRect.setArcHeight(panelBorder.arc());
 		clipRect.setId("clipRect");
+
 		viewport.setClip(clipRect);
 
 		// 4. Mini-Map

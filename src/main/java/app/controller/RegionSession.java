@@ -119,7 +119,7 @@ public class RegionSession implements Session {
 				stats.incrementWrongCount();
 			service.savePlayedCards(spec, stats, correct, wrongId);
 			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Ausblick", getUntilString(stats.getDueDate()), false, false);
-	    	Optional<ButtonType> result = alert.showAndWait();
+	    	alert.showAndWait();
 		}
 		Log.info(this, "RegionsSession " + spec.getDeckType().getDisplayName() + " (play = " + spec.isPlaySession() + ") beendet.");
 		controller.sessionEnded();
@@ -146,6 +146,7 @@ public class RegionSession implements Session {
 			throw new RuntimeException("Damit habe ich nun so gar nicht gerechnet. Wieso sollte ich eine unfertige Regionssession speichern?");
 	}
 	
+	// !Sofort: Wir sehen uns in 1 Jahren wieder????
 	private String getUntilString(LocalDate date) {
 		long dayDiff = AppClock.TODAY.until(date, ChronoUnit.DAYS);
 		long weekDiff = AppClock.TODAY.until(date, ChronoUnit.WEEKS);

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import app.alc.AlcoholStartupService;
 import app.data.AnkiCard;
 import app.data.AnkiDeckService;
 import app.data.AnkiLearnSessionInfo;
@@ -105,6 +106,9 @@ public class Controller{
 			FitbitUpdateService fitbitService = new FitbitUpdateService(fitbitDataFetcher);
 			fitbitService.showDialogsAndSave(null);
 		}
+		
+	    AlcoholStartupService alcoholService = new AlcoholStartupService();
+	    alcoholService.checkAndPrompt();
 
 		// Hier kommen später weitere Post-Tasks (tmdb etc.)
 	}
@@ -223,6 +227,10 @@ public class Controller{
 	            currentSession.start();
 	        } else if ("Fitbit".equals(item)) {
 	            currentSession = new FitbitSession();
+	            mainWindow.showPane(currentSession.getView());
+	            currentSession.start();
+	        }  else if ("Alkohol".equals(item)) {
+	            currentSession = new AlcoholSession();
 	            mainWindow.showPane(currentSession.getView());
 	            currentSession.start();
 	        }

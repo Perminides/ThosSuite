@@ -1,4 +1,4 @@
-package app.data;
+package app.fitbit;
 
 import java.time.LocalDate;
 
