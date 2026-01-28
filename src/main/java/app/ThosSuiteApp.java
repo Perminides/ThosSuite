@@ -18,6 +18,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -106,25 +107,52 @@ public class ThosSuiteApp extends Application {
                 loadFonts();
 
                 // C) Zurück in den UI-Thread
-                Platform.runLater(() -> {
-                    try {
-                        // Pre-Tasks (Splash noch sichtbar)
-                    	initializeMainWindow(primaryStage);
-                        controller = new Controller(mainWindow);
-                        controller.runPreTasks();
-                        
-                        splashStage.close(); // Splash endgültig weg
-                        
-                        // Post-Tasks (Splash weg, MainWindow noch unsichtbar)
-                        controller.runPostTasks();
-                        
-                        mainWindow.show();
-                        mainWindow.centerOnScreen();
-                    } catch (Exception e) {
-                        Log.error(ThosSuiteApp.class, "Fehler beim UI-Start", e);
-                        throw new RuntimeException(e);
-                    }
-                });
+				Platform.runLater(() -> {
+					try {
+						// Pre-Tasks (Splash noch sichtbar)
+						initializeMainWindow(primaryStage);
+						primaryStage.setOpacity(0); // MainWindow unsichtbar starten
+						controller = new Controller(mainWindow);
+						controller.runPreTasks();
+
+						// MainWindow zeigen (aber unsichtbar via opacity=0)
+						// Grund: JavaFX rendert Fenster BEVOR CSS vollständig angewendet ist.
+						// Bei komplexem CSS (hunderte Zeilen, dutzende Selektoren) führt das zu
+						// einem sichtbaren "White Flash" - das Fenster erscheint erst weiß, dann
+						// mit Styling. Je komplexer das CSS und das Fenster, desto länger dauert die Anwendung,
+						// desto deutlicher der Flash.
+						//
+						// Lösung: Fenster mit opacity=0 anzeigen, 500ms warten (CSS hat Zeit sich
+						// zu setzen), dann opacity=1. Der Splash bleibt währenddessen sichtbar,
+						// so dass der User keine leere Fläche sieht.
+						mainWindow.show();
+						mainWindow.centerOnScreen();
+
+						// 500ms warten, damit CSS vollständig angewendet wird
+						javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(500));
+						pause.setOnFinished(e -> {
+							splashStage.close();
+
+							// Platform.runLater nötig, weil showAndWait() nicht während einer
+							// Animation aufgerufen werden darf (IllegalStateException).
+							// Das runLater verschiebt die Ausführung in den nächsten Frame,
+							// wo die Animation bereits beendet ist.
+							Platform.runLater(() -> {
+								controller.runPostTasks(); // Zeigt Startup-Dialoge (Fitbit, Alkohol)
+								primaryStage.setOpacity(1); // MainWindow wird NACH den Dialogen sichtbar
+								// Nochmal runLater für toFront - kommt dann garantiert nach allem
+							    Platform.runLater(() -> {
+							        primaryStage.toFront();
+							    });
+							});
+						});
+						pause.play();
+
+					} catch (Exception e) {
+						Log.error(ThosSuiteApp.class, "Fehler beim UI-Start", e);
+						throw new RuntimeException(e);
+					}
+				});
 
             } catch (Exception e) {
                 e.printStackTrace();

@@ -157,18 +157,18 @@ public class FitbitRepository {
     }
     
     /**
-     * Lädt die letzten N Wochen mit ihren Punkten aus der Datenbank.
-     * Startet ab der neuesten Woche in der DB und geht N Wochen zurück.
+     * Lädt alle Wochen im angegebenen Zeitraum mit ihren Punkten aus der Datenbank.
      * 
-     * @param n Anzahl der Wochen
+     * @param from Start-Datum (sollte ein Montag sein, wird aber nicht geprüft)
+     * @param to End-Datum (sollte ein Sonntag sein, wird aber nicht geprüft)
      * @return Liste der Wochen, aufsteigend sortiert (älteste zuerst)
      */
-    public List<FitbitWeekData> getLastNWeeks(int n) {
+    public List<FitbitWeekData> getWeeksInRange(LocalDate from, LocalDate to) {
         String sql = """
             SELECT week_start, points 
             FROM fitbit_weekly_points 
-            ORDER BY week_start DESC 
-            LIMIT ?
+            WHERE week_start >= ? AND week_start <= ?
+            ORDER BY week_start ASC
             """;
         
         List<FitbitWeekData> result = new ArrayList<>();
@@ -176,7 +176,8 @@ public class FitbitRepository {
         try (Connection conn = DB.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setInt(1, n);
+            stmt.setString(1, from.toString());
+            stmt.setString(2, to.toString());
             
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -185,10 +186,7 @@ public class FitbitRepository {
                 result.add(new FitbitWeekData(weekStart, points));
             }
             
-            // Umdrehen: Älteste zuerst (für chronologische Darstellung)
-            result.sort((a, b) -> a.weekStart().compareTo(b.weekStart()));
-            
-            Log.debug(this, "Geladene Wochen: " + result.size());
+            Log.debug(this, "Geladene Wochen im Zeitraum " + from + " bis " + to + ": " + result.size());
             return result;
             
         } catch (SQLException e) {

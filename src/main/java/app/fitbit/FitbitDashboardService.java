@@ -2,7 +2,9 @@ package app.fitbit;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.TemporalUnit;
 import java.util.List;
 
 import app.data.persistence.FitbitRepository;
@@ -64,7 +66,7 @@ public class FitbitDashboardService {
      * @return Anzahl der aufeinanderfolgenden grünen Wochen (ab der letzten vollständigen Woche)
      */
     public int calculateCurrentStreak(LocalDate today) {
-        List<FitbitWeekData> weeks = repository.getLastNWeeks(9999);
+        List<FitbitWeekData> weeks = repository.getWeeksInRange(LocalDate.now().minus(9999, ChronoUnit.WEEKS), LocalDate.now());
         
         if (weeks.isEmpty()) {
             return 0;
@@ -107,7 +109,7 @@ public class FitbitDashboardService {
      * @return Die maximale Anzahl aufeinanderfolgender grüner Wochen (All-Time-Rekord)
      */
     public int calculateRecordStreak() {
-        List<FitbitWeekData> weeks = repository.getLastNWeeks(9999);
+        List<FitbitWeekData> weeks = repository.getWeeksInRange(LocalDate.now().minus(9999, ChronoUnit.WEEKS), LocalDate.now());
         
         if (weeks.isEmpty()) {
             return 0;

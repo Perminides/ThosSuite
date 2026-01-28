@@ -97,10 +97,7 @@ public class AlcoholStartupService {
         );
         
         // Ergebnis verarbeiten
-        System.out.println(">>> BEFORE showAndWait: " + System.currentTimeMillis());
-        System.out.println(">>> Alert opacity before showAndWait: " + alert.getDialogPane().getScene().getWindow().getOpacity());
         Optional<ButtonType> result = alert.showAndWait();
-        System.out.println(">>> AFTER showAndWait: " + System.currentTimeMillis());
         
         if (result.isEmpty() || result.get() == btnCancel) {
             Log.info(this, "Alkohol-Eingabe abgebrochen");

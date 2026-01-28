@@ -1,9 +1,10 @@
 package app.controller;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
-import app.config.Config;
 import app.data.Deck;
 import app.data.SessionSwitchStrategy;
 import app.data.persistence.FitbitRepository;
@@ -11,7 +12,6 @@ import app.fitbit.FitbitGoalHistoryEntry;
 import app.fitbit.FitbitWeekData;
 import app.ui.skin.SkinService;
 import app.util.Log;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
@@ -21,9 +21,16 @@ import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.Spinner;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Background;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.layout.StackPane;
 
 /**
@@ -44,20 +51,23 @@ public class FitbitSession implements Session {
     private static final PseudoClass FAILED = PseudoClass.getPseudoClass("failed");
     
     private final FitbitRepository repository;
-    private final int weeksToShow;
     
     private StackPane view;
+    private DatePicker fromPicker;
+    private DatePicker toPicker;
+    private Spinner<Integer> gapSpinner;
+    private BarChart<String, Number> barChart;
+    private LineChart<String, Number> lineChart;
 
     public FitbitSession() {
         this.repository = new FitbitRepository();
-        this.weeksToShow = Config.get("fitbitWeeksToShow") == null ? 30 : Integer.parseInt(Config.get("fitbitWeeksToShow")); // Default: 30 Wochen
     }
 
     @Override
     public Pane getView() {
         if (view == null) {
-        	view = new StackPane();
-        	view.getStyleClass().add("chart-root");
+            view = new StackPane();
+            view.getStyleClass().add("chart-root");
             buildView();
         }
         return view;
@@ -70,8 +80,7 @@ public class FitbitSession implements Session {
 
     @Override
     public void refresh() {
-    	view.setBackground(new Background(SkinService.get().getBackgroundImage(Deck.WORLD_CARDS)));
-        //view = buildView();
+        buildView();
     }
 
     @Override
@@ -81,41 +90,103 @@ public class FitbitSession implements Session {
 
     @Override
     public void escClicked() {
-        // Keine Aktion - Session kann einfach verlassen werden
+        // Keine Aktion
     }
-    
-    private StackPane buildView() {
-    	view.getChildren().clear(); // WICHTIG: Alte Inhalte entfernen
-    	
-        // 1. Daten laden
-        List<FitbitWeekData> weeks = repository.getLastNWeeks(weeksToShow);
+
+    @Override
+    public void closeSilent(boolean save) {
+        // Nichts zu speichern
+    }
+
+    private void buildView() {
+        view.getChildren().clear();
+        view.setBackground(new Background(SkinService.get().getBackgroundImage(Deck.WORLD_CARDS)));
+        
+        VBox container = new VBox();
+        container.getStyleClass().add("chart-container");
+        
+        // Controls oben
+        HBox controls = createControlsBar();
+        container.getChildren().add(controls);
+        
+        // Charts unten (Bar + Line überlagert)
+        StackPane chartStack = createCharts();
+        container.getChildren().add(chartStack);
+        VBox.setVgrow(chartStack, Priority.ALWAYS);
+        
+        view.getChildren().add(container);
+    }
+
+    private HBox createControlsBar() {
+        HBox controls = new HBox();
+        controls.getStyleClass().add("chart-controls");
+        
+        // Defaults berechnen: 2 Jahre zurück bis heute
+        LocalDate defaultTo = LocalDate.now();
+        LocalDate defaultFrom = defaultTo.minusYears(2);
+        
+        // DatePicker "Von"
+        Label fromLabel = new Label("Von:");
+        fromPicker = new DatePicker(defaultFrom);
+        fromPicker.setOnAction(e -> updateCharts());
+        
+        // DatePicker "Bis"
+        Label toLabel = new Label("Bis:");
+        toPicker = new DatePicker(defaultTo);
+        toPicker.setOnAction(e -> updateCharts());
+        
+        // Spacer
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        // Spinner für category-gap
+        Label gapLabel = new Label("Balkenabstand:");
+        gapSpinner = new Spinner<>(0, 20, 0);
+        gapSpinner.setEditable(true);
+        gapSpinner.valueProperty().addListener((obs, old, newVal) -> updateCharts());
+        
+        controls.getChildren().addAll(
+            fromLabel, fromPicker,
+            toLabel, toPicker,
+            spacer,
+            gapLabel, gapSpinner
+        );
+        
+        return controls;
+    }
+
+    private StackPane createCharts() {
+        LocalDate from = roundToMonday(fromPicker.getValue());
+        LocalDate to = roundToSunday(toPicker.getValue());
+        int categoryGap = gapSpinner.getValue();
+        
+        // Daten laden
+        List<FitbitWeekData> weeks = repository.getWeeksInRange(from, to);
         List<FitbitGoalHistoryEntry> goalHistory = repository.getAllGoalHistory();
         
         if (weeks.isEmpty()) {
-            Log.warn(this, "Keine Fitbit-Daten vorhanden");
-            return createEmptyView();
+            Log.warn(this, "Keine Fitbit-Daten im gewählten Zeitraum");
+            return createEmptyChartStack();
         }
         
-     // 2. Gemeinsame Achsen erstellen
+        // Achsen erstellen (gemeinsam für beide Charts)
         CategoryAxis xAxis = new CategoryAxis();
-
-        // NEU: Kategorien explizit setzen
         ObservableList<String> categories = FXCollections.observableArrayList(
             weeks.stream().map(w -> w.weekStart().toString()).toList()
         );
         xAxis.setCategories(categories);
-        xAxis.setTickLabelRotation(-45); // Gibt es so in der Form nicht als CSS. 
-
+        xAxis.setTickLabelRotation(-45);
+        
         int maxPoints = weeks.stream().mapToInt(FitbitWeekData::points).max().orElse(5000);
         int maxGoal = goalHistory.stream().mapToInt(FitbitGoalHistoryEntry::weeklyGoal).max().orElse(4000);
         int yMax = Math.max(maxPoints, maxGoal) + 500;
-
+        
         NumberAxis yAxis = new NumberAxis(0, yMax, 500);
         
-        // 3. BarChart erstellen
-        BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
+        // BarChart erstellen
+        barChart = new BarChart<>(xAxis, yAxis);
         barChart.setLegendVisible(false);
-        //barChart.setCategoryGap(2);  // Hier im Java-Code setzen
+        barChart.setCategoryGap(categoryGap);
         barChart.setHorizontalGridLinesVisible(false);
         barChart.setVerticalGridLinesVisible(false);
         
@@ -125,8 +196,8 @@ public class FitbitSession implements Session {
         }
         barChart.getData().add(barSeries);
         
-        // 4. LineChart erstellen (Ziellinie)
-        LineChart<String, Number> lineChart = new LineChart<>(xAxis, yAxis);
+        // LineChart erstellen (Ziellinie)
+        lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setCreateSymbols(false);
         lineChart.setLegendVisible(false);
         lineChart.setMouseTransparent(true);
@@ -140,12 +211,12 @@ public class FitbitSession implements Session {
         }
         lineChart.getData().add(lineSeries);
         
-        // 5. LineChart transparent machen (nur Linie sichtbar)
+        // LineChart transparent machen
         lineChart.setStyle("-fx-background-color: transparent;");
-        lineChart.lookup(".chart-plot-background").setStyle("-fx-background-color: transparent;"); // !Sofort. Äh, was geschieht hier? Das sieht aber fishy aus!
+        lineChart.lookup(".chart-plot-background").setStyle("-fx-background-color: transparent;"); //!Sofort: Was passiert hier???
         
-        // 6. PseudoClass auf Balken setzen (nach Rendering)
-        barChart.layout(); // Layout-Pass erzwingen
+        // PseudoClass + Tooltips auf Balken setzen
+        barChart.layout();
         
         for (int i = 0; i < barSeries.getData().size(); i++) {
             XYChart.Data<String, Number> data = barSeries.getData().get(i);
@@ -157,42 +228,72 @@ public class FitbitSession implements Session {
                 boolean achieved = week.points() >= goalForWeek;
                 barNode.pseudoClassStateChanged(ACHIEVED, achieved);
                 barNode.pseudoClassStateChanged(FAILED, !achieved);
+                
+                String tooltipText = week.weekStart().toString() + " : " + week.points();
+                Tooltip tooltip = new Tooltip(tooltipText);
+                Tooltip.install(barNode, tooltip);
             }
-            
-            String tooltipText = week.weekStart().toString() + " : " + week.points();
-            Tooltip tooltip = new Tooltip(tooltipText);
-            Tooltip.install(barNode, tooltip);
         }
         
-        // 7. Stack zusammenbauen
-        view.getChildren().addAll(barChart, lineChart);
-        Platform.runLater(() -> xAxis.setTickLabelRotation(-45));
-        view.setBackground(new Background(SkinService.get().getBackgroundImage(Deck.WORLD_CARDS)));
-        System.out.println("Rotation gesetzt auf: " + xAxis.getTickLabelRotation());
-        
-        return view;
+        // Stack zusammenbauen
+        StackPane stack = new StackPane();
+        stack.getChildren().addAll(barChart, lineChart);
+        return stack;
     }
-    
+
+    private void updateCharts() {
+        if (view != null) {
+            // Alten Chart-Stack entfernen
+            VBox container = (VBox) view.getChildren().get(0);
+            if (container.getChildren().size() > 1) {
+                container.getChildren().remove(1);
+            }
+            
+            // Neuen Chart-Stack erstellen
+            StackPane chartStack = createCharts();
+            container.getChildren().add(chartStack);
+            VBox.setVgrow(chartStack, Priority.ALWAYS);
+        }
+    }
+
+    private StackPane createEmptyChartStack() {
+        CategoryAxis xAxis = new CategoryAxis();
+        NumberAxis yAxis = new NumberAxis();
+        BarChart<String, Number> emptyChart = new BarChart<>(xAxis, yAxis);
+        
+        StackPane stack = new StackPane();
+        stack.getChildren().add(emptyChart);
+        return stack;
+    }
+
     /**
      * Findet das gültige Wochenziel für ein bestimmtes Datum.
-     * Sucht den neuesten Eintrag mit validFrom <= date.
      */
     private int findGoalForDate(LocalDate date, List<FitbitGoalHistoryEntry> history) {
         return history.stream()
             .filter(entry -> !entry.validFrom().isAfter(date))
-            .reduce((_, second) -> second) // Letzter passender Eintrag
+            .reduce((_, second) -> second)
             .map(FitbitGoalHistoryEntry::weeklyGoal)
             .orElseThrow(() -> new RuntimeException("Kein Fitbit-Ziel gefunden für " + date));
     }
-    
-    private StackPane createEmptyView() {
-        StackPane pane = new StackPane();
-        pane.setBackground(new Background(SkinService.get().getBackgroundImage(null)));
-        return pane;
+
+    /**
+     * Rundet ein Datum auf den vorherigen Montag (inkl. selbst wenn Montag).
+     */
+    private LocalDate roundToMonday(LocalDate date) {
+        if (date.getDayOfWeek() == DayOfWeek.MONDAY) {
+            return date;
+        }
+        return date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
     }
 
-	@Override
-	public void closeSilent(boolean save) {
-		// TODO Auto-generated method stub
-	}
+    /**
+     * Rundet ein Datum auf den nächsten Sonntag (inkl. selbst wenn Sonntag).
+     */
+    private LocalDate roundToSunday(LocalDate date) {
+        if (date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            return date;
+        }
+        return date.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+    }
 }

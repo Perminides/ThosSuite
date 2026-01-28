@@ -332,6 +332,7 @@ public abstract class Skin {
 	    css.start(".root")
 	       .add("-fx-font-family", "'" + font.getFamily() + "'")
 	       .add("-fx-font-size", font.getSize() + "px")
+	       //.add("-fx-background-color", UIUtils.toHex(playFieldBackground)) // NEU!
 	       .end();
 	    css.rule(".text", "-fx-fill", UIUtils.toHex(textColor));
 	    
@@ -1456,7 +1457,14 @@ public abstract class Skin {
 	 */
 	public Alert createAlert(Window parent, String title, String message, ButtonType... buttonTypes) {
 	    Alert alert = new Alert(Alert.AlertType.NONE); 
-	    alert.initOwner(parent);
+	    
+	    // Fallback auf ownerStage wenn parent == null
+	    // !Sofort: Hilfsmethoden ohne Angabe eines parents wären besser. Diese dann nur, wenn man dezidiert ein anderes braucht. Kann also erst einmal private vermutlich
+	    Window effectiveParent = parent != null ? parent : SkinService.getOwnerWindow();
+	    if (effectiveParent != null) {
+	        alert.initOwner(effectiveParent);
+	    }
+	    
 	    alert.initStyle(StageStyle.EXTENDED);
 
 	    // HeaderBar hinzufügen
@@ -1494,30 +1502,14 @@ public abstract class Skin {
 	        if (newScene != null) styleScene(newScene);
 	    });
 	    
-	    if (parent == null && dialogPane.getScene() != null) {
-	        System.out.println(">>> BEFORE runLater: " + System.currentTimeMillis());
-	        Platform.runLater(() -> {
-	            System.out.println(">>> INSIDE runLater: " + System.currentTimeMillis());
-	            Window window = alert.getDialogPane().getScene().getWindow();
-	            System.out.println(">>> Window opacity in runLater: " + window.getOpacity());
-	            window.sizeToScene();
-	            
-	            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-	            double centerX = (screenBounds.getWidth() - window.getWidth()) / 2;
-	            double centerY = (screenBounds.getHeight() - window.getHeight()) / 2;
-	            
-	            window.setX(centerX);
-	            window.setY(centerY);
-	        });
-	        System.out.println(">>> AFTER runLater registration: " + System.currentTimeMillis());
-	    }
-	    
 	    // Oder lieber gar kein Windows Close-Button oben rechts? Dann 0 setzen!
 		headerBar.heightProperty().addListener((obs, oldVal, newVal) -> {
 			if (alert.getDialogPane().getScene().getWindow() instanceof Stage)
 				HeaderBar.setPrefButtonHeight((Stage) alert.getDialogPane().getScene().getWindow(), (double)newVal);
 		});
 
+		/**alert.getDialogPane().applyCss();
+		alert.getDialogPane().layout();**/
 	    return alert;
 	}
 
@@ -1549,6 +1541,10 @@ public abstract class Skin {
 	 */
 	public Dialog<?> createDialog(Window parent, String title) {
 	    Dialog<?> dialog = new Dialog<>();
+	    Window effectiveParent = parent != null ? parent : SkinService.getOwnerWindow();
+	    if (effectiveParent != null) {
+	        dialog.initOwner(effectiveParent);
+	    }
 	    dialog.initOwner(parent);
 	    dialog.initStyle(StageStyle.EXTENDED);
 	    
@@ -1556,17 +1552,6 @@ public abstract class Skin {
 	    
 	    HeaderBar headerBar = createDialogHeaderBar(title);
 	    dialogPane.setHeader(headerBar);
-	    
-	    // Zentrieren wenn kein Parent
-	    if (parent == null) {
-	        Platform.runLater(() -> {
-	            Window window = dialog.getDialogPane().getScene().getWindow();	            
-	            window.sizeToScene();
-	            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
-	            window.setX((bounds.getWidth() - window.getWidth()) / 2);
-	            window.setY((bounds.getHeight() - window.getHeight()) / 2);
-	        });
-	    }
 	    
 	    // Oder lieber gar kein Windows Close-Button oben rechts? Dann 0 setzen!
         // Sicherstellen, dass Minimize und Close-Button die ganze Höhe ausnutzen...
