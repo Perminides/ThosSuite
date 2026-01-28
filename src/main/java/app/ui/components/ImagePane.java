@@ -41,6 +41,8 @@ public class ImagePane extends StackPane {
         setPrefSize(width, height);
         setMinSize(width, height);
         setMaxSize(width, height);
+        
+        // !Sofort: Hier  auch noch den -fx-background-insets Fix einführen. Analog ImageMapPane 
 
         // ---------------------------------------------------------
         // Layer 1: Hintergrund (Unten)

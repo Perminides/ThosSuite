@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Optional;
 
 import app.config.Config;
-import app.data.FitbitGoalHistoryEntry;
-import app.data.FitbitWeekData;
+import app.fitbit.FitbitGoalHistoryEntry;
+import app.fitbit.FitbitWeekData;
 import app.util.Log;
 
 /**

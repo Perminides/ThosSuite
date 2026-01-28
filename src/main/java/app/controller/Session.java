@@ -4,6 +4,10 @@ import app.data.CardSortOrder;
 import app.data.SessionSwitchStrategy;
 import javafx.scene.layout.Pane;
 
+
+/**
+ * !Architektur: Session ist etwas, dass das Spielfeld ausfüllt. Ist Session da wirklich das beste Wort für?
+ */
 public interface Session {
 
 	public void start();

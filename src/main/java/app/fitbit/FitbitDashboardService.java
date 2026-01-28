@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
-import app.data.FitbitWeekData;
 import app.data.persistence.FitbitRepository;
 
 public class FitbitDashboardService {

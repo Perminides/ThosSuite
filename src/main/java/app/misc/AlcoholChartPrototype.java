@@ -91,7 +91,7 @@ public class AlcoholChartPrototype extends Application {
         // DatePicker "Von"
         Label fromLabel = new Label("Von:");
         fromLabel.setStyle("-fx-text-fill: white;");
-        fromPicker = new DatePicker(LocalDate.now().minusDays(30));
+        fromPicker = new DatePicker(LocalDate.now().minusDays(1500));
         fromPicker.setOnAction(e -> updateChart());
         
         // DatePicker "Bis"

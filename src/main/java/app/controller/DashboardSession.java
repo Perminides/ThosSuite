@@ -1,15 +1,14 @@
 package app.controller;
 
-import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Locale;
 
 import app.data.AppClock;
 import app.data.Deck;
 import app.data.SessionSwitchStrategy;
+import app.data.persistence.AlcoholRepository;
 import app.fitbit.FitbitDashboardService;
 import app.ui.skin.SkinService;
-import app.util.Log;
 import javafx.geometry.Pos;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.FlowPane;
@@ -53,6 +52,16 @@ public class DashboardSession implements Session {
             SkinService.get().createDashboardTile(
             	"" + fitbitService.calculateCurrentStreak(AppClock.TODAY), 
                 "Aktueller Fitbit-Streak in Wochen (Rekord: " + fitbitService.calculateRecordStreak() + ")"
+            )
+        );
+        
+        AlcoholRepository alcoholRepo = new AlcoholRepository();
+        int balance = alcoholRepo.getCurrentBalance();
+        
+        view.getChildren().add(
+            SkinService.get().createDashboardTile(
+                "" + balance, 
+                "Aktueller Alkoholkontostand"
             )
         );
     }

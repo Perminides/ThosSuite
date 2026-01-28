@@ -115,7 +115,8 @@ public class MainWindow {
         root.setTop(headerBar);
     }
     
- // Refactoring: Gibt MenuBar zurück statt void
+    // !Sofort: Die TopMenüs sollten kein Drag and Drop auf das Fenster zulassen
+    // Refactoring: Gibt MenuBar zurück statt void
     private MenuBar buildMenuBar(Skin skin) {
         MenuBar menuBar = skin.createMenuBar();
         HeaderBar.setDragType(menuBar, HeaderDragType.DRAGGABLE_SUBTREE);
@@ -167,6 +168,9 @@ public class MainWindow {
         MenuItem itemFitbit = skin.createMenuItem("Fitbit");
         itemFitbit.setOnAction(_ -> onStatisticsSelected.accept("Fitbit"));
         menuStatistics.getItems().add(itemFitbit);
+        MenuItem itemAlc = skin.createMenuItem("Alkohol");
+        itemAlc.setOnAction(_ -> onStatisticsSelected.accept("Alkohol"));
+        menuStatistics.getItems().add(itemAlc);
         
         // ANSICHT-MENÜ
         Menu menuView = skin.createMenu("Ansicht");

@@ -608,7 +608,7 @@ public abstract class Skin {
 	    builder.start(".my-image-map-pane #borderOverlay")
 	       .add("-fx-border-color", UIUtils.toHex(borderBigComponent.color()))
 	       .add("-fx-border-width", borderBigComponent.width() + "px")
-	       .add("-fx-border-radius", (borderBigComponent.arc() / 2) + "px")
+	       .add("-fx-border-radius", (borderBigComponent.arc()) + "px")
 	       .add("-fx-background-insets", borderBigComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .end();
 	    
@@ -897,18 +897,19 @@ public abstract class Skin {
 		// Chart an sich
 	    css.start(".chart")
 	    	.add("-fx-background-color", "transparent")
-	    	.add("-fx-category-gap", "3")
+	    	//.add("-fx-category-gap", "3")
 	    .end();
 		
 	    // Balken stylen - Standard (Ziel nicht erreicht)
 	    css.start(".chart-bar")
-	       .add("-fx-bar-fill", UIUtils.toHex(incorrectColor))
-	       .add("-fx-border-color", UIUtils.toHex(textColor))
-	       .add("-fx-border-width", "1px")
-	       .end();
+	    	.add("-fx-bar-fill", UIUtils.toHex(markedColor))  // Standardbalken
+	    	.add("-fx-border-color", UIUtils.toHex(textColor))
+	    	.add("-fx-border-width", "1px")
+	    .end();
 	    
-	    // Balken stylen - Ziel erreicht
+	    // Balken stylen - Ziel erreicht / nicht erreicht
 	    css.rule(".chart-bar:achieved", "-fx-bar-fill", UIUtils.toHex(correctColor));
+	    css.rule(".chart-bar:failed", "-fx-bar-fill", UIUtils.toHex(incorrectColor));
 	    
 	    // Ziellinie stylen
 	    css.start(".chart-series-line")
@@ -920,8 +921,8 @@ public abstract class Skin {
 	    css.start(".chart .axis")
 	       .add("-fx-tick-label-font-family", "'" + font.getFamily() + "'")
 	       .add("-fx-tick-label-font-size", font.getSize() + "px")
-	       .add("-fx-tick-label-fill", UIUtils.toHex(textColor))
-	       //.add("-fx-tick-label-rotation", "-45")
+	       .add("-fx-tick-label-fill", textColor)
+	       .add("-fx-tick-label-rotation", "-30")
 	       .end();
 
 	    // Grpße Tick-Marks auf y-Achse
@@ -957,12 +958,25 @@ public abstract class Skin {
 	       .add("-fx-text-fill", UIUtils.toHex(textColor))
 	       .end();
 	    
-	    css.start(".fitbit-chart-container")
-	    	.add("-fx-padding", "150px 200px 150px 200px")
+	    css.start(".chart-root")
+	    	.add("-fx-padding", "150px 200px 150px 200px") // !Sofort: Wird ausgelagert in properties!
 	    .end();
 
 	    css.rule(".chart-plot-background", "-fx-background-color", "transparent");
 	    css.rule(".chart-content", "-fx-background-color", "transparent");
+	    
+	    // Chart Layout (VBox)
+	    double spacing = font.getSize() * 0.5;
+	    css.start(".chart-container")
+	       .add("-fx-spacing", "20px")
+	       .add("-fx-alignment", "top-center")
+	    .end();
+
+	    // Chart Controls (HBox)
+	    css.start(".chart-controls")
+	       .add("-fx-spacing", spacing + "px")
+	       .add("-fx-alignment", "center-left")
+	    .end();
 	    
 	    css.start(".tooltip")
 	    	.add("-fx-background-color", UIUtils.toHex(activeComponentBgColor)+"88")
@@ -1481,11 +1495,13 @@ public abstract class Skin {
 	    });
 	    
 	    if (parent == null && dialogPane.getScene() != null) {
+	        System.out.println(">>> BEFORE runLater: " + System.currentTimeMillis());
 	        Platform.runLater(() -> {
-	        	Window window = alert.getDialogPane().getScene().getWindow();
+	            System.out.println(">>> INSIDE runLater: " + System.currentTimeMillis());
+	            Window window = alert.getDialogPane().getScene().getWindow();
+	            System.out.println(">>> Window opacity in runLater: " + window.getOpacity());
 	            window.sizeToScene();
 	            
-	            // Manuelle Zentrierung
 	            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 	            double centerX = (screenBounds.getWidth() - window.getWidth()) / 2;
 	            double centerY = (screenBounds.getHeight() - window.getHeight()) / 2;
@@ -1493,6 +1509,7 @@ public abstract class Skin {
 	            window.setX(centerX);
 	            window.setY(centerY);
 	        });
+	        System.out.println(">>> AFTER runLater registration: " + System.currentTimeMillis());
 	    }
 	    
 	    // Oder lieber gar kein Windows Close-Button oben rechts? Dann 0 setzen!

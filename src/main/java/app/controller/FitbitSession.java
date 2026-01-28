@@ -5,10 +5,10 @@ import java.util.List;
 
 import app.config.Config;
 import app.data.Deck;
-import app.data.FitbitGoalHistoryEntry;
-import app.data.FitbitWeekData;
 import app.data.SessionSwitchStrategy;
 import app.data.persistence.FitbitRepository;
+import app.fitbit.FitbitGoalHistoryEntry;
+import app.fitbit.FitbitWeekData;
 import app.ui.skin.SkinService;
 import app.util.Log;
 import javafx.application.Platform;
@@ -41,6 +41,7 @@ import javafx.scene.layout.StackPane;
 public class FitbitSession implements Session {
 
     private static final PseudoClass ACHIEVED = PseudoClass.getPseudoClass("achieved");
+    private static final PseudoClass FAILED = PseudoClass.getPseudoClass("failed");
     
     private final FitbitRepository repository;
     private final int weeksToShow;
@@ -56,7 +57,7 @@ public class FitbitSession implements Session {
     public Pane getView() {
         if (view == null) {
         	view = new StackPane();
-        	view.getStyleClass().add("fitbit-chart-container");
+        	view.getStyleClass().add("chart-root");
             buildView();
         }
         return view;
@@ -103,7 +104,7 @@ public class FitbitSession implements Session {
             weeks.stream().map(w -> w.weekStart().toString()).toList()
         );
         xAxis.setCategories(categories);
-        xAxis.setTickLabelRotation(-45);
+        xAxis.setTickLabelRotation(-45); // Gibt es so in der Form nicht als CSS. 
 
         int maxPoints = weeks.stream().mapToInt(FitbitWeekData::points).max().orElse(5000);
         int maxGoal = goalHistory.stream().mapToInt(FitbitGoalHistoryEntry::weeklyGoal).max().orElse(4000);
@@ -141,7 +142,7 @@ public class FitbitSession implements Session {
         
         // 5. LineChart transparent machen (nur Linie sichtbar)
         lineChart.setStyle("-fx-background-color: transparent;");
-        lineChart.lookup(".chart-plot-background").setStyle("-fx-background-color: transparent;");
+        lineChart.lookup(".chart-plot-background").setStyle("-fx-background-color: transparent;"); // !Sofort. Äh, was geschieht hier? Das sieht aber fishy aus!
         
         // 6. PseudoClass auf Balken setzen (nach Rendering)
         barChart.layout(); // Layout-Pass erzwingen
@@ -155,6 +156,7 @@ public class FitbitSession implements Session {
             if (barNode != null) {
                 boolean achieved = week.points() >= goalForWeek;
                 barNode.pseudoClassStateChanged(ACHIEVED, achieved);
+                barNode.pseudoClassStateChanged(FAILED, !achieved);
             }
             
             String tooltipText = week.weekStart().toString() + " : " + week.points();
@@ -178,7 +180,7 @@ public class FitbitSession implements Session {
     private int findGoalForDate(LocalDate date, List<FitbitGoalHistoryEntry> history) {
         return history.stream()
             .filter(entry -> !entry.validFrom().isAfter(date))
-            .reduce((first, second) -> second) // Letzter passender Eintrag
+            .reduce((_, second) -> second) // Letzter passender Eintrag
             .map(FitbitGoalHistoryEntry::weeklyGoal)
             .orElseThrow(() -> new RuntimeException("Kein Fitbit-Ziel gefunden für " + date));
     }
