@@ -91,9 +91,12 @@ public class Controller{
 	}
 
 	/**
-	 * Wird NACH splashStage.close() aufgerufen (Splash weg, MainWindow unsichtbar). Zeigt Dialoge und speichert Daten.
+	 * Wird NACH splashStage.close() aufgerufen (Splash weg, MainWindow sichtbar).
+	 * Registriert das MainWindow im SkinService, zeigt Dialoge und speichert Daten.
 	 */
 	public void runPostTasks() {
+	    // Owner-Stage registrieren VOR allen Dialogen
+	    SkinService.setOwnerWindow(mainWindow.getStage());
 		// Fitbit-Fehler behandeln
 		if (fitbitDataFetcher.hasError()) {
 			SkinService.get().createAlert(mainWindow.getStage(), "Fitbit-Fehler",
