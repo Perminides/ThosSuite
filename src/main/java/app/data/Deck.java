@@ -27,6 +27,7 @@ public enum Deck {
     ITALIEN("it", "Italien", "it", DeckCategory.REGION_DECK, null, MapMetadata.ITALY, null, true),
 	USA("us", "USA", "us", DeckCategory.REGION_DECK, null, MapMetadata.USA, null, true),
 	CARIBBEAN("cs", "Karibik", "cs", DeckCategory.REGION_DECK, null, MapMetadata.CARIBBEAN, null, true),
+	ENGLAND("en", "England", "en", DeckCategory.REGION_DECK, null, MapMetadata.ENGLAND, null, true),
 	
 	BERLIN_WEST("be_we", "Berlin West", "be", DeckCategory.REGION_DECK, null, MapMetadata.BERLIN, null, false),
 	BERLIN_NORD("be_no", "Berlin Nord", "be", DeckCategory.REGION_DECK, null, MapMetadata.BERLIN, null, false),

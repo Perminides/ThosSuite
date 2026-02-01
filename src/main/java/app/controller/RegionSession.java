@@ -22,10 +22,12 @@ import app.util.Log;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
 
 // !Später: Das RegionSessionBild croppen und dann den korrekten Rand setzen, wenn isComplete==true. Wobei isComplete meint, dasss das ganze Rechteck ausgefüllt ist.
 // !Sofort: Es wäre schon nice bei Finde uf der Karte (schwer) zu wissen, wie viel noch kommen. Also doch einen Fortschritt bitte.
+// !Sofort: FreePlay ist kaputt. Bei falschem Klick bleiben die gründen nicht stehen!
 public class RegionSession implements Session {
 	
 	private final RegionSessionPresenter presenter;
@@ -95,8 +97,22 @@ public class RegionSession implements Session {
 		
 		Pane currentPane = getView();
 		if (!correct) { // Wenn nicht korrekt, dann zeige den Text an. Ok und Abbruch. Und eventuell, wenn erlaubt, auch Fortfahren...
+			Log.info(this, "Alert wird erstellt. correct=" + correct);
+
 			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Nicht korrekt", text, true, allowResume);
+			
+			ScrollPane scrollFromAlert = (ScrollPane) alert.getDialogPane().getContent();
+
+			Log.info(this, "=== VOR SHOW ===");
+			Log.info(this, "ScrollPane insets: " + (scrollFromAlert.getBackground() != null ? scrollFromAlert.getBackground().getFills().get(0).getInsets() : "null"));
+			
 	    	Optional<ButtonType> result = alert.showAndWait();
+	    	
+	    	Log.info(this, "=== NACH SHOW ===");
+	    	Log.info(this, "ScrollPane boundsInLocal: " + scrollFromAlert.getBoundsInLocal());
+	    	Log.info(this, "ScrollPane boundsInParent: " + scrollFromAlert.getBoundsInParent());
+	    	Log.info(this, "DialogPane boundsInLocal: " + alert.getDialogPane().getBoundsInLocal());
+	    	
 	    		if (!result.isPresent() || result.get().getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) { // Abbruch. Wir speichern nicht, wir beenden sofort.
 	    			active = false;
 	    	        controller.sessionEnded();
@@ -108,6 +124,7 @@ public class RegionSession implements Session {
 					return;
 	    	    }
 		} else if (text != null && !text.isEmpty()) { // Ah. Ich soll was anzeigen, obwohl es korrekt war. Vermutlich ein FreePlay. Na egal, zeigen wir halt an...
+			Log.info(this, "Alert wird erstellt. correct=" + correct);
 			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Korrekt", text, false, allowResume);
 	    	alert.showAndWait();
 		}

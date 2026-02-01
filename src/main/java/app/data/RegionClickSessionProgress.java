@@ -9,6 +9,7 @@ import java.util.TreeSet;
 
 import app.controller.RegionSession;
 import app.presenter.RegionSessionPresenter;
+import app.util.Log;
 
 public class RegionClickSessionProgress implements RegionSessionProgress{
 	
@@ -54,20 +55,31 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 	public void start() {
 		nextStep();
 	}
-	
+
 	@Override
 	public void resume() {
-		wrongClicked.clear(); // Resume wird nur in echten Lernsessions aufgerufen. Der falsche Klick soll dann ignoriert werden.
+		if (!spec.isPlaySession())
+			wrongClicked.clear();
 		isPaused = false;
-		presenter.undoClick();
-		currentIndex--;
-		nextStep();
+		presenter.undoClick(); // Das Anzeigen der falschen und richtigen Region wird entfernt und der Stand davor wiederhergestellt.
+		if (spec.isPlaySession()) {
+		    // FreePlay soll smooth durchlaufen. Kein erneuter Klick nötig, da ja auch kein Pop-Up zwischendurch.
+			elementClicked(quizElements.get(currentIndex).shapeId);
+		} else {
+		    // In einer Lernsession ist das hier ein starker Eingriff in die Logik. 
+		    // Ich habe mich geweigert, die Session als falsch abzuspeichern. 
+		    // Ok, dann muss ich aber noch einmal auf das korrekte Klicken...
+		    currentIndex--;
+		    nextStep();
+		}
 	}
 
 	@Override
 	public void elementClicked(String id) {
-		if (isPaused)
+		if (isPaused) {
 			endPause();
+			return;
+		}
 		
 		if (quizElements.get(currentIndex).getShapeId().equals(id)) {
 			presenter.handleClickResult(id, true, null);
@@ -84,7 +96,7 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 	public void endPause() { // Durch Klick im Presenter oder Pause-Taste 
 		if (spec.isPlaySession()) {
 			isPaused = false;
-			nextStep();
+			resume();
 		} else if (isPaused) {
 			session.end(false, getId(wrongClicked), "Statt " + quizElements.get(currentIndex).toFind() + " wurde " + getNameForId(wrongClicked) + " geklickt.", true);
 		}

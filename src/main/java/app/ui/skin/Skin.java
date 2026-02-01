@@ -21,6 +21,7 @@ import app.ui.components.MultipleChoicePane;
 import app.ui.components.SessionInfoLabel;
 import app.ui.components.ShapeMapPane;
 import app.ui.skin.params.BorderParams;
+import app.util.Log;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -264,6 +265,9 @@ public abstract class Skin {
 	protected Rectangle2D beSessionQuestionPanel;
 	protected Rectangle2D beSessionMapPanel;
 	protected Rectangle2D beSessionTextInputPanel;
+	protected Rectangle2D enSessionQuestionPanel;
+	protected Rectangle2D enSessionMapPanel;
+	protected Rectangle2D enSessionTextInputPanel;
 
 	protected Integer verticalGapMC;
 
@@ -455,8 +459,14 @@ public abstract class Skin {
 	    
 	    // Content in ScrollPane
 	    css.start(".my-dialog-scrollpane")
-	    .add("-fx-background-color", playFieldBackground) 
+	    .add("-fx-background-color", playFieldBackground)
 	    .end();
+	    
+	    /* Fix: ScrollPane bekommt Fokus z. B. durch Mausklick und würde
+	     * dann durch JavaFX's default -1.4 Insets (für Glow-Effekt) nach außen wachsen
+	     * und den Border der DialogPane überdecken. Insets auf 0 halten.
+	     */
+	    css.rule(".my-dialog-scrollpane:focused", "-fx-background-insets", "0");
 	    
 	    // Viewport in Dialog
 	    css.start(".dialog-pane .viewport")
@@ -1488,6 +1498,7 @@ public abstract class Skin {
 	    scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 	    scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 	    scroll.getStyleClass().add("my-dialog-scrollpane");
+	    //Log.info(this, "ScrollPane StyleClass: " + scroll.getStyleClass());
 
 	    alert.getDialogPane().setContent(scroll);
 	    alert.getButtonTypes().setAll(buttonTypes);
@@ -1508,8 +1519,13 @@ public abstract class Skin {
 				HeaderBar.setPrefButtonHeight((Stage) alert.getDialogPane().getScene().getWindow(), (double)newVal);
 		});
 
-		/**alert.getDialogPane().applyCss();
-		alert.getDialogPane().layout();**/
+		// Direkt vor return alert;
+		Log.info(this, "=== ALERT ERSTELLT ===");
+		Log.info(this, "ScrollPane background: " + scroll.getBackground());
+		if (scroll.getBackground() != null && !scroll.getBackground().getFills().isEmpty()) {
+		    Log.info(this, "ScrollPane background-insets: " + scroll.getBackground().getFills().get(0).getInsets());
+		}
+		Log.info(this, "ScrollPane boundsInLocal: " + scroll.getBoundsInLocal());
 	    return alert;
 	}
 
