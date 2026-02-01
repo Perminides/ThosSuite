@@ -80,6 +80,7 @@ public class RegionWriteSessionProgress implements RegionSessionProgress {
 			presenter.weWaitForWriteText(toLearnRegions.get(currentIndex).id());
 	}
 	
+	// !Sofort: Viel zu abruptes Ende bei FreePlay! Das muss nochmal durchdacht und refactoret werden fürs freie Spiel!
 	@Override
 	public void endPause() {
 		if (!isEndPause)

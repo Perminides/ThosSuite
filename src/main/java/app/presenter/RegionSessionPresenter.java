@@ -113,10 +113,7 @@ public class RegionSessionPresenter {
 	// ========================================
 	
 	public void clickedMapElement(String id) {
-		if (progress.isPause())
-			progress.endPause();
-		else
-			progress.elementClicked(id);
+		progress.elementClicked(id);
 	}
 	
 
