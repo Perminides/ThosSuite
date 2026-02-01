@@ -1,7 +1,5 @@
 package app.fitbit;
 
-import java.util.List;
-
 import app.fitbit.json.Activity;
 import app.fitbit.json.ActivityDaySummary;
 import app.fitbit.json.ActivityLogList;
