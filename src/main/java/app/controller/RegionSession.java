@@ -92,21 +92,26 @@ public class RegionSession implements Session {
 	public void end(boolean correct, String wrongId, String text, boolean allowResume) {
 		if (!active)
     		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
+		
 		Pane currentPane = getView();
-    	active = false;
-		if (!correct) {
+		if (!correct) { // Wenn nicht korrekt, dann zeige den Text an. Ok und Abbruch. Und eventuell, wenn erlaubt, auch Fortfahren...
 			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Nicht korrekt", text, true, allowResume);
 	    	Optional<ButtonType> result = alert.showAndWait();
-	    		if (!result.isPresent() || result.get().getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) {
+	    		if (!result.isPresent() || result.get().getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) { // Abbruch. Wir speichern nicht, wir beenden sofort.
+	    			active = false;
 	    	        controller.sessionEnded();
 	    	        return;
-	    	    } else if (result.get().getButtonData() == ButtonBar.ButtonData.YES) {
+	    	    } else if (result.get().getButtonData() == ButtonBar.ButtonData.YES) { // Ok. Wir beenden gleich nach dem Speichern.
 	    	        // Nichts weiter zu tun...
-	    	    } else if (result.get().getButtonData() == ButtonBar.ButtonData.OTHER) {
+	    	    } else if (result.get().getButtonData() == ButtonBar.ButtonData.OTHER) { // Fortsetzen. Wir setzen fort.
 	    	    	progress.resume();
 					return;
 	    	    }
+		} else if (text != null && !text.isEmpty()) { // Ah. Ich soll was anzeigen, obwohl es korrekt war. Vermutlich ein FreePlay. Na egal, zeigen wir halt an...
+			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Korrekt", text, false, allowResume);
+	    	alert.showAndWait();
 		}
+		
 		if (!spec.isPlaySession()) {
 			LearnStat stats = service.getLearnStat(spec);
 			
@@ -122,6 +127,7 @@ public class RegionSession implements Session {
 	    	alert.showAndWait();
 		}
 		Log.info(this, "RegionsSession " + spec.getDeckType().getDisplayName() + " (play = " + spec.isPlaySession() + ") beendet.");
+		active = false;
 		controller.sessionEnded();
 	}
 
@@ -161,7 +167,11 @@ public class RegionSession implements Session {
 		if (weekDiff < 10)
 			return "Wir sehen uns in " + weekDiff + " Wochen wieder.";
 		if (monthDiff < 12)
-			return "Wir sehen uns in " + weekDiff + " Monaten wieder.";
+			return "Wir sehen uns in " + monthDiff + " Monaten wieder.";
+		if (monthDiff < 18)
+			return "Wir sehen uns in einem Jahr wieder.";
+		if (monthDiff < 36)
+			return "Wir sehen uns in zwei Jahren wieder.";
 		return "Wir sehen uns in " + yearDiff + " Jahren wieder";
 	}
 }

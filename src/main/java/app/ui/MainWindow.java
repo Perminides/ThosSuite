@@ -18,7 +18,6 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HeaderBar;
-import javafx.scene.layout.HeaderDragType;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -33,6 +32,7 @@ import javafx.stage.Window;
  * 		headerBar 	= "my-header-bar",
  * 		titleLabel	= "my-title"
  */
+@SuppressWarnings("deprecation")
 public class MainWindow {
 
 	private final StackPane contentPane;
@@ -108,18 +108,17 @@ public class MainWindow {
         headerBar.getStyleClass().add("my-header-bar");
         
         // D. Sicherstellen, dass Minimize und Close-Button die ganze Höhe ausnutzen...
-        headerBar.heightProperty().addListener((obs, oldVal, newVal) ->
+        headerBar.heightProperty().addListener((_, _, newVal) ->
             HeaderBar.setPrefButtonHeight(stage, newVal.doubleValue())
         );
         
         root.setTop(headerBar);
     }
     
-    // !Sofort: Die TopMenüs sollten kein Drag and Drop auf das Fenster zulassen
     // Refactoring: Gibt MenuBar zurück statt void
-    private MenuBar buildMenuBar(Skin skin) {
+	private MenuBar buildMenuBar(Skin skin) {
         MenuBar menuBar = skin.createMenuBar();
-        HeaderBar.setDragType(menuBar, HeaderDragType.DRAGGABLE_SUBTREE);
+        HeaderBar.setDragType(menuBar, null);
         
         // DATEI-MENÜ
         Menu menuFile = skin.createMenu("Datei");
@@ -266,7 +265,6 @@ public class MainWindow {
     }
     
     private void initKeyBindings() {
-    	final String instanceId = Integer.toHexString(System.identityHashCode(this));
     	stage.getScene().setOnKeyPressed(event -> {
             switch (event.getCode()) {
                 case ESCAPE: {

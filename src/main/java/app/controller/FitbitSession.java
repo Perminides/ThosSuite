@@ -49,6 +49,7 @@ public class FitbitSession implements Session {
 
     private static final PseudoClass ACHIEVED = PseudoClass.getPseudoClass("achieved");
     private static final PseudoClass FAILED = PseudoClass.getPseudoClass("failed");
+    private static final PseudoClass IN_PROGRESS = PseudoClass.getPseudoClass("in-progress");
     
     private final FitbitRepository repository;
     
@@ -225,9 +226,23 @@ public class FitbitSession implements Session {
             
             Node barNode = data.getNode();
             if (barNode != null) {
-                boolean achieved = week.points() >= goalForWeek;
-                barNode.pseudoClassStateChanged(ACHIEVED, achieved);
-                barNode.pseudoClassStateChanged(FAILED, !achieved);
+                // Prüfen ob es die laufende Woche ist
+                LocalDate today = LocalDate.now();
+                LocalDate currentWeekStart = roundToMonday(today);
+                boolean isCurrentWeek = week.weekStart().equals(currentWeekStart);
+                
+                if (isCurrentWeek) {
+                    // Laufende Woche = immer gelb
+                    barNode.pseudoClassStateChanged(IN_PROGRESS, true);
+                    barNode.pseudoClassStateChanged(ACHIEVED, false);
+                    barNode.pseudoClassStateChanged(FAILED, false);
+                } else {
+                    // Vergangene Wochen = grün/rot
+                    boolean achieved = week.points() >= goalForWeek;
+                    barNode.pseudoClassStateChanged(IN_PROGRESS, false);
+                    barNode.pseudoClassStateChanged(ACHIEVED, achieved);
+                    barNode.pseudoClassStateChanged(FAILED, !achieved);
+                }
                 
                 String tooltipText = week.weekStart().toString() + " : " + week.points();
                 Tooltip tooltip = new Tooltip(tooltipText);

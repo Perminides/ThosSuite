@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import app.controller.RegionSession;
 import app.presenter.RegionSessionPresenter;
@@ -24,13 +25,16 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 	private final RegionSession session;
 	private final Set<String> sessionRegions;
 	private final List<QuizElement> quizElements;
-	private String wrongClicked = "";
+	private final Set<String> wrongClicked = new TreeSet<>();
+	private final RegionSessionSpec spec;
+	private boolean isPaused = false;
 	private int currentIndex = -1;
 	
 	private RegionSessionPresenter presenter;
 
 	public RegionClickSessionProgress(Set<MapShape> regions, RegionSessionSpec spec, RegionSession regionSession) {
 		this.session = regionSession;
+		this.spec = spec;
 		this.sessionRegions = new HashSet<>();
 		for (MapShape region : regions) {
 			sessionRegions.add(region.id());
@@ -53,7 +57,8 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 	
 	@Override
 	public void resume() {
-		wrongClicked = "";
+		wrongClicked.clear(); // Resume wird nur in echten Lernsessions aufgerufen. Der falsche Klick soll dann ignoriert werden.
+		isPaused = false;
 		presenter.undoClick();
 		currentIndex--;
 		nextStep();
@@ -61,21 +66,28 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 
 	@Override
 	public void elementClicked(String id) {
+		if (isPaused)
+			endPause();
+		
 		if (quizElements.get(currentIndex).getShapeId().equals(id)) {
 			presenter.handleClickResult(id, true, null);
 			sessionRegions.remove(id);
 			nextStep();
 		} else {
-			wrongClicked = id;
-			// Wir haben keinen expliziten internen Pause-Modus. Wenn wrongClicked != "" ist, dann reagieren wir auf endPause... 
+			wrongClicked.add(quizElements.get(currentIndex).shapeId());
+			isPaused = true; 
 			presenter.handleClickResult(id, false, quizElements.get(currentIndex).getShapeId());
 		}
 	}
 
 	@Override
-	public void endPause() {
-		if (!wrongClicked.isEmpty())
-			session.end(false, wrongClicked, "Statt " + quizElements.get(currentIndex).toFind() + " wurde " + getNameForId(wrongClicked) + " geklickt.", true);
+	public void endPause() { // Durch Klick im Presenter oder Pause-Taste 
+		if (spec.isPlaySession()) {
+			isPaused = false;
+			nextStep();
+		} else if (isPaused) {
+			session.end(false, getId(wrongClicked), "Statt " + quizElements.get(currentIndex).toFind() + " wurde " + getNameForId(wrongClicked) + " geklickt.", true);
+		}
 	}
 	
 	@Override
@@ -90,17 +102,50 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 	
 	private void nextStep() {
 		currentIndex++;
-		if (currentIndex >= quizElements.size())
-			session.end(true, null, "", true);
+		if (currentIndex >= quizElements.size()) {
+			if (spec.isPlaySession()) {
+				if (wrongClicked.isEmpty()) 	// Freies Spiel ohne Fehler. Super!
+					session.end(true, null, "Super gemacht!", false);
+				else { 							// Freies Spiel mit Fehlern. Die listen wir auf
+					String result = "Folgende Elemente wurden nicht erkannt: \n\n";
+					for (String wrongId : wrongClicked) {
+						result = result + getNameForId(wrongId) + "\n";
+					}
+					session.end(false, "", result, false);
+				}
+			} else {
+				if (wrongClicked.isEmpty()) 	// Lernsession korrekt beantwortet
+					session.end(true, null, null, false);
+				else {
+					throw new RuntimeException("Moment. Entweder wird ein falscher Klick zurückgenommen oder es wird ohne nextStep beendet. Hierhin dürfte der Code nie kommen. Untersuchen!");
+				}
+			}
+		}
 		else {
 			presenter.showQuestion(quizElements.get(currentIndex).getToFind());
 			presenter.weWaitForClick(sessionRegions);
 		}
 	}
 	
-	private String getNameForId(String id) {
+	private String getId(Set<String> ids) {
+		if (ids.size() != 1)
+			throw new RuntimeException("Moment. Wieso gibt es mehr als einen Klick hier?");
+		for (String element : ids) {
+			return element;
+		}
+		return null;
+	}
+	
+	private String getNameForId(String wrongClicked) {
+		return getNameForId (Set.of(wrongClicked));
+	}
+
+	
+	private String getNameForId(Set<String> wrongClicked) {
+		if (wrongClicked.size() != 1)
+			throw new RuntimeException("Moment. Wieso gibt es mehr als einen flaschen Klick hier?");
 		for (QuizElement element : quizElements) {
-			if (element.shapeId.equals(id))
+			if (wrongClicked.contains(element.shapeId))
 				return element.toFind();
 		}
 		return "";
