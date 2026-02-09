@@ -2,6 +2,8 @@ package app.fitbit.json;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import app.fitbit.FitbitImporter;
 import app.util.Log;
 
@@ -13,6 +15,10 @@ public class Activity extends Parent{
 	private String startTime;
 	private String originalStartTime;
 	private int steps;
+	
+	// Default-Konstruktor für Jackson
+	public Activity() {
+	}
 	
 	public Activity(String originalStartTime, String activityName, String distanceUnit, Double distance, int steps) {
 		this.originalStartTime = originalStartTime;
@@ -57,6 +63,7 @@ public class Activity extends Parent{
 		return startTime;
 	}
 	public void setStartTime(String startTime) {
+		Log.debug(this, "setStartTime aufgerufen mit: " + startTime);
 		this.startTime = startTime;
 	}
 	public String getOriginalStartTime() {
@@ -65,12 +72,24 @@ public class Activity extends Parent{
 	public void setOriginalStartTime(String originalStartTime) {
 		this.originalStartTime = originalStartTime;
 	}
+	
+	@JsonIgnore
 	public LocalDate getDate() {
-		if (!startTime.equals(originalStartTime)) {
-			Log.error(this, "Hurra, ich habe eine Aktivität gefunden wo StartTime <> OrigStartTime ist. Schau Dir mal " + activityName + " am " + startTime + "an");
-			throw new RuntimeException("Hurra, ich habe eine Aktivität gefunden wo StartTime <> OrigStartTime ist. Schau Dir mal " + activityName + " am " + startTime + "an");
-		}
-		return LocalDate.parse(startTime.substring(0, 10));
+	    // Sicherheitscheck: Felder müssen gesetzt sein
+	    if (startTime == null || originalStartTime == null) {
+	        Log.error(this, "getDate() aufgerufen, aber startTime oder originalStartTime ist null für Activity: " + activityName);
+	        return null;
+	    }
+	    
+	    // Validierung: startTime und originalStartTime sollten gleich sein
+	    if (!startTime.equals(originalStartTime)) {
+	        Log.error(this, "Hurra, ich habe eine Aktivität gefunden wo StartTime <> OrigStartTime ist. " +
+	                        "Schau Dir mal " + activityName + " am " + startTime + " an");
+	        throw new RuntimeException("StartTime != OriginalStartTime für Activity: " + activityName);
+	    }
+	    
+	    // Datum extrahieren (Format: "2026-02-01T12:45:00.000+01:00" → "2026-02-01")
+	    return LocalDate.parse(startTime.substring(0, 10));
 	}
 	
 }

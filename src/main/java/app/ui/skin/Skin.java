@@ -3,6 +3,7 @@ package app.ui.skin;
 import java.io.File;
 import java.io.FileInputStream;
 import java.lang.reflect.Field;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +23,7 @@ import app.ui.components.SessionInfoLabel;
 import app.ui.components.ShapeMapPane;
 import app.ui.skin.params.BorderParams;
 import app.util.Log;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -35,6 +37,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
@@ -58,6 +61,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
@@ -156,14 +160,14 @@ public abstract class Skin {
 	protected Color mcIncorrectTextColor;
 	protected Color mcCorrectTextColor;
 
-	protected Color incorrectColor; // Für MC, Deutschlandkarte, Welt
+	/** Für MC, Deutschlandkarte, Welt **/ protected Color incorrectColor;  
 	protected Color correctColor; // Für MC, Deutschlandkarte
 	protected Color markedColor; // Für die Karten
 	protected Color shapeMapColor0; // Für die Karten
 	protected Color shapeMapColor1; // Für die Karten
 
 	protected Color activeComponentBgColor; // Default für aktive MCButton, Karte, BackButton
-	protected Color activeComponentHoverColor; // Default für MCButton, Kartem BackButton
+	protected Color activeComponentHoverColor; // Default für MCButton, Karten, BackButton
 	protected Color disabledComponentBgColor; // Default für MCButton, Map, JTextField
 	protected Color displayTextBgColor; // Default für Textfields (Fragen), signalisiert: Hier nichts klickbares!
 
@@ -198,6 +202,7 @@ public abstract class Skin {
 	protected Color borderShapeColor; // Karten
 	protected Color thinBorderColor; // Um contentPane und unten die MenuBar
 	protected Integer thinBorderWidth; // default = 1
+	protected Color stageBorderColor; // default = weiß
 	
 	protected Integer dashBoardTileWidth; // 250
 	protected Integer dashBoardTileTopHeight; // 250
@@ -286,10 +291,9 @@ public abstract class Skin {
 	// ========== CSS ==========
 	// region
 	
-	// !Sofort: Müssen wir nicht weiter oben stylen gleich die ganze Stage? Ne, wahrscheinlich reicht Scene
 	public void styleScene(Scene scene) {
-		menuBarHoverBackground = menuBarHoverBackground == null ? adjustBrightness(menuBarBackground, 20) : menuBarHoverBackground;
-		menuDisabledForeground = menuDisabledForeground == null ? adjustBrightness(textColor, 90) : menuDisabledForeground;
+		menuBarHoverBackground = menuBarHoverBackground == null ? UIUtils.adjustBrightness(menuBarBackground, 20) : menuBarHoverBackground;
+		menuDisabledForeground = menuDisabledForeground == null ? UIUtils.adjustBrightness(textColor, 90) : menuDisabledForeground;
 		menuButtonPadding = menuButtonPadding == null ? font.getSize() * 0.3 + "px " + font.getSize() * 0.4 + "px" : menuButtonPadding;
 		menuItemPadding = menuItemPadding == null ? font.getSize() * 0.1 + "px " + font.getSize() * 0.5 + "px" : menuItemPadding;
 		thinBorderWidth = thinBorderWidth == null ? 1 : thinBorderWidth;
@@ -310,6 +314,7 @@ public abstract class Skin {
 		displayTextHistoryBgColor = displayTextHistoryBgColor == null ? displayTextBgColor : displayTextHistoryBgColor;
 		displayTextProgressBgColor = displayTextProgressBgColor == null ? displayTextBgColor : displayTextProgressBgColor;
 		displayTextQuestionBgColor = displayTextQuestionBgColor == null ? displayTextBgColor : displayTextQuestionBgColor;
+		stageBorderColor = stageBorderColor == null ? Color.WHITE : stageBorderColor;
 		
 		/**
 		// Dieser Code ist natürlich Quatsch. Aber ich bin so angepisst über diese -1 dass ich mir das jetzt gebaut habe.
@@ -325,8 +330,6 @@ public abstract class Skin {
 		    javafx.geometry.Insets insets = firstFill.getInsets();
 		    if (insets.getBottom() != -1)
 		    	throw new RuntimeException("Alter jetzt ist der bottomInset für den Background plötzlich nicht mehr -1?");**/
-		
-	    scene.setFill(menuBarBackground);
 	    
 	    CssBuilder css = new CssBuilder();
 	    
@@ -389,7 +392,7 @@ public abstract class Skin {
 	    
 	    css.rule(".button .text, .date-picker .arrow-button .text", "-fx-fill", textActiveComponentColor);
 	    css.rule(".button:hover, .date-picker .arrow-button:hover", "-fx-background-color", activeComponentHoverColor);
-	    css.rule(".button:pressed, .date-picker .arrow-button:pressed", "-fx-background-color", adjustBrightness(activeComponentHoverColor, 8));
+	    css.rule(".button:pressed, .date-picker .arrow-button:pressed", "-fx-background-color", UIUtils.adjustBrightness(activeComponentHoverColor, 8));
 	    // Alternative Effekte (für andere Skins):
 	    //css.rule(".my-mc-button:active:pressed", "-fx-translate-y", "1px");
 	    //css.rule(".my-mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
@@ -406,10 +409,11 @@ public abstract class Skin {
 	       .add("-fx-border-color", borderSmallComponent.color())
 	       .add("-fx-background-color", activeComponentBgColor)
 	       //.add("-fx-text-fill", UIUtils.toHex(textActiveComponentColor))
-	       .end();
+	    .end();
+		
 	    builder.rule(".box .text", "-fx-fill", textActiveComponentColor);
 	    builder.rule(".box:hover", "-fx-background-color", activeComponentHoverColor);
-	    builder.rule(".box:pressed", "-fx-background-color", adjustBrightness(activeComponentHoverColor, 8));
+	    builder.rule(".box:pressed", "-fx-background-color", UIUtils.adjustBrightness(activeComponentHoverColor, 8));
 	    builder.rule(".check-box:selected .mark", "-fx-background-color", textActiveComponentColor); // Die Farbe des Hakens in der Checkbox :-)
 	}
 	
@@ -424,6 +428,7 @@ public abstract class Skin {
 	       .end();
 	    
 	    css.rule(".combo-box-base .text", "-fx-fill", textActiveComponentColor);
+	    css.rule(".combo-box-base .arrow", "-fx-background-color", textActiveComponentColor);
 	    
 	    // ListView in ComboBox
 	    // ⚠️ ACHTUNG: Wenn ListView woanders gebraucht wird, dort analog stylen
@@ -436,7 +441,7 @@ public abstract class Skin {
 	private void addDialogStyles(CssBuilder css) {
 	    // Dialog Container
 	    css.start(".dialog-pane")
-	       .add("-fx-border-color", "white") // analog der Stage
+	       .add("-fx-border-color", stageBorderColor) // analog der Stage
 	       .add("-fx-border-width", 1 + "px") // analog der Stage
 	       .add("-fx-background-color", playFieldBackground) // Für den Bereich mit den Buttons.
 	       .add("-fx-effect", "dropshadow(gaussian, rgba(255,0,0,1.0), 50, 0, 20, 20)")
@@ -690,7 +695,7 @@ public abstract class Skin {
 	private void addMainWindowStyles(CssBuilder css) {
 	    // Root Container (Stage Border)
 	    css.start(".my-root")
-	       .add("-fx-border-color", "white") // Wir wollen einen weißen Rahmen um das gesamte Fenster!
+	       .add("-fx-border-color", stageBorderColor) // Wir wollen einen weißen Rahmen um das gesamte Fenster!
 	       .add("-fx-border-width", "1px") // Einen dünnen.
 	       .end();
 	    
@@ -760,21 +765,18 @@ public abstract class Skin {
 	    builder.rule(".my-mc-button", "-fx-padding", paddingCss);
 	    builder.rule(".my-mc-button:active", "-fx-background-color", activeComponentBgColor);
 	    builder.rule(".my-mc-button:active:hover", "-fx-background-color", activeComponentHoverColor);
-	    builder.rule(".my-mc-button:active:pressed", "-fx-background-color", adjustBrightness(activeComponentHoverColor, 8));
+	    builder.rule(".my-mc-button:active:pressed", "-fx-background-color", UIUtils.adjustBrightness(activeComponentHoverColor, 8));
 	    // Alternative Effekte (für andere Skins):
 	    //css.rule(".my-mc-button:active:pressed", "-fx-translate-y", "1px");
 	    //css.rule(".my-mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
 	    builder.rule(".my-mc-button:inactive", "-fx-background-color", disabledComponentBgColor);
-	    builder.start(".my-mc-button:correct")
-	    		.add("-fx-background-color", correctColor);
+	    builder.rule(".my-mc-button:correct", "-fx-background-color", correctColor);
+	    if (mcCorrectTextColor != null)
+	        builder.rule(".my-mc-button:correct .text", "-fx-fill", mcCorrectTextColor); 
+	        
+	    builder.rule(".my-mc-button:incorrect", "-fx-background-color", incorrectColor);
 	    if (mcIncorrectTextColor != null)
-	        builder.add("-fx-text-fill", mcCorrectTextColor);
-	    builder.end();
-	    builder.start(".my-mc-button:incorrect")
-	    		.add("-fx-background-color", incorrectColor);
-	    if (mcIncorrectTextColor != null)
-	    	builder.add("-fx-text-fill", mcIncorrectTextColor);
-	    builder.end();
+	        builder.rule(".my-mc-button:incorrect .text", "-fx-fill", mcIncorrectTextColor);
 	    
 	    // --- MC Button Layout Varianten (Pseudo-Klassen) ---
 	    
@@ -818,7 +820,7 @@ public abstract class Skin {
 	    	.end();
 	    
 	    css.start(".my-table-view .table-row-cell")
-	       .add("-fx-background-color", UIUtils.toHex(textColor) + ", " + UIUtils.toHex(adjustBrightness(playFieldBackground, 5)))
+	       .add("-fx-background-color", UIUtils.toHex(textColor) + ", " + UIUtils.toHex(UIUtils.adjustBrightness(playFieldBackground, 5)))
 	       .end();
 	    
 	    css.start(".my-table-view .table-row-cell:selected")
@@ -905,13 +907,11 @@ public abstract class Skin {
 		
 		// Chart an sich
 	    css.start(".chart")
-	    	.add("-fx-background-color", "transparent")
-	    	//.add("-fx-category-gap", "3")
+	    	.add("-fx-background-color", "transparent") // Hintertgrund des ganzen (Balken-)Diagramms mit Achsen und Gedöns.
 	    .end();
 		
-	    // Balken stylen - Standard (Ziel nicht erreicht)
+	    // Borders für alle Balken
 	    css.start(".chart-bar")
-	    	.add("-fx-bar-fill", markedColor)  // Standardbalken
 	    	.add("-fx-border-color", textColor)
 	    	.add("-fx-border-width", "1px")
 	    .end();
@@ -961,7 +961,7 @@ public abstract class Skin {
     		.add("-fx-border-color", "transparent " + UIUtils.toHex(textColor) + " transparent transparent") // Siehe oben. Hier müssen wir dann rechts setzen
     	.end();
 	    
-	    // Achsen-Titel stylen (optional)
+	    // Achsen-Titel stylen
 	    css.start(".chart .axis-label")
 	       .add("-fx-font-family", "'" + font.getFamily() + "'")
 	       .add("-fx-font-size", font.getSize() + "px")
@@ -969,27 +969,28 @@ public abstract class Skin {
 	       .end();
 	    
 	    css.start(".chart-root")
-	    	.add("-fx-padding", "150px 200px 150px 200px") // !Sofort: Wird ausgelagert in properties!
+	    	.add("-fx-padding", "50px 50px 50px 50px") // !Sofort: Wird ausgelagert in properties!
 	    .end();
 
 	    css.rule(".chart-plot-background", "-fx-background-color", "transparent");
 	    css.rule(".chart-content", "-fx-background-color", "transparent");
 	    
 	    // Chart Layout (VBox)
-	    double spacing = font.getSize() * 0.5;
-	    css.start(".chart-container")
-	       .add("-fx-spacing", "20px")
-	       .add("-fx-alignment", "top-center")
+	    css.start(".chart-container") // Der Container, der Kinder vertikal anordnet und die Steuer-Bar und darunter das Diagramm enthält.
+	       .add("-fx-spacing", "20px") // vertikaler Abstand zwischen den Kind-Elementen (Datepicker und Diagramm)
 	    .end();
 
 	    // Chart Controls (HBox)
-	    css.start(".chart-controls")
-	       .add("-fx-spacing", spacing + "px")
-	       .add("-fx-alignment", "center-left")
+	    double spacing = font.getSize() * 0.5;
+	    css.start(".chart-controls") // Der Container mit den Datepickern und der Balkenbreite
+	       .add("-fx-spacing", spacing + "px") // Abstand zwischen den Kindern (z. B. Label "Von", "Bis" und dem Datepicker daneben)
+	       .add("-fx-alignment", "center-left") // center damit die Labels mittig platziert sind. "Left" macht gerade nix
 	    .end();
 	    
+	    // Der Tooltip ist bisher noch nicht weiter gestylet bezüglich der Ecken und Border und so. Ist mir gerade nicht so wichtig... Default ist ohne Border und abgerundet anscheinend.
+	    
 	    css.start(".tooltip")
-	    	.add("-fx-background-color", UIUtils.toHex(activeComponentBgColor)+"88")
+	    	.add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
 	    .end();
 	    
 	    css.start(".tooltip .text")
@@ -1006,12 +1007,6 @@ public abstract class Skin {
 		   .add("-fx-background-insets", "0")
 		   .add("-fx-padding", "0")
 		   .end();
-		
-	    // === DatePicker Textfeld (geschlossen) ===
-		/**css.start(".date-picker .text-field")
-	       .add("-fx-background-color", activeComponentBgColor)
-	       .add("-fx-text-fill", UIUtils.toHex(textActiveComponentColor))
-	       .end();**/
 	    
 	    // === Arrow Button (Kalender-Icon) ===
 	    css.start(".date-picker .arrow-button")
@@ -1036,10 +1031,10 @@ public abstract class Skin {
 	       .add("-fx-background-color", menuBarBackground)
 	       .end();
 	    
-	    css.start(".date-picker-popup .month-year-pane .label")
-	       .add("-fx-text-fill", textColor)
-	       .add("-fx-font-weight", "bold")
-	       .end();
+	    css.start(".date-picker-popup .month-year-pane .label .text")
+	    .add("-fx-fill", textColor)  // -fx-fill für Text-Nodes!
+	    .add("-fx-font-weight", "bold")
+	    .end();
 	    
 	    // === Spinner Buttons (< >) ===
 	    css.start(".date-picker-popup .spinner .button")
@@ -1058,17 +1053,33 @@ public abstract class Skin {
 	    
 	    // === Wochentag-Header ===
 	    css.start(".date-picker-popup .day-name-cell")
-	       .add("-fx-text-fill", textColor)
+	       .add("-fx-background-color", playFieldBackground)
+	       .end();
+	    css.start(".date-picker-popup .day-name-cell .text")
+	       .add("-fx-fill", textColor)
 	       .end();
 	    
 	    // === Tages-Zellen ===
+	    // Normale Tage des aktuellen Monats
+	    css.start(".date-picker-popup .day-cell .text")
+	    .add("-fx-fill", textColor)
+	    	.end();
 	    css.start(".date-picker-popup .day-cell")
-	       .add("-fx-background-color", adjustBrightness(playFieldBackground, 5))
-	       .add("-fx-text-fill", textColor)
-	       .end();
+	       .add("-fx-background-color", playFieldBackground)
+	    .end();
+
+	    // Tage anderer Monate explizit
+	    css.start(".date-picker-popup .day-cell.previous-month .text, " +
+	              ".date-picker-popup .day-cell.next-month .text")
+	    	.add("-fx-fill", textColor)
+	    .end();
+	    css.start(".date-picker-popup .day-cell.previous-month, .date-picker-popup .day-cell.next-month")
+	       .add("-fx-background-color", UIUtils.adjustBrightness(playFieldBackground, 20))
+	    .end();
 	    
-	    css.rule(".date-picker-popup .day-cell:hover", "-fx-background-color", activeComponentHoverColor);
+	    css.rule(".date-picker-popup .day-cell:hover", "-fx-background-color", UIUtils.adjustBrightness(playFieldBackground, 40));
 	    
+	    /**
 	    // === Heutiges Datum ===
 	    css.start(".date-picker-popup .today")
 	       .add("-fx-border-color", textColor)
@@ -1078,7 +1089,7 @@ public abstract class Skin {
 	    // === Ausgewähltes Datum ===
 	    css.start(".date-picker-popup .selected")
 	       .add("-fx-background-color", activeComponentBgColor)
-	       .end();
+	       .end();**/
 	}
 	
 	public void addSpinnerStyles(CssBuilder css) {
@@ -1370,7 +1381,10 @@ public abstract class Skin {
 			case CANCEL -> cancelButtonIcon;
 		};
 
-		ImageView icon = new ImageView(new Image(new File(Config.get("iconFolder") + iconPath).toURI().toString()));
+		Image image = new Image(new File(Config.get("iconFolder") + iconPath).toURI().toString());
+		if (buttonType == IconButtonType.BACK)
+			image = UIUtils.tintImage(image, textActiveComponentColor);
+		ImageView icon = new ImageView(image);
 	    
 	    // Button erstellen
 	    Button button = new Button();
@@ -1646,6 +1660,24 @@ public abstract class Skin {
 	    return tile;
 	}
 	
+	public DatePicker createDatePicker(LocalDate defaultDate) {
+		DatePicker result = new DatePicker(defaultDate);
+		result.setShowWeekNumbers(false);
+		result.setOnShowing(_ -> {
+            Platform.runLater(() -> {                
+                Window.getWindows().stream()
+                    .filter(w -> w instanceof PopupWindow)
+                    .forEach(popup -> {
+                        Scene popupScene = popup.getScene();
+                        if (popupScene != null) {
+                            SkinService.get().styleScene(popupScene);
+                        }
+                    });
+            });
+        });
+		return result;
+	}
+	
 	// endregion
 
 	/**
@@ -1708,35 +1740,6 @@ public abstract class Skin {
 		return Config.get("wallpaperFolder") + defaultWallpaperName;
 	}
 
-	/**
-	 * 
-	 * @param c
-	 * @param intensity:
-	 *            an int value between 0 (no change) and 100 (maximal change will lead to white or black...)
-	 * @return
-	 */
-	public static Color adjustBrightness(Color c, int intensity) {	    
-	    if (intensity < 0 || intensity > 100) {
-	        throw new RuntimeException("Das soll ein Prozentwert sein für die adjustBrightness, du Witzbold :)");
-	    }
-
-	    double intensityF = intensity / 100.0;
-	    double threshold = 1.0 - intensityF;
-
-	    double brightness = c.getBrightness();
-	    double newBrightness;
-
-	    if (brightness > threshold) {
-	        newBrightness = Math.max(0.0, brightness - intensityF); // abdunkeln
-	    } else {
-	        newBrightness = Math.min(1.0, brightness + intensityF); // aufhellen
-	    }
-
-	    // Neue Farbe erstellen via HSB-Factory
-	    // Wichtig: c.getOpacity() übernimmt den Alpha-Wert (0.0 - 1.0)
-	    return Color.hsb(c.getHue(), c.getSaturation(), newBrightness, c.getOpacity());
-	}
-
 	protected void loadAllConfigs(String configPath) {
 		try (FileInputStream in = new FileInputStream(configPath)) {
 			Properties props = new Properties();
@@ -1750,6 +1753,8 @@ public abstract class Skin {
 					String value = props.getProperty(field.getName());
 					if (value == null)
 						continue;
+					else
+						value = value.trim();
 
 					if (field.getType() == Color.class) {
 						field.set(this, parseColor(value));

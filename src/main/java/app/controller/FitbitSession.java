@@ -4,6 +4,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Locale;
 
 import app.data.Deck;
 import app.data.SessionSwitchStrategy;
@@ -30,8 +31,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 
 /**
  * !Architektur: Also im controller-Paket so heavy UI-Krams? Really?
@@ -100,7 +101,7 @@ public class FitbitSession implements Session {
     }
 
     private void buildView() {
-        view.getChildren().clear();
+    	view.getChildren().clear();
         view.setBackground(new Background(SkinService.get().getBackgroundImage(Deck.WORLD_CARDS)));
         
         VBox container = new VBox();
@@ -118,7 +119,7 @@ public class FitbitSession implements Session {
         view.getChildren().add(container);
     }
 
-    private HBox createControlsBar() {
+    private HBox createControlsBar() {    	
         HBox controls = new HBox();
         controls.getStyleClass().add("chart-controls");
         
@@ -128,13 +129,13 @@ public class FitbitSession implements Session {
         
         // DatePicker "Von"
         Label fromLabel = new Label("Von:");
-        fromPicker = new DatePicker(defaultFrom);
-        fromPicker.setOnAction(e -> updateCharts());
+        fromPicker = SkinService.get().createDatePicker(defaultFrom);
+        fromPicker.setOnAction(_ -> updateCharts());
         
         // DatePicker "Bis"
         Label toLabel = new Label("Bis:");
-        toPicker = new DatePicker(defaultTo);
-        toPicker.setOnAction(e -> updateCharts());
+        toPicker = SkinService.get().createDatePicker(defaultTo);
+        toPicker.setOnAction(_ -> updateCharts());
         
         // Spacer
         Region spacer = new Region();
@@ -144,7 +145,7 @@ public class FitbitSession implements Session {
         Label gapLabel = new Label("Balkenabstand:");
         gapSpinner = new Spinner<>(0, 20, 0);
         gapSpinner.setEditable(true);
-        gapSpinner.valueProperty().addListener((obs, old, newVal) -> updateCharts());
+        gapSpinner.valueProperty().addListener((_, _, _) -> updateCharts());
         
         controls.getChildren().addAll(
             fromLabel, fromPicker,

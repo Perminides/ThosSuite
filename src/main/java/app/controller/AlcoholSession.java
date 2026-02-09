@@ -107,13 +107,13 @@ public class AlcoholSession implements Session {
         
         // DatePicker "Von"
         Label fromLabel = new Label("Von:");
-        fromPicker = new DatePicker(LocalDate.now().minusDays(365));
-        fromPicker.setOnAction(e -> updateChart());
+        fromPicker = SkinService.get().createDatePicker(LocalDate.now().minusDays(365));
+        fromPicker.setOnAction(_ -> updateChart());
         
         // DatePicker "Bis"
         Label toLabel = new Label("Bis:");
-        toPicker = new DatePicker(LocalDate.now());
-        toPicker.setOnAction(e -> updateChart());
+        toPicker = SkinService.get().createDatePicker(LocalDate.now());
+        toPicker.setOnAction(_ -> updateChart());
         
         // Spacer
         Region spacer = new Region();
@@ -123,7 +123,7 @@ public class AlcoholSession implements Session {
         Label gapLabel = new Label("Balkenabstand:");
         gapSpinner = new Spinner<>(0, 20, 0);
         gapSpinner.setEditable(true);
-        gapSpinner.valueProperty().addListener((obs, old, newVal) -> updateChart());
+        gapSpinner.valueProperty().addListener((_, _, _) -> updateChart());
         
         controls.getChildren().addAll(
             fromLabel, fromPicker,

@@ -3,6 +3,7 @@ package app.ui;
 import java.util.List;
 import java.util.function.Consumer;
 
+import app.config.Config;
 import app.data.CardSortOrder;
 import app.data.LearnSessionInfo;
 import app.ui.skin.Skin;
@@ -133,9 +134,6 @@ public class MainWindow {
         
         for (CardSortOrder order : CardSortOrder.values()) {
             MenuItem item = skin.createMenuItem(order.getDisplayName());
-            if (order == CardSortOrder.BY_WRONG_COUNT_DESC) {
-                item.setDisable(true);
-            }
             item.setOnAction(e -> {
                 onSortSelected.accept(order);
                 // Alle anderen enablen, dieses disablen
@@ -336,6 +334,20 @@ public class MainWindow {
 
 	public void setHeight(int height) {
 		stage.setHeight(height);
+	}
+	
+	/**
+	 * Setzt die aktuelle SortOrder und disabled das entsprechende MenuItem
+	 * Wird initial ein Mal vom Controller nach Lesen der config aufgerufen
+	 */
+	public void setCurrentSortOrder(CardSortOrder sortOrder) {
+	    if (menuSort == null) return; // Noch nicht initialisiert
+	    
+	    for (MenuItem item : menuSort.getItems()) {
+	        // Vergleich über DisplayName (das steht im MenuItem-Text)
+	        boolean isCurrentOrder = item.getText().equals(sortOrder.getDisplayName());
+	        item.setDisable(isCurrentOrder);
+	    }
 	}
 
 	public ObservableList<Image> getIcons() {

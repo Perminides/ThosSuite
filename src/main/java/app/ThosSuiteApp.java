@@ -3,6 +3,7 @@ package app;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Locale;
 
 import app.config.Config;
 import app.controller.Controller;
@@ -48,6 +49,9 @@ public class ThosSuiteApp extends Application {
     private Controller controller;
 
     public static void main(String[] args) {
+    	// JavaFX DatePicker nutzt Locale.getDefault(Category.FORMAT) für Monatsnamen.
+    	// Windows-Regionsformat kann abweichen von der Sprache → explizit auf Deutsch setzen.
+    	Locale.setDefault(Locale.GERMANY);
         launch(args); // JavaFX Application.launch() startet die App und den JavaFX Application Thread
         Log.info(ThosSuiteApp.class, "End Suite");
         
@@ -129,7 +133,7 @@ public class ThosSuiteApp extends Application {
 
 						// 500ms warten, damit CSS vollständig angewendet wird
 						javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(500));
-						pause.setOnFinished(e -> {
+						pause.setOnFinished(_ -> {
 							splashStage.close();
 
 							// Platform.runLater nötig, weil showAndWait() nicht während einer
@@ -280,38 +284,22 @@ public class ThosSuiteApp extends Application {
     @Override
     public void stop() throws Exception {
         Log.debug(this, "App wird gestoppt, räume auf...");
-        // Sicherstellen, dass DB geschlossen wird (auch wenn Controller evtl. null ist bei Fehler)
+        
+        // Config speichern
         try {
-            app.data.persistence.DB.closeConnection();
-        } catch (Exception e) { /* ignore */ }
+            app.config.Config.save();
+        } catch (Exception e) {
+            Log.error(this, "Fehler beim Speichern der Config", e);
+        }
+        
+        // DB schließen
+        try {
+            app.data.persistence.DB.closeConnection(); // Sicherstellen, dass DB geschlossen wird (auch wenn Controller evtl. null ist bei Fehler)
+        } catch (Exception e) {
+        	Log.error(this, "Fehler beim Schließen der DB-Connection", e);
+        }
+        
         super.stop();
-    }
-
-    private String getDataFolder() {
-        // Erst Parameter prüfen
-        Parameters params = getParameters();
-        java.util.List<String> args = params.getRaw();
-        
-        if (!args.isEmpty()) {
-            String dataFolder = args.get(0);
-            if (new File(dataFolder).isDirectory()) {
-                return dataFolder;
-            }
-        }
-
-        // Fallback: DirectoryChooser
-        DirectoryChooser dirChooser = new DirectoryChooser();
-        dirChooser.setTitle("Wo finde ich denn die Dateien?");
-        try {
-            dirChooser.setInitialDirectory(new File(System.getProperty("user.home") + "/Desktop"));
-        } catch (Exception e) { /* fallback if desktop not accessable */ }
-        
-        File selectedDir = dirChooser.showDialog(null);
-        if (selectedDir != null) {
-            return selectedDir.getAbsolutePath() + "/";
-        }
-        
-        return null;
     }
 
     private void setupGlobalExceptionHandler() {
@@ -350,7 +338,7 @@ public class ThosSuiteApp extends Application {
                     return; // Nicht crashen für externes Tool
                 }
                 
-                System.exit(1);
+                Platform.exit();
             });
         });
     }

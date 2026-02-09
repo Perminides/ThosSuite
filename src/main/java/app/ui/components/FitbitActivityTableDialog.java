@@ -234,25 +234,25 @@ public class FitbitActivityTableDialog {
     private DialogResult convertFromTableData(ObservableList<ActivityRow> rows) {
         ActivityRow stepsRow = rows.get(0);
         int correctedTotalSteps = stepsRow.getSteps();
-        
+
         List<Activity> editedActivities = new ArrayList<>();
-        
+
         for (int i = 1; i < rows.size(); i++) {
             ActivityRow row = rows.get(i);
             Activity original = activities.get(i - 1);
-            
+
             Activity edited = new Activity(
-                row.getStartTime(),
+                original.getOriginalStartTime(),  // ← Vom Original
                 row.getActivityName(),
                 row.getDistanceUnit().isEmpty() ? null : row.getDistanceUnit(),
                 row.getDistance(),
                 row.getSteps()
             );
-            edited.setOriginalStartTime(original.getOriginalStartTime());
-            
+            edited.setStartTime(row.getStartTime());  // ← Explizit setzen!
+
             editedActivities.add(edited);
         }
-        
+
         return new DialogResult(editedActivities, correctedTotalSteps);
     }
     

@@ -97,11 +97,10 @@ public class FitbitUpdateService {
             mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
             mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT, false);
             
-            java.util.Map<String, Object> logData = java.util.Map.of(
-                "date", dayData.date(),
-                "totalSteps", dialogResult.totalSteps(),
-                "activities", dialogResult.activities()
-            );
+            java.util.Map<String, Object> logData = new java.util.LinkedHashMap<>();
+            logData.put("date", dayData.date());
+            logData.put("totalSteps", dialogResult.totalSteps());
+            logData.put("activities", dialogResult.activities());
             
             String usedDataLog = mapper.writeValueAsString(logData);
             repository.logApiResponse(dayData.date(), usedDataLog);
