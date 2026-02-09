@@ -3,7 +3,7 @@ package app.ui.skin;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.stage.Stage;
+import app.config.Config;
 import javafx.stage.Window;
 
 public final class SkinService {
@@ -15,11 +15,28 @@ public final class SkinService {
             new BlueGradientSkin(),
             new RedGradientSkin(),
             new FlatWebSkin(),
+            new FlowerSkin(),
             new SpicySkin(),
             new DarkMode()
     ));
     private static Skin current = AVAILABLE_SKINS.get(0); // !Erweiterung Später über config-Datei...
     private static Window ownerWindow;
+    
+    // Statischer Initializer lädt gespeichertes Skin
+    static {
+        String savedSkinClass = Config.get("pref_skinClass");
+        
+        if (savedSkinClass != null) {
+            // Suche Skin in der Liste
+            current = AVAILABLE_SKINS.stream()
+                .filter(skin -> skin.getClass().getSimpleName().equals(savedSkinClass))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Ungültiges Skin in config.txt: " + savedSkinClass));
+        } else {
+            // Fallback auf erstes Skin
+            current = AVAILABLE_SKINS.get(0);
+        }
+    }
 
     private SkinService() {} // keine Instanz erlaubt
 
@@ -28,6 +45,7 @@ public final class SkinService {
     		return;
     	
         current = skin;
+        Config.set("pref_skinClass", skin.getClass().getSimpleName());
     }
 
     public static Skin get() {

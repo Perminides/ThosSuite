@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import app.alc.AlcoholStartupService;
+import app.config.Config;
 import app.data.AnkiCard;
 import app.data.AnkiDeckService;
 import app.data.AnkiLearnSessionInfo;
@@ -77,6 +78,16 @@ public class Controller{
     	showEmptyBackground();
     	ankiDeckService = new AnkiDeckService();
     	regionDeckService = new RegionDeckService();
+    	
+    	// Gespeicherte SortOrder laden
+        String savedSort = Config.get("pref_sortOrder", "BY_WRONG_COUNT_DESC");
+        try {
+            currentSortOrder = CardSortOrder.valueOf(savedSort);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Ungültige SortOrder in config.txt: " + savedSort, e);
+        }
+        mainWindow.setCurrentSortOrder(currentSortOrder);
+    	
     	setLearnMenuItemLabels();
     	setPlayMenuItemLabels();
     	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
@@ -257,11 +268,12 @@ public class Controller{
 	}
 
 	public void cardSortOrderSelected(CardSortOrder sort) {
-		currentSortOrder = sort;
-		if (currentSession == null) //!Später dann weiß noch nicht, muss geschaut werden ob die Session zu sort überhaupt passt.
-			return;
-		currentSession.sort(sort);
-		
+	    currentSortOrder = sort;
+	    Config.set("pref_sortOrder", sort.name()); // Persistieren
+	    
+	    if (currentSession == null)
+	        return;
+	    currentSession.sort(sort); //!Später dann weiß noch nicht, muss geschaut werden ob die Session zu sort überhaupt passt.
 	}
 	
 	// NEU: Die Refresh-Methode

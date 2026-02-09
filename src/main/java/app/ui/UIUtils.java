@@ -1,5 +1,11 @@
 package app.ui;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.paint.Color;
+
 public class UIUtils {
     
     public static String toHex(javafx.scene.paint.Color c) {
@@ -19,5 +25,62 @@ public class UIUtils {
             return String.format("#%02X%02X%02X", r, g, b);
         }
     }
+    
+	/**
+	 * Ersetzt die Farbe jedes Pixels mit tintColor, wobei der Alpha-Wert unangetastet bleibt.
+	 * Ist also super, um monochromatische Bilder einzufärben :-)
+	 * 
+	 * @param source
+	 * @param tintColor
+	 * @return
+	 */
+	public static Image tintImage(Image source, Color tintColor) {
+		int width = (int) source.getWidth();
+		int height = (int) source.getHeight();
+
+		WritableImage result = new WritableImage(width, height);
+		PixelReader reader = source.getPixelReader();
+		PixelWriter writer = result.getPixelWriter();
+
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				Color pixelColor = reader.getColor(x, y);
+				Color newColor = new Color(tintColor.getRed(), tintColor.getGreen(), tintColor.getBlue(), pixelColor.getOpacity() // Alpha bleibt unverändert
+				);
+				writer.setColor(x, y, newColor);
+			}
+		}
+
+		return result;
+	}
+	
+	/**
+	 * 
+	 * @param c
+	 * @param intensity:
+	 *            an int value between 0 (no change) and 100 (maximal change will lead to white or black...)
+	 * @return
+	 */
+	public static Color adjustBrightness(Color c, int intensity) {	    
+	    if (intensity < 0 || intensity > 100) {
+	        throw new RuntimeException("Das soll ein Prozentwert sein für die adjustBrightness, du Witzbold :)");
+	    }
+
+	    double intensityF = intensity / 100.0;
+	    double threshold = 1.0 - intensityF;
+
+	    double brightness = c.getBrightness();
+	    double newBrightness;
+
+	    if (brightness > threshold) {
+	        newBrightness = Math.max(0.0, brightness - intensityF); // abdunkeln
+	    } else {
+	        newBrightness = Math.min(1.0, brightness + intensityF); // aufhellen
+	    }
+
+	    // Neue Farbe erstellen via HSB-Factory
+	    // Wichtig: c.getOpacity() übernimmt den Alpha-Wert (0.0 - 1.0)
+	    return Color.hsb(c.getHue(), c.getSaturation(), newBrightness, c.getOpacity());
+	}
 	
 }
