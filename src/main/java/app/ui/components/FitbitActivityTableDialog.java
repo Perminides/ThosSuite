@@ -15,6 +15,9 @@ import app.fitbit.json.ActivityDaySummary;
 import app.ui.skin.SkinService;
 import app.util.Log;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
@@ -163,31 +166,31 @@ public class FitbitActivityTableDialog {
         
         // Spalten erstellen
         TableColumn<ActivityRow, String> startTimeCol = new TableColumn<>("StartTime");
-        startTimeCol.setCellValueFactory(new PropertyValueFactory<>("startTime"));
+        startTimeCol.setCellValueFactory(cd -> cd.getValue().startTimeProperty());
         startTimeCol.setCellFactory(TextFieldTableCell.forTableColumn());
         startTimeCol.setEditable(true);
         startTimeCol.setSortable(false);
         
         TableColumn<ActivityRow, String> nameCol = new TableColumn<>("ActivityName");
-        nameCol.setCellValueFactory(new PropertyValueFactory<>("activityName"));
+        nameCol.setCellValueFactory(cd -> cd.getValue().activityNameProperty());
         nameCol.setCellFactory(TextFieldTableCell.forTableColumn());
         nameCol.setEditable(true);
         nameCol.setSortable(false);
         
         TableColumn<ActivityRow, String> unitCol = new TableColumn<>("DistanceUnit");
-        unitCol.setCellValueFactory(new PropertyValueFactory<>("distanceUnit"));
+        unitCol.setCellValueFactory(cd -> cd.getValue().distanceUnitProperty());
         unitCol.setCellFactory(TextFieldTableCell.forTableColumn());
         unitCol.setEditable(true);
         unitCol.setSortable(false);
         
         TableColumn<ActivityRow, Double> distanceCol = new TableColumn<>("Distance");
-        distanceCol.setCellValueFactory(new PropertyValueFactory<>("distance"));
+        distanceCol.setCellValueFactory(cd -> cd.getValue().distanceProperty().asObject());
         distanceCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         distanceCol.setEditable(true);
         distanceCol.setSortable(false);
         
         TableColumn<ActivityRow, Integer> stepsCol = new TableColumn<>("Steps");
-        stepsCol.setCellValueFactory(new PropertyValueFactory<>("steps"));
+        stepsCol.setCellValueFactory(cd -> cd.getValue().stepsProperty().asObject());
         stepsCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         stepsCol.setEditable(true);
         stepsCol.setSortable(false);
@@ -274,37 +277,47 @@ public class FitbitActivityTableDialog {
      * Datenmodell für eine Zeile in der TableView.
      */
     public static class ActivityRow {
-        private String startTime;
-        private String activityName;
-        private String distanceUnit;
-        private Double distance;
-        private Integer steps;
+        private final SimpleStringProperty startTime;
+        private final SimpleStringProperty activityName;
+        private final SimpleStringProperty distanceUnit;
+        private final SimpleDoubleProperty distance;
+        private final SimpleIntegerProperty steps;
         private final boolean isStepsRow;
         
         public ActivityRow(String startTime, String activityName, String distanceUnit, 
                           Double distance, Integer steps, boolean isStepsRow) {
-            this.startTime = startTime;
-            this.activityName = activityName;
-            this.distanceUnit = distanceUnit;
-            this.distance = distance;
-            this.steps = steps;
+            this.startTime = new SimpleStringProperty(startTime);
+            this.activityName = new SimpleStringProperty(activityName);
+            this.distanceUnit = new SimpleStringProperty(distanceUnit);
+            this.distance = new SimpleDoubleProperty(distance != null ? distance : 0.0);
+            this.steps = new SimpleIntegerProperty(steps != null ? steps : 0);
             this.isStepsRow = isStepsRow;
         }
         
-        public String getStartTime() { return startTime; }
-        public void setStartTime(String startTime) { this.startTime = startTime; }
+        // --- Property-Accessors (für JavaFX-Binding) ---
         
-        public String getActivityName() { return activityName; }
-        public void setActivityName(String activityName) { this.activityName = activityName; }
+        public SimpleStringProperty startTimeProperty() { return startTime; }
+        public SimpleStringProperty activityNameProperty() { return activityName; }
+        public SimpleStringProperty distanceUnitProperty() { return distanceUnit; }
+        public SimpleDoubleProperty distanceProperty() { return distance; }
+        public SimpleIntegerProperty stepsProperty() { return steps; }
         
-        public String getDistanceUnit() { return distanceUnit; }
-        public void setDistanceUnit(String distanceUnit) { this.distanceUnit = distanceUnit; }
+        // --- Konventionelle Getter/Setter (für Zugriff aus Java-Code) ---
         
-        public Double getDistance() { return distance; }
-        public void setDistance(Double distance) { this.distance = distance; }
+        public String getStartTime() { return startTime.get(); }
+        public void setStartTime(String value) { startTime.set(value); }
         
-        public Integer getSteps() { return steps; }
-        public void setSteps(Integer steps) { this.steps = steps; }
+        public String getActivityName() { return activityName.get(); }
+        public void setActivityName(String value) { activityName.set(value); }
+        
+        public String getDistanceUnit() { return distanceUnit.get(); }
+        public void setDistanceUnit(String value) { distanceUnit.set(value); }
+        
+        public double getDistance() { return distance.get(); }
+        public void setDistance(double value) { distance.set(value); }
+        
+        public int getSteps() { return steps.get(); }
+        public void setSteps(int value) { steps.set(value); }
         
         public boolean isStepsRow() { return isStepsRow; }
     }
