@@ -331,7 +331,10 @@ public abstract class Skin {
 		    if (insets.getBottom() != -1)
 		    	throw new RuntimeException("Alter jetzt ist der bottomInset für den Background plötzlich nicht mehr -1?");**/
 	    
-	    CssBuilder css = new CssBuilder();
+		// The color scheme of the default header buttons is automatically adjusted to remain easily recognizable by inspecting the Scene.fill property to gauge the brightness of the user interface. Applications should set the scene fill to a color that matches the user interface of the header bar area, even if the scene fill is not visible because it is obscured by other controls.
+	    scene.setFill(menuBarBackground);
+		
+		CssBuilder css = new CssBuilder();
 	    
 	    // === GLOBAL: FONT ===
 	    css.start(".root")
@@ -441,8 +444,9 @@ public abstract class Skin {
 	private void addDialogStyles(CssBuilder css) {
 	    // Dialog Container
 	    css.start(".dialog-pane")
-	       .add("-fx-border-color", stageBorderColor) // analog der Stage
-	       .add("-fx-border-width", 1 + "px") // analog der Stage
+	      // Ein dünner weißer Border sieht super aus auf Windows 10. Auf Windows 11 weniger, siehe Mail vom 10.02. ToDo
+	      // .add("-fx-border-color", stageBorderColor) // analog der Stage
+	      // .add("-fx-border-width", 1 + "px") // analog der Stage
 	       .add("-fx-background-color", playFieldBackground) // Für den Bereich mit den Buttons.
 	       .add("-fx-effect", "dropshadow(gaussian, rgba(255,0,0,1.0), 50, 0, 20, 20)")
 	       .end();
@@ -694,10 +698,11 @@ public abstract class Skin {
 	
 	private void addMainWindowStyles(CssBuilder css) {
 	    // Root Container (Stage Border)
-	    css.start(".my-root")
+		// Siehe  Kommentar im Dialog. Wegen Windows 11 rausgenommen, der hat eigenen Border und runde Ecken un ddas verträgt sich leider so gar nicht... 
+	 /**   css.start(".my-root")
 	       .add("-fx-border-color", stageBorderColor) // Wir wollen einen weißen Rahmen um das gesamte Fenster!
 	       .add("-fx-border-width", "1px") // Einen dünnen.
-	       .end();
+	       .end();**/
 	    
 	    // HeaderBar in MainWindow
 	    /**css.start(".my-root .header-bar")

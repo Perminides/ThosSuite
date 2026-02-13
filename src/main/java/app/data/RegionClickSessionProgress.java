@@ -86,7 +86,7 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 			sessionRegions.remove(id);
 			nextStep();
 		} else {
-			wrongClicked.add(quizElements.get(currentIndex).shapeId());
+			wrongClicked.add(id);
 			isPaused = true; 
 			presenter.handleClickResult(id, false, quizElements.get(currentIndex).getShapeId());
 		}
