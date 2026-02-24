@@ -1,9 +1,13 @@
 package app.ui.components;
 
 import java.io.File;
+import java.net.MalformedURLException;
+
+import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
+import javafx.scene.shape.Rectangle;
 
 
 /**
@@ -83,12 +87,25 @@ public class ImagePane extends StackPane {
         if (imagePath == null) {
             imageRect.setStyle(""); 
             imageRect.setFill(Color.TRANSPARENT);
-        } else {
-        	File imageFile = new File(imagePath);
-        	if (!imageFile.exists())
-        		throw new RuntimeException("Konnte das Bild nicht finden: " + imagePath);
-            String uri = imageFile.toURI().toString();
-            imageRect.setStyle("-fx-fill: url('" + uri + "');");
+            return;
+        }
+        
+
+        File imageFile = new File(imagePath);
+        if (!imageFile.exists()) {
+            throw new RuntimeException("Konnte das Bild nicht finden: " + imagePath);
+        }
+
+        try {
+            String url = imageFile.toURI().toURL().toExternalForm(); // sauberer als toString()
+            Image img = new Image(url, false); // backgroundLoading=false => lädt synchron
+            if (img.isError()) {
+                throw new RuntimeException("Fehler beim Laden des Bildes: " + imagePath, img.getException());
+            }
+            imageRect.setStyle(""); // CSS weg, falls vorher gesetzt
+            imageRect.setFill(new ImagePattern(img));
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Ungültige Bild-URL: " + imagePath, e);
         }
     }
     

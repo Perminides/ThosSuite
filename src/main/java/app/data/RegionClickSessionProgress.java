@@ -98,7 +98,7 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 			isPaused = false;
 			resume();
 		} else if (isPaused) {
-			session.end(false, getId(wrongClicked), "Statt " + quizElements.get(currentIndex).toFind() + " wurde " + getNameForId(wrongClicked) + " geklickt.", true);
+			session.end(false, quizElements.get(currentIndex).shapeId(), "Statt " + quizElements.get(currentIndex).toFind() + " wurde " + getNameForId(wrongClicked) + " geklickt.", true);
 		}
 	}
 	

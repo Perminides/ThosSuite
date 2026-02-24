@@ -8,7 +8,7 @@ import app.data.Deck;
 import app.data.LearnStat;
 
 /**
- * Diese Klasse sollte nur vom MapDeckService gekannt werden.
+ * Diese Klasse sollte nur vom AnkiDeckService gekannt werden.
  */
 public class AnkiDeckRepository {
 
