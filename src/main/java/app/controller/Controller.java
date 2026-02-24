@@ -112,13 +112,12 @@ public class Controller{
 		if (fitbitDataFetcher.hasError()) {
 			SkinService.get().createAlert(mainWindow.getStage(), "Fitbit-Fehler",
 					"Fehler beim Laden der Fitbit-Daten:\n" + fitbitDataFetcher.getError().getMessage(), false, false).showAndWait();
-			return;
-		}
-
-		// Fitbit-Dialoge zeigen
-		if (fitbitDataFetcher.hasData()) {
-			FitbitUpdateService fitbitService = new FitbitUpdateService(fitbitDataFetcher);
-			fitbitService.showDialogsAndSave(null);
+		} else {
+			// Fitbit-Dialoge zeigen
+			if (fitbitDataFetcher.hasData()) {
+				FitbitUpdateService fitbitService = new FitbitUpdateService(fitbitDataFetcher);
+				fitbitService.showDialogsAndSave(null);
+			}
 		}
 		
 	    AlcoholStartupService alcoholService = new AlcoholStartupService();
