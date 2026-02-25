@@ -9,12 +9,17 @@ public enum MapMetadata {
 	CARIBBEAN(MapType.SHAPE, "carribean.geojson", null),
 	ENGLAND(MapType.SHAPE, "england.geojson", null),
 	BERLIN(MapType.SHAPE, "berlin.geojson", null), // !Sofort: Willste in Bertlin nicht noch die Bezirksgrenzen hinzufügen? Wäre flott gemacht :)
+	SCHWEIZ(MapType.SHAPE, "schweiz.geojson", null),
+	HANNOVER_STADTTEILE(MapType.SHAPE, "hannover_stadtteile.geojson", null),
+	OZEANIEN(MapType.SHAPE, "ozeanien.geojson", null),
+	AUSTRIA(MapType.SHAPE, "austria.geojson", null),
 	
 	WORLD(MapType.IMAGE, "worldAreas.geojson;worldCountries.geojson;worldLines.geojson", "world.png");
 
+	private final MapType mapType;
 	private final String[] geoJsonFile;
 	private final String bgImageFile;
-	private final MapType mapType;
+	
 
 	MapMetadata(MapType type, String geoJsonFile, String bgImage) {
 		this.mapType = type;
