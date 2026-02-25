@@ -28,6 +28,10 @@ public enum Deck {
 	USA("us", "USA", "us", DeckCategory.REGION_DECK, null, MapMetadata.USA, null, true),
 	CARIBBEAN("cs", "Karibik", "cs", DeckCategory.REGION_DECK, null, MapMetadata.CARIBBEAN, null, true),
 	ENGLAND("en", "England", "en", DeckCategory.REGION_DECK, null, MapMetadata.ENGLAND, null, true),
+	SCHWEIZ("ch", "Schweiz", "ch", DeckCategory.REGION_DECK, null, MapMetadata.SCHWEIZ, null, true),
+	OZEANIEN("oz", "Ozeanien", "oz", DeckCategory.REGION_DECK, null, MapMetadata.OZEANIEN, null, true),
+	HANNOVER_STADTTEILE("hs", "Hannover Stadt", "hs", DeckCategory.REGION_DECK, null, MapMetadata.HANNOVER_STADTTEILE, null, false),
+	AUSTRIA("au", "Österreich", "au", DeckCategory.REGION_DECK, null, MapMetadata.AUSTRIA, null, true),
 	
 	BERLIN_WEST("be_we", "Berlin West", "be", DeckCategory.REGION_DECK, null, MapMetadata.BERLIN, null, false),
 	BERLIN_NORD("be_no", "Berlin Nord", "be", DeckCategory.REGION_DECK, null, MapMetadata.BERLIN, null, false),
