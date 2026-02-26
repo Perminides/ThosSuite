@@ -13,6 +13,8 @@ public enum MapMetadata {
 	HANNOVER_STADTTEILE(MapType.SHAPE, "hannover_stadtteile.geojson", null),
 	OZEANIEN(MapType.SHAPE, "ozeanien.geojson", null),
 	AUSTRIA(MapType.SHAPE, "austria.geojson", null),
+	BAVARIA(MapType.SHAPE, "bayern_reg.geojson", null),
+	HANNOVER_REGION(MapType.SHAPE, "hannover_region.geojson", null),
 	
 	WORLD(MapType.IMAGE, "worldAreas.geojson;worldCountries.geojson;worldLines.geojson", "world.png");
 

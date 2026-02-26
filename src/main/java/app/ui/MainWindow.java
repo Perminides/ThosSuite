@@ -2,8 +2,8 @@ package app.ui;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-import app.config.Config;
 import app.data.CardSortOrder;
 import app.data.LearnSessionInfo;
 import app.ui.skin.Skin;
@@ -49,6 +49,7 @@ public class MainWindow {
     private Consumer<LearnSessionInfo> onSessionSelected = null;
     private Consumer<CardSortOrder> onSortSelected = null;
     private Consumer<Skin> onNewSkinSelected = null;
+    private Supplier<CardSortOrder> sortOrderSupplier = null;
     private Runnable onSaveSelected = null;
     private Runnable onEscPressed = null;
     private Runnable onPausePressed = null;
@@ -132,6 +133,10 @@ public class MainWindow {
         menuOptions = skin.createMenu("Optionen");
         menuSort = skin.createMenu("Anzeigereihenfolge");
         
+        // !Sofort. Boah. Ok, also ich muss bei Skinwechsel nicht mehr im Controller setCurrentSortOrder aufrufen, was gut ist. Dafür habe ich hier diesen Hack, weil bei der allerersten Initialisierung der Controller noch nicht existiert, was eher eklig ist tbh.
+        CardSortOrder currentSortOrder = null;
+        if (sortOrderSupplier != null)
+        	currentSortOrder = sortOrderSupplier.get();
         for (CardSortOrder order : CardSortOrder.values()) {
             MenuItem item = skin.createMenuItem(order.getDisplayName());
             item.setOnAction(e -> {
@@ -141,6 +146,8 @@ public class MainWindow {
                     menuItem.setDisable(menuItem == e.getSource());
                 }
             });
+            if (order == currentSortOrder)
+            	item.setDisable(true);
             menuSort.getItems().add(item);
         }
         menuOptions.getItems().add(menuSort);
@@ -322,6 +329,10 @@ public class MainWindow {
     
     public void setStatisticsConsumer(Consumer<String> consumer) {
         this.onStatisticsSelected = consumer;
+    }
+    
+    public void setSortOrderSupplier(Supplier<CardSortOrder> supplier) {
+    	this.sortOrderSupplier = supplier;
     }
 
 	public void show() {

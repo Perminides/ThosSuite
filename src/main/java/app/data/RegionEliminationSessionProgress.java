@@ -11,13 +11,13 @@ public class RegionEliminationSessionProgress implements RegionSessionProgress {
 	private final RegionSession session;
 	private final Set<MapShape> sessionRegions;
 	private RegionSessionPresenter presenter;
-	private RegionMode mode;
+	private RegionSessionSpec spec;
 	private boolean hasProgressed = false;
 
 	public RegionEliminationSessionProgress(Set<MapShape> regions, RegionSessionSpec spec, RegionSession regionSession) {
 		this.sessionRegions = regions;
 		this.session = regionSession;
-		this.mode = spec.getMode();
+		this.spec = spec;
 	}
 
 	@Override
@@ -34,7 +34,7 @@ public class RegionEliminationSessionProgress implements RegionSessionProgress {
 	public void cancel() {
 		String result = "Folgende Elemente wurden nicht eliminiert: \n\n";
 		for (MapShape mapShape : sessionRegions) {
-			switch (mode) {
+			switch (spec.getMode()) {
             	case ELIMINATION_BOTH -> result = result + mapShape.regionName() + " - " + mapShape.capitalName() + "\n";
             	case ELIMINATION_CITY -> result = result + mapShape.capitalName() + "\n";
             	case ELIMINATION_REGION -> result = result + mapShape.regionName() + "\n";
@@ -49,7 +49,7 @@ public class RegionEliminationSessionProgress implements RegionSessionProgress {
 	    Set<MapShape> matches = new HashSet<>();
 	    
 	    for (MapShape region : sessionRegions) {
-	        boolean isMatch = switch (mode) {
+	        boolean isMatch = switch (spec.getMode()) {
 	            case ELIMINATION_BOTH -> region.isMatching(text);
 	            case ELIMINATION_CITY -> region.isMatchingCapital(text);
 	            case ELIMINATION_REGION -> region.isMatchingRegion(text);
@@ -68,8 +68,12 @@ public class RegionEliminationSessionProgress implements RegionSessionProgress {
 	    presenter.handleCorrectAnswers(getIds(matches));
 	    hasProgressed = true;
 	    
-	    if (sessionRegions.isEmpty())
-	        session.end(true, null, null, true);
+	    if (sessionRegions.isEmpty()) {
+	    	if (spec.isPlaySession())
+	    		session.end(true, null, "Super gemacht!", true);
+	    	else
+	    		session.end(true, null, null, true);
+	    }
 	}
 
 	@Override

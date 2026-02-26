@@ -75,6 +75,7 @@ public class Controller{
     	mainWindow.setSkinChangeConsumer(this::newSkinSelected);
     	mainWindow.setReloadSkinRunnable(this::triggerSkinRefresh);
     	mainWindow.setStatisticsConsumer(this::onStatisticsMenuItemSelected);
+    	mainWindow.setSortOrderSupplier(this::getCardSortOrder);
     	showEmptyBackground();
     	ankiDeckService = new AnkiDeckService();
     	regionDeckService = new RegionDeckService();
@@ -256,6 +257,10 @@ public class Controller{
 			currentSession.endGracefully();
 	}
 	
+	public CardSortOrder getCardSortOrder() {
+		return currentSortOrder;
+	}
+	
 	public void escPressed() {
 		if (currentSession != null)
 			currentSession.escClicked();
@@ -297,6 +302,9 @@ public class Controller{
     	Log.info(this, "=== SKIN CHANGE === currentSession=" 
     	        + (currentSession == null ? "null" : "Session@" + System.identityHashCode(currentSession)));
         mainWindow.buildStyledUi();
+        
+        // !Sofort: Das ist aber architektonisch scheiße, dass ich das hier noch mal aufrufen muss!
+        //mainWindow.setCurrentSortOrder(currentSortOrder);
         
         if (currentSession != null) {
             currentSession.refresh();
