@@ -31,7 +31,9 @@ public enum Deck {
 	SCHWEIZ("ch", "Schweiz", "ch", DeckCategory.REGION_DECK, null, MapMetadata.SCHWEIZ, null, true),
 	OZEANIEN("oz", "Ozeanien", "oz", DeckCategory.REGION_DECK, null, MapMetadata.OZEANIEN, null, true),
 	HANNOVER_STADTTEILE("hs", "Hannover Stadt", "hs", DeckCategory.REGION_DECK, null, MapMetadata.HANNOVER_STADTTEILE, null, false),
+	HANNOVER_REGION("hr", "Hannover Region", "hr", DeckCategory.REGION_DECK, null, MapMetadata.HANNOVER_REGION, null, false),
 	AUSTRIA("au", "Österreich", "au", DeckCategory.REGION_DECK, null, MapMetadata.AUSTRIA, null, true),
+	BAVARIA("br", "Bayern Reg", "br", DeckCategory.REGION_DECK, null, MapMetadata.BAVARIA, null, true),
 	
 	BERLIN_WEST("be_we", "Berlin West", "be", DeckCategory.REGION_DECK, null, MapMetadata.BERLIN, null, false),
 	BERLIN_NORD("be_no", "Berlin Nord", "be", DeckCategory.REGION_DECK, null, MapMetadata.BERLIN, null, false),

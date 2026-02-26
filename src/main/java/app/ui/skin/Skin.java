@@ -233,6 +233,8 @@ public abstract class Skin {
 	protected String hsWallpaperName;
 	protected String ozWallpaperName;
 	protected String auWallpaperName;
+	protected String brWallpaperName;
+	protected String hrWallpaperName;
 
 	protected Rectangle2D mcSessionQuestionPanel;
 	protected Rectangle2D mcSessionImagePanel;
@@ -289,6 +291,12 @@ public abstract class Skin {
 	protected Rectangle2D auSessionQuestionPanel;
 	protected Rectangle2D auSessionMapPanel;
 	protected Rectangle2D auSessionTextInputPanel;
+	protected Rectangle2D brSessionQuestionPanel;
+	protected Rectangle2D brSessionMapPanel;
+	protected Rectangle2D brSessionTextInputPanel;
+	protected Rectangle2D hrSessionQuestionPanel;
+	protected Rectangle2D hrSessionMapPanel;
+	protected Rectangle2D hrSessionTextInputPanel;
 
 	protected Integer verticalGapMC;
 
