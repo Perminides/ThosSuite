@@ -46,7 +46,7 @@ public class RegionSessionPresenter {
 	public void refresh() {
 		savedState = new SavedState(sessionPane.getState(), sessionPane.getQuestion());
 		this.sessionPane = new RegionSessionPane(this, spec.getDeckType(), spec.getMode().getSubCategory() == RegionMode.SubCategory.CLICK);
-		sessionPane.setState(savedState.mapState);
+		sessionPane.setState(savedState.mapState, false);
 		sessionPane.setQuestion(savedState.text);
 		sessionPaneContainer.getChildren().setAll(sessionPane);
 		savedState = null;
@@ -102,8 +102,11 @@ public class RegionSessionPresenter {
 		sessionPane.setTextInTextField("");
 	}
 	
-	public void undoClick() {
-		sessionPane.setState(savedState.mapState);
+	/**
+	 * @param keepLastIncorrect -> Wenn true, dann wird das aktuell als korrekt dargestellte rot! Wurde ja nicht gefunden!
+	 */
+	public void undoClick(boolean keepLastIncorrect) {
+		sessionPane.setState(savedState.mapState, keepLastIncorrect);
 		sessionPane.setQuestion(savedState.text);
 		savedState = null;
 	}

@@ -9,7 +9,6 @@ import java.util.TreeSet;
 
 import app.controller.RegionSession;
 import app.presenter.RegionSessionPresenter;
-import app.util.Log;
 
 public class RegionClickSessionProgress implements RegionSessionProgress{
 	
@@ -61,10 +60,11 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 		if (!spec.isPlaySession())
 			wrongClicked.clear();
 		isPaused = false;
-		presenter.undoClick(); // Das Anzeigen der falschen und richtigen Region wird entfernt und der Stand davor wiederhergestellt.
+		presenter.undoClick(spec.isPlaySession()); // Das Anzeigen der falschen und richtigen Region wird entfernt und der Stand davor wiederhergestellt.
 		if (spec.isPlaySession()) {
 		    // FreePlay soll smooth durchlaufen. Kein erneuter Klick nötig, da ja auch kein Pop-Up zwischendurch.
-			elementClicked(quizElements.get(currentIndex).shapeId);
+			sessionRegions.remove(quizElements.get(currentIndex).getShapeId());
+			nextStep();
 		} else {
 		    // In einer Lernsession ist das hier ein starker Eingriff in die Logik. 
 		    // Ich habe mich geweigert, die Session als falsch abzuspeichern. 
@@ -86,7 +86,7 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 			sessionRegions.remove(id);
 			nextStep();
 		} else {
-			wrongClicked.add(id);
+			wrongClicked.add(quizElements.get(currentIndex).getShapeId());
 			isPaused = true; 
 			presenter.handleClickResult(id, false, quizElements.get(currentIndex).getShapeId());
 		}
@@ -137,15 +137,6 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 			presenter.showQuestion(quizElements.get(currentIndex).getToFind());
 			presenter.weWaitForClick(sessionRegions);
 		}
-	}
-	
-	private String getId(Set<String> ids) {
-		if (ids.size() != 1)
-			throw new RuntimeException("Moment. Wieso gibt es mehr als einen Klick hier?");
-		for (String element : ids) {
-			return element;
-		}
-		return null;
 	}
 	
 	private String getNameForId(String wrongClicked) {
