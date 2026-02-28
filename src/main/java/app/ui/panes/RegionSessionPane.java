@@ -82,8 +82,8 @@ public class RegionSessionPane extends Pane {
     	return karte.getState();
     }
     
-    public void setState(ShapeMapState state) {
-    	karte.setState(state);
+    public void setState(ShapeMapState state, boolean isFreePlay) {
+    	karte.setState(state, isFreePlay);
     }
     
     /**
