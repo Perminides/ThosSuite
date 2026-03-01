@@ -9,6 +9,7 @@ import java.util.TreeSet;
 
 import app.controller.RegionSession;
 import app.presenter.RegionSessionPresenter;
+import app.presenter.RegionSessionPresenter.WrongClickResolution;
 
 public class RegionClickSessionProgress implements RegionSessionProgress{
 	
@@ -57,21 +58,28 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 
 	@Override
 	public void resume() {
-		if (!spec.isPlaySession())
-			wrongClicked.clear();
-		isPaused = false;
-		presenter.undoClick(spec.isPlaySession()); // Das Anzeigen der falschen und richtigen Region wird entfernt und der Stand davor wiederhergestellt.
 		if (spec.isPlaySession()) {
-		    // FreePlay soll smooth durchlaufen. Kein erneuter Klick nötig, da ja auch kein Pop-Up zwischendurch.
-			sessionRegions.remove(quizElements.get(currentIndex).getShapeId());
-			nextStep();
+			sessionRegions.removeAll(wrongClicked);
 		} else {
+			wrongClicked.clear();
+		}
+			
+		isPaused = false;
+
+		presenter.undoWrongClick(
+			    spec.isPlaySession()
+			        ? WrongClickResolution.COMMIT_MISS_AND_CONTINUE
+			        : WrongClickResolution.ROLLBACK_FOR_RETRY
+			);
+		
+		if (!spec.isPlaySession()) {
 		    // In einer Lernsession ist das hier ein starker Eingriff in die Logik. 
 		    // Ich habe mich geweigert, die Session als falsch abzuspeichern. 
 		    // Ok, dann muss ich aber noch einmal auf das korrekte Klicken...
 		    currentIndex--;
-		    nextStep();
 		}
+		
+		nextStep();
 	}
 
 	@Override
