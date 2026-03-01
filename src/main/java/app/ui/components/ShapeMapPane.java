@@ -231,15 +231,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         return new ShapeMapState(correct, incorrect, marked, active, isInteractive);
     }
     
-    public void setState(ShapeMapState state, boolean keepLastIncorrect) {
-    	// Set wegen final, sollte aber nur einer sein.
-    	Set<String> lastIncorrectShape = new HashSet<String>();
-    	// Der gesuchte Kreis wurde als korrekt angezeigt. Der falsch geklickte als inkorrekt.
-    	// !Sofort: Alles etwas gruselig, oder? Ich meine, das funktioniert hier auch NUR weil setState halt nur bei RegionClick aufgerufen wird und sonst nie. Für was anderes ist die Methode auch nicht mehr zu gebrauchen, so wie Du die designed hast...
-    	shapeMap.values().forEach(mS -> {
-    		if (mS.shape().getPseudoClassStates().contains(CORRECT)) 
-    			lastIncorrectShape.add(mS.id());
-    	});
+    public void setState(ShapeMapState state) {
         resetAllStates();
         addToCorrect(state.correctShapes());
         // Einzel-Add für Incorrect (meist nur einer)
@@ -247,9 +239,5 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         addToMarked(state.markedShapes());
         makeActive(state.activeShapes());
         setInteractive(state.interactive());
-        if (keepLastIncorrect) {
-        	String wrongId = lastIncorrectShape.iterator().next();
-        	addToIncorrect(wrongId);
-        }
     }
 }

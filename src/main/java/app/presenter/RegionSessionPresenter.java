@@ -16,14 +16,21 @@ import javafx.scene.layout.StackPane;
  * the sessionPane inside this container is recreated. The MainWindow won't realize this :-)
  */
 public class RegionSessionPresenter {
-	
+	// Wir speichern auch die Frage für Skinwechsel
 	private record SavedState (ShapeMapState mapState, String text) {};
+	private record WrongClickSnapshot(ShapeMapState beforeMap, String beforeText, String expectedId) {}
+	public enum WrongClickResolution {
+	    ROLLBACK_FOR_RETRY,          // Learning "Fortsetzen"
+	    COMMIT_MISS_AND_CONTINUE     // FreePlay
+	}
 	
 	private final StackPane sessionPaneContainer = new StackPane();
 	private RegionSessionPane sessionPane;
 	private final RegionSessionSpec spec; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 	private final RegionSessionProgress progress;
 	private final boolean hard;
+
+	private WrongClickSnapshot wrongClickSnapshot;
 	private SavedState savedState;
 	
 	public RegionSessionPresenter(RegionSessionProgress progress, RegionSessionSpec spec) {
@@ -46,7 +53,7 @@ public class RegionSessionPresenter {
 	public void refresh() {
 		savedState = new SavedState(sessionPane.getState(), sessionPane.getQuestion());
 		this.sessionPane = new RegionSessionPane(this, spec.getDeckType(), spec.getMode().getSubCategory() == RegionMode.SubCategory.CLICK);
-		sessionPane.setState(savedState.mapState, false);
+		sessionPane.setState(savedState.mapState);
 		sessionPane.setQuestion(savedState.text);
 		sessionPaneContainer.getChildren().setAll(sessionPane);
 		savedState = null;
@@ -90,7 +97,11 @@ public class RegionSessionPresenter {
 			sessionPane.addIdsToCorrect(Set.of(id));
 
 		} else {
-			savedState = new SavedState(sessionPane.getState(), sessionPane.getQuestion());
+			wrongClickSnapshot = new WrongClickSnapshot(
+				    sessionPane.getState(),
+				    sessionPane.getQuestion(),
+				    correctId // expected target
+				);
 			sessionPane.moveAllToActive();
 			sessionPane.setIdToIncorrect(id);
 			sessionPane.addIdsToCorrect(Set.of(correctId));
@@ -102,13 +113,14 @@ public class RegionSessionPresenter {
 		sessionPane.setTextInTextField("");
 	}
 	
-	/**
-	 * @param keepLastIncorrect -> Wenn true, dann wird das aktuell als korrekt dargestellte rot! Wurde ja nicht gefunden!
-	 */
-	public void undoClick(boolean keepLastIncorrect) {
-		sessionPane.setState(savedState.mapState, keepLastIncorrect);
-		sessionPane.setQuestion(savedState.text);
-		savedState = null;
+	public void undoWrongClick(WrongClickResolution resolution) {
+	    ShapeMapState base = wrongClickSnapshot.beforeMap();
+	    if (resolution == WrongClickResolution.COMMIT_MISS_AND_CONTINUE) {
+	    	base.incorrectShapes().add(wrongClickSnapshot.expectedId());
+	    	base.activeShapes().remove(wrongClickSnapshot.expectedId());
+	    }
+	    sessionPane.setState(base);	    
+	    wrongClickSnapshot = null;
 	}
 	
 	// ========================================
