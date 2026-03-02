@@ -146,6 +146,7 @@ public class ThosSuiteApp extends Application {
 								// Nochmal runLater für toFront - kommt dann garantiert nach allem
 							    Platform.runLater(() -> {
 							        primaryStage.toFront();
+							        primaryStage.requestFocus();
 							    });
 							});
 						});

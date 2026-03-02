@@ -31,6 +31,7 @@ import app.ui.components.DiaryDialog;
 import app.ui.components.AnkiPlayConfigDialog.AnkiPlayConfig;
 import app.ui.components.RegionPlayConfigDialog;
 import app.ui.components.RegionPlayConfigDialog.RegionPlayConfig;
+import app.ui.components.WeekdayDialog;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
 import app.util.Log;
@@ -78,6 +79,7 @@ public class Controller{
     	mainWindow.setStatisticsConsumer(this::onStatisticsMenuItemSelected);
     	mainWindow.setSortOrderSupplier(this::getCardSortOrder);
     	mainWindow.setDiaryRunnable(this::diarySelected);
+    	mainWindow.setWeekdayRunnable(this::weekdaySelected);
     	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
     	showEmptyBackground();
     	ankiDeckService = new AnkiDeckService();
@@ -127,6 +129,8 @@ public class Controller{
 	    alcoholService.checkAndPrompt();
 	    
 	    new DiaryDialog().show(mainWindow.getStage());
+	    
+	    new WeekdayDialog().showForDaily();
 
 		// Hier kommen später weitere Post-Tasks (tmdb etc.)
 	}
@@ -300,6 +304,10 @@ public class Controller{
     
     public void diarySelected() {
     	new DiaryDialog().show(mainWindow.getStage());
+    }
+    
+    public void weekdaySelected() {
+    	new WeekdayDialog().showForPractice();
     }
     
     /**
