@@ -27,6 +27,7 @@ import app.ui.MainWindow;
 import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
 import app.ui.components.AnkiPlayConfigDialog;
+import app.ui.components.DiaryDialog;
 import app.ui.components.AnkiPlayConfigDialog.AnkiPlayConfig;
 import app.ui.components.RegionPlayConfigDialog;
 import app.ui.components.RegionPlayConfigDialog.RegionPlayConfig;
@@ -76,6 +77,8 @@ public class Controller{
     	mainWindow.setReloadSkinRunnable(this::triggerSkinRefresh);
     	mainWindow.setStatisticsConsumer(this::onStatisticsMenuItemSelected);
     	mainWindow.setSortOrderSupplier(this::getCardSortOrder);
+    	mainWindow.setDiaryRunnable(this::diarySelected);
+    	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
     	showEmptyBackground();
     	ankiDeckService = new AnkiDeckService();
     	regionDeckService = new RegionDeckService();
@@ -91,7 +94,6 @@ public class Controller{
     	
     	setLearnMenuItemLabels();
     	setPlayMenuItemLabels();
-    	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
     }
     
 	/**
@@ -123,6 +125,8 @@ public class Controller{
 		
 	    AlcoholStartupService alcoholService = new AlcoholStartupService();
 	    alcoholService.checkAndPrompt();
+	    
+	    new DiaryDialog().show(mainWindow.getStage());
 
 		// Hier kommen später weitere Post-Tasks (tmdb etc.)
 	}
@@ -292,6 +296,10 @@ public class Controller{
         
         SkinService.set(newSkin);
         updateUiAfterSkinChange();
+    }
+    
+    public void diarySelected() {
+    	new DiaryDialog().show(mainWindow.getStage());
     }
     
     /**

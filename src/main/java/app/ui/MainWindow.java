@@ -49,6 +49,7 @@ public class MainWindow {
     private Consumer<LearnSessionInfo> onSessionSelected = null;
     private Consumer<CardSortOrder> onSortSelected = null;
     private Consumer<Skin> onNewSkinSelected = null;
+    private Runnable onDiarySelected = null;
     private Supplier<CardSortOrder> sortOrderSupplier = null;
     private Runnable onSaveSelected = null;
     private Runnable onEscPressed = null;
@@ -176,6 +177,12 @@ public class MainWindow {
         itemAlc.setOnAction(_ -> onStatisticsSelected.accept("Alkohol"));
         menuStatistics.getItems().add(itemAlc);
         
+        // MODULE-MENÜ
+        Menu menuModule = skin.createMenu("Module");
+        MenuItem diaryItem = skin.createMenuItem("Tagebuch");
+        diaryItem.setOnAction(_ -> onDiarySelected.run());
+        menuModule.getItems().add(diaryItem);
+        
         // ANSICHT-MENÜ
         Menu menuView = skin.createMenu("Ansicht");
         Skin currentSkin = SkinService.get();
@@ -211,7 +218,7 @@ public class MainWindow {
         menuView.getItems().add(itemReload);
         
         // Menüs zur MenuBar hinzufügen
-        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuPlay, menuStatistics, menuView);        
+        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuPlay, menuStatistics, menuModule, menuView);        
         return menuBar;
     }
     
@@ -333,6 +340,10 @@ public class MainWindow {
     
     public void setSortOrderSupplier(Supplier<CardSortOrder> supplier) {
     	this.sortOrderSupplier = supplier;
+    }
+    
+    public void setDiaryRunnable(Runnable runner) {
+    	this.onDiarySelected = runner;
     }
 
 	public void show() {
