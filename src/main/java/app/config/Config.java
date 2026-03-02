@@ -57,6 +57,11 @@ public class Config {
         return value != null ? value : defaultValue;
     }
     
+	public static int getInt(String key, int defaultValue) {
+		String value = get(key);
+        return value != null ? Integer.parseInt(value) : defaultValue;
+	}
+    
     public static void set(String key, String value) {
     	if (computedProps.containsKey(key)) {
             throw new RuntimeException("Computed property kann nicht geändert werden: " + key);
@@ -84,4 +89,5 @@ public class Config {
             throw new RuntimeException("Fehler beim Schreiben der config-Datei in " + configFile.getAbsolutePath(), e);
         }
     }
+
 }

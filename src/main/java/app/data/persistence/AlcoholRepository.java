@@ -8,6 +8,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import app.alc.AlcoholDayEntry;
+import app.alc.AlcoholRatioEntry;
 import app.alc.AlcoholStatus;
 import app.data.AppClock;
 import app.util.Log;
@@ -116,6 +118,26 @@ public class AlcoholRepository {
         return result;
     }
     
+    public LocalDate getLastEntryDate() {
+        String sql = "SELECT MAX(date) as last_date FROM alcohol_days";
+        
+        try (Connection conn = DB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                String dateStr = rs.getString("last_date");
+                if (dateStr != null) {
+                    return LocalDate.parse(dateStr);
+                }
+            }
+            return null;
+            
+        } catch (SQLException e) {
+            throw new RuntimeException("Fehler beim Ermitteln des letzten Eintrags", e);
+        }
+    }
+    
     /**
      * Gibt die aktuelle Balance zurück (Stand heute).
      */
@@ -185,19 +207,4 @@ public class AlcoholRepository {
             case RED -> -ratio.redPoints(); // Negativ!
         };
     }
-    
-    // === INNER RECORDS ===
-    
-    public record AlcoholDayEntry(
-        LocalDate date,
-        AlcoholStatus status,
-        int balance
-    ) {}
-    
-    public record AlcoholRatioEntry(
-        LocalDate validFrom,
-        int greenPoints,
-        int yellowPoints,
-        int redPoints
-    ) {}
 }

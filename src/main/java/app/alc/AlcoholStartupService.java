@@ -1,9 +1,5 @@
 package app.alc;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
@@ -11,7 +7,6 @@ import java.util.Locale;
 import java.util.Optional;
 
 import app.data.persistence.AlcoholRepository;
-import app.data.persistence.DB;
 import app.ui.skin.SkinService;
 import app.util.Log;
 import javafx.scene.control.Alert;
@@ -34,7 +29,7 @@ public class AlcoholStartupService {
     	LocalDate yesterday = LocalDate.now().minusDays(1);
         
         // Letzten Eintrag finden
-        LocalDate lastEntry = getLastEntryDate();
+        LocalDate lastEntry = repository.getLastEntryDate();
         
         if (lastEntry == null) {
             showInputDialog(yesterday);
@@ -52,26 +47,7 @@ public class AlcoholStartupService {
         }
     }
 
-    private LocalDate getLastEntryDate() {
-        // SQL: SELECT MAX(date) FROM alcohol_days
-        String sql = "SELECT MAX(date) as last_date FROM alcohol_days";
-        
-        try (Connection conn = DB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            
-            if (rs.next()) {
-                String dateStr = rs.getString("last_date");
-                if (dateStr != null) {
-                    return LocalDate.parse(dateStr);
-                }
-            }
-            return null;
-            
-        } catch (SQLException e) {
-            throw new RuntimeException("Fehler beim Ermitteln des letzten Eintrags", e);
-        }
-    }
+
     
     /**
      * !Später: Das Padding ist einigermaßen irre. Buttons nicht bündig mit dem Text. Überall andere Abstände.

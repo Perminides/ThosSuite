@@ -8,6 +8,16 @@ import javafx.scene.paint.Color;
 
 public class UIUtils {
     
+    /**
+     * Konvertiert eine JavaFX-{@link javafx.scene.paint.Color} in einen CSS-kompatiblen Hex-String.
+     * <p>
+     * Ist die Farbe voll deckend, wird das Format {@code #RRGGBB} zurückgegeben.
+     * Bei einem Opacity-Wert kleiner als 1.0 wird der Alpha-Kanal angehängt: {@code #RRGGBBAA}.
+     * </p>
+     *
+     * @param c die umzuwandelnde Farbe; {@code null} wird als {@code #000000} (Schwarz) behandelt
+     * @return Hex-Farb-String im Format {@code #RRGGBB} oder {@code #RRGGBBAA}
+     */
     public static String toHex(javafx.scene.paint.Color c) {
         if (c == null) return "#000000"; // Fallback
         

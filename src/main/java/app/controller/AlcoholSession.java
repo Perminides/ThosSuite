@@ -3,11 +3,11 @@ package app.controller;
 import java.time.LocalDate;
 import java.util.List;
 
+import app.alc.AlcoholDayEntry;
+import app.alc.AlcoholRatioEntry;
 import app.data.Deck;
 import app.data.SessionSwitchStrategy;
 import app.data.persistence.AlcoholRepository;
-import app.data.persistence.AlcoholRepository.AlcoholDayEntry;
-import app.data.persistence.AlcoholRepository.AlcoholRatioEntry;
 import app.ui.skin.SkinService;
 import app.util.Log;
 import javafx.collections.FXCollections;

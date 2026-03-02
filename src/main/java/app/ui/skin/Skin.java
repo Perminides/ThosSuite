@@ -391,6 +391,7 @@ public abstract class Skin {
 	    addMyTableStyles(css);
 	    addDashboardStyles(css);
 	    addChartStyles(css);
+	    addSuggestionBoxStyles(css);
 	    
 	    String rawCss = css.build(); // Hier kommt sauberes CSS raus: ".rule { color: #fff; }"
 
@@ -405,10 +406,10 @@ public abstract class Skin {
 	    //Log.debug(this, rawCss);
 	}
 	
-	private void addButtonStyles(CssBuilder css) {
+	private void addButtonStyles(CssBuilder builder) {
 	    // Standard Button (überall, auch TableView intern)
 		// // Das date-picker muss dadrin stehen, weil es gibt auch arrow-buttons in den Menüs und mit denen wollen wir uns nicht anlegen!
-	    css.start(".button, .date-picker .arrow-button, .spinner .increment-arrow-button, .spinner .decrement-arrow-button")
+	    builder.start(".button, .date-picker .arrow-button, .spinner .increment-arrow-button, .spinner .decrement-arrow-button")
 	       .add("-fx-border-radius", borderSmallComponent.arc() + "px")
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
 	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // // Buttons haben in javafx per default -fx-background-insets = 0, 0, -1, 0. Wenn ich den erwische, der das verbrochen hat. Ich bisher keine Probleme sehen können durch das Angleichen an alle anderen Komponenten. Hier dokumentiert: https://www.pragmaticcoding.ca/javafx/elements/buttons
@@ -417,9 +418,9 @@ public abstract class Skin {
 	       .add("-fx-background-color", activeComponentBgColor)
 	       .end();
 	    
-	    css.rule(".button .text, .date-picker .arrow-button .text", "-fx-fill", textActiveComponentColor);
-	    css.rule(".button:hover, .date-picker .arrow-button:hover", "-fx-background-color", activeComponentHoverColor);
-	    css.rule(".button:pressed, .date-picker .arrow-button:pressed", "-fx-background-color", UIUtils.adjustBrightness(activeComponentHoverColor, 8));
+	    builder.rule(".button .text, .date-picker .arrow-button .text", "-fx-fill", textActiveComponentColor);
+	    builder.rule(".button:hover, .date-picker .arrow-button:hover", "-fx-background-color", activeComponentHoverColor);
+	    builder.rule(".button:pressed, .date-picker .arrow-button:pressed", "-fx-background-color", UIUtils.adjustBrightness(activeComponentHoverColor, 8));
 	    // Alternative Effekte (für andere Skins):
 	    //css.rule(".my-mc-button:active:pressed", "-fx-translate-y", "1px");
 	    //css.rule(".my-mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
@@ -444,8 +445,8 @@ public abstract class Skin {
 	    builder.rule(".check-box:selected .mark", "-fx-background-color", textActiveComponentColor); // Die Farbe des Hakens in der Checkbox :-)
 	}
 	
-	private void addComboBoxStyles(CssBuilder css) {
-	    css.start(".combo-box-base")
+	private void addComboBoxStyles(CssBuilder builder) {
+	    builder.start(".combo-box-base")
 	       .add("-fx-background-color", activeComponentBgColor)
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
 	       .add("-fx-border-radius", borderSmallComponent.arc() + "px")
@@ -454,20 +455,20 @@ public abstract class Skin {
 	       .add("-fx-border-color", borderSmallComponent.color())
 	       .end();
 	    
-	    css.rule(".combo-box-base .text", "-fx-fill", textActiveComponentColor);
-	    css.rule(".combo-box-base .arrow", "-fx-background-color", textActiveComponentColor);
+	    builder.rule(".combo-box-base .text", "-fx-fill", textActiveComponentColor);
+	    builder.rule(".combo-box-base .arrow", "-fx-background-color", textActiveComponentColor);
 	    
 	    // ListView in ComboBox
 	    // ⚠️ ACHTUNG: Wenn ListView woanders gebraucht wird, dort analog stylen
-	    css.rule(".combo-box-popup .list-view", "-fx-background-color", activeComponentBgColor);
-	    css.rule(".combo-box-popup .list-view .list-cell", "-fx-background-color", "'transparent'");
-	    css.rule(".combo-box-popup .list-view .list-cell:hover", "-fx-background-color", activeComponentHoverColor);
-	    css.rule(".combo-box-popup .list-view .list-cell:filled:selected", "-fx-background-color", activeComponentHoverColor);
+	    builder.rule(".combo-box-popup .list-view", "-fx-background-color", activeComponentBgColor);
+	    builder.rule(".combo-box-popup .list-view .list-cell", "-fx-background-color", "'transparent'");
+	    builder.rule(".combo-box-popup .list-view .list-cell:hover", "-fx-background-color", activeComponentHoverColor);
+	    builder.rule(".combo-box-popup .list-view .list-cell:filled:selected", "-fx-background-color", activeComponentHoverColor);
 	}
 	
-	private void addDialogStyles(CssBuilder css) {
+	private void addDialogStyles(CssBuilder builder) {
 	    // Dialog Container
-	    css.start(".dialog-pane")
+	    builder.start(".dialog-pane")
 	      // Ein dünner weißer Border sieht super aus auf Windows 10. Auf Windows 11 weniger, siehe Mail vom 10.02. ToDo
 	      // .add("-fx-border-color", stageBorderColor) // analog der Stage
 	      // .add("-fx-border-width", 1 + "px") // analog der Stage
@@ -477,21 +478,21 @@ public abstract class Skin {
 	    
 	    // HeaderBar in Dialogs
 	    // ⚠️ ACHTUNG: Identische Styles auch in addMainWindowStyles() für .my-main-window .header-bar
-	    css.start(".dialog-pane .header-bar")
+	    builder.start(".dialog-pane .header-bar")
 	       .add("-fx-border-color", thinBorderColor)
 	       .add("-fx-border-width", "0 0 " + thinBorderWidth + " 0")
 	       .add("-fx-background-color", menuBarBackground)
 	       .end();
 	    
 	    // Content VBox
-	    css.start(".my-dialog-vbox")
+	    builder.start(".my-dialog-vbox")
 	    .add("-fx-background-color", playFieldBackground)
 	    .add("-fx-padding", font.getSize() * 0.5 + "px")
 	    .add("-fx-alignment", "top-center") 
 	    .end();
 	    
 	    // Content in ScrollPane
-	    css.start(".my-dialog-scrollpane")
+	    builder.start(".my-dialog-scrollpane")
 	    .add("-fx-background-color", playFieldBackground)
 	    .end();
 	    
@@ -499,19 +500,19 @@ public abstract class Skin {
 	     * dann durch JavaFX's default -1.4 Insets (für Glow-Effekt) nach außen wachsen
 	     * und den Border der DialogPane überdecken. Insets auf 0 halten.
 	     */
-	    css.rule(".my-dialog-scrollpane:focused", "-fx-background-insets", "0");
+	    builder.rule(".my-dialog-scrollpane:focused", "-fx-background-insets", "0");
 	    
 	    // Viewport in Dialog
-	    css.start(".dialog-pane .viewport")
+	    builder.start(".dialog-pane .viewport")
 	    .add("-fx-background-color", playFieldBackground) 
 	    .end();
 	}
 	
-	private void addTextFieldStyles(CssBuilder css) {
+	private void addTextFieldStyles(CssBuilder builder) {
 	    Insets i = borderSmallComponent.insets();
 	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", (int)i.getTop(), (int)i.getRight(), (int)i.getBottom(), (int)i.getLeft());
 	    
-	  css.start(".text-field")
+	  builder.start(".text-field")
 	       .add("-fx-text-fill", textActiveComponentColor)
 	       .add("-fx-alignment", "center")
 	       .add("-fx-padding", paddingCss)
@@ -523,7 +524,7 @@ public abstract class Skin {
 	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .end();
 	    
-	    css.start(".text-field:disabled")
+	    builder.start(".text-field:disabled")
 	       .add("-fx-opacity", "1.0")
 	       .add("-fx-background-color", disabledComponentBgColor)
 	       .add("-fx-border-color", borderSmallComponent.disabledColor())
@@ -532,8 +533,8 @@ public abstract class Skin {
 	       .end();
 	}
 	
-	private void addTextAreaStyles(CssBuilder css) {
-	    css.start(".text-area")
+	private void addTextAreaStyles(CssBuilder builder) {
+	    builder.start(".text-area")
 	       .add("-fx-text-fill", textActiveComponentColor)
 	       .add("-fx-background-color", activeComponentBgColor)
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
@@ -543,12 +544,12 @@ public abstract class Skin {
 	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .end();
 	    
-	    css.start(".text-area .content")
+	    builder.start(".text-area .content")
 	       .add("-fx-background-color", activeComponentBgColor)
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
 	       .end();
 	    
-	    css.start(".text-area .viewport")
+	    builder.start(".text-area .viewport")
 	       .add("-fx-background-color", activeComponentBgColor)
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
 	       .end();
@@ -626,8 +627,8 @@ public abstract class Skin {
         }
 	}
 	
-	private void addIconButtonStyles(CssBuilder css) {
-	    css.start(".my-icon-button")
+	private void addIconButtonStyles(CssBuilder builder) {
+	    builder.start(".my-icon-button")
 	       .add("-fx-padding", "0")
 	       .add("-fx-background-color", activeComponentBgColor)
 	       .add("-fx-border-color", borderSmallComponent.color())
@@ -637,9 +638,9 @@ public abstract class Skin {
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
 	       .end();
 	    
-	    css.rule(".my-icon-button:hover", "-fx-background-color", activeComponentHoverColor);
+	    builder.rule(".my-icon-button:hover", "-fx-background-color", activeComponentHoverColor);
 	    
-	    css.start(".my-icon-button:disabled")
+	    builder.start(".my-icon-button:disabled")
 	       .add("-fx-opacity", "1.0") // JavaFX setzt da sonst per se einen Default von 40% oder so für disabled...
 	       .add("-fx-background-color", disabledComponentBgColor)
 	       .end();
@@ -710,17 +711,17 @@ public abstract class Skin {
 	       .end();
 	}
 	
-	private void addImagePaneStyles(CssBuilder css) {
-	    css.rule(".my-image-background-layer", "-fx-fill", imageLabelBgColor);
+	private void addImagePaneStyles(CssBuilder builder) {
+	    builder.rule(".my-image-background-layer", "-fx-fill", imageLabelBgColor);
 	    
-	    css.start(".my-image-border-layer")
+	    builder.start(".my-image-border-layer")
 	       .add("-fx-stroke", borderBigComponent.color())
 	       .add("-fx-stroke-width", borderBigComponent.width() + "px")
 	       .add("-fx-stroke-type", "inside")
 	       .end();
 	}
 	
-	private void addMainWindowStyles(CssBuilder css) {
+	private void addMainWindowStyles(CssBuilder builder) {
 	    // Root Container (Stage Border)
 		// Siehe  Kommentar im Dialog. Wegen Windows 11 rausgenommen, der hat eigenen Border und runde Ecken un ddas verträgt sich leider so gar nicht... 
 	 /**   css.start(".my-root")
@@ -836,45 +837,45 @@ public abstract class Skin {
 	/**
 	 * Uses textColor as borderColor (e. g. because of skins without border)
 	 * 
-	 * @param css
+	 * @param builder
 	 */
-	private void addMyTableStyles(CssBuilder css) {
+	private void addMyTableStyles(CssBuilder builder) {
 		
-	    css.start(".my-table-view .table-row-cell:odd")
+	    builder.start(".my-table-view .table-row-cell:odd")
 	       .add("-fx-background-color", UIUtils.toHex(textColor) + ", " + UIUtils.toHex(playFieldBackground))
 	       .end();
 	    
-	    css.start(".my-table-view .table-row-cell:focused")
+	    builder.start(".my-table-view .table-row-cell:focused")
 	    	.add("-fx-background-insets", "0, 0 0 1 0")
 	    	.end();
 	    
-	    css.start(".my-table-view .table-row-cell")
+	    builder.start(".my-table-view .table-row-cell")
 	       .add("-fx-background-color", UIUtils.toHex(textColor) + ", " + UIUtils.toHex(UIUtils.adjustBrightness(playFieldBackground, 5)))
 	       .end();
 	    
-	    css.start(".my-table-view .table-row-cell:selected")
+	    builder.start(".my-table-view .table-row-cell:selected")
 	    	.add("-fx-background-color", UIUtils.toHex(textColor) + ", " + UIUtils.toHex(menuBarHoverBackground))
 	    	.add("-fx-background-insets", "0, 0 0 1 0")
 	    	.end();
 	    
-	    css.start(".my-table-view .column-header-background")
+	    builder.start(".my-table-view .column-header-background")
 	    	.add("-fx-background-color", playFieldBackground)
 	    	.end();
 	    
-	    css.start(".my-table-view .column-header, .my-table-view .filler")
+	    builder.start(".my-table-view .column-header, .my-table-view .filler")
 	    	.add("-fx-background-color", menuBarBackground)
 	    	.add("-fx-border-color", "transparent " + UIUtils.toHex(textColor) + " " +  UIUtils.toHex(textColor) + " transparent")
 	    	.end();
 	    
-	    css.start(".my-table-view .column-header .label")
+	    builder.start(".my-table-view .column-header .label")
 	    	.add("-fx-alignment", "CENTER-LEFT")
 	    	.end();
 	    
-	    css.start(".my-table-view .table-cell")
+	    builder.start(".my-table-view .table-cell")
 	       .add("-fx-border-color", "transparent " + UIUtils.toHex(textColor) + " transparent transparent")
 	       .end();
 	    
-	    css.start(".my-table-view")
+	    builder.start(".my-table-view")
 	    .add("-fx-border-color", textColor)
 	    .add("-fx-focus-color", "transparent")
 	    .add("-fx-border-width", "1") 
@@ -883,16 +884,16 @@ public abstract class Skin {
 	    .add("-fx-padding", "0")
 	    .end();
 	    
-	    css.start(".my-table-view:focused")
+	    builder.start(".my-table-view:focused")
 	    .add("-fx-background-color", "-fx-control-inner-background")
 	    .add("-fx-background-insets", "0")
 	    .add("-fx-padding", "0")
 	    .end();
 	}
 	
-	private void addDashboardStyles(CssBuilder css) {
+	private void addDashboardStyles(CssBuilder builder) {
 	    // === Gesamtes Tile ===
-	    css.start(".dashboard-tile")
+	    builder.start(".dashboard-tile")
 	       .add("-fx-border-color", borderBigComponent.color())
 	       .add("-fx-border-width", borderBigComponent.width() + "px")
 	       .add("-fx-border-radius",  borderBigComponent.arc() + "px")
@@ -901,14 +902,14 @@ public abstract class Skin {
 	       .end();
 	    
 	    // === Oberer Bereich (große Zahl) ===
-	    css.start(".dashboard-tile-top")
+	    builder.start(".dashboard-tile-top")
 	       .add("-fx-background-color", displayTextProgressBgColor)
 	       .add("-fx-pref-height", dashBoardTileTopHeight + "px")
 	       .add("-fx-background-radius", borderBigComponent.arc() + "px " + borderBigComponent.arc() +  "px 0 0") // Nur oben abgerundet
 	       .end();
 	    
 	    // === Unterer Bereich (Beschreibung) ===
-	    css.start(".dashboard-tile-bottom")
+	    builder.start(".dashboard-tile-bottom")
 	       .add("-fx-background-color", menuBarBackground) // !Sofort: Was soll denn der Default hier mal sein???
 	       .add("-fx-pref-height", dashBoardTileBottomHeight + "px")
 	       .add("-fx-border-color", borderBigComponent.color())
@@ -917,14 +918,14 @@ public abstract class Skin {
 	       .end();
 	    
 	    // === Schrift oben (große Zahl) ===
-	    css.start(".dashboard-tile-value")
+	    builder.start(".dashboard-tile-value")
 	       .add("-fx-font-family", "'" + font.getFamily() + "'")
 	       .add("-fx-font-size", dashBoardTileTopFontSize + "px")
 	       .add("-fx-fill", textColor)
 	       .end();
 	    
 	    // === Schrift unten (Beschreibung) ===
-	    css.start(".dashboard-tile-label")
+	    builder.start(".dashboard-tile-label")
 	       .add("-fx-font-family", "'" + font.getFamily() + "'")
 	       .add("-fx-font-size", dashBoardTileBottomFontSize + "px")
 	       .add("-fx-fill", textColor)
@@ -932,32 +933,32 @@ public abstract class Skin {
 	}
 	
 	// !Später: Naja, so richtig überprüft habe ich nicht, ob die alle nötig sind. Und außerdem hier auch noch tooltip zu verstecken, hm...
-	private void addChartStyles(CssBuilder css) {
+	private void addChartStyles(CssBuilder builder) {
 		
 		// Chart an sich
-	    css.start(".chart")
+	    builder.start(".chart")
 	    	.add("-fx-background-color", "transparent") // Hintertgrund des ganzen (Balken-)Diagramms mit Achsen und Gedöns.
 	    .end();
 		
 	    // Borders für alle Balken
-	    css.start(".chart-bar")
+	    builder.start(".chart-bar")
 	    	.add("-fx-border-color", textColor)
 	    	.add("-fx-border-width", "1px")
 	    .end();
 	    
 	    // Balken stylen - Ziel erreicht / nicht erreicht
-	    css.rule(".chart-bar:achieved", "-fx-bar-fill", correctColor);
-	    css.rule(".chart-bar:failed", "-fx-bar-fill", incorrectColor);
-	    css.rule(".chart-bar:in-progress", "-fx-bar-fill", markedColor);
+	    builder.rule(".chart-bar:achieved", "-fx-bar-fill", correctColor);
+	    builder.rule(".chart-bar:failed", "-fx-bar-fill", incorrectColor);
+	    builder.rule(".chart-bar:in-progress", "-fx-bar-fill", markedColor);
 	    
 	    // Ziellinie stylen
-	    css.start(".chart-series-line")
+	    builder.start(".chart-series-line")
 	       .add("-fx-stroke", textColor)
 	       .add("-fx-stroke-width", "1px")
 	       .end();
 	    
 	    // Achsen-Beschriftung stylen
-	    css.start(".chart .axis")
+	    builder.start(".chart .axis")
 	       .add("-fx-tick-label-font-family", "'" + font.getFamily() + "'")
 	       .add("-fx-tick-label-font-size", font.getSize() + "px")
 	       .add("-fx-tick-label-fill", textColor)
@@ -965,72 +966,72 @@ public abstract class Skin {
 	       .end();
 
 	    // Grpße Tick-Marks auf y-Achse
-	    css.start(".chart .axis:left .axis-tick-mark")
+	    builder.start(".chart .axis:left .axis-tick-mark")
 	    	.add("-fx-stroke", textColor)
 	    	.add("-fx-stroke-width", "1px")
 	    .end();
 
 	    // Minor Tick-Marks weg
-	    css.start(".chart .axis .axis-minor-tick-mark")
+	    builder.start(".chart .axis .axis-minor-tick-mark")
 	    	.add("-fx-stroke", "transparent")
 	    	.add("-fx-stroke-width", "0px")
 	    .end();
 	 
 	    // Tick-Marks auf x-Achse weg
-	    css.start(".chart .axis:bottom .axis-tick-mark")
+	    builder.start(".chart .axis:bottom .axis-tick-mark")
 	    	.add("-fx-stroke", "transparent")
 	    	.add("-fx-stroke-width", "0px")
 	    .end();
 	    
-	    css.start(".chart .axis:bottom")
+	    builder.start(".chart .axis:bottom")
 	    	.add("-fx-border-color", UIUtils.toHex(textColor) + " transparent transparent transparent") // Es gibt einen Border um die ganze Beschriftung der x-Achse. Der obere Teil dieses Borders ist die x-Achse selbst. Herrje...
 	    .end();
 	    
-	    css.start(".chart .axis:left")
+	    builder.start(".chart .axis:left")
     		.add("-fx-border-color", "transparent " + UIUtils.toHex(textColor) + " transparent transparent") // Siehe oben. Hier müssen wir dann rechts setzen
     	.end();
 	    
 	    // Achsen-Titel stylen
-	    css.start(".chart .axis-label")
+	    builder.start(".chart .axis-label")
 	       .add("-fx-font-family", "'" + font.getFamily() + "'")
 	       .add("-fx-font-size", font.getSize() + "px")
 	       .add("-fx-text-fill", textColor)
 	       .end();
 	    
-	    css.start(".chart-root")
+	    builder.start(".chart-root")
 	    	.add("-fx-padding", "50px 50px 50px 50px") // !Sofort: Wird ausgelagert in properties!
 	    .end();
 
-	    css.rule(".chart-plot-background", "-fx-background-color", "transparent");
-	    css.rule(".chart-content", "-fx-background-color", "transparent");
+	    builder.rule(".chart-plot-background", "-fx-background-color", "transparent");
+	    builder.rule(".chart-content", "-fx-background-color", "transparent");
 	    
 	    // Chart Layout (VBox)
-	    css.start(".chart-container") // Der Container, der Kinder vertikal anordnet und die Steuer-Bar und darunter das Diagramm enthält.
+	    builder.start(".chart-container") // Der Container, der Kinder vertikal anordnet und die Steuer-Bar und darunter das Diagramm enthält.
 	       .add("-fx-spacing", "20px") // vertikaler Abstand zwischen den Kind-Elementen (Datepicker und Diagramm)
 	    .end();
 
 	    // Chart Controls (HBox)
 	    double spacing = font.getSize() * 0.5;
-	    css.start(".chart-controls") // Der Container mit den Datepickern und der Balkenbreite
+	    builder.start(".chart-controls") // Der Container mit den Datepickern und der Balkenbreite
 	       .add("-fx-spacing", spacing + "px") // Abstand zwischen den Kindern (z. B. Label "Von", "Bis" und dem Datepicker daneben)
 	       .add("-fx-alignment", "center-left") // center damit die Labels mittig platziert sind. "Left" macht gerade nix
 	    .end();
 	    
 	    // Der Tooltip ist bisher noch nicht weiter gestylet bezüglich der Ecken und Border und so. Ist mir gerade nicht so wichtig... Default ist ohne Border und abgerundet anscheinend.
 	    
-	    css.start(".tooltip")
+	    builder.start(".tooltip")
 	    	.add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
 	    .end();
 	    
-	    css.start(".tooltip .text")
+	    builder.start(".tooltip .text")
 	    	.add("-fx-fill", textActiveComponentColor)
 	    .end();
 	}
 	
-	private void addDatePickerStyles(CssBuilder css) {
+	private void addDatePickerStyles(CssBuilder builder) {
 		
 		// === Der Datepicker selber hat sonst unsere Borders des Textfelds und Kalenders kaputt gemacht ===
-		css.start(".date-picker")
+		builder.start(".date-picker")
 		   .add("-fx-background-color", "transparent")  // Kein eigener Background
 		   .add("-fx-border-color", "transparent")      // Kein eigener Border
 		   .add("-fx-background-insets", "0")
@@ -1038,75 +1039,75 @@ public abstract class Skin {
 		   .end();
 	    
 	    // === Arrow Button (Kalender-Icon) ===
-	    css.start(".date-picker .arrow-button")
+	    builder.start(".date-picker .arrow-button")
 	       .add("-fx-background-color", activeComponentBgColor)
 	       .end();
 	    
-	    css.rule(".date-picker .arrow-button:hover", "-fx-background-color", activeComponentHoverColor);
+	    builder.rule(".date-picker .arrow-button:hover", "-fx-background-color", activeComponentHoverColor);
 	    
-	    css.start(".date-picker .arrow-button .arrow")
+	    builder.start(".date-picker .arrow-button .arrow")
 	       .add("-fx-background-color", textActiveComponentColor)
 	       .end();
 	    
 	    // === Popup Container ===
-	    css.start(".date-picker-popup")
+	    builder.start(".date-picker-popup")
 	       .add("-fx-background-color", playFieldBackground)
 	       .add("-fx-border-color", borderColor)
 	       .add("-fx-border-width", thinBorderWidth + "px")
 	       .end();
 	    
 	    // === Month/Year Header ===
-	    css.start(".date-picker-popup .month-year-pane")
+	    builder.start(".date-picker-popup .month-year-pane")
 	       .add("-fx-background-color", menuBarBackground)
 	       .end();
 	    
-	    css.start(".date-picker-popup .month-year-pane .label .text")
+	    builder.start(".date-picker-popup .month-year-pane .label .text")
 	    .add("-fx-fill", textColor)  // -fx-fill für Text-Nodes!
 	    .add("-fx-font-weight", "bold")
 	    .end();
 	    
 	    // === Spinner Buttons (< >) ===
-	    css.start(".date-picker-popup .spinner .button")
+	    builder.start(".date-picker-popup .spinner .button")
 	       .add("-fx-background-color", activeComponentBgColor)
 	       .end();
 	    
-	    css.rule(".date-picker-popup .spinner .button:hover", "-fx-background-color", activeComponentHoverColor);
+	    builder.rule(".date-picker-popup .spinner .button:hover", "-fx-background-color", activeComponentHoverColor);
 	    
-	    css.start(".date-picker-popup .spinner .button .left-arrow")
+	    builder.start(".date-picker-popup .spinner .button .left-arrow")
 	       .add("-fx-background-color", textActiveComponentColor)
 	       .end();
 	    
-	    css.start(".date-picker-popup .spinner .button .right-arrow")
+	    builder.start(".date-picker-popup .spinner .button .right-arrow")
 	       .add("-fx-background-color", textActiveComponentColor)
 	       .end();
 	    
 	    // === Wochentag-Header ===
-	    css.start(".date-picker-popup .day-name-cell")
+	    builder.start(".date-picker-popup .day-name-cell")
 	       .add("-fx-background-color", playFieldBackground)
 	       .end();
-	    css.start(".date-picker-popup .day-name-cell .text")
+	    builder.start(".date-picker-popup .day-name-cell .text")
 	       .add("-fx-fill", textColor)
 	       .end();
 	    
 	    // === Tages-Zellen ===
 	    // Normale Tage des aktuellen Monats
-	    css.start(".date-picker-popup .day-cell .text")
+	    builder.start(".date-picker-popup .day-cell .text")
 	    .add("-fx-fill", textColor)
 	    	.end();
-	    css.start(".date-picker-popup .day-cell")
+	    builder.start(".date-picker-popup .day-cell")
 	       .add("-fx-background-color", playFieldBackground)
 	    .end();
 
 	    // Tage anderer Monate explizit
-	    css.start(".date-picker-popup .day-cell.previous-month .text, " +
+	    builder.start(".date-picker-popup .day-cell.previous-month .text, " +
 	              ".date-picker-popup .day-cell.next-month .text")
 	    	.add("-fx-fill", textColor)
 	    .end();
-	    css.start(".date-picker-popup .day-cell.previous-month, .date-picker-popup .day-cell.next-month")
+	    builder.start(".date-picker-popup .day-cell.previous-month, .date-picker-popup .day-cell.next-month")
 	       .add("-fx-background-color", UIUtils.adjustBrightness(playFieldBackground, 20))
 	    .end();
 	    
-	    css.rule(".date-picker-popup .day-cell:hover", "-fx-background-color", UIUtils.adjustBrightness(playFieldBackground, 40));
+	    builder.rule(".date-picker-popup .day-cell:hover", "-fx-background-color", UIUtils.adjustBrightness(playFieldBackground, 40));
 	    
 	    /**
 	    // === Heutiges Datum ===
@@ -1121,10 +1122,10 @@ public abstract class Skin {
 	       .end();**/
 	}
 	
-	public void addSpinnerStyles(CssBuilder css) {
+	private void addSpinnerStyles(CssBuilder builder) {
 		
 		// Siehe Datepicker. Zur Sicherheit setzen wir in dem Container mal alles schön auf 0
-		css.start(".spinner")
+		builder.start(".spinner")
 		   .add("-fx-background-color", "transparent")
 		   .add("-fx-border-color", "transparent")
 		   .add("-fx-pref-width", "-1")
@@ -1134,13 +1135,42 @@ public abstract class Skin {
 		   .add("-fx-min-width", "-fx-pref-width") // Tendenziell keine Wirkung, kann wohl weg
 		   .end();
 		
-		css.start(".spinner .text-field")
+		builder.start(".spinner .text-field")
 			.add("-fx-pref-column-count", "5")
 			.end();
 
-		css.start(".spinner .text-field:focused")
+		builder.start(".spinner .text-field:focused")
 			.add("-fx-background-insets", "0") // Den Fokus-Border auf diesem Fake-TextField bekommt man nur so weg. Gerade keine Nerven da tiefer einzusteigen.
 		.end();
+	}
+	
+	// !Sofort: Magic Numbers
+	// !Sofort: Highlight-Background der Labels ignoriert Border-Radius der VBox — JavaFX clippt Children nicht an abgerundeten Ecken, Lösung: Clip im Skin setzen
+	private void addSuggestionBoxStyles(CssBuilder builder) {
+		builder.start(".suggestion-box")
+	    	.add("-fx-background-color", menuBarBackground)
+	    	.add("-fx-border-color", borderColor)
+	    	.add("-fx-border-width", "1px")
+	    	//.add("-fx-effect", "dropshadow(gaussian, rgba(0,0,0,0.15), 6, 0, 0, 2)")
+	    .end();
+		
+		builder.start(".suggestion-box .label")
+	    	.add("-fx-padding", "5 5")
+	    .end();
+		
+		builder.start(".suggestion-box :highlighted")
+			.add("-fx-background-color", menuBarHoverBackground)
+		.end();
+		
+	    builder.start(".tag-chip-remove")
+	       .add("-fx-border-width", "0px")
+	       .add("-fx-border-color", Color.TRANSPARENT)
+	       .add("-fx-background-color", playFieldBackground)
+	       .add("-fx-padding", "0 0")
+	    .end();
+	    
+	    builder.rule(".tag-chip-remove .text", "-fx-fill", textColor);
+	    
 	}
 	
 	private static class CssBuilder {
