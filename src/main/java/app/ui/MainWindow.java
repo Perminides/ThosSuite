@@ -50,6 +50,7 @@ public class MainWindow {
     private Consumer<CardSortOrder> onSortSelected = null;
     private Consumer<Skin> onNewSkinSelected = null;
     private Runnable onDiarySelected = null;
+    private Runnable onWeekdaySelected = null;
     private Supplier<CardSortOrder> sortOrderSupplier = null;
     private Runnable onSaveSelected = null;
     private Runnable onEscPressed = null;
@@ -182,6 +183,9 @@ public class MainWindow {
         MenuItem diaryItem = skin.createMenuItem("Tagebuch");
         diaryItem.setOnAction(_ -> onDiarySelected.run());
         menuModule.getItems().add(diaryItem);
+        MenuItem weekdayItem = skin.createMenuItem("Wochentagsberechnung");
+        weekdayItem.setOnAction(_ -> onWeekdaySelected.run());
+        menuModule.getItems().add(weekdayItem);
         
         // ANSICHT-MENÜ
         Menu menuView = skin.createMenu("Ansicht");
@@ -344,6 +348,10 @@ public class MainWindow {
     
     public void setDiaryRunnable(Runnable runner) {
     	this.onDiarySelected = runner;
+    }
+    
+    public void setWeekdayRunnable(Runnable runner) {
+    	this.onWeekdaySelected = runner;
     }
 
 	public void show() {
