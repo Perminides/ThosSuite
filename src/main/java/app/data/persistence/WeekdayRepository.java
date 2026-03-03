@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 
 public class WeekdayRepository {
+	
+	public record WeekdayStats(int currentStreak, int maxStreak) {};
 
     public boolean playedToday() {
         String sql = "SELECT 1 FROM weekday WHERE day = ? LIMIT 1";
@@ -31,5 +33,35 @@ public class WeekdayRepository {
         } catch (SQLException e) {
 	        throw new RuntimeException("Fehler beim Speichern der Weekday-Stats", e);
 	    }
+    }
+    
+    public WeekdayStats getWeekdayStats(){
+        String sql = "SELECT seconds_needed FROM weekday ORDER BY day DESC";
+        int currentStreak = 0;
+        int maxStreak = 0;
+        int runningStreak = 0;
+        boolean currentStreakDone = false;
+
+        try (Connection con = DB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                int seconds = rs.getInt("seconds_needed");
+                if (seconds == -1) {
+                    currentStreakDone = true;
+                    maxStreak = Math.max(maxStreak, runningStreak);
+                    runningStreak = 0;
+                } else {
+                    runningStreak++;
+                    if (!currentStreakDone)
+                        currentStreak++;
+                }
+            }
+        } catch (Exception e) {
+			throw new RuntimeException("Ui, Probleme beim Holen der WochentagsStats...", e);
+		}
+        maxStreak = Math.max(maxStreak, runningStreak);
+
+        return new WeekdayStats(currentStreak, maxStreak);
     }
 }

@@ -28,6 +28,7 @@ import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
 import app.ui.components.AnkiPlayConfigDialog;
 import app.ui.components.DiaryDialog;
+import app.ui.components.MattressTurnDialog;
 import app.ui.components.AnkiPlayConfigDialog.AnkiPlayConfig;
 import app.ui.components.RegionPlayConfigDialog;
 import app.ui.components.RegionPlayConfigDialog.RegionPlayConfig;
@@ -80,6 +81,7 @@ public class Controller{
     	mainWindow.setSortOrderSupplier(this::getCardSortOrder);
     	mainWindow.setDiaryRunnable(this::diarySelected);
     	mainWindow.setWeekdayRunnable(this::weekdaySelected);
+    	mainWindow.setMattressRunnable(this::mattressSelected);
     	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
     	showEmptyBackground();
     	ankiDeckService = new AnkiDeckService();
@@ -103,7 +105,8 @@ public class Controller{
 	 */
 	public void runPreTasks() {
 		fitbitDataFetcher = new FitbitDataFetcher();
-		fitbitDataFetcher.fetch();
+		if (Config.get("offline", "false").equals("false"))
+			fitbitDataFetcher.fetch();
 	}
 
 	/**
@@ -131,6 +134,8 @@ public class Controller{
 	    new DiaryDialog().show(mainWindow.getStage());
 	    
 	    new WeekdayDialog().showForDaily();
+	    
+	    new MattressTurnDialog().showIfDue();
 
 		// Hier kommen später weitere Post-Tasks (tmdb etc.)
 	}
@@ -308,6 +313,10 @@ public class Controller{
     
     public void weekdaySelected() {
     	new WeekdayDialog().showForPractice();
+    }
+    
+    public void mattressSelected() {
+    	new MattressTurnDialog().show();
     }
     
     /**

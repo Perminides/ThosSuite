@@ -1780,6 +1780,10 @@ public abstract class Skin {
 			return null;
 		}
 	}
+	
+	public Image tintImageWithTextColor(Image img) {
+		return UIUtils.tintImage(img, textColor);
+	}
 
 	/**
 	 * Holt das passende Hintergrundbild zur laufenden Session bzw das "leere", wenn keine Session läuft

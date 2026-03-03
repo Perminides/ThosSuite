@@ -7,6 +7,9 @@ import app.data.AppClock;
 import app.data.Deck;
 import app.data.SessionSwitchStrategy;
 import app.data.persistence.AlcoholRepository;
+import app.data.persistence.MattressRepository;
+import app.data.persistence.WeekdayRepository;
+import app.data.persistence.WeekdayRepository.WeekdayStats;
 import app.fitbit.FitbitDashboardService;
 import app.ui.skin.SkinService;
 import javafx.geometry.Pos;
@@ -39,7 +42,7 @@ public class DashboardSession implements Session {
         // Mit Tausenderpunkt formatieren
         String formattedSteps = NumberFormat.getInstance(Locale.GERMANY).format(stepsNeeded);
         
-        // Tile erstellen
+        // Erstes Fitbit-Tile erstellen
         view.getChildren().add(
             SkinService.get().createDashboardTile(
             	formattedSteps, 
@@ -47,7 +50,7 @@ public class DashboardSession implements Session {
             )
         );
         
-        // Tile erstellen
+        // Zweites Fitbit-Tile erstellen
         view.getChildren().add(
             SkinService.get().createDashboardTile(
             	"" + fitbitService.calculateCurrentStreak(AppClock.TODAY), 
@@ -58,12 +61,36 @@ public class DashboardSession implements Session {
         AlcoholRepository alcoholRepo = new AlcoholRepository();
         int balance = alcoholRepo.getCurrentBalance();
         
+        // Alkohol-Tile erstellen
         view.getChildren().add(
             SkinService.get().createDashboardTile(
                 "" + balance, 
                 "Aktueller Alkoholkontostand"
             )
         );
+        
+        WeekdayRepository wr = new WeekdayRepository();
+        WeekdayStats ws = wr.getWeekdayStats();
+        
+        // Wochentags-Tile erstellen
+        view.getChildren().add(
+                SkinService.get().createDashboardTile(
+                	"" + ws.currentStreak(), 
+                    "Aktueller Wochentags-Streak in Tagen (Rekord: " + ws.maxStreak() + ")"
+                )
+            );
+        
+        MattressRepository mr = new MattressRepository();
+        long daysUntilMattressTurn = mr.getDaysUntilNextTurn();
+        
+        // Bett-Tile erstellen
+        view.getChildren().add(
+            SkinService.get().createDashboardTile(
+                "" + daysUntilMattressTurn, 
+                "Tage bis zum Wenden der Matratze"
+            )
+        );
+        
     }
     
     @Override
