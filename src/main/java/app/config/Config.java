@@ -30,6 +30,7 @@ public class Config {
         // 2. Computed properties in Memory setzen
         computedProps.setProperty("rootFolder", folderPath);
         computedProps.setProperty("imageFolder", folderPath + "data/images/500x500/");
+        computedProps.setProperty("miscImageFolder", folderPath + "data/images/misc/");
         computedProps.setProperty("deckFolder", folderPath + "data/decks/");
         computedProps.setProperty("iconFolder", folderPath + "data/icons/");
         computedProps.setProperty("geoJsonFolder", folderPath + "data/maps/geojson/");

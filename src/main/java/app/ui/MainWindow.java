@@ -51,6 +51,7 @@ public class MainWindow {
     private Consumer<Skin> onNewSkinSelected = null;
     private Runnable onDiarySelected = null;
     private Runnable onWeekdaySelected = null;
+    private Runnable onMattressSelected = null;
     private Supplier<CardSortOrder> sortOrderSupplier = null;
     private Runnable onSaveSelected = null;
     private Runnable onEscPressed = null;
@@ -186,6 +187,9 @@ public class MainWindow {
         MenuItem weekdayItem = skin.createMenuItem("Wochentagsberechnung");
         weekdayItem.setOnAction(_ -> onWeekdaySelected.run());
         menuModule.getItems().add(weekdayItem);
+        MenuItem mattressItem = skin.createMenuItem("Matratze");
+        mattressItem.setOnAction(_ -> onMattressSelected.run());
+        menuModule.getItems().add(mattressItem);
         
         // ANSICHT-MENÜ
         Menu menuView = skin.createMenu("Ansicht");
@@ -352,6 +356,10 @@ public class MainWindow {
     
     public void setWeekdayRunnable(Runnable runner) {
     	this.onWeekdaySelected = runner;
+    }
+    
+    public void setMattressRunnable(Runnable runner) {
+    	this.onMattressSelected = runner;
     }
 
 	public void show() {
