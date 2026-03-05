@@ -172,7 +172,7 @@ public class RegionSession implements Session {
 		if (dayDiff < 7l)
 			return "Wir sehen uns in " + dayDiff + " Tagen wieder.";
 		if (weekDiff < 10)
-			return "Wir sehen uns in " + weekDiff + " Wochen wieder.";
+			return "Wir sehen uns in " + (weekDiff == 1 ? " Woche" : " Wochen") + "wieder.";
 		if (monthDiff < 12)
 			return "Wir sehen uns in " + monthDiff + " Monaten wieder.";
 		if (monthDiff < 18)
