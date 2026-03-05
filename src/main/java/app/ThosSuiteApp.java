@@ -1,8 +1,12 @@
 package app;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Locale;
 
 import app.config.Config;
@@ -10,6 +14,7 @@ import app.controller.Controller;
 import app.data.AppClock;
 import app.ui.MainWindow;
 import app.util.Log;
+import app.util.SingleInstanceGuard;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
@@ -88,6 +93,26 @@ public class ThosSuiteApp extends Application {
                 System.exit(-1);
                 return;
             }
+        }
+        
+        // Läuft die Suite bereits?
+        if (!SingleInstanceGuard.lockInstance(Path.of(dataFolder + "log/suite.lock"))) {
+        	Alert alert = new Alert(AlertType.WARNING);
+        	alert.setTitle("Programm bereits gestartet");
+        	alert.setHeaderText(null);
+        	alert.setContentText("Die Suite läuft bereits.");
+        	alert.getDialogPane().setStyle("-fx-font-size: 18px;");
+        	alert.showAndWait();
+            System.exit(0);
+        }
+        
+        // Locks auf die Log-Dateien entfernen, falls beim letzten mal abgestürzt.
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of(dataFolder + "log") , "*.lck")) {
+            for (Path file : stream) {
+                Files.deleteIfExists(file);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Probleme beim Entfernen der Locks auf die log-Dateien", e);
         }
         
         // Variable final machen für den Thread
