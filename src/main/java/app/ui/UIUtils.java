@@ -1,9 +1,12 @@
 package app.ui;
 
+import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 
 public class UIUtils {
@@ -93,4 +96,11 @@ public class UIUtils {
 	    return Color.hsb(c.getHue(), c.getSaturation(), newBrightness, c.getOpacity());
 	}
 	
+	public static void inactivateEscPress (Alert alert) {
+		alert.getDialogPane().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+		    if (event.getCode() == KeyCode.ESCAPE) {
+		        event.consume();
+		    }
+		});
+	}
 }
