@@ -64,6 +64,15 @@
 			<version>${javafx.version}</version>
 		</dependency>
 
+		<!-- Source:
+		https://mvnrepository.com/artifact/org.imgscalr/imgscalr-lib -->
+		<dependency>
+			<groupId>org.imgscalr</groupId>
+			<artifactId>imgscalr-lib</artifactId>
+			<version>4.2</version>
+			<scope>compile</scope>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>
@@ -160,7 +169,11 @@
 						<addModule>javafx.graphics</addModule>
 						<addModule>java.sql</addModule>
 						<addModule>java.net.http</addModule>
-						<addModule>jdk.localedata</addModule> <!-- Vollständige Locale-Daten. Ohne dieses Modul verwendet Java minimale Locale-Daten mit ',' als Tausendertrenner für de_DE, was in Deutschland unüblich ist. Mit jdk.localedata wird der übliche Punkt '.' verwendet. --> 
+						<addModule>jdk.localedata</addModule> <!-- Vollständige
+						Locale-Daten. Ohne dieses Modul verwendet Java minimale
+						Locale-Daten mit ',' als Tausendertrenner für de_DE, was
+						in Deutschland unüblich ist. Mit jdk.localedata wird der
+						übliche Punkt '.' verwendet. -->
 					</addModules>
 
 					<modulePaths>

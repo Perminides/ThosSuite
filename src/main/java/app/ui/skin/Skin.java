@@ -1634,7 +1634,7 @@ public abstract class Skin {
 	    if (effectiveParent != null) {
 	        dialog.initOwner(effectiveParent);
 	    }
-	    dialog.initOwner(parent);
+	    dialog.initOwner(parent); // !Sofort: Was war denn hier der Grund, dann ergibt ja der if darüber keinen Sinn. Hier ist was falsch!
 	    dialog.initStyle(StageStyle.EXTENDED);
 	    
 	    DialogPane dialogPane = dialog.getDialogPane();

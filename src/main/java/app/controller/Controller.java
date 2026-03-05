@@ -28,6 +28,7 @@ import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
 import app.ui.components.AnkiPlayConfigDialog;
 import app.ui.components.DiaryDialog;
+import app.ui.components.ImageScaler;
 import app.ui.components.MattressTurnDialog;
 import app.ui.components.AnkiPlayConfigDialog.AnkiPlayConfig;
 import app.ui.components.RegionPlayConfigDialog;
@@ -136,6 +137,8 @@ public class Controller{
 	    new WeekdayDialog().showForDaily();
 	    
 	    new MattressTurnDialog().showIfDue();
+	    
+	    ImageScaler.processImages();
 
 		// Hier kommen später weitere Post-Tasks (tmdb etc.)
 	}
