@@ -7,7 +7,6 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
@@ -30,15 +29,13 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 
 public class ImageScaler {
 	
-	/**
-	 * !Sofort: Ich finde den Code ein bisschen hässlich. Und wieso hatte ChatGPT so zu kämpfen damit, dass ein Klick
-	 * auf einen der OK.-Buttons auch den Dialog schließt? Ist etwas doof an unserer createDialog-Mehtode?
-	 * Lass Claude hier noch einmal drüber schauen bitte! Vor allem auch mit dem Button-Handling.
-	 * ButtonType leftType = new ButtonType("LEFT"); → Das brauchen wir doch nicht? Schau auch im WeekdayDialog nach!
-	 */
+	private static final Integer LEFT = 0;
+	private static final Integer RIGHT = 1;
+	
 	public static void processImages() {
 
 		Path targetDir500 = Path.of(Config.get("imageFolder"));
@@ -65,9 +62,9 @@ public class ImageScaler {
 
 	            BufferedImage original = ImageIO.read(imgPath.toFile());
 
-	            Image resultX = scaleImageScalr(original, new Dimension (500, 500));
-	            Image resultY = scaleImagePlain(original, new Dimension (500, 500));
-	            Image chosen = chooseImage(resultX, resultY);
+	            Image resultLeft = scaleImageScalr(original, new Dimension (500, 500));
+	            Image resultRight = scaleImagePlain(original, new Dimension (500, 500));
+	            Image chosen = chooseImage(resultLeft, resultRight);
 
 	            if (chosen == null)
 	            	return;
@@ -97,9 +94,13 @@ public class ImageScaler {
 		}
 	}
 	
-	private static Image chooseImage(Image imgX, Image imgY) {
+	private static Image chooseImage(Image imgLeft, Image imgRight) {
 
-	    Dialog<ButtonType> dialog = (Dialog<ButtonType>) SkinService.get().createDialog(null, "Bild auswählen");
+		Window owner = SkinService.getOwnerWindow();
+		// createDialog gibt Dialog<?> zurück – wir casten bewusst auf Integer,
+        // um setResult() nutzen zu können und die showAndWait()-Event-Loop sauber zu beenden.
+        @SuppressWarnings("unchecked")
+	    Dialog<Integer> dialog = (Dialog<Integer>) SkinService.get().createDialog(owner, "Bild auswählen");
 	    
 	    // CANCEL_CLOSE damit JavaFX den Dialog grundsätzlich schließen lässt
         ButtonType cancelType = new ButtonType("", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -120,23 +121,28 @@ public class ImageScaler {
 	    
 	    DialogPane pane = dialog.getDialogPane();
 
-	    ButtonType leftType = new ButtonType("LEFT");
-	    ButtonType rightType = new ButtonType("RIGHT");
+	    int[] chosen = { -1 };
 
-	    Button okX = new Button("OK");
-	    Button okY = new Button("OK");
+	    Button okLeft = new Button("OK");
+	    Button okRight = new Button("OK");
 
-	    okX.setOnAction(e -> dialog.setResult(leftType));
-	    okY.setOnAction(e -> dialog.setResult(rightType));
+	    okLeft.setOnAction(_ -> {
+	    	chosen[0] = LEFT;
+	    	dialog.setResult(LEFT);
+	    });
+	    okRight.setOnAction(_ -> {
+	    	chosen[0] = RIGHT;
+	    	dialog.setResult(RIGHT);
+	    });
 
-	    ImageView viewX = new ImageView(imgX);
-	    ImageView viewY = new ImageView(imgY);
+	    ImageView viewLeft = new ImageView(imgLeft);
+	    ImageView viewRight = new ImageView(imgRight);
 
-	    viewX.setPreserveRatio(true);
-	    viewY.setPreserveRatio(true);
+	    viewLeft.setPreserveRatio(true);
+	    viewRight.setPreserveRatio(true);
 
-	    VBox left = new VBox(10, viewX, okX);
-	    VBox right = new VBox(10, viewY, okY);
+	    VBox left = new VBox(10, viewLeft, okLeft);
+	    VBox right = new VBox(10, viewRight, okRight);
 
 	    left.setAlignment(Pos.CENTER);
 	    right.setAlignment(Pos.CENTER);
@@ -147,14 +153,15 @@ public class ImageScaler {
 
 	    pane.setContent(root);
 
-	    Optional<ButtonType> result = dialog.showAndWait();
-
-	    if (result.isPresent()) {
-	        if (result.get() == leftType) return imgX;
-	        if (result.get() == rightType) return imgY;
+	    dialog.showAndWait();
+	    
+	    if (chosen[0] == -1)
+	    	return null;
+	    else {
+	    	Image result = chosen[0] == LEFT ? imgLeft : imgRight;
+	    	Log.debug(ImageScaler.class, (chosen[0] == LEFT ? "Linkes " : "Rechtes ") + "Bild gewählt.");
+	    	return result;
 	    }
-
-	    return null;
 	}
 	
     private static Image scaleImageScalr(BufferedImage img, Dimension d) {
