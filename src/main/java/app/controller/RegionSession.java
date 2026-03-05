@@ -17,6 +17,7 @@ import app.data.RegionSessionSpec;
 import app.data.RegionWriteSessionProgress;
 import app.data.SessionSwitchStrategy;
 import app.presenter.RegionSessionPresenter;
+import app.ui.UIUtils;
 import app.ui.skin.SkinService;
 import app.util.Log;
 import javafx.scene.control.Alert;
@@ -100,29 +101,19 @@ public class RegionSession implements Session {
 			Log.info(this, "Alert wird erstellt. correct=" + correct);
 
 			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Nicht korrekt", text, true, allowResume);
-			
-			ScrollPane scrollFromAlert = (ScrollPane) alert.getDialogPane().getContent();
+			UIUtils.inactivateEscPress(alert);
+			Optional<ButtonType> result = alert.showAndWait();
 
-			Log.info(this, "=== VOR SHOW ===");
-			Log.info(this, "ScrollPane insets: " + (scrollFromAlert.getBackground() != null ? scrollFromAlert.getBackground().getFills().get(0).getInsets() : "null"));
-			
-	    	Optional<ButtonType> result = alert.showAndWait();
-	    	
-	    	Log.info(this, "=== NACH SHOW ===");
-	    	Log.info(this, "ScrollPane boundsInLocal: " + scrollFromAlert.getBoundsInLocal());
-	    	Log.info(this, "ScrollPane boundsInParent: " + scrollFromAlert.getBoundsInParent());
-	    	Log.info(this, "DialogPane boundsInLocal: " + alert.getDialogPane().getBoundsInLocal());
-	    	
-	    		if (!result.isPresent() || result.get().getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) { // Abbruch. Wir speichern nicht, wir beenden sofort.
-	    			active = false;
-	    	        controller.sessionEnded();
-	    	        return;
-	    	    } else if (result.get().getButtonData() == ButtonBar.ButtonData.YES) { // Ok. Wir beenden gleich nach dem Speichern.
-	    	        // Nichts weiter zu tun...
-	    	    } else if (result.get().getButtonData() == ButtonBar.ButtonData.OTHER) { // Fortsetzen. Wir setzen fort.
-	    	    	progress.resume();
-					return;
-	    	    }
+			if (!result.isPresent() || result.get().getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) { // Abbruch. Wir speichern nicht, wir beenden sofort.
+				active = false;
+				controller.sessionEnded();
+				return;
+			} else if (result.get().getButtonData() == ButtonBar.ButtonData.YES) { // Ok. Wir beenden gleich nach dem Speichern.
+				// Nichts weiter zu tun...
+			} else if (result.get().getButtonData() == ButtonBar.ButtonData.OTHER) { // Fortsetzen. Wir setzen fort.
+				progress.resume();
+				return;
+			}
 		} else if (text != null && !text.isEmpty()) { // Ah. Ich soll was anzeigen, obwohl es korrekt war. Vermutlich ein FreePlay. Na egal, zeigen wir halt an...
 			Log.info(this, "Alert wird erstellt. correct=" + correct);
 			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Korrekt", text, false, allowResume);
