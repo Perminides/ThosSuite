@@ -70,6 +70,10 @@ public class RegionSessionPane extends Pane {
     	karte.addToCorrect(elements);
     }
 	
+	public void addIdsToInactive(Set<String> elements) {
+    	karte.makeInactive(elements);
+    }
+	
 	public void setIdToIncorrect(String element) {
     	karte.addToIncorrect(element);
 	}

@@ -44,6 +44,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
     private static final PseudoClass INCORRECT = PseudoClass.getPseudoClass("incorrect");
     private static final PseudoClass MARKED = PseudoClass.getPseudoClass("marked");
     private static final PseudoClass ACTIVE = PseudoClass.getPseudoClass("active");
+    private static final PseudoClass INACTIVE = PseudoClass.getPseudoClass("inactive");
     
     // Hält alle Shapes im Zugriff für Updates per ID
     private final Map<String, MapShape> shapeMap = new HashMap<>();
@@ -167,6 +168,12 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         }
     }
     
+    public void makeInactive(Set<String> ids) {
+        for (String id : ids) {
+            updateShapeState(id, INACTIVE);
+        }
+    }
+    
     public void moveCorrectToActive() {
        shapeMap.values().forEach(shape -> {
            if (shape.shape().getPseudoClassStates().contains(CORRECT)) {
@@ -197,7 +204,6 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
             // oder CSS regelt die Priorität. Hier resetten wir sicherheitshalber die anderen.
             resetShapeState(mapShape);
             mapShape.shape().pseudoClassStateChanged(state, true);
-            System.out.println("State set. id=" + mapShape.id() + " state=" + state.getPseudoClassName());
         }
     }
     
@@ -210,6 +216,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         shape.shape().pseudoClassStateChanged(INCORRECT, false);
         shape.shape().pseudoClassStateChanged(MARKED, false);
         shape.shape().pseudoClassStateChanged(ACTIVE, false);
+        shape.shape().pseudoClassStateChanged(INACTIVE, false);
     }
     
     // Für Resume/Restore State (ShapeMapState Record)

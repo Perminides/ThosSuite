@@ -762,6 +762,7 @@ public abstract class Skin {
 	    builder.rule(".my-map-shape:correct", "-fx-fill", correctColor);
 	    builder.rule(".my-map-shape:incorrect", "-fx-fill", incorrectColor);
 	    builder.rule(".my-map-shape:marked", "-fx-fill", markedColor);
+	    builder.rule(".my-map-shape:inactive", "-fx-fill", disabledComponentBgColor);
 
 	    // Wenn Spiel pausiert ist (.game-paused auf dem Parent) bekommen aktive die disabledComponentBgColor und keinen Hover-Effekt
 	    builder.rule(".my-shape-map-pane:paused .my-map-shape:active", "-fx-fill", disabledComponentBgColor);

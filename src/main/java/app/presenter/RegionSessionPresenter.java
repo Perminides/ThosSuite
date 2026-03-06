@@ -65,17 +65,17 @@ public class RegionSessionPresenter {
 	}
 	
 	public void weWaitForEliminationText(Set<String> ids) {
-		sessionPane.addIdsToMarked(ids);
+		sessionPane.addIdsToInactive(ids);
 		sessionPane.setMapActive(false);
 	}
 	
 	public void weWaitForWriteText(String id) {
-		sessionPane.addIdsToActive(Set.of(id));
+		sessionPane.addIdsToMarked(Set.of(id));
 		sessionPane.setMapActive(true);
 	}
 	
 	public void prepareWriteSession(Set<String> ids) {
-		sessionPane.addIdsToMarked(ids);
+		sessionPane.addIdsToInactive(ids);
 		sessionPane.setMapActive(false);
 	}
 	

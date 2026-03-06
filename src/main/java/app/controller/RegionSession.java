@@ -23,7 +23,6 @@ import app.util.Log;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
 
 // !Später: Das RegionSessionBild croppen und dann den korrekten Rand setzen, wenn isComplete==true. Wobei isComplete meint, dasss das ganze Rechteck ausgefüllt ist.
@@ -172,7 +171,7 @@ public class RegionSession implements Session {
 		if (dayDiff < 7l)
 			return "Wir sehen uns in " + dayDiff + " Tagen wieder.";
 		if (weekDiff < 10)
-			return "Wir sehen uns in " + (weekDiff == 1 ? " Woche" : " Wochen") + "wieder.";
+			return "Wir sehen uns in " + weekDiff + (weekDiff == 1 ? " Woche" : " Wochen") + " wieder.";
 		if (monthDiff < 12)
 			return "Wir sehen uns in " + monthDiff + " Monaten wieder.";
 		if (monthDiff < 18)
