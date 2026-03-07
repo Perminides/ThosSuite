@@ -11,7 +11,7 @@ import app.data.SessionProgress;
 import app.ui.panes.AnkiSessionPane;
 import app.ui.panes.GermanySessionPane;
 import app.ui.panes.MCSessionPane;
-import app.ui.panes.WorldSessionPane;
+import app.ui.panes.ImageMapSessionPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
@@ -45,7 +45,8 @@ public class AnkiSessionPresenter {
         return switch(type) {
             case GERMANY_CARDS -> new GermanySessionPane(this);
             case MC_CARDS -> new MCSessionPane(this);
-            case WORLD_CARDS -> new WorldSessionPane(this);
+            case WORLD_CARDS -> new ImageMapSessionPane(this, type);
+            case HANNOVER_CARDS -> new ImageMapSessionPane(this, type);
             default -> null; // oder throw new IllegalArgumentException?
         };
     }
