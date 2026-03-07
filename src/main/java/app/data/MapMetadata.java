@@ -16,7 +16,8 @@ public enum MapMetadata {
 	BAVARIA(MapType.SHAPE, "bayern_reg.geojson", null),
 	HANNOVER_REGION(MapType.SHAPE, "hannover_region.geojson", null),
 	
-	WORLD(MapType.IMAGE, "worldAreas.geojson;worldCountries.geojson;worldLines.geojson", "world.png");
+	WORLD(MapType.IMAGE, "worldAreas.geojson;worldCountries.geojson;worldLines.geojson", "world.png"),
+	HANNOVER(MapType.IMAGE, "hannoverAreas.geojson", "");
 
 	private final MapType mapType;
 	private final String[] geoJsonFile;

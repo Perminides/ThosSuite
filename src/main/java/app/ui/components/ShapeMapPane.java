@@ -33,6 +33,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
 		    Set<String> incorrectShapes,
 		    Set<String> markedShapes,
 		    Set<String> activeShapes,
+		    Set<String> inactiveShapes,
 		    boolean interactive
 		) {}
 
@@ -226,6 +227,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         Set<String> incorrect = new HashSet<>();
         Set<String> marked = new HashSet<>();
         Set<String> active = new HashSet<>();
+        Set<String> inactive = new HashSet<>();
         
         shapeMap.forEach((id, mapShape) -> {
             Set<PseudoClass> states = mapShape.shape().getPseudoClassStates();
@@ -233,9 +235,10 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
             if (states.contains(INCORRECT)) incorrect.add(id);
             if (states.contains(MARKED)) marked.add(id);
             if (states.contains(ACTIVE)) active.add(id);
+            if (states.contains(INACTIVE)) inactive.add(id);
         });
         
-        return new ShapeMapState(correct, incorrect, marked, active, isInteractive);
+        return new ShapeMapState(correct, incorrect, marked, active, inactive, isInteractive);
     }
     
     public void setState(ShapeMapState state) {
@@ -244,6 +247,7 @@ public class ShapeMapPane extends StackPane { // StackPane zentriert den Inhalt 
         // Einzel-Add für Incorrect (meist nur einer)
         state.incorrectShapes().forEach(this::addToIncorrect); 
         addToMarked(state.markedShapes());
+        makeInactive(state.inactiveShapes);
         makeActive(state.activeShapes());
         setInteractive(state.interactive());
     }

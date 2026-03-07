@@ -201,7 +201,7 @@ public abstract class Skin {
 	protected Color borderColor; // Komponenten
 	protected Color borderShapeColor; // Karten
 	protected Color thinBorderColor; // Um contentPane und unten die MenuBar
-	protected Integer thinBorderWidth; // default = 1
+	protected Integer thinBorderWidth = 1; // default = 1
 	protected Color stageBorderColor; // default = weiß
 	
 	protected Integer dashBoardTileWidth; // 250
@@ -219,6 +219,10 @@ public abstract class Skin {
 	protected String worldMapInactiveImageName;
 	protected String worldMapOverlayImageName;
 	protected String worldMapInactiveOverlayImageName;
+	protected String hannoverMapImageName = "Hannover 500.jpg";
+	protected String hannoverMapInactiveImageName = "Hannover 500.jpg";
+	protected String hannoverMapOverlayImageName = "Hannover small.png";
+	protected String hannoverMapInactiveOverlayImageName = "Hannover small.png";
 	protected String defaultWallpaperName;
 	protected String emptyWallpaperName;
 	protected String mcWallpaperName;
@@ -250,6 +254,14 @@ public abstract class Skin {
 	protected Rectangle2D worldSessionProgressPanel;
 	protected Rectangle2D worldSessionHistoryPanel;
 	protected Rectangle2D worldSessionBackButton;
+	protected Rectangle2D hannoverSessionMapPanel;
+	protected Rectangle2D hannoverSessionQuestionPanel;
+	protected Rectangle2D hannoverSessionTextInputPanel;
+	protected Rectangle2D hannoverSessionImagePanel;
+	protected Rectangle2D hannoverSessionMcPanel;
+	protected Rectangle2D hannoverSessionProgressPanel;
+	protected Rectangle2D hannoverSessionHistoryPanel;
+	protected Rectangle2D hannoverSessionBackButton;
 	protected Rectangle2D germanySessionMapPanel;
 	protected Rectangle2D germanySessionQuestionPanel;
 	protected Rectangle2D germanySessionTextInputPanel;
@@ -316,11 +328,11 @@ public abstract class Skin {
 	// region
 	
 	public void styleScene(Scene scene) {
+		// !Sofort: Das ist ja Quatsch. Du kannst harte Defaults viel besser oben gleich ind er Definition setzen. Nur beei berechneten kann das schwierig werden...
 		menuBarHoverBackground = menuBarHoverBackground == null ? UIUtils.adjustBrightness(menuBarBackground, 20) : menuBarHoverBackground;
 		menuDisabledForeground = menuDisabledForeground == null ? UIUtils.adjustBrightness(textColor, 90) : menuDisabledForeground;
 		menuButtonPadding = menuButtonPadding == null ? font.getSize() * 0.3 + "px " + font.getSize() * 0.4 + "px" : menuButtonPadding;
 		menuItemPadding = menuItemPadding == null ? font.getSize() * 0.1 + "px " + font.getSize() * 0.5 + "px" : menuItemPadding;
-		thinBorderWidth = thinBorderWidth == null ? 1 : thinBorderWidth;
 		imageMapShapeBorderWidth = imageMapShapeBorderWidth == null ? 2 : imageMapShapeBorderWidth;
 		imageMapLineShapeInnerWidth = imageMapLineShapeInnerWidth == null ? 12 : imageMapLineShapeInnerWidth; // Nur für den unsichtbaren Klickbereich
 		imageMapShapeMarkedOuterWidth = imageMapShapeMarkedOuterWidth == null ? 7 : imageMapShapeMarkedOuterWidth;
@@ -339,6 +351,14 @@ public abstract class Skin {
 		displayTextProgressBgColor = displayTextProgressBgColor == null ? displayTextBgColor : displayTextProgressBgColor;
 		displayTextQuestionBgColor = displayTextQuestionBgColor == null ? displayTextBgColor : displayTextQuestionBgColor;
 		stageBorderColor = stageBorderColor == null ? Color.WHITE : stageBorderColor;
+		hannoverSessionMapPanel = hannoverSessionMapPanel == null ? worldSessionMapPanel : hannoverSessionMapPanel;
+		hannoverSessionQuestionPanel = hannoverSessionQuestionPanel == null ? worldSessionQuestionPanel : hannoverSessionQuestionPanel;
+		hannoverSessionTextInputPanel = hannoverSessionTextInputPanel == null ? worldSessionTextInputPanel : hannoverSessionTextInputPanel;
+		hannoverSessionImagePanel = hannoverSessionImagePanel == null ? worldSessionImagePanel : hannoverSessionImagePanel;
+		hannoverSessionMcPanel = hannoverSessionMcPanel == null ? worldSessionMcPanel : hannoverSessionMcPanel;
+		hannoverSessionProgressPanel = hannoverSessionProgressPanel == null ? worldSessionProgressPanel : hannoverSessionProgressPanel;
+		hannoverSessionHistoryPanel = hannoverSessionHistoryPanel == null ? worldSessionHistoryPanel : hannoverSessionHistoryPanel;
+		hannoverSessionBackButton = hannoverSessionBackButton == null ? worldSessionBackButton : hannoverSessionBackButton;
 		
 		/**
 		// Dieser Code ist natürlich Quatsch. Aber ich bin so angepisst über diese -1 dass ich mir das jetzt gebaut habe.
@@ -1706,7 +1726,8 @@ public abstract class Skin {
 		GeoMap map = MapService.getInstance().getMap(type);
 		Rectangle2D bounds = (Rectangle2D) getFieldValue(type.getId() + "SessionMapPanel");
 		BorderParams borderForRectangle = new BorderParams(borderBigComponent.width(), borderBigComponent.color(), borderBigComponent.insets(), borderBigComponent.arc()*2, borderBigComponent.focusWidth(), borderBigComponent.focusedColor(), borderBigComponent.disabledColor());
-		ImageMapPane result = new ImageMapPane(map, bounds.getWidth(), bounds.getHeight(), borderForRectangle, new Rectangle2D(11, 11, 410, 254));
+		// !Sofort. Was sind das denn für wilde Magic Numbers?
+		ImageMapPane result = new ImageMapPane(map, bounds.getWidth(), bounds.getHeight(), borderForRectangle, type == Deck.WORLD_CARDS ? new Rectangle2D(11, 11, 410, 254) : new Rectangle2D(0, 0, 390, 300));
 		result.setLayoutX(bounds.getMinX());
 		result.setLayoutY(bounds.getMinY());
 		return result;
@@ -1750,6 +1771,8 @@ public abstract class Skin {
 		switch (type) {
 		case WORLD_CARDS:
 			return Config.get("mapImagesFolder") + worldMapImageName;
+		case HANNOVER_CARDS:
+			return Config.get("mapImagesFolder") + hannoverMapImageName;
 		default:
 			return null;
 		}
@@ -1759,6 +1782,8 @@ public abstract class Skin {
 		switch (type) {
 		case WORLD_CARDS:
 			return Config.get("mapImagesFolder") + worldMapInactiveImageName;
+		case HANNOVER_CARDS:
+			return Config.get("mapImagesFolder") + hannoverMapInactiveImageName;
 		default:
 			return null;
 		}
@@ -1768,6 +1793,8 @@ public abstract class Skin {
 		switch (type) {
 		case WORLD_CARDS:
 			return Config.get("mapImagesFolder") + worldMapInactiveOverlayImageName;
+		case HANNOVER_CARDS:
+			return Config.get("mapImagesFolder") + hannoverMapInactiveOverlayImageName;
 		default:
 			return null;
 		}
@@ -1777,6 +1804,8 @@ public abstract class Skin {
 		switch (type) {
 		case WORLD_CARDS:
 			return Config.get("mapImagesFolder") + worldMapOverlayImageName;
+		case HANNOVER_CARDS:
+			return Config.get("mapImagesFolder") + hannoverMapOverlayImageName;
 		default:
 			return null;
 		}

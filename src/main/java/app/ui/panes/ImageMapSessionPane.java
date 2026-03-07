@@ -20,9 +20,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
-public class WorldSessionPane extends Pane implements AnkiSessionPane {
-	private static final Deck DECKTYPE = Deck.WORLD_CARDS; 
-
+public class ImageMapSessionPane extends Pane implements AnkiSessionPane {
+	
+	private final Deck deckType; 
 	private final AnkiSessionPresenter presenter;
     private TextField textInputField;
     private SessionInfoLabel questionArea;
@@ -30,38 +30,39 @@ public class WorldSessionPane extends Pane implements AnkiSessionPane {
     private SessionInfoLabel cardHistoryArea;
     private MultipleChoicePane mcPane;
     private Button backButton;
-    private ImageMapPane weltkarte;
+    private ImageMapPane mapPane;
     private ImagePane imageComponent;
 
-    public WorldSessionPane(AnkiSessionPresenter presenter) {
+    public ImageMapSessionPane(AnkiSessionPresenter presenter, Deck deckType) {
         this.presenter = presenter;
-        this.setBackground(new Background(SkinService.get().getBackgroundImage(DECKTYPE)));
+        this.deckType = deckType;
+        this.setBackground(new Background(SkinService.get().getBackgroundImage(deckType)));
         initUI();
     }   
 
     private void initUI() {
         Skin skin = SkinService.get();
-        weltkarte = skin.createImageMapPanel(DECKTYPE);
-    	weltkarte.setListener(new MapElementListener() {
+        mapPane = skin.createImageMapPanel(deckType);
+    	mapPane.setListener(new MapElementListener() {
     	    @Override
     	    public void mouseClicked(String id) {
     	        mapElementClicked(id);  // ← Über Helper
     	    }
     	});
-    	getChildren().add(weltkarte);
+    	getChildren().add(mapPane);
     	
-    	questionArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
+    	questionArea = skin.createSessionInfoLabel(deckType, Skin.TextLabelType.QUESTION);
     	questionArea.setText("");
     	getChildren().add(questionArea);
     	
-    	textInputField = skin.createInputField(DECKTYPE);
+    	textInputField = skin.createInputField(deckType);
         textInputField.setOnKeyReleased(_ -> textInputChanged());
         getChildren().add(textInputField);
     	
-        imageComponent = skin.createImageComponent(DECKTYPE);
+        imageComponent = skin.createImageComponent(deckType);
     	getChildren().add(imageComponent);
     	
-    	mcPane = skin.createMultipleChoicePane(DECKTYPE);
+    	mcPane = skin.createMultipleChoicePane(deckType);
     	mcPane.addListener(
     		new Consumer<Integer>() {
 				@Override
@@ -72,15 +73,15 @@ public class WorldSessionPane extends Pane implements AnkiSessionPane {
     	);
     	getChildren().add(mcPane);
     	
-    	progressArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
+    	progressArea = skin.createSessionInfoLabel(deckType, Skin.TextLabelType.PROGRESS);
     	progressArea.setText("");
     	getChildren().add(progressArea); // FEHLER
     	
-    	cardHistoryArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
+    	cardHistoryArea = skin.createSessionInfoLabel(deckType, Skin.TextLabelType.CARD_HISTORY);
     	cardHistoryArea.setText("");
     	getChildren().add(cardHistoryArea); // FEHLER
     	
-    	backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
+    	backButton = skin.createIconButton(deckType, Skin.IconButtonType.BACK);
     	backButton.setOnAction(_ -> backButtonClicked());
     	getChildren().add(backButton);
     }
@@ -126,32 +127,32 @@ public class WorldSessionPane extends Pane implements AnkiSessionPane {
 	// Map
 	
     public void resetMarkers() {
-    	weltkarte.resetMarkers();
+    	mapPane.resetMarkers();
     }
     
     public void setMapActive(boolean active) {
-    	weltkarte.setActive(active);
+    	mapPane.setActive(active);
     }
     
 	@Override
 	public void setIdsInQuestion(Set<String> ids) {
-		weltkarte.setToCheckShapes(ids);
+		mapPane.setToCheckShapes(ids);
 	}
 	
 	@Override
 	public void setMarkedIds(Set<String> ids) {
-		weltkarte.setMarked(ids);
+		mapPane.setMarked(ids);
 	}
 	
     @Override
 	public void addIdsToCorrect(Set<String> elements) {
-		weltkarte.addToCorrect(elements);
+		mapPane.addToCorrect(elements);
     }
     
     @Override
 	public void setIdToIncorrect(String id) { // Die id ist eh null, braucht uns nicht zu interessieren.
-		weltkarte.resetMarkers(); // Wo war die EM 2021? Alle Länder werden grün. Wer gewann? Wenn ich falsch klicke und jetzt eins der 10 nochmal grün wird sehe ich nicht, welches!
-    	weltkarte.markLastClickAsIncorrect();
+		mapPane.resetMarkers(); // Wo war die EM 2021? Alle Länder werden grün. Wer gewann? Wenn ich falsch klicke und jetzt eins der 10 nochmal grün wird sehe ich nicht, welches!
+    	mapPane.markLastClickAsIncorrect();
     }
     
     // Input
