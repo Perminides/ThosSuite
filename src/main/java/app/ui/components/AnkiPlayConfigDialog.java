@@ -48,7 +48,7 @@ public class AnkiPlayConfigDialog {
         minIndexField.setPrefColumnCount(8);
         
         Label maxLabel = new Label("Max Index:");
-        maxIndexField = new TextField("2000000");
+        maxIndexField = new TextField("50000000");
         maxIndexField.setPrefColumnCount(8);
         
         Label maxCardsLabel = new Label("Max Karten:");
@@ -84,7 +84,7 @@ public class AnkiPlayConfigDialog {
                 }
                 
                 String label = availableLabels.get(i);
-                String displayLabel = label.length() > 25 ? label.substring(0, 22) + "..." : label;
+                String displayLabel = label.length() > 30 ? label.substring(0, 30) + "..." : label;
                 CheckBox checkBox = new CheckBox(displayLabel);
                 checkBox.setTooltip(new Tooltip(label)); // Voller Text beim Hover
                 labelCheckBoxes.add(checkBox);
