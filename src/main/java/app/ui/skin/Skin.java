@@ -1783,7 +1783,7 @@ public abstract class Skin {
 		case WORLD_CARDS:
 			return Config.get("mapImagesFolder") + worldMapInactiveImageName;
 		case HANNOVER_CARDS:
-			return Config.get("mapImagesFolder") + hannoverMapInactiveImageName;
+			return null; //Config.get("mapImagesFolder") + hannoverMapInactiveImageName;
 		default:
 			return null;
 		}
@@ -1794,7 +1794,7 @@ public abstract class Skin {
 		case WORLD_CARDS:
 			return Config.get("mapImagesFolder") + worldMapInactiveOverlayImageName;
 		case HANNOVER_CARDS:
-			return Config.get("mapImagesFolder") + hannoverMapInactiveOverlayImageName;
+			return null; //Config.get("mapImagesFolder") + hannoverMapInactiveOverlayImageName;
 		default:
 			return null;
 		}

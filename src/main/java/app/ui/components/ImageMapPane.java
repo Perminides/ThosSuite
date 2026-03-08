@@ -237,6 +237,9 @@ public class ImageMapPane extends StackPane {
 	}
 
 	private void updateImages() {
+		// !Sofort: Ich weiß: Dass sieht harmlos aus hier. Aber frag mal Claude, ob ihm etwas elegantere einfällt. Genau solche harmlosen Hacks machen den Code am Ende so unwartbar!
+		if (map.getInactiveImage() == null && map.getInactiveOverlayImage() == null && mainImageView.getImage() != null)
+			return;
 		mainImageView.setImage(active ? map.getBackgroundImage() : map.getInactiveImage());
 		miniMapImageView.setImage(active ? map.getOverlayImage() : map.getInactiveOverlayImage());
 	}
