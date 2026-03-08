@@ -45,7 +45,7 @@ public class AnkiCard {
 	public AnkiCard(List<String> csvTokens) {
 		id = Integer.parseInt(csvTokens.get(0));
 		remark = csvTokens.get(1);
-		Arrays.stream(csvTokens.get(2).split("\\|")).map(String::trim).forEach(labels::add);
+		Arrays.stream(csvTokens.get(2).split("\\,")).map(String::trim).forEach(labels::add);
 		
 		List<Step> out = new ArrayList<>(); // Ergebnisliste
 		List<List<Step>> segments = null; // Segmente zwischen ShuffleStart und ShuffleEnd
