@@ -1,5 +1,10 @@
 package app.controller;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -68,7 +73,7 @@ public class Controller{
         CANCEL
     }
     
-    public Controller(MainWindow mainWindow) {
+    public Controller(MainWindow mainWindow) throws InterruptedException {
     	this.mainWindow = mainWindow;
     	//!Später: Wenn sich herausstellt, dass eh nur der Controller die ganzen Menü-Events erhält, dann darf das MainWindow auch den Controller kennen und die Methoden direkt aufrufen. Außer Claude erklärt mir, was an dieser zirkulären Beziehung nun so gefährlich sein soll...
     	mainWindow.setEscPressedRunnable(this::escPressed);
@@ -85,6 +90,7 @@ public class Controller{
     	mainWindow.setMattressRunnable(this::mattressSelected);
     	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
     	showEmptyBackground();
+    	
     	ankiDeckService = new AnkiDeckService();
     	regionDeckService = new RegionDeckService();
     	
@@ -458,5 +464,5 @@ public class Controller{
         
         // 3. In den Anker hängen
         mainWindow.showPane(emptyView);
-    }
+    }    
 }

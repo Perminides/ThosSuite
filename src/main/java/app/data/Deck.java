@@ -2,10 +2,10 @@ package app.data;
 
 public enum Deck {
     // Anki Decks
+	HANNOVER_CARDS("hannover", "Hannover", "hannover", DeckCategory.ANKI_DECK, "hannoverDeckJavaFX.csv", MapMetadata.HANNOVER, "newWorldCardsPerDay", false),
     GERMANY_CARDS("germany", "Deutschland", "germany", DeckCategory.ANKI_DECK, "germanDeckJavaFX.csv", MapMetadata.GERMANY, "newGermanCardsPerDay", false),
     MC_CARDS("mc", "Multiple Choice", "mc", DeckCategory.ANKI_DECK, "mcDeckJavaFX.csv", null, "newMCCardsPerDay", false),
     WORLD_CARDS("world", "Welt", "world", DeckCategory.ANKI_DECK, "weltDeckJavaFX.csv", MapMetadata.WORLD, "newWorldCardsPerDay", false),
-    HANNOVER_CARDS("hannover", "Hannover", "hannover", DeckCategory.ANKI_DECK, "hannoverDeckJavaFX.csv", MapMetadata.HANNOVER, "newWorldCardsPerDay", false),
     
     // Bundesländer
     BUNDESLAND_SH("lk_sh", "Schleswig-Holstein", "lk", DeckCategory.REGION_DECK, null, MapMetadata.GERMANY, null, true),
