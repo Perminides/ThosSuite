@@ -110,7 +110,7 @@ public class GeoMap {
 	}
 	
 	public Image getInactiveImage() {
-		return inactiveBackgroundImage;
+		return inactiveBackgroundImage == null ? backgroundImage : inactiveBackgroundImage;
 	}
 	
 	public Image getInactiveOverlayImage() {
