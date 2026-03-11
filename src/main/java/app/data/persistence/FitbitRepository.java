@@ -24,7 +24,7 @@ import app.util.Log;
  * Verantwortlich für die Persistierung von Fitbit-Daten.
  * 
  * <h3>Datenbank:</h3>
- * Tabelle: fitbit (date DATE PRIMARY KEY, ppints INTEGER NOT NULL)
+ * Tabelle: fitbit (date DATE PRIMARY KEY, points INTEGER NOT NULL, remark TEXT)
  * Speichert die berechneten Tagespunkte für schnellen Zugriff in Statistiken.
  * 
  * <h3>Log-Datei:</h3>
@@ -165,7 +165,7 @@ public class FitbitRepository {
      */
     public List<FitbitWeekData> getWeeksInRange(LocalDate from, LocalDate to) {
         String sql = """
-            SELECT week_start, points 
+            SELECT week_start, points, remark 
             FROM fitbit_weekly_points 
             WHERE week_start >= ? AND week_start <= ?
             ORDER BY week_start ASC
@@ -183,7 +183,8 @@ public class FitbitRepository {
             while (rs.next()) {
                 LocalDate weekStart = LocalDate.parse(rs.getString("week_start"));
                 int points = rs.getInt("points");
-                result.add(new FitbitWeekData(weekStart, points));
+                String remark = rs.getString("remark");
+                result.add(new FitbitWeekData(weekStart, points, remark));
             }
             
             Log.debug(this, "Geladene Wochen im Zeitraum " + from + " bis " + to + ": " + result.size());

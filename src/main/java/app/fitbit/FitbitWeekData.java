@@ -8,4 +8,4 @@ import java.time.LocalDate;
  * @param weekStart Montag der Woche
  * @param points Gesamtpunkte dieser Woche
  */
-public record FitbitWeekData(LocalDate weekStart, int points) {}
+public record FitbitWeekData(LocalDate weekStart, int points, String remark) {}
