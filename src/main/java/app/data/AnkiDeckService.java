@@ -111,7 +111,7 @@ public class AnkiDeckService {
 				initialDueCounts.put(type, initialDueCounts.get(type) + newCards.size());
 			}			
 		}
-		// Ach, was solls? Wir wollen den Schatten weg freigeben!
+		// Ach, was solls? Wir wollen den Schatten freigeben!
 		System.gc();
 	}
 	

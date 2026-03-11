@@ -4,7 +4,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
-import java.util.Locale;
 
 import app.data.Deck;
 import app.data.SessionSwitchStrategy;
@@ -246,6 +245,7 @@ public class FitbitSession implements Session {
                 }
                 
                 String tooltipText = week.weekStart().toString() + " : " + week.points();
+                tooltipText = (week.remark() == null || week.remark().isEmpty()) ? tooltipText : tooltipText + "\n" + week.remark();
                 Tooltip tooltip = new Tooltip(tooltipText);
                 Tooltip.install(barNode, tooltip);
             }
