@@ -35,15 +35,15 @@ import javafx.scene.layout.VBox;
 
 /**
  * !Architektur: Also im controller-Paket so heavy UI-Krams? Really?
- * !Architektur: Sollte der Großteil des UI-Codes nicht in einer create-methode im Skin liegen und Du übergibst dem nur Daten? Andererseits, musst Du die Daten ja auch ändern können. Muss man mal überlegen. Ist schon ein Designbruch hier!
+ * !Architektur: Sollte der Großteil des UI-Codes nicht in einer create-methode im Skin liegen und Du übergibst dem nur Daten? Andererseits, musst Du die Daten ja auch ändern können. Muss man mal überlegen. Ist schon ein Designbruch hier! <br><br>
  * 
- * Zeigt ein Diagramm mit den Fitbit-Wochenpunkten der letzten N Wochen.
- * 
- * - BarChart zeigt die erreichten Punkte pro Woche
- * - LineChart zeigt das jeweils gültige Wochenziel als durchgezogene Linie
- * - Balken werden via PseudoClass :achieved eingefärbt (Ziel erreicht/nicht erreicht)
- * - Beide Charts teilen sich dieselben Achsen für perfekte Überlagerung
- * !Sofort: Sollten DashboardSession und FitbitSession nicht analog funktionieren? Und / Oder sollte das hier eine genrische DiagramSession werden?
+ * <b>Zeigt ein Diagramm mit den Fitbit-Wochenpunkten der letzten N Wochen.</b>
+ * <br>
+ * <ul><li> BarChart zeigt die erreichten Punkte pro Woche</li>
+ * <li> LineChart zeigt das jeweils gültige Wochenziel als durchgezogene Linie</li>
+ * <li> Balken werden via PseudoClass :achieved eingefärbt (Ziel erreicht/nicht erreicht)</li>
+ * <li> Beide Charts teilen sich dieselben Achsen für perfekte Überlagerung</li></ul>
+ * <br>!Sofort: Sollten DashboardSession und FitbitSession nicht analog funktionieren? Und / Oder sollte das hier eine genrische DiagramSession werden?
  */
 public class FitbitSession implements Session {
 

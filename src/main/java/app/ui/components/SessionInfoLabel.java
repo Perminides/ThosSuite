@@ -12,7 +12,7 @@ import javafx.scene.text.TextFlow;
 
 /**
  * A custom TextLabel that can parse simple html without using the expensive browser-engine.
- * Supported html-tags are: <br />, <b>, <i>. Child nodes are used for this.
+ * Supported html-tags are: &lt;br /&gt;, &lt;b&gt;, &lt;i&gt;. Child nodes are used for this.
  * Soft hyphening is not possible but if there is a hyphen in a word then it can be wrapped there
  * 
  *  Css-classes:

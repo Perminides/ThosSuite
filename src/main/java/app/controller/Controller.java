@@ -1,10 +1,5 @@
 package app.controller;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,10 +27,10 @@ import app.ui.MainWindow;
 import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
 import app.ui.components.AnkiPlayConfigDialog;
+import app.ui.components.AnkiPlayConfigDialog.AnkiPlayConfig;
 import app.ui.components.DiaryDialog;
 import app.ui.components.ImageScaler;
 import app.ui.components.MattressTurnDialog;
-import app.ui.components.AnkiPlayConfigDialog.AnkiPlayConfig;
 import app.ui.components.RegionPlayConfigDialog;
 import app.ui.components.RegionPlayConfigDialog.RegionPlayConfig;
 import app.ui.components.WeekdayDialog;
@@ -85,7 +80,8 @@ public class Controller{
     	mainWindow.setReloadSkinRunnable(this::triggerSkinRefresh);
     	mainWindow.setStatisticsConsumer(this::onStatisticsMenuItemSelected);
     	mainWindow.setSortOrderSupplier(this::getCardSortOrder);
-    	mainWindow.setDiaryRunnable(this::diarySelected);
+    	mainWindow.setDiaryCreateRunnable(this::diaryCreateSelected);
+    	mainWindow.setDiaryViewRunnable(this::diaryViewSelected);
     	mainWindow.setWeekdayRunnable(this::weekdaySelected);
     	mainWindow.setMattressRunnable(this::mattressSelected);
     	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
@@ -259,18 +255,13 @@ public class Controller{
 	    requestSessionSwitch(() -> {
 	        if ("Dashboard".equals(item)) {
 	            currentSession = new DashboardSession();
-	            mainWindow.showPane(currentSession.getView());
-	            currentSession.start();
 	        } else if ("Fitbit".equals(item)) {
 	            currentSession = new FitbitSession();
-	            mainWindow.showPane(currentSession.getView());
-	            currentSession.start();
 	        }  else if ("Alkohol".equals(item)) {
 	            currentSession = new AlcoholSession();
-	            mainWindow.showPane(currentSession.getView());
-	            currentSession.start();
 	        }
-	        // Später kommen hier weitere Statistik-Einträge wie "Fitbit" etc.
+            mainWindow.showPane(currentSession.getView());
+            currentSession.start();
 	    });
 	}
 	
@@ -316,8 +307,16 @@ public class Controller{
         updateUiAfterSkinChange();
     }
     
-    public void diarySelected() {
+    public void diaryCreateSelected() {
     	new DiaryDialog().show(mainWindow.getStage());
+    }
+    
+    public void diaryViewSelected() {
+    	requestSessionSwitch(() -> {
+    		currentSession = new DiaryViewerSession();
+    		mainWindow.showPane(currentSession.getView());
+    		currentSession.start();
+    	});
     }
     
     public void weekdaySelected() {

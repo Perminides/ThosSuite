@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -55,6 +57,8 @@ import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.HeaderDragType;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -145,6 +149,14 @@ public abstract class Skin {
 		}
 	}
 	
+	public record DiaryViewerComponents(
+		    Pane root,
+		    DatePicker fromPicker,
+		    DatePicker toPicker,
+		    TextField queryField,
+		    VBox resultBox
+		) {}
+	
 	// ========== Instanzvariablen ==========
 	// region
 
@@ -184,13 +196,13 @@ public abstract class Skin {
 	protected String menuButtonPadding; // default = font.getSize() * 0.3 + "px " + font.getSize() * 0.4 + "px";
 	protected String menuItemPadding; // default = font.getSize() * 0.1 + "px " + font.getSize() * 0.5 + "px";
 	
-	protected Integer imageMapShapeBorderWidth; // default = 2;
-	protected Integer imageMapLineShapeInnerWidth; // default = 12. Nur für den unsichtbaren Click-Bereich!
-	protected Integer imageMapShapeMarkedOuterWidth; // default = 7
-	protected Integer imageMapShapeMarkedInnerWidth; // default = 4
+	protected Integer imageMapShapeBorderWidth = 2;
+	protected Integer imageMapLineShapeInnerWidth = 12;
+	protected Integer imageMapShapeMarkedOuterWidth = 7;
+	protected Integer imageMapShapeMarkedInnerWidth = 4;
 	
-	protected Double shapeMapStandardBorderWidth; // default = 1.8;
-	protected Double shapeMapFederalStateBorderWidth; // default 2.8 für Niedersachsen z. B.
+	protected Double shapeMapStandardBorderWidth = 1.8;
+	protected Double shapeMapFederalStateBorderWidth = 2.8; // für Niedersachsen z. B.
 
 	protected Font font;
 	protected Font smallFont;
@@ -202,13 +214,15 @@ public abstract class Skin {
 	protected Color borderShapeColor; // Karten
 	protected Color thinBorderColor; // Um contentPane und unten die MenuBar
 	protected Integer thinBorderWidth = 1; // default = 1
-	protected Color stageBorderColor; // default = weiß
+	protected Color stageBorderColor = Color.WHITE;
 	
-	protected Integer dashBoardTileWidth; // 250
-	protected Integer dashBoardTileTopHeight; // 250
-	protected Integer dashBoardTileBottomHeight; // 100
+	protected Integer dashBoardTileWidth = 250;
+	protected Integer dashBoardTileTopHeight = 250;
+	protected Integer dashBoardTileBottomHeight = 100;
 	protected Integer dashBoardTileTopFontSize; // font * 4
 	protected Integer dashBoardTileBottomFontSize; // font * 2
+	
+	protected Integer diaryViewerContentWidth = 1200;
 
 	protected String backButtonIcon;
 	protected String skipButtonIcon;
@@ -328,29 +342,18 @@ public abstract class Skin {
 	// region
 	
 	public void styleScene(Scene scene) {
-		// !Sofort: Das ist ja Quatsch. Du kannst harte Defaults viel besser oben gleich ind er Definition setzen. Nur beei berechneten kann das schwierig werden...
 		menuBarHoverBackground = menuBarHoverBackground == null ? UIUtils.adjustBrightness(menuBarBackground, 20) : menuBarHoverBackground;
 		menuDisabledForeground = menuDisabledForeground == null ? UIUtils.adjustBrightness(textColor, 90) : menuDisabledForeground;
 		menuButtonPadding = menuButtonPadding == null ? font.getSize() * 0.3 + "px " + font.getSize() * 0.4 + "px" : menuButtonPadding;
 		menuItemPadding = menuItemPadding == null ? font.getSize() * 0.1 + "px " + font.getSize() * 0.5 + "px" : menuItemPadding;
-		imageMapShapeBorderWidth = imageMapShapeBorderWidth == null ? 2 : imageMapShapeBorderWidth;
-		imageMapLineShapeInnerWidth = imageMapLineShapeInnerWidth == null ? 12 : imageMapLineShapeInnerWidth; // Nur für den unsichtbaren Klickbereich
-		imageMapShapeMarkedOuterWidth = imageMapShapeMarkedOuterWidth == null ? 7 : imageMapShapeMarkedOuterWidth;
-		imageMapShapeMarkedInnerWidth = imageMapShapeMarkedInnerWidth == null ? 4 : imageMapShapeMarkedInnerWidth;
-		shapeMapStandardBorderWidth = shapeMapStandardBorderWidth == null ? 1.8 : shapeMapStandardBorderWidth;
-		shapeMapFederalStateBorderWidth = shapeMapFederalStateBorderWidth == null ? 2.8 : shapeMapFederalStateBorderWidth;
 		playFieldBackground = playFieldBackground == null ? menuBarBackground : playFieldBackground;
 		borderShapeColor = borderShapeColor == null ? borderColor : borderShapeColor;
 		textActiveComponentColor = textActiveComponentColor == null ? textColor : textActiveComponentColor;
-		dashBoardTileWidth = dashBoardTileWidth == null ? 300 : dashBoardTileWidth;
-		dashBoardTileTopHeight = dashBoardTileTopHeight == null ? 300 : dashBoardTileTopHeight;
-		dashBoardTileBottomHeight = dashBoardTileBottomHeight == null ? 100 : dashBoardTileBottomHeight;
 		dashBoardTileTopFontSize = dashBoardTileTopFontSize == null ? (int)font.getSize()*4 : dashBoardTileTopFontSize;
 		dashBoardTileBottomFontSize = dashBoardTileBottomFontSize == null ? (int)font.getSize() : dashBoardTileBottomFontSize;
 		displayTextHistoryBgColor = displayTextHistoryBgColor == null ? displayTextBgColor : displayTextHistoryBgColor;
 		displayTextProgressBgColor = displayTextProgressBgColor == null ? displayTextBgColor : displayTextProgressBgColor;
 		displayTextQuestionBgColor = displayTextQuestionBgColor == null ? displayTextBgColor : displayTextQuestionBgColor;
-		stageBorderColor = stageBorderColor == null ? Color.WHITE : stageBorderColor;
 		hannoverSessionMapPanel = hannoverSessionMapPanel == null ? worldSessionMapPanel : hannoverSessionMapPanel;
 		hannoverSessionQuestionPanel = hannoverSessionQuestionPanel == null ? worldSessionQuestionPanel : hannoverSessionQuestionPanel;
 		hannoverSessionTextInputPanel = hannoverSessionTextInputPanel == null ? worldSessionTextInputPanel : hannoverSessionTextInputPanel;
@@ -399,6 +402,7 @@ public abstract class Skin {
 	    addMenuStyles(css);
 	    addDatePickerStyles(css);
 	    addSpinnerStyles(css);
+	    addScrollbarStyles(css);
 	    
 	    // Komponenten mit meiner eigenen Logik:-)
 	    addSessionInfoLabelStyles(css);
@@ -412,6 +416,7 @@ public abstract class Skin {
 	    addDashboardStyles(css);
 	    addChartStyles(css);
 	    addSuggestionBoxStyles(css);
+	    addDiaryViewerStyles(css);
 	    
 	    String rawCss = css.build(); // Hier kommt sauberes CSS raus: ".rule { color: #fff; }"
 
@@ -463,6 +468,14 @@ public abstract class Skin {
 	    builder.rule(".box:hover", "-fx-background-color", activeComponentHoverColor);
 	    builder.rule(".box:pressed", "-fx-background-color", UIUtils.adjustBrightness(activeComponentHoverColor, 8));
 	    builder.rule(".check-box:selected .mark", "-fx-background-color", textActiveComponentColor); // Die Farbe des Hakens in der Checkbox :-)
+	}
+	
+	private void addScrollbarStyles(CssBuilder builder) {
+		builder.rule(".scroll-bar .track", "-fx-background-color", UIUtils.adjustBrightness(playFieldBackground,10));
+		builder.rule(".scroll-bar .thumb", "-fx-background-color", activeComponentBgColor);
+		builder.rule(".scroll-bar .thumb:hover", "-fx-background-color", activeComponentHoverColor);
+		builder.rule(".scroll-bar .increment-button, .scroll-bar .decrement-button", "-fx-background-color", menuBarBackground);
+		builder.rule(".scroll-bar .increment-arrow, .scroll-bar .decrement-arrow", "-fx-background-color", textColor);
 	}
 	
 	private void addComboBoxStyles(CssBuilder builder) {
@@ -551,6 +564,10 @@ public abstract class Skin {
 	       .add("-fx-text-fill", incorrectTextColor)
 	       .add("-fx-font-weight", "bold")
 	       .end();
+	    
+	    builder.start(".text-field:invalid-query")
+	    	.add("-fx-text-fill", incorrectTextColor)
+	    .end();
 	}
 	
 	private void addTextAreaStyles(CssBuilder builder) {
@@ -1194,6 +1211,64 @@ public abstract class Skin {
 	    
 	}
 	
+	private void addDiaryViewerStyles(CssBuilder css) {
+	    css.start(".diary-card")
+	        .add("-fx-background-color", displayTextQuestionBgColor)
+	        .add("-fx-border-color", borderBigComponent.color())
+	        .add("-fx-border-width", borderBigComponent.width() + "px")
+	        .add("-fx-border-radius", borderBigComponent.arc() + "px")
+	        .add("-fx-background-radius", borderBigComponent.arc() + "px")
+	        .add("-fx-background-insets", borderBigComponent.width() + "px")
+	        .add("-fx-padding", font.getSize() + "px")
+	        .add("-fx-cursor", "hand")
+	        .end();
+
+	    css.rule(".diary-card:hover", "-fx-background-color", displayTextQuestionBgColor);
+
+	    css.start(".diary-card-date")
+	        .add("-fx-font-weight", "bold")
+	        .add("-fx-fill", textColor)
+	        .end();
+
+	    css.start(".diary-card-tags")
+	        .add("-fx-fill", textColor)
+	        .add("-fx-font-style", "italic")
+	        .end();
+
+	    css.start(".diary-card-text")
+	        .add("-fx-fill", textColor)
+	        .end();
+
+	    css.start(".diary-viewer-hint")
+	        .add("-fx-fill", incorrectTextColor)
+	        .add("-fx-font-style", "italic")
+	        .end();
+
+	    css.start(".diary-viewer-content")
+	        .add("-fx-spacing", "12px")
+	        .add("-fx-padding", font.getSize() * 2 + "px")
+	        .end();
+	    
+	    css.start(".diary-viewer-scroll")
+	    	.add("-fx-background-color", "transparent")
+	    	.add("-fx-background", "transparent")
+	    .end();
+
+	    css.start(".diary-viewer-scroll .viewport")
+	    	.add("-fx-background-color", "transparent")
+	    	.end();
+	    
+	    css.start(".diary-viewer-filter-bar")
+	    .add("-fx-padding", font.getSize() + "px")
+	    .add("-fx-max-width", diaryViewerContentWidth + "px")
+	    .add("-fx-min-width", diaryViewerContentWidth + "px")
+	    .end();
+
+	css.start(".diary-viewer-root")
+	    .add("-fx-padding", font.getSize() + "px 0px")
+	    .end();
+	}
+	
 	private static class CssBuilder {
 	    private final StringBuilder sb = new StringBuilder();
 	    private boolean insideBlock = false;
@@ -1757,6 +1832,74 @@ public abstract class Skin {
             });
         });
 		return result;
+	}
+	
+	public DiaryViewerComponents createDiaryViewer() {
+	    // Filterleiste
+	    DatePicker fromPicker = createDatePicker(LocalDate.now().minusMonths(1));
+	    DatePicker toPicker = createDatePicker(LocalDate.now());
+
+	    TextField queryField = new TextField();
+	    queryField.setPromptText("(x or y) and tag:z");
+	    HBox.setHgrow(queryField, Priority.ALWAYS);
+
+	    HBox filterBar = new HBox(12);
+	    filterBar.setAlignment(Pos.CENTER_LEFT);
+	    filterBar.getStyleClass().add("diary-viewer-filter-bar");
+	    filterBar.getChildren().addAll(
+	            new Label("Von:"), fromPicker,
+	            new Label("Bis:"), toPicker,
+	            queryField);
+
+	    // Ergebnisbereich
+	    VBox resultBox = new VBox(12);
+	    resultBox.setPadding(new Insets(12, 0, 12, 0));
+
+	    // Content-VBox (Karten)
+	    VBox content = new VBox(12);
+	    content.getStyleClass().add("diary-viewer-content");
+	    content.setMaxWidth(diaryViewerContentWidth);
+	    content.setMinWidth(diaryViewerContentWidth);
+	    content.getChildren().add(resultBox);
+
+	    // ScrollPane
+	    ScrollPane scrollPane = new ScrollPane(content);
+	    scrollPane.setFitToWidth(true);
+	    scrollPane.setFitToHeight(false);
+	    scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+	    scrollPane.getStyleClass().add("diary-viewer-scroll");
+	    scrollPane.setMaxWidth(diaryViewerContentWidth);
+	    scrollPane.setMinWidth(diaryViewerContentWidth);
+
+	    // Äußerer Wrapper — zentriert alles
+	    VBox root = new VBox(12);
+	    root.setAlignment(Pos.TOP_CENTER);
+	    root.getStyleClass().add("diary-viewer-root");
+	    root.getChildren().addAll(filterBar, scrollPane);
+	    VBox.setVgrow(scrollPane, Priority.ALWAYS);
+
+	    return new DiaryViewerComponents(root, fromPicker, toPicker, queryField, resultBox);
+	}
+
+	public VBox createDiaryCard(LocalDateTime createdAt2, LocalDate entryDate, String text, List<String> tags) {
+	    Label dateLabel = new Label(entryDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+	    dateLabel.getStyleClass().add("diary-card-date");
+
+	    String tagsText = tags.isEmpty() ? "" : String.join(" · ", tags);
+	    Label tagsLabel = new Label(tagsText);
+	    tagsLabel.getStyleClass().add("diary-card-tags");
+	    tagsLabel.managedProperty().bind(tagsLabel.visibleProperty());
+	    tagsLabel.setVisible(!tags.isEmpty());
+
+	    Label textLabel = new Label(text);
+	    textLabel.getStyleClass().add("diary-card-text");
+	    textLabel.setWrapText(true);
+	    textLabel.setMaxWidth(Double.MAX_VALUE);
+
+	    VBox card = new VBox(6, dateLabel, tagsLabel, textLabel);
+	    card.getStyleClass().add("diary-card");
+	    card.setMaxWidth(Double.MAX_VALUE);
+	    return card;
 	}
 	
 	// endregion
