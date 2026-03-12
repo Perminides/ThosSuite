@@ -49,7 +49,8 @@ public class MainWindow {
     private Consumer<LearnSessionInfo> onSessionSelected = null;
     private Consumer<CardSortOrder> onSortSelected = null;
     private Consumer<Skin> onNewSkinSelected = null;
-    private Runnable onDiarySelected = null;
+    private Runnable onDiaryCreateSelected = null;
+    private Runnable onDiaryViewSelected = null;
     private Runnable onWeekdaySelected = null;
     private Runnable onMattressSelected = null;
     private Supplier<CardSortOrder> sortOrderSupplier = null;
@@ -181,9 +182,12 @@ public class MainWindow {
         
         // MODULE-MENÜ
         Menu menuModule = skin.createMenu("Module");
-        MenuItem diaryItem = skin.createMenuItem("Tagebuch");
-        diaryItem.setOnAction(_ -> onDiarySelected.run());
+        MenuItem diaryItem = skin.createMenuItem("Tagebucheintrag erstellen");
+        diaryItem.setOnAction(_ -> onDiaryCreateSelected.run());
         menuModule.getItems().add(diaryItem);
+        MenuItem diaryViewItem = skin.createMenuItem("Tagebuch lesen");
+        diaryViewItem.setOnAction(_ -> onDiaryViewSelected.run());
+        menuModule.getItems().add(diaryViewItem);
         MenuItem weekdayItem = skin.createMenuItem("Wochentagsberechnung");
         weekdayItem.setOnAction(_ -> onWeekdaySelected.run());
         menuModule.getItems().add(weekdayItem);
@@ -350,8 +354,12 @@ public class MainWindow {
     	this.sortOrderSupplier = supplier;
     }
     
-    public void setDiaryRunnable(Runnable runner) {
-    	this.onDiarySelected = runner;
+    public void setDiaryCreateRunnable(Runnable runner) {
+    	this.onDiaryCreateSelected = runner;
+    }
+    
+    public void setDiaryViewRunnable(Runnable runner) {
+    	this.onDiaryViewSelected = runner;
     }
     
     public void setWeekdayRunnable(Runnable runner) {
