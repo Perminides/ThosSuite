@@ -158,7 +158,9 @@ public class DiaryViewerSession implements Session {
         private int pos;
 
         static class InvalidQueryException extends RuntimeException {
-            InvalidQueryException(String message) {
+			private static final long serialVersionUID = 1L;
+
+			InvalidQueryException(String message) {
                 super(message);
             }
         }
