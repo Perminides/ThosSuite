@@ -1,15 +1,10 @@
 package app.misc;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import app.config.Config;
 import app.ui.skin.SkinService;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
@@ -103,70 +98,54 @@ public class TableViewExample extends Application {
         primaryStage.setScene(scene);
         primaryStage.setTitle("TableView Example");
         
-        AtomicInteger currentWidth = new AtomicInteger(750);
-        AtomicInteger upperBound = new AtomicInteger(2000);
-        AtomicInteger lowerBound = new AtomicInteger(currentWidth.get()-10);
-        
-        primaryStage.setWidth(currentWidth.get());
-        root.layout();
-        root.applyCss();
+     // Start
+        primaryStage.setWidth(2000);
         primaryStage.setOpacity(0);
-        final long start = System.currentTimeMillis();
-        // Achtung: Das ganze ist nicht blocking. Bei der Integration in die Suite wird das zu einem Problem!
         primaryStage.show();
 
-        
-        final double[] lastTableViewWidth = {-2};
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        ScheduledFuture<?> timeout = executor.schedule(() -> {
-            Platform.runLater(() -> {
-                primaryStage.close();
-                // Error handling
-                System.out.println("Also länger warte ich aber nicht...");
-                executor.shutdown(); 
-            });
-        }, 5, TimeUnit.SECONDS);
-        
-        
+        AtomicBoolean measured = new AtomicBoolean(false);
+
         Runnable[] listenerRef = new Runnable[1];
+        double[] lastWidth = {-1};
+
         listenerRef[0] = () -> {
-            System.out.print(System.currentTimeMillis() - start + "ms: ");
+            double currentWidth = tableView.getWidth();
             
-            double currentTableViewWidth = tableView.getWidth();
-            // Hat sich die TableView-Breite angepasst? Das braucht manchmal einen Pulse mehr
-            if (Math.abs(currentTableViewWidth - lastTableViewWidth[0]) < 1) { // Ist ein double. Kleiner 1 sehen wir als keine wirkliche Änderung.
-                System.out.println("Wir setzen einen Pulse aus - Stage: " + primaryStage.getWidth() + ", TableView: " + currentTableViewWidth);
+            // Warte bis TableView sich stabilisiert hat
+            if (Math.abs(currentWidth - lastWidth[0]) >= 1) {
+                lastWidth[0] = currentWidth;
                 return;
             }
             
-            // Jetzt ist die TableView angepasst, wir können prüfen
-            lastTableViewWidth[0] = currentTableViewWidth;
-            ScrollBar sb = getHorizontalScrollbar(tableView);
+            if (measured.get()) return;
             
-            if (upperBound.get() - lowerBound.get() <= 2) { // Das reicht uns :-)
-                // Differenz klein genug, nehme obere Grenze
-            	timeout.cancel(false);
-            	executor.shutdown();
-                primaryStage.setWidth(upperBound.get());
-                scene.removePostLayoutPulseListener(listenerRef[0]);
-                primaryStage.setOpacity(1);
-                System.out.println("Fertig - Width: " + upperBound.get());
-            } else {
-                if (sb != null && sb.isVisible()) {
-                    // Zu schmal, brauchen mehr Platz
-                    System.out.println("Zu schmal bei " + currentWidth.get() + ", bounds: [" + lowerBound.get() + ", " + upperBound.get() + "]");
-                    lowerBound.set(currentWidth.get());
-                } else {
-                    // Passt (keine ScrollBar oder nicht sichtbar)
-                    System.out.println("Passt bei " + currentWidth.get() + ", bounds: [" + lowerBound.get() + ", " + upperBound.get() + "]" + " (" + sb + ") " + tableView.getWidth());
-                    upperBound.set(currentWidth.get());
-                }
-                
-                // Nächster Versuch: Mitte zwischen lower und upper
-                currentWidth.set((lowerBound.get() + upperBound.get()) / 2);
-                primaryStage.setWidth(currentWidth.get());
-            }
+            // Jetzt messen (TableView ist stabil)
+            double spaltenSumme = tableView.getColumns().stream()
+                .mapToDouble(TableColumn::getWidth)
+                .sum();
+            
+            System.out.println(spaltenSumme);
+            
+            double tableOverhead = tableView.getWidth() - spaltenSumme;
+            double windowOverhead = primaryStage.getWidth() - tableView.getWidth();
+            
+            double targetWidth = spaltenSumme + windowOverhead;
+            primaryStage.setWidth(targetWidth);
+            
+            measured.set(true);
+            scene.removePostLayoutPulseListener(listenerRef[0]);
+            primaryStage.setOpacity(1);
+            
+            System.out.println("Spaltensumme: " + spaltenSumme);
+            System.out.println("tableOverhead: " + tableOverhead);
+            System.out.println("windowOverhead: " + windowOverhead);
+            System.out.println("targetWidth: " + targetWidth);
+            System.out.println("Stage-Breite nach setWidth: " + primaryStage.getWidth());
+            
         };
+        
+        
+        
         scene.addPostLayoutPulseListener(listenerRef[0]);
     }
 

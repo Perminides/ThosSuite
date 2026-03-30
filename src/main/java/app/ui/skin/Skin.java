@@ -1245,11 +1245,11 @@ public abstract class Skin {
 	        .end();
 
 	    css.start(".diary-viewer-content")
-	        .add("-fx-spacing", "12px")
-	        .add("-fx-padding", font.getSize() * 2 + "px")
-	        .end();
+	    	.add("-fx-spacing", font.getSize() + "px")
+	    .end();
 	    
 	    css.start(".diary-viewer-scroll")
+	    	.add("-fx-padding", "0 " + font.getSize() * 0.5 + "px 0 0")
 	    	.add("-fx-background-color", "transparent")
 	    	.add("-fx-background", "transparent")
 	    .end();
@@ -1259,7 +1259,6 @@ public abstract class Skin {
 	    	.end();
 	    
 	    css.start(".diary-viewer-filter-bar")
-	    .add("-fx-padding", font.getSize() + "px")
 	    .add("-fx-max-width", diaryViewerContentWidth + "px")
 	    .add("-fx-min-width", diaryViewerContentWidth + "px")
 	    .end();
@@ -1859,7 +1858,7 @@ public abstract class Skin {
 	    VBox content = new VBox(12);
 	    content.getStyleClass().add("diary-viewer-content");
 	    content.setMaxWidth(diaryViewerContentWidth);
-	    content.setMinWidth(diaryViewerContentWidth);
+	    //content.setMinWidth(diaryViewerContentWidth);
 	    content.getChildren().add(resultBox);
 
 	    // ScrollPane
