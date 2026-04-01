@@ -3,6 +3,7 @@ package app.ui.skin;
 import java.io.File;
 import java.io.FileInputStream;
 import java.lang.reflect.Field;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -48,12 +49,14 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.HeaderDragType;
@@ -223,6 +226,7 @@ public abstract class Skin {
 	protected Integer dashBoardTileBottomFontSize; // font * 2
 	
 	protected Integer diaryViewerContentWidth = 1200;
+	protected Integer diaryTooltipMargin = 20;
 
 	protected String backButtonIcon;
 	protected String skipButtonIcon;
@@ -1057,13 +1061,13 @@ public abstract class Skin {
 	    
 	    // Der Tooltip ist bisher noch nicht weiter gestylet bezüglich der Ecken und Border und so. Ist mir gerade nicht so wichtig... Default ist ohne Border und abgerundet anscheinend.
 	    
-	    builder.start(".tooltip")
+	   /** builder.start(".tooltip")
 	    	.add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
 	    .end();
 	    
 	    builder.start(".tooltip .text")
 	    	.add("-fx-fill", textActiveComponentColor)
-	    .end();
+	    .end();**/
 	}
 	
 	private void addDatePickerStyles(CssBuilder builder) {
@@ -1880,7 +1884,7 @@ public abstract class Skin {
 	    return new DiaryViewerComponents(root, fromPicker, toPicker, queryField, resultBox);
 	}
 
-	public VBox createDiaryCard(LocalDateTime createdAt2, LocalDate entryDate, String text, List<String> tags) {
+	public VBox createDiaryCard(LocalDateTime createdAt, LocalDate entryDate, String text, List<String> tags, List<String> attachments) {
 	    Label dateLabel = new Label(entryDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
 	    dateLabel.getStyleClass().add("diary-card-date");
 
@@ -1895,7 +1899,114 @@ public abstract class Skin {
 	    textLabel.setWrapText(true);
 	    textLabel.setMaxWidth(Double.MAX_VALUE);
 
-	    VBox card = new VBox(6, dateLabel, tagsLabel, textLabel);
+	    VBox card = new VBox(6, dateLabel, tagsLabel);
+
+	    if (!attachments.isEmpty()) {
+	        int thumbHeight = Config.getInt("diary.thumbnailHeight", 120);
+	        Path diaryFolder = Path.of(Config.get("diary.mediaFolder")).resolve("diary");
+
+	        FlowPane thumbPane = new FlowPane(8, 8);
+	        thumbPane.getStyleClass().add("diary-card-thumbs");
+
+	        Tooltip tooltip = new Tooltip();
+	        tooltip.setShowDelay(javafx.util.Duration.millis(300));
+	        tooltip.setShowDuration(javafx.util.Duration.INDEFINITE);
+	        tooltip.setHideDelay(javafx.util.Duration.ZERO);
+	        tooltip.setAutoFix(false);
+	        tooltip.setStyle("-fx-padding: 0;");
+
+	        for (String relativePath : attachments) {
+	            Path thumbPath    = diaryFolder.resolve("thumbnails").resolve(Path.of(relativePath).getFileName());
+	            Path originalPath = diaryFolder.resolve(relativePath);
+
+	            ImageView iv = new ImageView(new Image(thumbPath.toUri().toString(), -1, thumbHeight, true, true));
+	            System.out.println(thumbPath.toUri().toString());
+
+	            iv.setOnMouseEntered(e -> {
+	                javafx.geometry.Rectangle2D screen = javafx.stage.Screen.getPrimary().getVisualBounds();
+	                double mouseX = e.getScreenX();
+	                double mouseY = e.getScreenY();
+
+	                // Bild einmal laden
+	                Image original = new Image(originalPath.toUri().toString());
+	                double naturalW = original.getWidth();
+	                double naturalH = original.getHeight();
+	                double aspectRatio = naturalW / naturalH;
+
+	                // Schritt 1: Gewinner links/rechts
+	                double leftW  = mouseX - screen.getMinX() - 2 * diaryTooltipMargin;
+	                double rightW = screen.getMaxX() - mouseX - 2 * diaryTooltipMargin;
+	                double hemiH  = screen.getHeight() - 2 * diaryTooltipMargin;
+
+	                boolean useRight  = rightW >= leftW;
+	                double hWinner_W  = useRight ? rightW : leftW;
+
+	                double hLR_imgW, hLR_imgH;
+	                if (naturalW <= hWinner_W && naturalH <= hemiH) {
+	                    hLR_imgW = naturalW; hLR_imgH = naturalH;
+	                } else if (naturalW / hWinner_W >= naturalH / hemiH) {
+	                    hLR_imgW = hWinner_W; hLR_imgH = hWinner_W / aspectRatio;
+	                } else {
+	                    hLR_imgH = hemiH; hLR_imgW = hemiH * aspectRatio;
+	                }
+	                double areaLR = hLR_imgW * hLR_imgH;
+
+	                // Schritt 2: Gewinner oben/unten
+	                double topH  = mouseY - screen.getMinY() - 2 * diaryTooltipMargin;
+	                double botH  = screen.getMaxY() - mouseY - 2 * diaryTooltipMargin;
+	                double hemiW = screen.getWidth() - 2 * diaryTooltipMargin;
+
+	                boolean useBottom = botH >= topH;
+	                double hWinner_H  = useBottom ? botH : topH;
+
+	                double hTB_imgW, hTB_imgH;
+	                if (naturalW <= hemiW && naturalH <= hWinner_H) {
+	                    hTB_imgW = naturalW; hTB_imgH = naturalH;
+	                } else if (naturalW / hemiW >= naturalH / hWinner_H) {
+	                    hTB_imgW = hemiW; hTB_imgH = hemiW / aspectRatio;
+	                } else {
+	                    hTB_imgH = hWinner_H; hTB_imgW = hWinner_H * aspectRatio;
+	                }
+	                double areaTB = hTB_imgW * hTB_imgH;
+
+	                // Schritt 3: Finale Entscheidung
+	                double imgW, imgH, tooltipX, tooltipY;
+
+	                if (areaLR >= areaTB) {
+	                    imgW = hLR_imgW; imgH = hLR_imgH;
+	                    tooltipX = useRight ? mouseX + diaryTooltipMargin : mouseX - diaryTooltipMargin - imgW;
+	                    tooltipY = mouseY - imgH / 2.0;
+	                    tooltipY = Math.max(screen.getMinY() + diaryTooltipMargin, tooltipY);
+	                    tooltipY = Math.min(screen.getMaxY() - diaryTooltipMargin - imgH, tooltipY);
+	                } else {
+	                    imgW = hTB_imgW; imgH = hTB_imgH;
+	                    tooltipY = useBottom ? mouseY + diaryTooltipMargin : mouseY - diaryTooltipMargin - imgH;
+	                    tooltipX = mouseX - imgW / 2.0;
+	                    tooltipX = Math.max(screen.getMinX() + diaryTooltipMargin, tooltipX);
+	                    tooltipX = Math.min(screen.getMaxX() - diaryTooltipMargin - imgW, tooltipX);
+	                }
+
+	                // ImageView mit Originalbild, bei Bedarf via setFitWidth/setFitHeight skaliert
+	                ImageView imageView = new ImageView(original);
+	                if (naturalW > imgW || naturalH > imgH) {
+	                    imageView.setFitWidth(imgW);
+	                    imageView.setFitHeight(imgH);
+	                    imageView.setPreserveRatio(true);
+	                    imageView.setSmooth(true);
+	                }
+
+	                tooltip.setGraphic(imageView);
+	                tooltip.show(iv, tooltipX, tooltipY);
+	            });
+
+	            iv.setOnMouseExited(_ -> tooltip.hide());
+
+	            thumbPane.getChildren().add(iv);
+	        }
+	        card.getChildren().add(thumbPane);
+	    }
+
+	    card.getChildren().add(textLabel);
 	    card.getStyleClass().add("diary-card");
 	    card.setMaxWidth(Double.MAX_VALUE);
 	    return card;
