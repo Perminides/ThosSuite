@@ -9,17 +9,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import app.data.DiaryEntry;
+
 public class DiaryRepository {
 
 	private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
-	
-	public record DiaryEntryResult(
-		    LocalDateTime createdAt,
-		    LocalDate entryDate,
-		    String text,
-		    List<String> tags
-		) {}
 
 	public void saveEntry(LocalDateTime createdAt, LocalDate entryDate, String text, List<String> tags) {
 		Connection conn = DB.getConnection();
@@ -140,12 +135,14 @@ public class DiaryRepository {
 	    }
 	}
 	
-	public List<DiaryEntryResult> search(String whereFragment, LocalDate from, LocalDate to, int limit) {
+	public List<DiaryEntry> search(String whereFragment, LocalDate from, LocalDate to, int limit) {
 	    String sql = """
 	            SELECT de.created_at, de.entry_date, de.text,
-	                   GROUP_CONCAT(det.tag_name ORDER BY det.tag_name) AS tags
+	                   GROUP_CONCAT(DISTINCT det.tag_name ORDER BY det.tag_name) AS tags,
+	                   GROUP_CONCAT(DISTINCT dea.path)                           AS attachments
 	            FROM diary_entry de
-	            LEFT JOIN diary_entry_tag det ON det.entry_created_at = de.created_at
+	            LEFT JOIN diary_entry_tag        det ON det.entry_created_at = de.created_at
+	            LEFT JOIN diary_entry_attachment  dea ON dea.entry_created_at = de.created_at
 	            WHERE (%s)
 	              AND de.entry_date BETWEEN ? AND ?
 	            GROUP BY de.created_at
@@ -153,7 +150,7 @@ public class DiaryRepository {
 	            LIMIT ?
 	            """.formatted(whereFragment);
 
-	    List<DiaryEntryResult> results = new ArrayList<>();
+	    List<DiaryEntry> results = new ArrayList<>();
 
 	    try (PreparedStatement ps = DB.getConnection().prepareStatement(sql)) {
 	        ps.setString(1, from.format(DATE_FORMAT));
@@ -162,15 +159,21 @@ public class DiaryRepository {
 
 	        try (ResultSet rs = ps.executeQuery()) {
 	            while (rs.next()) {
-	                LocalDateTime createdAt = LocalDateTime.parse(rs.getString("created_at"), TIMESTAMP_FORMAT);
-	                LocalDate entryDate = LocalDate.parse(rs.getString("entry_date"), DATE_FORMAT);
-	                String text = rs.getString("text");
-	                String tagsConcatenated = rs.getString("tags");
-	                List<String> tags = tagsConcatenated != null
+	                LocalDateTime createdAt  = LocalDateTime.parse(rs.getString("created_at"), TIMESTAMP_FORMAT);
+	                LocalDate     entryDate  = LocalDate.parse(rs.getString("entry_date"), DATE_FORMAT);
+	                String        text       = rs.getString("text");
+
+	                String tagsConcatenated  = rs.getString("tags");
+	                List<String> tags        = tagsConcatenated != null
 	                        ? List.of(tagsConcatenated.split(","))
 	                        : List.of();
 
-	                results.add(new DiaryEntryResult(createdAt, entryDate, text, tags));
+	                String attachmentsConcatenated = rs.getString("attachments");
+	                List<String> attachments       = attachmentsConcatenated != null
+	                        ? List.of(attachmentsConcatenated.split(","))
+	                        : List.of();
+
+	                results.add(new DiaryEntry(createdAt, entryDate, text, tags, attachments));
 	            }
 	        }
 	    } catch (Exception e) {
@@ -207,6 +210,56 @@ public class DiaryRepository {
 	            conn.setAutoCommit(true);
 	        } catch (Exception ignored) {
 	        }
+	    }
+	}
+	
+	public List<String> loadAttachments(LocalDateTime createdAt) {
+	    List<String> paths = new ArrayList<>();
+	    try (PreparedStatement ps = DB.getConnection().prepareStatement(
+	            "SELECT path FROM diary_entry_attachment WHERE entry_created_at = ? ORDER BY path")) {
+	        ps.setString(1, createdAt.withNano(0).format(TIMESTAMP_FORMAT));
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                paths.add(rs.getString("path"));
+	            }
+	        }
+	    } catch (Exception e) {
+	        throw new RuntimeException("Failed to load diary attachments", e);
+	    }
+	    return paths;
+	}
+	 
+	public void saveAttachment(LocalDateTime createdAt, String relativePath) {
+	    try (PreparedStatement ps = DB.getConnection().prepareStatement(
+	            "INSERT OR IGNORE INTO diary_entry_attachment (entry_created_at, path) VALUES (?, ?)")) {
+	        ps.setString(1, createdAt.withNano(0).format(TIMESTAMP_FORMAT));
+	        ps.setString(2, relativePath);
+	        ps.executeUpdate();
+	    } catch (Exception e) {
+	        throw new RuntimeException("Failed to save diary attachment", e);
+	    }
+	}
+	 
+	public void deleteAttachment(LocalDateTime createdAt, String relativePath) {
+	    try (PreparedStatement ps = DB.getConnection().prepareStatement(
+	            "DELETE FROM diary_entry_attachment WHERE entry_created_at = ? AND path = ?")) {
+	        ps.setString(1, createdAt.withNano(0).format(TIMESTAMP_FORMAT));
+	        ps.setString(2, relativePath);
+	        ps.executeUpdate();
+	    } catch (Exception e) {
+	        throw new RuntimeException("Failed to delete diary attachment", e);
+	    }
+	}
+	 
+	public boolean isPathReferencedElsewhere(String relativePath) {
+	    try (PreparedStatement ps = DB.getConnection().prepareStatement(
+	            "SELECT COUNT(*) FROM all_attachments WHERE path = ?")) {
+	        ps.setString(1, relativePath);
+	        try (ResultSet rs = ps.executeQuery()) {
+	            return rs.next() && rs.getInt(1) > 0;
+	        }
+	    } catch (Exception e) {
+	        throw new RuntimeException("Failed to check attachment references", e);
 	    }
 	}
 }

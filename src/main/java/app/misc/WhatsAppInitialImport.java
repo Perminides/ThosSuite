@@ -30,7 +30,10 @@ import java.util.Set;
  * UPDATE msg_contact_mapping SET contact_id = 2 WHERE contact_id = 33;
  * DELETE FROM msg_contacts WHERE contact_id = 33;
  *
+ *	Todos:
  * - Im Daily Import muss abgefragt werden, ob der Kontakt bereits existiert.
+ * - Attachments dürfen im Filename niemals nicht ein "," enthalten, das bringt unser SQL durcheinander. Die müssen konsequent durch "_" ersetzt werden
+ * - Am besten dann auch keine Kommas in den DB-Tabelllen erlauben für attachments, geht das einfach?
  *
  * Es kommt manchmal vor, dass der path des attachments null ist. Das in Kombi mit einer Nachricht mit leerem Content → Blockieren einfach...
  *

@@ -14,6 +14,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
+ *  * - Attachments dürfen im Filename niemals nicht ein "," enthalten, das bringt unser SQL durcheinander. Die müssen konsequent durch "_" ersetzt werden
+ * - Am besten dann auch keine Kommas in den DB-Tabelllen erlauben für attachments, geht das einfach?
+ */
+
+/**
  * Einmaliger Initialimport aller Signal-Nachrichten in die ThosSuite-Datenbank.
  *
  * <h2>Voraussetzungen</h2>

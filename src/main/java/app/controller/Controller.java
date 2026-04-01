@@ -134,7 +134,7 @@ public class Controller{
 	    AlcoholStartupService alcoholService = new AlcoholStartupService();
 	    alcoholService.checkAndPrompt();
 	    
-	    new DiaryDialog().show(mainWindow.getStage());
+	    new DiaryDialog().showNew(mainWindow.getStage());
 	    
 	    new WeekdayDialog().showForDaily();
 	    
@@ -308,7 +308,7 @@ public class Controller{
     }
     
     public void diaryCreateSelected() {
-    	new DiaryDialog().show(mainWindow.getStage());
+    	new DiaryDialog().showNew(mainWindow.getStage());
     }
     
     public void diaryViewSelected() {

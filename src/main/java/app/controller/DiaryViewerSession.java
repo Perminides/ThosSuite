@@ -5,11 +5,13 @@ import java.util.List;
 
 import app.config.Config;
 import app.data.Deck;
+import app.data.DiaryEntry;
 import app.data.SessionSwitchStrategy;
 import app.data.persistence.DiaryRepository;
-import app.ui.components.DiaryEntryEditDialog;
+import app.ui.components.DiaryDialog;
 import app.ui.skin.Skin.DiaryViewerComponents;
 import app.ui.skin.SkinService;
+import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.control.DatePicker;
@@ -89,6 +91,7 @@ public class DiaryViewerSession implements Session {
 
         VBox.setVgrow(components.root(), Priority.ALWAYS);
         view.getChildren().add(components.root());
+        Platform.runLater(() -> queryField.requestFocus());
         runSearch();
     }
 
@@ -114,7 +117,7 @@ public class DiaryViewerSession implements Session {
         LocalDate from = fromPicker.getValue();
         LocalDate to = toPicker.getValue();
 
-        List<DiaryRepository.DiaryEntryResult> entries =
+        List<DiaryEntry> entries =
                 repository.search(whereFragment, from, to, maxResults + 1);
 
         resultBox.getChildren().clear();
@@ -126,16 +129,17 @@ public class DiaryViewerSession implements Session {
             resultBox.getChildren().add(hint);
         }
 
-        for (DiaryRepository.DiaryEntryResult entry : entries) {
-            Pane card = SkinService.get().createDiaryCard(
+        for (DiaryEntry entry : entries) {
+        	Pane card = SkinService.get().createDiaryCard(
                     entry.createdAt(),
                     entry.entryDate(),
                     entry.text(),
-                    entry.tags());
+                    entry.tags(),
+                    entry.attachmentPaths());
 
             card.setOnMouseClicked(_ -> {
-                DiaryEntryEditDialog editDialog = new DiaryEntryEditDialog();
-                editDialog.show(
+                DiaryDialog editDialog = new DiaryDialog();
+                editDialog.showEdit(
                         view.getScene().getWindow(),
                         entry.createdAt(),
                         entry.entryDate(),
