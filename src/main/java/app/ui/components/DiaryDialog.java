@@ -86,6 +86,8 @@ public class DiaryDialog {
     private final ObservableList<String> currentAttachmentPaths = FXCollections.observableArrayList();
     // Neu hinzugefügte Originaldateien — noch nicht kopiert, erst bei Save
     private final List<File> pendingOriginals = new ArrayList<>();
+    // Snapshot der Attachment-Pfade beim Dialog-Start (showEdit)
+    private List<String> savedAttachmentPaths;
 
     // Dialog state
     private TextArea textArea;
@@ -171,6 +173,7 @@ public class DiaryDialog {
         }
         currentAttachmentPaths.clear();
         currentAttachmentPaths.addAll(repository.loadAttachments(createdAt));
+        savedAttachmentPaths = List.copyOf(currentAttachmentPaths);
 
         Dialog<?> dialog = SkinService.get().createDialog(owner, "Eintrag bearbeiten");
 
@@ -202,9 +205,8 @@ public class DiaryDialog {
                     textArea.getText().trim(),
                     new ArrayList<>(tagInput.getSelectedTags()));
 
-            // Entfernte Attachments löschen
-            List<String> savedPaths = repository.loadAttachments(createdAt);
-            for (String savedPath : savedPaths) {
+            // Entfernte Attachments löschen (Diff gegen Snapshot vom Dialog-Start)
+            for (String savedPath : savedAttachmentPaths) {
                 if (!currentAttachmentPaths.contains(savedPath)) {
                     deleteAttachmentWithFile(createdAt, savedPath);
                 }
@@ -395,8 +397,6 @@ public class DiaryDialog {
             }
         };
 
-        tagsListener = _ -> requirementsNotMet.invalidate();
-        tagInput.getSelectedTags().addListener(tagsListener);
         saveButton.disableProperty().bind(requirementsNotMet);
 
         int invasiveSeconds = Config.getInt("diary.invasiveSeconds", DEFAULT_INVASIVE_SECONDS);
