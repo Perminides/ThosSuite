@@ -16,6 +16,7 @@ import java.util.*;
 /**
  *  * - Attachments dürfen im Filename niemals nicht ein "," enthalten, das bringt unser SQL durcheinander. Die müssen konsequent durch "_" ersetzt werden
  * - Am besten dann auch keine Kommas in den DB-Tabelllen erlauben für attachments, geht das einfach?
+ * - 3 Attachments in der Suite mit KOmmas und die sind ncoh von Signal, da kümmern wir uns später darum
  */
 
 /**

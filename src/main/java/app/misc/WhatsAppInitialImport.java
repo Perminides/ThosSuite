@@ -34,6 +34,8 @@ import java.util.Set;
  * - Im Daily Import muss abgefragt werden, ob der Kontakt bereits existiert.
  * - Attachments dürfen im Filename niemals nicht ein "," enthalten, das bringt unser SQL durcheinander. Die müssen konsequent durch "_" ersetzt werden
  * - Am besten dann auch keine Kommas in den DB-Tabelllen erlauben für attachments, geht das einfach?
+ * - Attachment-Pfade müssen dann natürlich relativ gespeichert werden, die aktuellen bereinigt (falls da was zu tun)
+ * - Wir kopieren die Anhänge aktuell nciht in den Target-Ordner. Mach das später einfach manuell und schau, ob da viel unreferenziertes rumliegt. Ich denkle nicht.
  *
  * Es kommt manchmal vor, dass der path des attachments null ist. Das in Kombi mit einer Nachricht mit leerem Content → Blockieren einfach...
  *
@@ -64,14 +66,14 @@ public class WhatsAppInitialImport {
     private static final String PUA_MAPPING  = "C:\\Users\\Markgraf\\Desktop\\WhatsApp\\old_smileys_mapper.txt";
 
     /** Nachrichten vor diesem Timestamp werden nicht importiert (Unix ms). */
-    private static final long START_TIMESTAMP = 1562697819598L; // anpassen!
+    private static final long START_TIMESTAMP = 1638351549000L; // anpassen!
 
     /**
      * Anhänge die nach diesem Timestamp gesendet wurden aber nicht gefunden werden
      * lösen eine WARNING aus. Vorher: still ignorieren.
      * Format: Unix-Timestamp in Millisekunden.
      */
-    private static final long ATTACHMENT_WARNING_SINCE = 1_600_000_000_000L; // ~Sept 2020, anpassen!
+    private static final long ATTACHMENT_WARNING_SINCE = 1575586801L; 
 
     private static final DateTimeFormatter DT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -363,26 +365,25 @@ public class WhatsAppInitialImport {
                 }
 
                 // 7. Anhang verarbeiten
-                String  attachmentFilename  = null;
+                String  attachmentPath      = null;
                 boolean attachmentAvailable = false;
 
                 if (filePath != null) {
-                    attachmentFilename = new File(filePath).getName();
+                    String cleanPath = filePath.replace(",", "_");
                     File src = new File(MEDIA_SOURCE, filePath);
                     if (src.exists()) {
-                        File tgt = new File(MEDIA_TARGET, attachmentFilename);
-                        Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        File tgt = new File(MEDIA_TARGET, cleanPath);
+                        //Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
                         attachmentAvailable = true;
                     } else if (timestamp >= ATTACHMENT_WARNING_SINCE) {
                         System.out.println("WARNING: Anhang nicht gefunden: " + filePath
                             + " (_id=" + sourceId + ", " + formatTs(timestamp) + ")");
                     }
+                    attachmentPath = cleanPath;
                 } else if (messageUrl != null) {
-                    // Datei nie lokal gespeichert, nur URL bekannt — als nicht verfügbar markieren
-                    attachmentFilename  = messageUrl;
+                    attachmentPath      = messageUrl;
                     attachmentAvailable = false;
                 } else if (content == null) {
-                    // Weder Datei noch URL noch Text — das darf nicht vorkommen
                     throw new IllegalStateException(
                         "[FAILFAST] Message ohne content, file_path und message_url: _id=" + sourceId
                         + " type=" + type + " timestamp=" + formatTs(timestamp));
@@ -391,8 +392,8 @@ public class WhatsAppInitialImport {
                 // 8. INSERT
                 insertMessage(sourceId, timestamp, fromContactId, chatId, content, resolvedQuoteSourceId);
 
-                if (attachmentFilename != null) {
-                    insertAttachment(sourceId, attachmentFilename, attachmentAvailable);
+                if (attachmentPath != null) {
+                    insertAttachment(sourceId, attachmentPath, attachmentAvailable);
                 }
 
                 imported++;
@@ -454,17 +455,17 @@ public class WhatsAppInitialImport {
 
         for (String filePath : acc.childFilePaths) {
             if (filePath == null) continue;
-            String filename = new File(filePath).getName();
+            String cleanPath = filePath.replace(",", "_");
             File src = new File(MEDIA_SOURCE, filePath);
             if (src.exists()) {
-                File tgt = new File(MEDIA_TARGET, filename);
+                File tgt = new File(MEDIA_TARGET, cleanPath);
                 Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                insertAttachment(acc.sourceId, filename, true);
+                insertAttachment(acc.sourceId, cleanPath, true);
             } else {
                 if (acc.timestamp >= ATTACHMENT_WARNING_SINCE) {
                     System.out.println("WARNING: Album-Anhang nicht gefunden: " + filePath);
                 }
-                insertAttachment(acc.sourceId, filename, false);
+                insertAttachment(acc.sourceId, cleanPath, false);
             }
         }
     }
