@@ -189,63 +189,68 @@ public class Log {
             }
         };
 
-        try {
-            // === FILE HANDLER ===
-            // %u = eindeutige Nummer für Rotation (0-4)
-            String logPattern = dataFolder + "log/thossuite%u.log";
-            FileHandler fileHandler = new FileHandler(
-                logPattern,    // Pattern
-                10485760,      // Limit: 10MB (10 * 1024 * 1024)
-                5,             // Count: 5 Rotationen
-                true           // Append: true (erweitert existierende Datei)
-            );
-            // Im Debug-Mode auch FINE-Level in Datei, sonst nur INFO+
-            fileHandler.setLevel(debugMode ? Level.FINE : Level.INFO);
-            fileHandler.setFormatter(commonFormatter);
-            
-            // === CONSOLE HANDLER ===
-            // StreamHandler statt ConsoleHandler weil:
-            // 1. Wir wollen System.out statt stderr
-            // 2. Wir wollen auto-flush nach jedem Log
-            StreamHandler consoleHandler = new StreamHandler(System.out, commonFormatter) {
-                @Override
-                public synchronized void publish(LogRecord record) {
-                    super.publish(record);
-                    flush(); // Wichtig! Sonst sieht man Logs erst bei Buffer-Full
-                }
-            };
-            // ALL = zeigt alles was der Root-Logger durchlässt
-            consoleHandler.setLevel(Level.ALL);
-            
-            // === ROOT LOGGER KONFIGURATION ===
-            Logger rootLogger = Logger.getLogger("");
-            // FINE erlaubt Debug-Logs für App-Code (Log.debug(...))
-            rootLogger.setLevel(Level.FINE);
-            
-            // Alte Handler entfernen (Standard ConsoleHandler etc.)
-            for (Handler handler : rootLogger.getHandlers()) {
-                rootLogger.removeHandler(handler);
-            }
-            
-            // Neue Handler hinzufügen
-            rootLogger.addHandler(fileHandler);
-            rootLogger.addHandler(consoleHandler);
-            
-            // === LOGGER-LEVEL FÜR JAVA-INTERNA ===
-            // Diese Logger auf WARNING setzen um FINE/INFO Spam zu vermeiden
-            // WICHTIG: Diese werden in KEEP_ALIVE_LOGGERS hart referenziert!
-            for (Logger logger : KEEP_ALIVE_LOGGERS) {
-                logger.setLevel(Level.WARNING);
-            }
-            
-            Log.debug(ThosSuiteApp.class, "Logging initialisiert");
-            
-        } catch (Exception e) {
-            // Fail-Fast: Logging-Fehler sind kritisch!
-            e.printStackTrace();
-            throw new RuntimeException("Fehler beim Initialisieren von Logging:", e);
-        }
-    }
+		try {
+			// === FILE HANDLER ===
+			// %u = eindeutige Nummer für Rotation (0-4)
+			String logPattern = dataFolder + "log/thossuite%u.log";
+			FileHandler fileHandler = new FileHandler(logPattern, // Pattern
+					10485760, // Limit: 10MB (10 * 1024 * 1024)
+					5, // Count: 5 Rotationen
+					true // Append: true (erweitert existierende Datei)
+			) {
+				@Override
+				public synchronized void publish(LogRecord record) {
+					super.publish(record);
+					flush();
+				}
+			};
+			// Im Debug-Mode auch FINE-Level in Datei, sonst nur INFO+
+			fileHandler.setLevel(debugMode ? Level.FINE : Level.INFO);
+			fileHandler.setFormatter(commonFormatter);
+
+			// === CONSOLE HANDLER ===
+			// StreamHandler statt ConsoleHandler weil:
+			// 1. Wir wollen System.out statt stderr
+			// 2. Wir wollen auto-flush nach jedem Log
+			StreamHandler consoleHandler = new StreamHandler(System.out, commonFormatter) {
+				@Override
+				public synchronized void publish(LogRecord record) {
+					super.publish(record);
+					flush(); // Wichtig! Sonst sieht man Logs erst bei Buffer-Full
+				}
+			};
+			// ALL = zeigt alles was der Root-Logger durchlässt
+			consoleHandler.setLevel(Level.ALL);
+
+			// === ROOT LOGGER KONFIGURATION ===
+			Logger rootLogger = Logger.getLogger("");
+			// FINE erlaubt Debug-Logs für App-Code (Log.debug(...))
+			rootLogger.setLevel(Level.FINE);
+
+			// Alte Handler entfernen (Standard ConsoleHandler etc.)
+			for (Handler handler : rootLogger.getHandlers()) {
+				rootLogger.removeHandler(handler);
+			}
+
+			// Neue Handler hinzufügen
+			rootLogger.addHandler(fileHandler);
+			rootLogger.addHandler(consoleHandler);
+
+			// === LOGGER-LEVEL FÜR JAVA-INTERNA ===
+			// Diese Logger auf WARNING setzen um FINE/INFO Spam zu vermeiden
+			// WICHTIG: Diese werden in KEEP_ALIVE_LOGGERS hart referenziert!
+			for (Logger logger : KEEP_ALIVE_LOGGERS) {
+				logger.setLevel(Level.WARNING);
+			}
+
+			Log.debug(ThosSuiteApp.class, "Logging initialisiert");
+
+		} catch (Exception e) {
+			// Fail-Fast: Logging-Fehler sind kritisch!
+			e.printStackTrace();
+			throw new RuntimeException("Fehler beim Initialisieren von Logging:", e);
+		}
+	}
     
     // =========================================================================
     // PUBLIC API - Logging-Methoden

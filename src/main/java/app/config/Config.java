@@ -1,6 +1,11 @@
 package app.config;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 public class Config {
@@ -19,7 +24,7 @@ public class Config {
         configFile = new File(folderPath, "config/config.txt");
         if (configFile.exists()) {
             try (FileInputStream in = new FileInputStream(configFile)) {
-                configProps.load(in);
+            	configProps.load(new InputStreamReader(new FileInputStream(configFile), StandardCharsets.UTF_8));
             } catch (IOException e) {
                 throw new RuntimeException("Fehler beim lesen der config-Datei in " + configFile.getAbsolutePath(), e);
             }
@@ -51,6 +56,10 @@ public class Config {
         
         // Dann in computedProps
         return computedProps.getProperty(key);
+    }
+    
+    public static String getString(String key) {
+        return get(key);
     }
     
     public static String get(String key, String defaultValue) {

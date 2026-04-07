@@ -23,6 +23,7 @@ import app.data.RegionMode;
 import app.data.RegionSessionSpec;
 import app.fitbit.FitbitDataFetcher;
 import app.fitbit.FitbitUpdateService;
+import app.messaging.SignalIncrementalImport;
 import app.ui.MainWindow;
 import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
@@ -139,6 +140,8 @@ public class Controller{
 	    new WeekdayDialog().showForDaily();
 	    
 	    new MattressTurnDialog().showIfDue();
+	    
+	    new SignalIncrementalImport().run();
 	    
 	    ImageScaler.processImages();
 
