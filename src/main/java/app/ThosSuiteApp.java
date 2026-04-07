@@ -7,12 +7,15 @@ import java.io.StringWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.ZoneId;
 import java.util.Locale;
+import java.util.Optional;
 
 import app.config.Config;
 import app.controller.Controller;
 import app.data.AppClock;
 import app.ui.MainWindow;
+import app.ui.skin.SkinService;
 import app.util.Log;
 import app.util.SingleInstanceGuard;
 import javafx.application.Application;
@@ -21,6 +24,8 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -56,7 +61,7 @@ public class ThosSuiteApp extends Application {
     public static void main(String[] args) {
     	// JavaFX DatePicker nutzt Locale.getDefault(Category.FORMAT) für Monatsnamen.
     	// Windows-Regionsformat kann abweichen von der Sprache → explizit auf Deutsch setzen.
-    	Locale.setDefault(Locale.GERMANY);
+    	Locale.setDefault(Locale.GERMANY);    	
         launch(args); // JavaFX Application.launch() startet die App und den JavaFX Application Thread
         Log.info(ThosSuiteApp.class, "End Suite");
         
@@ -76,6 +81,22 @@ public class ThosSuiteApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+    	// 0. Zeitzone überprüfen
+    	ZoneId expected = ZoneId.of("Europe/Berlin");
+    	ZoneId current = ZoneId.systemDefault();
+    	if (!current.equals(expected)) {
+    	    Alert alert = new Alert(Alert.AlertType.WARNING);
+    	    alert.setTitle("Falsche Zeitzone");
+    	    alert.setHeaderText("Die Suite läuft in der Zeitzone " + current + " statt " + expected);
+    	    alert.setContentText("Timestamps werden falsch berechnet. (Beim Message Import z.B.)\n\nTrotzdem starten?");
+    	    ButtonType yes = new ButtonType("Ja, trotzdem starten", ButtonBar.ButtonData.YES);
+    	    ButtonType cancel = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
+    	    alert.getButtonTypes().setAll(yes, cancel);
+    	    Optional<ButtonType> result = alert.showAndWait();
+    	    if (result.isEmpty() || result.get() != yes)
+    	        Platform.exit();
+    	}
+    	
         // 1. Splash Screen erstellen und anzeigen
         Stage splashStage = new Stage();
         showSplashScreen(splashStage);

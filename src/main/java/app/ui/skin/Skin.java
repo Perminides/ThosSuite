@@ -1903,7 +1903,7 @@ public abstract class Skin {
 
 	    if (!attachments.isEmpty()) {
 	        int thumbHeight = Config.getInt("diary.thumbnailHeight", 120);
-	        Path diaryFolder = Path.of(Config.get("diary.mediaFolder")).resolve("diary");
+	        Path diaryFolder = Path.of(Config.get("diary.mediaFolder"));
 
 	        FlowPane thumbPane = new FlowPane(8, 8);
 	        thumbPane.getStyleClass().add("diary-card-thumbs");
@@ -1920,7 +1920,6 @@ public abstract class Skin {
 	            Path originalPath = diaryFolder.resolve(relativePath);
 
 	            ImageView iv = new ImageView(new Image(thumbPath.toUri().toString(), -1, thumbHeight, true, true));
-	            System.out.println(thumbPath.toUri().toString());
 
 	            iv.setOnMouseEntered(e -> {
 	                javafx.geometry.Rectangle2D screen = javafx.stage.Screen.getPrimary().getVisualBounds();

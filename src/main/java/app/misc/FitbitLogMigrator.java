@@ -1,10 +1,8 @@
-package app.fitbit;
+package app.misc;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,7 +11,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import app.config.Config;
 import app.data.persistence.FitbitRepository;
-import app.fitbit.json.Activity;
+import app.fitbit.PointsCalculator;
 import app.fitbit.json.ActivityDaySummary;
 import app.fitbit.json.ActivityLogList;
 

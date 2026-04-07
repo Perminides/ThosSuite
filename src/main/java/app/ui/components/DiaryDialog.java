@@ -57,7 +57,7 @@ import javafx.event.EventHandler;
  *
  * <p>Attachments werden als relative Pfade unterhalb des konfigurierten Diary-Ordners gespeichert.
  * Neu hinzugefügte Dateien werden erst beim Speichern in den Zielordner kopiert (pending-Mechanismus).
- * Für jedes Attachment wird automatisch ein Thumbnail generiert (Scalr, ULTRA_QUALITY).
+ * Für jedes Attachment wird automatisch ein Thumbnail generiert (Scalr, QUALITY).
  *
  * <p>Dateinamen-Bereinigung: Kommas werden beim Kopieren in den Zielordner durch Unterstriche ersetzt,
  * da Kommas in Dateinamen unser schlankes Select in der search im Repo kaputt macht. Der in der Datenbank
@@ -346,7 +346,7 @@ public class DiaryDialog {
             double ratio = (double) thumbHeight / original.getHeight();
             int thumbWidth = (int) (original.getWidth() * ratio);
             java.awt.image.BufferedImage scaled = org.imgscalr.Scalr.resize(
-                    original, org.imgscalr.Scalr.Method.ULTRA_QUALITY, thumbWidth, thumbHeight);
+                    original, org.imgscalr.Scalr.Method.QUALITY, thumbWidth, thumbHeight);
 
             String filename = thumbPath.getFileName().toString().toLowerCase();
             String format;
