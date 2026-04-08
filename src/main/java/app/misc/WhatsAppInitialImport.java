@@ -23,6 +23,12 @@ import java.util.Scanner;
 import java.util.Set;
 
 /**
+ * TODOS
+ * 
+ * Medien ins Target verschieben(!)
+ */
+
+/**
  *
  * Wenn Kontakt schon bei Signal bekannt:
  * UPDATE msg_messages SET from_contact = 2 WHERE from_contact = 33;
@@ -58,15 +64,15 @@ import java.util.Set;
  */
 public class WhatsAppInitialImport {
 
-    private static final String WHATSAPP_DB  = "C:\\Users\\Markgraf\\Desktop\\WhatsApp\\msgstore.db.unencrypted.java";
-    private static final String SUITE_DB     = "C:\\Users\\Markgraf\\OneDrive\\ThosSuite\\data\\thossuite.db";
-    private static final String MEDIA_SOURCE = "C:\\Users\\Markgraf\\Desktop\\WhatsApp\\Pixel Media";
-    private static final String MEDIA_TARGET = "C:\\Users\\Markgraf\\Desktop\\WhatsApp\\Target Media";
+    private static final String WHATSAPP_DB  = "C:\\Users\\permi\\Desktop\\WhatsApp\\msgstore.db.unencrypted.java";
+    private static final String SUITE_DB     = "C:\\Users\\permi\\OneDrive\\ThosSuite\\data\\thossuite.db";
+    private static final String MEDIA_SOURCE = "C:\\Users\\permi\\Desktop\\WhatsApp\\Pixel Media";
+    private static final String MEDIA_TARGET = "C:\\Users\\permi\\Desktop\\WhatsApp\\Target Media";
     private static final String SOURCE       = "whatsapp";
-    private static final String PUA_MAPPING  = "C:\\Users\\Markgraf\\Desktop\\WhatsApp\\old_smileys_mapper.txt";
+    private static final String PUA_MAPPING  = "C:\\Users\\permi\\Desktop\\WhatsApp\\old_smileys_mapper.txt";
 
     /** Nachrichten vor diesem Timestamp werden nicht importiert (Unix ms). */
-    private static final long START_TIMESTAMP = 1638351549000L; // anpassen!
+    private static final long START_TIMESTAMP = 1648683952000L; // anpassen!
 
     /**
      * Anhänge die nach diesem Timestamp gesendet wurden aber nicht gefunden werden
@@ -373,6 +379,7 @@ public class WhatsAppInitialImport {
                     File src = new File(MEDIA_SOURCE, filePath);
                     if (src.exists()) {
                         File tgt = new File(MEDIA_TARGET, cleanPath);
+                        // Ich weiß nicht, warum ich das auskommentiert habe, aber dann müssen wir das wophl später in einem etxra-Lauf tun.
                         //Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
                         attachmentAvailable = true;
                     } else if (timestamp >= ATTACHMENT_WARNING_SINCE) {

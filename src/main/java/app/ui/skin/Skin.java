@@ -1903,7 +1903,7 @@ public abstract class Skin {
 
 	    if (!attachments.isEmpty()) {
 	        int thumbHeight = Config.getInt("diary.thumbnailHeight", 120);
-	        Path diaryFolder = Path.of(Config.get("diary.mediaFolder"));
+	        Path diaryFolder = Path.of(Config.get("attachments.folder")).resolve("diary");
 
 	        FlowPane thumbPane = new FlowPane(8, 8);
 	        thumbPane.getStyleClass().add("diary-card-thumbs");

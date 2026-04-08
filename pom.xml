@@ -143,7 +143,13 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			
+			<!-- ACHTUNG: Eclipse-JDK und JAVA_HOME müssen auf JDK 25 zeigen.
+		     jpackage 26 erzeugt keine Windows Application Manifests mehr (Regression,
+		     vgl. JDK-8284675, ursprünglich in JDK 19 gefixt). Ohne Manifest aktiviert
+		     Windows DPI-Virtualisierung und skaliert die Anwendung hoch.
+		     jpackage 25 erzeugt das Manifest korrekt → kein Problem.
+		     Auf JDK 26 wechseln sobald der Bug dort gefixt ist. -->
 			<!-- jpackage Plugin: Erstellt die EXE -->
 			<plugin>
 				<groupId>org.panteleyev</groupId>
