@@ -122,7 +122,7 @@ public class DiaryDialog {
 
             if (hasText && hasTags) {
                 LocalDateTime createdAt = LocalDateTime.now();
-                Path mediaRoot = Path.of(Config.get("diary.mediaFolder"));
+                Path mediaRoot = Path.of(Config.get("attachments.folder"));
                 Path diaryFolder = mediaRoot.resolve("diary");
 
                 repository.saveEntry(
@@ -196,7 +196,7 @@ public class DiaryDialog {
 
         saveButton.addEventFilter(javafx.event.ActionEvent.ACTION, e -> {
             e.consume();
-            Path mediaRoot = Path.of(Config.get("diary.mediaFolder"));
+            Path mediaRoot = Path.of(Config.get("attachments.folder"));
             Path diaryFolder = mediaRoot.resolve("diary");
 
             repository.updateEntry(
@@ -281,7 +281,7 @@ public class DiaryDialog {
     private void rebuildAttachmentPane(Window owner) {
         attachmentPane.getChildren().clear();
         int thumbHeight = Config.getInt("diary.thumbnailHeight", DEFAULT_THUMBNAIL_HEIGHT);
-        Path mediaRoot = Path.of(Config.get("diary.mediaFolder"));
+        Path mediaRoot = Path.of(Config.get("attachments.folder"));
         Path diaryFolder = mediaRoot.resolve("diary");
 
         // Bestehende Attachments — Thumbnail von Platte laden
@@ -371,7 +371,7 @@ public class DiaryDialog {
     private void deleteAttachmentWithFile(LocalDateTime createdAt, String relativePath) {
         repository.deleteAttachment(createdAt, relativePath);
         if (!repository.isPathReferencedElsewhere(relativePath)) {
-            Path mediaRoot = Path.of(Config.get("diary.mediaFolder"));
+            Path mediaRoot = Path.of(Config.get("attachments.folder"));
             Path diaryFolder = mediaRoot.resolve("diary");
             Path file = diaryFolder.resolve(relativePath);
             Path thumb = diaryFolder.resolve("thumbnails").resolve(Path.of(relativePath).getFileName());

@@ -151,6 +151,7 @@ public class ThosSuiteApp extends Application {
                 Config.init(finalDataFolder);
                 Log.initLog(finalDataFolder, getParameters());
                 Log.info(ThosSuiteApp.class, "Start Suite (Async Init via Splash)");
+                Log.info(ThosSuiteApp.class, "prism.allowhidpi: " + System.getProperty("prism.allowhidpi"));
 
                 // B) Fonts laden
                 loadFonts();
