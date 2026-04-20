@@ -3,6 +3,7 @@ package app.messaging;
 import app.config.Config;
 import app.data.persistence.DB;
 import app.data.persistence.SignalRepository;
+import app.data.persistence.SignalSourceRepository;
 import app.ui.skin.SkinService;
 import app.util.Log;
 import javafx.scene.control.ButtonBar;
@@ -20,22 +21,20 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-
-
 /**
  * Importiert neue Signal-Nachrichten seit dem letzten erfolgreichen Import-Run in die ThosSuite-DB.
  *
  * <h2>Ablauf</h2>
  * <ol>
  *   <li>Caches aus ThosSuite-DB laden (bekannte Chats, Kontakte, Blacklist).</li>
- *   <li>Untere Importgrenze ermitteln: MAX(sent_at) der bereits importierten Signal-Nachrichten
- *       als Sekunden, minus 5 Minuten Überlappungspuffer. Sind noch keine vorhanden,
- *       wird Epoch (0) verwendet.</li>
+ *   <li>Letzte importierte source_id aus der Suite-DB lesen. Darüber wird der zugehörige
+ *       sent_at direkt aus der Signal-DB gelesen — keine Zeitzonenkonvertierung nötig.
+ *       Sind noch keine Nachrichten importiert, wird Epoch (0) als untere Grenze verwendet.</li>
  *   <li>Obere Importgrenze: jetzt − 5 Minuten (Puffer gegen noch nicht vollständig
  *       geschriebene Nachrichten in der Signal-DB).</li>
- *   <li>Ist das Fenster leer (obere ≤ untere Grenze) → Abbruch, nichts zu tun.</li>
- *   <li>Neue Nachrichten importieren, Attachments entschlüsseln. Bereits importierte
- *       Nachrichten im Überlappungsbereich werden per DB-Abfrage erkannt und übersprungen.</li>
+ *   <li>Neue Nachrichten (sent_at >= untere Grenze AND sent_at < obere Grenze) importieren,
+ *       Attachments entschlüsseln. Bereits importierte Nachrichten im Überlappungsbereich
+ *       (sent_at == untere Grenze) werden per DB-Abfrage erkannt und übersprungen.</li>
  *   <li>Commit. Bei Exception → Rollback.</li>
  * </ol>
  *
@@ -58,8 +57,8 @@ import java.util.*;
  * 
  * <h2>ToDos</h2>
  * <ol>
- * 	<li>Bei neuem Kontakt muss ich bestehenden auswählen können, also einen von Whatsapp z. B. Momentan legt der immer stillschweigend einen neuen an...</li>
- *  <li>Für die Integration ins Tagebuch, wird das Generieren von Thumbnails benötigt. Und damit muss das wohl vor dem Schließen des Splahscreens passieren. Also es wird zu einem Pre-Task</li>
+ * 	<li>@TODO: Bei neuem Kontakt muss ich bestehenden auswählen können, also einen von Whatsapp z. B. Momentan legt der immer stillschweigend einen neuen an...</li>
+ *  <li>Wir brauchen noch einen monatlichen Importcheck, der den letzten Monat überprüft, ob alle Nachrichten drin sind.</li>
  * </ol>
  * 
  * @TODO: Diverses Signalimport
@@ -92,7 +91,8 @@ public class SignalIncrementalImport {
         Map.entry("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx")
     );
 
-    private final SignalRepository repo = new SignalRepository();
+    private final SignalRepository       repo   = new SignalRepository();
+    private final SignalSourceRepository source = new SignalSourceRepository();
 
     // Caches — zu Beginn aus der Suite-DB geladen
     private final Map<String, Integer> chatByConversationId = new LinkedHashMap<>();
@@ -111,33 +111,27 @@ public class SignalIncrementalImport {
         chatByConversationId.putAll(repo.loadKnownChats());
         contactByServiceId.putAll(repo.loadKnownContacts());
 
-        // Schritt 2: Letzten Import-Timestamp lesen.
-        // null = noch keine Signal-Nachrichten importiert → untere Grenze ist Epoch (alles importieren).
-        // Puffer von 5 Minuten nach unten: sent_at ist nur sekundengenau, damit Nachrichten
-        // der letzten importierten Sekunde nicht übersprungen werden. Bereits importierte
-        // Nachrichten in diesem Überlappungsbereich werden in der Filterkette per DB-Abfrage erkannt
-        // und übersprungen.
-        long lastRunMs = Optional.ofNullable(repo.getLastImportRunTimestamp()).orElse(0L) - CUTOFF_BUFFER_MS;
-        long cutoffMs  = System.currentTimeMillis() - CUTOFF_BUFFER_MS;
-
-        if (cutoffMs <= lastRunMs) {
-            Log.info(this, "[signal] Importfenster leer (lastRun=" + lastRunMs + ", cutoff=" + cutoffMs + "), nichts zu tun.");
-            return;
-        }
+        long cutoffMs = System.currentTimeMillis() - CUTOFF_BUFFER_MS;
 
         String signalUrl = "jdbc:sqlite:" + Config.getString("signal.path") + "/sql/db.sqlite"
             + "?cipher=sqlcipher&key=x'" + Config.getString("signal.key") + "'&legacy=4";
 
-        try (Connection signal = DriverManager.getConnection(signalUrl);
-             Connection thos   = DB.getNewConnection()) {
+        try (Connection signalConnection = DriverManager.getConnection(signalUrl);
+             Connection suiteConnection   = DB.getNewConnection()) {
 
-            thos.setAutoCommit(false);
+            // Schritt 2: Letzte importierte source_id aus Suite-DB — Signal-DB macht den Rest
+            String lastSourceId = repo.getLastImportedSourceId();
+
+            Log.info(this, "[signal] Importiere Nachrichten ab source_id=" + lastSourceId
+                + " bis " + millisToDbString(cutoffMs));
+
+            suiteConnection.setAutoCommit(false);
 
             try {
-                importMessages(signal, thos, lastRunMs, cutoffMs);
-                thos.commit();
+                importMessages(signalConnection, suiteConnection, lastSourceId, cutoffMs);
+                suiteConnection.commit();
             } catch (Exception e) {
-                thos.rollback();
+                suiteConnection.rollback();
                 throw new RuntimeException("Signal-Import fehlgeschlagen, Rollback durchgeführt", e);
             }
 
@@ -149,12 +143,12 @@ public class SignalIncrementalImport {
     }
 
     // -------------------------------------------------------------------------
-    // Gemeinsame Filterkette
+    // Filterkette
     // -------------------------------------------------------------------------
 
     /**
-     * Iteriert über alle importierbaren Signal-Nachrichten im angegebenen Zeitfenster
-     * und ruft den Consumer für jede auf.
+     * Iteriert über alle importierbaren Signal-Nachrichten nach der letzten bekannten
+     * Nachricht bis cutoffMs und ruft den Consumer für jede auf.
      *
      * <p>Kapselt die vollständige Filterkette:
      * <ul>
@@ -165,105 +159,85 @@ public class SignalIncrementalImport {
      *   <li>Kein Body und keine Attachments → übersprungen</li>
      * </ul>
      *
-     * @param signal     Verbindung zur Signal-DB
-     * @param lastRunMs  untere Grenze des Importfensters (exklusiv), Millisekunden seit Epoch
-     * @param cutoffMs   obere Grenze des Importfensters (exklusiv), Millisekunden seit Epoch
-     * @param thos       ThosSuite-Verbindung (für lazy Chat-Anlage und Already-imported-Check)
-     * @param consumer   Wird für jede importierbare Nachricht aufgerufen
+     * @param signalConnection        Verbindung zur Signal-DB
+     * @param lastSourceId  source_id der letzten importierten Nachricht, oder null beim ersten Import
+     * @param cutoffMs      obere Grenze (exklusiv), Millisekunden seit Epoch
+     * @param suiteConnection          ThosSuite-Verbindung (für Already-imported-Check und lazy Chat-Anlage)
+     * @param consumer      Wird für jede importierbare Nachricht aufgerufen
      */
-    private void forEachImportableMessage(Connection signal, long lastRunMs, long cutoffMs,
-                                          Connection thos,
+    private void forEachImportableMessage(Connection signalConnection, String lastSourceId, long cutoffMs,
+                                          Connection suiteConnection,
                                           ThrowingConsumer consumer) throws Exception {
-        String sql = """
-                SELECT id, conversationId, type, body, sent_at, sourceServiceId, isErased,
-                       json_extract(json, '$.quote')           AS quote_json,
-                       json_extract(json, '$.quote.messageId') AS quote_message_id,
-                       json_extract(json, '$.quote.id')        AS quote_id
-                FROM messages
-                WHERE sent_at > ? AND sent_at < ?
-                ORDER BY sent_at ASC
-                """;
+        source.forEachMessageInWindow(signalConnection, lastSourceId, cutoffMs, rs -> {
+            String  signalMsgId     = rs.getString("id");
+            String  conversationId  = rs.getString("conversationId");
+            String  msgType         = rs.getString("type");
+            String  body            = rs.getString("body");
+            long    sentAtMs        = rs.getLong("sent_at");
+            String  sourceServiceId = rs.getString("sourceServiceId");
+            int     isErased        = rs.getInt("isErased");
+            String  quoteJson       = rs.getString("quote_json");
+            String  quoteMsgId      = rs.getString("quote_message_id");
+            long    quoteId         = rs.getLong("quote_id");
+            boolean outgoing        = "outgoing".equals(msgType);
 
-        try (var ps = signal.prepareStatement(sql)) {
-            ps.setLong(1, lastRunMs);
-            ps.setLong(2, cutoffMs);
+            if (!"incoming".equals(msgType) && !"outgoing".equals(msgType)) return;
+            if (isErased == 1) return;
+            if (repo.isAlreadyImported(suiteConnection, signalMsgId)) return;
 
-            try (var rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    String  signalMsgId     = rs.getString("id");
-                    String  conversationId  = rs.getString("conversationId");
-                    String  msgType         = rs.getString("type");
-                    String  body            = rs.getString("body");
-                    long    sentAtMs        = rs.getLong("sent_at");
-                    String  sourceServiceId = rs.getString("sourceServiceId");
-                    int     isErased        = rs.getInt("isErased");
-                    String  quoteJson       = rs.getString("quote_json");
-                    String  quoteMsgId      = rs.getString("quote_message_id");
-                    long    quoteId         = rs.getLong("quote_id");
-                    boolean outgoing        = "outgoing".equals(msgType);
-
-                    if (!"incoming".equals(msgType) && !"outgoing".equals(msgType)) continue;
-                    if (isErased == 1) continue;
-                    if (repo.isAlreadyImported(thos, signalMsgId)) continue;
-
-                    if (!chatByConversationId.containsKey(conversationId)
-                            && !blacklistedChats.contains(conversationId)) {
-                        ensureChat(signal, thos, conversationId);
-                    }
-                    if (blacklistedChats.contains(conversationId)) continue;
-
-                    List<AttachmentResult> attachments = resolveAttachments(signal, signalMsgId);
-
-                    if (isBlank(body) && attachments.isEmpty()) {
-                        Log.warn(this, "[signal] Keine Inhalte, übersprungen: signalMsgId=" + signalMsgId
-                            + " type=" + msgType + " conversationId=" + conversationId);
-                        continue;
-                    }
-
-                    String effectiveServiceId = (outgoing && isBlank(sourceServiceId))
-                        ? MY_SERVICE_ID : sourceServiceId;
-                    if (isBlank(effectiveServiceId))
-                        throw new IllegalStateException("[FAILFAST] effectiveServiceId blank für signalMsgId=" + signalMsgId);
-
-                    consumer.accept(new SignalMessage(
-                        signalMsgId, conversationId, body, sentAtMs,
-                        effectiveServiceId, outgoing, quoteJson, quoteMsgId, quoteId, attachments
-                    ));
-                }
+            if (!chatByConversationId.containsKey(conversationId)
+                    && !blacklistedChats.contains(conversationId)) {
+                ensureChat(signalConnection, suiteConnection, conversationId);
             }
-        }
+            if (blacklistedChats.contains(conversationId)) return;
+
+            List<AttachmentResult> attachments = resolveAttachments(signalConnection, signalMsgId);
+
+            if (isBlank(body) && attachments.isEmpty()) {
+                Log.warn(this, "[signal] Keine Inhalte, übersprungen: signalMsgId=" + signalMsgId
+                    + " type=" + msgType + " conversationId=" + conversationId);
+                return;
+            }
+
+            String effectiveServiceId = (outgoing && isBlank(sourceServiceId))
+                ? MY_SERVICE_ID : sourceServiceId;
+            if (isBlank(effectiveServiceId))
+                throw new IllegalStateException("[FAILFAST] effectiveServiceId blank für signalMsgId=" + signalMsgId);
+
+            consumer.accept(new SignalMessage(
+                signalMsgId, conversationId, body, sentAtMs,
+                effectiveServiceId, outgoing, quoteJson, quoteMsgId, quoteId, attachments
+            ));
+        });
     }
 
     // -------------------------------------------------------------------------
     // Hauptschleife
     // -------------------------------------------------------------------------
 
-    private void importMessages(Connection signal, Connection thos,
-                                long lastRunMs, long cutoffMs) throws Exception {
+    private void importMessages(Connection signalConnection, Connection suiteConnection,
+                                String lastSourceId, long cutoffMs) throws Exception {
         int[] msgCount    = {0};
         int[] attachCount = {0};
 
-        Log.info(this, "[signal] Importiere Nachrichten: " + millisToDbString(lastRunMs)
-            + " → " + millisToDbString(cutoffMs));
-
-        forEachImportableMessage(signal, lastRunMs, cutoffMs, thos, msg -> {
+        forEachImportableMessage(signalConnection, lastSourceId, cutoffMs, suiteConnection, msg -> {
 
             if (!contactByServiceId.containsKey(msg.effectiveServiceId()))
-                ensureContact(signal, thos, msg.effectiveServiceId());
+                ensureContact(signalConnection, suiteConnection, msg.effectiveServiceId());
 
             int fromContact = contactByServiceId.get(msg.effectiveServiceId());
             int chatId      = chatByConversationId.get(msg.conversationId());
-            ensureChatMember(thos, chatId, fromContact);
+            ensureChatMember(suiteConnection, chatId, fromContact);
 
-            String resolvedQuoteMsgId = resolveQuote(signal, msg.signalMsgId(),
+            String resolvedQuoteMsgId = resolveQuote(signalConnection, msg.signalMsgId(),
                 msg.quoteJson(), msg.quoteMsgId(), msg.quoteId());
 
-            repo.insertMessage(thos, msg.signalMsgId(), millisToDbString(msg.sentAtMs()),
+            repo.insertMessage(suiteConnection, msg.signalMsgId(), millisToDbString(msg.sentAtMs()),
                 fromContact, chatId, msg.body(), resolvedQuoteMsgId);
             msgCount[0]++;
 
             for (AttachmentResult att : msg.attachments()) {
-                repo.insertAttachment(thos, msg.signalMsgId(), att.relativePath(), att.available());
+                repo.insertAttachment(suiteConnection, msg.signalMsgId(), att.relativePath(), att.available());
                 attachCount[0]++;
             }
         });
@@ -275,144 +249,100 @@ public class SignalIncrementalImport {
     // Chat lazy anlegen
     // -------------------------------------------------------------------------
 
-    private void ensureChat(Connection signal, Connection thos, String conversationId) throws SQLException {
-        try (var ps = signal.prepareStatement("""
-                SELECT type, name, profileName, profileFamilyName, profileFullName,
-                       json_extract(json, '$.messageCount')     AS messageCount,
-                       json_extract(json, '$.sharedGroupNames') AS sharedGroupNames
-                FROM conversations WHERE id = ?
-                """)) {
-            ps.setString(1, conversationId);
-            try (var rs = ps.executeQuery()) {
-                if (!rs.next())
-                    throw new IllegalStateException("[FAILFAST] conversationId='" + conversationId + "' nicht in Signal-conversations");
+    private void ensureChat(Connection signalConnection, Connection suiteConnection, String conversationId) throws SQLException {
+        SignalSourceRepository.ConversationInfo conv = source.loadConversation(signalConnection, conversationId);
 
-                boolean isGroup     = "group".equals(rs.getString("type"));
-                String  displayName = isGroup
-                    ? (isBlank(rs.getString("name")) ? "Gruppe_" + conversationId : rs.getString("name"))
-                    : resolveDisplayName(rs, conversationId);
-                int     messageCount = rs.getInt("messageCount");
-                String  sharedGroups = rs.getString("sharedGroupNames");
+        String displayName = conv.isGroup()
+            ? (isBlank(conv.name()) ? "Gruppe_" + conversationId : conv.name())
+            : resolveDisplayName(conv.name(), conv.profileName(), conv.profileFamilyName(), conv.profileFullName(), conversationId);
 
-                String info = "Name: " + displayName
-                    + "\nGruppe: " + isGroup
-                    + "\nNachrichten: " + messageCount
-                    + (isBlank(sharedGroups) || "[]".equals(sharedGroups) ? "" : "\nGemeinsame Gruppen: " + sharedGroups);
+        String info = "Name: " + displayName
+            + "\nGruppe: " + conv.isGroup()
+            + "\nNachrichten: " + conv.messageCount()
+            + (isBlank(conv.sharedGroupNames()) || "[]".equals(conv.sharedGroupNames()) ? "" : "\nGemeinsame Gruppen: " + conv.sharedGroupNames());
 
-                ButtonType importBtn    = new ButtonType("Importieren", ButtonBar.ButtonData.YES);
-                ButtonType blacklistBtn = new ButtonType("Blacklist",   ButtonBar.ButtonData.NO);
+        ButtonType importBtn    = new ButtonType("Importieren", ButtonBar.ButtonData.YES);
+        ButtonType blacklistBtn = new ButtonType("Blacklist",   ButtonBar.ButtonData.NO);
 
-                Optional<ButtonType> result = SkinService.get()
-                    .createAlert(SkinService.getOwnerWindow(), "Neuer Signal-Chat", info, importBtn, blacklistBtn)
-                    .showAndWait();
+        Optional<ButtonType> result = SkinService.get()
+            .createAlert(SkinService.getOwnerWindow(), "Neuer Signal-Chat", info, importBtn, blacklistBtn)
+            .showAndWait();
 
-                boolean doImport = result.isPresent() && result.get() == importBtn;
-                int chatId = repo.insertChat(thos, conversationId, isGroup, displayName, !doImport);
+        boolean doImport = result.isPresent() && result.get() == importBtn;
+        int chatId = repo.insertChat(suiteConnection, conversationId, conv.isGroup(), displayName, !doImport);
 
-                if (doImport)
-                    chatByConversationId.put(conversationId, chatId);
-                else
-                    blacklistedChats.add(conversationId);
-            }
-        }
+        if (doImport)
+            chatByConversationId.put(conversationId, chatId);
+        else
+            blacklistedChats.add(conversationId);
     }
 
     // -------------------------------------------------------------------------
     // Kontakt lazy anlegen
     // -------------------------------------------------------------------------
 
-    private void ensureContact(Connection signal, Connection thos, String serviceId) throws SQLException {
-        try (var ps = signal.prepareStatement("""
-                SELECT name, profileName, profileFamilyName, profileFullName,
-                       json_extract(json, '$.sharedGroupNames') AS sharedGroupNames
-                FROM conversations WHERE serviceId = ?
-                """)) {
-            ps.setString(1, serviceId);
-            try (var rs = ps.executeQuery()) {
-                if (!rs.next())
-                    throw new IllegalStateException("[FAILFAST] serviceId='" + serviceId + "' nicht in Signal-conversations");
-
-                String displayName = resolveDisplayName(rs, serviceId);
-                int cid = repo.insertContact(thos, displayName);
-                repo.insertContactMapping(thos, serviceId, cid);
-                contactByServiceId.put(serviceId, cid);
-                Log.info(this, "[signal] Kontakt angelegt: '" + displayName + "'");
-            }
-        }
+    private void ensureContact(Connection signalConnection, Connection suiteConnection, String serviceId) throws SQLException {
+        SignalSourceRepository.ContactInfo contact = source.loadContact(signalConnection, serviceId);
+        String displayName = resolveDisplayName(contact.name(), contact.profileName(),
+            contact.profileFamilyName(), contact.profileFullName(), serviceId);
+        int cid = repo.insertContact(suiteConnection, displayName);
+        repo.insertContactMapping(suiteConnection, serviceId, cid);
+        contactByServiceId.put(serviceId, cid);
+        Log.info(this, "[signal] Kontakt angelegt: '" + displayName + "'");
     }
 
     // -------------------------------------------------------------------------
     // Chat-Member
     // -------------------------------------------------------------------------
 
-    private void ensureChatMember(Connection thos, int chatId, int contactId) throws SQLException {
+    private void ensureChatMember(Connection suiteConnection, int chatId, int contactId) throws SQLException {
         String key = chatId + ":" + contactId;
         if (chatMemberCache.contains(key)) return;
         chatMemberCache.add(key);
-        repo.insertChatMemberIfAbsent(thos, chatId, contactId);
+        repo.insertChatMemberIfAbsent(suiteConnection, chatId, contactId);
     }
 
     // -------------------------------------------------------------------------
     // Attachments
     // -------------------------------------------------------------------------
 
-    private List<AttachmentResult> resolveAttachments(Connection signal,
+    private List<AttachmentResult> resolveAttachments(Connection signalConnection,
                                                        String signalMsgId) throws Exception {
         List<AttachmentResult> results = new ArrayList<>();
 
-        try (var ps = signal.prepareStatement("""
-                SELECT path, localKey, fileName, size, contentType, attachmentType
-                FROM message_attachments
-                WHERE messageId = ? AND path IS NOT NULL AND localKey IS NOT NULL AND version = 2
-                """)) {
-            ps.setString(1, signalMsgId);
-            try (var rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    String signalPath  = rs.getString("path");
-                    String localKey    = rs.getString("localKey");
-                    String fileName    = rs.getString("fileName");
-                    int    size        = rs.getInt("size");
-                    String contentType = rs.getString("contentType");
-                    String attachType  = rs.getString("attachmentType");
+        for (SignalSourceRepository.AttachmentInfo att : source.loadAttachments(signalConnection, signalMsgId)) {
+            if (att.size() <= 0)
+                throw new IllegalStateException("[FAILFAST] size=" + att.size() + " für Attachment in messageId=" + signalMsgId);
 
-                    if (size <= 0)
-                        throw new IllegalStateException("[FAILFAST] size=" + size + " für Attachment in messageId=" + signalMsgId);
-
-                    String ext;
-                    if (isBlank(contentType) || "application/octet-stream".equals(contentType)) {
-                        if (isBlank(fileName))
-                            throw new IllegalStateException("[FAILFAST] Kein contentType und kein fileName für messageId=" + signalMsgId);
-                        int dot = fileName.lastIndexOf('.');
-                        if (dot < 0 || dot == fileName.length() - 1)
-                            throw new IllegalStateException("[FAILFAST] Keine Extension in fileName='" + fileName + "' für messageId=" + signalMsgId);
-                        ext = fileName.substring(dot + 1);
-                    } else {
-                        ext = EXTENSION_MAP.get(contentType);
-                        if (ext == null)
-                            throw new IllegalStateException("[FAILFAST] Unbekannter contentType='" + contentType
-                                + "' attachmentType='" + attachType + "' für messageId=" + signalMsgId);
-                    }
-
-                    String baseName  = sanitizeFileName(!isBlank(fileName) ? stripExtension(fileName) : "attachment");
-                    int    seq       = attachSeqPerMsg.merge(signalMsgId, 1, Integer::sum);
-                    String outName   = baseName + "_" + signalMsgId + "_" + seq + "." + ext;
-                    Path   attachDir = Path.of(Config.getString("signal.attachmentDir"));
-                    Path   outPath   = attachDir.resolve(outName);
-
-                    boolean available;
-                    if (Files.exists(outPath)) {
-                        available = true;
-                    } else {
-                        Path encryptedFile = Path.of(Config.getString("signal.path") + "/attachments.noindex/").resolve(signalPath);
-                        if (!Files.exists(encryptedFile))
-                            throw new IllegalStateException("[FAILFAST] Quelldatei nicht gefunden: " + encryptedFile + " (messageId=" + signalMsgId + ")");
-                        decryptAttachment(encryptedFile, localKey, size, outPath);
-                        available = true;
-                    }
-
-                    results.add(new AttachmentResult(outName, available));
-                }
+            String ext;
+            if (isBlank(att.contentType()) || "application/octet-stream".equals(att.contentType())) {
+                if (isBlank(att.fileName()))
+                    throw new IllegalStateException("[FAILFAST] Kein contentType und kein fileName für messageId=" + signalMsgId);
+                int dot = att.fileName().lastIndexOf('.');
+                if (dot < 0 || dot == att.fileName().length() - 1)
+                    throw new IllegalStateException("[FAILFAST] Keine Extension in fileName='" + att.fileName() + "' für messageId=" + signalMsgId);
+                ext = att.fileName().substring(dot + 1);
+            } else {
+                ext = EXTENSION_MAP.get(att.contentType());
+                if (ext == null)
+                    throw new IllegalStateException("[FAILFAST] Unbekannter contentType='" + att.contentType()
+                        + "' attachmentType='" + att.attachmentType() + "' für messageId=" + signalMsgId);
             }
+
+            String baseName = sanitizeFileName(!isBlank(att.fileName()) ? stripExtension(att.fileName()) : "attachment");
+            int    seq      = attachSeqPerMsg.merge(signalMsgId, 1, Integer::sum);
+            String outName  = baseName + "_" + signalMsgId + "_" + seq + "." + ext;
+            Path   attachDir = Path.of(Config.getString("signal.attachmentDir"));
+            Path   outPath   = attachDir.resolve(outName);
+
+            if (!Files.exists(outPath)) {
+                Path encryptedFile = Path.of(Config.getString("signal.path") + "/attachments.noindex/").resolve(att.path());
+                if (!Files.exists(encryptedFile))
+                    throw new IllegalStateException("[FAILFAST] Quelldatei nicht gefunden: " + encryptedFile + " (messageId=" + signalMsgId + ")");
+                decryptAttachment(encryptedFile, att.localKey(), att.size(), outPath);
+            }
+
+            results.add(new AttachmentResult(outName, true));
         }
         return results;
     }
@@ -421,61 +351,26 @@ public class SignalIncrementalImport {
     // Quote-Auflösung (dreistufig)
     // -------------------------------------------------------------------------
 
-    private String resolveQuote(Connection signal, String signalMsgId,
+    private String resolveQuote(Connection signalConnection, String signalMsgId,
                                 String quoteJson, String quoteMsgId, long quoteId) throws SQLException {
         if (quoteJson == null) return null;
 
         if (!isBlank(quoteMsgId)) {
-            String resolved = resolveQuoteByMessageId(signal, quoteMsgId);
+            String resolved = source.resolveQuoteByMessageId(signalConnection, quoteMsgId);
             if (resolved != null) return resolved;
             throw new IllegalStateException("[FAILFAST] quote.messageId='" + quoteMsgId
                 + "' nicht in Signal-DB (signalMsgId=" + signalMsgId + ")");
         }
 
         if (quoteId > 0) {
-            String resolved = resolveQuoteByTimestamp(signal, quoteId);
+            String resolved = source.resolveQuoteByTimestamp(signalConnection, quoteId);
             if (resolved != null) return resolved;
-            resolved = resolveQuoteByEditHistory(signal, quoteId);
+            resolved = source.resolveQuoteByEditHistory(signalConnection, quoteId);
             if (resolved != null) return resolved;
         }
 
         throw new IllegalStateException("[FAILFAST] Quote nicht auflösbar für signalMsgId=" + signalMsgId
             + " quote.id=" + quoteId + " quote.messageId=" + quoteMsgId);
-    }
-
-    private String resolveQuoteByMessageId(Connection signal, String messageId) throws SQLException {
-        try (var ps = signal.prepareStatement("SELECT id FROM messages WHERE id = ?")) {
-            ps.setString(1, messageId);
-            try (var rs = ps.executeQuery()) {
-                return rs.next() ? rs.getString("id") : null;
-            }
-        }
-    }
-
-    private String resolveQuoteByTimestamp(Connection signal, long quoteId) throws SQLException {
-        try (var ps = signal.prepareStatement("SELECT id FROM messages WHERE sent_at = ?")) {
-            ps.setLong(1, quoteId);
-            try (var rs = ps.executeQuery()) {
-                if (!rs.next()) return null;
-                String found = rs.getString("id");
-                if (rs.next())
-                    throw new IllegalStateException("[FAILFAST] quote.id=" + quoteId + " matcht mehrere Rows in messages.sent_at");
-                return found;
-            }
-        }
-    }
-
-    private String resolveQuoteByEditHistory(Connection signal, long quoteId) throws SQLException {
-        try (var ps = signal.prepareStatement("""
-                SELECT m.id
-                FROM messages m, json_each(m.json, '$.editHistory') eh
-                WHERE json_extract(eh.value, '$.timestamp') = ?
-                """)) {
-            ps.setLong(1, quoteId);
-            try (var rs = ps.executeQuery()) {
-                return rs.next() ? rs.getString("id") : null;
-            }
-        }
     }
 
     // -------------------------------------------------------------------------
@@ -504,11 +399,13 @@ public class SignalIncrementalImport {
     // Hilfsmethoden
     // -------------------------------------------------------------------------
 
-    private String resolveDisplayName(ResultSet rs, String fallback) throws SQLException {
+    private String resolveDisplayName(String name, String profileName,
+                                      String profileFamilyName, String profileFullName,
+                                      String fallback) {
         List<String> candidates = new ArrayList<>();
-        addIfNotBlank(candidates, stripBidiControls(rs.getString("name")));
-        addIfNotBlank(candidates, buildFullName(rs.getString("profileName"), rs.getString("profileFamilyName")));
-        addIfNotBlank(candidates, stripBidiControls(rs.getString("profileFullName")));
+        addIfNotBlank(candidates, stripBidiControls(name));
+        addIfNotBlank(candidates, buildFullName(profileName, profileFamilyName));
+        addIfNotBlank(candidates, stripBidiControls(profileFullName));
         return candidates.stream().max(Comparator.comparingInt(String::length)).orElse(fallback);
     }
 
