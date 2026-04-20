@@ -12,10 +12,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -24,8 +22,9 @@ import java.util.Set;
 
 /**
  * TODOS
- * 
+ *
  * Medien ins Target verschieben(!)
+ * Quotes von bearbeiteten Nachrichten kann man über chat_row_id + timestamp auflösen! Da nochmal einen standalone run und im regular importer natürlich gleich integrieren
  */
 
 /**
@@ -36,16 +35,14 @@ import java.util.Set;
  * UPDATE msg_contact_mapping SET contact_id = 2 WHERE contact_id = 33;
  * DELETE FROM msg_contacts WHERE contact_id = 33;
  *
- *	Todos:
+ * Todos:
  * - Im Daily Import muss abgefragt werden, ob der Kontakt bereits existiert.
  * - Attachments dürfen im Filename niemals nicht ein "," enthalten, das bringt unser SQL durcheinander. Die müssen konsequent durch "_" ersetzt werden
  * - Am besten dann auch keine Kommas in den DB-Tabelllen erlauben für attachments, geht das einfach?
  * - Attachment-Pfade müssen dann natürlich relativ gespeichert werden, die aktuellen bereinigt (falls da was zu tun)
- * - Wir kopieren die Anhänge aktuell nciht in den Target-Ordner. Mach das später einfach manuell und schau, ob da viel unreferenziertes rumliegt. Ich denkle nicht.
+ * - Wir kopieren die Anhänge aktuell nicht in den Target-Ordner. Mach das später einfach manuell und schau, ob da viel unreferenziertes rumliegt. Ich denke nicht.
  *
- * Es kommt manchmal vor, dass der path des attachments null ist. Das in Kombi mit einer Nachricht mit leerem Content → Blockieren einfach...
- *
- * TODO: System.exit(-1) bei erstem Quote und erstem Type-99 entfernen sobald debuggt.
+ * Es kommt manchmal vor, dass der path des attachments null ist. Das in Kombi mit einer Nachricht mit leerem Content → still ignorieren.
  */
 
 /**
@@ -56,7 +53,9 @@ import java.util.Set;
  *   2. Nachrichten ab START_TIMESTAMP sequenziell verarbeiten (nach timestamp)
  *   3. Unbekannte Chats interaktiv abfragen (importieren ja/nein)
  *   4. Unbekannte Kontakte interaktiv benennen
- *   5. Album-Gruppen (Type 99 + Kinder) zusammenführen
+ *   5. Album-Opener (Type 99) werden als normale Nachricht importiert und merken ihre source_id.
+ *      Album-Kinder (kein Content, aber filePath, bei offenem Opener im gleichen Chat/Sender)
+ *      hängen ihr Attachment sofort an den Opener – kein Sammeln, kein Flush.
  *   6. Anhänge aus Quellordner in Zielordner kopieren
  *   7. Quotes auflösen via message_quoted.key_id → message._id
  *
@@ -72,14 +71,14 @@ public class WhatsAppInitialImport {
     private static final String PUA_MAPPING  = "C:\\Users\\permi\\Desktop\\WhatsApp\\old_smileys_mapper.txt";
 
     /** Nachrichten vor diesem Timestamp werden nicht importiert (Unix ms). */
-    private static final long START_TIMESTAMP = 1648683952000L; // anpassen!
+    private static final long START_TIMESTAMP = 1735057509000L; // anpassen!
 
     /**
      * Anhänge die nach diesem Timestamp gesendet wurden aber nicht gefunden werden
      * lösen eine WARNING aus. Vorher: still ignorieren.
      * Format: Unix-Timestamp in Millisekunden.
      */
-    private static final long ATTACHMENT_WARNING_SINCE = 1575586801L; 
+    private static final long ATTACHMENT_WARNING_SINCE = 1575586801L;
 
     private static final DateTimeFormatter DT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -105,8 +104,13 @@ public class WhatsAppInitialImport {
     /** PUA-Codepoint -> Standard-Unicode-String (kann mehrere Codepoints enthalten). */
     private final Map<Integer, String> puaMapping = new HashMap<>();
 
-    /** Offene Album-Gruppen pro "chat_row_id:senderRaw". */
-    private final Map<String, AlbumAccumulator> openAlbums = new HashMap<>();
+    /**
+     * Offene Album-Opener pro "chatRowId:senderRaw".
+     * Wert ist ein Array: [source_id (Long), timestamp (Long)] des Type-99-Openers.
+     * Kinder hängen ihr Attachment sofort an die source_id des Openers.
+     * Wird durch einen neuen 99er desselben Senders im gleichen Chat einfach überschrieben.
+     */
+    private final Map<String, long[]> openAlbumByKey = new HashMap<>();
 
     private Connection wa;
     private Connection suite;
@@ -136,12 +140,6 @@ public class WhatsAppInitialImport {
         System.out.println();
 
         processMessages();
-
-        // Noch offene Alben abschließen
-        for (AlbumAccumulator acc : openAlbums.values()) {
-            System.out.println("WARNING: Offenes Album beim Ende des Imports – " + acc.describe());
-            flushAlbum(acc);
-        }
 
         wa.close();
         suite.close();
@@ -321,56 +319,59 @@ public class WhatsAppInitialImport {
                     continue; // blacklisted
                 }
 
-                // 4. Album-Logik
+                // 4. Album-Kind-Erkennung:
+                // Ein Kind erkennen wir daran: kein Content, origination_flags != 0, ein filePath,
+                // und ein Opener für diesen Sender/Chat ist offen.
+                // origination_flags ist nicht 100% zuverlässig (auch weitergeleitete Nachrichten
+                // bekommen es), aber es schränkt den Fehlerfall deutlich ein.
+                // Kein Opener offen, oder Bedingung nicht erfüllt → normal weiterverarbeiten.
+                // Jede Nachricht die nicht als Kind erkannt wird, schließt den Marker –
+                // damit wird ein stundenaltes Album nicht fälschlich weiter befüllt.
                 String albumKey = chatRowId + ":" + fromContactRaw;
+                long[] openAlbum = openAlbumByKey.get(albumKey);
 
-                if (type == 99) {
-                    // TODO: System.exit entfernen sobald Type-99-Logik debuggt ist
-                    System.out.println("[DEBUG] Erster Type-99 gefunden: _id=" + sourceId
-                        + " timestamp=" + formatTs(timestamp));
-                    System.exit(-1);
-
-                    if (openAlbums.containsKey(albumKey)) {
-                        AlbumAccumulator old = openAlbums.get(albumKey);
-                        System.out.println("WARNING: Neues Album öffnet altes ohne Abschluss – " + old.describe());
-                        flushAlbum(old);
+                if (type != 99 && origFlags != 0 && content == null && filePath != null && openAlbum != null) {
+                    long openerSourceId  = openAlbum[0];
+                    long openerTimestamp = openAlbum[1];
+                    if ((timestamp - openerTimestamp) > 2 * 60 * 1000L) {
+                        System.out.println("WARNING: Album-Kind liegt mehr als 2 Minuten nach dem Opener"
+                            + " – _id=" + sourceId + " opener_source_id=" + openerSourceId
+                            + " Zeitdiff=" + ((timestamp - openerTimestamp) / 1000) + "s");
                     }
-                    openAlbums.put(albumKey, new AlbumAccumulator(sourceId, timestamp, fromContactRaw, chatId));
+                    String cleanPath = filePath.replace(",", "_");
+                    // Kopieren erfolgt später im Bulk
+                    //Files.copy(new File(MEDIA_SOURCE, filePath).toPath(),
+                    //           new File(MEDIA_TARGET, cleanPath).toPath(),
+                    //           StandardCopyOption.REPLACE_EXISTING);
+                    insertAttachment(openerSourceId, cleanPath, new File(MEDIA_SOURCE, filePath).exists());
                     skipped++;
                     continue;
                 }
 
-                if (openAlbums.containsKey(albumKey)) {
-                    AlbumAccumulator acc = openAlbums.get(albumKey);
-                    boolean withinWindow = (timestamp - acc.timestamp) <= 2 * 60 * 1000L;
-                    boolean isChild      = origFlags != 0 && content == null;
-
-                    if (withinWindow && isChild) {
-                        acc.childFilePaths.add(filePath);
-                        acc.childSourceIds.add(sourceId);
-                        skipped++;
-                        continue;
-                    } else {
-                        if (!withinWindow) {
-                            System.out.println("WARNING: 2-Minuten-Grenze überschritten, schließe Album – " + acc.describe());
-                        }
-                        flushAlbum(acc);
-                        openAlbums.remove(albumKey);
-                        // aktuelle Nachricht normal weiterverarbeiten
-                    }
+                // Keine Kind-Erkennung → Album-Marker schließen (außer beim 99er, der überschreibt ihn).
+                if (type != 99) {
+                    openAlbumByKey.remove(albumKey);
                 }
 
-                // 5. Kontakt auflösen + Chat-Member eintragen
+                // 5. Type-99: Opener-Marker setzen. Der 99er läuft ansonsten normal durch
+                // den restlichen Code – Kontakt, Quote, FailFast (mit Ausnahme unten), INSERT.
+                if (type == 99) {
+                    openAlbumByKey.put(albumKey, new long[]{sourceId, timestamp});
+                }
+
+                // 6. Kontakt auflösen + Chat-Member eintragen
                 int fromContactId = resolveContact(fromContactRaw);
                 insertChatMemberIfNew(chatId, fromContactId);
 
-                // 6. Quote auflösen
+                // 7. Quote auflösen
                 String resolvedQuoteSourceId = null;
                 if (quoteKeyId != null) {
                     resolvedQuoteSourceId = resolveQuote(quoteKeyId, sourceId);
                 }
 
-                // 7. Anhang verarbeiten
+                // 8. Anhang verarbeiten.
+                // Ausnahme: Type-99 hat by design keinen Content, filePath und messageUrl –
+                // das ist kein Fehler.
                 String  attachmentPath      = null;
                 boolean attachmentAvailable = false;
 
@@ -378,9 +379,9 @@ public class WhatsAppInitialImport {
                     String cleanPath = filePath.replace(",", "_");
                     File src = new File(MEDIA_SOURCE, filePath);
                     if (src.exists()) {
-                        File tgt = new File(MEDIA_TARGET, cleanPath);
-                        // Ich weiß nicht, warum ich das auskommentiert habe, aber dann müssen wir das wophl später in einem etxra-Lauf tun.
-                        //Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        // Kopieren erfolgt später im Bulk
+                        //Files.copy(src.toPath(), new File(MEDIA_TARGET, cleanPath).toPath(),
+                        //           StandardCopyOption.REPLACE_EXISTING);
                         attachmentAvailable = true;
                     } else if (timestamp >= ATTACHMENT_WARNING_SINCE) {
                         System.out.println("WARNING: Anhang nicht gefunden: " + filePath
@@ -390,13 +391,13 @@ public class WhatsAppInitialImport {
                 } else if (messageUrl != null) {
                     attachmentPath      = messageUrl;
                     attachmentAvailable = false;
-                } else if (content == null) {
+                } else if (content == null && type != 99) {
                     throw new IllegalStateException(
                         "[FAILFAST] Message ohne content, file_path und message_url: _id=" + sourceId
                         + " type=" + type + " timestamp=" + formatTs(timestamp));
                 }
 
-                // 8. INSERT
+                // 9. INSERT
                 insertMessage(sourceId, timestamp, fromContactId, chatId, content, resolvedQuoteSourceId);
 
                 if (attachmentPath != null) {
@@ -439,42 +440,6 @@ public class WhatsAppInitialImport {
         System.out.println("WARNING: Quote nicht auflösbar: quoteKeyId=" + quoteKeyId
             + " (quotingSourceId=" + quotingSourceId + ")");
         return null;
-    }
-
-    // ------------------------------------------------------------------------------------
-    // Album-Flush
-    // ------------------------------------------------------------------------------------
-
-    private void flushAlbum(AlbumAccumulator acc) throws Exception {
-        System.out.println("Album zusammengeführt: source_id=" + acc.sourceId
-                + ", Sender=" + acc.senderRaw
-                + ", Zeitpunkt=" + formatTs(acc.timestamp)
-                + ", Kinder=" + acc.childSourceIds.size());
-
-        if (acc.childSourceIds.isEmpty()) {
-            System.out.println("WARNING: Album ohne Kinder – source_id=" + acc.sourceId);
-        }
-
-        int fromContactId = resolveContact(acc.senderRaw);
-        insertChatMemberIfNew(acc.chatId, fromContactId);
-
-        insertMessage(acc.sourceId, acc.timestamp, fromContactId, acc.chatId, null, null);
-
-        for (String filePath : acc.childFilePaths) {
-            if (filePath == null) continue;
-            String cleanPath = filePath.replace(",", "_");
-            File src = new File(MEDIA_SOURCE, filePath);
-            if (src.exists()) {
-                File tgt = new File(MEDIA_TARGET, cleanPath);
-                Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                insertAttachment(acc.sourceId, cleanPath, true);
-            } else {
-                if (acc.timestamp >= ATTACHMENT_WARNING_SINCE) {
-                    System.out.println("WARNING: Album-Anhang nicht gefunden: " + filePath);
-                }
-                insertAttachment(acc.sourceId, cleanPath, false);
-            }
-        }
     }
 
     // ------------------------------------------------------------------------------------
@@ -606,7 +571,7 @@ public class WhatsAppInitialImport {
             ps.setInt(4, fromContactId);
             ps.setInt(5, chatId);
             ps.setString(6, content);
-            ps.setString(7, quoteMessageId);  // NULL wenn kein Quote oder nicht auflösbar
+            ps.setString(7, quoteMessageId);
             ps.executeUpdate();
         }
     }
@@ -631,30 +596,5 @@ public class WhatsAppInitialImport {
         return LocalDateTime
                 .ofInstant(Instant.ofEpochMilli(unixMs), ZoneId.systemDefault())
                 .format(DT);
-    }
-
-    // ------------------------------------------------------------------------------------
-    // Album-Accumulator
-    // ------------------------------------------------------------------------------------
-
-    private static class AlbumAccumulator {
-        final long   sourceId;
-        final long   timestamp;
-        final String senderRaw;
-        final int    chatId;
-        final List<String> childFilePaths = new ArrayList<>();
-        final List<Long>   childSourceIds = new ArrayList<>();
-
-        AlbumAccumulator(long sourceId, long timestamp, String senderRaw, int chatId) {
-            this.sourceId  = sourceId;
-            this.timestamp = timestamp;
-            this.senderRaw = senderRaw;
-            this.chatId    = chatId;
-        }
-
-        String describe() {
-            return "source_id=" + sourceId + ", Sender=" + senderRaw
-                + ", Kinder=" + childSourceIds.size();
-        }
     }
 }

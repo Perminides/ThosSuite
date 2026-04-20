@@ -141,7 +141,12 @@ public class Controller{
 	    
 	    new MattressTurnDialog().showIfDue();
 	    
-	    new SignalIncrementalImport().run();
+	    try {
+	    	new SignalIncrementalImport().run();
+	    } catch (Exception e) {
+			Alert alert = SkinService.get().createAlert(mainWindow.getStage(), "Signal", "Beim Signalimport ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", false, false);
+			alert.showAndWait();
+		}
 	    
 	    ImageScaler.processImages();
 

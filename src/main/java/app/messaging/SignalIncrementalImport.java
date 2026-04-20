@@ -55,6 +55,11 @@ import java.util.*;
  * isErased, Blacklist, kein Body und keine Attachments) und wird sowohl vom
  * Integritätscheck als auch vom Import genutzt. Änderungen an der Filterlogik
  * müssen nur hier vorgenommen werden.
+ * @TODO: Diverses Signalimport
+ * <h2>ToDos</h2>
+ * <ol>
+ * 	<li>@TODO: Bei neuem Kontakt muss ich bestehenden auswählen können, also einen von Whatsapp z. B. Momentan legt der immer stillschweigend einen neuen an...</li>
+ * </ol>
  */
 public class SignalIncrementalImport {
 
@@ -128,10 +133,12 @@ public class SignalIncrementalImport {
 
             } catch (Exception e) {
                 thos.rollback();
+                Log.error(SignalIncrementalImport.class, "Signal-Import fehlgeschlagen, Rollback durchgeführt", e);
                 throw new RuntimeException("Signal-Import fehlgeschlagen, Rollback durchgeführt", e);
             }
 
         } catch (SQLException e) {
+        	Log.error(SignalIncrementalImport.class, "Signal-DB-Verbindung fehlgeschlagen", e);
             throw new RuntimeException("Signal-DB-Verbindung fehlgeschlagen", e);
         }
     }
