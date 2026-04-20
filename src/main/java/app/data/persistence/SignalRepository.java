@@ -1,17 +1,12 @@
 package app.data.persistence;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Datenbankzugriffe für den Signal-Incrementalimport.
- * Liest aus der ThosSuite-DB und schreibt in sie zurück.
- * Die Signal-DB-Verbindung wird in SignalIncrementalImport verwaltet.
+ * Datenbankzugriffe für den Signal-Incrementalimport — ausschließlich ThosSuite-DB.
+ * Die Signal-DB-Verbindung wird in SignalSourceRepository gekapselt.
  */
 public class SignalRepository {
 
@@ -20,24 +15,17 @@ public class SignalRepository {
     // -------------------------------------------------------------------------
 
     /**
-     * Gibt den sent_at-Timestamp der zuletzt importierten Signal-Nachricht zurück
-     * (Millisekunden seit Epoch), oder null wenn noch keine Signal-Nachrichten importiert wurden.
-     *
-     * Wird als untere Grenze des Importfensters verwendet.
+     * Gibt die source_id (Signal-Message-UUID) der zuletzt importierten Signal-Nachricht zurück,
+     * oder null wenn noch keine Signal-Nachrichten importiert wurden.
      */
-    public Long getLastImportRunTimestamp() {
-        String sql = """
-                SELECT CAST((strftime('%s', MAX(sent_at)) * 1000) AS INTEGER)
-                FROM msg_messages WHERE source = 'signal'
-                """;
+    public String getLastImportedSourceId() {
+        String sql = "SELECT source_id FROM msg_messages WHERE source = 'signal' ORDER BY sent_at DESC LIMIT 1";
         try (Connection con = DB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            if (rs.next() && rs.getString(1) != null)
-                return rs.getLong(1);
-            return null;
+            return rs.next() ? rs.getString("source_id") : null;
         } catch (Exception e) {
-            throw new RuntimeException("Fehler beim Ermitteln des letzten Signal-Import-Timestamps", e);
+            throw new RuntimeException("Fehler beim Ermitteln der letzten importierten Signal-Nachricht", e);
         }
     }
 
@@ -92,14 +80,9 @@ public class SignalRepository {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Schreiben (alle innerhalb einer extern verwalteten Transaktion,
-    // außer saveLastImportRunTimestamp — der wird nach dem Commit aufgerufen)
-    // -------------------------------------------------------------------------
-
     /**
      * Prüft ob eine Signal-Nachricht bereits in der Suite-DB vorhanden ist.
-     * Wird in der Filterkette genutzt um Duplikate im Überlappungspuffer zu überspringen.
+     * Wird in der Filterkette genutzt um Duplikate im Überlappungsbereich zu überspringen.
      */
     public boolean isAlreadyImported(Connection thos, String signalMsgId) throws SQLException {
         try (var ps = thos.prepareStatement(
@@ -110,6 +93,10 @@ public class SignalRepository {
             }
         }
     }
+
+    // -------------------------------------------------------------------------
+    // Schreiben (alle innerhalb einer extern verwalteten Transaktion)
+    // -------------------------------------------------------------------------
 
     public int insertContact(Connection thos, String displayName) throws SQLException {
         try (var ps = thos.prepareStatement(
