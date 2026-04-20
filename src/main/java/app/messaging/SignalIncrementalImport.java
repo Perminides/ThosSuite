@@ -1,7 +1,6 @@
 package app.messaging;
 
 import app.config.Config;
-import app.data.AppClock;
 import app.data.persistence.DB;
 import app.data.persistence.SignalRepository;
 import app.ui.skin.SkinService;
@@ -16,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.*;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -25,16 +23,19 @@ import java.util.*;
 
 
 /**
- * Täglicher Incrementalimport neuer Signal-Nachrichten in die ThosSuite-DB.
+ * Importiert neue Signal-Nachrichten seit dem letzten erfolgreichen Import-Run in die ThosSuite-DB.
  *
  * <h2>Ablauf</h2>
  * <ol>
  *   <li>Caches aus ThosSuite-DB laden (bekannte Chats, Kontakte, Blacklist).</li>
- *   <li>Letzten importierten Tag ermitteln. Ist er gestern → Abbruch, nichts zu tun.</li>
- *   <li>Integritätscheck: Alle importierbaren Signal-Nachrichten des letzten Tages
- *       müssen in der Suite-DB vorhanden sein. Fehlt eine → FailFast.</li>
- *   <li>Neue Nachrichten (DATE(sent_at) > letzter importierter Tag, &lt; heute) importieren.</li>
- *   <li>Attachments entschlüsseln und ins konfigurierte Verzeichnis schreiben.</li>
+ *   <li>Untere Importgrenze ermitteln: MAX(sent_at) der bereits importierten Signal-Nachrichten
+ *       als Sekunden, minus 5 Minuten Überlappungspuffer. Sind noch keine vorhanden,
+ *       wird Epoch (0) verwendet.</li>
+ *   <li>Obere Importgrenze: jetzt − 5 Minuten (Puffer gegen noch nicht vollständig
+ *       geschriebene Nachrichten in der Signal-DB).</li>
+ *   <li>Ist das Fenster leer (obere ≤ untere Grenze) → Abbruch, nichts zu tun.</li>
+ *   <li>Neue Nachrichten importieren, Attachments entschlüsseln. Bereits importierte
+ *       Nachrichten im Überlappungsbereich werden per DB-Abfrage erkannt und übersprungen.</li>
  *   <li>Commit. Bei Exception → Rollback.</li>
  * </ol>
  *
@@ -52,19 +53,24 @@ import java.util.*;
  *
  * <h2>Filterkette</h2>
  * {@link #forEachImportableMessage} kapselt die vollständige Filterkette (Typ-Whitelist,
- * isErased, Blacklist, kein Body und keine Attachments) und wird sowohl vom
- * Integritätscheck als auch vom Import genutzt. Änderungen an der Filterlogik
- * müssen nur hier vorgenommen werden.
- * @TODO: Diverses Signalimport
+ * isErased, bereits importiert, Blacklist, kein Body und keine Attachments). Änderungen
+ * an der Filterlogik müssen nur hier vorgenommen werden.
+ * 
  * <h2>ToDos</h2>
  * <ol>
- * 	<li>@TODO: Bei neuem Kontakt muss ich bestehenden auswählen können, also einen von Whatsapp z. B. Momentan legt der immer stillschweigend einen neuen an...</li>
+ * 	<li>Bei neuem Kontakt muss ich bestehenden auswählen können, also einen von Whatsapp z. B. Momentan legt der immer stillschweigend einen neuen an...</li>
+ *  <li>Für die Integration ins Tagebuch, wird das Generieren von Thumbnails benötigt. Und damit muss das wohl vor dem Schließen des Splahscreens passieren. Also es wird zu einem Pre-Task</li>
  * </ol>
+ * 
+ * @TODO: Diverses Signalimport
  */
 public class SignalIncrementalImport {
 
     private static final String MY_SERVICE_ID = "439b7480-bdcd-409f-a397-0fb85faa3a83";
     private static final DateTimeFormatter DB_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
+    /** Puffer am oberen Ende des Importfensters: Nachrichten jünger als dieser Wert werden ignoriert. */
+    private static final long CUTOFF_BUFFER_MS = 5 * 60 * 1000L;
 
     private static final Map<String, String> EXTENSION_MAP = Map.ofEntries(
         Map.entry("image/jpeg",           "jpeg"),
@@ -105,10 +111,17 @@ public class SignalIncrementalImport {
         chatByConversationId.putAll(repo.loadKnownChats());
         contactByServiceId.putAll(repo.loadKnownContacts());
 
-        // Schritt 2: Letzten importierten Tag ermitteln
-        LocalDate lastDay = repo.getLastImportedDay();
-        if (lastDay != null && lastDay.equals(AppClock.TODAY.minusDays(1))) {
-            Log.info(this, "[signal] Bereits gestern importiert, nichts zu tun.");
+        // Schritt 2: Letzten Import-Timestamp lesen.
+        // null = noch keine Signal-Nachrichten importiert → untere Grenze ist Epoch (alles importieren).
+        // Puffer von 5 Minuten nach unten: sent_at ist nur sekundengenau, damit Nachrichten
+        // der letzten importierten Sekunde nicht übersprungen werden. Bereits importierte
+        // Nachrichten in diesem Überlappungsbereich werden in der Filterkette per DB-Abfrage erkannt
+        // und übersprungen.
+        long lastRunMs = Optional.ofNullable(repo.getLastImportRunTimestamp()).orElse(0L) - CUTOFF_BUFFER_MS;
+        long cutoffMs  = System.currentTimeMillis() - CUTOFF_BUFFER_MS;
+
+        if (cutoffMs <= lastRunMs) {
+            Log.info(this, "[signal] Importfenster leer (lastRun=" + lastRunMs + ", cutoff=" + cutoffMs + "), nichts zu tun.");
             return;
         }
 
@@ -121,26 +134,18 @@ public class SignalIncrementalImport {
             thos.setAutoCommit(false);
 
             try {
-                // Schritt 3: Integritätscheck letzter importierter Tag
-                if (lastDay != null)
-                    checkIntegrity(signal, lastDay);
-
-                // Schritt 4+5: Import
-                importMessages(signal, thos, lastDay);
-
+                importMessages(signal, thos, lastRunMs, cutoffMs);
                 thos.commit();
-                Log.info(this, "[signal] Import abgeschlossen.");
-
             } catch (Exception e) {
                 thos.rollback();
-                Log.error(SignalIncrementalImport.class, "Signal-Import fehlgeschlagen, Rollback durchgeführt", e);
                 throw new RuntimeException("Signal-Import fehlgeschlagen, Rollback durchgeführt", e);
             }
 
         } catch (SQLException e) {
-        	Log.error(SignalIncrementalImport.class, "Signal-DB-Verbindung fehlgeschlagen", e);
             throw new RuntimeException("Signal-DB-Verbindung fehlgeschlagen", e);
         }
+
+        Log.info(this, "[signal] Import abgeschlossen.");
     }
 
     // -------------------------------------------------------------------------
@@ -148,30 +153,26 @@ public class SignalIncrementalImport {
     // -------------------------------------------------------------------------
 
     /**
-     * Iteriert über alle importierbaren Signal-Nachrichten und ruft den Consumer für jede auf.
+     * Iteriert über alle importierbaren Signal-Nachrichten im angegebenen Zeitfenster
+     * und ruft den Consumer für jede auf.
      *
      * <p>Kapselt die vollständige Filterkette:
      * <ul>
      *   <li>Typ-Whitelist: nur incoming und outgoing</li>
      *   <li>isErased = 1 → übersprungen</li>
+     *   <li>Bereits in Suite-DB vorhanden → übersprungen (Überlappungspuffer)</li>
      *   <li>Blacklisted Chat → übersprungen</li>
      *   <li>Kein Body und keine Attachments → übersprungen</li>
      * </ul>
      *
-     * <p>Wird sowohl vom Integritätscheck ({@link #checkIntegrity}) als auch vom
-     * Import ({@link #importMessages}) genutzt. Änderungen an der Filterlogik
-     * müssen nur hier vorgenommen werden.
-     *
-     * @param signal      Verbindung zur Signal-DB
-     * @param dateClause  SQL-DATE-Bedingung als String, wird direkt nach WHERE DATE(...) eingefügt
-     * @param params      Parameter für die dateClause in Reihenfolge
-     * @param allowWrite  true beim Import (legt Chats an, entschlüsselt Attachments),
-     *                    false beim Integritätscheck (unbekannter Chat → FailFast)
-     * @param thos        ThosSuite-Verbindung (nur benötigt wenn allowWrite=true)
-     * @param consumer    Wird für jede importierbare Nachricht aufgerufen
+     * @param signal     Verbindung zur Signal-DB
+     * @param lastRunMs  untere Grenze des Importfensters (exklusiv), Millisekunden seit Epoch
+     * @param cutoffMs   obere Grenze des Importfensters (exklusiv), Millisekunden seit Epoch
+     * @param thos       ThosSuite-Verbindung (für lazy Chat-Anlage und Already-imported-Check)
+     * @param consumer   Wird für jede importierbare Nachricht aufgerufen
      */
-    private void forEachImportableMessage(Connection signal, String dateClause, List<String> params,
-                                          boolean allowWrite, Connection thos,
+    private void forEachImportableMessage(Connection signal, long lastRunMs, long cutoffMs,
+                                          Connection thos,
                                           ThrowingConsumer consumer) throws Exception {
         String sql = """
                 SELECT id, conversationId, type, body, sent_at, sourceServiceId, isErased,
@@ -179,12 +180,13 @@ public class SignalIncrementalImport {
                        json_extract(json, '$.quote.messageId') AS quote_message_id,
                        json_extract(json, '$.quote.id')        AS quote_id
                 FROM messages
-                WHERE DATE(sent_at / 1000, 'unixepoch', 'localtime') \
-                """ + dateClause + "\nORDER BY sent_at ASC";
+                WHERE sent_at > ? AND sent_at < ?
+                ORDER BY sent_at ASC
+                """;
 
         try (var ps = signal.prepareStatement(sql)) {
-            for (int i = 0; i < params.size(); i++)
-                ps.setString(i + 1, params.get(i));
+            ps.setLong(1, lastRunMs);
+            ps.setLong(2, cutoffMs);
 
             try (var rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -202,19 +204,19 @@ public class SignalIncrementalImport {
 
                     if (!"incoming".equals(msgType) && !"outgoing".equals(msgType)) continue;
                     if (isErased == 1) continue;
+                    if (repo.isAlreadyImported(thos, signalMsgId)) continue;
 
                     if (!chatByConversationId.containsKey(conversationId)
                             && !blacklistedChats.contains(conversationId)) {
-                        if (!allowWrite)
-                            throw new IllegalStateException("[FAILFAST] Integritätscheck: unbekannter Chat conversationId='" + conversationId + "'");
                         ensureChat(signal, thos, conversationId);
                     }
                     if (blacklistedChats.contains(conversationId)) continue;
 
-                    List<AttachmentResult> attachments = resolveAttachments(signal, signalMsgId, allowWrite);
+                    List<AttachmentResult> attachments = resolveAttachments(signal, signalMsgId);
 
                     if (isBlank(body) && attachments.isEmpty()) {
-                        Log.warn(this, "[signal] Keine Inhalte, übersprungen: signalMsgId=" + signalMsgId);
+                        Log.warn(this, "[signal] Keine Inhalte, übersprungen: signalMsgId=" + signalMsgId
+                            + " type=" + msgType + " conversationId=" + conversationId);
                         continue;
                     }
 
@@ -233,61 +235,38 @@ public class SignalIncrementalImport {
     }
 
     // -------------------------------------------------------------------------
-    // Integritätscheck
-    // -------------------------------------------------------------------------
-
-    /**
-     * Prüft ob alle importierbaren Signal-Nachrichten des letzten Tages in der Suite-DB vorhanden sind.
-     *
-     * Beim Incrementalimport sind alle Chats bereits aus der Suite-DB in die Caches geladen.
-     * Ein unbekannter Chat am letzten importierten Tag wäre ein Widerspruch — er hätte beim
-     * damaligen Import angelegt werden müssen. Tritt er auf, deutet das auf ein
-     * Datenkonsistenzproblem hin und wird als FailFast behandelt.
-     *
-     * Fehlt eine importierbare Nachricht in der Suite-DB → FailFast.
-     */
-    private void checkIntegrity(Connection signal, LocalDate day) throws Exception {
-        Set<String> importedIds = repo.loadImportedSourceIdsForDay(day);
-        forEachImportableMessage(signal, "= ?", List.of(day.toString()), false, null, msg -> {
-            if (!importedIds.contains(msg.signalMsgId()))
-                throw new IllegalStateException("[FAILFAST] Integritätscheck: Signal-Nachricht nicht in Suite-DB: source_id="
-                    + msg.signalMsgId() + " day=" + day);
-        });
-    }
-
-    // -------------------------------------------------------------------------
     // Hauptschleife
     // -------------------------------------------------------------------------
 
-    private void importMessages(Connection signal, Connection thos, LocalDate lastDay) throws Exception {
-        String cutoff = lastDay != null ? lastDay.toString() : "1970-01-01";
+    private void importMessages(Connection signal, Connection thos,
+                                long lastRunMs, long cutoffMs) throws Exception {
         int[] msgCount    = {0};
         int[] attachCount = {0};
 
-        forEachImportableMessage(signal,
-            "> ? AND DATE(sent_at / 1000, 'unixepoch', 'localtime') < ?",
-            List.of(cutoff, AppClock.TODAY.toString()),
-            true, thos, msg -> {
+        Log.info(this, "[signal] Importiere Nachrichten: " + millisToDbString(lastRunMs)
+            + " → " + millisToDbString(cutoffMs));
 
-                if (!contactByServiceId.containsKey(msg.effectiveServiceId()))
-                    ensureContact(signal, thos, msg.effectiveServiceId());
+        forEachImportableMessage(signal, lastRunMs, cutoffMs, thos, msg -> {
 
-                int fromContact = contactByServiceId.get(msg.effectiveServiceId());
-                int chatId      = chatByConversationId.get(msg.conversationId());
-                ensureChatMember(thos, chatId, fromContact);
+            if (!contactByServiceId.containsKey(msg.effectiveServiceId()))
+                ensureContact(signal, thos, msg.effectiveServiceId());
 
-                String resolvedQuoteMsgId = resolveQuote(signal, msg.signalMsgId(),
-                    msg.quoteJson(), msg.quoteMsgId(), msg.quoteId());
+            int fromContact = contactByServiceId.get(msg.effectiveServiceId());
+            int chatId      = chatByConversationId.get(msg.conversationId());
+            ensureChatMember(thos, chatId, fromContact);
 
-                repo.insertMessage(thos, msg.signalMsgId(), millisToDbString(msg.sentAtMs()),
-                    fromContact, chatId, msg.body(), resolvedQuoteMsgId);
-                msgCount[0]++;
+            String resolvedQuoteMsgId = resolveQuote(signal, msg.signalMsgId(),
+                msg.quoteJson(), msg.quoteMsgId(), msg.quoteId());
 
-                for (AttachmentResult att : msg.attachments()) {
-                    repo.insertAttachment(thos, msg.signalMsgId(), att.relativePath(), att.available());
-                    attachCount[0]++;
-                }
-            });
+            repo.insertMessage(thos, msg.signalMsgId(), millisToDbString(msg.sentAtMs()),
+                fromContact, chatId, msg.body(), resolvedQuoteMsgId);
+            msgCount[0]++;
+
+            for (AttachmentResult att : msg.attachments()) {
+                repo.insertAttachment(thos, msg.signalMsgId(), att.relativePath(), att.available());
+                attachCount[0]++;
+            }
+        });
 
         Log.info(this, "[signal] Importiert: " + msgCount[0] + " Nachrichten, " + attachCount[0] + " Attachments.");
     }
@@ -377,15 +356,8 @@ public class SignalIncrementalImport {
     // Attachments
     // -------------------------------------------------------------------------
 
-    /**
-     * Gibt alle importierbaren Attachments einer Message zurück.
-     *
-     * @param allowWrite true beim Import: Quelldatei wird entschlüsselt und ins Zielverzeichnis geschrieben.
-     *                   false beim Integritätscheck: Keine Dateioperationen — Attachments des letzten
-     *                   Tages existieren bereits auf der Platte.
-     */
-    private List<AttachmentResult> resolveAttachments(Connection signal, String signalMsgId,
-                                                       boolean allowWrite) throws Exception {
+    private List<AttachmentResult> resolveAttachments(Connection signal,
+                                                       String signalMsgId) throws Exception {
         List<AttachmentResult> results = new ArrayList<>();
 
         try (var ps = signal.prepareStatement("""
@@ -430,14 +402,11 @@ public class SignalIncrementalImport {
                     boolean available;
                     if (Files.exists(outPath)) {
                         available = true;
-                    } else if (allowWrite) {
+                    } else {
                         Path encryptedFile = Path.of(Config.getString("signal.path") + "/attachments.noindex/").resolve(signalPath);
                         if (!Files.exists(encryptedFile))
                             throw new IllegalStateException("[FAILFAST] Quelldatei nicht gefunden: " + encryptedFile + " (messageId=" + signalMsgId + ")");
                         decryptAttachment(encryptedFile, localKey, size, outPath);
-                        available = true;
-                    } else {
-                        // Integritätscheck: Datei wird erst beim Import erstellt, das ist kein Fehler
                         available = true;
                     }
 
