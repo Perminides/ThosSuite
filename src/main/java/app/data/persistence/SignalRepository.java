@@ -1,9 +1,10 @@
 package app.data.persistence;
 
-import java.sql.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,26 +15,29 @@ import java.util.Set;
  */
 public class SignalRepository {
 
-    private static final DateTimeFormatter DB_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-
     // -------------------------------------------------------------------------
     // Lesen
     // -------------------------------------------------------------------------
 
     /**
-     * Gibt das Datum des zuletzt importierten Signal-Tages zurück,
-     * oder null wenn noch kein Signal-Import stattgefunden hat.
+     * Gibt den sent_at-Timestamp der zuletzt importierten Signal-Nachricht zurück
+     * (Millisekunden seit Epoch), oder null wenn noch keine Signal-Nachrichten importiert wurden.
+     *
+     * Wird als untere Grenze des Importfensters verwendet.
      */
-    public LocalDate getLastImportedDay() {
-        String sql = "SELECT MAX(sent_at) FROM msg_messages WHERE source = 'signal'";
+    public Long getLastImportRunTimestamp() {
+        String sql = """
+                SELECT CAST((strftime('%s', MAX(sent_at)) * 1000) AS INTEGER)
+                FROM msg_messages WHERE source = 'signal'
+                """;
         try (Connection con = DB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             if (rs.next() && rs.getString(1) != null)
-                return LocalDateTime.parse(rs.getString(1), DB_FORMAT).toLocalDate();
+                return rs.getLong(1);
             return null;
         } catch (Exception e) {
-            throw new RuntimeException("Fehler beim Ermitteln des letzten Signal-Importtags", e);
+            throw new RuntimeException("Fehler beim Ermitteln des letzten Signal-Import-Timestamps", e);
         }
     }
 
@@ -88,28 +92,24 @@ public class SignalRepository {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Schreiben (alle innerhalb einer extern verwalteten Transaktion,
+    // außer saveLastImportRunTimestamp — der wird nach dem Commit aufgerufen)
+    // -------------------------------------------------------------------------
+
     /**
-     * Gibt alle source_ids (Signal-Message-UUIDs) zurück, die am angegebenen Tag importiert wurden.
+     * Prüft ob eine Signal-Nachricht bereits in der Suite-DB vorhanden ist.
+     * Wird in der Filterkette genutzt um Duplikate im Überlappungspuffer zu überspringen.
      */
-    public Set<String> loadImportedSourceIdsForDay(LocalDate day) {
-        String sql = "SELECT source_id FROM msg_messages WHERE source = 'signal' AND DATE(sent_at) = ?";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, day.toString());
-            try (ResultSet rs = ps.executeQuery()) {
-                Set<String> result = new HashSet<>();
-                while (rs.next())
-                    result.add(rs.getString("source_id"));
-                return result;
+    public boolean isAlreadyImported(Connection thos, String signalMsgId) throws SQLException {
+        try (var ps = thos.prepareStatement(
+                "SELECT 1 FROM msg_messages WHERE source = 'signal' AND source_id = ?")) {
+            ps.setString(1, signalMsgId);
+            try (var rs = ps.executeQuery()) {
+                return rs.next();
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Fehler beim Laden der importierten Source-IDs für Tag " + day, e);
         }
     }
-
-    // -------------------------------------------------------------------------
-    // Schreiben (alle innerhalb einer extern verwalteten Transaktion)
-    // -------------------------------------------------------------------------
 
     public int insertContact(Connection thos, String displayName) throws SQLException {
         try (var ps = thos.prepareStatement(
