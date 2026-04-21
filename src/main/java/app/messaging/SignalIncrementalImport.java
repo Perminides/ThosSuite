@@ -56,10 +56,11 @@ import java.util.*;
  * an der Filterlogik müssen nur hier vorgenommen werden.
  * 
  * <h2>ToDos</h2>
- * <ol>
+ * <ul>
  * 	<li>@TODO: Bei neuem Kontakt muss ich bestehenden auswählen können, also einen von Whatsapp z. B. Momentan legt der immer stillschweigend einen neuen an...</li>
  *  <li>Wir brauchen noch einen monatlichen Importcheck, der den letzten Monat überprüft, ob alle Nachrichten drin sind.</li>
- * </ol>
+ *  <li>Sollten Chats nicht auch nur zeitweise stummgeschaltet werden dürfen? Also z. B. der Betriebssport-Chat in den Zeiten, wo ich nicht angemeldet bin?</li>
+ * </ul>
  * 
  * @TODO: Diverses Signalimport
  */
