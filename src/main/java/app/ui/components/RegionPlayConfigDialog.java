@@ -1,6 +1,7 @@
 package app.ui.components;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import app.data.Deck;
 import app.data.MapMetadata;
 import app.data.RegionMode;
 import app.ui.skin.Skin;
+import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
@@ -130,10 +132,12 @@ public class RegionPlayConfigDialog {
         }
         
         updateCheckBoxStates();
+        updateModeComboBoxItems();
     }
     
     private void updateCheckBoxStates() {
         RegionMode selectedMode = modeComboBox.getValue();
+        if (selectedMode == null) return;
         
         for (Map.Entry<Deck, CheckBox> entry : deckCheckBoxes.entrySet()) {
             Deck type = entry.getKey();
@@ -153,6 +157,41 @@ public class RegionPlayConfigDialog {
             }
             
             checkBox.setDisable(disable);
+        }
+    }
+
+    /**
+     * Befüllt die modeComboBox neu mit nur den kompatiblen Modi.
+     * Ein Modus ist inkompatibel, wenn er Hauptstädte erfordert, aber kein selektiertes Deck Hauptstädte hat.
+     * Ist der aktuell gewählte Modus inkompatibel, wird auf den ersten kompatiblen Modus umgeschaltet.
+     *
+     * Wir befüllen die Items neu statt einzelne Einträge zu deaktivieren, weil JavaFX die Zellen
+     * einer ComboBox virtualisiert und beim Öffnen nicht zuverlässig neu rendert — was dazu führt,
+     * dass deaktivierte Einträge optisch nicht als solche erkennbar sind.
+     */
+    private void updateModeComboBoxItems() {
+    	boolean anySelected = deckCheckBoxes.values().stream().anyMatch(CheckBox::isSelected);
+    	boolean anySelectedHasCapital = deckCheckBoxes.entrySet().stream()
+    	    .filter(e -> e.getValue().isSelected())
+    	    .anyMatch(e -> e.getKey().hasCapital());
+
+    	List<RegionMode> kompatibel = Arrays.stream(RegionMode.values())
+    	    .filter(mode -> {
+    	        if (mode.getCapitalOrRegion() == RegionMode.CapitalOrRegion.CAPITAL ||
+    	            mode.getCapitalOrRegion() == RegionMode.CapitalOrRegion.BOTH) {
+    	            return !anySelected || anySelectedHasCapital;
+    	        }
+    	        return true;
+    	    })
+    	    .toList();
+
+        RegionMode current = modeComboBox.getValue();
+        modeComboBox.setItems(FXCollections.observableArrayList(kompatibel));
+
+        if (kompatibel.contains(current)) {
+            modeComboBox.setValue(current);
+        } else {
+            modeComboBox.setValue(kompatibel.get(0));
         }
     }
     

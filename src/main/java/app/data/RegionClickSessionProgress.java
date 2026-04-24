@@ -26,10 +26,11 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 	private final RegionSession session;
 	private final Set<String> sessionRegions;
 	private final List<QuizElement> quizElements;
-	private final Set<String> wrongClicked = new TreeSet<>();
+	private final Set<String> notFound = new TreeSet<>();
 	private final RegionSessionSpec spec;
 	private boolean isPaused = false;
 	private int currentIndex = -1;
+	private String lastClickedId = null;
 	
 	private RegionSessionPresenter presenter;
 
@@ -59,9 +60,9 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 	@Override
 	public void resume() {
 		if (spec.isPlaySession()) {
-			sessionRegions.removeAll(wrongClicked);
+			sessionRegions.removeAll(notFound);
 		} else {
-			wrongClicked.clear();
+			notFound.clear();
 		}
 			
 		isPaused = false;
@@ -84,6 +85,7 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 
 	@Override
 	public void elementClicked(String id) {
+		lastClickedId = id;
 		if (isPaused) {
 			endPause();
 			return;
@@ -94,7 +96,7 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 			sessionRegions.remove(id);
 			nextStep();
 		} else {
-			wrongClicked.add(quizElements.get(currentIndex).getShapeId());
+			notFound.add(quizElements.get(currentIndex).getShapeId());
 			isPaused = true; 
 			presenter.handleClickResult(id, false, quizElements.get(currentIndex).getShapeId());
 		}
@@ -106,13 +108,13 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 			isPaused = false;
 			resume();
 		} else if (isPaused) {
-			session.end(false, quizElements.get(currentIndex).shapeId(), "Statt " + quizElements.get(currentIndex).toFind() + " wurde " + getNameForId(wrongClicked) + " geklickt.", true);
+			session.end(false, quizElements.get(currentIndex).shapeId(), "Statt " + quizElements.get(currentIndex).toFind() + " wurde " + getNameForId(lastClickedId) + " geklickt.", true);
 		}
 	}
 	
 	@Override
 	public boolean isPause() {
-		return !wrongClicked.isEmpty();
+		return !notFound.isEmpty();
 	}
 	
 	@Override
@@ -124,17 +126,17 @@ public class RegionClickSessionProgress implements RegionSessionProgress{
 		currentIndex++;
 		if (currentIndex >= quizElements.size()) {
 			if (spec.isPlaySession()) {
-				if (wrongClicked.isEmpty()) 	// Freies Spiel ohne Fehler. Super!
+				if (notFound.isEmpty()) 	// Freies Spiel ohne Fehler. Super!
 					session.end(true, null, "Super gemacht!", false);
 				else { 							// Freies Spiel mit Fehlern. Die listen wir auf
 					String result = "Folgende Elemente wurden nicht erkannt: \n\n";
-					for (String wrongId : wrongClicked) {
+					for (String wrongId : notFound) {
 						result = result + getNameForId(wrongId) + "\n";
 					}
 					session.end(false, "", result, false);
 				}
 			} else {
-				if (wrongClicked.isEmpty()) 	// Lernsession korrekt beantwortet
+				if (notFound.isEmpty()) 	// Lernsession korrekt beantwortet
 					session.end(true, null, null, false);
 				else {
 					throw new RuntimeException("Moment. Entweder wird ein falscher Klick zurückgenommen oder es wird ohne nextStep beendet. Hierhin dürfte der Code nie kommen. Untersuchen!");
