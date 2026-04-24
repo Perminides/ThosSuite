@@ -15,6 +15,7 @@ import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.time.format.TextStyle;
@@ -32,8 +33,8 @@ public class WeekdayDialog {
     private final WeekdayRepository repository = new WeekdayRepository();
 
     public void showForDaily() {
-        if (repository.playedToday()) {
-            Log.debug(this, "WeekdayDialog: heute bereits gespielt, überspringe.");
+        if (repository.playedToday() || LocalDateTime.now().getHour() < 6) {
+            Log.debug(this, "WeekdayDialog gerade nicht dran. Wir überspringen das mal (bereits gespielt oder es ist noch nachts).");
             return;
         }
         show(true);
