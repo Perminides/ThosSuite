@@ -3,6 +3,7 @@ package app.ui.components;
 import java.io.File;
 import java.net.MalformedURLException;
 
+import app.config.Config;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -84,7 +85,7 @@ public class ImagePane extends StackPane {
     }
 
     public void setImage(String imagePath) {
-        if (imagePath == null) {
+        if (imagePath == null || imagePath.equals(Config.get("imageFolder"))) {
             imageRect.setStyle(""); 
             imageRect.setFill(Color.TRANSPARENT);
             return;
