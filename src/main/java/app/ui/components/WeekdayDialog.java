@@ -130,7 +130,7 @@ public class WeekdayDialog {
             .getDisplayName(TextStyle.FULL, Locale.GERMANY);
         SkinService.get()
             .createAlert(owner, "Wochentag berechnen",
-                "Leider falsch. Es war ein " + correctName + ".", false, false)
+                "Leider falsch. " + puzzleDate + " war ein "+ correctName + ".", false, false)
             .showAndWait();
         if (saveResult)
             repository.save(puzzleDate, -1);
