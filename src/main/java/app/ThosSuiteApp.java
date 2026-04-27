@@ -316,6 +316,11 @@ public class ThosSuiteApp extends Application {
         }
 
         mainWindow.buildStyledUi();
+        
+        primaryStage.setOnCloseRequest(event -> {
+            event.consume();
+            controller.requestSessionSwitch(Platform::exit);
+        });
     }
 
     private void loadFonts() {
