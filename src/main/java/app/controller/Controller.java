@@ -378,7 +378,7 @@ public class Controller{
 	 * 
 	 * @param startNewSessionRoutine
 	 */
-	private void requestSessionSwitch(Runnable startNewSessionRoutine) {
+	public void requestSessionSwitch(Runnable startNewSessionRoutine) {
 		Log.info(this, "=== REQUEST SESSION SWITCH === currentSession=" 
 		        + (currentSession == null ? "null" : "Session@" + System.identityHashCode(currentSession)));
 	    if (currentSession == null) {
