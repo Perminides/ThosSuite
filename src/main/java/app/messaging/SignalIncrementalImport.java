@@ -2,7 +2,7 @@ package app.messaging;
 
 import app.config.Config;
 import app.data.persistence.DB;
-import app.data.persistence.SignalRepository;
+import app.data.persistence.MessageRepository;
 import app.data.persistence.SignalSourceRepository;
 import app.ui.skin.SkinService;
 import app.util.Log;
@@ -68,6 +68,7 @@ public class SignalIncrementalImport {
 
     private static final String MY_SERVICE_ID = "439b7480-bdcd-409f-a397-0fb85faa3a83";
     private static final DateTimeFormatter DB_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    private static final String signalId = "signal";
 
     /** Puffer am oberen Ende des Importfensters: Nachrichten jünger als dieser Wert werden ignoriert. */
     private static final long CUTOFF_BUFFER_MS = 5 * 60 * 1000L;
@@ -85,6 +86,7 @@ public class SignalIncrementalImport {
         Map.entry("audio/ogg",            "ogg"),
         Map.entry("application/pdf",      "pdf"),
         Map.entry("text/x-signal-plain",  "txt"),
+        Map.entry("text/plain",  "txt"),
         Map.entry("text/comma-separated-values",          "csv"),
         Map.entry("application/x-zip-compressed",         "zip"),
         Map.entry("application/zip",                      "zip"),
@@ -92,7 +94,7 @@ public class SignalIncrementalImport {
         Map.entry("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx")
     );
 
-    private final SignalRepository       repo   = new SignalRepository();
+    private final MessageRepository       repo   = new MessageRepository();
     private final SignalSourceRepository source = new SignalSourceRepository();
 
     // Caches — zu Beginn aus der Suite-DB geladen
@@ -108,9 +110,9 @@ public class SignalIncrementalImport {
 
     public void run() {
         // Schritt 1: Caches laden
-        blacklistedChats.addAll(repo.loadBlacklistedConversationIds());
-        chatByConversationId.putAll(repo.loadKnownChats());
-        contactByServiceId.putAll(repo.loadKnownContacts());
+        blacklistedChats.addAll(repo.loadBlacklistedChatIds(signalId));
+        chatByConversationId.putAll(repo.loadKnownChats(signalId));
+        contactByServiceId.putAll(repo.loadKnownContacts(signalId));
 
         long cutoffMs = System.currentTimeMillis() - CUTOFF_BUFFER_MS;
 
@@ -121,7 +123,7 @@ public class SignalIncrementalImport {
              Connection suiteConnection   = DB.getNewConnection()) {
 
             // Schritt 2: Letzte importierte source_id aus Suite-DB — Signal-DB macht den Rest
-            String lastSourceId = repo.getLastImportedSourceId();
+            String lastSourceId = repo.getLastImportedSourceId(signalId);
 
             Log.info(this, "[signal] Importiere Nachrichten ab source_id=" + lastSourceId
                 + " bis " + millisToDbString(cutoffMs));
@@ -184,7 +186,7 @@ public class SignalIncrementalImport {
 
             if (!"incoming".equals(msgType) && !"outgoing".equals(msgType)) return;
             if (isErased == 1) return;
-            if (repo.isAlreadyImported(suiteConnection, signalMsgId)) return;
+            if (repo.isAlreadyImported(suiteConnection, signalId, signalMsgId)) return;
 
             if (!chatByConversationId.containsKey(conversationId)
                     && !blacklistedChats.contains(conversationId)) {
@@ -233,12 +235,12 @@ public class SignalIncrementalImport {
             String resolvedQuoteMsgId = resolveQuote(signalConnection, msg.signalMsgId(),
                 msg.quoteJson(), msg.quoteMsgId(), msg.quoteId());
 
-            repo.insertMessage(suiteConnection, msg.signalMsgId(), millisToDbString(msg.sentAtMs()),
+            repo.insertMessage(suiteConnection, signalId, msg.signalMsgId(), millisToDbString(msg.sentAtMs()),
                 fromContact, chatId, msg.body(), resolvedQuoteMsgId);
             msgCount[0]++;
 
             for (AttachmentResult att : msg.attachments()) {
-                repo.insertAttachment(suiteConnection, msg.signalMsgId(), att.relativePath(), att.available());
+                repo.insertAttachment(suiteConnection, signalId, msg.signalMsgId(), att.relativePath(), att.available());
                 attachCount[0]++;
             }
         });
@@ -270,7 +272,7 @@ public class SignalIncrementalImport {
             .showAndWait();
 
         boolean doImport = result.isPresent() && result.get() == importBtn;
-        int chatId = repo.insertChat(suiteConnection, conversationId, conv.isGroup(), displayName, !doImport);
+        int chatId = repo.insertChat(suiteConnection, signalId, conversationId, conv.isGroup(), displayName, !doImport);
 
         if (doImport)
             chatByConversationId.put(conversationId, chatId);
@@ -287,7 +289,7 @@ public class SignalIncrementalImport {
         String displayName = resolveDisplayName(contact.name(), contact.profileName(),
             contact.profileFamilyName(), contact.profileFullName(), serviceId);
         int cid = repo.insertContact(suiteConnection, displayName);
-        repo.insertContactMapping(suiteConnection, serviceId, cid);
+        repo.insertContactMapping(suiteConnection, signalId, serviceId, cid);
         contactByServiceId.put(serviceId, cid);
         Log.info(this, "[signal] Kontakt angelegt: '" + displayName + "'");
     }
@@ -307,6 +309,21 @@ public class SignalIncrementalImport {
     // Attachments
     // -------------------------------------------------------------------------
 
+    /**
+     * Einige Attachments haben keinen vorgegebenen Filename in der Signal-DB (z. B. Vorschauen oder lange Nachrichten, die als txt-Datei gespeichert wurden). Der Name wird wie folgt aufgelöst:<br>
+     * <ul><li>Filename wenn vorhanden ohne Endung, sonst "attachment"</li>
+     * <li>+ "_"</li>
+     * <li>+ originale Message-Id aus der SignalDB. Message-Id nicht Attachment-Id!</li>
+     * <li>+ "_"</li>
+     * <li>+ Hochzählendes int bei mehreren Attachments pro Nachricht. Dass wir hier nicht einfach das Feld orderInMessage aus der Signal-DB genommen haben, war ein fehler, aber es funktioniert anscheinend.</li>
+     * <li>+ "."</li>
+     * <li>+ Dateiendung aus dem Mapping. Da es ja manchmal keins gab und wir eh nur bekannte importieren wollen, ignorieren wir hier die Endung aus dem filename, falls der bekannt sein sollte. Wir nehmen stattdessen den aus unserer internen Mapping-Tabelle. Ja, die liegt nur im Code vor. Ob das clever ist, da sind sich Claude ("super") und Thorsten ("Mist") uneins.</li></ul> 
+     * 
+     * @param signalConnection
+     * @param signalMsgId
+     * @return
+     * @throws Exception
+     */
     private List<AttachmentResult> resolveAttachments(Connection signalConnection,
                                                        String signalMsgId) throws Exception {
         List<AttachmentResult> results = new ArrayList<>();
@@ -390,7 +407,8 @@ public class SignalIncrementalImport {
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(aesKey, "AES"), new IvParameterSpec(iv));
         byte[] plaintext = cipher.doFinal(ciphertext);
 
-        Files.createDirectories(outPath.getParent());
+        if (!Files.exists(outPath.getParent()))
+        	throw new IllegalStateException("[FAILFAST] Attachment-Verzeichnis existiert nicht: " + outPath.getParent());
         Files.write(outPath, Arrays.copyOf(plaintext, size));
         if (Files.notExists(outPath))
             throw new RuntimeException("[FAILFAST] Attachment wurde nicht geschrieben: " + outPath);

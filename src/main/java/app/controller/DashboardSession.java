@@ -8,6 +8,7 @@ import app.data.Deck;
 import app.data.SessionSwitchStrategy;
 import app.data.persistence.AlcoholRepository;
 import app.data.persistence.MattressRepository;
+import app.data.persistence.MessageRepository;
 import app.data.persistence.WeekdayRepository;
 import app.data.persistence.WeekdayRepository.WeekdayStats;
 import app.fitbit.FitbitDashboardService;
@@ -91,6 +92,15 @@ public class DashboardSession implements Session {
             )
         );
         
+        MessageRepository sr = new MessageRepository();
+        int messagesToday = sr.getMessageCountToday();
+        
+        // Nachrichten-Tile erstellen
+        view.getChildren().add(
+                SkinService.get().createDashboardTile(
+                	"" + messagesToday, 
+                    "Heute importierte Nachrichten")
+                );
     }
     
     @Override
