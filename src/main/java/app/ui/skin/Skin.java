@@ -1774,6 +1774,7 @@ public abstract class Skin {
 	    titleLabel.setPadding(new javafx.geometry.Insets(verticalPadding, 0, verticalPadding, 0));
 	    
 	    headerBar.setCenter(titleLabel);
+	    HeaderBar.setDragType(titleLabel, HeaderDragType.DRAGGABLE_SUBTREE);
 	    return headerBar;
 	}
 
