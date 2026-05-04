@@ -1,7 +1,13 @@
 package app.ui.components;
 
 import app.ui.skin.SkinService;
-import javafx.scene.control.*;
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -43,9 +49,6 @@ public class WhatsAppChatDialog {
         Stage stage = (Stage) dialog.getDialogPane().getScene().getWindow();
         stage.setOnCloseRequest(e -> {
             e.consume();
-            throw new IllegalStateException(
-                "[FAILFAST] WhatsApp-Import abgebrochen: Chat-Dialog ohne Entscheidung geschlossen. " +
-                "rawIdentifier=" + rawIdentifier);
         });
 
         // Content
@@ -58,9 +61,14 @@ public class WhatsAppChatDialog {
             "Typ:        " + (isGroup ? "Gruppe" : "Einzelchat"));
         infoLabel.setWrapText(true);
 
-        String defaultName = (subject != null && !subject.isBlank()) ? subject : rawIdentifier;
+        String defaultName = (subject != null && !subject.isBlank()) ? subject : "Name des Chats";
         TextField nameField = new TextField(defaultName);
-        nameField.setPromptText("Anzeigename");
+        dialog.setOnShown(_ -> {
+            Platform.runLater(() -> {
+            	nameField.selectAll();
+                nameField.requestFocus();
+            });
+        });
 
         content.getChildren().addAll(
             new Label("Unbekannter Chat gefunden:"),
@@ -73,6 +81,12 @@ public class WhatsAppChatDialog {
         ButtonType importBtn  = new ButtonType("Importieren",  ButtonBar.ButtonData.YES);
         ButtonType ignoreBtn  = new ButtonType("Ignorieren",   ButtonBar.ButtonData.NO);
         dialog.getDialogPane().getButtonTypes().setAll(importBtn, ignoreBtn);
+        dialog.getDialogPane().lookupButton(importBtn).disableProperty().bind(
+        	    Bindings.createBooleanBinding(
+        	        () -> nameField.getText().isBlank() || nameField.getText().equals(defaultName),
+        	        nameField.textProperty()
+        	    )
+        	);
 
         dialog.showAndWait();
 

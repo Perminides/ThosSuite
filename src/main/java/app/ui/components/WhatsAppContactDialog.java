@@ -66,9 +66,6 @@ public class WhatsAppContactDialog {
         Stage stage = (Stage) dialog.getDialogPane().getScene().getWindow();
         stage.setOnCloseRequest(e -> {
             e.consume();
-            throw new IllegalStateException(
-                "[FAILFAST] WhatsApp-Import abgebrochen: Kontakt-Dialog ohne Entscheidung geschlossen. " +
-                "rawIdentifier=" + rawIdentifier);
         });
 
         // Content
