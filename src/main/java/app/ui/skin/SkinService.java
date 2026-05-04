@@ -7,8 +7,6 @@ import app.config.Config;
 import javafx.stage.Window;
 
 public final class SkinService {
-	
-	// !Erweiterung: Eine refresh-Möglichkeit einbauen, die die props neu einliest. Sollte aber nicht per se bei jedem skinwechsel passieren, oder vielleicht doch?
 
 	// 1. Liste muss veränderbar (mutable) sein wegen des refreshs, daher wrapping in ArrayList
     private static final List<Skin> AVAILABLE_SKINS = new ArrayList<>(List.of(

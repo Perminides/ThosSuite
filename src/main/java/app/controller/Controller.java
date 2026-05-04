@@ -24,6 +24,7 @@ import app.data.RegionSessionSpec;
 import app.fitbit.FitbitDataFetcher;
 import app.fitbit.FitbitUpdateService;
 import app.messaging.SignalIncrementalImport;
+import app.messaging.WhatsAppIncrementalImport;
 import app.ui.MainWindow;
 import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
@@ -144,7 +145,16 @@ public class Controller{
 	    try {
 	    	new SignalIncrementalImport().run();
 	    } catch (Exception e) {
+	    	Log.error(this.getClass(), "", e);
 			Alert alert = SkinService.get().createAlert(mainWindow.getStage(), "Signal", "Beim Signalimport ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", false, false);
+			alert.showAndWait();
+		}
+	    
+	    try {
+	    	new WhatsAppIncrementalImport().run();
+	    } catch (Exception e) {
+	    	Log.error(this.getClass(), "", e);
+			Alert alert = SkinService.get().createAlert(mainWindow.getStage(), "WhatsApp", "Beim WhatsApp-Import ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", false, false);
 			alert.showAndWait();
 		}
 	    
