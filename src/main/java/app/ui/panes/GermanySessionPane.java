@@ -103,6 +103,7 @@ public class GermanySessionPane extends Pane implements AnkiSessionPane {
 	// Image
 	
     public void setImage(String imagePath) {
+    	//TODO: Es wäre nice, ein "Bild fehlt" einzublenden, wenn das Bild nicht gefunden werden kann und nicht abzubrechen! Oder?
         imageComponent.setImage(imagePath);
     }
     

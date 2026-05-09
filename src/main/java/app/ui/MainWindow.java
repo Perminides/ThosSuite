@@ -53,6 +53,7 @@ public class MainWindow {
     private Runnable onDiaryViewSelected = null;
     private Runnable onWeekdaySelected = null;
     private Runnable onMattressSelected = null;
+    private Runnable onExportSelected = null;
     private Supplier<CardSortOrder> sortOrderSupplier = null;
     private Runnable onSaveSelected = null;
     private Runnable onEscPressed = null;
@@ -194,6 +195,9 @@ public class MainWindow {
         MenuItem mattressItem = skin.createMenuItem("Matratze");
         mattressItem.setOnAction(_ -> onMattressSelected.run());
         menuModule.getItems().add(mattressItem);
+        MenuItem exportItem = skin.createMenuItem("Export");
+        exportItem.setOnAction(_ -> onExportSelected.run());
+        menuModule.getItems().add(exportItem);
         
         // ANSICHT-MENÜ
         Menu menuView = skin.createMenu("Ansicht");
@@ -368,6 +372,10 @@ public class MainWindow {
     
     public void setMattressRunnable(Runnable runner) {
     	this.onMattressSelected = runner;
+    }
+    
+    public void setExportRunnable(Runnable runner) {
+    	this.onExportSelected = runner;
     }
 
 	public void show() {

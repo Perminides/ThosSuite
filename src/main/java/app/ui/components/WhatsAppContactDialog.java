@@ -1,6 +1,7 @@
 package app.ui.components;
 
 import app.ui.skin.SkinService;
+import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.scene.control.*;
@@ -23,22 +24,33 @@ import java.util.stream.Collectors;
  * <ul>
  *   <li>Während des Tippens werden passende bestehende Kontakte als Popup angezeigt</li>
  *   <li>Klick auf einen Vorschlag → bestehender Kontakt wird gewählt</li>
- *   <li>Enter → oberster Vorschlag wird gewählt (falls Vorschläge vorhanden)</li>
+ *   <li>Enter oder Tab → markierter Vorschlag wird gewählt (falls Popup offen)</li>
  *   <li>Freitext ohne Auswahl aus der Liste → neuer Kontakt wird angelegt</li>
  * </ul>
  * </p>
  *
  * <p>Bekannte Einschränkung: Wenn ein bestehender Kontakt "Michael Meier" existiert,
  * kann kein neuer Kontakt "Michael" angelegt werden, da "Michael" als Substring matcht
- * und per Enter den Vorschlag auswählen würde. Diese Einschränkung wird bewusst
+ * und per Enter/Tab den Vorschlag auswählen würde. Diese Einschränkung wird bewusst
  * in Kauf genommen.</p>
  *
  * <p>Das Schließen per X ist blockiert — der Import kann ohne Entscheidung
  * nicht fortgesetzt werden.</p>
+ * <p>Titel-Wechsel wird über SkinService.get().setDialogTitle() realisiert, nicht über stage.setTitle().
+ * Grund: Der Dialog nutzt eine custom HeaderBar mit einem Label als Titel — stage.setTitle() setzt
+ * nur den nativen Fenstertitel, der hinter der HeaderBar verborgen ist.</p>
+ * Alternativen die verworfen wurden:
+ * Haken im TextField-Text ("✓ Wolfgang"): setText() im textProperty-Listener erzeugte
+ * Endlosschleifen und einen JavaFX-Bug (IllegalArgumentException: start > end beim Löschen).
+ * Button-Text togglen ("OK" / "Übernehmen"): ButtonBar setzt feste Button-Breiten,
+ * die sich nach einem setText() nicht neu berechnen — der Button blieb immer gleich breit.
  */
 public class WhatsAppContactDialog {
 
     private static final PseudoClass HIGHLIGHTED = PseudoClass.getPseudoClass("highlighted");
+
+    private static final String TITLE_NEW      = "Neuer WhatsApp-Kontakt";
+    private static final String TITLE_SELECTED = "Ausgewählter WhatsApp-Kontakt";
 
     /**
      * Ergebnis des Dialogs. Genau eines der beiden Felder ist non-null.
@@ -57,16 +69,15 @@ public class WhatsAppContactDialog {
      * @throws IllegalStateException [FAILFAST] wenn der Dialog ohne Entscheidung geschlossen wird
      */
     public static Result show(String rawIdentifier, Map<String, Integer> knownContacts) {
-        Dialog<?> dialog = SkinService.get().createDialog(SkinService.getOwnerWindow(), "Unbekannter WhatsApp-Kontakt");
+        Dialog<?> dialog = SkinService.get().createDialog(SkinService.getOwnerWindow(), TITLE_NEW);
 
         // Ergebnis-State
         final Integer[] selectedContactId = {null};
+        final boolean[] settingFromCode   = {false};
 
         // X-Button blockieren
         Stage stage = (Stage) dialog.getDialogPane().getScene().getWindow();
-        stage.setOnCloseRequest(e -> {
-            e.consume();
-        });
+        stage.setOnCloseRequest(e -> e.consume());
 
         // Content
         VBox content = SkinService.get().createDialogContent();
@@ -82,9 +93,13 @@ public class WhatsAppContactDialog {
         ButtonType okBtn = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().setAll(okBtn);
 
+        // OK-Button solange disabled bis etwas eingegeben wurde
+        Button okButton = (Button) dialog.getDialogPane().lookupButton(okBtn);
+        okButton.setDisable(true);
+
         // Autocomplete
-        List<String> allNames   = new ArrayList<>(knownContacts.keySet());
-        List<String> matches    = new ArrayList<>();
+        List<String> allNames      = new ArrayList<>(knownContacts.keySet());
+        List<String> matches       = new ArrayList<>();
         VBox         suggestionBox = new VBox();
         suggestionBox.getStyleClass().add("suggestion-box");
         Popup popup = new Popup();
@@ -105,12 +120,34 @@ public class WhatsAppContactDialog {
             }
         };
 
+        Runnable selectActive = () -> {
+            String chosen = matches.get(activeIndex[0]);
+            selectedContactId[0] = knownContacts.get(chosen);
+            System.out.println("[selectActive] chosen=" + chosen + " selectedContactId=" + selectedContactId[0]);
+            SkinService.get().setDialogTitle(dialog, TITLE_SELECTED);
+            System.out.println("[selectActive] Titel gesetzt auf: " + TITLE_SELECTED);
+            settingFromCode[0] = true;
+            System.out.println("[selectActive] settingFromCode=true, rufe setText auf");
+            nameField.setText(chosen);
+            settingFromCode[0] = false;
+            System.out.println("[selectActive] settingFromCode=false");
+            hideSuggestions.run();
+        };
+
         nameField.textProperty().addListener((_, _, newVal) -> {
-            selectedContactId[0] = null; // Freitext → Auswahl zurücksetzen
+            System.out.println("[listener] newVal='" + newVal + "' settingFromCode=" + settingFromCode[0] + " selectedContactId=" + selectedContactId[0]);
+            if (!settingFromCode[0]) {
+                selectedContactId[0] = null;
+                SkinService.get().setDialogTitle(dialog, TITLE_NEW);
+                System.out.println("[listener] Titel zurückgesetzt auf: " + TITLE_NEW);
+            }
+            okButton.setDisable(newVal == null || newVal.isBlank());
             if (newVal == null || newVal.isBlank()) {
                 hideSuggestions.run();
                 return;
             }
+            if (settingFromCode[0]) return;
+
             String lower = newVal.toLowerCase();
             matches.clear();
             matches.addAll(allNames.stream()
@@ -134,7 +171,10 @@ public class WhatsAppContactDialog {
                 });
                 lbl.setOnMouseClicked(_ -> {
                     selectedContactId[0] = knownContacts.get(match);
+                    SkinService.get().setDialogTitle(dialog, TITLE_SELECTED);
+                    settingFromCode[0] = true;
                     nameField.setText(match);
+                    settingFromCode[0] = false;
                     hideSuggestions.run();
                 });
                 suggestionBox.getChildren().add(lbl);
@@ -151,32 +191,47 @@ public class WhatsAppContactDialog {
         });
 
         nameField.setOnKeyPressed(e -> {
-            if (!popup.isShowing() || matches.isEmpty()) return;
             switch (e.getCode()) {
                 case ENTER -> {
-                    e.consume();
-                    String chosen = matches.get(Math.max(0, activeIndex[0]));
-                    selectedContactId[0] = knownContacts.get(chosen);
-                    nameField.setText(chosen);
-                    hideSuggestions.run();
+                    if (popup.isShowing()) {
+                        e.consume();
+                        selectActive.run();
+                    }
+                }
+                case TAB -> {
+                    if (popup.isShowing()) {
+                        e.consume();
+                        selectActive.run();
+                    }
                 }
                 case DOWN -> {
-                    e.consume();
-                    activeIndex[0] = Math.min(activeIndex[0] + 1, matches.size() - 1);
-                    highlightActive.run();
+                    if (popup.isShowing()) {
+                        e.consume();
+                        activeIndex[0] = Math.min(activeIndex[0] + 1, matches.size() - 1);
+                        highlightActive.run();
+                    }
                 }
                 case UP -> {
-                    e.consume();
-                    activeIndex[0] = Math.max(activeIndex[0] - 1, 0);
-                    highlightActive.run();
+                    if (popup.isShowing()) {
+                        e.consume();
+                        activeIndex[0] = Math.max(activeIndex[0] - 1, 0);
+                        highlightActive.run();
+                    }
                 }
                 case ESCAPE -> {
-                    e.consume();
-                    hideSuggestions.run();
+                    if (popup.isShowing()) {
+                        e.consume();
+                        hideSuggestions.run();
+                    }
                 }
                 default -> {}
             }
         });
+
+        dialog.setOnShown(_ -> Platform.runLater(() -> {
+            nameField.selectAll();
+            nameField.requestFocus();
+        }));
 
         dialog.showAndWait();
 
