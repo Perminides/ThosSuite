@@ -25,6 +25,7 @@ import app.fitbit.FitbitDataFetcher;
 import app.fitbit.FitbitUpdateService;
 import app.messaging.SignalIncrementalImport;
 import app.messaging.WhatsAppIncrementalImport;
+import app.module.SuiteExporter;
 import app.ui.MainWindow;
 import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
@@ -86,6 +87,7 @@ public class Controller{
     	mainWindow.setDiaryViewRunnable(this::diaryViewSelected);
     	mainWindow.setWeekdayRunnable(this::weekdaySelected);
     	mainWindow.setMattressRunnable(this::mattressSelected);
+    	mainWindow.setExportRunnable(this::exportSelected);
     	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
     	showEmptyBackground();
     	
@@ -343,6 +345,10 @@ public class Controller{
     
     public void mattressSelected() {
     	new MattressTurnDialog().show();
+    }
+    
+    public void exportSelected() {
+    	new SuiteExporter().export();
     }
     
     /**

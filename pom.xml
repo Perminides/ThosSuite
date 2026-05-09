@@ -72,6 +72,12 @@
 			<scope>compile</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>net.lingala.zip4j</groupId>
+			<artifactId>zip4j</artifactId>
+			<version>2.11.5</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>
@@ -143,7 +149,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<!-- ACHTUNG: Eclipse-JDK und JAVA_HOME müssen auf JDK 25 zeigen.
 		     jpackage 26 erzeugt keine Windows Application Manifests mehr (Regression,
 		     vgl. JDK-8284675, ursprünglich in JDK 19 gefixt). Ohne Manifest aktiviert

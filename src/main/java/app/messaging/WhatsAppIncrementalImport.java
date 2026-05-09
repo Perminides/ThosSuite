@@ -6,6 +6,7 @@ import app.data.persistence.MessageRepository;
 import app.data.persistence.WhatsAppSourceRepository;
 import app.ui.components.WhatsAppChatDialog;
 import app.ui.components.WhatsAppContactDialog;
+import app.util.Log;
 import app.config.Config;
 
 import javafx.scene.control.Alert;
@@ -119,18 +120,23 @@ public class WhatsAppIncrementalImport {
      * Wird vom Controller beim Start der Suite aufgerufen.
      */
     public void run() throws Exception {
-        if (!isCheckDue()) return;
+        if (!isCheckDue()) {
+        	Log.info(this.getClass(), "Kein WhatsApp-Import fällig.");
+        	return;
+        }
 
         String currentHash = computeHash(crypt15Path);
         String storedHash  = kvRepo.get(KV_LAST_HASH).orElse(null);
 
         if (Objects.equals(currentHash, storedHash)) {
             checkWarning();
+            Log.info(this.getClass(), "WhatsApp: Hash der Datei hat sich nicht geändert.");
+            updateKeyValue(currentHash);
             return;
         }
 
         validateAttachmentDir();
-
+        
         Path tempDb = decryptToTemp();
         runImport(tempDb);
     }
@@ -175,6 +181,7 @@ public class WhatsAppIncrementalImport {
             alert.setContentText("Letzter erfolgreicher Import: " + lastImport.get());
             alert.showAndWait();
         }
+        Log.warn(this.getClass(), "WhatsApp-import: Uff. Schon lange kein Import mehr gelaufen. Warnung ausgegeben.");
     }
 
     // -------------------------------------------------------------------------
@@ -207,6 +214,7 @@ public class WhatsAppIncrementalImport {
     // -------------------------------------------------------------------------
 
     private void runImport(Path tempDb) throws Exception {
+    	Log.info(this.getClass(), "WhatsApp-Import startet.");
         String waUrl = "jdbc:sqlite:" + tempDb.toAbsolutePath();
 
         try (Connection wa   = DriverManager.getConnection(waUrl);
@@ -225,9 +233,7 @@ public class WhatsAppIncrementalImport {
 
         copyAttachments();
         String currentHash = computeHash(crypt15Path);
-        kvRepo.set(KV_LAST_HASH, currentHash);
-        kvRepo.set(KV_LAST_IMPORT, LocalDateTime.now().format(DT));
-        kvRepo.set(KV_LAST_CHECK, LocalDateTime.now().format(DT));
+        updateKeyValue(currentHash);
 
         showSummaryAlert();
     }
@@ -578,5 +584,11 @@ public class WhatsAppIncrementalImport {
             .atZone(java.time.ZoneId.systemDefault())
             .toInstant()
             .toEpochMilli();
+    }
+    
+    private void updateKeyValue(String currentHash) {
+        kvRepo.set(KV_LAST_HASH, currentHash);
+        kvRepo.set(KV_LAST_IMPORT, LocalDateTime.now().format(DT));
+        kvRepo.set(KV_LAST_CHECK, LocalDateTime.now().format(DT));
     }
 }

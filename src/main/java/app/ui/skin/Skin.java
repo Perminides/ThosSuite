@@ -1755,6 +1755,13 @@ public abstract class Skin {
 	    
 	    return dialog;
 	}
+	
+	public void setDialogTitle(Dialog<?> dialog, String title) {
+	    javafx.scene.Node node = dialog.getDialogPane().getHeader().lookup(".my-title");
+	    if (node instanceof Label label) {
+	        label.setText(title);
+	    }
+	}
 
 	// Im Skin
 	public VBox createDialogContent() {
