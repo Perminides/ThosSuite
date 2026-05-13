@@ -43,23 +43,22 @@ public class FitbitRepository {
      */
     public Optional<LocalDate> getLastImportedDate() {
         String sql = "SELECT MAX(date) as last_date FROM fitbit";
-        
-        try (Connection conn = DB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
+        Connection conn = DB.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            
+
             if (rs.next()) {
-            	String dateString = rs.getString("last_date");
-            	if (dateString != null) {
-            	    LocalDate lastDate = LocalDate.parse(dateString);
+                String dateString = rs.getString("last_date");
+                if (dateString != null) {
+                    LocalDate lastDate = LocalDate.parse(dateString);
                     Log.debug(this, "Letztes importiertes Fitbit-Datum: " + lastDate);
                     return Optional.of(lastDate);
                 }
             }
-            
+
             Log.debug(this, "Keine Fitbit-Daten in DB gefunden");
             return Optional.empty();
-            
+
         } catch (SQLException e) {
             throw new RuntimeException("Fehler beim Laden des letzten Fitbit-Datums", e);
         }
@@ -75,8 +74,8 @@ public class FitbitRepository {
     public void saveDayPoints(LocalDate date, int points) {
         String sql = "REPLACE INTO fitbit (date, points) VALUES (?, ?)";
         
-        try (Connection conn = DB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        Connection conn = DB.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             
         	stmt.setString(1, date.toString());
             stmt.setInt(2, points);
@@ -107,8 +106,8 @@ public class FitbitRepository {
             LIMIT 1
             """;
         
-        try (Connection conn = DB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        Connection conn = DB.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, date.toString());
             ResultSet rs = stmt.executeQuery();
@@ -139,8 +138,8 @@ public class FitbitRepository {
             WHERE week_start = ?
             """;
         
-        try (Connection conn = DB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        Connection conn = DB.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, monday.toString());
             
@@ -173,8 +172,8 @@ public class FitbitRepository {
         
         List<FitbitWeekData> result = new ArrayList<>();
         
-        try (Connection conn = DB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        Connection conn = DB.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, from.toString());
             stmt.setString(2, to.toString());
@@ -209,8 +208,8 @@ public class FitbitRepository {
         
         List<FitbitGoalHistoryEntry> result = new ArrayList<>();
         
-        try (Connection conn = DB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
+        Connection conn = DB.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             
             while (rs.next()) {

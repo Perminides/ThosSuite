@@ -27,8 +27,8 @@ public class MessageRepository {
      */
     public String getLastImportedSourceId(String source) {
         String sql = "SELECT source_id FROM msg_messages WHERE source = ? ORDER BY sent_at DESC LIMIT 1";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, source);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getString("source_id") : null;
@@ -51,8 +51,8 @@ public class MessageRepository {
      */
     public String getSentAtForSourceId(String source, String sourceId) {
         String sql = "SELECT sent_at FROM msg_messages WHERE source = ? AND source_id = ?";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, source);
             ps.setString(2, sourceId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -74,8 +74,8 @@ public class MessageRepository {
      */
     public Set<String> loadBlacklistedChatIds(String source) {
         String sql = "SELECT raw_identifier FROM msg_chats WHERE source = ? AND blacklisted = 1";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, source);
             try (ResultSet rs = ps.executeQuery()) {
                 Set<String> result = new HashSet<>();
@@ -94,8 +94,8 @@ public class MessageRepository {
      */
     public Map<String, Integer> loadKnownChats(String source) {
         String sql = "SELECT raw_identifier, chat_id FROM msg_chats WHERE source = ? AND blacklisted = 0";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, source);
             try (ResultSet rs = ps.executeQuery()) {
                 Map<String, Integer> result = new LinkedHashMap<>();
@@ -114,8 +114,8 @@ public class MessageRepository {
      */
     public Map<String, Integer> loadKnownContacts(String source) {
         String sql = "SELECT raw_identifier, contact_id FROM msg_contact_mapping WHERE source = ?";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, source);
             try (ResultSet rs = ps.executeQuery()) {
                 Map<String, Integer> result = new LinkedHashMap<>();
@@ -148,8 +148,8 @@ public class MessageRepository {
      */
     public int getMessageCountToday() {
         String sql = "SELECT count(*) FROM msg_messages WHERE date(sent_at) = date('now')";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getInt(1) : 0;
         } catch (Exception e) {
@@ -285,8 +285,8 @@ public class MessageRepository {
                 JOIN msg_contact_mapping cm ON cm.contact_id = c.contact_id
                 WHERE cm.source = ?
                 """;
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, source);
             try (ResultSet rs = ps.executeQuery()) {
                 Map<String, Integer> result = new LinkedHashMap<>();

@@ -30,8 +30,8 @@ public class AlcoholRepository {
 	    
 	    String sql = "SELECT date, status FROM alcohol_days WHERE date >= ? AND date <= ? ORDER BY date ASC";
 	    
-	    try (Connection conn = DB.getConnection();
-	         PreparedStatement stmt = conn.prepareStatement(sql)) {
+	    Connection conn = DB.getConnection();
+	    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 	        
 	        stmt.setString(1, from.toString());
 	        stmt.setString(2, to.toString());
@@ -66,8 +66,8 @@ public class AlcoholRepository {
         String sql = "INSERT INTO alcohol_days (date, status) VALUES (?, ?) " +
                      "ON CONFLICT(date) DO UPDATE SET status = ?";
         
-        try (Connection conn = DB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        Connection conn = DB.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, date.toString());
             stmt.setString(2, status.name());
@@ -96,8 +96,8 @@ public class AlcoholRepository {
         String sql = "SELECT valid_from, green_points, yellow_points, red_points " +
                      "FROM alcohol_ratios ORDER BY valid_from ASC";
         
-        try (Connection conn = DB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
+        Connection conn = DB.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             
             while (rs.next()) {
@@ -121,10 +121,10 @@ public class AlcoholRepository {
     public LocalDate getLastEntryDate() {
         String sql = "SELECT MAX(date) as last_date FROM alcohol_days";
         
-        try (Connection conn = DB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
+        Connection conn = DB.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            
+
             if (rs.next()) {
                 String dateStr = rs.getString("last_date");
                 if (dateStr != null) {
@@ -132,7 +132,7 @@ public class AlcoholRepository {
                 }
             }
             return null;
-            
+
         } catch (SQLException e) {
             throw new RuntimeException("Fehler beim Ermitteln des letzten Eintrags", e);
         }
@@ -150,9 +150,8 @@ public class AlcoholRepository {
     
     private int calculateBalanceUntil(LocalDate until, List<AlcoholRatioEntry> ratios) {
         String sql = "SELECT date, status FROM alcohol_days WHERE date <= ? ORDER BY date ASC";
-        
-        try (Connection conn = DB.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        Connection conn = DB.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, until.toString());
             

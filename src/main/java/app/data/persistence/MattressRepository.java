@@ -14,23 +14,23 @@ public class MattressRepository {
 
     public MattressTurn getLastTurn() {
         String sql = "SELECT turned_at, direction FROM mattress_turns ORDER BY turned_at DESC LIMIT 1";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             if (rs.next())
                 return new MattressTurn(
                     LocalDateTime.parse(rs.getString("turned_at")),
                     rs.getString("direction"));
             return null;
-        }  catch (Exception e) {
-			throw new RuntimeException("Ui, Probleme beim Laden des letzten Matratzen-Turns", e);
-		}
+        } catch (Exception e) {
+            throw new RuntimeException("Ui, Probleme beim Laden des letzten Matratzen-Turns", e);
+        }
     }
 
     public void save(LocalDateTime turnedAt, String direction) {
         String sql = "INSERT INTO mattress_turns (turned_at, direction) VALUES (?, ?)";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, turnedAt.withNano(0).toString());
             ps.setString(2, direction);
             ps.executeUpdate();
