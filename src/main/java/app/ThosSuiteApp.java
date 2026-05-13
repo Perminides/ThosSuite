@@ -14,8 +14,8 @@ import java.util.Optional;
 import app.config.Config;
 import app.controller.Controller;
 import app.data.AppClock;
+import app.data.persistence.DB;
 import app.ui.MainWindow;
-import app.ui.skin.SkinService;
 import app.util.Log;
 import app.util.SingleInstanceGuard;
 import javafx.application.Application;
@@ -40,7 +40,6 @@ import javafx.stage.StageStyle;
 public class ThosSuiteApp extends Application {
 	
 	// TODO: In Amerika fehlt ein Strich zwischen Utah und Arizona
-	// TODO: Vergiss das Bilder verkleinern nicht. JavaFX sollte das besser können...
 	
 	/** JavaFX-Nachteile
 	 * 
@@ -142,7 +141,7 @@ public class ThosSuiteApp extends Application {
         // 3. Die eigentliche Initialisierung im Hintergrund starten
         new Thread(() -> {
             try {
-                // A) Log & Config
+                // A) Log & Config & DB
                 File logDir = new File(finalDataFolder + "log");
                 if (!logDir.exists()) {
                     logDir.mkdirs();
@@ -152,6 +151,8 @@ public class ThosSuiteApp extends Application {
                 Log.initLog(finalDataFolder, getParameters());
                 Log.info(ThosSuiteApp.class, "Start Suite (Async Init via Splash)");
                 Log.info(ThosSuiteApp.class, "prism.allowhidpi: " + System.getProperty("prism.allowhidpi"));
+                
+                DB.init();
 
                 // B) Fonts laden
                 loadFonts();
@@ -347,9 +348,10 @@ public class ThosSuiteApp extends Application {
         
         // DB schließen
         try {
-            app.data.persistence.DB.closeConnection(); // Sicherstellen, dass DB geschlossen wird (auch wenn Controller evtl. null ist bei Fehler)
+            DB.closeConnection(); // Sicherstellen, dass DB geschlossen wird (auch wenn Controller evtl. null ist bei Fehler)
+            DB.shutdown();
         } catch (Exception e) {
-        	Log.error(this, "Fehler beim Schließen der DB-Connection", e);
+        	Log.error(this, "Fehler beim Schließen der DB-Connection oder beim Zurückkopieren", e);
         }
         
         super.stop();

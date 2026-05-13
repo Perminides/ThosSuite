@@ -214,7 +214,7 @@ public class WhatsAppIncrementalImport {
     // -------------------------------------------------------------------------
 
     private void runImport(Path tempDb) throws Exception {
-    	Log.info(this.getClass(), "WhatsApp-Import startet.");
+        Log.info(this.getClass(), "WhatsApp-Import startet.");
         String waUrl = "jdbc:sqlite:" + tempDb.toAbsolutePath();
 
         try (Connection wa   = DriverManager.getConnection(waUrl);
@@ -222,13 +222,14 @@ public class WhatsAppIncrementalImport {
 
             thos.setAutoCommit(false);
             loadState(thos);
-            processMessages(wa, thos);
-            thos.commit();
-        }
-        // Compiler-Pflicht: try-with-resources ruft close() implizit auf, dessen checked Exception
-        // muss explizit behandelt werden — wir werfen sie unverändert weiter.
-        catch (Exception e) {
-            throw e;
+
+            try {
+                processMessages(wa, thos);
+                thos.commit();
+            } catch (Exception e) {
+                thos.rollback();
+                throw new RuntimeException("WhatsApp-Import fehlgeschlagen, Rollback durchgeführt", e);
+            }
         }
 
         copyAttachments();

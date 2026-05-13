@@ -28,8 +28,8 @@ public class KeyValueRepository {
      */
     public Optional<String> get(String key) {
         String sql = "SELECT value FROM key_values WHERE key = ?";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, key);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? Optional.of(rs.getString("value")) : Optional.empty();
@@ -49,8 +49,8 @@ public class KeyValueRepository {
      */
     public void set(String key, String value) {
         String sql = "INSERT INTO key_values (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, key);
             ps.setString(2, value);
             ps.executeUpdate();
@@ -64,8 +64,8 @@ public class KeyValueRepository {
      */
     public void delete(String key) {
         String sql = "DELETE FROM key_values WHERE key = ?";
-        try (Connection con = DB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, key);
             ps.executeUpdate();
         } catch (Exception e) {
