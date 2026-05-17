@@ -1,5 +1,6 @@
 package app.data.persistence;
 
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -9,6 +10,7 @@ import java.sql.SQLException;
 
 import app.config.Config;
 import app.ui.skin.SkinService;
+import app.util.Log;
 
 public class DB {
 	
@@ -37,11 +39,26 @@ public class DB {
 	
 	/**
 	 * Kopiert die temporäre Datei wieder in den originalen Ordner.
+	 * Wenn sich etwas geändert hat zumindest.
 	 * 
 	 * @throws Exception
 	 */
 	public static void shutdown() throws Exception {
-		Files.move(tmpDbPath, origDbPath,  StandardCopyOption.REPLACE_EXISTING);
+	    DB.closeConnection();
+	    
+	    while (true) {
+	        try {
+	            if (Files.mismatch(tmpDbPath, origDbPath) != -1L)
+	                Files.move(tmpDbPath, origDbPath, StandardCopyOption.REPLACE_EXISTING);
+	            else
+	                Files.delete(tmpDbPath);
+	            return;
+	        } catch (FileSystemException  e) {
+	        	Log.info(DB.class, "Konnte nicht kopieren. SQLiteStudio noch offen?");
+	            SkinService.get().createAlert(null, "Datenbank gesperrt",
+	                "Bitte SQLiteStudio schließen und dann OK klicken.", false, false).showAndWait();
+	        }
+	    }
 	}
 	
 	/**
