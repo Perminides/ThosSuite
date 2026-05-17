@@ -1,64 +1,21 @@
 package app.data.persistence;
 
-import java.nio.file.FileSystemException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import app.config.Config;
 import app.ui.skin.SkinService;
-import app.util.Log;
 
 public class DB {
 	
-	private static Path origDbPath = null;
-	private static Path tmpDbPath = null;
+	private static Path dbPath = null;
 	private static Connection connection = null;
 	private static Connection nonAutoCommitConnection = null;
-
-	/**
-	 * Kopiert die DB ins tmp-Verzeichnis, welches in der config konfiguriert sein muss.
-	 * FailFast: Wenn dort bereits eine DB liegt oder das Verzeichnis nicht existiert,
-	 * wird abgebrochen.
-	 * 
-	 * @throws Exception
-	 */
-	public static void init() throws Exception {
-		Path tmpDbFolder = Path.of(Config.get("tmpDB.folder"));
-		if (!Files.exists(tmpDbFolder))
-			throw new RuntimeException("Der Temp-Ordner für die DB exitiert nicht");
-		tmpDbPath = Path.of(tmpDbFolder.toString(), "thossuite.db");
-		if (Files.exists(tmpDbPath))
-			throw new RuntimeException("Es existiert eine DB im Temp-Ordner. Bitte verschieben oder löschen");
-		origDbPath = Path.of(Config.get("dbFolder") + "thossuite.db");
-		Files.copy(origDbPath, tmpDbPath, StandardCopyOption.COPY_ATTRIBUTES);
-	}
 	
-	/**
-	 * Kopiert die temporäre Datei wieder in den originalen Ordner.
-	 * Wenn sich etwas geändert hat zumindest.
-	 * 
-	 * @throws Exception
-	 */
-	public static void shutdown() throws Exception {
-	    DB.closeConnection();
-	    
-	    while (true) {
-	        try {
-	            if (Files.mismatch(tmpDbPath, origDbPath) != -1L)
-	                Files.move(tmpDbPath, origDbPath, StandardCopyOption.REPLACE_EXISTING);
-	            else
-	                Files.delete(tmpDbPath);
-	            return;
-	        } catch (FileSystemException  e) {
-	        	Log.info(DB.class, "Konnte nicht kopieren. SQLiteStudio noch offen?");
-	            SkinService.get().createAlert(null, "Datenbank gesperrt",
-	                "Bitte SQLiteStudio schließen und dann OK klicken.", false, false).showAndWait();
-	        }
-	    }
+	static {
+		dbPath = Path.of(Config.get("dbFolder") + "thossuite.db");
 	}
 	
 	/**
@@ -88,7 +45,7 @@ public class DB {
 				SkinService.get().createAlert(null, "Warnung", "Shit. Die connection ist closed? Wer ist der Übeltäter?", false, false).showAndWait();
 			}
 			if (connection == null || connection.isClosed())
-				connection = DriverManager.getConnection("jdbc:sqlite:" + tmpDbPath.toString());
+				connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath.toString());
 		} catch (Exception e) {
 			throw new RuntimeException("SQL error while getting connection", e);
 		}
@@ -112,7 +69,7 @@ public class DB {
 	public static Connection getNewConnection() {
 		Connection connection = null;
 		try {
-				connection = DriverManager.getConnection("jdbc:sqlite:" + tmpDbPath.toString());
+				connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath.toString());
 				connection.setAutoCommit(false);
 		} catch (Exception e) {
 			throw new RuntimeException("SQL error while getting connection", e);

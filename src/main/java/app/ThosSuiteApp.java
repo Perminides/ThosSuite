@@ -15,6 +15,7 @@ import app.config.Config;
 import app.controller.Controller;
 import app.data.AppClock;
 import app.data.persistence.DB;
+import app.data.persistence.FilenIgnoreSource;
 import app.ui.MainWindow;
 import app.util.Log;
 import app.util.SingleInstanceGuard;
@@ -152,7 +153,7 @@ public class ThosSuiteApp extends Application {
                 Log.info(ThosSuiteApp.class, "Start Suite (Async Init via Splash)");
                 Log.info(ThosSuiteApp.class, "prism.allowhidpi: " + System.getProperty("prism.allowhidpi"));
                 
-                DB.init();
+                FilenIgnoreSource.addToIgnore();
 
                 // B) Fonts laden
                 loadFonts();
@@ -349,7 +350,7 @@ public class ThosSuiteApp extends Application {
         // DB schließen
         try {
             DB.closeConnection(); // Sicherstellen, dass DB geschlossen wird (auch wenn Controller evtl. null ist bei Fehler)
-            DB.shutdown();
+            FilenIgnoreSource.removeFromIgnore();
         } catch (Exception e) {
         	Log.error(this, "Fehler beim Schließen der DB-Connection oder beim Zurückkopieren", e);
         }
