@@ -27,7 +27,6 @@ import javafx.scene.layout.Pane;
 
 // !Später: Das RegionSessionBild croppen und dann den korrekten Rand setzen, wenn isComplete==true. Wobei isComplete meint, dasss das ganze Rechteck ausgefüllt ist.
 // !Sofort: Es wäre schon nice bei Finde uf der Karte (schwer) zu wissen, wie viel noch kommen. Also doch einen Fortschritt bitte.
-// !Sofort: FreePlay ist kaputt. Bei falschem Klick bleiben die gründen nicht stehen!
 public class RegionSession implements Session {
 	
 	private final RegionSessionPresenter presenter;
