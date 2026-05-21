@@ -6,6 +6,7 @@ import app.data.persistence.MessageRepository;
 import app.data.persistence.WhatsAppSourceRepository;
 import app.ui.components.WhatsAppChatDialog;
 import app.ui.components.WhatsAppContactDialog;
+import app.ui.skin.SkinService;
 import app.util.Log;
 import app.config.Config;
 
@@ -536,12 +537,7 @@ public class WhatsAppIncrementalImport {
     // -------------------------------------------------------------------------
 
     private void showSummaryAlert() {
-        Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle("WhatsApp-Import");
-        alert.setHeaderText("Import abgeschlossen");
-        alert.setContentText(importedMessages + " Nachrichten und " +
-                             importedAttachments + " Anhänge importiert.");
-        alert.showAndWait();
+        SkinService.get().createAlert(null, "WhatsApp-Import abgeschlossen", importedMessages + " Nachrichten und " + importedAttachments + " Anhänge importiert.", false, false).showAndWait();
     }
 
     // -------------------------------------------------------------------------
