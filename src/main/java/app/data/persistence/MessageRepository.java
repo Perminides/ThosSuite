@@ -1,6 +1,12 @@
 package app.data.persistence;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -12,6 +18,9 @@ import java.util.Set;
  * Die Verbindung zur jeweiligen Quell-DB wird in den quellspezifischen SourceRepositories gekapselt.
  */
 public class MessageRepository {
+	
+	private static final DateTimeFormatter DB_FORMAT =
+		    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     // -------------------------------------------------------------------------
     // Lesen
@@ -39,7 +48,7 @@ public class MessageRepository {
     }
 
     /**
-     * Gibt den gespeicherten sent_at-Wert (yyyy-MM-dd HH:mm:ss) einer Nachricht
+     * Gibt den gespeicherten sent_at-Wert (yyyy-MM-ddTHH:mm:ss) einer Nachricht
      * anhand ihrer source_id zurück.
      * <p>
      * Wird beim WhatsApp-Import für den Konsistenzcheck genutzt: die höchste bekannte
@@ -49,7 +58,7 @@ public class MessageRepository {
      *
      * @throws IllegalStateException [FAILFAST] wenn die sourceId nicht in der Suite-DB gefunden wird
      */
-    public String getSentAtForSourceId(String source, String sourceId) {
+    public LocalDateTime getSentAtForSourceId(String source, String sourceId) {
         String sql = "SELECT sent_at FROM msg_messages WHERE source = ? AND source_id = ?";
         Connection con = DB.getConnection();
         try (PreparedStatement ps = con.prepareStatement(sql)) {
@@ -59,7 +68,7 @@ public class MessageRepository {
                 if (!rs.next())
                     throw new IllegalStateException("[FAILFAST] source_id='" + sourceId
                         + "' für source='" + source + "' nicht in Suite-DB — Datenkonsistenzproblem");
-                return rs.getString("sent_at");
+                return LocalDateTime.parse(rs.getString("sent_at"), DB_FORMAT);
             }
         } catch (IllegalStateException e) {
             throw e;
@@ -232,27 +241,26 @@ public class MessageRepository {
      * Fügt eine Nachricht in msg_messages ein.
      *
      * @param sourceId           Quellspezifische Nachrichten-ID (Signal: UUID, WhatsApp: _id als String)
-     * @param sentAt             Formatierter Zeitstempel (yyyy-MM-dd HH:mm:ss)
+     * @param sentAt             Formatierter Zeitstempel (yyyy-MM-ddTHH:mm:ss)
      * @param fromContact        contact_id des Absenders
      * @param chatId             chat_id des zugehörigen Chats
      * @param content            Nachrichtentext, darf null sein
      * @param resolvedQuoteMsgId source_id der gequoteten Nachricht, oder null
      */
-    public void insertMessage(Connection thos, String source, String sourceId, String sentAt,
-                              int fromContact, int chatId, String content,
-                              String resolvedQuoteMsgId) throws SQLException {
-        try (var ps = thos.prepareStatement(
-                "INSERT INTO msg_messages (source, source_id, sent_at, from_contact, chat_id, content, quote_message_id) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
-            ps.setString(1, source);
-            ps.setString(2, sourceId);
-            ps.setString(3, sentAt);
-            ps.setInt(4, fromContact);
-            ps.setInt(5, chatId);
-            ps.setString(6, content);
-            ps.setString(7, resolvedQuoteMsgId);
-            ps.executeUpdate();
-        }
-    }
+	public void insertMessage(Connection thos, String source, String sourceId, LocalDateTime sentAt, int fromContact, int chatId, String content,
+			String resolvedQuoteMsgId) throws SQLException {
+		try (var ps = thos.prepareStatement(
+				"INSERT INTO msg_messages (source, source_id, sent_at, from_contact, chat_id, content, quote_message_id) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+			ps.setString(1, source);
+			ps.setString(2, sourceId);
+			ps.setString(3, sentAt.format(DB_FORMAT));
+			ps.setInt(4, fromContact);
+			ps.setInt(5, chatId);
+			ps.setString(6, content);
+			ps.setString(7, resolvedQuoteMsgId);
+			ps.executeUpdate();
+		}
+	}
 
     /**
      * Fügt einen Anhang in msg_message_attachment ein.

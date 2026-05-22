@@ -16,6 +16,9 @@ import app.controller.Controller;
 import app.data.AppClock;
 import app.data.persistence.DB;
 import app.data.persistence.FilenIgnoreSource;
+import app.data.persistence.TmdbMovieRepository;
+import app.tmdb.TmdbApiClient;
+import app.tmdb.TmdbImporter;
 import app.ui.MainWindow;
 import app.util.Log;
 import app.util.SingleInstanceGuard;
@@ -164,6 +167,13 @@ public class ThosSuiteApp extends Application {
 						// Pre-Tasks (Splash noch sichtbar)
 						initializeMainWindow(primaryStage);
 						primaryStage.setOpacity(0); // MainWindow unsichtbar starten
+						
+						//TmdbApiClient client = new TmdbApiClient();
+						//client.getImage("/rxeDxo8FvZpLu6iplNpxdtAVnfu.jpg", "w154");
+						//TmdbMovieRepository repo = new TmdbMovieRepository();
+						//System.out.println(repo.getMovieRating(10));
+						new TmdbImporter().run();
+						
 						controller = new Controller(mainWindow);
 						controller.runPreTasks();
 

@@ -11,11 +11,13 @@ import app.ui.skin.SkinService;
 public class DB {
 	
 	private static Path dbPath = null;
+	private static Path tmdbDbPath = null;
 	private static Connection connection = null;
-	private static Connection nonAutoCommitConnection = null;
+	private static Connection tmdbConnection = null;
 	
 	static {
 		dbPath = Path.of(Config.get("dbFolder") + "thossuite.db");
+		tmdbDbPath = Path.of(Config.get("dbFolder") + "movies.db");
 	}
 	
 	/**
@@ -79,12 +81,43 @@ public class DB {
 		return connection;
 	}
 	
+	/**
+	 * Gibt die gemeinsame Singleton-Connection zur Film-Datenbank zurück.
+	 * 
+	 **/
+	public static Connection getTmdbConnection() {
+		try {
+			if (tmdbConnection != null && tmdbConnection.isClosed()) {
+				SkinService.get().createAlert(null, "Warnung", "Shit. Die connection ist closed? Wer ist der Übeltäter?", false, false).showAndWait();
+			}
+			if (tmdbConnection == null || tmdbConnection.isClosed())
+				tmdbConnection = DriverManager.getConnection("jdbc:sqlite:" + tmdbDbPath.toString());
+			tmdbConnection.createStatement().execute("PRAGMA foreign_keys = ON");
+		} catch (Exception e) {
+			throw new RuntimeException("SQL error while getting connection", e);
+		}
+		return tmdbConnection;
+	}
+	
+	/**
+	 * Öffnet eine neue, dedizierte Verbindung zur Film-Datenbank mit AutoCommit=false.
+	 */
+	public static Connection getNewTmdbConnection() {
+		Connection connection = null;
+		try {
+				connection = DriverManager.getConnection("jdbc:sqlite:" + tmdbDbPath.toString());
+				connection.setAutoCommit(false);
+				connection.createStatement().execute("PRAGMA foreign_keys = ON");
+		} catch (Exception e) {
+			throw new RuntimeException("SQL error while getting connection", e);
+		}
+		return connection;
+	}
+	
 	public static void closeConnection() {
 		try {
 		if (connection != null && !connection.isClosed())
 			connection.close();
-		if (nonAutoCommitConnection != null && !nonAutoCommitConnection.isClosed())
-			nonAutoCommitConnection.close();
 		} catch (SQLException e) {
 			throw new RuntimeException("SQL error while closing connection ", e);
 		}
