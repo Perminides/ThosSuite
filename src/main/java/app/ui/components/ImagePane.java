@@ -85,7 +85,7 @@ public class ImagePane extends StackPane {
     }
 
     public void setImage(String imagePath) {
-        if (imagePath == null || imagePath.equals(Config.get("imageFolder"))) {
+        if (imagePath == null || imagePath.equals(Config.get("learnImageFolder"))) {
             imageRect.setStyle(""); 
             imageRect.setFill(Color.TRANSPARENT);
             return;

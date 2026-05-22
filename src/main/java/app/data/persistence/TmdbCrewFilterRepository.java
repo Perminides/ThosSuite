@@ -27,7 +27,7 @@ public class TmdbCrewFilterRepository {
         blacklist.clear();
         log.info("Lade CrewFilter aus DB");
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "SELECT job FROM tmdb_crew_whitelist");
+                "SELECT job FROM crew_whitelist");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next())
                 whitelist.add(rs.getString("job"));
@@ -35,7 +35,7 @@ public class TmdbCrewFilterRepository {
             throw new RuntimeException("CrewFilter Whitelist laden fehlgeschlagen", e);
         }
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "SELECT job FROM tmdb_crew_blacklist");
+                "SELECT job FROM crew_blacklist");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next())
                 blacklist.add(rs.getString("job"));
@@ -59,7 +59,7 @@ public class TmdbCrewFilterRepository {
     public void addToWhitelist(String job) {
         log.info("Job zur Whitelist hinzugefügt: " + job);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "INSERT OR IGNORE INTO tmdb_crew_whitelist (job) VALUES (?)")) {
+                "INSERT INTO crew_whitelist (job) VALUES (?)")) {
             ps.setString(1, job);
             ps.execute();
         } catch (Exception e) {
@@ -74,7 +74,7 @@ public class TmdbCrewFilterRepository {
     public void addToBlacklist(String job) {
         log.info("Job zur Blacklist hinzugefügt: " + job);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "INSERT OR IGNORE INTO tmdb_crew_blacklist (job) VALUES (?)")) {
+                "INSERT INTO crew_blacklist (job) VALUES (?)")) {
             ps.setString(1, job);
             ps.execute();
         } catch (Exception e) {
@@ -84,13 +84,13 @@ public class TmdbCrewFilterRepository {
     }
 
     /**
-     * Liefert alle Jobs die noch nicht eingeordnet wurden — also in tmdb_crew_pending
+     * Liefert alle Jobs die noch nicht eingeordnet wurden — also in crew_pending
      * stehen aber weder in Whitelist noch Blacklist.
      */
     public java.util.List<String> getPendingJobs() {
         java.util.List<String> jobs = new java.util.ArrayList<>();
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "SELECT DISTINCT job FROM tmdb_crew_pending");
+                "SELECT DISTINCT job FROM crew_pending");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next())
                 jobs.add(rs.getString("job"));

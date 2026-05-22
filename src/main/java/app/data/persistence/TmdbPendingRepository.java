@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 import app.tmdb.json.PersonJSON;
 
 /**
- * Repository für die Pending-Tabellen tmdb_person_pending und tmdb_crew_pending.
+ * Repository für die Pending-Tabellen person_pending und crew_pending.
  *
  * Personen und unbekannte Crew-Einträge landen hier während des Imports.
  * TmdbImportReview entscheidet dann was damit passiert:
@@ -19,8 +19,9 @@ public class TmdbPendingRepository {
     private static final Logger log = Logger.getLogger(TmdbPendingRepository.class.getName());
 
     /**
-     * Schreibt eine Person in tmdb_person_pending.
-     * Ignoriert wenn bereits vorhanden.
+     * Schreibt eine Person in person_pending.
+     * Ignoriert wenn bereits vorhanden. Ja, das ist etwas schmutzig.
+     * Sauberer wäre eine 1:1 Beziehung zwischen crew_pending und person_pending
      *
      * @param person    PersonJSON mit allen Detaildaten
      * @param conn      Transaktions-Connection
@@ -28,7 +29,7 @@ public class TmdbPendingRepository {
     public void insertPersonPending(PersonJSON person, Connection conn) {
         log.fine("insertPersonPending, personId " + person.id);
         try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT OR IGNORE INTO tmdb_person_pending (id, gender, name, known_for_department, " +
+                "INSERT OR IGNORE INTO person_pending (id, gender, name, known_for_department, " +
                 "birthday, deathday, biography, homepage, imdb_id, place_of_birth, popularity, profile_path) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             ps.setInt(1, person.id);
@@ -50,7 +51,7 @@ public class TmdbPendingRepository {
     }
 
     /**
-     * Schreibt einen unbekannten Crew-Eintrag in tmdb_crew_pending.
+     * Schreibt einen unbekannten Crew-Eintrag in crew_pending.
      *
      * @param movieId       TMDB-ID des Films
      * @param personId      TMDB-ID der Person
@@ -64,7 +65,7 @@ public class TmdbPendingRepository {
             String department, String creditId, Connection conn) {
         log.fine("insertCrewPending, personId " + personId + ", job " + job);
         try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO tmdb_crew_pending (movie_id, person_id, person_name, job, department, credit_id) " +
+                "INSERT INTO crew_pending (movie_id, person_id, person_name, job, department, credit_id) " +
                 "VALUES (?, ?, ?, ?, ?, ?)")) {
             ps.setInt(1, movieId);
             ps.setInt(2, personId);
@@ -79,15 +80,16 @@ public class TmdbPendingRepository {
     }
 
     /**
-     * Überträgt eine Person von tmdb_person_pending in die echte person-Tabelle.
+     * Überträgt eine Person von person_pending in die echte person-Tabelle.
      * Löscht den Pending-Eintrag danach.
+     * Da eine Person ja auch 2x pending gewesen sein kann, muss es ignoriert werden, wenn eine Person in der Tabelle fehlt.
      *
      * @param personId  TMDB-ID der Person
      */
     public void transferPersonToMain(int personId) {
         log.info("transferPersonToMain, personId " + personId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "INSERT OR IGNORE INTO person SELECT * FROM tmdb_person_pending WHERE id = ?")) {
+                "INSERT OR IGNORE INTO person SELECT * FROM person_pending WHERE id = ?")) {
             ps.setInt(1, personId);
             ps.execute();
         } catch (Exception e) {
@@ -97,14 +99,14 @@ public class TmdbPendingRepository {
     }
 
     /**
-     * Löscht eine Person aus tmdb_person_pending.
+     * Löscht eine Person aus person_pending.
      *
      * @param personId  TMDB-ID der Person
      */
     public void deletePersonPending(int personId) {
         log.fine("deletePersonPending, personId " + personId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "DELETE FROM tmdb_person_pending WHERE id = ?")) {
+                "DELETE FROM person_pending WHERE id = ?")) {
             ps.setInt(1, personId);
             ps.execute();
         } catch (Exception e) {
@@ -122,7 +124,7 @@ public class TmdbPendingRepository {
     public void deleteCrewPending(int movieId, int personId, String job) {
         log.fine("deleteCrewPending, personId " + personId + ", job " + job);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "DELETE FROM tmdb_crew_pending WHERE movie_id = ? AND person_id = ? AND job = ?")) {
+                "DELETE FROM crew_pending WHERE movie_id = ? AND person_id = ? AND job = ?")) {
             ps.setInt(1, movieId);
             ps.setInt(2, personId);
             ps.setString(3, job);
