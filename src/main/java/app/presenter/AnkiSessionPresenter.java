@@ -64,7 +64,7 @@ public class AnkiSessionPresenter {
 	// ========================================
 	
 	public void showImage(String imagePath) {
-		sessionPane.setImage(Config.get("imageFolder") + imagePath);
+		sessionPane.setImage(Config.get("learnImageFolder") + imagePath);
 	}
 
 	public void showQuestion(String text) {

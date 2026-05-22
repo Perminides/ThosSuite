@@ -38,7 +38,7 @@ public class ImageScaler {
 	
 	public static void processImages() {
 
-		Path targetDir500 = Path.of(Config.get("imageFolder"));
+		Path targetDir500 = Path.of(Config.get("learnImageFolder"));
 	    Path sourceDir = targetDir500.getParent();
 	    Path targetDirOrig = sourceDir.resolve("origs");
 

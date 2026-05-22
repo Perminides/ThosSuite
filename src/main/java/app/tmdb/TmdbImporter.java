@@ -14,15 +14,15 @@ import javax.imageio.ImageIO;
 import app.config.Config;
 import app.data.persistence.DB;
 import app.data.persistence.KeyValueRepository;
+import app.data.persistence.TmdbCrewFilterRepository;
 import app.data.persistence.TmdbMovieRepository;
+import app.data.persistence.TmdbPendingRepository;
 import app.tmdb.json.CastJSON;
 import app.tmdb.json.CreditListJSON;
 import app.tmdb.json.CrewJSON;
-import app.tmdb.json.JobJSON;
 import app.tmdb.json.MovieJSON;
 import app.tmdb.json.MovieRatingJSON;
 import app.tmdb.json.MovieRatingsPageJSON;
-import app.tmdb.json.PersonJSON;
 
 /**
  * Orchestriert den täglichen TMDB-Import.
@@ -47,10 +47,14 @@ public class TmdbImporter {
 
     private final TmdbApiClient api;
     private final TmdbMovieRepository movieRepo;
+    private final TmdbCrewFilterRepository crewFilterRepo;
+    private final TmdbPendingRepository pendingRepo;
 
     public TmdbImporter() {
         this.api = new TmdbApiClient();
         this.movieRepo = new TmdbMovieRepository();
+        this.crewFilterRepo = new TmdbCrewFilterRepository();
+        this.pendingRepo = new TmdbPendingRepository();
     }
 
     public void run() {
@@ -65,14 +69,15 @@ public class TmdbImporter {
      * für Umbewertungen.
      */
     private void importMovies() {
-    	KeyValueRepository kvRepo = new KeyValueRepository();
+        KeyValueRepository kvRepo = new KeyValueRepository();
         LocalDateTime lastImport = kvRepo.getTime("tmdb.lastMovieImport");
         if (lastImport.toLocalDate().equals(LocalDate.now())) {
             log.info("TMDB Filmimport heute bereits durchgeführt, überspringe.");
             return;
-        } else {
-        	log.info("Letzter Filmimport: " + lastImport + ". Wir starten einen neuen Import-Lauf.");
         }
+        log.info("Letzter Filmimport: " + lastImport + ". Wir starten einen neuen Import-Lauf.");
+
+        crewFilterRepo.load();
 
         // Schritt 1+2: Seite 1 laden, neue Bewertungen importieren
         MovieRatingsPageJSON firstPage = api.getRatedMovies(1);
@@ -130,9 +135,9 @@ public class TmdbImporter {
     private void processReratedMovies(MovieRatingsPageJSON page) {
         for (MovieRatingJSON rating : page.results) {
             Integer dbRating = movieRepo.getMovieRating(rating.id);
-            if (dbRating == null) {
-            	throw new RuntimeException("Film auf der Umbewertungs-Prüfseite nicht in DB gefunden. movieId: " + rating.id + " (" + rating.title + ")");
-            } else if (!dbRating.equals(rating.account_rating.value)) {
+            if (dbRating == null)
+                throw new RuntimeException("Film auf der Umbewertungs-Prüfseite nicht in DB gefunden. movieId: " + rating.id + " (" + rating.title + ")");
+            if (!dbRating.equals(rating.account_rating.value)) {
                 log.info("Umbewertung erkannt für Film " + rating.id + " (" + rating.title + ")");
                 String existingComment = movieRepo.getMovieComment(rating.id);
                 movieRepo.updateMovieRating(rating, existingComment);
@@ -144,53 +149,79 @@ public class TmdbImporter {
      * Importiert einen einzelnen neuen Film vollständig:
      * Movie, Credits, Personen, Bilder, Rating — alles in einer Transaktion.
      */
-	private void importNewMovie(MovieRatingJSON rating) {
-		log.info("Importiere neuen Film: " + rating.title + " (id=" + rating.id + ")");
-		MovieJSON movie = api.getMovieDetails(rating.id);
-		CreditListJSON credits = api.getMovieCredits(rating.id);
-		byte[] posterW92 = movie.poster_path != null ? api.getImage(movie.poster_path, "w92") : null;
-		byte[] posterW154 = movie.poster_path != null ? api.getImage(movie.poster_path, "w154") : null;
+    private void importNewMovie(MovieRatingJSON rating) {
+        log.info("Importiere neuen Film: " + rating.title + " (id=" + rating.id + ")");
+        MovieJSON movie = api.getMovieDetails(rating.id);
+        CreditListJSON credits = api.getMovieCredits(rating.id);
+        byte[] posterW92 = movie.poster_path != null ? api.getImage(movie.poster_path, "w92") : null;
+        byte[] posterW154 = movie.poster_path != null ? api.getImage(movie.poster_path, "w154") : null;
 
-		try (var conn = DB.getNewTmdbConnection()) {
-			try {
-				movieRepo.insertMovie(movie, conn);
-				if (posterW92 != null) {
-					int[] dimensions = getImageDimensions(posterW92);
-					String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
-					saveImageToFileSystem(filename, posterW92);
-					movieRepo.insertMovieImage(movie, 92, dimensions[1], filename, conn);
-				}
-				if (posterW154 != null) {
-					int[] dimensions = getImageDimensions(posterW154);
-					String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
-					saveImageToFileSystem(filename, posterW154);
-					movieRepo.insertMovieImage(movie, 154, dimensions[1], filename, conn);
-				}
-				movieRepo.insertMovieRating(rating, ".", conn);
-				for (var cast : credits.cast)
-					movieRepo.insertPersonIfNotExists(api.getPerson(cast.id), conn);
-				for (var crew : credits.crew)
-					movieRepo.insertPersonIfNotExists(api.getPerson(crew.id), conn);
-				movieRepo.insertMovieCredits(credits, movie.id, conn);
-				movieRepo.insertMovieGenres(movie, conn);
-				movieRepo.insertMovieCountries(movie, conn);
-				movieRepo.insertMovieLanguages(movie, conn);
-				conn.commit();
-				log.info("Film erfolgreich importiert: " + movie.title);
-			} catch (Exception e) {
-				conn.rollback();
-				throw new RuntimeException("Import fehlgeschlagen für Film: " + rating.title + " (id=" + rating.id + ")", e);
-			}
-		} catch (SQLException e) {
-			throw new RuntimeException("TMDB-DB-Verbindung fehlgeschlagen", e);
-		}
-	}
+        try (var conn = DB.getNewTmdbConnection()) {
+            try {
+                movieRepo.insertMovie(movie, conn);
+                if (posterW92 != null) {
+                    int[] dimensions = getImageDimensions(posterW92);
+                    String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
+                    saveImageToFileSystem(filename, posterW92);
+                    movieRepo.insertMovieImage(movie, 92, dimensions[1], filename, conn);
+                }
+                if (posterW154 != null) {
+                    int[] dimensions = getImageDimensions(posterW154);
+                    String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
+                    saveImageToFileSystem(filename, posterW154);
+                    movieRepo.insertMovieImage(movie, 154, dimensions[1], filename, conn);
+                }
+                movieRepo.insertMovieRating(rating, ".", conn);
+                processCredits(credits, movie, conn);
+                movieRepo.insertMovieGenres(movie, conn);
+                movieRepo.insertMovieCountries(movie, conn);
+                movieRepo.insertMovieLanguages(movie, conn);
+                conn.commit();
+                log.info("Film erfolgreich importiert: " + movie.title);
+            } catch (Exception e) {
+                conn.rollback();
+                throw new RuntimeException("Import fehlgeschlagen für Film: " + rating.title + " (id=" + rating.id + ")", e);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("TMDB-DB-Verbindung fehlgeschlagen", e);
+        }
+    }
 
     /**
-     * Speichert ein Bild im Dateisystem. Überschreibt nicht wenn bereits vorhanden.
+     * Verarbeitet Credits eines Films:
+     * - Cast: Person in DB, dann movie_to_person-Eintrag
+     * - Crew whitelisted: wie Cast
+     * - Crew blacklisted: ignorieren
+     * - Crew unbekannt: Person und Crew-Eintrag in pending-Tabellen
+     *
+     * Alle Operationen laufen auf der übergebenen Transaktions-Connection.
+     */
+    private void processCredits(CreditListJSON credits, MovieJSON movie, Connection conn) {
+        for (CastJSON cast : credits.cast) {
+            movieRepo.insertPersonIfNotExists(api.getPerson(cast.id), conn);
+            movieRepo.insertMovieCast(cast, movie.id, conn);
+        }
+        for (CrewJSON crew : credits.crew) {
+            String job = crew.getJob();
+            if (crewFilterRepo.isBlacklisted(job)) {
+                log.fine("Crew blacklisted, überspringe. personId=" + crew.id + ", job=" + job);
+            } else if (crewFilterRepo.isWhitelisted(job)) {
+                movieRepo.insertPersonIfNotExists(api.getPerson(crew.id), conn);
+                movieRepo.insertMovieCrew(crew, movie.id, conn);
+            } else {
+                log.info("Crew-Job unbekannt, in pending. personId=" + crew.id + ", job=" + job + ", film=" + movie.title);
+                pendingRepo.insertPersonPending(api.getPerson(crew.id), conn);
+                pendingRepo.insertCrewPending(movie.id, crew.id, crew.name, job, crew.department, crew.getCredit_id(), conn);
+            }
+        }
+    }
+
+    /**
+     * Speichert ein Bild im Dateisystem. Wirft Exception wenn bereits vorhanden —
+     * das sollte nie passieren.
      */
     private static void saveImageToFileSystem(String filename, byte[] image) {
-        File file = new File(Config.get("imageFolder") + File.separator + "tmdb" + File.separator + filename);
+        File file = new File(Config.get("imageFolder") + "tmdb" + File.separator + filename);
         if (file.exists())
             throw new RuntimeException("Bild existiert bereits, das sollte nicht passieren: " + filename);
         try {
@@ -216,7 +247,7 @@ public class TmdbImporter {
     }
 
     /**
-     * Baut den Dateinamen für ein Bild zusammen, analog zur alten GeoSuite.
+     * Baut den Dateinamen für ein Bild zusammen.
      * Format: originalname_language_width_height.jpg
      */
     private static String buildImageFilename(String posterPath, String language, int width, int height) {

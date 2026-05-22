@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.util.logging.Logger;
 
 import app.tmdb.json.CastJSON;
-import app.tmdb.json.CreditListJSON;
 import app.tmdb.json.CrewJSON;
 import app.tmdb.json.GenreJSON;
 import app.tmdb.json.MovieJSON;
@@ -22,10 +21,9 @@ import app.tmdb.json.SpokenLanguageJSON;
 public class TmdbMovieRepository {
 
     private static final Logger log = Logger.getLogger(TmdbMovieRepository.class.getName());
-    
+
     /**
-     * Fügt einen neuen Film in die DB ein. Ignoriert den Insert wenn der Film
-     * bereits existiert (z.B. weil er schon über eine Episode oder Serie bekannt ist).
+     * Fügt einen neuen Film in die DB ein. Wirft Exception wenn der Film bereits existiert.
      *
      * @param movie     Vollständiges MovieJSON mit german_title
      * @param conn      Transaktions-Connection
@@ -33,7 +31,7 @@ public class TmdbMovieRepository {
     public void insertMovie(MovieJSON movie, Connection conn) {
         log.fine("insertMovie, movieId " + movie.id);
         try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT OR IGNORE INTO movie (id, title, original_title, german_title, release_date, " +
+                "INSERT INTO movie (id, title, original_title, german_title, release_date, " +
                 "tagline, overview, backdrop_path, collection_name, budget, homepage, imdb_id, " +
                 "original_language, popularity, poster_path, runtime, vote_average, vote_count) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
@@ -60,7 +58,7 @@ public class TmdbMovieRepository {
             throw new RuntimeException("insertMovie fehlgeschlagen. movieId: " + movie.id, e);
         }
     }
-    
+
     /**
      * Fügt eine neue Filmbewertung in die DB ein.
      * Kommentar wird als "." gesetzt wenn keiner angegeben — wird später in
@@ -84,11 +82,9 @@ public class TmdbMovieRepository {
             throw new RuntimeException("insertMovieRating fehlgeschlagen. movieId: " + rating.id, e);
         }
     }
-    
+
     /**
      * Speichert die Bild-Metadaten eines Films in der DB.
-     * Das eigentliche Bild-Byte-Array wird nicht hier gespeichert — das landet
-     * im Dateisystem, gehandhabt durch den TmdbImporter.
      *
      * @param movie     MovieJSON mit poster_path
      * @param width     Breite des Bildes in Pixeln, z.B. 92 oder 154
@@ -99,7 +95,7 @@ public class TmdbMovieRepository {
     public void insertMovieImage(MovieJSON movie, int width, int height, String filename, Connection conn) {
         log.fine("insertMovieImage, movieId " + movie.id);
         try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT OR IGNORE INTO movie_image (movie_id, type, width, height, language, original_name, filename) " +
+                "INSERT INTO movie_image (movie_id, type, width, height, language, original_name, filename) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
             ps.setInt(1, movie.id);
             ps.setString(2, "poster");
@@ -113,11 +109,9 @@ public class TmdbMovieRepository {
             throw new RuntimeException("insertMovieImage fehlgeschlagen. movieId: " + movie.id, e);
         }
     }
-    
+
     /**
      * Fügt eine Person in die DB ein, wenn sie noch nicht vorhanden ist.
-     * Bereits vorhandene Personen werden nicht aktualisiert — das ist eine
-     * bewusste Designentscheidung, siehe Architektur-Dokumentation.
      *
      * @param person    PersonJSON mit allen Detaildaten
      * @param conn      Transaktions-Connection
@@ -145,49 +139,57 @@ public class TmdbMovieRepository {
             throw new RuntimeException("insertPersonIfNotExists fehlgeschlagen. personId: " + person.id, e);
         }
     }
-    
+
     /**
-     * Fügt Cast und Crew eines Films in movie_to_person ein.
-     * Bereits vorhandene Einträge werden ignoriert (INSERT OR IGNORE).
-     * Personen müssen vorher bereits in der person-Tabelle vorhanden sein.
+     * Fügt einen einzelnen Cast-Eintrag in movie_to_person ein.
      *
-     * @param credits   CreditListJSON mit Cast und Crew
+     * @param cast      CastJSON mit Personendaten und Rolle
      * @param movieId   TMDB-ID des Films
      * @param conn      Transaktions-Connection
      */
-    public void insertMovieCredits(CreditListJSON credits, int movieId, Connection conn) {
-        log.fine("insertMovieCredits, movieId " + movieId);
+    public void insertMovieCast(CastJSON cast, int movieId, Connection conn) {
+        log.fine("insertMovieCast, movieId " + movieId + ", personId " + cast.id);
         try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT OR IGNORE INTO movie_to_person (movie_id, person_id, credit_id, character, " +
-                "\"order\", department, job) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
-            for (CastJSON cast : credits.cast) {
-                ps.setInt(1, movieId);
-                ps.setInt(2, cast.id);
-                ps.setString(3, cast.getCredit_id());
-                ps.setString(4, cast.getCharacter());
-                ps.setObject(5, cast.order);
-                ps.setNull(6, java.sql.Types.VARCHAR);
-                ps.setNull(7, java.sql.Types.VARCHAR);
-                ps.execute();
-            }
-            for (CrewJSON crew : credits.crew) {
-                ps.setInt(1, movieId);
-                ps.setInt(2, crew.id);
-                ps.setString(3, crew.getCredit_id());
-                ps.setNull(4, java.sql.Types.VARCHAR);
-                ps.setNull(5, java.sql.Types.INTEGER);
-                ps.setString(6, crew.department);
-                ps.setString(7, crew.getJob());
-                ps.execute();
-            }
+                "INSERT INTO movie_to_person (movie_id, person_id, credit_id, character, " +
+                "\"order\", department, job) VALUES (?, ?, ?, ?, ?, NULL, NULL)")) {
+            ps.setInt(1, movieId);
+            ps.setInt(2, cast.id);
+            ps.setString(3, cast.getCredit_id());
+            ps.setString(4, cast.getCharacter());
+            ps.setObject(5, cast.order);
+            ps.execute();
         } catch (Exception e) {
-            throw new RuntimeException("insertMovieCredits fehlgeschlagen. movieId: " + movieId, e);
+            throw new RuntimeException("insertMovieCast fehlgeschlagen. movieId: " + movieId + ", personId: " + cast.id, e);
         }
     }
-    
+
+    /**
+     * Fügt einen einzelnen Crew-Eintrag in movie_to_person ein.
+     * Wird nur für whitegelistete Jobs aufgerufen — die Filterentscheidung
+     * liegt beim Aufrufer (TmdbImporter).
+     *
+     * @param crew      CrewJSON mit Personendaten und Job
+     * @param movieId   TMDB-ID des Films
+     * @param conn      Transaktions-Connection
+     */
+    public void insertMovieCrew(CrewJSON crew, int movieId, Connection conn) {
+        log.fine("insertMovieCrew, movieId " + movieId + ", personId " + crew.id + ", job " + crew.getJob());
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO movie_to_person (movie_id, person_id, credit_id, character, " +
+                "\"order\", department, job) VALUES (?, ?, ?, NULL, NULL, ?, ?)")) {
+            ps.setInt(1, movieId);
+            ps.setInt(2, crew.id);
+            ps.setString(3, crew.getCredit_id());
+            ps.setString(4, crew.department);
+            ps.setString(5, crew.getJob());
+            ps.execute();
+        } catch (Exception e) {
+            throw new RuntimeException("insertMovieCrew fehlgeschlagen. movieId: " + movieId + ", personId: " + crew.id + ", job: " + crew.getJob(), e);
+        }
+    }
+
     /**
      * Fügt die Genre-Zuordnungen eines Films ein.
-     * Genres werden bei Bedarf ebenfalls angelegt (INSERT OR IGNORE).
      *
      * @param movie     MovieJSON mit genres-Liste
      * @param conn      Transaktions-Connection
@@ -197,7 +199,7 @@ public class TmdbMovieRepository {
         try (PreparedStatement psGenre = conn.prepareStatement(
                     "INSERT OR IGNORE INTO genre (id, name) VALUES (?, ?)");
              PreparedStatement psMovieGenre = conn.prepareStatement(
-                    "INSERT OR IGNORE INTO movie_to_genre (movie_id, genre_id) VALUES (?, ?)")) {
+                    "INSERT INTO movie_to_genre (movie_id, genre_id) VALUES (?, ?)")) {
             for (GenreJSON genre : movie.genres) {
                 psGenre.setInt(1, genre.id);
                 psGenre.setString(2, genre.name);
@@ -220,7 +222,7 @@ public class TmdbMovieRepository {
     public void insertMovieCountries(MovieJSON movie, Connection conn) {
         log.fine("insertMovieCountries, movieId " + movie.id);
         try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT OR IGNORE INTO movie_to_country (movie_id, iso_3166_1) VALUES (?, ?)")) {
+                "INSERT INTO movie_to_country (movie_id, iso_3166_1) VALUES (?, ?)")) {
             for (ProductionCountryJSON country : movie.production_countries) {
                 ps.setInt(1, movie.id);
                 ps.setString(2, country.iso_3166_1);
@@ -240,7 +242,7 @@ public class TmdbMovieRepository {
     public void insertMovieLanguages(MovieJSON movie, Connection conn) {
         log.fine("insertMovieLanguages, movieId " + movie.id);
         try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT OR IGNORE INTO movie_to_language (movie_id, iso_639_1) VALUES (?, ?)")) {
+                "INSERT INTO movie_to_language (movie_id, iso_639_1) VALUES (?, ?)")) {
             for (SpokenLanguageJSON language : movie.spoken_languages) {
                 ps.setInt(1, movie.id);
                 ps.setString(2, language.iso_639_1);
@@ -250,32 +252,27 @@ public class TmdbMovieRepository {
             throw new RuntimeException("insertMovieLanguages fehlgeschlagen. movieId: " + movie.id, e);
         }
     }
-    
+
     /**
      * Aktualisiert die Bewertung eines bereits vorhandenen Films.
-     * first_rated_at wird nicht angefasst — nur der neue Wert, Kommentar und
-     * das Update-Datum werden gesetzt.
      *
      * @param rating    MovieRatingJSON mit neuer Bewertung
      * @param comment   Kommentar. Der alte wird hiermit ersetzt!
-     * @param conn      Transaktions-Connection
      */
-	public void updateMovieRating(MovieRatingJSON rating, String comment) {
-		{
-			log.fine("updateMovieRating, movieId " + rating.id);
-			try (PreparedStatement ps = DB.getTmdbConnection()
-					.prepareStatement("UPDATE movie_rating SET ar_value = ?, comment = ?, last_updated_at = ? " + "WHERE movie_id = ?")) {
-				ps.setInt(1, rating.account_rating.value);
-				ps.setString(2, comment == null || comment.isEmpty() ? "." : comment);
-				ps.setString(3, java.time.LocalDateTime.now().toString());
-				ps.setInt(4, rating.id);
-				ps.execute();
-			} catch (Exception e) {
-				throw new RuntimeException("updateMovieRating fehlgeschlagen. movieId: " + rating.id, e);
-			}
-		}
-	}
-    
+    public void updateMovieRating(MovieRatingJSON rating, String comment) {
+        log.fine("updateMovieRating, movieId " + rating.id);
+        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+                "UPDATE movie_rating SET ar_value = ?, comment = ?, last_updated_at = ? WHERE movie_id = ?")) {
+            ps.setInt(1, rating.account_rating.value);
+            ps.setString(2, comment == null || comment.isEmpty() ? "." : comment);
+            ps.setString(3, java.time.LocalDateTime.now().toString());
+            ps.setInt(4, rating.id);
+            ps.execute();
+        } catch (Exception e) {
+            throw new RuntimeException("updateMovieRating fehlgeschlagen. movieId: " + rating.id, e);
+        }
+    }
+
     /**
      * Liefert den aktuellen Kommentar einer Filmbewertung aus der DB.
      * Gibt null zurück wenn keine Bewertung existiert.
