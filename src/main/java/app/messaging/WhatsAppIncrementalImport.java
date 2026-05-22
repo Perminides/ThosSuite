@@ -1,5 +1,29 @@
 package app.messaging;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import app.config.Config;
 import app.data.persistence.DB;
 import app.data.persistence.KeyValueRepository;
 import app.data.persistence.MessageRepository;
@@ -8,22 +32,8 @@ import app.ui.components.WhatsAppChatDialog;
 import app.ui.components.WhatsAppContactDialog;
 import app.ui.skin.SkinService;
 import app.util.Log;
-import app.config.Config;
-
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.security.MessageDigest;
-import java.sql.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
 
 /**
  * 
@@ -127,7 +137,7 @@ public class WhatsAppIncrementalImport {
         }
 
         String currentHash = computeHash(crypt15Path);
-        String storedHash  = kvRepo.get(KV_LAST_HASH).orElse(null);
+        String storedHash  = kvRepo.get(KV_LAST_HASH);
 
         if (Objects.equals(currentHash, storedHash)) {
             checkWarning();
@@ -159,11 +169,9 @@ public class WhatsAppIncrementalImport {
             dayStart = dayStart.minusDays(1);
         }
 
-        Optional<String> lastCheck = kvRepo.get(KV_LAST_CHECK);
-        if (lastCheck.isEmpty()) return true;
-
-        LocalDateTime lastCheckTime = LocalDateTime.parse(lastCheck.get(), DT);
-        return lastCheckTime.isBefore(dayStart);
+        LocalDateTime lastCheck = kvRepo.getTime(KV_LAST_CHECK);
+        if (lastCheck == null) return true;
+        return lastCheck.isBefore(dayStart);
     }
 
     /**
@@ -171,15 +179,13 @@ public class WhatsAppIncrementalImport {
      * kein erfolgreicher Import stattgefunden hat.
      */
     private void checkWarning() {
-        Optional<String> lastImport = kvRepo.get(KV_LAST_IMPORT);
-        if (lastImport.isEmpty()) return;
-
-        LocalDateTime lastImportTime = LocalDateTime.parse(lastImport.get(), DT);
+        LocalDateTime lastImportTime = kvRepo.getTime(KV_LAST_IMPORT);
+        if (lastImportTime == null) return;
         if (lastImportTime.isBefore(LocalDateTime.now().minusDays(warningAfterDays))) {
             Alert alert = new Alert(AlertType.WARNING);
             alert.setTitle("WhatsApp-Import");
             alert.setHeaderText("Kein Import seit " + warningAfterDays + " Tagen");
-            alert.setContentText("Letzter erfolgreicher Import: " + lastImport.get());
+            alert.setContentText("Letzter erfolgreicher Import: " + lastImportTime);
             alert.showAndWait();
         }
         Log.warn(this.getClass(), "WhatsApp-import: Uff. Schon lange kein Import mehr gelaufen. Warnung ausgegeben.");
@@ -270,11 +276,10 @@ public class WhatsAppIncrementalImport {
     // -------------------------------------------------------------------------
 
     private void processMessages(Connection wa, Connection thos) throws Exception {
-        String lastSourceId = msgRepo.getLastImportedSourceId(SOURCE);
-        long   lastId       = lastSourceId != null ? Long.parseLong(lastSourceId) : 0L;
-        long   lastTs       = lastSourceId != null
-            ? parseTs(msgRepo.getSentAtForSourceId(SOURCE, lastSourceId))
-            : 0L;
+		String lastSourceId = msgRepo.getLastImportedSourceId(SOURCE);
+		long lastId = lastSourceId != null ? Long.parseLong(lastSourceId) : 0L;
+		LocalDateTime lastSentAt = lastSourceId != null ? msgRepo.getSentAtForSourceId(SOURCE, lastSourceId) : null;
+		long lastTs = lastSentAt != null ? lastSentAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() : 0L;
 
         Map<Integer, Boolean> messageTypeToIgnore = loadMessageTypes(thos);
 
@@ -398,7 +403,7 @@ public class WhatsAppIncrementalImport {
         }
 
         // Einfügen — Message zuerst, dann Attachment (FK-Constraint)
-        String sentAt = formatTs(timestamp);
+        LocalDateTime sentAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault());
         msgRepo.insertMessage(thos, SOURCE, sourceIdStr, sentAt, fromContactId, chatId, content, resolvedQuote);
 
         if (attachmentPath != null) {
@@ -574,13 +579,6 @@ public class WhatsAppIncrementalImport {
         return java.time.LocalDateTime
             .ofInstant(java.time.Instant.ofEpochMilli(unixMs), java.time.ZoneId.systemDefault())
             .format(DT);
-    }
-
-    private long parseTs(String sentAt) {
-        return java.time.LocalDateTime.parse(sentAt, DT)
-            .atZone(java.time.ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli();
     }
     
     private void updateKeyValue(String currentHash) {

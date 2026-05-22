@@ -1,6 +1,10 @@
 package app.data.persistence;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 /**
@@ -18,6 +22,8 @@ import java.util.Optional;
  */
 public class KeyValueRepository {
 
+	// TODO: Sortierreihenfolge und letztes Skin noch implementieren.
+	
     // -------------------------------------------------------------------------
     // Lesen
     // -------------------------------------------------------------------------
@@ -26,17 +32,31 @@ public class KeyValueRepository {
      * Gibt den gespeicherten Wert für den angegebenen Schlüssel zurück,
      * oder {@link Optional#empty()} wenn der Schlüssel nicht existiert.
      */
-    public Optional<String> get(String key) {
+    public String get(String key) {
         String sql = "SELECT value FROM key_values WHERE key = ?";
         Connection con = DB.getConnection();
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, key);
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? Optional.of(rs.getString("value")) : Optional.empty();
+                return rs.next() ? rs.getString("value") : null;
             }
         } catch (Exception e) {
             throw new RuntimeException("Fehler beim Lesen von key_values für key='" + key + "'", e);
         }
+    }
+    
+    public Integer getInteger(String key) {
+        String value = get(key);
+        if (value == null)
+            return null;
+        return Integer.parseInt(value);
+    }
+
+    public LocalDateTime getTime(String key) {
+        String value = get(key);
+        if (value == null)
+            return null;
+        return LocalDateTime.parse(value);
     }
 
     // -------------------------------------------------------------------------
@@ -57,6 +77,14 @@ public class KeyValueRepository {
         } catch (Exception e) {
             throw new RuntimeException("Fehler beim Schreiben von key_values für key='" + key + "'", e);
         }
+    }
+    
+    public void setInteger(String key, Integer value) {
+    	set (key, String.valueOf(value));
+    }
+    
+    public void setTime(String key, LocalDateTime time) {
+    	set (key, time.truncatedTo(ChronoUnit.SECONDS).toString());
     }
 
     /**

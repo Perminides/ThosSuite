@@ -18,7 +18,6 @@ import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -67,7 +66,6 @@ import java.util.*;
 public class SignalIncrementalImport {
 
     private static final String MY_SERVICE_ID = "439b7480-bdcd-409f-a397-0fb85faa3a83";
-    private static final DateTimeFormatter DB_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
     private static final String signalId = "signal";
 
     /** Puffer am oberen Ende des Importfensters: Nachrichten jünger als dieser Wert werden ignoriert. */
@@ -126,7 +124,7 @@ public class SignalIncrementalImport {
             String lastSourceId = repo.getLastImportedSourceId(signalId);
 
             Log.info(this, "[signal] Importiere Nachrichten ab source_id=" + lastSourceId
-                + " bis " + millisToDbString(cutoffMs));
+                + " bis " + LocalDateTime.ofInstant(Instant.ofEpochMilli(cutoffMs), ZoneId.systemDefault()));
 
             suiteConnection.setAutoCommit(false);
 
@@ -235,8 +233,9 @@ public class SignalIncrementalImport {
             String resolvedQuoteMsgId = resolveQuote(signalConnection, msg.signalMsgId(),
                 msg.quoteJson(), msg.quoteMsgId(), msg.quoteId());
 
-            repo.insertMessage(suiteConnection, signalId, msg.signalMsgId(), millisToDbString(msg.sentAtMs()),
-                fromContact, chatId, msg.body(), resolvedQuoteMsgId);
+            repo.insertMessage(suiteConnection, signalId, msg.signalMsgId(),
+            	    LocalDateTime.ofInstant(Instant.ofEpochMilli(msg.sentAtMs()), ZoneId.systemDefault()),
+            	    fromContact, chatId, msg.body(), resolvedQuoteMsgId);
             msgCount[0]++;
 
             for (AttachmentResult att : msg.attachments()) {
@@ -444,10 +443,6 @@ public class SignalIncrementalImport {
 
     private boolean isBlank(String s)                      { return s == null || s.isBlank(); }
     private void addIfNotBlank(List<String> list, String s) { if (!isBlank(s)) list.add(s); }
-
-    private String millisToDbString(long millis) {
-        return LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault()).format(DB_FORMAT);
-    }
 
     private String sanitizeFileName(String name) {
         return name.replaceAll("[,:\\\\/*?\"<>|]", "_");
