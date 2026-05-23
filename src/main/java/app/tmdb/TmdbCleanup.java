@@ -144,7 +144,7 @@ public class TmdbCleanup {
 
         for (NullCommentEntry entry : entries) {
             String comment = askForComment(entry);
-            movieRepo.saveComment(entry.movieId, (comment == null || comment.isBlank()) ? "." : comment);
+            movieRepo.saveComment(entry.movieId, (comment == null || comment.isBlank()) ? "." : comment.trim());
         }
     }
 
