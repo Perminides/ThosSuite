@@ -168,12 +168,6 @@ public class ThosSuiteApp extends Application {
 						initializeMainWindow(primaryStage);
 						primaryStage.setOpacity(0); // MainWindow unsichtbar starten
 						
-						//TmdbApiClient client = new TmdbApiClient();
-						//client.getImage("/rxeDxo8FvZpLu6iplNpxdtAVnfu.jpg", "w154");
-						//TmdbMovieRepository repo = new TmdbMovieRepository();
-						//System.out.println(repo.getMovieRating(10));
-						new TmdbImporter().run();
-						
 						controller = new Controller(mainWindow);
 						controller.runPreTasks();
 

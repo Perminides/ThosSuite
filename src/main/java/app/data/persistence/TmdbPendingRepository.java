@@ -2,6 +2,9 @@ package app.data.persistence;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import app.tmdb.json.PersonJSON;
@@ -17,6 +20,26 @@ import app.tmdb.json.PersonJSON;
 public class TmdbPendingRepository {
 
     private static final Logger log = Logger.getLogger(TmdbPendingRepository.class.getName());
+    
+	public static class CrewPendingEntry {
+		public final int movieId;
+		public final int personId;
+		public final String personName;
+		public final String job;
+		public final String department;
+		public final String creditId;
+		public final String movieTitle;
+
+		public CrewPendingEntry(int movieId, int personId, String personName, String job, String department, String creditId, String movieTitle) {
+			this.movieId = movieId;
+			this.personId = personId;
+			this.personName = personName;
+			this.job = job;
+			this.department = department;
+			this.creditId = creditId;
+			this.movieTitle = movieTitle;
+		}
+	}
 
     /**
      * Schreibt eine Person in person_pending.
@@ -82,14 +105,15 @@ public class TmdbPendingRepository {
     /**
      * Überträgt eine Person von person_pending in die echte person-Tabelle.
      * Löscht den Pending-Eintrag danach.
-     * Da eine Person ja auch 2x pending gewesen sein kann, muss es ignoriert werden, wenn eine Person in der Tabelle fehlt.
+     * Wenn Person bereits übertragen wurde, passiert nichts.
+     * Wenn Person bereits in Person-Tabelle drin, gibt es eine Exception.
      *
      * @param personId  TMDB-ID der Person
      */
     public void transferPersonToMain(int personId) {
         log.info("transferPersonToMain, personId " + personId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "INSERT OR IGNORE INTO person SELECT * FROM person_pending WHERE id = ?")) {
+                "INSERT INTO person SELECT * FROM person_pending WHERE id = ?")) {
             ps.setInt(1, personId);
             ps.execute();
         } catch (Exception e) {
@@ -131,6 +155,42 @@ public class TmdbPendingRepository {
             ps.execute();
         } catch (Exception e) {
             throw new RuntimeException("deleteCrewPending fehlgeschlagen. personId: " + personId + ", job: " + job, e);
+        }
+    }
+    
+    public List<CrewPendingEntry> loadCrewPendingEntries() {
+        List<CrewPendingEntry> entries = new ArrayList<>();
+        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+                "SELECT cp.movie_id, cp.person_id, cp.person_name, cp.job, cp.department, cp.credit_id, " +
+                "m.title AS movie_title " +
+                "FROM crew_pending cp " +
+                "JOIN movie m ON m.id = cp.movie_id " +
+                "ORDER BY cp.job, cp.person_name");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next())
+                entries.add(new CrewPendingEntry(
+                    rs.getInt("movie_id"),
+                    rs.getInt("person_id"),
+                    rs.getString("person_name"),
+                    rs.getString("job"),
+                    rs.getString("department"),
+                    rs.getString("credit_id"),
+                    rs.getString("movie_title")));
+        } catch (Exception e) {
+            throw new RuntimeException("loadCrewPendingEntries fehlgeschlagen", e);
+        }
+        return entries;
+    }
+
+    public boolean hasMoreCrewPendingForPerson(int personId) {
+        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+                "SELECT COUNT(*) FROM crew_pending WHERE person_id = ?")) {
+            ps.setInt(1, personId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("hasMoreCrewPendingForPerson fehlgeschlagen. personId=" + personId, e);
         }
     }
 }

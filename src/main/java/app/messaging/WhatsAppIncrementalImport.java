@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -82,7 +81,6 @@ public class WhatsAppIncrementalImport {
     private static final String KV_LAST_IMPORT    = "whatsapp.lastImport";
     private static final String SOURCE            = "whatsapp";
     private static final String MEDIA             = "Media/";
-    private static final DateTimeFormatter DT     = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final KeyValueRepository       kvRepo    = new KeyValueRepository();
     private final MessageRepository        msgRepo   = new MessageRepository();
@@ -135,14 +133,14 @@ public class WhatsAppIncrementalImport {
         	Log.info(this.getClass(), "Kein WhatsApp-Import fällig.");
         	return;
         }
-
+        
+        kvRepo.setTime(KV_LAST_CHECK, LocalDateTime.now());
         String currentHash = computeHash(crypt15Path);
         String storedHash  = kvRepo.get(KV_LAST_HASH);
 
         if (Objects.equals(currentHash, storedHash)) {
             checkWarning();
             Log.info(this.getClass(), "WhatsApp: Hash der Datei hat sich nicht geändert.");
-            updateKeyValue(currentHash);
             return;
         }
 
@@ -182,13 +180,13 @@ public class WhatsAppIncrementalImport {
         LocalDateTime lastImportTime = kvRepo.getTime(KV_LAST_IMPORT);
         if (lastImportTime == null) return;
         if (lastImportTime.isBefore(LocalDateTime.now().minusDays(warningAfterDays))) {
+        	Log.warn(this.getClass(), "WhatsApp-import: Uff. Schon lange kein Import mehr gelaufen. Warnung ausgegeben.");
             Alert alert = new Alert(AlertType.WARNING);
             alert.setTitle("WhatsApp-Import");
             alert.setHeaderText("Kein Import seit " + warningAfterDays + " Tagen");
             alert.setContentText("Letzter erfolgreicher Import: " + lastImportTime);
             alert.showAndWait();
         }
-        Log.warn(this.getClass(), "WhatsApp-import: Uff. Schon lange kein Import mehr gelaufen. Warnung ausgegeben.");
     }
 
     // -------------------------------------------------------------------------
@@ -197,9 +195,9 @@ public class WhatsAppIncrementalImport {
 
     private void validateAttachmentDir() {
         if (!Files.exists(attachmentDir))
-            throw new IllegalStateException("[FAILFAST] Attachment-Zielverzeichnis existiert nicht: " + attachmentDir);
+            throw new IllegalStateException("Attachment-Zielverzeichnis existiert nicht: " + attachmentDir);
         if (!Files.isWritable(attachmentDir))
-            throw new IllegalStateException("[FAILFAST] Attachment-Zielverzeichnis nicht beschreibbar: " + attachmentDir);
+            throw new IllegalStateException("Attachment-Zielverzeichnis nicht beschreibbar: " + attachmentDir);
     }
 
     // -------------------------------------------------------------------------
@@ -212,7 +210,7 @@ public class WhatsAppIncrementalImport {
             decryptor.decrypt(hexKey, crypt15Path, tempFile);
             return tempFile;
         } catch (Exception e) {
-            throw new RuntimeException("[FAILFAST] Entschlüsselung der crypt15-Datei fehlgeschlagen", e);
+            throw new RuntimeException("Entschlüsselung der crypt15-Datei fehlgeschlagen", e);
         }
     }
 
@@ -241,7 +239,8 @@ public class WhatsAppIncrementalImport {
 
         copyAttachments();
         String currentHash = computeHash(crypt15Path);
-        updateKeyValue(currentHash);
+        kvRepo.set(KV_LAST_HASH, currentHash);
+        kvRepo.setTime(KV_LAST_IMPORT, LocalDateTime.now());
 
         showSummaryAlert();
     }
@@ -308,7 +307,7 @@ public class WhatsAppIncrementalImport {
         // Konsistenzcheck
         if (sourceId < lastId || timestamp < lastTs)
             throw new IllegalStateException(
-                "[FAILFAST] Konsistenzfehler: Nachricht _id=" + sourceId +
+                "Konsistenzfehler: Nachricht _id=" + sourceId +
                 " timestamp=" + timestamp + " liegt vor dem letzten importierten Wert " +
                 "(lastId=" + lastId + ", lastTs=" + lastTs + ")");
 
@@ -332,7 +331,7 @@ public class WhatsAppIncrementalImport {
         // Und jetzt nachgelagert der Unknown-Check, aber erst wenn wir wissen, dass es einen interessanten Chat betrifft.
         if (unknownMessageTypeFound)
             throw new IllegalStateException(
-                    "[FAILFAST] Unbekannter message_type=" + type +
+                    "Unbekannter message_type=" + type +
                     " bei _id=" + sourceId + " — bitte msg_message_types aktualisieren");
 
         // Album-Kind-Erkennung
@@ -489,7 +488,7 @@ public class WhatsAppIncrementalImport {
     private AttachmentResolution resolveAttachment(String filePath, long sourceId) {
         if (!filePath.startsWith(MEDIA))
             throw new IllegalStateException(
-                "[FAILFAST] Unerwarteter Attachment-Pfad ohne '" + MEDIA +
+                "Unerwarteter Attachment-Pfad ohne '" + MEDIA +
                 "'-Präfix: " + filePath + " (_id=" + sourceId + ")");
 
         String relativePath = filePath.replace(",", "_");
@@ -503,7 +502,7 @@ public class WhatsAppIncrementalImport {
             return new AttachmentResolution(relativePath, true);
         } else {
             throw new IllegalStateException(
-                "[FAILFAST] Attachment nicht gefunden in Quelle '" + source +
+                "Attachment nicht gefunden in Quelle '" + source +
                 "' und nicht im Zielverzeichnis '" + target +
                 "' (_id=" + sourceId + ")");
         }
@@ -528,7 +527,7 @@ public class WhatsAppIncrementalImport {
                 Files.copy(move.source(), move.target(), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 throw new IllegalStateException(
-                    "[FAILFAST] Attachment-Verschiebung fehlgeschlagen — das hätte nie passieren dürfen. " +
+                    "Attachment-Verschiebung fehlgeschlagen — das hätte nie passieren dürfen. " +
                     "Bitte Konsistenz-Check durchführen. Quelle: " + move.source() +
                     " Ziel: " + move.target(), e);
             }
@@ -571,19 +570,13 @@ public class WhatsAppIncrementalImport {
             for (byte b : hash) sb.append(String.format("%02x", b));
             return sb.toString();
         } catch (Exception e) {
-            throw new RuntimeException("[FAILFAST] SHA-256-Hash der crypt15-Datei konnte nicht berechnet werden", e);
+            throw new RuntimeException("SHA-256-Hash der crypt15-Datei konnte nicht berechnet werden", e);
         }
     }
 
     private String formatTs(long unixMs) {
         return java.time.LocalDateTime
             .ofInstant(java.time.Instant.ofEpochMilli(unixMs), java.time.ZoneId.systemDefault())
-            .format(DT);
-    }
-    
-    private void updateKeyValue(String currentHash) {
-        kvRepo.set(KV_LAST_HASH, currentHash);
-        kvRepo.set(KV_LAST_IMPORT, LocalDateTime.now().format(DT));
-        kvRepo.set(KV_LAST_CHECK, LocalDateTime.now().format(DT));
+            .toString();
     }
 }
