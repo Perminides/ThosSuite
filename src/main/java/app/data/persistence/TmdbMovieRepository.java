@@ -95,7 +95,7 @@ public class TmdbMovieRepository {
                 "VALUES (?, ?, ?, ?)")) {
             ps.setInt(1, rating.id);
             ps.setInt(2, rating.account_rating.value);
-            ps.setString(3, comment == null || comment.isEmpty() ? "." : comment);
+            ps.setString(3, comment);
             ps.setString(4, rating.account_rating.getCreated_at().toString());
             ps.execute();
         } catch (Exception e) {
