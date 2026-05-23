@@ -13,7 +13,9 @@ import app.ui.skin.SkinService;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.VBox;
 
 /**
  * PostTask für den TMDB-Import.
@@ -142,36 +144,32 @@ public class TmdbCleanup {
 
         for (NullCommentEntry entry : entries) {
             String comment = askForComment(entry);
-            movieRepo.saveComment(entry.movieId, comment);
+            movieRepo.saveComment(entry.movieId, (comment == null || comment.isBlank()) ? "." : comment);
         }
     }
 
     /**
      * Zeigt eine TextArea für die Kommentareingabe zu einem Film.
-     * Leere Eingabe → ".".
      */
     private String askForComment(NullCommentEntry entry) {
-        ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.YES);
-        ButtonType btnSkip = new ButtonType("Überspringen (Punkt)", ButtonBar.ButtonData.NO);
-
         TextArea textArea = new TextArea();
         textArea.setWrapText(true);
         textArea.setPrefRowCount(6);
         textArea.setPrefColumnCount(40);
 
-        Alert alert = SkinService.get().createAlert(
-            null,
-            "Kommentar eingeben",
+        Dialog<?> dialog = SkinService.get().createDialog(null, "Kommentar eingeben");
+        VBox content = SkinService.get().createDialogContent();
+        content.getChildren().add(new javafx.scene.control.Label(
             "Film: " + entry.title + " (" + entry.germanTitle + ")\n" +
             "Bewertet am: " + entry.firstRatedAt + "\n" +
-            "Bewertung: " + entry.rating,
-            btnOk, btnSkip
-        );
-        alert.getDialogPane().setExpandableContent(textArea);
-        alert.getDialogPane().setExpanded(true);
+            "Bewertung: " + entry.rating));
+        content.getChildren().add(textArea);
 
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isEmpty() || result.get() == btnSkip)
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+
+        Optional<?> result = dialog.showAndWait();
+        if (result.isEmpty() || result.get().equals(ButtonType.CANCEL))
             return ".";
 
         String text = textArea.getText();

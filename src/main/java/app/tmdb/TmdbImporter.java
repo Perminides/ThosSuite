@@ -171,7 +171,7 @@ public class TmdbImporter {
                     saveImageToFileSystem(filename, posterW154);
                     movieRepo.insertMovieImage(movie, 154, dimensions[1], filename, conn);
                 }
-                movieRepo.insertMovieRating(rating, ".", conn);
+                movieRepo.insertMovieRating(rating, null, conn);
                 processCredits(credits, movie, conn);
                 movieRepo.insertMovieGenres(movie, conn);
                 movieRepo.insertMovieCountries(movie, conn);
