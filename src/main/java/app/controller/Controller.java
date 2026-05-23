@@ -26,6 +26,8 @@ import app.fitbit.FitbitUpdateService;
 import app.messaging.SignalIncrementalImport;
 import app.messaging.WhatsAppIncrementalImport;
 import app.module.SuiteExporter;
+import app.tmdb.TmdbCleanup;
+import app.tmdb.TmdbImporter;
 import app.ui.MainWindow;
 import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
@@ -111,9 +113,11 @@ public class Controller{
 	 * Wird VOR initializeMainWindow aufgerufen (Splash noch sichtbar). Holt Daten im UI-Thread, blockiert aber die App - Splash bleibt sichtbar.
 	 */
 	public void runPreTasks() {
-		fitbitDataFetcher = new FitbitDataFetcher();
-		if (Config.get("offline", "false").equals("false"))
+		fitbitDataFetcher = new FitbitDataFetcher(); // Muss Instanzvariable sein, weil wir Daten für den PostTask übergeben. Das macht tmdb sauberer, wie ich finde...
+		if (Config.get("offline", "false").equals("false")) {
 			fitbitDataFetcher.fetch();
+			new TmdbImporter().run();
+		}
 	}
 
 	/**
@@ -143,6 +147,8 @@ public class Controller{
 	    new WeekdayDialog().showForDaily();
 	    
 	    new MattressTurnDialog().showIfDue();
+	    
+	    new TmdbCleanup().run();
 	    
 	    try {
 	    	new SignalIncrementalImport().run();

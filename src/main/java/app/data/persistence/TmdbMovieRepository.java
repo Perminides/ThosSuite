@@ -3,6 +3,9 @@ package app.data.persistence;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import app.tmdb.json.CastJSON;
@@ -21,6 +24,23 @@ import app.tmdb.json.SpokenLanguageJSON;
 public class TmdbMovieRepository {
 
     private static final Logger log = Logger.getLogger(TmdbMovieRepository.class.getName());
+    
+    public static class NullCommentEntry {
+        public final int movieId;
+        public final String title;
+        public final String germanTitle;
+        public final int rating;
+        public final String firstRatedAt;
+
+        public NullCommentEntry(int movieId, String title, String germanTitle,
+                int rating, String firstRatedAt) {
+            this.movieId = movieId;
+            this.title = title;
+            this.germanTitle = germanTitle;
+            this.rating = rating;
+            this.firstRatedAt = firstRatedAt;
+        }
+    }
 
     /**
      * Fügt einen neuen Film in die DB ein. Wirft Exception wenn der Film bereits existiert.
@@ -314,6 +334,76 @@ public class TmdbMovieRepository {
             }
         } catch (Exception e) {
             throw new RuntimeException("getMovieRating fehlgeschlagen. movieId: " + movieId, e);
+        }
+    }
+    
+    public List<NullCommentEntry> loadNullCommentEntries() {
+        List<NullCommentEntry> entries = new ArrayList<>();
+        LocalDate cutoff = LocalDate.now().minusDays(100);
+        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+                "SELECT mr.movie_id, m.title, m.german_title, mr.ar_value, mr.first_rated_at " +
+                "FROM movie_rating mr " +
+                "JOIN movie m ON m.id = mr.movie_id " +
+                "WHERE mr.comment IS NULL " +
+                "AND date(mr.first_rated_at) >= ? " +
+                "ORDER BY mr.first_rated_at ASC")) {
+            ps.setString(1, cutoff.toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next())
+                    entries.add(new NullCommentEntry(
+                        rs.getInt("movie_id"),
+                        rs.getString("title"),
+                        rs.getString("german_title"),
+                        rs.getInt("ar_value"),
+                        rs.getString("first_rated_at")));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("loadNullCommentEntries fehlgeschlagen", e);
+        }
+        return entries;
+    }
+
+    public void saveComment(int movieId, String comment) {
+        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+                "UPDATE movie_rating SET comment = ? WHERE movie_id = ?")) {
+            ps.setString(1, comment);
+            ps.setInt(2, movieId);
+            ps.execute();
+        } catch (Exception e) {
+            throw new RuntimeException("saveComment fehlgeschlagen. movieId=" + movieId, e);
+        }
+    }
+
+    public List<String> loadDotCommentTitles() {
+        List<String> titles = new ArrayList<>();
+        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+                "SELECT m.title, m.german_title, mr.first_rated_at " +
+                "FROM movie_rating mr " +
+                "JOIN movie m ON m.id = mr.movie_id " +
+                "WHERE mr.comment = '.' " +
+                "ORDER BY mr.first_rated_at DESC");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next())
+                titles.add(rs.getString("title") + " (" + rs.getString("german_title") + ") — " + rs.getString("first_rated_at"));
+        } catch (Exception e) {
+            throw new RuntimeException("loadDotCommentTitles fehlgeschlagen", e);
+        }
+        return titles;
+    }
+
+    public void insertMovieCrew(int movieId, int personId, String creditId,
+            String department, String job) {
+        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+                "INSERT INTO movie_to_person (movie_id, person_id, credit_id, character, " +
+                "\"order\", department, job) VALUES (?, ?, ?, NULL, NULL, ?, ?)")) {
+            ps.setInt(1, movieId);
+            ps.setInt(2, personId);
+            ps.setString(3, creditId);
+            ps.setString(4, department);
+            ps.setString(5, job);
+            ps.execute();
+        } catch (Exception e) {
+            throw new RuntimeException("insertMovieCrew fehlgeschlagen. movieId=" + movieId + ", personId=" + personId + ", job=" + job, e);
         }
     }
 }
