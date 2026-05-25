@@ -1,16 +1,24 @@
 package app.ui.components;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import app.ui.skin.SkinService;
+import app.util.Log;
 import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Modaler Dialog zur Auflösung eines unbekannten WhatsApp-Kontakts.
@@ -123,23 +131,23 @@ public class WhatsAppContactDialog {
         Runnable selectActive = () -> {
             String chosen = matches.get(activeIndex[0]);
             selectedContactId[0] = knownContacts.get(chosen);
-            System.out.println("[selectActive] chosen=" + chosen + " selectedContactId=" + selectedContactId[0]);
+            Log.debug(WhatsAppContactDialog.class, "[selectActive] chosen=" + chosen + " selectedContactId=" + selectedContactId[0]);
             SkinService.get().setDialogTitle(dialog, TITLE_SELECTED);
-            System.out.println("[selectActive] Titel gesetzt auf: " + TITLE_SELECTED);
+            Log.debug(WhatsAppContactDialog.class, "[selectActive] Titel gesetzt auf: " + TITLE_SELECTED);
             settingFromCode[0] = true;
-            System.out.println("[selectActive] settingFromCode=true, rufe setText auf");
+            Log.debug(WhatsAppContactDialog.class, "[selectActive] settingFromCode=true, rufe setText auf");
             nameField.setText(chosen);
             settingFromCode[0] = false;
-            System.out.println("[selectActive] settingFromCode=false");
+            Log.debug(WhatsAppContactDialog.class, "[selectActive] settingFromCode=false");
             hideSuggestions.run();
         };
 
         nameField.textProperty().addListener((_, _, newVal) -> {
-            System.out.println("[listener] newVal='" + newVal + "' settingFromCode=" + settingFromCode[0] + " selectedContactId=" + selectedContactId[0]);
+        	Log.debug(WhatsAppContactDialog.class, "[listener] newVal='" + newVal + "' settingFromCode=" + settingFromCode[0] + " selectedContactId=" + selectedContactId[0]);
             if (!settingFromCode[0]) {
                 selectedContactId[0] = null;
                 SkinService.get().setDialogTitle(dialog, TITLE_NEW);
-                System.out.println("[listener] Titel zurückgesetzt auf: " + TITLE_NEW);
+                Log.debug(WhatsAppContactDialog.class, "[listener] Titel zurückgesetzt auf: " + TITLE_NEW);
             }
             okButton.setDisable(newVal == null || newVal.isBlank());
             if (newVal == null || newVal.isBlank()) {

@@ -1,5 +1,8 @@
 package app.ui;
 
+import java.io.File;
+
+import app.config.Config;
 import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
@@ -102,5 +105,29 @@ public class UIUtils {
 		        event.consume();
 		    }
 		});
+	}
+	
+	/**
+	 * Malt ein +-Zeichen unten rechts auf ein Bild.
+	 * Analog zu ImageWizard.addPlusSign() in der Geosuite.
+	 */
+	public static Image addPlusSign(Image source, int targetWidth) {
+	    double scale = targetWidth / source.getWidth();
+	    int w = targetWidth;
+	    int h = (int)(source.getHeight() * scale);
+
+	    javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(w, h);
+	    javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
+	    gc.drawImage(source, 0, 0, w, h);
+
+	    // Badge-Icon laden und unten rechts draufmalen
+	    String badgeFilename = "plus_" + targetWidth + ".png";
+	    File badgeFile = new File(Config.get("iconFolder") + badgeFilename);
+	    Image badge = new Image(badgeFile.toURI().toString());
+	    gc.drawImage(badge, w - badge.getWidth() - 4, h - badge.getHeight() - 4);
+
+	    javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+	    params.setFill(javafx.scene.paint.Color.TRANSPARENT);
+	    return canvas.snapshot(params, null);
 	}
 }

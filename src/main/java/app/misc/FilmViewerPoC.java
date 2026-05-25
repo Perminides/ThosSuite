@@ -268,7 +268,7 @@ public class FilmViewerPoC extends Application {
         Label synopsisLabel = new Label(film.synopsis());
         synopsisLabel.getStyleClass().add("diary-card-text");
         synopsisLabel.setWrapText(true);
-        synopsisLabel.setMaxWidth(Double.MAX_VALUE);
+        synopsisLabel.setMaxWidth(400);
 
         box.getChildren().addAll(titleBox, ratedLabel, directorRow, actorRow, synopsisLabel);
         return box;
