@@ -54,6 +54,7 @@ public class MainWindow {
     private Runnable onWeekdaySelected = null;
     private Runnable onMattressSelected = null;
     private Runnable onExportSelected = null;
+    private Runnable onMovieSelected = null;
     private Supplier<CardSortOrder> sortOrderSupplier = null;
     private Runnable onSaveSelected = null;
     private Runnable onEscPressed = null;
@@ -183,21 +184,25 @@ public class MainWindow {
         
         // MODULE-MENÜ
         Menu menuModule = skin.createMenu("Module");
-        MenuItem diaryItem = skin.createMenuItem("Tagebucheintrag erstellen");
-        diaryItem.setOnAction(_ -> onDiaryCreateSelected.run());
-        menuModule.getItems().add(diaryItem);
+        MenuItem exportItem = skin.createMenuItem("Export");
+        exportItem.setOnAction(_ -> onExportSelected.run());
+        menuModule.getItems().add(exportItem);
+        MenuItem movieItem = skin.createMenuItem("Filme");
+        movieItem.setOnAction(_ -> onMovieSelected.run());
+        menuModule.getItems().add(movieItem);
         MenuItem diaryViewItem = skin.createMenuItem("Tagebuch lesen");
         diaryViewItem.setOnAction(_ -> onDiaryViewSelected.run());
         menuModule.getItems().add(diaryViewItem);
+        MenuItem diaryItem = skin.createMenuItem("Tagebucheintrag erstellen");
+        diaryItem.setOnAction(_ -> onDiaryCreateSelected.run());
+        menuModule.getItems().add(diaryItem);
         MenuItem weekdayItem = skin.createMenuItem("Wochentagsberechnung");
         weekdayItem.setOnAction(_ -> onWeekdaySelected.run());
         menuModule.getItems().add(weekdayItem);
         MenuItem mattressItem = skin.createMenuItem("Matratze");
         mattressItem.setOnAction(_ -> onMattressSelected.run());
         menuModule.getItems().add(mattressItem);
-        MenuItem exportItem = skin.createMenuItem("Export");
-        exportItem.setOnAction(_ -> onExportSelected.run());
-        menuModule.getItems().add(exportItem);
+
         
         // ANSICHT-MENÜ
         Menu menuView = skin.createMenu("Ansicht");
@@ -376,6 +381,10 @@ public class MainWindow {
     
     public void setExportRunnable(Runnable runner) {
     	this.onExportSelected = runner;
+    }
+    
+    public void setMovieRunnable(Runnable runner) {
+    	this.onMovieSelected = runner;
     }
 
 	public void show() {

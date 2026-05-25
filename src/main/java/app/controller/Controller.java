@@ -90,6 +90,7 @@ public class Controller{
     	mainWindow.setWeekdayRunnable(this::weekdaySelected);
     	mainWindow.setMattressRunnable(this::mattressSelected);
     	mainWindow.setExportRunnable(this::exportSelected);
+    	mainWindow.setMovieRunnable(this::movieSelected);
     	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
     	showEmptyBackground();
     	
@@ -340,6 +341,14 @@ public class Controller{
     public void diaryViewSelected() {
     	requestSessionSwitch(() -> {
     		currentSession = new DiaryViewerSession();
+    		mainWindow.showPane(currentSession.getView());
+    		currentSession.start();
+    	});
+    }
+    
+    public void movieSelected() {
+    	requestSessionSwitch(() -> {
+    		currentSession = new MovieViewerSession();
     		mainWindow.showPane(currentSession.getView());
     		currentSession.start();
     	});
