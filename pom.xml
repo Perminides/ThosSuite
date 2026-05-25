@@ -206,8 +206,7 @@
 					</javaOptions>
 
 					<arguments>
-						<argument>C:/Users/permi/Documents/Gedächtnis Lernen und
-							so/ThosSuite/</argument>
+						<argument>C:/Users/permi/Documents/Gedächtnis Lernen und so/ThosSuite/</argument>
 					</arguments>
 				</configuration>
 			</plugin>

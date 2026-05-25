@@ -23,6 +23,7 @@ import app.tmdb.json.CrewJSON;
 import app.tmdb.json.MovieJSON;
 import app.tmdb.json.MovieRatingJSON;
 import app.tmdb.json.MovieRatingsPageJSON;
+import app.ui.skin.SkinService;
 
 /**
  * Orchestriert den täglichen TMDB-Import.
@@ -164,12 +165,16 @@ public class TmdbImporter {
                     String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
                     saveImageToFileSystem(filename, posterW92);
                     movieRepo.insertMovieImage(movie, 92, dimensions[1], filename, conn);
+                } else {
+                	SkinService.get().createAlert(SkinService.getOwnerWindow(), "92er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, false, false);
                 }
                 if (posterW154 != null) {
                     int[] dimensions = getImageDimensions(posterW154);
                     String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
                     saveImageToFileSystem(filename, posterW154);
                     movieRepo.insertMovieImage(movie, 154, dimensions[1], filename, conn);
+                } else {
+                	SkinService.get().createAlert(SkinService.getOwnerWindow(), "154er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, false, false);
                 }
                 movieRepo.insertMovieRating(rating, null, conn);
                 processCredits(credits, movie, conn);
