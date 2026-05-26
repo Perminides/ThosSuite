@@ -13,7 +13,7 @@ import app.tmdb.json.PersonJSON;
  * Repository für die Pending-Tabellen person_pending und crew_pending.
  *
  * Personen und unbekannte Crew-Einträge landen hier während des Imports.
- * TmdbImportReview entscheidet dann was damit passiert:
+ * TmdbCleanup entscheidet dann was damit passiert:
  * - Person in person übertragen und crew_pending-Eintrag in movie_to_person
  * - oder beides verwerfen
  */

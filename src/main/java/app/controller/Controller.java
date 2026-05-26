@@ -28,6 +28,7 @@ import app.messaging.WhatsAppIncrementalImport;
 import app.module.SuiteExporter;
 import app.tmdb.TmdbCleanup;
 import app.tmdb.TmdbImporter;
+import app.tmdb.TmdbSeriesImporter;
 import app.ui.MainWindow;
 import app.ui.PlayMenuItem;
 import app.ui.PlayMenuNode;
@@ -91,6 +92,7 @@ public class Controller{
     	mainWindow.setMattressRunnable(this::mattressSelected);
     	mainWindow.setExportRunnable(this::exportSelected);
     	mainWindow.setMovieRunnable(this::movieSelected);
+    	mainWindow.setExtraTmdbImportRunnable(this::additionalTmdbImportSelected);
     	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
     	showEmptyBackground();
     	
@@ -364,6 +366,10 @@ public class Controller{
     
     public void exportSelected() {
     	new SuiteExporter().export();
+    }
+    
+    public void additionalTmdbImportSelected() {
+    	new TmdbSeriesImporter().run();
     }
     
     /**

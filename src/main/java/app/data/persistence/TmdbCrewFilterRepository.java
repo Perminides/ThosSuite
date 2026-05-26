@@ -1,5 +1,6 @@
 package app.data.persistence;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.logging.Logger;
@@ -52,13 +53,13 @@ public class TmdbCrewFilterRepository {
     public boolean isBlacklisted(String job) {
         return blacklist.contains(job);
     }
-
+    
     /**
      * Fügt einen Job zur Whitelist hinzu — in DB und lokal.
      */
-    public void addToWhitelist(String job) {
+    public void addToWhitelist(String job, Connection con) {
         log.info("Job zur Whitelist hinzugefügt: " + job);
-        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+        try (PreparedStatement ps = con.prepareStatement(
                 "INSERT INTO crew_whitelist (job) VALUES (?)")) {
             ps.setString(1, job);
             ps.execute();
@@ -69,11 +70,18 @@ public class TmdbCrewFilterRepository {
     }
 
     /**
+     * Fügt einen Job zur Whitelist hinzu — in DB und lokal.
+     */
+    public void addToWhitelist(String job) {
+        addToWhitelist(job, DB.getTmdbConnection());
+    }
+    
+    /**
      * Fügt einen Job zur Blacklist hinzu — in DB und lokal.
      */
-    public void addToBlacklist(String job) {
+    public void addToBlacklist(String job, Connection con) {
         log.info("Job zur Blacklist hinzugefügt: " + job);
-        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+        try (PreparedStatement ps = con.prepareStatement(
                 "INSERT INTO crew_blacklist (job) VALUES (?)")) {
             ps.setString(1, job);
             ps.execute();
@@ -81,6 +89,13 @@ public class TmdbCrewFilterRepository {
             throw new RuntimeException("addToBlacklist fehlgeschlagen. job: " + job, e);
         }
         blacklist.add(job);
+    }
+
+    /**
+     * Fügt einen Job zur Blacklist hinzu — in DB und lokal.
+     */
+    public void addToBlacklist(String job) {
+        addToBlacklist(job, DB.getTmdbConnection());
     }
 
     /**
