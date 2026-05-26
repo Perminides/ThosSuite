@@ -7,6 +7,7 @@ import app.data.AppClock;
 import app.data.Deck;
 import app.data.SessionSwitchStrategy;
 import app.data.persistence.AlcoholRepository;
+import app.data.persistence.KeyValueRepository;
 import app.data.persistence.MattressRepository;
 import app.data.persistence.MessageRepository;
 import app.data.persistence.WeekdayRepository;
@@ -101,6 +102,17 @@ public class DashboardSession implements Session {
                 	"" + messagesToday, 
                     "Heute importierte Nachrichten")
                 );
+        
+        KeyValueRepository kvRepo = new KeyValueRepository();
+        int daysSinceLastAdditionalTmdbImport = kvRepo.getDaysSince("tmdb.lastAdditionalImportRun");
+        
+        // Tmdb-Tile erstellen
+        view.getChildren().add(
+                SkinService.get().createDashboardTile(
+                	"" + daysSinceLastAdditionalTmdbImport, 
+                    "Tage seit letztem Extra-TMDB-Import")
+                );
+        
     }
     
     @Override

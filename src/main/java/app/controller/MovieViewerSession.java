@@ -4,8 +4,8 @@ import java.util.List;
 
 import app.data.Deck;
 import app.data.SessionSwitchStrategy;
-import app.data.persistence.TmdbMovieViewerRepository;
-import app.tmdb.MovieCardData;
+import app.data.persistence.TmdbViewerRepository;
+import app.tmdb.CardData;
 import app.ui.components.SuggestionTextField;
 import app.ui.skin.Skin.MovieViewerComponents;
 import app.ui.skin.SkinService;
@@ -16,7 +16,7 @@ import javafx.scene.layout.VBox;
 
 public class MovieViewerSession implements Session {
 
-    private final TmdbMovieViewerRepository repository = new TmdbMovieViewerRepository();
+    private final TmdbViewerRepository repository = new TmdbViewerRepository();
 
     private VBox view;
     private SuggestionTextField directorField;
@@ -67,60 +67,50 @@ public class MovieViewerSession implements Session {
         titleField = components.titleField();
         resultBox = components.resultBox();
 
-        // SWYT-Listen vorladen (sortiert nach Relevanz)
         directorField.setAllItems(repository.loadAllDirectorNames());
         actorField.setAllItems(repository.loadAllActorNames());
         titleField.setAllItems(repository.loadAllTitles());
 
-        // Callbacks: Bei Auswahl die anderen Felder leeren und Suche starten
         directorField.setOnSelected(name -> {
             actorField.clearSilent();
             titleField.clearSilent();
-            showMovies(repository.loadMoviesByDirector(name));
+            showCards(repository.loadByDirector(name));
         });
 
         actorField.setOnSelected(name -> {
             directorField.clearSilent();
             titleField.clearSilent();
-            showMovies(repository.loadMoviesByActor(name));
+            showCards(repository.loadByActor(name));
         });
 
         titleField.setOnSelected(name -> {
             directorField.clearSilent();
             actorField.clearSilent();
-            showMovies(repository.loadMoviesByTitle(name));
+            showCards(repository.loadByTitle(name));
         });
 
         VBox.setVgrow(components.root(), Priority.ALWAYS);
         view.getChildren().add(components.root());
     }
 
-    private void showMovies(List<MovieCardData> movies) {
+    private void showCards(List<CardData> cards) {
         resultBox.getChildren().clear();
 
-        for (MovieCardData movie : movies) {
-            Pane card = SkinService.get().createMovieCard(
-                    movie,
+        for (CardData card : cards) {
+            Pane cardPane = SkinService.get().createCard(
+                    card,
                     this::onDirectorClicked,
                     this::onActorClicked);
-            resultBox.getChildren().add(card);
+            resultBox.getChildren().add(cardPane);
         }
     }
 
-    /**
-     * Link-Callback: Klick auf einen Regisseur-Namen in einer Filmkachel.
-     * Setzt das Director-SWYT-Feld und löst die Suche aus.
-     */
     private void onDirectorClicked(String directorName) {
         actorField.clearSilent();
         titleField.clearSilent();
         directorField.setTextAndTrigger(directorName);
     }
 
-    /**
-     * Link-Callback: Klick auf einen Schauspieler-Namen in einer Filmkachel.
-     * Setzt das Actor-SWYT-Feld und löst die Suche aus.
-     */
     private void onActorClicked(String actorName) {
         directorField.clearSilent();
         titleField.clearSilent();

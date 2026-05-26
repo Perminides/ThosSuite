@@ -5,10 +5,12 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 import app.data.persistence.TmdbCrewFilterRepository;
+import app.data.persistence.TmdbEpisodeRepository;
 import app.data.persistence.TmdbMovieRepository;
 import app.data.persistence.TmdbMovieRepository.NullCommentEntry;
 import app.data.persistence.TmdbPendingRepository;
 import app.data.persistence.TmdbPendingRepository.CrewPendingEntry;
+import app.data.persistence.TmdbTvShowRepository;
 import app.ui.skin.SkinService;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
@@ -36,11 +38,15 @@ public class TmdbCleanup {
     private final TmdbCrewFilterRepository crewFilterRepo;
     private final TmdbPendingRepository pendingRepo;
     private final TmdbMovieRepository movieRepo;
+    private final TmdbTvShowRepository tvShowRepo;
+    private final TmdbEpisodeRepository episodeRepo;
 
     public TmdbCleanup() {
         this.crewFilterRepo = new TmdbCrewFilterRepository();
         this.pendingRepo = new TmdbPendingRepository();
         this.movieRepo = new TmdbMovieRepository();
+        this.tvShowRepo = new TmdbTvShowRepository();
+        this.episodeRepo = new TmdbEpisodeRepository();
     }
 
     public void run() {
@@ -180,20 +186,36 @@ public class TmdbCleanup {
      * Zeigt am Ende eine Liste aller Filme mit "."-Kommentar.
      */
     private void showDotCommentSummary() {
-        List<String> titles = movieRepo.loadDotCommentTitles();
-        if (titles.isEmpty()) {
-            log.info("Keine Filme mit Punkt-Kommentar.");
+        List<String> movieTitles = movieRepo.loadDotCommentTitles();
+        List<String> showTitles = tvShowRepo.loadDotCommentTitles();
+        List<String> episodeTitles = episodeRepo.loadDotCommentTitles();
+
+        if (movieTitles.isEmpty() && showTitles.isEmpty() && episodeTitles.isEmpty()) {
+            log.info("Keine Einträge mit Punkt-Kommentar.");
             return;
         }
 
-        String message = "Folgende Filme haben noch keinen richtigen Kommentar (\".\").\n" +
-                "Bitte in der DB nachpflegen:\n\n" +
-                String.join("\n", titles);
+        StringBuilder sb = new StringBuilder();
+        sb.append("Folgende Einträge haben noch keinen richtigen Kommentar (\".\"):\n\n");
+        if (!movieTitles.isEmpty()) {
+            sb.append("Filme:\n");
+            sb.append(String.join("\n", movieTitles));
+            sb.append("\n\n");
+        }
+        if (!showTitles.isEmpty()) {
+            sb.append("Serien:\n");
+            sb.append(String.join("\n", showTitles));
+            sb.append("\n\n");
+        }
+        if (!episodeTitles.isEmpty()) {
+            sb.append("Episoden:\n");
+            sb.append(String.join("\n", episodeTitles));
+        }
 
         Alert alert = SkinService.get().createAlert(
             null,
             "Offene Kommentare",
-            message,
+            sb.toString().trim(),
             new ButtonType("OK", ButtonBar.ButtonData.OK_DONE)
         );
         alert.showAndWait();

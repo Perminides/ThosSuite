@@ -3,6 +3,7 @@ package app.data.persistence;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +83,7 @@ public class TmdbMovieRepository {
     /**
      * Fügt eine neue Filmbewertung in die DB ein.
      * Kommentar wird als "." gesetzt wenn keiner angegeben — wird später in
-     * TmdbImportReview nachgepflegt.
+     * TmdbCleanup nachgepflegt.
      *
      * @param rating    MovieRatingJSON mit Bewertung und Metadaten
      * @param comment   Kommentar, oder "." wenn noch keiner eingegeben wurde
@@ -405,5 +406,76 @@ public class TmdbMovieRepository {
         } catch (Exception e) {
             throw new RuntimeException("insertMovieCrew fehlgeschlagen. movieId=" + movieId + ", personId=" + personId + ", job=" + job, e);
         }
+    }
+    
+    public List<Integer> getMoviesWithoutOverview() {
+    	String sql =
+                "SELECT m.id, m.title FROM movie m "
+                + "JOIN movie_rating mr ON m.id = mr.movie_id "
+                + "WHERE m.overview IS NULL OR m.overview = ''";
+        List<Integer> result = new ArrayList<>();
+        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next())
+                result.add(rs.getInt(1));
+        } catch (Exception e) {
+            throw new RuntimeException("getMoviesWithoutOverview fehlgeschlagen. sql: " + sql, e);
+        }
+        return result;
+    }
+    
+    public List<Integer> getMoviesWithoutPoster() {
+        String sql =
+                "SELECT m.id, m.title FROM movie m "
+                + "JOIN movie_rating mr ON m.id = mr.movie_id "
+                + "WHERE NOT EXISTS (SELECT 1 FROM movie_image mi WHERE mi.movie_id = m.id)";
+        List<Integer> result = new ArrayList<>();
+        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next())
+                result.add(rs.getInt(1));
+        } catch (Exception e) {
+            throw new RuntimeException("getMoviesWithoutPoster fehlgeschlagen. sql: " + sql, e);
+        }
+        return result;
+    }
+    
+    public void updateMovieOverview(Integer id, String overview) {
+    	try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+                "UPDATE movie SET overview = ? WHERE id = ?")) {
+            ps.setString(1, overview);
+            ps.setInt(2, id);
+            ps.execute();
+        } catch (Exception e) {
+        	throw new RuntimeException("updateMovieOverview fehlgeschlagen.", e);
+		}
+    }
+    
+    public void updateMoviePoster(int movie_id, int width, int height, String language, String original_name, String filename) {
+            try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+                    "INSERT INTO movie_image (movie_id, type, width, height, language, "
+                    + "original_name, filename) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                ps.setInt(1, movie_id);
+                ps.setString(2, "poster");
+                ps.setInt(3, width);
+                ps.setInt(4, height);
+                ps.setString(5, language);
+                ps.setString(6, original_name);
+                ps.setString(7, filename);
+                ps.execute();
+            } catch (SQLException e) {
+            	throw new RuntimeException("updateMoviePoster fehlgeschlagen.", e);
+			}
+    }
+    
+    public void updateMoviePosterPath(int movieId, String poster_path) {
+    	try (PreparedStatement psUpdate = DB.getTmdbConnection().prepareStatement(
+                "UPDATE movie SET poster_path = ? WHERE id = ?")) {
+            psUpdate.setString(1, poster_path);
+            psUpdate.setInt(2, movieId);
+            psUpdate.execute();
+        } catch (SQLException e) {
+        	throw new RuntimeException("updateMoviePosterPath fehlgeschlagen.", e);
+		}
     }
 }

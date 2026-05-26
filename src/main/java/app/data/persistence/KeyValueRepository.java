@@ -3,6 +3,7 @@ package app.data.persistence;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -85,6 +86,10 @@ public class KeyValueRepository {
     
     public void setTime(String key, LocalDateTime time) {
     	set (key, time.truncatedTo(ChronoUnit.SECONDS).toString());
+    }
+    
+    public Integer getDaysSince(String key) {
+    	return (int) ChronoUnit.DAYS.between(LocalDate.parse(get(key).substring(0, 10)), LocalDate.now());
     }
 
     /**

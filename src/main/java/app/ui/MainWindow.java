@@ -55,6 +55,7 @@ public class MainWindow {
     private Runnable onMattressSelected = null;
     private Runnable onExportSelected = null;
     private Runnable onMovieSelected = null;
+    private Runnable onMovieAdditionalRunSelected = null;
     private Supplier<CardSortOrder> sortOrderSupplier = null;
     private Runnable onSaveSelected = null;
     private Runnable onEscPressed = null;
@@ -196,6 +197,9 @@ public class MainWindow {
         MenuItem diaryItem = skin.createMenuItem("Tagebucheintrag erstellen");
         diaryItem.setOnAction(_ -> onDiaryCreateSelected.run());
         menuModule.getItems().add(diaryItem);
+        MenuItem additionalMovieItem = skin.createMenuItem("Erweiterter TMDB-Import");
+        additionalMovieItem.setOnAction(_ -> onMovieAdditionalRunSelected.run());
+        menuModule.getItems().add(additionalMovieItem);
         MenuItem weekdayItem = skin.createMenuItem("Wochentagsberechnung");
         weekdayItem.setOnAction(_ -> onWeekdaySelected.run());
         menuModule.getItems().add(weekdayItem);
@@ -385,6 +389,10 @@ public class MainWindow {
     
     public void setMovieRunnable(Runnable runner) {
     	this.onMovieSelected = runner;
+    }
+    
+    public void setExtraTmdbImportRunnable(Runnable runner) {
+    	this.onMovieAdditionalRunSelected = runner;
     }
 
 	public void show() {

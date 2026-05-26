@@ -18,7 +18,7 @@ import app.config.Config;
 import app.data.Deck;
 import app.data.GeoMap;
 import app.data.MapService;
-import app.tmdb.MovieCardData;
+import app.tmdb.CardData;
 import app.ui.UIUtils;
 import app.ui.components.DashboardTile;
 import app.ui.components.ImageMapPane;
@@ -1324,7 +1324,7 @@ public abstract class Skin {
 	        .end();
 	 
 	    // === Rating-Zahl ===
-	    // Schriftgröße wird dynamisch im createMovieCard gesetzt (50% der Posterbreite).
+	    // Schriftgröße wird dynamisch im createCard gesetzt (50% der Posterbreite).
 	    // min-width sorgt dafür, dass einstellige und zweistellige Zahlen gleich breit sind.
 	    css.start(".movie-card-rating")
 	    	.add("-fx-font-weight", "bold")
@@ -1338,15 +1338,7 @@ public abstract class Skin {
 	        .add("-fx-fill", textColor)
 	        .end();
 	 
-	    // === Header ===
-	    css.start(".movie-card-header-bold")
-	        .add("-fx-font-weight", "bold")
-	        .end();
-	 
-	    css.start(".movie-card-header-bold .text")
-	        .add("-fx-fill", textColor)
-	        .end();
-	 
+	    // === Header ===	 
 	    css.start(".movie-card-header .text")
 	        .add("-fx-fill", textColor)
 	        .add("-fx-font-weight", "bold")
@@ -2179,7 +2171,7 @@ public abstract class Skin {
 	    return new MovieViewerComponents(root, directorField, actorField, titleField, resultBox);
 	}
 	
-	public Pane createMovieCard(MovieCardData data,
+	public Pane createCard(CardData data,
 	        Consumer<String> onDirectorClicked,
 	        Consumer<String> onActorClicked) {
 
@@ -2230,24 +2222,24 @@ public abstract class Skin {
 	    infoBox.getStyleClass().add("movie-card-info");
 	    HBox.setHgrow(infoBox, Priority.ALWAYS);
 
-	    boolean firstLine = true;
-	    for (String line : data.headerLines()) {
-	        Label headerLabel = new Label(line);
-	        headerLabel.setWrapText(true);
-	        if (firstLine) {
-	            headerLabel.getStyleClass().add("movie-card-header-bold");
-	            firstLine = false;
-	        } else {
-	            headerLabel.getStyleClass().add("movie-card-header");
-	        }
-	        infoBox.getChildren().add(headerLabel);
-	    }
+	    String headerString = String.join("\n", data.headerLines());
+  	    Label headerLabel = new Label(headerString);
+	    headerLabel.getStyleClass().add("movie-card-header");
+	    infoBox.getChildren().add(headerLabel);
 
 	    // Abstand nach Header-Block
 	    javafx.scene.layout.Region headerSpacer = new javafx.scene.layout.Region();
 	    headerSpacer.setPrefHeight(font.getSize());
 	    infoBox.getChildren().add(headerSpacer);
-
+	    
+	    
+		String detailString = String.join("\n", data.detailLines());
+		if (detailString != null && !detailString.isEmpty()) {
+			Label detailLabel = new Label(detailString);
+			detailLabel.getStyleClass().add("movie-card-text");
+			infoBox.getChildren().add(detailLabel);
+		}
+		
 	    if (data.ratedAt() != null) {
 	        Label ratedLabel = new Label("Rated: " + data.ratedAt());
 	        ratedLabel.getStyleClass().add("movie-card-text");
