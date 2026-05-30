@@ -50,16 +50,87 @@ import javafx.scene.layout.VBox;
 /**
  * Orchestriert den manuellen Serien-/Episoden-Import.
  *
- * Wird über einen Menübutton ausgelöst. Läuft komplett auf dem FX-Thread.
- * Interaktive Dialoge (Kommentar, Flags, Crew-Whitelist) erscheinen inline.
+ * <p>Wird über einen Menübutton ausgelöst. Läuft komplett auf dem FX-Thread.
+ * Interaktive Dialoge (Kommentar, Flag, Crew-Whitelist) erscheinen inline.
  *
- * Ablauf:
- * 1. Step-Alert → Serien-Check (neue, Umbewertungen, Daten-Update)
- * 2. Step-Alert → Episoden-Check (neue mit Kaskade, Flags, Kommentar, Umbewertungen)
- * 3. Step-Alert → Lücken-Check (fehlende Poster/Overviews nachholen)
- * 4. Abschluss-Alert mit Zusammenfassung
+ * <h2>Ablauf</h2>
+ * <ol>
+ *   <li>Serien-Check: neue Serien importieren, Umbewertungen erkennen,
+ *       geänderte Seriendaten (Seasons/Episodes/Status/Last-Air-Date) auf
+ *       Rückfrage aktualisieren.</li>
+ *   <li>Episoden-Check: neue Episoden mit Kaskade (Show → Season → Episode
+ *       sicherstellen), Kommentar- und Flag-Abfrage; Umbewertungen erkennen.</li>
+ *   <li>Lücken-Check: fehlende Poster und Overviews für Filme, Serien und
+ *       Episoden nachholen.</li>
+ *   <li>Abschluss-Zusammenfassung.</li>
+ * </ol>
  *
- * Alle Fehler sind fatal — kein stiller Fallback.
+ * <h2>Kaskade beim Episoden-Import</h2>
+ * Eine bewertete Episode kann auf eine Show/Season verweisen, die noch nicht in
+ * der DB ist (z.B. wenn nie zuvor etwas aus dieser Serie bewertet wurde).
+ * {@code ensureShowExists} und {@code ensureSeasonExists} importieren diese bei
+ * Bedarf nach — die Show ggf. ohne eigenes Rating (nur über den Episodenpfad
+ * reingekommen).
+ *
+ * <h2>Episoden-Bewertungsart (rated_season)</h2>
+ * Pro neuer Episode wird genau eine Frage gestellt: bezieht sich die Bewertung
+ * auf diese eine Episode oder auf mehr aus der Staffel (entweder abgebrochen
+ * oder letzte Episode bewertet, dann bezieht es sich auf die ganze Staffel)?
+ * Daraus ergibt sich das Flag {@code rated_season}, das die Credit- und
+ * Overview-Auswahl im Viewer steuert (siehe {@code CardData.forEpisode} und die
+ * episode_*-Views). Es gibt keine Vorschau — die fertige Karte wird nachträglich
+ * im Viewer kontrolliert, das Flag kann bei Bedarf direkt in der DB angepasst
+ * werden.
+ *
+ * <h2>Season Regulars und die aggregated-Invariante</h2>
+ * Direkt nach dem Import einer Season ({@code /aggregate_credits}) werden die
+ * regulären Season-Credits ({@code /credits}) geholt und die zugehörigen Zeilen
+ * in {@code season_to_person} auf {@code regular = 1} geflippt — in derselben
+ * Transaktion wie der Season-Import.
+ *
+ * <p><b>Wie TMDB Credits führt:</b> Eine Staffel hat zweierlei Cast/Crew. Zum
+ * einen die Credits der einzelnen Episoden (Guest Stars, Episodenregie usw.).
+ * Zum anderen die "Season Regulars" — durchgehende Stammbesetzung/-crew, die auf
+ * TMDB direkt an der Staffel gepflegt wird ("Add Season Regular" auf
+ * Staffelebene), nicht über einzelne Episoden. Der reguläre Endpunkt
+ * ({@code /credits}) liefert genau diese Regulars; der aggregierte
+ * ({@code /aggregate_credits}) liefert die Vereinigung aus beidem.
+ *
+ * <p><b>Invariante:</b> {@code aggregated == (Vereinigung aller Episoden-Credits)
+ * ∪ (reguläre Season-Credits)}. Insbesondere ist jeder reguläre Credit auch in
+ * aggregated enthalten ("regulär ⊆ aggregiert"). Empirisch bestätigt an Akte X
+ * Staffel 7 (22 Episoden, akribisch gepflegte Fan-Daten) und einer Miniserie —
+ * in beide Richtungen keine Abweichung.
+ *
+ * <p><b>Warum wir flippen statt einfügen:</b> Weil {@code season_to_person}
+ * bereits alle aggregierten Credits enthält und die Regulars eine Teilmenge
+ * davon sind, müssen wir nichts Neues einfügen — es genügt, die bereits
+ * vorhandenen Zeilen als regular zu markieren. Der Flip matcht auf
+ * {@code (season_id, person_id, credit_id)}; {@code credit_id} ist pro Eintrag
+ * eindeutig (ebenfalls bestätigt — keine (person_id, credit_id) mit mehreren
+ * Jobs/Characters), daher braucht der Match weder job noch character.
+ *
+ * <p><b>FailFast:</b> Findet der Flip keine Zeile, ist die Invariante verletzt
+ * (ein regulärer Credit, der nicht in aggregated steht). Das darf nach unserer
+ * Prüfung nicht vorkommen; tritt es doch auf, wirft
+ * {@code TmdbSeasonRepository.markRegularCast/markRegularCrew} eine
+ * RuntimeException statt eines stillen Inserts. Der umschließende
+ * Transaktions-Rollback verwirft dann die ganze Season. Zur Diagnose eines
+ * solchen Falls dient die Wegwerfklasse {@code AggregatedCreditsProbe}
+ * (vergleicht aggregated gegen Episoden ∪ Regulars und prüft die
+ * credit_id-Eindeutigkeit).
+ *
+ * <h2>Transaktionen und Fehler</h2>
+ * Jeder Entitäts-Import (Show, Season, Episode) läuft jeweils in einer eigenen
+ * Transaktion über {@code DB.getNewTmdbConnection()}. Alle Fehler sind fatal —
+ * kein stiller Fallback. Schlägt etwas innerhalb einer Transaktion fehl (auch
+ * der Regular-Flip), wird die gesamte Entität zurückgerollt, statt halb
+ * importiert zu werden.
+ *
+ * <h2>Crew-Filter</h2>
+ * Crew-Jobs werden gegen eine Whitelist/Blacklist geprüft. Unbekannte Jobs
+ * lösen eine interaktive Whitelist/Blacklist-Abfrage aus; die Entscheidung wird
+ * persistiert und gilt für den weiteren Lauf.
  */
 public class TmdbSeriesImporter {
 
@@ -344,6 +415,17 @@ public class TmdbSeriesImporter {
                         (crew, job, creditId, episodeCount, c) ->
                                 seasonRepo.insertSeasonCrew(crew, season, job, creditId, episodeCount, c),
                         season.name);
+                // Regular-Credits holen und flippen.
+                // aggregated == Episoden-Credits ∪ reguläre Season-Credits, also sind
+                // alle Regulars bereits in season_to_person — wir markieren nur.
+                // Findet markRegular* keine Zeile, ist die Invariante verletzt → FailFast.
+                // Details: Klassen-Javadoc dieser Klasse, Abschnitt "Season Regulars".
+                CreditListJSON regularCredits =
+                        api.getRegularSeasonCredits(tvShowId, seasonNumber);
+                for (CastJSON cast : regularCredits.cast)
+                    seasonRepo.markRegularCast(cast, season.id, conn);
+                for (CrewJSON crew : regularCredits.crew)
+                    seasonRepo.markRegularCrew(crew, season.id, conn);
                 conn.commit();
                 log.info("Season importiert: " + season.name);
             } catch (Exception e) {
@@ -374,7 +456,7 @@ public class TmdbSeriesImporter {
                 episodeRepo.insertEpisodeRating(episode.id, rating.rating, comment,
                         rating.first_rated_at != null ? rating.first_rated_at.toString()
                                 : LocalDate.now().toString(),
-                        null, null, null, conn);
+                        null, conn);
                 conn.commit();
                 log.info("Episode importiert: " + episode.name);
             } catch (Exception e) {
@@ -387,7 +469,7 @@ public class TmdbSeriesImporter {
         }
 
         // Flag-Dialog — nach dem Commit, weil die Views die gespeicherten Daten brauchen
-        showFlagDialog(episode.id);
+        showFlagDialog(episode.id, title);
     }
 
     /**
@@ -605,165 +687,31 @@ public class TmdbSeriesImporter {
     }
 
     // =========================================================================
-    // Flag-Dialog
+    // Flag-Alert
     // =========================================================================
 
     /**
-     * Zeigt vier Vorschau-Karten für die Flag-Auswahl.
-     * Baut jede Karte mit den passenden Credits aus den jeweiligen Views.
+     * Fragt nach der Art der Bewertung: ganze Staffel oder nur diese Episode.
+     * Keine Vorschau — die fertige Karte wird anschließend im Viewer
+     * kontrolliert. Bei Bedarf kann das Flag direkt in der DB angepasst werden.
      */
-    private void showFlagDialog(int episodeId) {
-        // Vier Flag-Kombinationen
-        String[][] flagCombos = {
-            // {label, ratedSeason, actorsFromShow, directorsFromShow}
-            {"1 - Staffel bewertet", "1", "null", "null"},
-            {"2 - Nur diese Episode", "0", "0", "0"},
-            {"3 - Episode, Schauspieler von der Show", "0", "1", "0"},
-            {"4 - Abgebrochene Serie", "0", "1", "1"},
-        };
-
-        // Karten bauen
-        List<CardData> cards = new ArrayList<>();
-        for (String[] combo : flagCombos) {
-            boolean ratedSeason = "1".equals(combo[1]);
-            boolean actorsFromShow = "1".equals(combo[2]);
-            boolean directorsFromShow = "1".equals(combo[3]);
-            cards.add(buildPreviewCard(episodeId, ratedSeason, actorsFromShow, directorsFromShow));
-        }
-
-        // Dialog zusammenbauen
-        VBox cardBox = new VBox(10);
-        for (int i = 0; i < cards.size(); i++) {
-            Label label = new Label(flagCombos[i][0]);
-            label.setStyle("-fx-font-weight: bold;");
-            Pane card = SkinService.get().createCard(cards.get(i), _ -> {}, _ -> {});
-            cardBox.getChildren().addAll(label, card);
-        }
-
-        ScrollPane scrollPane = new ScrollPane(cardBox);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setPrefHeight(800);
-        scrollPane.getStyleClass().add("my-dialog-scrollpane");
-
-        ButtonType btn1 = new ButtonType("1 - Staffel", ButtonBar.ButtonData.OTHER);
-        ButtonType btn2 = new ButtonType("2 - Episode", ButtonBar.ButtonData.OTHER);
-        ButtonType btn3 = new ButtonType("3 - Ep+ShowCast", ButtonBar.ButtonData.OTHER);
-        ButtonType btn4 = new ButtonType("4 - Abgebrochen", ButtonBar.ButtonData.OTHER);
-
+    private void showFlagDialog(int episodeId, String title) {
+        ButtonType btnSeason = new ButtonType("Ganze Staffel", ButtonBar.ButtonData.OTHER);
+        ButtonType btnEpisode = new ButtonType("Nur diese Episode", ButtonBar.ButtonData.OTHER);
+ 
         Alert alert = SkinService.get().createAlert(null,
-                "Wähle die Art der Bewertung",
-                "", btn1, btn2, btn3, btn4);
-        alert.getDialogPane().setContent(scrollPane);
-
+                "Art der Bewertung",
+                "Bezieht sich die Bewertung auf die ganze Staffel oder nur auf diese Episode?\n\n"
+                + title + "\n\n"
+                + "Hinweis: Die Karte anschließend im Viewer kontrollieren. Stimmt das Flag "
+                + "nicht, kann rated_season direkt in der DB angepasst werden.",
+                btnSeason, btnEpisode);
+ 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isEmpty())
             throw new RuntimeException("Flag-Dialog wurde ohne Auswahl geschlossen. episodeId=" + episodeId);
-
-        ButtonType chosen = result.get();
-        if (chosen == btn1)
-            episodeRepo.updateEpisodeFlags(episodeId, true, null, null);
-        else if (chosen == btn2)
-            episodeRepo.updateEpisodeFlags(episodeId, false, false, false);
-        else if (chosen == btn3)
-            episodeRepo.updateEpisodeFlags(episodeId, false, true, false);
-        else if (chosen == btn4)
-            episodeRepo.updateEpisodeFlags(episodeId, false, true, true);
-    }
-
-    /**
-     * Baut eine Vorschau-Karte für den Flag-Dialog mit den passenden Credits.
-     */
-    private CardData buildPreviewCard(int episodeId, boolean ratedSeason,
-            boolean actorsFromShow, boolean directorsFromShow) {
-        Connection conn = DB.getTmdbConnection();
-        int actorsToShow = Config.getInt("tmdb.actorsToShow", 10);
-        int directorsToShow = Config.getInt("tmdb.directorsToShow", 5);
-
-        // Actor-View wählen
-        String actorView;
-        if (ratedSeason) actorView = "episode_actors_from_season";
-        else if (actorsFromShow) actorView = "episode_actors_from_show";
-        else actorView = "episode_actors_from_episode";
-
-        // Director-View wählen
-        String directorView;
-        if (ratedSeason) directorView = "episode_directors_from_season";
-        else if (directorsFromShow) directorView = "episode_directors_from_show";
-        else directorView = "episode_directors_from_episode";
-
-        List<String> actors = loadPreviewNames(conn,
-                "SELECT name FROM " + actorView + " WHERE id = ? ORDER BY position ASC",
-                episodeId, actorsToShow);
-        List<String> directors = loadPreviewNames(conn,
-                "SELECT name FROM " + directorView + " WHERE id = ? ORDER BY position DESC",
-                episodeId, directorsToShow);
-
-        // Episode-Details laden
-        try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT * FROM episode_details WHERE episode_id = ?")) {
-            ps.setInt(1, episodeId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next())
-                    throw new RuntimeException("Episode nicht in episode_details. episodeId=" + episodeId);
-
-                String seasonReleaseDateStr = rs.getString("release_date");
-                LocalDate seasonFirstAirDate = seasonReleaseDateStr != null
-                        ? LocalDate.parse(seasonReleaseDateStr) : null;
-                String episodeReleaseDateStr = rs.getString("episode_release_date");
-                LocalDate episodeAirDate = episodeReleaseDateStr != null
-                        ? LocalDate.parse(episodeReleaseDateStr) : null;
-
-                boolean useSeasonOverview = ratedSeason || (actorsFromShow && directorsFromShow);
-                String overview = useSeasonOverview
-                        ? rs.getString("season_overview")
-                        : rs.getString("overview");
-
-                String imageFilename = rs.getString("season_image_filename");
-                if (imageFilename == null)
-                    imageFilename = rs.getString("show_image_filename");
-
-                return CardData.forEpisode(
-                        episodeId,
-                        rs.getString("show_name"),
-                        rs.getString("show_german_name"),
-                        rs.getString("season_name"),
-                        rs.getString("season_german_name"),
-                        rs.getString("episode_name"),
-                        rs.getString("episode_german_name"),
-                        rs.getInt("season_number"),
-                        rs.getInt("episode_number"),
-                        seasonFirstAirDate,
-                        episodeAirDate,
-                        ratedSeason,
-                        rs.getInt("rating"),
-                        LocalDate.parse(rs.getString("ratingInsertDate")),
-                        directors,
-                        actors,
-                        overview,
-                        rs.getString("comment"),
-                        imageFilename);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("buildPreviewCard fehlgeschlagen. episodeId=" + episodeId, e);
-        }
-    }
-
-    private List<String> loadPreviewNames(Connection conn, String sql, int id, int limit) {
-        List<String> names = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                int count = 0;
-                while (rs.next() && count < limit) {
-                    names.add(rs.getString("name"));
-                    count++;
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("loadPreviewNames fehlgeschlagen. id: " + id, e);
-        }
-        return names;
+ 
+        episodeRepo.updateEpisodeFlags(episodeId, result.get() == btnSeason);
     }
 
     // =========================================================================

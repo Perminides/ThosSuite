@@ -7,7 +7,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 public class MergeJavaToTxt {
 
     public static void main(String[] args) throws IOException {
-        Path sourceDir = Paths.get("C:/Users/Markgraf/git/ThosSuite/src/main/java/app");   // anpassen
+        Path sourceDir = Paths.get("C:/Users/permi/git/ThosSuite/src/main/java/app");   // anpassen
         Path outputFile = Paths.get("C:/Users/Markgraf/Desktop/notebooklm_alles.txt"); // anpassen
 
         Files.createDirectories(outputFile.getParent());

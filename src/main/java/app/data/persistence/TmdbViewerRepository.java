@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -176,6 +175,16 @@ public class TmdbViewerRepository {
         }
         return result;
     }
+    
+    // -------------------------------------------------------------------------
+    // Alle Episoden
+    // -------------------------------------------------------------------------
+    
+    public List<CardData> loadAllEpisodes() {
+        String sql = "SELECT edet.* FROM episode_details edet "
+                + "ORDER BY edet.episode_release_date DESC";
+        return loadEpisodes(sql);
+    }
 
     // -------------------------------------------------------------------------
     // SWYT-Vorschlagslisten
@@ -287,20 +296,6 @@ public class TmdbViewerRepository {
             LocalDate episodeAirDate = episodeReleaseDateStr != null
                     ? LocalDate.parse(episodeReleaseDateStr) : null;
 
-            // Overview: Bei Staffelbewertung den Season-Overview verwenden,
-            // bei Einzelepisode den Episode-Overview.
-            // Sonderfall (1,1) = abgebrochene Serie → auch Season-Overview.
-            boolean useSeasonOverview = ratedSeason
-                    || (rs.getInt("actors_from_show") == 1 && rs.getInt("directors_from_show") == 1);
-            String overview = useSeasonOverview
-                    ? rs.getString("season_overview")
-                    : rs.getString("overview");
-
-            // Bild: Season-Image bevorzugt, Fallback auf Show-Image
-            String imageFilename = rs.getString("season_image_filename");
-            if (imageFilename == null)
-                imageFilename = rs.getString("show_image_filename");
-
             return CardData.forEpisode(
                     episodeId,
                     rs.getString("show_name"),
@@ -318,9 +313,12 @@ public class TmdbViewerRepository {
                     LocalDate.parse(rs.getString("ratingInsertDate").substring(0, 10)),
                     directors,
                     actors,
-                    overview,
+                    rs.getString("overview"),
+                    rs.getString("season_overview"),
+                    rs.getString("show_overview"),
                     rs.getString("comment"),
-                    imageFilename);
+                    rs.getString("season_image_filename"),
+                    rs.getString("show_image_filename"));
         } catch (Exception e) {
             throw new RuntimeException("buildEpisodeCard fehlgeschlagen", e);
         }
@@ -359,7 +357,7 @@ public class TmdbViewerRepository {
         }
         return result;
     }
-
+    
     private List<CardData> loadEpisodes(String sql, String paramName) {
         Connection conn = DB.getTmdbConnection();
         List<CardData> result = new ArrayList<>();
@@ -371,6 +369,19 @@ public class TmdbViewerRepository {
             }
         } catch (Exception e) {
             throw new RuntimeException("loadEpisodes fehlgeschlagen. sql: " + sql + ", param: " + paramName, e);
+        }
+        return result;
+    }
+    
+    private List<CardData> loadEpisodes(String sql) {
+        Connection conn = DB.getTmdbConnection();
+        List<CardData> result = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next())
+                result.add(buildEpisodeCard(rs, conn));
+        } catch (Exception e) {
+            throw new RuntimeException("loadEpisodes fehlgeschlagen. sql: " + sql, e);
         }
         return result;
     }

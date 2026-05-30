@@ -11,8 +11,9 @@ import app.tmdb.json.RoleJSON;
 import app.tmdb.json.SeasonJSON;
 
 /**
- * Repository für alle Datenbankoperationen rund um Staffeln in der TMDB-Datenbank.
- * Kein Netzwerkzugriff, kein Dateisystemzugriff — nur DB.
+* <p>Zum regular-Flag (markRegularCast/markRegularCrew) und der zugrunde
+ * liegenden Invariante "regulär ⊆ aggregiert" siehe das Klassen-Javadoc von
+ * {@code TmdbSeriesImporter}, Abschnitt "Season Regulars".
  */
 public class TmdbSeasonRepository {
 
@@ -162,5 +163,48 @@ public class TmdbSeasonRepository {
             throw new RuntimeException("seasonExists fehlgeschlagen. tvShowId: " + tvShowId
                     + ", seasonNumber: " + seasonNumber, e);
         }
+    }
+    
+    // -------------------------------------------------------------------------
+    // Update
+    // -------------------------------------------------------------------------
+
+    /**
+     * Setzt regular=1 auf der season_to_person-Zeile (Match über
+     * season_id, person_id, credit_id). Trifft keine Zeile: FailFast — die
+     * Invariante "regulär ⊆ aggregiert" ist verletzt. Begründung und
+     * Diagnose siehe TmdbSeriesImporter, Abschnitt "Season Regulars".
+     */
+    public void markRegularCast(CastJSON cast, int seasonId, Connection conn) {
+        flipRegular(seasonId, cast.id, cast.getCredit_id(), conn);
+    }
+
+    /**
+     * Setzt regular=1 auf der season_to_person-Zeile (Match über
+     * season_id, person_id, credit_id). Trifft keine Zeile: FailFast — die
+     * Invariante "regulär ⊆ aggregiert" ist verletzt. Begründung und
+     * Diagnose siehe TmdbSeriesImporter, Abschnitt "Season Regulars".
+     */
+    public void markRegularCrew(CrewJSON crew, int seasonId, Connection conn) {
+        flipRegular(seasonId, crew.id, crew.getCredit_id(), conn);
+    }
+
+    private void flipRegular(int seasonId, int personId, String creditId, Connection conn) {
+        int updated;
+        try (PreparedStatement ps = conn.prepareStatement(
+                "UPDATE season_to_person SET regular = 1 " +
+                "WHERE season_id = ? AND person_id = ? AND credit_id = ?")) {
+            ps.setInt(1, seasonId);
+            ps.setInt(2, personId);
+            ps.setString(3, creditId);
+            updated = ps.executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException("flipRegular fehlgeschlagen. seasonId: " + seasonId
+                    + ", personId: " + personId, e);
+        }
+        if (updated == 0)
+            throw new RuntimeException("Regular nicht in aggregierten Season-Credits gefunden — "
+                    + "Grundannahme (regulär \u2286 aggregiert) verletzt. seasonId=" + seasonId
+                    + ", personId=" + personId + ", creditId=" + creditId);
     }
 }

@@ -6,7 +6,7 @@ import java.util.Comparator;
 
 public class FolderStructure {
 	
-    private static final String ROOT_PATH = "C:/Users/Markgraf/git/ThosSuite/src/main/java/app"; // <– anpassen
+    private static final String ROOT_PATH = "C:/Users/permi/git/ThosSuite/src/main/java/app"; // <– anpassen
 	
 	public static void main(String[] args) {
         File root = new File(ROOT_PATH);

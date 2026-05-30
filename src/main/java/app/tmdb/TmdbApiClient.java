@@ -270,6 +270,25 @@ public class TmdbApiClient {
     }
     
     /**
+     * Liefert die regular Credits (Cast und Crew) einer Staffel.
+     *
+     * @param tvShowId      TMDB-ID der Serie
+     * @param seasonNumber  Staffelnummer
+     * @return              CreditListJSON mit aggregiertem Cast und Crew
+     */
+    public CreditListJSON getRegularSeasonCredits(int tvShowId, int seasonNumber) {
+        log.info("TMDB getRegularSeasonCredits, tvShowId " + tvShowId + ", seasonNumber " + seasonNumber);
+        String path = "tv/" + tvShowId + "/season/" + seasonNumber + "/credits";
+        String json = getV3(path, Map.of("language", LANG_EN));
+        log.fine("TMDB getRegularSeasonCredits response: " + json);
+        try {
+            return mapper.readValue(json, CreditListJSON.class);
+        } catch (Exception e) {
+            throw new RuntimeException("[FAILFAST] TMDB getRegularSeasonCredits: JSON-Mapping fehlgeschlagen. tvShowId: " + tvShowId + ", seasonNumber: " + seasonNumber, e);
+        }
+    }
+    
+    /**
      * Liefert die aggregierten Credits (Cast und Crew) einer Staffel.
      * Aggregiert bedeutet: Rollen und Jobs sind als Listen innerhalb von Cast/Crew
      * verschachtelt, nicht als flache Liste.
