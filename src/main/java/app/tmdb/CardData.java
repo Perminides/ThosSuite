@@ -15,7 +15,8 @@ import java.util.List;
  * - Dann Rated, Directors (Links), Actors (Links), Overview, Comment
  *
  * Die Factory-Methoden formatieren die Header- und Detail-Zeilen
- * typ-spezifisch, damit der Skin keine Typ-Logik braucht.
+ * typ-spezifisch und lösen die Auswahl von Overview und Bild selbst auf.
+ * Das Repository reicht nur Rohfelder durch und enthält keine Anzeige-Logik.
  *
  * sortDate wird nicht angezeigt, sondern nur zum Sortieren der Ergebnisliste
  * verwendet, wenn Filme, Serien und Episoden gemischt dargestellt werden.
@@ -151,22 +152,28 @@ public record CardData(
     /**
      * Factory für bewertete Episoden.
      *
-     * Das Format hängt von den Flags ab:
+     * Zwei Fälle, gesteuert über ratedSeason:
      *
-     * rated_season=1 (Staffelbewertung):
+     * ratedSeason=true (Staffelbewertung):
      *   Header: "Show Name / Show German Name"
      *           "Season Name (SeasonFirstAirYear)"
-     *   Detail: "Season: X"
+     *   Detail: "Episode: S01E05"
+     *   Overview: season_overview, Fallback show_overview
      *   sortDate: season release_date
      *
-     * Einzelepisode (rated_season=0):
+     * ratedSeason=false (Einzelepisode):
      *   Header: "Show Name / Show German Name"
      *           "Episode Name / Episode German Name (EpisodeAirYear)"
      *   Detail: "Episode: S01E05"
+     *   Overview: episode_overview (kein Fallback)
      *   sortDate: episode_release_date
+     *
+     * Bild: season_image_filename, Fallback show_image_filename.
      *
      * Wenn Show-Name = Show-German-Name, kein " / German Name" im Header.
      * Analog für Episode-Name.
+     *
+     * Die Factory bekommt Rohfelder und löst Overview und Bild selbst auf.
      */
     public static CardData forEpisode(
             int id,
@@ -185,9 +192,12 @@ public record CardData(
             LocalDate ratedAt,
             List<String> directors,
             List<String> actors,
-            String overview,
+            String episodeOverview,
+            String seasonOverview,
+            String showOverview,
             String comment,
-            String imageFilename) {
+            String seasonImageFilename,
+            String showImageFilename) {
 
         List<String> header = new ArrayList<>();
         List<String> detail = new ArrayList<>();
@@ -199,6 +209,7 @@ public record CardData(
         }
         header.add(showLine);
 
+        String overview;
         if (ratedSeason) {
             // Staffelbewertung
             String seasonLine = seasonName != null ? seasonName : "Season " + seasonNumber;
@@ -209,7 +220,8 @@ public record CardData(
                     ? " (" + seasonFirstAirDate.getYear() + ")"
                     : "";
             header.add(seasonLine + seasonYear);
-            detail.add("Season: " + seasonNumber);
+            overview = (seasonOverview == null || seasonOverview.isBlank())
+                    ? showOverview : seasonOverview;
         } else {
             // Einzelepisode
             String episodeLine = episodeName != null ? episodeName : "Episode " + episodeNumber;
@@ -220,9 +232,14 @@ public record CardData(
                     ? " (" + episodeAirDate.getYear() + ")"
                     : "";
             header.add(episodeLine + episodeYear);
-            detail.add("Episode: S" + String.format("%02d", seasonNumber)
-                    + "E" + String.format("%02d", episodeNumber));
+            overview = episodeOverview;
         }
+
+        detail.add("Episode: S" + String.format("%02d", seasonNumber)
+                + "E" + String.format("%02d", episodeNumber));
+
+        String imageFilename = seasonImageFilename != null
+                ? seasonImageFilename : showImageFilename;
 
         return new CardData(
                 id,

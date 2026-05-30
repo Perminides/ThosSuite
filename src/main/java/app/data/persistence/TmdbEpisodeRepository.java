@@ -47,35 +47,27 @@ public class TmdbEpisodeRepository {
     }
 
     /**
-     * Fügt ein Episoden-Rating mit Flags und Kommentar ein.
+     * Fügt ein Episoden-Rating mit Flag und Kommentar ein.
      *
-     * @param episodeId         TMDB-ID der Episode
-     * @param rating            Bewertungswert
-     * @param comment           Kommentar oder "."
-     * @param firstRatedAt      Zeitpunkt der ersten Bewertung als String
-     * @param ratedSeason       Flag: Staffelbewertung?
-     * @param actorsFromShow    Flag: Schauspieler von der Show?
-     * @param directorsFromShow Flag: Regisseure von der Show?
-     * @param conn              Transaktions-Connection
+     * @param episodeId    TMDB-ID der Episode
+     * @param rating       Bewertungswert
+     * @param comment      Kommentar oder "."
+     * @param firstRatedAt Zeitpunkt der ersten Bewertung als String
+     * @param ratedSeason  Flag: Staffelbewertung?
+     * @param conn         Transaktions-Connection
      */
     public void insertEpisodeRating(int episodeId, int rating, String comment,
-            String firstRatedAt, Boolean ratedSeason, Boolean actorsFromShow,
-            Boolean directorsFromShow, Connection conn) {
+            String firstRatedAt, Boolean ratedSeason, Connection conn) {
         log.fine("insertEpisodeRating, episodeId " + episodeId);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO episode_rating (episode_id, ar_value, comment, first_rated_at, " +
-                "rated_season, actors_from_show, directors_from_show) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                "rated_season) VALUES (?, ?, ?, ?, ?)")) {
             ps.setInt(1, episodeId);
             ps.setInt(2, rating);
             ps.setString(3, comment);
             ps.setString(4, firstRatedAt);
             if (ratedSeason == null) ps.setNull(5, java.sql.Types.INTEGER);
             else ps.setInt(5, ratedSeason ? 1 : 0);
-            if (actorsFromShow == null) ps.setNull(6, java.sql.Types.INTEGER);
-            else ps.setInt(6, actorsFromShow ? 1 : 0);
-            if (directorsFromShow == null) ps.setNull(7, java.sql.Types.INTEGER);
-            else ps.setInt(7, directorsFromShow ? 1 : 0);
             ps.execute();
         } catch (Exception e) {
             throw new RuntimeException("insertEpisodeRating fehlgeschlagen. episodeId: " + episodeId, e);
@@ -194,7 +186,7 @@ public class TmdbEpisodeRepository {
     // -------------------------------------------------------------------------
     // Update
     // -------------------------------------------------------------------------
-
+    
     public void updateEpisodeRating(int episodeId, int rating, String comment) {
         log.fine("updateEpisodeRating, episodeId " + episodeId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
@@ -207,6 +199,22 @@ public class TmdbEpisodeRepository {
             ps.execute();
         } catch (Exception e) {
             throw new RuntimeException("updateEpisodeRating fehlgeschlagen. episodeId: " + episodeId, e);
+        }
+    }
+
+    /**
+     * Aktualisiert das rated_season-Flag einer Episodenbewertung.
+     */
+    public void updateEpisodeFlags(int episodeId, Boolean ratedSeason) {
+        log.fine("updateEpisodeFlags, episodeId " + episodeId);
+        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
+                "UPDATE episode_rating SET rated_season = ? WHERE episode_id = ?")) {
+            if (ratedSeason == null) ps.setNull(1, java.sql.Types.INTEGER);
+            else ps.setInt(1, ratedSeason ? 1 : 0);
+            ps.setInt(2, episodeId);
+            ps.execute();
+        } catch (Exception e) {
+            throw new RuntimeException("updateEpisodeFlags fehlgeschlagen. episodeId: " + episodeId, e);
         }
     }
 
