@@ -151,7 +151,7 @@ public class AnkiSessionPresenter {
 
 	public void clickedMapElement(String id) {
 		if (session.isPaused())
-			session.endPause();
+			session.reactOnPauseClick();
 		else
 			session.elementClicked(id);
 	}
@@ -164,7 +164,7 @@ public class AnkiSessionPresenter {
 	}**/
 	
 	public void clickedPlay() {
-		session.endPause();
+		session.reactOnPauseClick();
 	}
 	
 	public void clickedBack() {
@@ -173,7 +173,7 @@ public class AnkiSessionPresenter {
 	
 	public void clickedMCAnswer(int index) {
 		if (session.isPaused())
-			session.endPause();
+			session.reactOnPauseClick();
 		else
 			session.mcClicked(index);		
 	}
