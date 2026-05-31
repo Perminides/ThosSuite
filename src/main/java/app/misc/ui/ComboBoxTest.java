@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.ui;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

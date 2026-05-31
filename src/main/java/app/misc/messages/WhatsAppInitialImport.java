@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.messages;
 
 import java.io.File;
 import java.nio.file.Files;

@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.ui;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

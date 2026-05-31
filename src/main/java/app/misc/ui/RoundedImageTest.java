@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.ui;
 
 import java.io.File;
 

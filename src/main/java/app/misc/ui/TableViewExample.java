@@ -1,22 +1,24 @@
-package app.misc;
+package app.misc.ui;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import app.config.Config;
 import app.ui.skin.SkinService;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 
-public class TableViewDialogTest extends Application {
+public class TableViewExample extends Application {
 
     public static class Person {
         private final String firstName;
@@ -41,14 +43,8 @@ public class TableViewDialogTest extends Application {
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public void start(Stage primaryStage) {
-        Config.init("C:/Users/Markgraf/OneDrive/ThosSuite/");
-        
-        // Dialog erstellen (mit Parent, damit er nicht zentral positioniert wird)
-        Dialog<?> dialog = SkinService.get().createDialog(null, "TableView im Dialog");
-        
-        // TableView erstellen (exakt wie in TableViewExample)
+	@Override
+    public void start(final Stage primaryStage) {
         TableView<Person> tableView = new TableView<>();
         tableView.setPrefWidth(TableView.USE_COMPUTED_SIZE);
         tableView.setPrefHeight(TableView.USE_COMPUTED_SIZE);
@@ -84,58 +80,88 @@ public class TableViewDialogTest extends Application {
 
         tableView.setItems(data);
         tableView.setEditable(true);
-        
         for (TableColumn<Person, ?> column : tableView.getColumns()) {
             column.setSortable(false);
+        }
+
+        for (TableColumn<Person, ?> column : tableView.getColumns()) {
             column.setEditable(true);
             ((TableColumn<Person, String>) column).setCellFactory(TextFieldTableCell.forTableColumn());
         }
 
-        // VBox als Container (wie in TableViewExample)
-        VBox content = new VBox(tableView);
-        content.getStyleClass().add("my-dialog-vbox");
+        VBox root = new VBox(tableView);
+        Scene scene = new Scene(root, -1, -1);
+
+        Config.init("C:/Users/Markgraf/OneDrive/ThosSuite/");
+        SkinService.get().styleScene(scene);
         
-        // In Dialog einbauen
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("TableView Example");
         
-        // Versuch 1: Einfach anzeigen und schauen was passiert
-        System.out.println("=== Versuch 1: Dialog ohne manuelle Anpassung ===");
-        Platform.runLater(() -> {
-            dialog.show();
-            
-            // Nach dem Show: Größen ausgeben
-            Platform.runLater(() -> {
-                Window window = dialog.getDialogPane().getScene().getWindow();
-                System.out.println("Dialog Window: " + window.getWidth() + " x " + window.getHeight());
-                System.out.println("DialogPane: " + dialog.getDialogPane().getWidth() + " x " + dialog.getDialogPane().getHeight());
-                System.out.println("Content VBox: " + content.getWidth() + " x " + content.getHeight());
-                System.out.println("TableView: " + tableView.getWidth() + " x " + tableView.getHeight());
-                
-                System.out.println("TableView Items: " + tableView.getItems().size());
-                System.out.println("TableView PrefHeight: " + tableView.getPrefHeight());
-                System.out.println("TableView MinHeight: " + tableView.getMinHeight());
-                System.out.println("TableView MaxHeight: " + tableView.getMaxHeight());
-                
-                // Versuch 2: sizeToScene() aufrufen
-                System.out.println("\n=== Versuch 2: sizeToScene() nach Show ===");
-                window.sizeToScene();
-                
-                Platform.runLater(() -> {
-                    System.out.println("Nach sizeToScene():");
-                    System.out.println("Dialog Window: " + window.getWidth() + " x " + window.getHeight());
-                    System.out.println("DialogPane: " + dialog.getDialogPane().getWidth() + " x " + dialog.getDialogPane().getHeight());
-                    System.out.println("Content VBox: " + content.getWidth() + " x " + content.getHeight());
-                    System.out.println("TableView: " + tableView.getWidth() + " x " + tableView.getHeight());
-                });
-            });
-        });
-        
-        primaryStage.setTitle("Parent Stage (leer)");
+     // Start
+        primaryStage.setWidth(2000);
+        primaryStage.setOpacity(0);
         primaryStage.show();
+
+        AtomicBoolean measured = new AtomicBoolean(false);
+
+        Runnable[] listenerRef = new Runnable[1];
+        double[] lastWidth = {-1};
+
+        listenerRef[0] = () -> {
+            double currentWidth = tableView.getWidth();
+            
+            // Warte bis TableView sich stabilisiert hat
+            if (Math.abs(currentWidth - lastWidth[0]) >= 1) {
+                lastWidth[0] = currentWidth;
+                return;
+            }
+            
+            if (measured.get()) return;
+            
+            // Jetzt messen (TableView ist stabil)
+            double spaltenSumme = tableView.getColumns().stream()
+                .mapToDouble(TableColumn::getWidth)
+                .sum();
+            
+            System.out.println(spaltenSumme);
+            
+            double tableOverhead = tableView.getWidth() - spaltenSumme;
+            double windowOverhead = primaryStage.getWidth() - tableView.getWidth();
+            
+            double targetWidth = spaltenSumme + windowOverhead;
+            primaryStage.setWidth(targetWidth);
+            
+            measured.set(true);
+            scene.removePostLayoutPulseListener(listenerRef[0]);
+            primaryStage.setOpacity(1);
+            
+            System.out.println("Spaltensumme: " + spaltenSumme);
+            System.out.println("tableOverhead: " + tableOverhead);
+            System.out.println("windowOverhead: " + windowOverhead);
+            System.out.println("targetWidth: " + targetWidth);
+            System.out.println("Stage-Breite nach setWidth: " + primaryStage.getWidth());
+            
+        };
+        
+        
+        
+        scene.addPostLayoutPulseListener(listenerRef[0]);
     }
 
     public static void main(String[] args) {
         launch(args);
+    }
+    
+    public static ScrollBar getHorizontalScrollbar(TableView<?> table) {
+        for (Node n : table.lookupAll(".scroll-bar")) {
+            if (n instanceof ScrollBar) {
+                ScrollBar bar = (ScrollBar) n;
+                if (bar.getOrientation() == Orientation.HORIZONTAL) {
+                    return bar;
+                }
+            }
+        }
+        return null;
     }
 }

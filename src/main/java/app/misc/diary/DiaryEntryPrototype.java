@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.diary;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
