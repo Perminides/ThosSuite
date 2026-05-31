@@ -82,6 +82,12 @@
 			<version>2.11.5</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.github.javaparser</groupId>
+			<artifactId>javaparser-core</artifactId>
+			<version>3.28.2</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>
@@ -98,6 +104,18 @@
 							<directory>${project.build.directory}</directory>
 						</fileset>
 					</filesets>
+				</configuration>
+			</plugin>
+
+			<!-- Hält app.misc (Wegwerf-/Analyse-Code) aus der ausgelieferten JAR -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.4.1</version>
+				<configuration>
+					<excludes>
+						<exclude>app/misc/**</exclude>
+					</excludes>
 				</configuration>
 			</plugin>
 
