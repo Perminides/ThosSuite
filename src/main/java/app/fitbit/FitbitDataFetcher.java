@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import app.data.persistence.FitbitRepository;
-import app.fitbit.json.ActivityDaySummary;
-import app.fitbit.json.ActivityLogList;
+import app.fitbit.model.json.ActivityDaySummary;
+import app.fitbit.model.json.ActivityLogList;
+import app.fitbit.repository.FitbitRepository;
 import app.util.Log;
 
 /**
@@ -17,7 +17,7 @@ import app.util.Log;
 public class FitbitDataFetcher {
     
     private final FitbitRepository repository;
-    private FitbitImporter importer;
+    private FitbitApiClient importer;
     private List<DayData> fetchedDays;
     private Exception fetchError;
     
@@ -53,7 +53,7 @@ public class FitbitDataFetcher {
             }
             
             // 3. Importer erstellen (lädt Credentials, refresht Token)
-            this.importer = new FitbitImporter();
+            this.importer = new FitbitApiClient();
             
             // 4. Fehlende Tage sammeln
             List<LocalDate> missingDates = new ArrayList<>();
@@ -83,9 +83,9 @@ public class FitbitDataFetcher {
     private DayData fetchDay(LocalDate date) {
         Log.info(this, "Hole Fitbit-Daten für: " + date);
         
-        FitbitImporter.ApiResponse<ActivityDaySummary> daySummaryResponse = 
+        FitbitApiClient.ApiResponse<ActivityDaySummary> daySummaryResponse = 
             importer.getActivityDaySummary(date);
-        FitbitImporter.ApiResponse<ActivityLogList> activityLogResponse = 
+        FitbitApiClient.ApiResponse<ActivityLogList> activityLogResponse = 
             importer.getActivitiesLogList(date);
         
         return new DayData(
@@ -114,7 +114,7 @@ public class FitbitDataFetcher {
     /**
      * Container für die abgeholten Daten eines Tages.
      */
-    public record DayData(
+    record DayData(
         LocalDate date,
         ActivityLogList activityLogList,
         ActivityDaySummary daySummary

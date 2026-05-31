@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import app.alc.AlcoholStartupService;
+import app.alc.AlcoholStatisticsScreen;
 import app.config.Config;
 import app.data.AnkiCard;
 import app.data.AnkiDeckService;
@@ -22,9 +23,10 @@ import app.data.RegionLearnSessionInfo;
 import app.data.RegionMode;
 import app.data.RegionSessionSpec;
 import app.fitbit.FitbitDataFetcher;
-import app.fitbit.FitbitUpdateService;
-import app.messaging.SignalIncrementalImport;
-import app.messaging.WhatsAppIncrementalImport;
+import app.fitbit.FitbitStatisticsScreen;
+import app.fitbit.FitbitDataReviewService;
+import app.messaging.signal.SignalIncrementalImport;
+import app.messaging.whatsapp.WhatsAppIncrementalImport;
 import app.module.SuiteExporter;
 import app.tmdb.TmdbCleanup;
 import app.tmdb.TmdbImporter;
@@ -63,7 +65,7 @@ public class Controller{
 	private final RegionDeckService regionDeckService;
 	
     private MainWindow mainWindow;
-    private Session currentSession; //!Später natürlich nicht mehr nur MapDeckSessions...
+    private Screen currentSession; //!Später natürlich nicht mehr nur MapDeckSessions...
     private CardSortOrder currentSortOrder = CardSortOrder.BY_WRONG_COUNT_DESC; //!Architektur Sofort: Momentan muss die Anfangssortorder an 2 Stellen gesetzt werden. Gruselig!
     private FitbitDataFetcher fitbitDataFetcher;
 
@@ -137,7 +139,7 @@ public class Controller{
 		} else {
 			// Fitbit-Dialoge zeigen
 			if (fitbitDataFetcher.hasData()) {
-				FitbitUpdateService fitbitService = new FitbitUpdateService(fitbitDataFetcher);
+				FitbitDataReviewService fitbitService = new FitbitDataReviewService(fitbitDataFetcher);
 				fitbitService.showDialogsAndSave(null);
 			}
 		}
@@ -234,7 +236,7 @@ public class Controller{
 	            // Session starten (ohne Sortierung, gemischt)
 	            currentSession = new AnkiDeckSession(cards, this, ankiDeckService, deckType, Collections::shuffle, true);
 	            mainWindow.showPane(currentSession.getView());
-	            //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
+	            //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar. Warum ist das auskommentiert???
 	            currentSession.start();
 	        });
 	        
@@ -280,14 +282,16 @@ public class Controller{
 	    }
 	}
 	
+	// !Später: "Speichern" wird bei Statistik-Screens nicht ausgeblendet (anders als Region).
+	// Prüfen ob Bug — save ergibt für Stats keinen Sinn. Sichtbarkeit an Screen-Typ koppeln?
 	public void onStatisticsMenuItemSelected(String item) {
 	    requestSessionSwitch(() -> {
 	        if ("Dashboard".equals(item)) {
-	            currentSession = new DashboardSession();
+	            currentSession = new DashboardScreen();
 	        } else if ("Fitbit".equals(item)) {
-	            currentSession = new FitbitSession();
+	            currentSession = new FitbitStatisticsScreen();
 	        }  else if ("Alkohol".equals(item)) {
-	            currentSession = new AlcoholSession();
+	            currentSession = new AlcoholStatisticsScreen();
 	        }
             mainWindow.showPane(currentSession.getView());
             currentSession.start();
@@ -310,7 +314,7 @@ public class Controller{
 	
 	public void pausePressed() {
 		if (currentSession != null)
-			currentSession.endPause();
+			currentSession.reactOnPauseClick();
 	}
 
 	public void cardSortOrderSelected(CardSortOrder sort) {
@@ -342,7 +346,7 @@ public class Controller{
     
     public void diaryViewSelected() {
     	requestSessionSwitch(() -> {
-    		currentSession = new DiaryViewerSession();
+    		currentSession = new DiaryViewerScreen();
     		mainWindow.showPane(currentSession.getView());
     		currentSession.start();
     	});
@@ -350,7 +354,7 @@ public class Controller{
     
     public void movieSelected() {
     	requestSessionSwitch(() -> {
-    		currentSession = new MovieViewerSession();
+    		currentSession = new MovieViewerScreen();
     		mainWindow.showPane(currentSession.getView());
     		currentSession.start();
     	});

@@ -10,10 +10,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import app.config.Config;
-import app.data.persistence.FitbitRepository;
 import app.fitbit.PointsCalculator;
-import app.fitbit.json.ActivityDaySummary;
-import app.fitbit.json.ActivityLogList;
+import app.fitbit.model.json.ActivityDaySummary;
+import app.fitbit.model.json.ActivityLogList;
+import app.fitbit.repository.FitbitRepository;
 
 /**
  * EINMALIGE MIGRATION von alten Fitbit-Log-Daten in die neue Datenbank.

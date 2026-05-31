@@ -27,7 +27,7 @@ import javafx.scene.layout.Pane;
 
 // !Später: Das RegionSessionBild croppen und dann den korrekten Rand setzen, wenn isComplete==true. Wobei isComplete meint, dasss das ganze Rechteck ausgefüllt ist.
 // !Sofort: Es wäre schon nice bei Finde uf der Karte (schwer) zu wissen, wie viel noch kommen. Also doch einen Fortschritt bitte.
-public class RegionSession implements Session {
+public class RegionSession implements Screen {
 	
 	private final RegionSessionPresenter presenter;
 	private final RegionDeckService service;
@@ -84,7 +84,7 @@ public class RegionSession implements Session {
 	}
 	
 	@Override
-	public void endPause() {
+	public void reactOnPauseClick() {
 		if (!active)
     		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		progress.endPause();

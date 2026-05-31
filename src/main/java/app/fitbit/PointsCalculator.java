@@ -1,8 +1,8 @@
 package app.fitbit;
 
-import app.fitbit.json.Activity;
-import app.fitbit.json.ActivityDaySummary;
-import app.fitbit.json.ActivityLogList;
+import app.fitbit.model.json.Activity;
+import app.fitbit.model.json.ActivityDaySummary;
+import app.fitbit.model.json.ActivityLogList;
 import app.ui.skin.SkinService;
 import app.util.Log;
 

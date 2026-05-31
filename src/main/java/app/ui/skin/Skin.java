@@ -1524,6 +1524,10 @@ public abstract class Skin {
 	    }
 	    return background;
 	}
+	
+	public BackgroundImage getBackgroundImage() {
+		return getBackgroundImage(Deck.WORLD_CARDS); // TODO: Wozu gibt es denn die emptyWallpaperName Variable? Wäre das hier nicht sauberer?
+	}
 
 	/**
 	 * Creates a TextField with css-class = "input-field"

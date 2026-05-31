@@ -22,7 +22,7 @@ import app.util.Log;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.Pane;
 
-public class AnkiDeckSession implements Session{
+public class AnkiDeckSession implements Screen{
 
 	private final AnkiSessionPresenter presenter;
 	private final AnkiDeckService service;
@@ -173,7 +173,8 @@ public class AnkiDeckSession implements Session{
 		getCurrentProgress().mcClicked(index);
 	}
 	
-	public void endPause() {
+	@Override
+	public void reactOnPauseClick() {
 		if (!active)
     		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		getCurrentProgress().endPause();

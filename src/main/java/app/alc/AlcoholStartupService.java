@@ -6,7 +6,8 @@ import java.time.format.TextStyle;
 import java.util.Locale;
 import java.util.Optional;
 
-import app.data.persistence.AlcoholRepository;
+import app.alc.model.AlcoholStatus;
+import app.alc.repository.AlcoholRepository;
 import app.ui.skin.SkinService;
 import app.util.Log;
 import javafx.scene.control.Alert;
