@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.weekday;
 
 import app.config.Config;
 import app.data.persistence.DB;

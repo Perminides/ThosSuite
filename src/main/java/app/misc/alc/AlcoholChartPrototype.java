@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.alc;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

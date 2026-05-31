@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.tmdb;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.messages;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;

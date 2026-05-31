@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.fitbit;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

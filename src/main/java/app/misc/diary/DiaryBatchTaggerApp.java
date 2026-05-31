@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.diary;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

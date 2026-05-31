@@ -1,4 +1,4 @@
-package app.misc;
+package app.misc.ui;
 
 import app.config.Config;
 import app.ui.skin.SkinService;
