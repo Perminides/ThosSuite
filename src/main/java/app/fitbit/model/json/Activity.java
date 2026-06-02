@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import app.util.Log;
+import app.shared.Log;
 
 public class Activity extends Parent{
 	

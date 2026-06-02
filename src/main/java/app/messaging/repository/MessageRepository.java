@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import app.data.persistence.DB;
+import app.shared.DB;
 
 /**
  * Datenbankzugriffe auf die ThosSuite-DB für alle Messaging-Quellen (Signal, WhatsApp, …).

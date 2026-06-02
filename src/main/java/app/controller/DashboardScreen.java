@@ -3,17 +3,18 @@ package app.controller;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-import app.alc.repository.AlcoholRepository;
-import app.data.AppClock;
-import app.data.Deck;
-import app.data.SessionSwitchStrategy;
-import app.data.persistence.KeyValueRepository;
-import app.data.persistence.MattressRepository;
-import app.data.persistence.WeekdayRepository;
-import app.data.persistence.WeekdayRepository.WeekdayStats;
-import app.fitbit.FitbitDashboardService;
+import app.alc.repository.Repository;
+import app.fitbit.DashboardService;
+import app.learn.model.Deck;
+import app.mattress.repository.MattressRepository;
 import app.messaging.repository.MessageRepository;
+import app.shared.AppClock;
+import app.shared.KeyValueRepository;
+import app.shared.Screen;
+import app.shared.model.SessionSwitchStrategy;
 import app.ui.skin.SkinService;
+import app.weekday.model.WeekdayStats;
+import app.weekday.repository.WeekdayRepository;
 import javafx.geometry.Pos;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.FlowPane;
@@ -36,7 +37,7 @@ public class DashboardScreen implements Screen {
         view.setBackground(new Background(SkinService.get().getBackgroundImage(Deck.WORLD_CARDS)));
         
      // Fitbit-Service erstellen
-        FitbitDashboardService fitbitService = new FitbitDashboardService();
+        DashboardService fitbitService = new DashboardService();
         
         // Echte Berechnung
         int stepsNeeded = fitbitService.calculateRemainingDailySteps(AppClock.TODAY);
@@ -60,7 +61,7 @@ public class DashboardScreen implements Screen {
             )
         );
         
-        AlcoholRepository alcoholRepo = new AlcoholRepository();
+        Repository alcoholRepo = new Repository();
         int balance = alcoholRepo.getCurrentBalance();
         
         // Alkohol-Tile erstellen

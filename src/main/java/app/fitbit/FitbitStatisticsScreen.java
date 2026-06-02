@@ -5,14 +5,13 @@ import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
-import app.controller.Screen;
-import app.data.Deck;
-import app.data.SessionSwitchStrategy;
-import app.fitbit.model.FitbitGoalHistoryEntry;
-import app.fitbit.model.FitbitWeekData;
-import app.fitbit.repository.FitbitRepository;
+import app.fitbit.model.GoalHistoryEntry;
+import app.fitbit.model.WeekData;
+import app.fitbit.repository.Repository;
+import app.shared.Log;
+import app.shared.Screen;
+import app.shared.model.SessionSwitchStrategy;
 import app.ui.skin.SkinService;
-import app.util.Log;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
@@ -51,7 +50,7 @@ public class FitbitStatisticsScreen implements Screen {
     private static final PseudoClass FAILED = PseudoClass.getPseudoClass("failed");
     private static final PseudoClass IN_PROGRESS = PseudoClass.getPseudoClass("in-progress");
     
-    private final FitbitRepository repository;
+    private final Repository repository;
     
     private StackPane view;
     private DatePicker fromPicker;
@@ -61,7 +60,7 @@ public class FitbitStatisticsScreen implements Screen {
     private LineChart<String, Number> lineChart;
 
     public FitbitStatisticsScreen() {
-        this.repository = new FitbitRepository();
+        this.repository = new Repository();
     }
 
     @Override
@@ -86,7 +85,7 @@ public class FitbitStatisticsScreen implements Screen {
 
     private void buildView() {
     	view.getChildren().clear();
-        view.setBackground(new Background(SkinService.get().getBackgroundImage(Deck.WORLD_CARDS)));
+        view.setBackground(new Background(SkinService.get().getBackgroundImage()));
         
         VBox container = new VBox();
         container.getStyleClass().add("chart-container");
@@ -147,8 +146,8 @@ public class FitbitStatisticsScreen implements Screen {
         int categoryGap = gapSpinner.getValue();
         
         // Daten laden
-        List<FitbitWeekData> weeks = repository.getWeeksInRange(from, to);
-        List<FitbitGoalHistoryEntry> goalHistory = repository.getAllGoalHistory();
+        List<WeekData> weeks = repository.getWeeksInRange(from, to);
+        List<GoalHistoryEntry> goalHistory = repository.getAllGoalHistory();
         
         if (weeks.isEmpty()) {
             Log.warn(this, "Keine Fitbit-Daten im gewählten Zeitraum");
@@ -163,8 +162,8 @@ public class FitbitStatisticsScreen implements Screen {
         xAxis.setCategories(categories);
         xAxis.setTickLabelRotation(-45);
         
-        int maxPoints = weeks.stream().mapToInt(FitbitWeekData::points).max().orElse(5000);
-        int maxGoal = goalHistory.stream().mapToInt(FitbitGoalHistoryEntry::weeklyGoal).max().orElse(4000);
+        int maxPoints = weeks.stream().mapToInt(WeekData::points).max().orElse(5000);
+        int maxGoal = goalHistory.stream().mapToInt(GoalHistoryEntry::weeklyGoal).max().orElse(4000);
         int yMax = Math.max(maxPoints, maxGoal) + 500;
         
         NumberAxis yAxis = new NumberAxis(0, yMax, 500);
@@ -177,7 +176,7 @@ public class FitbitStatisticsScreen implements Screen {
         barChart.setVerticalGridLinesVisible(false);
         
         XYChart.Series<String, Number> barSeries = new XYChart.Series<>();
-        for (FitbitWeekData week : weeks) {
+        for (WeekData week : weeks) {
             barSeries.getData().add(new XYChart.Data<>(week.weekStart().toString(), week.points()));
         }
         barChart.getData().add(barSeries);
@@ -191,7 +190,7 @@ public class FitbitStatisticsScreen implements Screen {
         lineChart.setVerticalGridLinesVisible(false);
         
         XYChart.Series<String, Number> lineSeries = new XYChart.Series<>();
-        for (FitbitWeekData week : weeks) {
+        for (WeekData week : weeks) {
             int goalForWeek = findGoalForDate(week.weekStart(), goalHistory);
             lineSeries.getData().add(new XYChart.Data<>(week.weekStart().toString(), goalForWeek));
         }
@@ -206,7 +205,7 @@ public class FitbitStatisticsScreen implements Screen {
         
         for (int i = 0; i < barSeries.getData().size(); i++) {
             XYChart.Data<String, Number> data = barSeries.getData().get(i);
-            FitbitWeekData week = weeks.get(i);
+            WeekData week = weeks.get(i);
             int goalForWeek = findGoalForDate(week.weekStart(), goalHistory);
             
             Node barNode = data.getNode();
@@ -270,11 +269,11 @@ public class FitbitStatisticsScreen implements Screen {
     /**
      * Findet das gültige Wochenziel für ein bestimmtes Datum.
      */
-    private int findGoalForDate(LocalDate date, List<FitbitGoalHistoryEntry> history) {
+    private int findGoalForDate(LocalDate date, List<GoalHistoryEntry> history) {
         return history.stream()
             .filter(entry -> !entry.validFrom().isAfter(date))
             .reduce((_, second) -> second)
-            .map(FitbitGoalHistoryEntry::weeklyGoal)
+            .map(GoalHistoryEntry::weeklyGoal)
             .orElseThrow(() -> new RuntimeException("Kein Fitbit-Ziel gefunden für " + date));
     }
 

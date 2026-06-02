@@ -3,8 +3,8 @@ package app.fitbit;
 import app.fitbit.model.json.Activity;
 import app.fitbit.model.json.ActivityDaySummary;
 import app.fitbit.model.json.ActivityLogList;
+import app.shared.Log;
 import app.ui.skin.SkinService;
-import app.util.Log;
 
 /**
  * Berechnet die Tagespunkte aus den Fitbit-Activities.

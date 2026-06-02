@@ -13,9 +13,9 @@ import javax.imageio.ImageIO;
 
 import org.imgscalr.Scalr;
 
-import app.config.Config;
+import app.shared.Config;
+import app.shared.Log;
 import app.ui.skin.SkinService;
-import app.util.Log;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

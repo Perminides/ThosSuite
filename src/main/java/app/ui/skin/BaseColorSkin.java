@@ -1,6 +1,6 @@
 package app.ui.skin;
 
-import app.config.Config;
+import app.shared.Config;
 
 public abstract class BaseColorSkin extends Skin {
 

@@ -22,15 +22,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import app.config.Config;
-import app.data.persistence.DB;
-import app.data.persistence.KeyValueRepository;
 import app.messaging.repository.MessageRepository;
 import app.messaging.whatsapp.repository.WhatsAppSourceRepository;
-import app.ui.components.WhatsAppChatDialog;
-import app.ui.components.WhatsAppContactDialog;
+import app.shared.Config;
+import app.shared.DB;
+import app.shared.KeyValueRepository;
+import app.shared.Log;
 import app.ui.skin.SkinService;
-import app.util.Log;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 

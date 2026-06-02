@@ -2,7 +2,7 @@ package app.messaging.whatsapp.repository;
 
 import java.sql.*;
 
-import app.util.ThrowingConsumer;
+import app.shared.ThrowingConsumer;
 
 /**
  * Kapselt alle Lesezugriffe auf die entschlüsselte WhatsApp-DB (read-only).

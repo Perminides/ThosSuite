@@ -1,50 +1,49 @@
 package app.controller;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import app.alc.AlcoholStartupService;
-import app.alc.AlcoholStatisticsScreen;
-import app.config.Config;
-import app.data.AnkiCard;
-import app.data.AnkiDeckService;
-import app.data.AnkiLearnSessionInfo;
-import app.data.CardSortOrder;
-import app.data.Deck;
-import app.data.DeckCategory;
-import app.data.LearnSessionInfo;
-import app.data.MapShape;
-import app.data.RegionDeckService;
-import app.data.RegionLearnSessionInfo;
-import app.data.RegionMode;
-import app.data.RegionSessionSpec;
-import app.fitbit.FitbitDataFetcher;
-import app.fitbit.FitbitStatisticsScreen;
-import app.fitbit.FitbitDataReviewService;
+import app.alc.AlcStatisticsScreen;
+import app.alc.StartupService;
+import app.diary.DiaryDialog;
+import app.diary.DiaryViewerScreen;
+import app.fitbit.DataFetcher;
+import app.fitbit.DataReviewService;
+import app.learn.ShapeMap;
+import app.learn.anki.AnkiDeckService;
+import app.learn.anki.AnkiDeckSession;
+import app.learn.anki.AnkiPlayConfigDialog;
+import app.learn.anki.AnkiPlayConfigDialog.AnkiPlayConfig;
+import app.learn.anki.model.AnkiLearnSessionInfo;
+import app.learn.anki.model.Card;
+import app.learn.model.Deck;
+import app.learn.model.DeckCategory;
+import app.learn.model.LearnSessionInfo;
+import app.learn.region.RegionDeckService;
+import app.learn.region.RegionPlayConfigDialog;
+import app.learn.region.RegionPlayConfigDialog.RegionPlayConfig;
+import app.learn.region.RegionSession;
+import app.learn.region.model.Mode;
+import app.learn.region.model.RegionLearnSessionInfo;
+import app.learn.region.model.SessionSpec;
+import app.mattress.TurnDialog;
 import app.messaging.signal.SignalIncrementalImport;
 import app.messaging.whatsapp.WhatsAppIncrementalImport;
-import app.module.SuiteExporter;
-import app.tmdb.TmdbCleanup;
-import app.tmdb.TmdbImporter;
-import app.tmdb.TmdbSeriesImporter;
-import app.ui.MainWindow;
-import app.ui.PlayMenuItem;
-import app.ui.PlayMenuNode;
-import app.ui.components.AnkiPlayConfigDialog;
-import app.ui.components.AnkiPlayConfigDialog.AnkiPlayConfig;
-import app.ui.components.DiaryDialog;
+import app.movie.Cleanup;
+import app.movie.Importer;
+import app.movie.MovieViewerScreen;
+import app.movie.SeriesImporter;
+import app.shared.Config;
+import app.shared.Log;
+import app.shared.Screen;
+import app.shared.model.CardSortOrder;
 import app.ui.components.ImageScaler;
-import app.ui.components.MattressTurnDialog;
-import app.ui.components.RegionPlayConfigDialog;
-import app.ui.components.RegionPlayConfigDialog.RegionPlayConfig;
-import app.ui.components.WeekdayDialog;
 import app.ui.skin.Skin;
 import app.ui.skin.SkinService;
-import app.util.Log;
+import app.weekday.WeekdayDialog;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -67,7 +66,7 @@ public class Controller{
     private MainWindow mainWindow;
     private Screen currentSession; //!Später natürlich nicht mehr nur MapDeckSessions...
     private CardSortOrder currentSortOrder = CardSortOrder.BY_WRONG_COUNT_DESC; //!Architektur Sofort: Momentan muss die Anfangssortorder an 2 Stellen gesetzt werden. Gruselig!
-    private FitbitDataFetcher fitbitDataFetcher;
+    private DataFetcher fitbitDataFetcher;
 
     
     public enum SessionSwitchAction {
@@ -118,10 +117,10 @@ public class Controller{
 	 * Wird VOR initializeMainWindow aufgerufen (Splash noch sichtbar). Holt Daten im UI-Thread, blockiert aber die App - Splash bleibt sichtbar.
 	 */
 	public void runPreTasks() {
-		fitbitDataFetcher = new FitbitDataFetcher(); // Muss Instanzvariable sein, weil wir Daten für den PostTask übergeben. Das macht tmdb sauberer, wie ich finde...
+		fitbitDataFetcher = new DataFetcher(); // Muss Instanzvariable sein, weil wir Daten für den PostTask übergeben. Das macht tmdb sauberer, wie ich finde...
 		if (Config.get("offline", "false").equals("false")) {
 			fitbitDataFetcher.fetch();
-			new TmdbImporter().run();
+			new Importer().run();
 		}
 	}
 
@@ -139,21 +138,21 @@ public class Controller{
 		} else {
 			// Fitbit-Dialoge zeigen
 			if (fitbitDataFetcher.hasData()) {
-				FitbitDataReviewService fitbitService = new FitbitDataReviewService(fitbitDataFetcher);
+				DataReviewService fitbitService = new DataReviewService(fitbitDataFetcher);
 				fitbitService.showDialogsAndSave(null);
 			}
 		}
 		
-	    AlcoholStartupService alcoholService = new AlcoholStartupService();
+	    StartupService alcoholService = new StartupService();
 	    alcoholService.checkAndPrompt();
 	    
 	    new DiaryDialog().showNew(mainWindow.getStage());
 	    
 	    new WeekdayDialog().showForDaily();
 	    
-	    new MattressTurnDialog().showIfDue();
+	    new TurnDialog().showIfDue();
 	    
-	    new TmdbCleanup().run();
+	    new Cleanup().run();
 	    
 	    try {
 	    	new SignalIncrementalImport().run();
@@ -189,12 +188,12 @@ public class Controller{
 	public void onLearnMenuItemSelected(LearnSessionInfo info) {
 	    requestSessionSwitch(() -> {
 	    	if (info instanceof AnkiLearnSessionInfo anki) {
-				List<AnkiCard> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // !Später: Wenn Session schon den Service bekommt, um die Session zu speichern, warum holt sie sich nicht auch die Karten zum Spielen. Beantwortung muss erfolgen, wenn freies Spiel implementiert wird!
-				currentSession = new AnkiDeckSession(dueCards, this, ankiDeckService, anki.getDeckType(), currentSortOrder == null ? Collections::shuffle : currentSortOrder::sort, false);
+				List<Card> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // !Später: Wenn Session schon den Service bekommt, um die Session zu speichern, warum holt sie sich nicht auch die Karten zum Spielen. Beantwortung muss erfolgen, wenn freies Spiel implementiert wird!
+				currentSession = new AnkiDeckSession(dueCards, this::sessionEnded, ankiDeckService, anki.getDeckType(), currentSortOrder, false);
 				mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
 		    } else if (info instanceof RegionLearnSessionInfo region) {
-		    	Set<MapShape> regions = regionDeckService.getRegions(region.getSpec());
-		        currentSession = new RegionSession(region.getSpec(), regions, this, regionDeckService);
+		    	Set<ShapeMap> regions = regionDeckService.getRegions(region.getSpec());
+		        currentSession = new RegionSession(region.getSpec(), regions, this::sessionEnded, regionDeckService);
 		        mainWindow.showSaveSession(false);
 		    }
 	        mainWindow.showPane(currentSession.getView());
@@ -219,7 +218,7 @@ public class Controller{
 	        
 	        AnkiPlayConfig config = configOpt.get();
 	        
-	        List<AnkiCard> cards = ankiDeckService.getCardsForPlay(
+	        List<Card> cards = ankiDeckService.getCardsForPlay(
 	            deckType,
 	            config.minIndex(),
 	            config.maxIndex(),
@@ -234,7 +233,7 @@ public class Controller{
 	        
 	        requestSessionSwitch(() -> {
 	            // Session starten (ohne Sortierung, gemischt)
-	            currentSession = new AnkiDeckSession(cards, this, ankiDeckService, deckType, Collections::shuffle, true);
+	            currentSession = new AnkiDeckSession(cards, this::sessionEnded, ankiDeckService, deckType, CardSortOrder.RANDOM, true);
 	            mainWindow.showPane(currentSession.getView());
 	            //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar. Warum ist das auskommentiert???
 	            currentSession.start();
@@ -249,7 +248,7 @@ public class Controller{
 	        RegionPlayConfig config = configOpt.get();
 	        
 	        Set<Deck> selectedDecks = config.selectedDecks();
-	        RegionMode mode = config.mode();
+	        Mode mode = config.mode();
 	        
 	        // Erstes Deck als primäres, Rest als additional
 	        Deck primaryDeck = selectedDecks.iterator().next();
@@ -257,7 +256,7 @@ public class Controller{
 	        additionalDecks.remove(primaryDeck);
 	        
 	        // Spec erstellen
-	        RegionSessionSpec spec = new RegionSessionSpec(
+	        SessionSpec spec = new SessionSpec(
 	            primaryDeck,
 	            mode,
 	            additionalDecks.isEmpty() ? null : additionalDecks,
@@ -265,7 +264,7 @@ public class Controller{
 	        );
 	        
 	        // Regionen holen VOR dem Switch
-	        Set<MapShape> regions = regionDeckService.getRegions(spec);
+	        Set<ShapeMap> regions = regionDeckService.getRegions(spec);
 	        
 	        if (regions.isEmpty()) {
 	            SkinService.get().createAlert(mainWindow.getStage(), null, "Keine Regionen gefunden", false, false).showAndWait();
@@ -274,7 +273,7 @@ public class Controller{
 	        
 	        requestSessionSwitch(() -> {
 	            // Session starten
-	            currentSession = new RegionSession(spec, regions, this, regionDeckService);
+	            currentSession = new RegionSession(spec, regions, this::sessionEnded, regionDeckService);
 	            mainWindow.showPane(currentSession.getView());
 	            //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
 	            currentSession.start();
@@ -289,9 +288,9 @@ public class Controller{
 	        if ("Dashboard".equals(item)) {
 	            currentSession = new DashboardScreen();
 	        } else if ("Fitbit".equals(item)) {
-	            currentSession = new FitbitStatisticsScreen();
+	            currentSession = new AlcStatisticsScreen();
 	        }  else if ("Alkohol".equals(item)) {
-	            currentSession = new AlcoholStatisticsScreen();
+	            currentSession = new AlcStatisticsScreen();
 	        }
             mainWindow.showPane(currentSession.getView());
             currentSession.start();
@@ -365,7 +364,7 @@ public class Controller{
     }
     
     public void mattressSelected() {
-    	new MattressTurnDialog().show();
+    	new TurnDialog().show();
     }
     
     public void exportSelected() {
@@ -373,7 +372,7 @@ public class Controller{
     }
     
     public void additionalTmdbImportSelected() {
-    	new TmdbSeriesImporter().run();
+    	new SeriesImporter().run();
     }
     
     /**
