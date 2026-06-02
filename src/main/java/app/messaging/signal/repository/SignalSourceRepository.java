@@ -10,7 +10,7 @@ import java.util.List;
 import app.messaging.signal.model.AttachmentInfo;
 import app.messaging.signal.model.ContactInfo;
 import app.messaging.signal.model.ConversationInfo;
-import app.util.ThrowingConsumer;
+import app.shared.ThrowingConsumer;
 
 /**
  * Kapselt alle Lesezugriffe auf die externe Signal-DB (read-only).

@@ -24,16 +24,16 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import app.config.Config;
-import app.data.persistence.DB;
 import app.messaging.repository.MessageRepository;
 import app.messaging.signal.model.AttachmentInfo;
 import app.messaging.signal.model.ContactInfo;
 import app.messaging.signal.model.ConversationInfo;
 import app.messaging.signal.repository.SignalSourceRepository;
+import app.shared.Config;
+import app.shared.DB;
+import app.shared.Log;
+import app.shared.ThrowingConsumer;
 import app.ui.skin.SkinService;
-import app.util.Log;
-import app.util.ThrowingConsumer;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 

@@ -3,7 +3,7 @@ package app.ui.skin;
 import java.util.ArrayList;
 import java.util.List;
 
-import app.config.Config;
+import app.shared.Config;
 import javafx.stage.Window;
 
 public final class SkinService {
