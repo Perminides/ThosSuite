@@ -33,7 +33,7 @@ public class CardProgress implements Progress{
 	private final SessionPresenter presenter;
 	private final Card card;
 	private final List<Card.Step> steps;
-	private final AnkiSessionProgress sessionProgress;
+	private final SessionProgress sessionProgress;
 	
 	private Boolean correctlyAnswered = null; // null = Noch nicht gespielt.
 	private LocalDateTime playedTimestamp = null;
@@ -46,7 +46,7 @@ public class CardProgress implements Progress{
 	private List<String> lastMcOrder = null;
 	private MultipleChoiceAnswers activeSessionMC = null;
 	
-	public CardProgress(Card hint, SessionPresenter presenter, AnkiSessionProgress sessionProgress) {
+	public CardProgress(Card hint, SessionPresenter presenter, SessionProgress sessionProgress) {
 		this.card = hint;
 		this.presenter = presenter;
 		this.sessionProgress = sessionProgress;

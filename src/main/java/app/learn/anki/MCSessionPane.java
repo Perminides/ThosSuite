@@ -128,7 +128,7 @@ public class MCSessionPane extends Pane implements SessionPane{
 	public void sessionProgressChanged(SessionProgressCounter progress) {
 		String text = "Korrekt: " + progress.correct() + "\nFalsch: "
 				+ progress.incorrect() + "\nOffen: "
-				+ (progress.remaining()-progress.correct()-progress.incorrect());
+				+ (progress.total()-progress.correct()-progress.incorrect());
 		progressArea.setText(text);
 	}
 

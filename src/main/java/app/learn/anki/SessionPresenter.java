@@ -22,10 +22,10 @@ public class SessionPresenter {
 
 	private final StackPane sessionPaneContainer = new StackPane();
     private SessionPane sessionPane; //!Später MapDeckGamePanel!
-    private AnkiSessionProgress sessionProgress;
+    private SessionProgress sessionProgress;
     private final Deck type; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 
-    public SessionPresenter(Deck type, AnkiSessionProgress sessionProgress) {
+    public SessionPresenter(Deck type, SessionProgress sessionProgress) {
     	this.type = type;
     	this.sessionProgress = sessionProgress;
     	sessionProgress.setPresenter(this);
