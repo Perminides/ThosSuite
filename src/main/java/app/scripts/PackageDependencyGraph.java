@@ -27,7 +27,7 @@ import java.util.stream.Stream;
  *
  * Lokal ausführen, danach die erzeugte .dot mit Graphviz rendern:
  *   dot -Tsvg thossuite_packages.dot -o thossuite_packages.svg
- * oder online (z. B. dreampuf.github.io/GraphvizOnline) reinkopieren.
+ * oder online (z. B. https://edotor.net/) reinkopieren.
  */
 public class PackageDependencyGraph {
 

@@ -64,7 +64,7 @@ public class Controller{
 	private final RegionDeckService regionDeckService;
 	
     private MainWindow mainWindow;
-    private Screen currentSession; //!Später natürlich nicht mehr nur MapDeckSessions...
+    private Screen currentScreen; //!Später natürlich nicht mehr nur MapDeckSessions...
     private CardSortOrder currentSortOrder = CardSortOrder.BY_WRONG_COUNT_DESC; //!Architektur Sofort: Momentan muss die Anfangssortorder an 2 Stellen gesetzt werden. Gruselig!
     private DataFetcher fitbitDataFetcher;
 
@@ -181,7 +181,7 @@ public class Controller{
     	setLearnMenuItemLabels();
     	mainWindow.showSaveSession(false);
     	showEmptyBackground();
-    	currentSession = null;
+    	currentScreen = null;
     	// !Erweiterung im Popup auch fragen ob eine neue Session gestartet werden soll
     }
 	
@@ -189,15 +189,15 @@ public class Controller{
 	    requestSessionSwitch(() -> {
 	    	if (info instanceof AnkiLearnSessionInfo anki) {
 				List<Card> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // !Später: Wenn Session schon den Service bekommt, um die Session zu speichern, warum holt sie sich nicht auch die Karten zum Spielen. Beantwortung muss erfolgen, wenn freies Spiel implementiert wird!
-				currentSession = new AnkiDeckSession(dueCards, this::sessionEnded, ankiDeckService, anki.getDeckType(), currentSortOrder, false);
+				currentScreen = new AnkiDeckSession(dueCards, this::sessionEnded, ankiDeckService, anki.getDeckType(), currentSortOrder, false);
 				mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
 		    } else if (info instanceof RegionLearnSessionInfo region) {
 		    	Set<ShapeMap> regions = regionDeckService.getRegions(region.getSpec());
-		        currentSession = new RegionSession(region.getSpec(), regions, this::sessionEnded, regionDeckService);
+		        currentScreen = new RegionSession(region.getSpec(), regions, this::sessionEnded, regionDeckService);
 		        mainWindow.showSaveSession(false);
 		    }
-	        mainWindow.showPane(currentSession.getView());
-	        currentSession.start();
+	        mainWindow.showPane(currentScreen.getView());
+	        currentScreen.start();
 	    });
 	}
 	
@@ -233,10 +233,10 @@ public class Controller{
 	        
 	        requestSessionSwitch(() -> {
 	            // Session starten (ohne Sortierung, gemischt)
-	            currentSession = new AnkiDeckSession(cards, this::sessionEnded, ankiDeckService, deckType, CardSortOrder.RANDOM, true);
-	            mainWindow.showPane(currentSession.getView());
+	            currentScreen = new AnkiDeckSession(cards, this::sessionEnded, ankiDeckService, deckType, CardSortOrder.RANDOM, true);
+	            mainWindow.showPane(currentScreen.getView());
 	            //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar. Warum ist das auskommentiert???
-	            currentSession.start();
+	            currentScreen.start();
 	        });
 	        
 	    } else if (payload == DeckCategory.REGION_DECK) {
@@ -273,10 +273,10 @@ public class Controller{
 	        
 	        requestSessionSwitch(() -> {
 	            // Session starten
-	            currentSession = new RegionSession(spec, regions, this::sessionEnded, regionDeckService);
-	            mainWindow.showPane(currentSession.getView());
+	            currentScreen = new RegionSession(spec, regions, this::sessionEnded, regionDeckService);
+	            mainWindow.showPane(currentScreen.getView());
 	            //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
-	            currentSession.start();
+	            currentScreen.start();
 	        });
 	    }
 	}
@@ -286,20 +286,20 @@ public class Controller{
 	public void onStatisticsMenuItemSelected(String item) {
 	    requestSessionSwitch(() -> {
 	        if ("Dashboard".equals(item)) {
-	            currentSession = new DashboardScreen();
+	            currentScreen = new DashboardScreen();
 	        } else if ("Fitbit".equals(item)) {
-	            currentSession = new AlcStatisticsScreen();
+	            currentScreen = new AlcStatisticsScreen();
 	        }  else if ("Alkohol".equals(item)) {
-	            currentSession = new AlcStatisticsScreen();
+	            currentScreen = new AlcStatisticsScreen();
 	        }
-            mainWindow.showPane(currentSession.getView());
-            currentSession.start();
+            mainWindow.showPane(currentScreen.getView());
+            currentScreen.start();
 	    });
 	}
 	
 	public void saveMenuItemSelected() {
-		if (currentSession != null)
-			currentSession.endGracefully();
+		if (currentScreen != null)
+			currentScreen.endGracefully();
 	}
 	
 	public CardSortOrder getCardSortOrder() {
@@ -307,22 +307,22 @@ public class Controller{
 	}
 	
 	public void escPressed() {
-		if (currentSession != null)
-			currentSession.escClicked();
+		if (currentScreen != null)
+			currentScreen.escClicked();
 	}
 	
 	public void pausePressed() {
-		if (currentSession != null)
-			currentSession.reactOnPauseClick();
+		if (currentScreen != null)
+			currentScreen.reactOnPauseClick();
 	}
 
 	public void cardSortOrderSelected(CardSortOrder sort) {
 	    currentSortOrder = sort;
 	    Config.set("pref_sortOrder", sort.name()); // Persistieren
 	    
-	    if (currentSession == null)
+	    if (currentScreen == null)
 	        return;
-	    currentSession.sort(sort); //!Später dann weiß noch nicht, muss geschaut werden ob die Session zu sort überhaupt passt.
+	    currentScreen.sort(sort); //!Später dann weiß noch nicht, muss geschaut werden ob die Session zu sort überhaupt passt.
 	}
 	
 	// NEU: Die Refresh-Methode
@@ -345,17 +345,17 @@ public class Controller{
     
     public void diaryViewSelected() {
     	requestSessionSwitch(() -> {
-    		currentSession = new DiaryViewerScreen();
-    		mainWindow.showPane(currentSession.getView());
-    		currentSession.start();
+    		currentScreen = new DiaryViewerScreen();
+    		mainWindow.showPane(currentScreen.getView());
+    		currentScreen.start();
     	});
     }
     
     public void movieSelected() {
     	requestSessionSwitch(() -> {
-    		currentSession = new MovieViewerScreen();
-    		mainWindow.showPane(currentSession.getView());
-    		currentSession.start();
+    		currentScreen = new MovieViewerScreen();
+    		mainWindow.showPane(currentScreen.getView());
+    		currentScreen.start();
     	});
     }
     
@@ -381,14 +381,14 @@ public class Controller{
      */
     private void updateUiAfterSkinChange() {
     	Log.info(this, "=== SKIN CHANGE === currentSession=" 
-    	        + (currentSession == null ? "null" : "Session@" + System.identityHashCode(currentSession)));
+    	        + (currentScreen == null ? "null" : "Session@" + System.identityHashCode(currentScreen)));
         mainWindow.buildStyledUi();
         
         // !Sofort: Das ist aber architektonisch scheiße, dass ich das hier noch mal aufrufen muss!
         //mainWindow.setCurrentSortOrder(currentSortOrder);
         
-        if (currentSession != null) {
-            currentSession.refresh();
+        if (currentScreen != null) {
+            currentScreen.refresh();
             mainWindow.showSaveSession(true); 
         } else {
             showEmptyBackground();
@@ -420,15 +420,15 @@ public class Controller{
 	 */
 	public void requestSessionSwitch(Runnable startNewSessionRoutine) {
 		Log.info(this, "=== REQUEST SESSION SWITCH === currentSession=" 
-		        + (currentSession == null ? "null" : "Session@" + System.identityHashCode(currentSession)));
-	    if (currentSession == null) {
+		        + (currentScreen == null ? "null" : "Session@" + System.identityHashCode(currentScreen)));
+	    if (currentScreen == null) {
 	        startNewSessionRoutine.run();
 	        return;
 	    }
 
-	    switch (currentSession.getSwitchStrategy()) {
+	    switch (currentScreen.getSwitchStrategy()) {
 	        case IMMEDIATE:
-	            currentSession.closeSilent(false);
+	            currentScreen.closeSilent(false);
 	            startNewSessionRoutine.run();
 	            break;
 
@@ -436,11 +436,11 @@ public class Controller{
 	            // Der komplexe Dialog: Speichern / Verwerfen / Abbrechen
 	            var decision = showSaveDiscardCancelDialog();
 	            if (decision == SessionSwitchAction.SAVE_AND_SWITCH) {
-	                currentSession.closeSilent(true);
+	                currentScreen.closeSilent(true);
 	                setLearnMenuItemLabels();
 	                startNewSessionRoutine.run();
 	            } else if (decision == SessionSwitchAction.DISCARD_AND_SWITCH) {
-	                currentSession.closeSilent(false);
+	                currentScreen.closeSilent(false);
 	                startNewSessionRoutine.run();
 	            }
 	            // bei CANCEL passiert nichts
@@ -450,7 +450,7 @@ public class Controller{
 	            // Der simple Dialog: "Achtung, Fortschritt geht verloren! OK / Abbrechen"
 	            boolean reallyQuit = showConfirmDiscardDialog();
 	            if (reallyQuit) {
-	                currentSession.closeSilent(false); // Nicht speichern, nur schließen
+	                currentScreen.closeSilent(false); // Nicht speichern, nur schließen
 	                startNewSessionRoutine.run();
 	            }
 	            break;

@@ -22,16 +22,18 @@ import app.shared.Log;
 
 
 /**
- * Existiert nur innerhalb einer (Lern-)Session. Wird von der Session erstellt und am Ende der Sesion auch wieder aus der Card
- * entfernt! Dass sie den Presenter kennt, ist nicht ganz sauber. Aber wir haben uns der Einfachheit darauf verständigt, weil
- * Events würden das nur aufblähen und das Konstrukt Panel - Presenter - Session - Progress ist halt auch ein enges...
+ * Existiert nur innerhalb einer (Lern-)Session. Wird vom AnkiSessionProgress erstellt und in dessen
+ * Map gehalten (Karten-Id -> CardProgress). Mit dem Ende des AnkiSessionProgress stirbt die Map - es
+ * gibt nichts mehr aus der Card zu entfernen. Dass sie den Presenter kennt, ist nicht ganz sauber.
+ * Aber wir haben uns der Einfachheit darauf verständigt, weil Events würden das nur aufblähen und das
+ * Konstrukt Panel - Presenter - SessionProgress - Progress ist halt auch ein enges...
  */
 public class CardProgress implements Progress{
 	
 	private final SessionPresenter presenter;
 	private final Card card;
 	private final List<Card.Step> steps;
-	private final AnkiDeckSession session;
+	private final AnkiSessionProgress sessionProgress;
 	
 	private Boolean correctlyAnswered = null; // null = Noch nicht gespielt.
 	private LocalDateTime playedTimestamp = null;
@@ -44,10 +46,10 @@ public class CardProgress implements Progress{
 	private List<String> lastMcOrder = null;
 	private MultipleChoiceAnswers activeSessionMC = null;
 	
-	public CardProgress(Card hint, SessionPresenter presenter, AnkiDeckSession session) {
+	public CardProgress(Card hint, SessionPresenter presenter, AnkiSessionProgress sessionProgress) {
 		this.card = hint;
 		this.presenter = presenter;
-		this.session = session;
+		this.sessionProgress = sessionProgress;
 		this.steps = hint.getSteps();
 	}
 	
@@ -140,7 +142,7 @@ public class CardProgress implements Progress{
 	    Step step = steps.get(currentIndex);
 	     // Wir reagieren auf alle Klicks. Wenn wir im Pause-Modus sind, bleiben sie im Presenter hängen.
 	     // Wenn nicht, dann müssen wir sie hier ignorieren.
-	    if (!(step instanceof MC mc)) {
+	    if (!(step instanceof MC)) {
 	        return;
 	    }
 	    
@@ -231,7 +233,7 @@ public class CardProgress implements Progress{
 	private void cardFinished() {
 		if (correctlyAnswered == null)
 			throw new RuntimeException("Wieso wurde correctlyAnswered nicht gesetzt vor dem Aufruf von cardFinished?");
-        session.cardFinished(correctlyAnswered);
+        sessionProgress.cardFinished(correctlyAnswered);
 	}
 	
 	private void runSteps() {

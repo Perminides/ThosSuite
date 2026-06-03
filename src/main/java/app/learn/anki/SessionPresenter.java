@@ -12,9 +12,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
 /**
- * Calls AnkiSessionPane and the Session (which forwards most calls to the current Progress of course).
- * Is called by the current progress directly.
- * 
+ * Calls the SessionPane and the AnkiSessionProgress (which forwards most calls to the current
+ * CardProgress of course). Is called by the current CardProgress directly.
+ *
  * Also holds a final sessionPaneContainer, which is shown in the MainWindow. In case of a skin change,
  * the sessionPane inside this container is recreated. The MainWindow won't realize this :-)
  */
@@ -22,12 +22,13 @@ public class SessionPresenter {
 
 	private final StackPane sessionPaneContainer = new StackPane();
     private SessionPane sessionPane; //!Später MapDeckGamePanel!
-    private AnkiDeckSession session;
+    private AnkiSessionProgress sessionProgress;
     private final Deck type; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 
-    public SessionPresenter(Deck type, AnkiDeckSession session) {
+    public SessionPresenter(Deck type, AnkiSessionProgress sessionProgress) {
     	this.type = type;
-    	this.session = session;
+    	this.sessionProgress = sessionProgress;
+    	sessionProgress.setPresenter(this);
         sessionPane = createPanelForType(type);
         sessionPaneContainer.getChildren().setAll(sessionPane.asPane());
     }
@@ -48,7 +49,7 @@ public class SessionPresenter {
     }
     
     public void end() {
-        session = null;
+        sessionProgress = null;
     }
     
 	public Pane getView() {
@@ -142,36 +143,29 @@ public class SessionPresenter {
 	// ========================================
 	
 	public void typedText(String text) {
-		session.textInputChanged(text);
+		sessionProgress.textInputChanged(text);
 	}
 
 	public void clickedMapElement(String id) {
-		if (session.isPaused())
-			session.reactOnPauseClick();
+		if (sessionProgress.isPaused())
+			sessionProgress.reactOnPauseClick();
 		else
-			session.elementClicked(id);
+			sessionProgress.elementClicked(id);
 	}
 	
-	/**public void mapClicked() {
-		if (session.isPaused())
-			session.endPause();
-		else
-			session.clickedWrongly();
-	}**/
-	
 	public void clickedPlay() {
-		session.reactOnPauseClick();
+		sessionProgress.reactOnPauseClick();
 	}
 	
 	public void clickedBack() {
-		session.goBack();
+		sessionProgress.goBack();
 	}
 	
 	public void clickedMCAnswer(int index) {
-		if (session.isPaused())
-			session.reactOnPauseClick();
+		if (sessionProgress.isPaused())
+			sessionProgress.reactOnPauseClick();
 		else
-			session.mcClicked(index);		
+			sessionProgress.mcClicked(index);		
 	}
 	
 	// ========================================
