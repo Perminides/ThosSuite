@@ -25,7 +25,7 @@ import javafx.scene.layout.Pane;
  */
 public class AnkiDeckSession implements Screen {
 
-	private final AnkiSessionProgress progress;
+	private final SessionProgress progress;
 	private final Runnable onSessionEnded;
 	private final boolean isFreePlay;
 
@@ -33,7 +33,7 @@ public class AnkiDeckSession implements Screen {
 		Log.info(this, "=== SESSION CONSTRUCTOR === Session@" + System.identityHashCode(this));
 		this.onSessionEnded = onSessionEnded;
 		this.isFreePlay = isFreePlay;
-		this.progress = new AnkiSessionProgress(cards, service, type, sortOrder, this);
+		this.progress = new SessionProgress(cards, service, type, sortOrder, this);
 		new SessionPresenter(type, progress); // registriert sich selbst am Progress via setPresenter(this)
 	}
 
@@ -103,7 +103,7 @@ public class AnkiDeckSession implements Screen {
 
 	private String createSummary() {
 		SessionProgressCounter counter = progress.createSessionProgress();
-		String text = "Du hast " + (counter.correct() + counter.incorrect()) + " von " + counter.remaining() + " Karten gelernt.";
+		String text = "Du hast " + (counter.correct() + counter.incorrect()) + " von " + counter.total() + " Karten gelernt.";
 		text += "\n\nDavon hast Du " + counter.correct() + " richtig und " + counter.incorrect() + " falsch beantwortet.";
 		if (!isFreePlay)
 			text += "\n\nDer Fortschritt wird nun gespeichert.";

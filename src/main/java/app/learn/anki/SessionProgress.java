@@ -33,7 +33,7 @@ import javafx.scene.layout.Pane;
  * Hält - wie WriteSessionProgress die RegionSession - eine Rückreferenz auf die Schale, um beim
  * Ende der letzten Karte das Lebenszyklus-Ende (endGracefully) auszulösen.
  */
-public class AnkiSessionProgress {
+class SessionProgress {
 
 	private final AnkiDeckSession session;
 	private final AnkiDeckService service;
@@ -46,7 +46,7 @@ public class AnkiSessionProgress {
 	private int currentIndex = -1;
 	private boolean active = true;
 
-	public AnkiSessionProgress(List<Card> cards, AnkiDeckService service, Deck type, CardSortOrder sortOrder, AnkiDeckSession session) {
+	public SessionProgress(List<Card> cards, AnkiDeckService service, Deck type, CardSortOrder sortOrder, AnkiDeckSession session) {
 		Log.info(this, "=== PROGRESS CONSTRUCTOR === Progress@" + System.identityHashCode(this));
 		this.cards = cards;
 		this.service = service;
@@ -277,16 +277,14 @@ public class AnkiSessionProgress {
 	public SessionProgressCounter createSessionProgress() {
 		int correct = 0;
 		int incorrect = 0;
-		int remaining = 0;
 		for (Card card : cards) {
 			Boolean answered = cardProgressById.get(card.getId()).isCorrectlyAnswered();
-			if (answered == null)
-				remaining++;
-			else if (answered)
-				correct++;
-			else
-				incorrect++;
+			if (answered != null)
+				if (answered)
+					correct++;
+				else
+					incorrect++;
 		}
-		return new SessionProgressCounter(correct, incorrect, remaining);
+		return new SessionProgressCounter(correct, incorrect, cards.size());
 	}
 }
