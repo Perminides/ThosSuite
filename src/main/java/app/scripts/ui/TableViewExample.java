@@ -3,7 +3,7 @@ package app.scripts.ui;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import app.shared.Config;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

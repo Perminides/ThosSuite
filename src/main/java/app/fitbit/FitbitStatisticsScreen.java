@@ -11,7 +11,7 @@ import app.fitbit.repository.Repository;
 import app.shared.Log;
 import app.shared.Screen;
 import app.shared.model.SessionSwitchStrategy;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
@@ -85,7 +85,7 @@ public class FitbitStatisticsScreen implements Screen {
 
     private void buildView() {
     	view.getChildren().clear();
-        view.setBackground(new Background(SkinService.get().getBackgroundImage()));
+        view.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
         
         VBox container = new VBox();
         container.getStyleClass().add("chart-container");

@@ -3,8 +3,7 @@ package app.learn.region;
 import java.util.HashSet;
 import java.util.Set;
 
-import app.learn.ShapeMap;
-import app.learn.region.model.SessionProgress;
+import app.learn.model.ShapeMap;
 import app.learn.region.model.SessionSpec;
 
 public class EliminationSessionProgress implements SessionProgress {

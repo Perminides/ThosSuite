@@ -1,6 +1,6 @@
 package app.messaging.whatsapp;
 
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.scene.control.ButtonBar;

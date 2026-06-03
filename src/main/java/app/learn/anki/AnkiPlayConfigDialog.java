@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Set;
 
 import app.learn.model.Deck;
-import app.ui.skin.Skin;
-import app.ui.skin.SkinService;
+import app.shared.skin.Skin;
+import app.shared.skin.SkinService;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.ButtonType;

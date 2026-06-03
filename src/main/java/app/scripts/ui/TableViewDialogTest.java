@@ -1,7 +1,7 @@
 package app.scripts.ui;
 
 import app.shared.Config;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;

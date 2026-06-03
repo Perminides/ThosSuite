@@ -9,7 +9,7 @@ import java.util.Optional;
 import app.alc.model.Status;
 import app.alc.repository.Repository;
 import app.shared.Log;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;

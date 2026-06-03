@@ -13,8 +13,8 @@ import java.util.List;
 
 import app.diary.repository.Repository;
 import app.shared.Config;
-import app.ui.components.TagInputComponent;
-import app.ui.skin.SkinService;
+import app.shared.TagInputComponent;
+import app.shared.skin.SkinService;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;

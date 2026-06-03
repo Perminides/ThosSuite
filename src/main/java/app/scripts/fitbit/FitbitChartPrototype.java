@@ -1,7 +1,7 @@
 package app.scripts.fitbit;
 
 import app.shared.Config;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;

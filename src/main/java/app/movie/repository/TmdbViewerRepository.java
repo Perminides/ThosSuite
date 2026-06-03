@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import app.movie.model.CardData;
 import app.shared.Config;
 import app.shared.DB;
+import app.shared.model.CardData;
 
 /**
  * Repository für Leseoperationen des Viewers.
@@ -222,7 +222,7 @@ public class TmdbViewerRepository {
             String releaseDateStr = rs.getString("release_date");
             LocalDate releaseDate = releaseDateStr != null ? LocalDate.parse(releaseDateStr) : null;
 
-            return CardData.forMovie(
+            return CardDataFactory.forMovie(
                     movieId,
                     rs.getString("title"),
                     rs.getString("german_title"),
@@ -257,7 +257,7 @@ public class TmdbViewerRepository {
             String lastAirDateStr = rs.getString("last_air_date");
             LocalDate lastAirDate = lastAirDateStr != null ? LocalDate.parse(lastAirDateStr) : null;
 
-            return CardData.forTvShow(
+            return CardDataFactory.forTvShow(
                     showId,
                     rs.getString("name"),
                     rs.getString("german_name"),
@@ -297,7 +297,7 @@ public class TmdbViewerRepository {
             LocalDate episodeAirDate = episodeReleaseDateStr != null
                     ? LocalDate.parse(episodeReleaseDateStr) : null;
 
-            return CardData.forEpisode(
+            return CardDataFactory.forEpisode(
                     episodeId,
                     rs.getString("show_name"),
                     rs.getString("show_german_name"),

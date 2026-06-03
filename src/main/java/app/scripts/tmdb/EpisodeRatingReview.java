@@ -2,10 +2,10 @@ package app.scripts.tmdb;
 
 import java.util.List;
 
-import app.movie.model.CardData;
 import app.movie.repository.TmdbViewerRepository;
 import app.shared.Config;
-import app.ui.skin.SkinService;
+import app.shared.model.CardData;
+import app.shared.skin.SkinService;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;

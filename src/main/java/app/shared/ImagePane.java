@@ -1,9 +1,8 @@
-package app.ui.components;
+package app.shared;
 
 import java.io.File;
 import java.net.MalformedURLException;
 
-import app.shared.Config;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;

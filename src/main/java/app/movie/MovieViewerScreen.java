@@ -2,13 +2,13 @@ package app.movie;
 
 import java.util.List;
 
-import app.movie.model.CardData;
 import app.movie.repository.TmdbViewerRepository;
 import app.shared.Screen;
+import app.shared.SuggestionTextField;
+import app.shared.model.CardData;
 import app.shared.model.SessionSwitchStrategy;
-import app.ui.components.SuggestionTextField;
-import app.ui.skin.SkinService;
-import app.ui.skin.Skin.MovieViewerComponents;
+import app.shared.skin.SkinService;
+import app.shared.skin.Skin.MovieViewerComponents;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -34,9 +34,10 @@ public class MovieViewerScreen implements Screen {
         return view;
     }
 
+    // TODO: Also das ist einigermaßen optimistisch. Was ist denn wenn ein hochauflösender Skin, die ganzen Positionen etc ändert?
     @Override
     public void refresh() {
-        buildView();
+    	view.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
     }
 
     @Override
@@ -46,7 +47,7 @@ public class MovieViewerScreen implements Screen {
 
     private void buildView() {
         view.getChildren().clear();
-        view.setBackground(new Background(SkinService.get().getBackgroundImage()));
+        view.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
 
         MovieViewerComponents components = SkinService.get().createMovieViewer();
         directorField = components.directorField();

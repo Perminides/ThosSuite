@@ -9,7 +9,7 @@ import app.fitbit.DataFetcher.DayData;
 import app.fitbit.model.json.ActivityLogList;
 import app.fitbit.repository.Repository;
 import app.shared.Log;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.stage.Window;
 
 /**

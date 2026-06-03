@@ -1,4 +1,4 @@
-package app.learn;
+package app.learn.model;
 
 import java.util.Arrays;
 import java.util.Set;

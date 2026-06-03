@@ -8,7 +8,7 @@ import java.util.List;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import app.learn.ShapeMap;
+import app.learn.model.ShapeMap;
 import javafx.scene.Group;
 import javafx.scene.shape.ClosePath;
 import javafx.scene.shape.FillRule;

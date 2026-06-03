@@ -1,4 +1,4 @@
-package app.ui.components;
+package app.shared;
 
 import java.util.ArrayList;
 import java.util.List;

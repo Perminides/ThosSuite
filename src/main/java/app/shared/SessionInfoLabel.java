@@ -1,9 +1,8 @@
-package app.learn;
+package app.shared;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;

@@ -8,8 +8,8 @@ import app.diary.repository.Repository;
 import app.shared.Config;
 import app.shared.Screen;
 import app.shared.model.SessionSwitchStrategy;
-import app.ui.skin.SkinService;
-import app.ui.skin.Skin.DiaryViewerComponents;
+import app.shared.skin.SkinService;
+import app.shared.skin.Skin.DiaryViewerComponents;
 import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
@@ -58,7 +58,7 @@ public class DiaryViewerScreen implements Screen {
 
     private void buildView() {
         view.getChildren().clear();
-        view.setBackground(new Background(SkinService.get().getBackgroundImage()));
+        view.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
 
         DiaryViewerComponents components = SkinService.get().createDiaryViewer();
         fromPicker = components.fromPicker();

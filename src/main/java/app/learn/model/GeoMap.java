@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import app.learn.ShapeMap;
 import javafx.scene.Group;
 import javafx.scene.image.Image;
 import javafx.scene.shape.Circle;

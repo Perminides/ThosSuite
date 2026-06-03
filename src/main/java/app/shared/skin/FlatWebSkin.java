@@ -1,4 +1,4 @@
-package app.ui.skin;
+package app.shared.skin;
 
 import app.shared.Config;
 

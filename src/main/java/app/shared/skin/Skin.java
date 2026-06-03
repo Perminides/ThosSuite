@@ -1,4 +1,4 @@
-package app.ui.skin;
+package app.shared.skin;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,21 +14,16 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import app.learn.MapService;
-import app.learn.SessionInfoLabel;
-import app.learn.ShapeMapPane;
-import app.learn.anki.ImageMapPane;
-import app.learn.anki.MultipleChoicePane;
-import app.learn.model.Deck;
-import app.learn.model.GeoMap;
-import app.movie.model.CardData;
 import app.shared.Config;
+import app.shared.DashboardTile;
+import app.shared.ImagePane;
 import app.shared.Log;
+import app.shared.MultipleChoicePane;
+import app.shared.SessionInfoLabel;
+import app.shared.SuggestionTextField;
 import app.shared.UIUtils;
-import app.ui.components.DashboardTile;
-import app.ui.components.ImagePane;
-import app.ui.components.SuggestionTextField;
-import app.ui.skin.params.BorderParams;
+import app.shared.model.BorderParams;
+import app.shared.model.CardData;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -38,6 +33,8 @@ import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -69,10 +66,12 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.transform.Scale;
 import javafx.stage.Popup;
 import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
@@ -217,6 +216,8 @@ public abstract class Skin {
 	protected Integer imageMapLineShapeInnerWidth = 12;
 	protected Integer imageMapShapeMarkedOuterWidth = 7;
 	protected Integer imageMapShapeMarkedInnerWidth = 4;
+	protected Rectangle2D worldSessionOverlayContentBounds = new Rectangle2D(11, 11, 410, 254);
+	protected Rectangle2D defaultOverlayContentBounds      = new Rectangle2D(0, 0, 390, 300);
 	
 	protected Double shapeMapStandardBorderWidth = 1.8;
 	protected Double shapeMapFederalStateBorderWidth = 2.8; // für Niedersachsen z. B.
@@ -254,9 +255,9 @@ public abstract class Skin {
 	protected String worldMapOverlayImageName;
 	protected String worldMapInactiveOverlayImageName;
 	protected String hannoverMapImageName = "Hannover 500.jpg";
-	protected String hannoverMapInactiveImageName = "Hannover 500.jpg";
+	protected String hannoverMapInactiveImageName = null;
 	protected String hannoverMapOverlayImageName = "Hannover small.png";
-	protected String hannoverMapInactiveOverlayImageName = "Hannover small.png";
+	protected String hannoverMapInactiveOverlayImageName = null;
 	protected String defaultWallpaperName;
 	protected String emptyWallpaperName;
 	protected String mcWallpaperName;
@@ -872,7 +873,7 @@ public abstract class Skin {
 	    // Padding für mehrzeilige Buttons berechnen (nur 1px oben/unten, damit 2 Zeilen passen)
 	    // Horizontal lassen wir das normale Padding (insets.right/left), damit es optisch gleich aussieht
 	    Insets i = borderSmallComponent.insets();
-	    double lineSpacingSqueezed = font.getSize() * -0.4;
+	    double lineSpacingSqueezed = mcLineSpacingSqueezed();
 	    double lineSpacingTiny = smallFont.getSize() * -0.4;
 	    String squeezedPadding = String.format("0px %dpx 0px %dpx", (int)i.getRight(), (int)i.getLeft());
 
@@ -1500,8 +1501,8 @@ public abstract class Skin {
 	 * @param type Darf null sein!
 	 * @return
 	 */
-	public BackgroundImage getBackgroundImage(Deck type) {
-		String bgPath = getBackgroundImagePath(type);
+	public BackgroundImage getBackgroundImage(String mapName, String deckCategoryName) {
+		String bgPath = Config.get("wallpaperFolder") + getBackgroundImageName(mapName, deckCategoryName);
 		BackgroundImage background;
 	    try {
 	        Image bgImage = new Image(new File(bgPath).toURI().toString());
@@ -1525,8 +1526,21 @@ public abstract class Skin {
 	    return background;
 	}
 	
-	public BackgroundImage getBackgroundImage() {
-		return getBackgroundImage(Deck.WORLD_CARDS); // TODO: Wozu gibt es denn die emptyWallpaperName Variable? Wäre das hier nicht sauberer?
+	// TODO: !Sofort: Also mit empty und default geht es aber ein bisschen durcheinander. Hier holt empty das default *lol*
+	public BackgroundImage getEmptyBackgroundImage() {
+		return getBackgroundImage(null, null);
+	}
+	
+	private String getBackgroundImageName (String mapName, String categoryName) {
+		if (mapName == null || categoryName == null)
+			return defaultWallpaperName == null ? emptyWallpaperName : defaultWallpaperName;
+		String bgName = (String) getFieldValue(mapName + "WallpaperName");
+		if (bgName != null)
+			return bgName;
+		bgName = (String) getFieldValue(categoryName + "WallpaperName");
+		if (bgName != null)
+			return bgName;
+		return defaultWallpaperName;
 	}
 
 	/**
@@ -1535,10 +1549,10 @@ public abstract class Skin {
 	 * @param deck
 	 * @return
 	 */
-	public TextField createInputField(Deck deck) {
-	    Rectangle2D bounds = (Rectangle2D) getFieldValue(deck.getMapName() + "SessionTextInputPanel");
+	public TextField createInputField(String mapName, String categoryName) {
+	    Rectangle2D bounds = (Rectangle2D) getFieldValue(mapName + "SessionTextInputPanel");
 	    if (bounds == null)
-			bounds = (Rectangle2D) getFieldValue(deck.getCategory().toString() + "SessionTextInputPanel");
+			bounds = (Rectangle2D) getFieldValue(categoryName + "SessionTextInputPanel");
 	    
 	    TextField textField = new TextField();
 	    textField.setLayoutX(bounds.getMinX());
@@ -1550,11 +1564,11 @@ public abstract class Skin {
 	}
 
 	// Rückgabetyp angepasst
-	public ImagePane createImageComponent(Deck type) {
+	public ImagePane createImageComponent(String deckId, String deckCategory) {
 	    // 1. Config laden (wie vorher)
-	    Rectangle2D bounds = (Rectangle2D) getFieldValue(type.getId() + "SessionImagePanel");
+	    Rectangle2D bounds = (Rectangle2D) getFieldValue(deckId + "SessionImagePanel");
 	    if (bounds == null) 
-	         bounds = (Rectangle2D) getFieldValue(type.getCategory().toString() + "SessionImagePanel");
+	         bounds = (Rectangle2D) getFieldValue(deckCategory + "SessionImagePanel");
 
 	    // 2. Parameter für Konstruktor vorbereiten
 	    // Wir holen den Radius direkt aus der Config, da Rectangles ihn im Konstruktor wollen
@@ -1574,10 +1588,10 @@ public abstract class Skin {
 	}
 	
 	// --- Bereinigte Factory-Methode ---
-	public SessionInfoLabel createSessionInfoLabel(Deck deck, TextLabelType labelType) {
-        Rectangle2D bounds = (Rectangle2D) getFieldValue(deck.getMapName() + "Session" + labelType + "Panel");
+	public SessionInfoLabel createSessionInfoLabel(String deckMapName, String deckCategory, TextLabelType labelType) {
+        Rectangle2D bounds = (Rectangle2D) getFieldValue(deckMapName + "Session" + labelType + "Panel");
         if (bounds == null)
-            bounds = (Rectangle2D) getFieldValue(deck.getCategory().toString() + "Session" + labelType + "Panel");
+            bounds = (Rectangle2D) getFieldValue(deckCategory + "Session" + labelType + "Panel");
         
         SessionInfoLabel label = new SessionInfoLabel("");
         label.setLayoutX(bounds.getMinX());
@@ -1593,51 +1607,48 @@ public abstract class Skin {
         return label;
     }
 
-	public MultipleChoicePane createMultipleChoicePane(Deck deck) {
-        // 1. Bounds holen
-        Rectangle2D bounds = (Rectangle2D) getFieldValue(deck.getId() + "SessionMcPanel");
-        if (bounds == null) 
-            bounds = (Rectangle2D) getFieldValue(deck.getCategory().toString() + "SessionMcPanel");
-        
-        // 2. Padding und Border Werte holen
-        Insets insets = borderSmallComponent.insets();
-        double verticalPadding = insets.getTop() + insets.getBottom();
-        double horizontalPadding = insets.getLeft() + insets.getRight();
-        double borderWidth = borderSmallComponent.width();
-        
-        double horizontalOverhead = horizontalPadding + (borderWidth * 2);
+	public MultipleChoicePane createMultipleChoicePane(String id, String category) {
+	    Rectangle2D bounds = (Rectangle2D) getFieldValue(id + "SessionMcPanel");
+	    if (bounds == null)
+	        bounds = (Rectangle2D) getFieldValue(category + "SessionMcPanel");
 
-        // 3. Button-Höhe berechnen
-        Text dummyText = new Text("Q");
-        dummyText.setFont(font);
-        
-        double fixedButtonHeight = Math.ceil(dummyText.getLayoutBounds().getHeight() + verticalPadding + (borderWidth * 2));
-        // JavaFX ist ein bisschen sehr generös bei der Höhe. Ein bissi weniger tut es auch...
-        // Ja, das ist ein Hack. Aber ich vermute, einer der mich nie wieder stören wird, also sei es drum...
-        fixedButtonHeight = Math.round(fixedButtonHeight * 0.95745f);
+	    Insets insets = borderSmallComponent.insets();
+	    double borderWidth = borderSmallComponent.width();
+	    double horizontalOverhead = insets.getLeft() + insets.getRight() + (borderWidth * 2);
 
-        // NEU: Berechnung des Spacings (identisch zur Logik in styleScene!)
-        // !Sofort! Wieso wird das hier nochmal übergeben, wenn es in styleScene doch bereits als css definiert wurde???
-        double lineSpacingSqueezed = font.getSize() * -0.4;
+	    // TODO: Hier reichen wir skin-eigene Werte (font, overhead, border, spacing) als Daten nach draußen an MC —
+	    //   wenn auch nur innerhalb von shared. Streng genommen sickern damit skin.properties in eine UI-Komponente.
+	    //   Nochmal prüfen, wie ok das ist. Gegenargument: result.setLayoutX(bounds.getMinX()) unten tut faktisch
+	    //   dasselbe, und nicht jeder UI-Parameter ist per CSS stylebar — ganz verhindern lässt sich das nicht.
+	    //   Also hier vielleicht nicht zu dogmatisch sein.
+	    MultipleChoicePane.Metrics metrics = new MultipleChoicePane.Metrics(
+	            font, horizontalOverhead, borderWidth, mcLineSpacingSqueezed());
 
-        // 5. Pane erstellen mit neuen Parametern0
-        MultipleChoicePane result = new MultipleChoicePane(
-            bounds.getWidth(), 
-            fixedButtonHeight, 
-            horizontalOverhead,
-            borderWidth,
-            font, 
-            verticalGapMC,
-            lineSpacingSqueezed // NEU übergeben
-        );
-        
-        result.setLayoutX(bounds.getMinX());
-        result.setLayoutY(bounds.getMinY());
-        
-        return result;
-    }
+	    MultipleChoicePane result = new MultipleChoicePane(
+	            bounds.getWidth(), computeMcButtonHeight(), verticalGapMC, metrics);
+	    result.setLayoutX(bounds.getMinX());
+	    result.setLayoutY(bounds.getMinY());
+	    return result;
+	}
+
+	private double computeMcButtonHeight() {
+	    Insets insets = borderSmallComponent.insets();
+	    double verticalPadding = insets.getTop() + insets.getBottom();
+	    double borderWidth = borderSmallComponent.width();
+
+	    Text dummyText = new Text("Q");
+	    dummyText.setFont(font);
+
+	    // JavaFX ist großzügig mit der Höhe; ein bisschen weniger reicht. Hack wie gehabt.
+	    double h = Math.ceil(dummyText.getLayoutBounds().getHeight() + verticalPadding + (borderWidth * 2));
+	    return Math.round(h * 0.95745f);
+	}
+
+	private double mcLineSpacingSqueezed() {
+	    return font.getSize() * -0.4;
+	}
 	
-	public Button createIconButton(Deck type, IconButtonType buttonType) {
+	public Button createIconButton(String deckId, IconButtonType buttonType) {
 	    // Icon laden
 		String iconPath = switch (buttonType) {
 			case BACK -> backButtonIcon;
@@ -1657,7 +1668,7 @@ public abstract class Skin {
 	    button.getStyleClass().add("my-icon-button");
 	    
 	    // Bounds holen
-	    Rectangle2D bounds = (Rectangle2D) getFieldValue(type.getId() + "SessionBackButton");
+	    Rectangle2D bounds = (Rectangle2D) getFieldValue(deckId + "SessionBackButton");
 	    button.setPrefSize(bounds.getWidth(), bounds.getHeight());
 	    button.setLayoutX(bounds.getMinX());
 	    button.setLayoutY(bounds.getMinY());
@@ -1892,38 +1903,79 @@ public abstract class Skin {
 	    return headerBar;
 	}
 
-	/**
-	 * Erstellt ein Deutschlandpanel. Aktuell noch ohne Hintergrundbild. Die Größe berechnet sich aus: Höhe = height + 2 * yPadding. Der scale findet ohne
-	 * Verzerrung statt, von daher ist die width dann auch aus diesen Parametern und der Auflösung der Map bestimmt.
-	 */
-	public ShapeMapPane createShapeMapPane(Deck deck) {
-        // 1. Daten holen
-        GeoMap map = MapService.getInstance().getMap(deck);
-        
-        // 2. Bounds via Reflection holen (AWT Rectangle)
-        Rectangle2D bounds = (Rectangle2D) getFieldValue(deck.getMapName() + "SessionMapPanel");
-        if (bounds == null) 
-            bounds = (Rectangle2D) getFieldValue(deck.getCategory().toString() + "SessionMapPanel");
-            
-        // 3. Komponente erstellen (Skin bestimmt die Ziel-Höhe für den Zoom!)
-        ShapeMapPane pane = new ShapeMapPane(map, bounds.getHeight());
-        
-        // 4. Positionieren (Absolut)
-        pane.setLayoutX(bounds.getMinX());
-        pane.setLayoutY(bounds.getMinY());
-        
-        return pane;
-    }
+	public Region buildShapeMapWrapper(List<Node> shapeNodes, String mapName, String category) {
+	    Rectangle2D bounds = (Rectangle2D) getFieldValue(mapName + "SessionMapPanel");
+	    if (bounds == null)
+	        bounds = (Rectangle2D) getFieldValue(category + "SessionMapPanel");
 
-	public ImageMapPane createImageMapPanel(Deck type) {
-		GeoMap map = MapService.getInstance().getMap(type);
-		Rectangle2D bounds = (Rectangle2D) getFieldValue(type.getId() + "SessionMapPanel");
-		BorderParams borderForRectangle = new BorderParams(borderBigComponent.width(), borderBigComponent.color(), borderBigComponent.insets(), borderBigComponent.arc()*2, borderBigComponent.focusWidth(), borderBigComponent.focusedColor(), borderBigComponent.disabledColor());
-		// !Sofort. Was sind das denn für wilde Magic Numbers?
-		ImageMapPane result = new ImageMapPane(map, bounds.getWidth(), bounds.getHeight(), borderForRectangle, type == Deck.WORLD_CARDS ? new Rectangle2D(11, 11, 410, 254) : new Rectangle2D(0, 0, 390, 300));
-		result.setLayoutX(bounds.getMinX());
-		result.setLayoutY(bounds.getMinY());
-		return result;
+	    // Inhalt in eine Group — den Container baut der Skin, nicht die Domäne.
+	    Group contentGroup = new Group();
+	    for (Node node : shapeNodes) {
+	        node.setStyle(""); // Altlasten (alte Inline-Strichdicken der letzten Session) raus → sauber messen.
+	        contentGroup.getChildren().add(node);
+	    }
+
+	    // Messen auf Default-Styles (noch keine Scene → stabile UA-Defaults).
+	    contentGroup.applyCss();
+	    contentGroup.layout();
+	    final double scaleFactor = bounds.getHeight() / contentGroup.getBoundsInLocal().getHeight();
+
+	    Scale scale = new Scale(scaleFactor, scaleFactor);
+	    scale.setPivotX(0);
+	    scale.setPivotY(0);
+	    contentGroup.getTransforms().add(scale);
+
+	    StackPane wrapper = new StackPane(contentGroup); // StackPane zentriert automatisch.
+	    wrapper.getStyleClass().add("my-shape-map-pane");
+	    wrapper.setLayoutX(bounds.getMinX());
+	    wrapper.setLayoutY(bounds.getMinY());
+
+	    // Inverse-Scaling-Fix für konstante Strichdicken — erst wenn die Scene (und damit das Skin-CSS) da ist.
+	    wrapper.sceneProperty().addListener(new javafx.beans.value.ChangeListener<javafx.scene.Scene>() {
+	        @Override
+	        public void changed(javafx.beans.value.ObservableValue<? extends javafx.scene.Scene> obs,
+	                javafx.scene.Scene oldScene, javafx.scene.Scene newScene) {
+	            if (newScene != null) {
+	                contentGroup.applyCss();
+	                for (Node node : contentGroup.getChildren()) {
+	                    if (node instanceof javafx.scene.shape.Shape s) {
+	                        double w = s.getStrokeWidth();
+	                        if (w > 0)
+	                            s.setStyle("-fx-stroke-width: "
+	                                    + String.format(java.util.Locale.US, "%.4f", w / scaleFactor) + "px;");
+	                    }
+	                }
+	                wrapper.sceneProperty().removeListener(this);
+	            }
+	        }
+	    });
+
+	    return wrapper;
+	}
+
+	public Node applyImageMapLayout(Region pane, String id) {
+	    Rectangle2D bounds = (Rectangle2D) getFieldValue(id + "SessionMapPanel");
+	    pane.setPrefSize(bounds.getWidth(), bounds.getHeight());
+	    pane.setMaxSize(bounds.getWidth(), bounds.getHeight());
+	    pane.setLayoutX(bounds.getMinX());
+	    pane.setLayoutY(bounds.getMinY());
+	    pane.getStyleClass().add("my-image-map-pane");
+
+	    // Clip = programmatisches Gegenstück zum #borderOverlay-Border. Um die Border-Breite eingerückt,
+	    // arc*2 weil JavaFX den Arc als Durchmesser nimmt, unsere Config als Radius.
+	    double bw = borderBigComponent.width();
+	    Rectangle clip = new Rectangle(bw, bw, bounds.getWidth() - 2 * bw, bounds.getHeight() - 2 * bw);
+	    clip.setArcWidth(borderBigComponent.arc() * 2);
+	    clip.setArcHeight(borderBigComponent.arc() * 2);
+	    return clip;
+	}
+
+	// TODO: overlayContentBounds beschreibt, wo der Inhalt im Mini-Map-Bild sitzt — eigentlich
+	// Karten-/Asset-Daten, kein Styling. Liegt nur hier, weil hartcodiert. Sobald berechenbar
+	// (Overlay-Größe + prozentualer Rand), wandert das hoch zur Karte. Bis dahin: Felder mit Defaults.
+	public Rectangle2D getOverlayContentBounds(String id) {
+	    Rectangle2D b = (Rectangle2D) getFieldValue(id + "SessionOverlayContentBounds");
+	    return b != null ? b : defaultOverlayContentBounds;
 	}
 	
 	public DashboardTile createDashboardTile(String value, String label) {
@@ -2294,75 +2346,33 @@ public abstract class Skin {
 	// endregion
 
 	/**
-	 * Die Kartenbilder werden vom MapRepositories geholt
+	 * Die Kartenbilder werden dann von den MapRepositories geholt
 	 * 
 	 * @param id
 	 * @return
 	 */
-	public String getMapImagePath(Deck type) {
-		switch (type) {
-		case WORLD_CARDS:
-			return Config.get("mapImagesFolder") + worldMapImageName;
-		case HANNOVER_CARDS:
-			return Config.get("mapImagesFolder") + hannoverMapImageName;
-		default:
-			return null;
-		}
+	public String getMapImagePath(String mapName) {
+	    String name = (String) getFieldValue(mapName + "MapImageName");
+	    return name == null ? null : Config.get("mapImagesFolder") + name;
 	}
 
-	public String getMapInactiveImagePath(Deck type) {
-		switch (type) {
-		case WORLD_CARDS:
-			return Config.get("mapImagesFolder") + worldMapInactiveImageName;
-		case HANNOVER_CARDS:
-			return null; //Config.get("mapImagesFolder") + hannoverMapInactiveImageName;
-		default:
-			return null;
-		}
+	public String getMapInactiveImagePath(String mapName) {
+	    String name = (String) getFieldValue(mapName + "MapInactiveImageName");
+	    return name == null ? null : Config.get("mapImagesFolder") + name;
 	}
 
-	public String getMapInactiveOverlayImagePath(Deck type) {
-		switch (type) {
-		case WORLD_CARDS:
-			return Config.get("mapImagesFolder") + worldMapInactiveOverlayImageName;
-		case HANNOVER_CARDS:
-			return null; //Config.get("mapImagesFolder") + hannoverMapInactiveOverlayImageName;
-		default:
-			return null;
-		}
+	public String getMapInactiveOverlayImagePath(String mapName) {
+	    String name = (String) getFieldValue(mapName + "MapInactiveOverlayImageName");
+	    return name == null ? null : Config.get("mapImagesFolder") + name;
 	}
 
-	public String getMapOverlayImagePath(Deck type) {
-		switch (type) {
-		case WORLD_CARDS:
-			return Config.get("mapImagesFolder") + worldMapOverlayImageName;
-		case HANNOVER_CARDS:
-			return Config.get("mapImagesFolder") + hannoverMapOverlayImageName;
-		default:
-			return null;
-		}
+	public String getMapOverlayImagePath(String mapName) {
+	    String name = (String) getFieldValue(mapName + "MapOverlayImageName");
+	    return name == null ? null : Config.get("mapImagesFolder") + name;
 	}
 	
 	public Image tintImageWithTextColor(Image img) {
 		return UIUtils.tintImage(img, textColor);
-	}
-
-	/**
-	 * Holt das passende Hintergrundbild zur laufenden Session bzw das "leere", wenn keine Session läuft
-	 * 
-	 * @param deck Darf null sein!
-	 * @return
-	 */
-	protected String getBackgroundImagePath(Deck deck) {
-		if (deck == null)
-			return Config.get("wallpaperFolder") + (emptyWallpaperName == null ? defaultWallpaperName : emptyWallpaperName);
-		String bgName = (String) getFieldValue(deck.getMapName() + "WallpaperName");
-		if (bgName != null)
-			return Config.get("wallpaperFolder") + bgName;
-		bgName = (String) getFieldValue(deck.getCategory().toString() + "WallpaperName");
-		if (bgName != null)
-			return Config.get("wallpaperFolder") + bgName;
-		return Config.get("wallpaperFolder") + defaultWallpaperName;
 	}
 
 	protected void loadAllConfigs(String configPath) {

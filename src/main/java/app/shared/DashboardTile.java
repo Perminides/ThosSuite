@@ -1,4 +1,4 @@
-package app.ui.components;
+package app.shared;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;

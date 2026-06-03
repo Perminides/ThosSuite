@@ -14,7 +14,7 @@ import app.learn.model.Deck;
 import app.learn.model.DeckCategory;
 import app.learn.model.MapMetadata;
 import app.learn.region.model.Mode;
-import app.ui.skin.Skin;
+import app.shared.skin.Skin;
 import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
 import javafx.scene.control.ButtonType;
