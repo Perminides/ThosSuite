@@ -15,14 +15,14 @@ public class DeckRepository {
 
     private final CsvDeckCardSource csv;
     private final DbDeckProgressSource db;
-    
+
     public DeckRepository() {
     	csv = new CsvDeckCardSource(); //!Später: Hier muss der GameType mitgegeben werden
     	db = new DbDeckProgressSource();
     }
 
 	public List<Card> getAllHints(Deck type) {
-		
+
 		Map<String, LearnStat> statsById = db.loadAll(type);
 		List<Card> hints = csv.loadAll(type);  // liefert fertige Hints
 
@@ -32,11 +32,11 @@ public class DeckRepository {
 
 	    return hints;
 	}
-	
-	public void savePlayedCards(Deck type, List<Card> cards){
-		db.saveLearned(type, cards);
+
+	public void savePlayedCards(Deck type, List<PlayedCardData> rows){
+		db.saveLearned(type, rows);
 	}
-	
+
 	public int getInitialDue(Deck type) {
 		return db.getInitialDue(type);
 	}

@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import app.learn.anki.CardProgress;
 import app.learn.model.LearnStat;
 import app.shared.AppClock;
 import javafx.geometry.Point2D;
@@ -38,7 +37,6 @@ public class Card {
 	
 	private MC lastMCStep = null;
 	private LearnStat learnStat;
-	private transient CardProgress progress;
 
 	public Card(List<String> csvTokens, LearnStat learnStat) {
 		this(csvTokens);
@@ -181,14 +179,6 @@ public class Card {
 	public List<Step> getSteps() {
 		return steps;
 	}    
-	
-	public CardProgress getProgress() {
-		return progress;
-	}
-	
-	public void setProgress (CardProgress progress) {
-		this.progress = progress;
-	}
 	
 	public Set<String> getLabels() {
 		return labels;

@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import app.learn.anki.model.Card;
 import app.learn.model.Deck;
 import app.learn.model.LearnStat;
 import app.shared.AppClock;
@@ -45,7 +44,7 @@ class DbDeckProgressSource {
 	        return result;
 	    }
 		
-		void saveLearned(Deck type, List<Card> cardsFromSession) {
+		void saveLearned(Deck type, List<PlayedCardData> rows) {
 		    String logSQL = "INSERT INTO card_log (deck, card_id, played_timestamp, correct_flag) VALUES (?, ?, ?, ?)";
 		    String learnStatSQL = "INSERT INTO card_learn_stat (deck, card_id, first_played, last_played, level, wrong_count) "
 		            + "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (deck, card_id) DO UPDATE SET "
@@ -55,27 +54,24 @@ class DbDeckProgressSource {
 		    try (Connection conn = DB.getNewConnection(); // Unbedingt! 40 Karten mit Autocommit: Schleife 783 ms. Ohne: 11 ms
 		         PreparedStatement psLog = conn.prepareStatement(logSQL);
 		         PreparedStatement psLearn = conn.prepareStatement(learnStatSQL)) {
-		        for (Card card : cardsFromSession) {
-		            if (card.getProgress().isCorrectlyAnswered() == null)
-		                continue;
-
+		        for (PlayedCardData row : rows) {
 		            psLearn.setString(1, type.getDisplayName());
-		            psLearn.setInt(2, card.getId());
+		            psLearn.setInt(2, row.cardId());
 		            psLearn.setString(3, AppClock.TODAY.toString()); // Wird nur im Insert-Fall genutzt
 		            psLearn.setString(4, AppClock.TODAY.toString());
-		            psLearn.setInt(5, card.getLearnStat().getCurrentLevel());
-		            psLearn.setInt(6, card.getLearnStat().getWrongCount());
+		            psLearn.setInt(5, row.level());
+		            psLearn.setInt(6, row.wrongCount());
 		            psLearn.execute();
 
 		            psLog.setString(1, type.getDisplayName());
-		            psLog.setInt(2, card.getId());
-		            psLog.setBoolean(4, card.getProgress().isCorrectlyAnswered());
+		            psLog.setInt(2, row.cardId());
+		            psLog.setBoolean(4, row.correctFlag());
 		            //!Später: Remove this dirty hack and go with millis if this happens more often...
 		            boolean saved = false;
 		            int attempts = 0;
 		            while (!saved && attempts < 5) {
 		                try {
-		                    psLog.setString(3, card.getProgress().getPlayedTimestamp().truncatedTo(ChronoUnit.SECONDS).minus(attempts, ChronoUnit.SECONDS).toString());
+		                    psLog.setString(3, row.playedTimestamp().truncatedTo(ChronoUnit.SECONDS).minus(attempts, ChronoUnit.SECONDS).toString());
 		                    psLog.execute();
 		                    saved = true;
 		                } catch (SQLException e) {
@@ -84,7 +80,7 @@ class DbDeckProgressSource {
 		                    } else {
 		                        throw e;
 		                    }
-		                    new Alert(AlertType.WARNING, psLog.getParameterMetaData() + " - " + card.getId() + " Ich versuche es evtl. nochmal...", ButtonType.OK).showAndWait();
+		                    new Alert(AlertType.WARNING, psLog.getParameterMetaData() + " - " + row.cardId() + " Ich versuche es evtl. nochmal...", ButtonType.OK).showAndWait();
 		                }
 		            }
 		            if (!saved)

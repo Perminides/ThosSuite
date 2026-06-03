@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +13,7 @@ import app.learn.MapService;
 import app.learn.anki.model.Card;
 import app.learn.anki.model.AnkiLearnSessionInfo;
 import app.learn.anki.repository.DeckRepository;
+import app.learn.anki.repository.PlayedCardData;
 import app.learn.model.Deck;
 import app.learn.model.DeckCategory;
 import app.learn.model.LearnSessionInfo;
@@ -183,14 +183,14 @@ public class AnkiDeckService {
 	    return candidates.subList(0, Math.min(maxCards, candidates.size()));
 	}
 	
-	public void savePlayedCards(Deck type, List<Card> cards) {
-		repo.savePlayedCards(type, cards);
-		// Die Learnstats in den Karten sind bereits aktualisiert.
-		Iterator<Card> iter = cards.iterator();
-		while (iter.hasNext()) {
-			Card card = iter.next();
+	public void savePlayedCards(Deck type, List<PlayedCardData> rows) {
+		repo.savePlayedCards(type, rows);
+		// Die Learnstats in den Karten sind bereits aktualisiert (in-place vom AnkiSessionProgress).
+		// Gespielte Karten liegen weiterhin in dueCards, daher Lookup über die cardId.
+		for (PlayedCardData row : rows) {
+			Card card = dueCards.get(type).get(row.cardId());
 			if (!card.isDueToday())
-				dueCards.get(type).remove(card.getId());
+				dueCards.get(type).remove(row.cardId());
 		}
 	}
 	
