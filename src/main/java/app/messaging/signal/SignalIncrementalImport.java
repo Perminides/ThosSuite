@@ -33,7 +33,7 @@ import app.shared.Config;
 import app.shared.DB;
 import app.shared.Log;
 import app.shared.ThrowingConsumer;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 

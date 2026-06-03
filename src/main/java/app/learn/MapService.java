@@ -9,9 +9,10 @@ import app.learn.model.Deck;
 import app.learn.model.GeoMap;
 import app.learn.model.MapMetadata;
 import app.learn.model.MapType;
+import app.learn.model.ShapeMap;
 import app.learn.repository.MapRepository;
-import app.ui.skin.Skin;
-import app.ui.skin.SkinService;
+import app.shared.skin.Skin;
+import app.shared.skin.SkinService;
 
 /**
  * Implementiert als Singleton wegen des Cachings der Map-Daten. Da darf es natürlich nur einen geben.
@@ -42,10 +43,10 @@ public class MapService {
         }
         return cache.computeIfAbsent(type.getMapMetadata(), _ -> repository.load(
                 type,
-                skin.getMapImagePath(type),
-                skin.getMapOverlayImagePath(type),
-                skin.getMapInactiveImagePath(type),
-                skin.getMapInactiveOverlayImagePath(type)
+                skin.getMapImagePath(type.getMapName()),
+                skin.getMapOverlayImagePath(type.getMapName()),
+                skin.getMapInactiveImagePath(type.getMapName()),
+                skin.getMapInactiveOverlayImagePath(type.getMapName())
         ));
     }
 

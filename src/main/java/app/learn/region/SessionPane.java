@@ -2,12 +2,14 @@ package app.learn.region;
 
 import java.util.Set;
 
-import app.learn.SessionInfoLabel;
+import app.learn.MapService;
 import app.learn.ShapeMapPane;
 import app.learn.ShapeMapPane.ShapeMapState;
 import app.learn.model.Deck;
-import app.ui.skin.Skin;
-import app.ui.skin.SkinService;
+import app.learn.model.GeoMap;
+import app.shared.SessionInfoLabel;
+import app.shared.skin.Skin;
+import app.shared.skin.SkinService;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
@@ -22,24 +24,25 @@ public class SessionPane extends Pane {
 	public SessionPane(SessionPresenter presenter, Deck deckType, boolean questionAreaVisible) {
         this.presenter = presenter;
         this.deckType = deckType;
-        this.setBackground(new Background(SkinService.get().getBackgroundImage(deckType)));
+        this.setBackground(new Background(SkinService.get().getBackgroundImage(deckType.getMapName(), deckType.getCategory().toString())));
         initUI(questionAreaVisible);
 	}
 	
 	private void initUI(boolean questionAreaVisible) {
         Skin skin = SkinService.get();
         
-        karte = skin.createShapeMapPane(deckType);
+        GeoMap map = MapService.getInstance().getMap(deckType);  // holt sich die SessionPane selbst (sie ist learn)
+        karte = new ShapeMapPane(map, deckType.getMapName(), deckType.getCategory().toString());
+        getChildren().add(karte.getView());
         karte.setListener(id -> mapElementClicked(id));
-    	getChildren().add(karte);
     	
-    	// !Sofoert: Hier wäre allerdings CENTER schon angesagt
+    	// !Sofort: Hier wäre allerdings CENTER schon angesagt
     	if (questionAreaVisible) {
-        	questionArea = skin.createSessionInfoLabel(deckType, Skin.TextLabelType.QUESTION);
+        	questionArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.QUESTION);
         	questionArea.setText(""); // Initial leer
             getChildren().add(questionArea);
     	} else {
-            textInputField = skin.createInputField(deckType);
+            textInputField = skin.createInputField(deckType.getMapName(), deckType.getCategory().toString());
             textInputField.setOnKeyReleased(_ -> textInputChanged());
             getChildren().add(textInputField);
     	}

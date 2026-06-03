@@ -11,7 +11,7 @@ import app.movie.repository.EpisodeRepository;
 import app.movie.repository.MovieRepository;
 import app.movie.repository.PendingRepository;
 import app.movie.repository.TvShowRepository;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;

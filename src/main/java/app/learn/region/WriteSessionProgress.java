@@ -5,9 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import app.learn.ShapeMap;
+import app.learn.model.ShapeMap;
 import app.learn.region.model.Mode;
-import app.learn.region.model.SessionProgress;
 import app.learn.region.model.SessionSpec;
 
 public class WriteSessionProgress implements SessionProgress {

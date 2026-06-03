@@ -1,4 +1,4 @@
-package app.ui.components;
+package app.learn;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -15,7 +15,7 @@ import org.imgscalr.Scalr;
 
 import app.shared.Config;
 import app.shared.Log;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

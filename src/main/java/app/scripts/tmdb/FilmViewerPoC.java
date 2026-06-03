@@ -3,8 +3,8 @@ package app.scripts.tmdb;
 import java.util.List;
 
 import app.shared.Config;
-import app.ui.skin.Skin;
-import app.ui.skin.SkinService;
+import app.shared.skin.Skin;
+import app.shared.skin.SkinService;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

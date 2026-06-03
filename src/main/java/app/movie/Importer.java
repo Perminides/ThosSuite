@@ -23,7 +23,7 @@ import app.movie.repository.PendingRepository;
 import app.shared.Config;
 import app.shared.DB;
 import app.shared.KeyValueRepository;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 
 /**
  * Orchestriert den täglichen TMDB-Import.

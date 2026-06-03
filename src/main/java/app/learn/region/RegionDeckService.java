@@ -8,11 +8,11 @@ import java.util.Map;
 import java.util.Set;
 
 import app.learn.MapService;
-import app.learn.ShapeMap;
 import app.learn.model.Deck;
 import app.learn.model.DeckCategory;
 import app.learn.model.LearnSessionInfo;
 import app.learn.model.LearnStat;
+import app.learn.model.ShapeMap;
 import app.learn.region.model.RegionLearnSessionInfo;
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;

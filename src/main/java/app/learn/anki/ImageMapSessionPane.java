@@ -4,15 +4,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import app.learn.SessionInfoLabel;
+import app.learn.MapService;
 import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
+import app.learn.model.GeoMap;
 import app.learn.model.LearnStat;
+import app.learn.model.MapElementListener;
 import app.learn.model.SessionProgressCounter;
-import app.ui.MapElementListener;
-import app.ui.components.ImagePane;
-import app.ui.skin.Skin;
-import app.ui.skin.SkinService;
+import app.shared.ImagePane;
+import app.shared.MultipleChoicePane;
+import app.shared.SessionInfoLabel;
+import app.shared.skin.Skin;
+import app.shared.skin.SkinService;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Background;
@@ -34,13 +37,17 @@ public class ImageMapSessionPane extends Pane implements SessionPane {
     public ImageMapSessionPane(SessionPresenter presenter, Deck deckType) {
         this.presenter = presenter;
         this.deckType = deckType;
-        this.setBackground(new Background(SkinService.get().getBackgroundImage(deckType)));
+        this.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
         initUI();
     }   
 
     private void initUI() {
         Skin skin = SkinService.get();
-        mapPane = skin.createImageMapPanel(deckType);
+        GeoMap map = MapService.getInstance().getMap(deckType);
+        mapPane = new ImageMapPane(map, skin.getOverlayContentBounds(deckType.getId()));
+        mapPane.setViewportClip(skin.applyImageMapLayout(mapPane, deckType.getId()));  // Größe/Position/CSS + Clip zurück
+        mapPane.center();                                                       // jetzt steht die Größe
+
     	mapPane.setListener(new MapElementListener() {
     	    @Override
     	    public void mouseClicked(String id) {
@@ -49,18 +56,18 @@ public class ImageMapSessionPane extends Pane implements SessionPane {
     	});
     	getChildren().add(mapPane);
     	
-    	questionArea = skin.createSessionInfoLabel(deckType, Skin.TextLabelType.QUESTION);
+    	questionArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.QUESTION);
     	questionArea.setText("");
     	getChildren().add(questionArea);
     	
-    	textInputField = skin.createInputField(deckType);
+    	textInputField = skin.createInputField(deckType.getMapName(), deckType.getCategory().toString());
         textInputField.setOnKeyReleased(_ -> textInputChanged());
         getChildren().add(textInputField);
     	
-        imageComponent = skin.createImageComponent(deckType);
+        imageComponent = skin.createImageComponent(deckType.getId(), deckType.getCategory().toString());
     	getChildren().add(imageComponent);
     	
-    	mcPane = skin.createMultipleChoicePane(deckType);
+    	mcPane = skin.createMultipleChoicePane(deckType.getId(), deckType.getCategory().toString());
     	mcPane.addListener(
     		new Consumer<Integer>() {
 				@Override
@@ -71,15 +78,15 @@ public class ImageMapSessionPane extends Pane implements SessionPane {
     	);
     	getChildren().add(mcPane);
     	
-    	progressArea = skin.createSessionInfoLabel(deckType, Skin.TextLabelType.PROGRESS);
+    	progressArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.PROGRESS);
     	progressArea.setText("");
     	getChildren().add(progressArea); // FEHLER
     	
-    	cardHistoryArea = skin.createSessionInfoLabel(deckType, Skin.TextLabelType.CARD_HISTORY);
+    	cardHistoryArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.CARD_HISTORY);
     	cardHistoryArea.setText("");
     	getChildren().add(cardHistoryArea); // FEHLER
     	
-    	backButton = skin.createIconButton(deckType, Skin.IconButtonType.BACK);
+    	backButton = skin.createIconButton(deckType.getId(), Skin.IconButtonType.BACK);
     	backButton.setOnAction(_ -> backButtonClicked());
     	getChildren().add(backButton);
     }

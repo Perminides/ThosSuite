@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import app.fitbit.model.json.Activity;
 import app.fitbit.model.json.ActivityDaySummary;
 import app.shared.Log;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;

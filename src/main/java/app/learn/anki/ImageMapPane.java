@@ -2,10 +2,9 @@ package app.learn.anki;
 
 import java.util.Set;
 
-import app.learn.ShapeMap;
 import app.learn.model.GeoMap;
-import app.ui.MapElementListener;
-import app.ui.skin.params.BorderParams;
+import app.learn.model.MapElementListener;
+import app.learn.model.ShapeMap;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -20,14 +19,17 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Rectangle;
 
 /**
  * A map that is basically a very large image. The image can be dragged and dropped. Shapes can be placed on the
  * image. They are invisible when a click on them is expected and after the click they are shown as correct.
  * Shapes can also be marked (What mountain range is this?). Shapes consist of two Paths organized in a group.
  * A shape can be a polygon (countries) or a line (rivers).
- * 
+ *
+ * <p>Diese Klasse hält Inhalt + Verhalten (Bild, Shapes, Panning, Mini-Map, Zustand). Skin-Werte (Größe,
+ * Border, Clip-Geometrie) erreichen sie nicht: Größe/Position/CSS-Klasse setzt der Skin von außen auf diese
+ * Pane (als generische Region), den Clip baut der Skin und reicht ihn via {@link #setViewportClip(Node)} rein.</p>
+ *
  * ImageMapPane
  * |-- Pane viewport (clipped und mit prefSize)
  *     |-- Group contentGroup
@@ -35,9 +37,9 @@ import javafx.scene.shape.Rectangle;
  *         |-- Group shapeLayer
  *     |-- ImageView miniMap
  *     |-- Region borderOverlay
- *      
+ *
  * CSS:
- * 		ImageMapPane	= ".image-map-pane",
+ * 		ImageMapPane	= ".my-image-map-pane",
  * 		borderOverlay	= "#borderOverlay"
  * 		Shape (group)	= ".my-image-map-shape", ".river"
  * 		Shape (group)	= ":correct", ":incorrect", ":marked"
@@ -75,17 +77,12 @@ public class ImageMapPane extends StackPane {
 	// Mini-Map Config
 	private static final int MINI_MAP_INSET = 10;
 
-	public ImageMapPane(GeoMap map, double width, double height, BorderParams panelBorder, Rectangle2D overlayContentBounds) {
-		this.getStyleClass().add("my-image-map-pane");
+	public ImageMapPane(GeoMap map, Rectangle2D overlayContentBounds) {
 		this.map = map;
 		this.overlayContentBounds = overlayContentBounds;
 		this.cardShapes = new ShapesWrapper();
 
-		// 1. Größe fixieren
-		setPrefSize(width, height);
-		setMaxSize(width, height);
-
-		// 2. Main Content aufbauen
+		// 1. Main Content aufbauen
 		mainImageView = new ImageView();
 		mainImageView.setId("mainImageView");
 		shapeLayer = new Group();
@@ -93,32 +90,17 @@ public class ImageMapPane extends StackPane {
 		contentGroup = new Group(mainImageView, shapeLayer);
 		contentGroup.setId("contentGroup");
 
-		// 3. Viewport mit Clipping
+		// 2. Viewport (ohne Clip — den setzt der Skin via setViewportClip)
 		viewport = new Pane(contentGroup); // Einfach weglassen? → Eine StackPane ist ein Layout-Manager. Sie versucht zwanghaft, ihre Kinder (Children) zu positionieren – standardmäßig zentriert in der Mitte. Wenn du später versuchst, deine contentGroup (die Karte) zu verschieben (Panning/Verschieben mit der Maus), kämpfst du gegen die StackPane. Eine reine Pane macht kein Layout-Management. Sie sagt: "Setz deine Kinder hin, wo du willst (x, y), mir egal".
 		viewport.setId("viewport");
 
-		/**
-		 * Überall wo Border-Radius + Border-Width gesetzt wird, direkt danach .add("-fx-background-insets", borderWidth + "px") hinzufügen
-		 * Das hier ist die Clipping-Variante davon :)
-		 */
-		Rectangle clipRect = new Rectangle(panelBorder.width(),
-				panelBorder.width(), // y
-				width - (2 * panelBorder.width()),
-				height - (2 * panelBorder.width())
-		);
-		clipRect.setArcWidth(panelBorder.arc());
-		clipRect.setArcHeight(panelBorder.arc());
-		clipRect.setId("clipRect");
-
-		viewport.setClip(clipRect);
-
-		// 4. Mini-Map
+		// 3. Mini-Map
 		miniMapImageView = new ImageView();
 		miniMapImageView.setId("miniMapImageView");
 		StackPane.setAlignment(miniMapImageView, Pos.TOP_RIGHT);
 		StackPane.setMargin(miniMapImageView, new javafx.geometry.Insets(MINI_MAP_INSET));
 
-		// 5. Border Overlay
+		// 4. Border Overlay
 		borderOverlay = new Region();
 		borderOverlay.setId("borderOverlay");
 		borderOverlay.setMouseTransparent(true);
@@ -127,10 +109,20 @@ public class ImageMapPane extends StackPane {
 
 		updateImages();
 		setupInteraction();
-		centerMap();
+		// Kein centerMap() hier: die Größe setzt der Skin erst nach dem Bauen.
+		// Die learn-Seite ruft center() explizit, sobald prefSize steht.
 	}
 
-	private void centerMap() {
+	/**
+	 * Hängt den vom Skin gebauten Clip an den internen Viewport. Opaker Node — diese Klasse rechnet mit
+	 * keinem Skin-Wert, sie wendet den fertigen Clip nur an.
+	 */
+	public void setViewportClip(Node clip) {
+		viewport.setClip(clip);
+	}
+
+	/** Zentriert die Karte. Von der learn-Seite zu rufen, NACHDEM der Skin die Größe gesetzt hat. */
+	public void center() {
 		if (mainImageView.getImage() == null)
 			return;
 
@@ -180,7 +172,7 @@ public class ImageMapPane extends StackPane {
 
 	    int x = (int) e.getX();
 	    int y = (int) e.getY();
-	    
+
 	    // Bounds-Check
 	    if (x < 0 || x >= overlay.getWidth() || y < 0 || y >= overlay.getHeight()) {
 	        return;
@@ -288,14 +280,14 @@ public class ImageMapPane extends StackPane {
 	    for (String id : shapeIds) {
 	        Node node = cardShapes.getNode(id);
 	        if (node != null) {
-	        	// Wir nutzen getBoundsInParent(), weil wir die effektive Position im Koordinatensystem 
+	        	// Wir nutzen getBoundsInParent(), weil wir die effektive Position im Koordinatensystem
 	        	// des Parents (shapeLayer) benötigen.
 	        	// Auch wenn aktuell keine Transforms (Scale/Translate) auf den Shapes liegen,
-	        	// wäre getBoundsInLocal() falsch, sobald wir z.B. Pulsier-Effekte (Scale) 
+	        	// wäre getBoundsInLocal() falsch, sobald wir z.B. Pulsier-Effekte (Scale)
 	        	// oder Korrektur-Offsets hinzufügen. Parent-Bounds sind "What you see is what you get".
 	            Bounds b = node.getBoundsInParent(); // ← HIER!
 	            double centerX = b.getMinX() + b.getWidth() / 2.0;
-	            double centerY = b.getMinY() + b.getHeight() / 2.0;	            
+	            double centerY = b.getMinY() + b.getHeight() / 2.0;
 	            sumX += centerX;
 	            sumY += centerY;
 	            count++;
@@ -303,7 +295,7 @@ public class ImageMapPane extends StackPane {
 	    }
 
 	    if (count == 0) return null;
-	    
+
 	    Point2D result = new Point2D(sumX / count, sumY / count);
 	    return result;
 	}
@@ -329,21 +321,21 @@ public class ImageMapPane extends StackPane {
 	        Node node = cardShapes.getNode(id);
 	        if (node != null) {
 	            Bounds b = node.getBoundsInParent(); // ← AUCH HIER!
-	            
+
 	            if (b.getMinX() < visibleMinX || b.getMaxX() > visibleMaxX ||
 	                b.getMinY() < visibleMinY || b.getMaxY() > visibleMaxY) {
 	                return false;
 	            }
 	        }
 	    }
-	    
+
 	    return true;
 	}
 
 	// --- Inner Class: ShapesWrapper ---
 
 	private class ShapesWrapper {
-	    
+
 		void reset() {
 			// 1. Alle aktuellen Shapes "waschen" (Zustände entfernen)
 			// Das ist wichtig, weil die GeoMap Instanzen wiederverwendet.
@@ -358,7 +350,7 @@ public class ImageMapPane extends StackPane {
 			// 2. Jetzt den Layer leeren
 			shapeLayer.getChildren().clear();
 		}
-	    
+
 		void setToCheck(Set<String> ids) {
 			// 1. Ghost Mode:
 			// Erstmal ALLES im Layer durchlässig machen.
@@ -374,7 +366,7 @@ public class ImageMapPane extends StackPane {
 					throw new RuntimeException("What the heck????");
 
 				Node shape = mapShape.shape();
-				
+
 				// Prüfen: Liegt das Shape schon auf der Karte?
 				boolean alreadyInLayer = shapeLayer.getChildren().contains(shape);
 
@@ -404,7 +396,7 @@ public class ImageMapPane extends StackPane {
 				}
 			}
 		}
-	    
+
 	    void addToCorrect(Set<String> ids) {
 	        for (String id : ids) {
 	            Node shape = map.getShape(id).shape();
@@ -414,30 +406,30 @@ public class ImageMapPane extends StackPane {
 	            }
 	        }
 	    }
-	    
+
 	    void setMarked(Set<String> ids) {
 	        for (String id : ids) {
 	            Node shape = map.getShape(id).shape();
 	            shape.pseudoClassStateChanged(MARKED, true);
-	            
+
 	            if (!shapeLayer.getChildren().contains(shape)) {
 	                shapeLayer.getChildren().add(shape);
 	            }
 	        }
 	    }
-	    
+
 	    void setIncorrect(Point2D clickPoint) {
 	        int x = (int) clickPoint.getX();
 	        int y = (int) clickPoint.getY();
 	        String circleId = "small|" + x + "|" + y;
-	        
+
 	        Node circle = map.getShape(circleId).shape();
 	        circle.pseudoClassStateChanged(INCORRECT, true);
 	        circle.toFront();
-	        
+
 	        shapeLayer.getChildren().add(circle);
 	    }
-	    
+
 	    Node getNode(String id) {
 	        return map.getShape(id).shape();
 	    }

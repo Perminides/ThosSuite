@@ -12,7 +12,7 @@ import app.shared.AppClock;
 import app.shared.KeyValueRepository;
 import app.shared.Screen;
 import app.shared.model.SessionSwitchStrategy;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import app.weekday.model.WeekdayStats;
 import app.weekday.repository.WeekdayRepository;
 import javafx.geometry.Pos;
@@ -34,7 +34,7 @@ public class DashboardScreen implements Screen {
     
     private void buildContent() {
         view.getChildren().clear();
-        view.setBackground(new Background(SkinService.get().getBackgroundImage(Deck.WORLD_CARDS)));
+        view.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
         
      // Fitbit-Service erstellen
         DashboardService fitbitService = new DashboardService();

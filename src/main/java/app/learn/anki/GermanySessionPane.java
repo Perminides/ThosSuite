@@ -4,15 +4,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import app.learn.SessionInfoLabel;
+import app.learn.MapService;
 import app.learn.ShapeMapPane;
 import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
+import app.learn.model.GeoMap;
 import app.learn.model.LearnStat;
 import app.learn.model.SessionProgressCounter;
-import app.ui.components.ImagePane;
-import app.ui.skin.Skin;
-import app.ui.skin.SkinService;
+import app.shared.ImagePane;
+import app.shared.MultipleChoicePane;
+import app.shared.SessionInfoLabel;
+import app.shared.skin.Skin;
+import app.shared.skin.SkinService;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Background;
@@ -41,31 +44,32 @@ public class GermanySessionPane extends Pane implements SessionPane {
 
     public GermanySessionPane(SessionPresenter presenter) {
         this.presenter = presenter;
-        this.setBackground(new Background(SkinService.get().getBackgroundImage(DECKTYPE)));
+        this.setBackground(new Background(SkinService.get().getBackgroundImage(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString())));
         initUI();
     }
 
     private void initUI() {
         Skin skin = SkinService.get();
         
-    	deutschlandkarte = skin.createShapeMapPane(DECKTYPE);
+        GeoMap map = MapService.getInstance().getMap(DECKTYPE);  // holt sich die SessionPane selbst (sie ist learn)
+        deutschlandkarte = new ShapeMapPane(map, DECKTYPE.getMapName(), DECKTYPE.getCategory().toString());
+        getChildren().add(deutschlandkarte.getView());
     	deutschlandkarte.setListener(id -> mapElementClicked(id));
-    	getChildren().add(deutschlandkarte);
     	deutschlandkarte.moveAllToActive();
     	
     	
-    	questionArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.QUESTION);
+    	questionArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.QUESTION);
     	questionArea.setText(""); // Initial leer
         getChildren().add(questionArea);
     	
-        textInputField = skin.createInputField(DECKTYPE);
+        textInputField = skin.createInputField(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString());
         textInputField.setOnKeyReleased(_ -> textInputChanged());
         getChildren().add(textInputField);
     	
-    	imageComponent = skin.createImageComponent(DECKTYPE);
+    	imageComponent = skin.createImageComponent(DECKTYPE.getId(), DECKTYPE.getCategory().toString());
     	getChildren().add(imageComponent); 
     	
-    	mcPane = skin.createMultipleChoicePane(DECKTYPE);
+    	mcPane = skin.createMultipleChoicePane(DECKTYPE.getId(), DECKTYPE.getCategory().toString());
     	mcPane.addListener(
     		new Consumer<Integer>() {
 				@Override
@@ -76,15 +80,15 @@ public class GermanySessionPane extends Pane implements SessionPane {
     	);
     	getChildren().add(mcPane);
     	
-    	progressArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.PROGRESS);
+    	progressArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.PROGRESS);
     	progressArea.setText("");
     	getChildren().add(progressArea);
     	
-    	cardHistoryArea = skin.createSessionInfoLabel(DECKTYPE, Skin.TextLabelType.CARD_HISTORY);
+    	cardHistoryArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.CARD_HISTORY);
     	cardHistoryArea.setText("");
     	getChildren().add(cardHistoryArea);
     	
-    	backButton = skin.createIconButton(DECKTYPE, Skin.IconButtonType.BACK);
+    	backButton = skin.createIconButton(DECKTYPE.getId(), Skin.IconButtonType.BACK);
     	backButton.setOnAction(_ -> backButtonClicked());
     	getChildren().add(backButton);
     }

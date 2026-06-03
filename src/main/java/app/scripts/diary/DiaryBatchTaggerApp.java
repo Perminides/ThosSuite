@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 import app.shared.Config;
 import app.shared.DB;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;

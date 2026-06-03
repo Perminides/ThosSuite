@@ -4,7 +4,6 @@ import java.util.Set;
 
 import app.learn.ShapeMapPane.ShapeMapState;
 import app.learn.region.model.Mode;
-import app.learn.region.model.SessionProgress;
 import app.learn.region.model.SessionSpec;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;

@@ -7,7 +7,7 @@ import java.time.temporal.ChronoUnit;
 import app.mattress.repository.MattressRepository;
 import app.shared.Config;
 import app.shared.Log;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import app.mattress.model.MattressTurn;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;

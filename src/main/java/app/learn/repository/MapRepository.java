@@ -7,11 +7,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import app.learn.ShapeMap;
 import app.learn.model.Deck;
 import app.learn.model.GeoMap;
 import app.learn.model.MapMetadata;
 import app.learn.model.MapType;
+import app.learn.model.ShapeMap;
 import app.shared.Config;
 import javafx.scene.image.Image;
 

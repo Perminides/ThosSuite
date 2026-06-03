@@ -15,7 +15,7 @@ import app.shared.Log;
 import app.shared.Screen;
 import app.shared.model.CardSortOrder;
 import app.shared.model.SessionSwitchStrategy;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.Pane;
 

@@ -1,4 +1,4 @@
-package app.ui.skin.params;
+package app.shared.model;
 
 import javafx.geometry.Insets;
 import javafx.scene.paint.Color;

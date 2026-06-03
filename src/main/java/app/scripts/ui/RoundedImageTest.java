@@ -3,7 +3,7 @@ package app.scripts.ui;
 import java.io.File;
 
 import app.shared.Config;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;

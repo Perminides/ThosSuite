@@ -12,7 +12,7 @@ import app.diary.DiaryDialog;
 import app.diary.DiaryViewerScreen;
 import app.fitbit.DataFetcher;
 import app.fitbit.DataReviewService;
-import app.learn.ShapeMap;
+import app.learn.ImageScaler;
 import app.learn.anki.AnkiDeckService;
 import app.learn.anki.AnkiDeckSession;
 import app.learn.anki.AnkiPlayConfigDialog;
@@ -22,6 +22,7 @@ import app.learn.anki.model.Card;
 import app.learn.model.Deck;
 import app.learn.model.DeckCategory;
 import app.learn.model.LearnSessionInfo;
+import app.learn.model.ShapeMap;
 import app.learn.region.RegionDeckService;
 import app.learn.region.RegionPlayConfigDialog;
 import app.learn.region.RegionPlayConfigDialog.RegionPlayConfig;
@@ -40,9 +41,8 @@ import app.shared.Config;
 import app.shared.Log;
 import app.shared.Screen;
 import app.shared.model.CardSortOrder;
-import app.ui.components.ImageScaler;
-import app.ui.skin.Skin;
-import app.ui.skin.SkinService;
+import app.shared.skin.Skin;
+import app.shared.skin.SkinService;
 import app.weekday.WeekdayDialog;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
@@ -507,7 +507,7 @@ public class Controller{
         Pane emptyView = new Pane();
         
         // 2. Den "Null"-Hintergrund (Standard-Wallpaper) draufkleben
-        emptyView.setBackground(new Background(SkinService.get().getBackgroundImage(null)));
+        emptyView.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
         
         // 3. In den Anker hängen
         mainWindow.showPane(emptyView);

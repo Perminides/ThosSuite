@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 import app.shared.Config;
 import app.shared.Log;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;

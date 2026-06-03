@@ -1,11 +1,10 @@
-package app.learn.region.model;
+package app.learn.region;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import app.learn.ShapeMap;
-import app.learn.region.SessionPresenter;
 import app.learn.Progress;
+import app.learn.model.ShapeMap;
 
 public interface SessionProgress extends Progress {
 

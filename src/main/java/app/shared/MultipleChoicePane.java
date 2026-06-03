@@ -1,4 +1,4 @@
-package app.learn.anki;
+package app.shared;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,13 +16,24 @@ import javafx.scene.text.TextAlignment;
 /**
  * A pane that shows up to 8 Multiple-Choice-Buttons. Three different layouts depending on font-size:
  * 		- Single line normal font for short text
- * 		- 2 lines normal font with reduced padding for longer text
- * 		- up to 3 lines in small font for very long text
- * 
+ * 		- 2 lines normal font with reduced padding for longer text (squeezed)
+ * 		- up to 3 lines in small font for very long text (tiny)
+ *
+ * <p>MC misst selbst, welche Stufe ein Antworttext braucht, und togglet die passende Pseudo-Klasse. Die dafür
+ * nötigen, skin-abhängigen Werte kommen gebündelt als {@link Metrics} herein — ein Objekt statt vier loser
+ * Parameter. MC importiert nichts aus dem skin-Paket: {@code Metrics} ist sein eigener Eingabe-Kontrakt, den
+ * der Skin nur füllt.</p>
+ *
  * CSS-classes
  * 		Button	= "my-mc-button"
  */
 public class MultipleChoicePane extends Pane {
+
+	/**
+	 * Die skin-abhängigen Werte, die MC fürs Messen der Antwort-Stufe braucht. Der Skin füllt das Record beim
+	 * Erzeugen der Pane; MC besitzt nur den Typ und rechnet damit.
+	 */
+	public record Metrics(Font font, double horizontalOverhead, double borderWidth, double lineSpacingSqueezed) {}
 
     // --- Logik-Zustände (Exklusiv) ---
     private static final PseudoClass STATE_INACTIVE = PseudoClass.getPseudoClass("inactive");
@@ -31,25 +42,19 @@ public class MultipleChoicePane extends Pane {
     private static final PseudoClass STATE_INCORRECT = PseudoClass.getPseudoClass("incorrect");
 
     // --- Layout-Zustände (Additiv zu Logik-Zuständen) ---
-    // multiline: Text umbrechen, Padding reduzieren
-    private static final PseudoClass STATE_SQUEEZED = PseudoClass.getPseudoClass("squeezed"); // NEU
+    // squeezed: Text umbrechen, Padding reduzieren
+    private static final PseudoClass STATE_SQUEEZED = PseudoClass.getPseudoClass("squeezed");
     // tiny: Text umbrechen, Padding reduzieren UND Schrift verkleinern
     private static final PseudoClass STATE_TINY = PseudoClass.getPseudoClass("tiny");
 
     private final List<Button> buttons = new ArrayList<>();
-    private final Font font;
-    private final double borderWidth; // NEU: Damit wir das absolute Limit kennen
-    private final double horizontalOverhead; // Ersatz für die Magic Number "24"
-    private final double lineSpacingSqueezed;
-    
+    private final Metrics metrics;
+
     private Consumer<Integer> listener;
 
-    public MultipleChoicePane(double width, double fixedButtonHeight, double horizontalOverhead, double borderWidth, Font font, int verticalGap, double lineSpacingSqueezed) {
-        this.font = font;
-        this.horizontalOverhead = horizontalOverhead;
-        this.borderWidth = borderWidth;
-        this.lineSpacingSqueezed = lineSpacingSqueezed;
-        
+    public MultipleChoicePane(double width, double fixedButtonHeight, int verticalGap, Metrics metrics) {
+        this.metrics = metrics;
+
         double totalHeight = (fixedButtonHeight * 8) + (verticalGap * 7);
         this.setPrefSize(width, totalHeight);
 
@@ -70,52 +75,50 @@ public class MultipleChoicePane extends Pane {
         btn.setMinSize(width, height);
         btn.setMaxSize(width, height);
         btn.getStyleClass().add("my-mc-button");
-        
+
         // WrapText muss für alle an sein, damit es wirkt, wenn wir es brauchen.
         // Gesteuert wird das Aussehen aber über CSS (Padding/Font).
-        btn.setWrapText(true); 
+        btn.setWrapText(true);
         btn.setTextAlignment(TextAlignment.CENTER);
         btn.setAlignment(Pos.CENTER);
-        
-        btn.setOnAction(e -> {
+
+        btn.setOnAction(_ -> {
             if (listener != null) listener.accept(index);
         });
-        
+
         btn.setText("");
         setButtonLogicState(btn, STATE_INACTIVE);
-        
+
         return btn;
     }
 
     public void initiateMultipleChoice(List<String> answers) {
         for (int i = 0; i < 8; i++) {
             Button btn = buttons.get(i);
-            
+
             // Reset aller Layout-States
             btn.pseudoClassStateChanged(STATE_SQUEEZED, false);
             btn.pseudoClassStateChanged(STATE_TINY, false);
-            
+
             if (i < answers.size()) {
                 String text = answers.get(i);
                 btn.setText(text);
-                
-                double availableTextWidth = btn.getPrefWidth() - horizontalOverhead;
-                
+
+                double availableTextWidth = btn.getPrefWidth() - metrics.horizontalOverhead();
+
                 Text measure = new Text(text);
-                measure.setFont(font);
+                measure.setFont(metrics.font());
 
                 // SCHRITT 1: Passt es einzeilig?
                 if (measure.getLayoutBounds().getWidth() > availableTextWidth) {
-                    
+
                     // Nein. Passt es "gequetscht" zweizeilig?
                     measure.setWrappingWidth(availableTextWidth);
-                    
-                    // NEU: Variable statt Magic Number -6
-                    measure.setLineSpacing(lineSpacingSqueezed); 
-                    
+                    measure.setLineSpacing(metrics.lineSpacingSqueezed());
+
                     // Limit: ButtonHöhe - (Rahmen Oben + Rahmen Unten). Kein Padding!
-                    double absoluteMaxHeight = btn.getPrefHeight() - (borderWidth * 2);
-                    
+                    double absoluteMaxHeight = btn.getPrefHeight() - (metrics.borderWidth() * 2);
+
                     if (measure.getLayoutBounds().getHeight() <= absoluteMaxHeight) {
                         // JA! Es passt mit Quetschen.
                         btn.pseudoClassStateChanged(STATE_SQUEEZED, true);
@@ -124,7 +127,7 @@ public class MultipleChoicePane extends Pane {
                         btn.pseudoClassStateChanged(STATE_TINY, true);
                     }
                 }
-                
+
                 setButtonLogicState(btn, STATE_ACTIVE);
             } else {
                 btn.setText("");
@@ -152,7 +155,7 @@ public class MultipleChoicePane extends Pane {
             }
         }
     }
-    
+
     public void setCorrect(int index, boolean correct) {
         setButtonLogicState(buttons.get(index), correct ? STATE_CORRECT : STATE_INCORRECT);
     }

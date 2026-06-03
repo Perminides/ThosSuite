@@ -1,4 +1,4 @@
-package app.controller;
+package app;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +11,8 @@ import java.time.ZoneId;
 import java.util.Locale;
 import java.util.Optional;
 
+import app.controller.Controller;
+import app.controller.MainWindow;
 import app.shared.AppClock;
 import app.shared.Config;
 import app.shared.DB;

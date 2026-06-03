@@ -1,7 +1,7 @@
 package app.weekday;
 
 import app.shared.Log;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import app.weekday.repository.WeekdayRepository;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;

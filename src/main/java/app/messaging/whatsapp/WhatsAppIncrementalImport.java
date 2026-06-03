@@ -28,7 +28,7 @@ import app.shared.Config;
 import app.shared.DB;
 import app.shared.KeyValueRepository;
 import app.shared.Log;
-import app.ui.skin.SkinService;
+import app.shared.skin.SkinService;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 
