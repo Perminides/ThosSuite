@@ -43,7 +43,7 @@ public class TmdbViewerRepository {
     }
 
     private List<CardData> loadMoviesByDirector(String name) {
-        String sql = "SELECT mdet.* FROM movie_details mdet "
+        String sql = "SELECT distinct mdet.* FROM movie_details mdet "
                 + "JOIN movie_directors mdir ON mdet.id = mdir.id "
                 + "WHERE mdir.name = ? "
                 + "ORDER BY mdet.release_date DESC";
@@ -51,7 +51,7 @@ public class TmdbViewerRepository {
     }
 
     private List<CardData> loadTvShowsByDirector(String name) {
-        String sql = "SELECT sdet.* FROM tv_show_details sdet "
+        String sql = "SELECT distinct sdet.* FROM tv_show_details sdet "
                 + "JOIN tv_show_directors sdir ON sdet.id = sdir.id "
                 + "WHERE sdir.name = ? "
                 + "ORDER BY sdet.first_air_date DESC";
@@ -59,7 +59,7 @@ public class TmdbViewerRepository {
     }
 
     private List<CardData> loadEpisodesByDirector(String name) {
-        String sql = "SELECT edet.* FROM episode_details edet "
+        String sql = "SELECT distinct edet.* FROM episode_details edet "
                 + "JOIN episode_directors edir ON edet.episode_id = edir.id "
                 + "WHERE edir.name = ? "
                 + "ORDER BY edet.episode_release_date DESC";
@@ -80,7 +80,7 @@ public class TmdbViewerRepository {
     }
 
     private List<CardData> loadMoviesByActor(String name) {
-        String sql = "SELECT mdet.* FROM movie_details mdet "
+        String sql = "SELECT distinct mdet.* FROM movie_details mdet "
                 + "JOIN movie_actors mact ON mdet.id = mact.id "
                 + "WHERE mact.name = ? "
                 + "ORDER BY mdet.release_date DESC";
@@ -88,7 +88,7 @@ public class TmdbViewerRepository {
     }
 
     private List<CardData> loadTvShowsByActor(String name) {
-        String sql = "SELECT sdet.* FROM tv_show_details sdet "
+        String sql = "SELECT distinct sdet.* FROM tv_show_details sdet "
                 + "JOIN tv_show_actors sact ON sdet.id = sact.id "
                 + "WHERE sact.name = ? "
                 + "ORDER BY sdet.first_air_date DESC";
@@ -96,7 +96,7 @@ public class TmdbViewerRepository {
     }
 
     private List<CardData> loadEpisodesByActor(String name) {
-        String sql = "SELECT edet.* FROM episode_details edet "
+        String sql = "SELECT distinct edet.* FROM episode_details edet "
                 + "JOIN episode_actors eact ON edet.episode_id = eact.id "
                 + "WHERE eact.name = ? "
                 + "ORDER BY edet.episode_release_date DESC";
