@@ -92,7 +92,6 @@ public class SessionPresenter {
 				sessionPane.moveCorrectToActive();
 			}
 			sessionPane.addIdsToCorrect(Set.of(id));
-			sessionPane.addIdsToCorrect(Set.of(id));
 
 		} else {
 			wrongClickSnapshot = new WrongClickSnapshot(
