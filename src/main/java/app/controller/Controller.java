@@ -12,6 +12,7 @@ import app.diary.DiaryDialog;
 import app.diary.DiaryViewerScreen;
 import app.fitbit.DataFetcher;
 import app.fitbit.DataReviewService;
+import app.fitbit.FitbitStatisticsScreen;
 import app.learn.ImageScaler;
 import app.learn.anki.AnkiDeckService;
 import app.learn.anki.AnkiDeckSession;
@@ -288,7 +289,7 @@ public class Controller{
 	        if ("Dashboard".equals(item)) {
 	            currentScreen = new DashboardScreen();
 	        } else if ("Fitbit".equals(item)) {
-	            currentScreen = new AlcStatisticsScreen();
+	            currentScreen = new FitbitStatisticsScreen();
 	        }  else if ("Alkohol".equals(item)) {
 	            currentScreen = new AlcStatisticsScreen();
 	        }

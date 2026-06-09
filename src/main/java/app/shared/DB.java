@@ -47,9 +47,10 @@ public class DB {
 			if (connection != null && connection.isClosed()) {
 				new Alert(AlertType.WARNING, "Shit. Die connection ist closed? Wer ist der Übeltäter?", ButtonType.OK).showAndWait();
 			}
-			if (connection == null || connection.isClosed())
+			if (connection == null || connection.isClosed()) {
 				connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath.toString());
 				connection.createStatement().execute("PRAGMA foreign_keys = ON");
+			}
 		} catch (Exception e) {
 			throw new RuntimeException("SQL error while getting connection", e);
 		}
