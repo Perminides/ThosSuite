@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,8 +17,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import app.fitbit.model.json.ActivityDaySummary;
 import app.fitbit.model.json.Activity;
+import app.fitbit.model.json.ActivityDaySummary;
 import app.fitbit.model.json.ActivityLogList;
 import app.fitbit.model.json.FitbitCredentials;
 import app.shared.Config;
@@ -70,7 +71,7 @@ public class ApiClient {
     private static final String CLIENT_AUTHORIZATION;
     
     // Pfad zur Credentials-Datei
-    private static final String CREDENTIALS_FILE_PATH;
+    private static final Path CREDENTIALS_FILE_PATH;
     
     static {
         MAPPER.registerModule(new JavaTimeModule());
@@ -78,7 +79,7 @@ public class ApiClient {
         MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         
         CLIENT_AUTHORIZATION = "Basic " + Config.get("fitbitClientPlusSecret");
-        CREDENTIALS_FILE_PATH = Config.get("fitbitFolder") + "fitbit_credentials.json";
+        CREDENTIALS_FILE_PATH = Config.getPath("fitbitFolder").resolve("fitbit_credentials.json");
     }
     
     private FitbitCredentials credentials;
@@ -188,7 +189,7 @@ public class ApiClient {
      * @throws RuntimeException wenn Credentials nicht geladen werden können
      */
     private void loadCredentials() {
-        File credentialsFile = new File(CREDENTIALS_FILE_PATH);
+        File credentialsFile = CREDENTIALS_FILE_PATH.toFile();
         
         if (!credentialsFile.exists()) {
             throw new RuntimeException(
@@ -286,7 +287,7 @@ public class ApiClient {
     private void saveCredentials() {
         try {
             MAPPER.writerWithDefaultPrettyPrinter()
-                  .writeValue(new File(CREDENTIALS_FILE_PATH), credentials);
+                  .writeValue(CREDENTIALS_FILE_PATH.toFile(), credentials);
             Log.debug(this, "Credentials gespeichert: " + CREDENTIALS_FILE_PATH);
         } catch (IOException e) {
             throw new RuntimeException("Fehler beim Speichern der Credentials", e);

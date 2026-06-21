@@ -37,7 +37,7 @@ import app.shared.skin.SkinService;
  * Serien und Episoden werden nicht hier behandelt — die laufen über einen
  * separaten manuellen Menüpunkt.
  *
- * Bilder landen im Dateisystem unter Config.get("tmdb.imageFolder").
+ * Bilder landen im Dateisystem unter Config.getPath("tmdb.imageFolder").
  * Bild-Metadaten landen in der DB.
  *
  * Alle Fehler sind fatal — kein stiller Fallback.
@@ -226,7 +226,7 @@ public class Importer {
      * das sollte nie passieren.
      */
     private static void saveImageToFileSystem(String filename, byte[] image) {
-        File file = new File(Config.get("imageFolder") + "tmdb" + File.separator + filename);
+    	File file = Config.getPath("imageFolder").resolve("tmdb").resolve(filename).toFile();
         if (file.exists())
             throw new RuntimeException("Bild existiert bereits, das sollte nicht passieren: " + filename);
         try {

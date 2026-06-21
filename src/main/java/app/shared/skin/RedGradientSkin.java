@@ -13,6 +13,6 @@ public class RedGradientSkin extends BaseColorSkin{
 	
 	public RedGradientSkin() {
 		super();
-		loadAllConfigs(Config.get("configFolder") + "skin_drive.properties");
+		loadAllConfigs(Config.getPath("configFolder").resolve("skin_drive.properties"));
 	}
 }

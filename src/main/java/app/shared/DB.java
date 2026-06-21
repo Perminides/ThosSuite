@@ -17,8 +17,8 @@ public class DB {
 	private static Connection tmdbConnection = null;
 	
 	static {
-		dbPath = Path.of(Config.get("dbFolder") + "thossuite.db");
-		tmdbDbPath = Path.of(Config.get("dbFolder") + "movies.db");
+		dbPath = Config.getPath("dbFolder").resolve("thossuite.db");
+		tmdbDbPath = Config.getPath("dbFolder").resolve("movies.db");
 	}
 	
 	/**

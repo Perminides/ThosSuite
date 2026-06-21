@@ -117,7 +117,7 @@ public class ThosSuiteApp extends Application {
         }
         
         // Läuft die Suite bereits?
-        if (!SingleInstanceGuard.lockInstance(Path.of(dataFolder + "log/suite.lock"))) {
+        if (!SingleInstanceGuard.lockInstance(Path.of(dataFolder).resolve("log/suite.lock"))) {
         	Alert alert = new Alert(AlertType.WARNING);
         	alert.setTitle("Programm bereits gestartet");
         	alert.setHeaderText(null);
@@ -242,10 +242,7 @@ public class ThosSuiteApp extends Application {
         } catch (Exception e) { /* fallback */ }
         
         File selectedDir = dirChooser.showDialog(null); // null ist okay, da wir kein Parent-Window haben
-        if (selectedDir != null) {
-            return selectedDir.getAbsolutePath() + "/";
-        }
-        return null;
+        return selectedDir == null ? null : selectedDir.getAbsolutePath();
     }
 
     /**
@@ -305,14 +302,14 @@ public class ThosSuiteApp extends Application {
         
         // Icons laden
         try {
-            String iconFolder = Config.get("iconFolder") + "suite_icon/";
+            Path iconFolder = Config.getPath("iconFolder").resolve("suite_icon");
             mainWindow.getIcons().addAll(
-                new Image(new File(iconFolder + "mondrian_rounded_16.png").toURI().toString()),
-                new Image(new File(iconFolder + "mondrian_rounded_24.png").toURI().toString()),
-                new Image(new File(iconFolder + "mondrian_rounded_32.png").toURI().toString()),
-                new Image(new File(iconFolder + "mondrian_rounded_64.png").toURI().toString()),
-                new Image(new File(iconFolder + "mondrian_rounded_128.png").toURI().toString()),
-                new Image(new File(iconFolder + "mondrian_rounded_256.png").toURI().toString())
+                new Image(iconFolder.resolve("mondrian_rounded_16.png").toUri().toString()),
+                new Image(iconFolder.resolve("mondrian_rounded_24.png").toUri().toString()),
+                new Image(iconFolder.resolve("mondrian_rounded_32.png").toUri().toString()),
+                new Image(iconFolder.resolve("mondrian_rounded_64.png").toUri().toString()),
+                new Image(iconFolder.resolve("mondrian_rounded_128.png").toUri().toString()),
+                new Image(iconFolder.resolve("mondrian_rounded_256.png").toUri().toString())
             );
         } catch (Exception e) {
             throw new RuntimeException("Probleme beim Laden der Icons", e);

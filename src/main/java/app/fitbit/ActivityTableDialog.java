@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import app.fitbit.model.json.Activity;
 import app.fitbit.model.json.ActivityDaySummary;
 import app.shared.Log;
+import app.shared.TabCommitTextFieldTableCell;
 import app.shared.skin.SkinService;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -27,7 +28,6 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
@@ -166,31 +166,31 @@ public class ActivityTableDialog {
         // Spalten erstellen
         TableColumn<ActivityRow, String> startTimeCol = new TableColumn<>("StartTime");
         startTimeCol.setCellValueFactory(cd -> cd.getValue().startTimeProperty());
-        startTimeCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        startTimeCol.setCellFactory(TabCommitTextFieldTableCell.forTableColumn());
         startTimeCol.setEditable(true);
         startTimeCol.setSortable(false);
         
         TableColumn<ActivityRow, String> nameCol = new TableColumn<>("ActivityName");
         nameCol.setCellValueFactory(cd -> cd.getValue().activityNameProperty());
-        nameCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        nameCol.setCellFactory(TabCommitTextFieldTableCell.forTableColumn());
         nameCol.setEditable(true);
         nameCol.setSortable(false);
         
         TableColumn<ActivityRow, String> unitCol = new TableColumn<>("DistanceUnit");
         unitCol.setCellValueFactory(cd -> cd.getValue().distanceUnitProperty());
-        unitCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        unitCol.setCellFactory(TabCommitTextFieldTableCell.forTableColumn());
         unitCol.setEditable(true);
         unitCol.setSortable(false);
         
         TableColumn<ActivityRow, Double> distanceCol = new TableColumn<>("Distance");
         distanceCol.setCellValueFactory(cd -> cd.getValue().distanceProperty().asObject());
-        distanceCol.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        distanceCol.setCellFactory(TabCommitTextFieldTableCell.forTableColumn(new DoubleStringConverter()));
         distanceCol.setEditable(true);
         distanceCol.setSortable(false);
         
         TableColumn<ActivityRow, Integer> stepsCol = new TableColumn<>("Steps");
         stepsCol.setCellValueFactory(cd -> cd.getValue().stepsProperty().asObject());
-        stepsCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+        stepsCol.setCellFactory(TabCommitTextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         stepsCol.setEditable(true);
         stepsCol.setSortable(false);
         

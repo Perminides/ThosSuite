@@ -10,6 +10,6 @@ public class FlowerSkin extends BaseColorSkin {
 	
 	public FlowerSkin() {
 		super();
-		loadAllConfigs(Config.get("configFolder") + "skin_flower.properties");
+		loadAllConfigs(Config.getPath("configFolder").resolve("skin_flower.properties"));
 	}
 }

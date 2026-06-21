@@ -103,8 +103,8 @@ public class ImageMapSessionPane extends Pane implements SessionPane {
     
 	// Image
 	
-    public void setImage(String imagePath) {
-    	imageComponent.setImage(imagePath);
+    public void setImage(String imageName) {
+    	imageComponent.setImage(imageName);
     }
     
     // Multiple Choice

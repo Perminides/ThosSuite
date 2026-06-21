@@ -6,7 +6,7 @@ public abstract class BaseColorSkin extends Skin {
 
 	public BaseColorSkin() {
 		super();
-		loadAllConfigs(Config.get("configFolder") + "skin_basecolor.properties");
+		loadAllConfigs(Config.getPath("configFolder").resolve("skin_basecolor.properties"));
 	}
 	
 }

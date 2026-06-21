@@ -12,7 +12,7 @@ public class DarkMode extends Skin {
 	
 	public DarkMode() {
 		super();
-		loadAllConfigs(Config.get("configFolder") + "skin_darkmode.properties");
+		loadAllConfigs(Config.getPath("configFolder").resolve("skin_darkmode.properties"));
 	}
 	
 }
