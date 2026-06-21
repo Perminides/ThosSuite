@@ -21,15 +21,15 @@ import javafx.scene.layout.Pane;
 /**
  * Kapselt den kompletten Karten-Ablauf einer Anki-Lernsession: Iteration über die Karten,
  * Sortierung, Vor/Zurück, Refresh, Aggregation und das Erzeugen der Persistenz-Daten.
- *
+ * <br><br>
  * Pendant zu region's WriteSessionProgress. Steht zwischen der Schale (AnkiDeckSession) und dem
  * Presenter. Hält die Zuordnung Karten-Id -> CardProgress selbst (statt sie an die Card zu hängen);
  * mit dem Ende dieser Instanz stirbt die Map - es gibt nichts aus den Karten zu entfernen.
- *
+ * <br><br>
  * Der innere CardProgress kapselt den Mehrschritt-Ablauf einer einzelnen Karte. Das ist der
  * strukturelle Unterschied zu region (dort sind Items einschrittig) - jetzt an genau einer Stelle
  * gekapselt statt über die Session verschmiert.
- *
+ * <br><br>
  * Hält - wie WriteSessionProgress die RegionSession - eine Rückreferenz auf die Schale, um beim
  * Ende der letzten Karte das Lebenszyklus-Ende (endGracefully) auszulösen.
  */
