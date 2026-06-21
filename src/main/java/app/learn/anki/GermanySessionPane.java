@@ -105,9 +105,9 @@ public class GermanySessionPane extends Pane implements SessionPane {
     
 	// Image
 	
-    public void setImage(String imagePath) {
+    public void setImage(String imageName) {
     	//TODO: Es wäre nice, ein "Bild fehlt" einzublenden, wenn das Bild nicht gefunden werden kann und nicht abzubrechen! Oder?
-        imageComponent.setImage(imagePath);
+        imageComponent.setImage(imageName);
     }
     
     // Multiple Choice

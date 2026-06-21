@@ -60,8 +60,8 @@ public class SessionPresenter {
 	// STEP EXECUTION (from Progress)
 	// ========================================
 	
-	public void showImage(String imagePath) {
-		sessionPane.setImage(Config.get("learnImageFolder") + imagePath);
+	public void showImage(String imageName) {
+		sessionPane.setImage(imageName);
 	}
 
 	public void showQuestion(String text) {

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,15 +26,15 @@ public class MapRepository {
         this.loader = new GeoJsonLoader();
     }
     
-    public GeoMap load(Deck type, String bgImagePath, String overlayPath, String inactiveBgPath, String inactiveOverlayPath) {
+    public GeoMap load(Deck type, Path bgImagePath, Path overlayPath, Path inactiveBgPath, Path inactiveOverlayPath) {
         MapMetadata meta = type.getMapMetadata();
 
         if (meta.getMapType() == MapType.SHAPE) {
-            String folder = Config.get("geoJsonFolder");
+            Path folder = Config.getPath("geoJsonFolder");
             String[] fileNames = meta.getGeoJsonFiles();
             List<ShapeMap> shapes = new ArrayList<>();
             for (String fileName : fileNames) {
-                shapes.addAll(loader.load(folder + fileName, true));
+                shapes.addAll(loader.load(folder.resolve(fileName), true));
             }
             return new GeoMap(shapes, MapType.SHAPE, null, null, null, null);
 
@@ -44,11 +45,11 @@ public class MapRepository {
                 Image bgia  = loadImage(inactiveBgPath);
                 Image ovia  = loadImage(inactiveOverlayPath);
 
-                String folder = Config.get("geoJsonFolder");
+                Path folder = Config.getPath("geoJsonFolder");
                 String[] fileNames = meta.getGeoJsonFiles();
                 List<ShapeMap> shapes = new ArrayList<>();
                 for (String fileName : fileNames) {
-                    shapes.addAll(loader.load(folder + fileName, false));
+                    shapes.addAll(loader.load(folder.resolve(fileName), false));
                 }
                 return new GeoMap(shapes, MapType.IMAGE, bg, ov, bgia, ovia);
 
@@ -58,12 +59,12 @@ public class MapRepository {
         }
     }
     
-    // Kleiner Helper, um null-Checks und Stream-Handling zu zentralisieren
-    private Image loadImage(String path) throws IOException {
+ // Kleiner Helper, um null-Checks und Stream-Handling zu zentralisieren
+    private Image loadImage(Path path) throws IOException {
         if (path == null) return null;
-        File file = new File(path);
+        File file = path.toFile();
         if (!file.exists()) return null;
-        
+
         try (InputStream is = new FileInputStream(file)) {
             // Image(InputStream) lädt das Bild synchron (wichtig, damit es sofort da ist)
             // Wir könnten auch "file:..." URL nehmen, das wäre async, aber hier wollen wir sicher sein.

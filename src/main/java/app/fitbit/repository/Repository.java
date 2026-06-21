@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,7 +36,7 @@ import app.shared.Log;
  */
 public class Repository {
     
-    private static final String LOG_FILE_PATH = Config.get("logFolder") + "fitbit_import.log";
+    private static final Path LOG_FILE_PATH = Config.getPath("logFolder").resolve("fitbit_import.log");
     
     /**
      * Lädt das Datum des letzten importierten Tages aus der Datenbank.
@@ -236,7 +237,7 @@ public class Repository {
      * @param jsonResponse Die komplette JSON-Antwort von Fitbit-API
      */
     public void logApiResponse(LocalDate date, String jsonResponse) {
-        File logFile = new File(LOG_FILE_PATH);
+        File logFile = LOG_FILE_PATH.toFile();
         
         // Log-Verzeichnis erstellen falls nicht vorhanden
         File logDir = logFile.getParentFile();

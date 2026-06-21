@@ -11,7 +11,7 @@ public class FlatWebSkin extends Skin {
 	
 	public FlatWebSkin() {
 		super();
-		loadAllConfigs(Config.get("configFolder") + "skin_flatweb.properties");
+		loadAllConfigs(Config.getPath("configFolder").resolve("skin_flatweb.properties"));
 	}
 	
 }

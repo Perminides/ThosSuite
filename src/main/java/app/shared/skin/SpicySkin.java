@@ -13,6 +13,6 @@ public class SpicySkin extends BaseColorSkin{
 	
 	public SpicySkin() {
 		super();
-		loadAllConfigs(Config.get("configFolder") + "skin_spicy.properties");
+		loadAllConfigs(Config.getPath("configFolder").resolve("skin_spicy.properties"));
 	}
 }

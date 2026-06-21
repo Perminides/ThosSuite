@@ -13,6 +13,6 @@ public class BlueGradientSkin extends BaseColorSkin{
 	
 	public BlueGradientSkin() {
 		super();
-		loadAllConfigs(Config.get("configFolder") + "skin_moonlight.properties");
+		loadAllConfigs(Config.getPath("configFolder").resolve("skin_moonlight.properties"));
 	}
 }

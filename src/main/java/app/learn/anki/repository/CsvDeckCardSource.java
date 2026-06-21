@@ -22,7 +22,7 @@ class CsvDeckCardSource {
 		private final Map<Deck, File> bundles = new EnumMap<>(Deck.class);
 		
 		CsvDeckCardSource() {
-			File dataDir = new File(Config.get("deckFolder"));
+			File dataDir = Config.getPath("deckFolder").toFile();
 			for (Deck type : Deck.values()) {
 				if (type.getCategory() == DeckCategory.ANKI_DECK)
 					bundles.put(type, new File(dataDir, type.getDeckFileName()));

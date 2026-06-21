@@ -103,8 +103,8 @@ public class TurnDialog {
         imageView.setFitHeight(150);
         imageView.setPreserveRatio(true);
         try {
-            String imgPath = Config.get("miscImageFolder") + (direction.equals(DIR_UP_DOWN) ? IMG_UP_DOWN : IMG_RIGHT_LEFT);
-            Image img = new Image(Path.of(imgPath).toUri().toString());
+            Path imgPath = Config.getPath("miscImageFolder").resolve(direction.equals(DIR_UP_DOWN) ? IMG_UP_DOWN : IMG_RIGHT_LEFT);
+            Image img = new Image(imgPath.toUri().toString());
             imageView.setImage(SkinService.get().tintImageWithTextColor(img));
         } catch (Exception e) {
             throw new RuntimeException("Häh? Wo ist das Bild mit der Matratze?", e);

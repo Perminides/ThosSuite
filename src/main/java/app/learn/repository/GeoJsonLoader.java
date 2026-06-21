@@ -21,15 +21,16 @@ import javafx.scene.shape.Path;
  * Erzeugt aus einer geoJSON mit Multipolygons eine Liste von MapShapes
  */
 class GeoJsonLoader {
-	public List<ShapeMap> load(String filePath, boolean isShapeMap) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(new File(filePath));
-            return parseFeatures(root, isShapeMap);
-        } catch (IOException e) {
-            throw new RuntimeException("Fehler beim Laden von GeoJSON: " + filePath, e);
-        }
-    }
+
+	public List<ShapeMap> load(java.nio.file.Path filePath, boolean isShapeMap) {
+	    try {
+	        ObjectMapper mapper = new ObjectMapper();
+	        JsonNode root = mapper.readTree(filePath.toFile());
+	        return parseFeatures(root, isShapeMap);
+	    } catch (IOException e) {
+	        throw new RuntimeException("Fehler beim Laden von GeoJSON: " + filePath, e);
+	    }
+	}
 
 	private List<ShapeMap> parseFeatures(JsonNode root, boolean isShapeMap) {
 	    List<ShapeMap> shapes = new ArrayList<>();

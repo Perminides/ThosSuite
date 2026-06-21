@@ -1,8 +1,9 @@
 package app.shared.skin;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -1502,10 +1503,10 @@ public abstract class Skin {
 	 * @return
 	 */
 	public BackgroundImage getBackgroundImage(String mapName, String deckCategoryName) {
-		String bgPath = Config.get("wallpaperFolder") + getBackgroundImageName(mapName, deckCategoryName);
+		Path bgPath = Config.getPath("wallpaperFolder").resolve(getBackgroundImageName(mapName, deckCategoryName));
 		BackgroundImage background;
-	    try {
-	        Image bgImage = new Image(new File(bgPath).toURI().toString());
+		try {
+		    Image bgImage = new Image(bgPath.toUri().toString());
 	        background = new BackgroundImage(
 	            bgImage,
 	            BackgroundRepeat.NO_REPEAT,
@@ -1657,9 +1658,9 @@ public abstract class Skin {
 			case CANCEL -> cancelButtonIcon;
 		};
 
-		Image image = new Image(new File(Config.get("iconFolder") + iconPath).toURI().toString());
+		Image image = new Image(Config.getPath("iconFolder").resolve(iconPath).toUri().toString());
 		if (buttonType == IconButtonType.BACK)
-			image = UIUtils.tintImage(image, textActiveComponentColor);
+		    image = UIUtils.tintImage(image, textActiveComponentColor);
 		ImageView icon = new ImageView(image);
 	    
 	    // Button erstellen
@@ -2070,7 +2071,7 @@ public abstract class Skin {
 
 	    if (!attachments.isEmpty()) {
 	        int thumbHeight = Config.getInt("diary.thumbnailHeight", 120);
-	        Path diaryFolder = Path.of(Config.get("attachments.folder")).resolve("diary");
+	        Path diaryFolder = Config.getPath("attachments.folder").resolve("diary");
 
 	        FlowPane thumbPane = new FlowPane(8, 8);
 	        thumbPane.getStyleClass().add("diary-card-thumbs");
@@ -2240,7 +2241,7 @@ public abstract class Skin {
 	    // kein separater Badge-Node nötig.
 	    StackPane posterPane = null;
 	    File imageFile = data.imageFilename() != null
-	            ? new File(Config.get("imageFolder") + "tmdb" + File.separator + data.imageFilename())
+	            ? Config.getPath("imageFolder").resolve("tmdb").resolve(data.imageFilename()).toFile()
 	            : null;
 
 	    if (imageFile != null && imageFile.exists()) {
@@ -2351,64 +2352,64 @@ public abstract class Skin {
 	 * @param id
 	 * @return
 	 */
-	public String getMapImagePath(String mapName) {
+	public Path getMapImagePath(String mapName) {
 	    String name = (String) getFieldValue(mapName + "MapImageName");
-	    return name == null ? null : Config.get("mapImagesFolder") + name;
+	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
 	}
 
-	public String getMapInactiveImagePath(String mapName) {
+	public Path getMapInactiveImagePath(String mapName) {
 	    String name = (String) getFieldValue(mapName + "MapInactiveImageName");
-	    return name == null ? null : Config.get("mapImagesFolder") + name;
+	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
 	}
 
-	public String getMapInactiveOverlayImagePath(String mapName) {
+	public Path getMapInactiveOverlayImagePath(String mapName) {
 	    String name = (String) getFieldValue(mapName + "MapInactiveOverlayImageName");
-	    return name == null ? null : Config.get("mapImagesFolder") + name;
+	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
 	}
 
-	public String getMapOverlayImagePath(String mapName) {
+	public Path getMapOverlayImagePath(String mapName) {
 	    String name = (String) getFieldValue(mapName + "MapOverlayImageName");
-	    return name == null ? null : Config.get("mapImagesFolder") + name;
+	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
 	}
 	
 	public Image tintImageWithTextColor(Image img) {
 		return UIUtils.tintImage(img, textColor);
 	}
 
-	protected void loadAllConfigs(String configPath) {
-		try (FileInputStream in = new FileInputStream(configPath)) {
-			Properties props = new Properties();
-			props.load(in);
+	protected void loadAllConfigs(Path configPath) {
+	    try (InputStream in = Files.newInputStream(configPath)) {
+	        Properties props = new Properties();
+	        props.load(in);
 
-			// ganze Klassenhierarchie durchlaufen
-			for (Class<?> cls = this.getClass(); cls != null; cls = cls.getSuperclass()) {
-				for (Field field : cls.getDeclaredFields()) {
-					field.setAccessible(true);
+	        // ganze Klassenhierarchie durchlaufen
+	        for (Class<?> cls = this.getClass(); cls != null; cls = cls.getSuperclass()) {
+	            for (Field field : cls.getDeclaredFields()) {
+	                field.setAccessible(true);
 
-					String value = props.getProperty(field.getName());
-					if (value == null)
-						continue;
-					else
-						value = value.trim();
+	                String value = props.getProperty(field.getName());
+	                if (value == null)
+	                    continue;
+	                else
+	                    value = value.trim();
 
-					if (field.getType() == Color.class) {
-						field.set(this, parseColor(value));
-					} else if (field.getType() == Font.class) {
-						field.set(this, parseFont(value));
-					} else if (field.getType() == BorderParams.class) {
-						field.set(this, parseBorderParams(value));
-					} else if (field.getType() == Integer.class || field.getType() == int.class) {
-						field.set(this, Integer.parseInt(value));
-					} else if (field.getType() == Rectangle2D.class) {
-						field.set(this, parseRectangle(value));
-					} else if (field.getType() == String.class) {
-						field.set(this, value);
-					}
-				}
-			}
-		} catch (Exception e) {
-			throw new RuntimeException("Probleme beim Lesen der Skins", e);
-		}
+	                if (field.getType() == Color.class) {
+	                    field.set(this, parseColor(value));
+	                } else if (field.getType() == Font.class) {
+	                    field.set(this, parseFont(value));
+	                } else if (field.getType() == BorderParams.class) {
+	                    field.set(this, parseBorderParams(value));
+	                } else if (field.getType() == Integer.class || field.getType() == int.class) {
+	                    field.set(this, Integer.parseInt(value));
+	                } else if (field.getType() == Rectangle2D.class) {
+	                    field.set(this, parseRectangle(value));
+	                } else if (field.getType() == String.class) {
+	                    field.set(this, value);
+	                }
+	            }
+	        }
+	    } catch (Exception e) {
+	        throw new RuntimeException("Probleme beim Lesen der Skins", e);
+	    }
 	}
 
 	protected Color parseColor(String value) {

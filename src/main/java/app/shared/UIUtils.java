@@ -121,7 +121,7 @@ public class UIUtils {
 
 	    // Badge-Icon laden und unten rechts draufmalen
 	    String badgeFilename = "plus_" + targetWidth + ".png";
-	    File badgeFile = new File(Config.get("iconFolder") + badgeFilename);
+	    File badgeFile = Config.getPath("iconFolder").resolve(badgeFilename).toFile();
 	    Image badge = new Image(badgeFile.toURI().toString());
 	    gc.drawImage(badge, w - badge.getWidth() - 4, h - badge.getHeight() - 4);
 

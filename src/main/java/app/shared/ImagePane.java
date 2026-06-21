@@ -83,29 +83,28 @@ public class ImagePane extends StackPane {
         getChildren().addAll(backgroundRect, imageRect, borderRect);
     }
 
-    public void setImage(String imagePath) {
-        if (imagePath == null || imagePath.equals(Config.get("learnImageFolder"))) {
-            imageRect.setStyle(""); 
+    public void setImage(String imageName) {
+        if (imageName == null || imageName.isEmpty()) {
+            imageRect.setStyle("");
             imageRect.setFill(Color.TRANSPARENT);
             return;
         }
-        
 
-        File imageFile = new File(imagePath);
+        File imageFile = Config.getPath("learnImageFolder").resolve(imageName).toFile();
         if (!imageFile.exists()) {
-            throw new RuntimeException("Konnte das Bild nicht finden: " + imagePath);
+            throw new RuntimeException("Konnte das Bild nicht finden: " + imageFile);
         }
 
         try {
             String url = imageFile.toURI().toURL().toExternalForm(); // sauberer als toString()
             Image img = new Image(url, false); // backgroundLoading=false => lädt synchron
             if (img.isError()) {
-                throw new RuntimeException("Fehler beim Laden des Bildes: " + imagePath, img.getException());
+                throw new RuntimeException("Fehler beim Laden des Bildes: " + imageName, img.getException());
             }
             imageRect.setStyle(""); // CSS weg, falls vorher gesetzt
             imageRect.setFill(new ImagePattern(img));
         } catch (MalformedURLException e) {
-            throw new RuntimeException("Ungültige Bild-URL: " + imagePath, e);
+            throw new RuntimeException("Ungültige Bild-URL: " + imageName, e);
         }
     }
     

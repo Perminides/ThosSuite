@@ -817,7 +817,7 @@ public class SeriesImporter {
     }
 
     private static void saveImageToFileSystem(String filename, byte[] image) {
-        File file = new File(Config.get("imageFolder") + "tmdb" + File.separator + filename);
+    	File file = Config.getPath("imageFolder").resolve("tmdb").resolve(filename).toFile();
         if (file.exists())
             return; // Bei Seasons kann dasselbe Bild schon durch die Show existieren
         try {

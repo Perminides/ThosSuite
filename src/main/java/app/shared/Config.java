@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -22,6 +23,9 @@ public class Config {
     private Config() {}
 
     public static void init(String folderPath) {
+        if (!folderPath.endsWith("/") && !folderPath.endsWith("\\")) {
+            folderPath = folderPath + "/";
+        }
         ROOT = folderPath;
 
         // 1. config.txt laden
@@ -79,15 +83,39 @@ public class Config {
         return value != null ? value : defaultValue;
     }
     
+    public static Path getPath(String key) {
+        String value = get(key);
+        if (value == null) {
+            throw new IllegalStateException("Path angefragt, aber Config-Key fehlt: " + key);
+        }
+        return Path.of(value);
+    }
+
     public static int getInt(String key) {
         String value = get(key);
-        return value != null ? Integer.parseInt(value) : null;
+        if (value == null) {
+            throw new IllegalStateException("Int angefragt, aber Config-Key fehlt: " + key);
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Int angefragt, aber der Wert ist kein Int: " + key + " = " + value, e);
+        }
     }
 
     public static int getInt(String key, int defaultValue) {
         String value = get(key);
-        return value != null ? Integer.parseInt(value) : defaultValue;
+        if (value != null) {
+            try {
+                return Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                throw new IllegalStateException("Int angefragt, aber der Wert ist kein Int: " + key + " = " + value, e);
+            }
+        }
+        return defaultValue;
     }
+    
+    
 
     public static void set(String key, String value) {
         if (computedProps.containsKey(key)) {
