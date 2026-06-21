@@ -1,4 +1,4 @@
-package app.controller;
+package app.controller.model;
 
 /**
  * Repräsentiert einen klickbaren Eintrag im "Spielen"-Menü.
