@@ -1,4 +1,4 @@
-package app.controller;
+package app.controller.model;
 
 /**
  * Marker-Interface für Elemente des "Spielen"-Menüs.
