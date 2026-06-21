@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
  * Persistenz genau das zu liefern, was sie zum Schreiben braucht - nicht mehr.
  *
  * Bewusst hier (und nicht in model): Die Klasse ist kein Domaenenbegriff, sondern der Kontrakt
- * von {@code saveLearned}. Wer die Datei sieht, weiss sofort, wofuer sie da ist.
+ * von code saveLearned. Wer die Datei sieht, weiss sofort, wofür sie da ist.
  *
- * Befuellt wird sie vom AnkiSessionProgress - der einzigen Stelle, die Karte und CardProgress hat.
+ * Befüllt wird sie vom AnkiSessionProgress - der einzigen Stelle, die Karte und CardProgress hat.
  * first_played/last_played stehen bewusst NICHT drin: das "heute" setzt die Persistenz selbst.
  */
 public record PlayedCardData(
