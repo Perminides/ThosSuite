@@ -22,6 +22,20 @@ import javafx.scene.layout.Pane;
 
 // !Später: Das RegionSessionBild croppen und dann den korrekten Rand setzen, wenn isComplete==true. Wobei isComplete meint, dasss das ganze Rechteck ausgefüllt ist.
 // !Sofort: Es wäre schon nice bei Finde uf der Karte (schwer) zu wissen, wie viel noch kommen. Also doch einen Fortschritt bitte.
+/**
+ * Schale der Regions-Lernsession und Ansprechpartner für den Controller (Screen). Hält den
+ * SessionProgress (je nach Modus Click/Elimination/Write) und den Presenter; wertet über end(...)
+ * das Sessionergebnis aus (Alert, LearnStat, Speichern).
+ *
+ * !Architektur (learn-Innensanierung, eigene Session — nicht nebenbei anfassen):
+ *  1) active-Flag + die !active-Wächter in fast jeder Methode: Die Exception ist nie geflogen.
+ *     Zu prüfen, ob ein Aufruf auf einer toten Session strukturell überhaupt möglich ist. Wenn
+ *     nein, fallen Flag UND alle Wächter weg (gilt analog für die AnkiSession-Seite).
+ *  2) Auswertungs-Asymmetrie zu Anki: Hier STEUERT der Progress die Auswertung, indem er
+ *     end(correct, wrongId, text, allowResume) ruft; bei Anki wertet die Session selbst aus und
+ *     der Progress liefert nur Daten. Zusammen mit dem schon markierten FreePlay-Umbau von end(...)
+ *     zu klären — ist die Verantwortungsverteilung gewollt oder soll sie angeglichen werden?
+ */
 public class RegionSession implements Screen {
 	
 	private final SessionPresenter presenter;

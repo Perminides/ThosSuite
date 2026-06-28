@@ -33,7 +33,7 @@ public class AnkiDeckSession implements Screen {
 		Log.info(this, "=== SESSION CONSTRUCTOR === Session@" + System.identityHashCode(this));
 		this.onSessionEnded = onSessionEnded;
 		this.isFreePlay = isFreePlay;
-		this.progress = new SessionProgress(cards, service, type, sortOrder, this);
+		this.progress = new SessionProgress(cards, service, type, sortOrder, this::endGracefully);
 		new SessionPresenter(type, progress); // registriert sich selbst am Progress via setPresenter(this)
 	}
 
