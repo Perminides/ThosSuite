@@ -42,14 +42,6 @@
 			<version>${javafx.version}</version>
 			<classifier>win</classifier>
 		</dependency>
-		<!-- Ich weiß gerade nicht wofür es gebraucht wird...
-		<dependency>
-			<groupId>org.openjfx</groupId>
-			<artifactId>javafx-fxml</artifactId>
-			<version>${javafx.version}</version>
-			<classifier>win</classifier>
-		</dependency>
-		-->
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-graphics</artifactId>
@@ -195,7 +187,6 @@
 
 					<addModules>
 						<addModule>javafx.controls</addModule>
-						<!--<addModule>javafx.fxml</addModule>-->
 						<addModule>javafx.graphics</addModule>
 						<addModule>java.sql</addModule>
 						<addModule>java.net.http</addModule>

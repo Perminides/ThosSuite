@@ -4,6 +4,27 @@ import app.shared.model.CardSortOrder;
 import app.shared.model.SessionSwitchStrategy;
 import javafx.scene.layout.Pane;
 
+/**
+ * Vertrag für eine Bildschirmfläche, die das Hauptfenster ausfüllt – die neutrale
+ * Abstraktion, mit der der Controller jeden aktiven Inhalt gleich behandelt
+ * (Lern-Sessions ebenso wie AlcoholScreen, DashboardScreen, MovieViewerScreen …).
+ * <p>
+ * Alle Methoden sind leere Defaults: Ein Screen implementiert nur, was ihn betrifft.
+ * Reagiert ein Screen auf eine Methode nicht (eine AlcoholScreen ignoriert
+ * {@link #sort(CardSortOrder)}), ist das <b>kein Fehler</b>, sondern beabsichtigte
+ * Nicht-Zuständigkeit – kein FailFast.
+ * <p>
+ * <b>Warum nicht in Sub-Interfaces aufgeteilt:</b> Methoden wie
+ * {@link #sort(CardSortOrder)} und {@link #reactOnPauseClick()} sehen lern- bzw.
+ * anki-spezifisch aus und könnten theoretisch in eine {@code LearnScreen}/
+ * {@code AnkiScreen}-Hierarchie wandern. Das scheitert aber daran, dass der
+ * Controller sie über eine {@code Screen}-Referenz aufruft
+ * ({@code currentScreen.sort(...)}, {@code currentScreen.reactOnPauseClick()}) –
+ * der konkrete Typ ist dort bewusst vergessen. Solange der Aufruf über {@code Screen}
+ * läuft, müssen die Methoden hier liegen. Eine Trennung würde erst möglich, wenn der
+ * Controller vor dem Aufruf die Screen-Art prüfte; dieser Umbau lohnt den Gewinn
+ * derzeit nicht (siehe {@code !Später} an {@code Controller.cardSortOrderSelected}).
+ */
 public interface Screen {
 
 	/**

@@ -35,7 +35,7 @@ import javafx.scene.layout.Pane;
  */
 class SessionProgress {
 
-	private final AnkiDeckSession session;
+	private final Runnable onLastCardDone;
 	private final AnkiDeckService service;
 	private final Deck type;
 	private final CardSortOrder sortOrder;
@@ -46,13 +46,13 @@ class SessionProgress {
 	private int currentIndex = -1;
 	private boolean active = true;
 
-	public SessionProgress(List<Card> cards, AnkiDeckService service, Deck type, CardSortOrder sortOrder, AnkiDeckSession session) {
+	public SessionProgress(List<Card> cards, AnkiDeckService service, Deck type, CardSortOrder sortOrder, Runnable onLastCardDone) {
 		Log.info(this, "=== PROGRESS CONSTRUCTOR === Progress@" + System.identityHashCode(this));
 		this.cards = cards;
 		this.service = service;
 		this.type = type;
 		this.sortOrder = sortOrder;
-		this.session = session;
+		this.onLastCardDone = onLastCardDone;
 	}
 
 	/**
@@ -114,7 +114,7 @@ class SessionProgress {
 			presenter.newCardIncoming(cards.get(currentIndex).getLearnStat());
 			getCurrentProgress().start();
 		} else {
-			session.endGracefully();
+			onLastCardDone.run();
 		}
 	}
 

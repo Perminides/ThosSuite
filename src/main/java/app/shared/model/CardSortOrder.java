@@ -9,7 +9,7 @@ package app.shared.model;
  * {@code Screen}-Vertrag, weil der Controller die Sortierung über eine
  * {@code Screen}-Referenz durchreicht (siehe {@code Controller.cardSortOrderSelected}).
  * Läge dieser Typ in {@code learn.anki}, müsste {@code shared} dorthin importieren –
- * verbotene Abhängigkeitsrichtung. Der Typ ist hier also bewusst eine Etage zu hoch
+ * verbotene Abhängigkeitsrichtung. Der Typ ist hier also bewusst eine Etage zu niedrig
  * angesiedelt; ein akzeptierter Schönheitsfehler, kein struktureller Defekt.
  */
 

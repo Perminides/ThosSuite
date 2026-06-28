@@ -7,16 +7,15 @@ import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
 import app.learn.model.LearnStat;
 import app.learn.model.SessionProgressCounter;
-import app.shared.Config;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
 /**
- * Calls the SessionPane and the AnkiSessionProgress (which forwards most calls to the current
- * CardProgress of course). Is called by the current CardProgress directly.
+ * Vermittelt zwischen SessionPane (GUI) und SessionProgress (Ablauf): reicht User-Eingaben der
+ * Pane weiter an den Progress und setzt umgekehrt die Anzeige-Aufrufe des Progress in der Pane um.
  *
- * Also holds a final sessionPaneContainer, which is shown in the MainWindow. In case of a skin change,
- * the sessionPane inside this container is recreated. The MainWindow won't realize this :-)
+ * Hält einen final sessionPaneContainer, der im MainWindow gezeigt wird. Bei einem Skin-Wechsel wird
+ * die sessionPane darin neu aufgebaut; das MainWindow merkt davon nichts :-)
  */
 public class SessionPresenter {
 
