@@ -103,7 +103,7 @@
 				<version>3.4.1</version>
 				<configuration>
 					<excludes>
-						<exclude>app/scripts/**</exclude>
+						<exclude>scripts/**</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
