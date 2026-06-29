@@ -34,7 +34,7 @@ public class WeekdayDialog {
 
     public void showForDaily() {
         if (repository.playedToday() || LocalDateTime.now().getHour() < 6) {
-            Log.debug(this, "WeekdayDialog gerade nicht dran. Wir überspringen das mal (bereits gespielt oder es ist noch nachts).");
+            Log.info(this, "WeekdayDialog gerade nicht dran. Wir überspringen das mal (bereits gespielt oder es ist noch nachts).");
             return;
         }
         show(true);

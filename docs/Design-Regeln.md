@@ -7,9 +7,7 @@ in Pakete und Klassen geschnitten, benannt und verbunden ist, und *warum*. Vorsc
 Hier schlägt man nach, **bevor** man etwas Neues baut, damit es in die Struktur passt. Was es
 konkret gibt (der Klassenbaum, der Ist-Zustand), steht im Architektur-Dokument.
 
----
-
-## Grundlage: Maßstab und feste Regeln
+## 1. Grundlage: Maßstab und feste Regeln
 
 **Maßstab — Auffindbarkeit.**
 
@@ -34,7 +32,6 @@ Keine Tests! Keine Unit-Tests, keine Test-Infrastruktur,
 Testbarkeit ist kein Designziel. Einziger Nutzer und Entwickler ist Thorsten; ein Fehler
 fällt im täglichen Gebrauch sofort auf und wird direkt behoben.
 
-
 **Vier feste Regeln:**
 
 1. **Keine Zirkel zwischen Paketen, auch keine transitiven.** Gilt ausnahmslos für alle Pakete.
@@ -50,11 +47,9 @@ fällt im täglichen Gebrauch sofort auf und wird direkt behoben.
 <!-- TODO: Regel 4 braucht noch ein gutes Beispiel aus der Domäne (Schnitt/Benennung/Abhängigkeit),
      keins aus dem Prozess. Bleibt offen, bis eine echte Stutzer-Stelle auftaucht. -->
 
----
+## 2. Die Pakete
 
-# Teil A — Wo wohnen Pakete?
-
-## Die Sorten von Paketen
+### Die Sorten von Paketen
 
 Vier Sorten. Übersicht — die genauen Regeln je Sorte folgen in den nächsten Abschnitten.
 
@@ -69,9 +64,7 @@ Vier Sorten. Übersicht — die genauen Regeln je Sorte folgen in den nächsten 
 - **`scripts`** — einmalige Standalone-Klassen (Migrationen, Fixes, Prototypen, manuelle Tests),
   komplett vom Produktivcode abtrennbar. Wird nicht mitgebaut und landet nicht im Build-Ergebnis.
 
----
-
-## Richtungen
+### Richtungen
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -96,9 +89,7 @@ Vier Sorten. Übersicht — die genauen Regeln je Sorte folgen in den nächsten 
 Drei Ebenen. Gleiche Ebene = nebeneinander, kein Zugriff aufeinander (Regel 3). Tiefere Ebene =
 Zugriff nach unten erlaubt (Regel 2). `shared` kennt niemanden über sich.
 
----
-
-## Innenschnitt eines Feature-Pakets
+### Innenschnitt eines Feature-Pakets
 
 Die meisten Features sind innen nach diesem Muster aufgebaut — ein Standard, keine Pflicht:
 
@@ -120,9 +111,7 @@ feature
 `repository` nutzt `model`. Ein `model` zeigt nie zurück — nie in eine Wurzel, nie in ein
 `repository`. Eine Datenklasse weiß nichts davon, wer sie lädt oder benutzt.
 
----
-
-## Wann ein Feature sich aufteilt
+### Wann ein Feature sich aufteilt
 
 Ein Feature darf sich in Unterpakete teilen, wenn es in mehreren **Zweigen** vorkommt, die je
 ihre eigene Mechanik haben. Was die Zweige gemeinsam haben, bleibt im Kern (Wurzel, `repository`,
@@ -139,11 +128,9 @@ unten in einen Zweig, und die Zweige kennen einander nicht — so bleibt es zirk
 Das ist die einzige Stelle, an der die Abwärtsrichtung im Inneren bewusst nach oben aufgemacht
 wird.
 
----
+## 3. Die Klassen
 
-# Teil B — Einzelne Klassen: Platzierung, Sichtbarkeit, Benennung, Verträge
-
-## So lokal wie möglich
+### So lokal wie möglich
 
 Eine Klasse wohnt so weit oben wie möglich — bei dem Feature, das sie nutzt. Nach unten ins
 Fundament (`shared`) fällt sie nur, wenn sie sich oben nicht halten lässt. Zwei Gründe führen
@@ -167,9 +154,7 @@ es dort findet, statt es neu zu bauen. Maßstab ist nicht „könnte man allgeme
 bei fast allem), sondern „ist es von Natur aus ein Allgemeinwerkzeug". Im Zweifel: Würde ein
 anderes Feature das plausibel auch wollen?
 
----
-
-## Versteckt oder freistehend
+### Versteckt oder freistehend
 
 Diese Frage betrifft fast nur Datenklassen. Sie entscheidet nicht *wo* eine Klasse wohnt
 (das tut die Platzierung oben), sondern *ob* sie überhaupt als eigene, sichtbare Klasse
@@ -180,9 +165,7 @@ existiert oder im Erzeuger versteckt bleibt. Maßstab ist die Sichtbarkeit:
 - Muss er von außerhalb seiner Klasse erreichbar sein, wird er freistehend und kommt ins
   `model`-Paket. Erst dann stellt sich die Platzierungsfrage.
 
----
-
-## Klassenbenennung
+### Klassenbenennung
 
 Klassen werden **ohne** Domänenpräfix benannt. Der Präfix (der Name des Feature-Pakets, bei
 Zweigen der des Zweigs) kommt erst dazu, wenn die Klasse zum ersten Mal von **außerhalb** ihres
@@ -198,9 +181,7 @@ Feature-Pakets importiert wird — fast immer aus der Orchestrierung.
 **Am Namen ablesbar:** kurzer Name = nur intern benutzt; langer Name mit Präfix = von außen
 importiert. Man sieht es der Klasse an, ohne in den Code zu schauen.
 
----
-
-## Bildschirm-Kontrakt `Screen`
+### Bildschirm-Kontrakt `Screen`
 
 - Der Bildschirm-Kontrakt heißt `Screen` und liegt in `shared` (warum dort: siehe „So lokal wie
   möglich").
@@ -212,9 +193,7 @@ importiert. Man sieht es der Klasse an, ohne in den Code zu schauen.
   nicht auf alles reagieren — ein `AlcStatisticsScreen` tut bei `sort()` nichts, und das ist kein
   Fehler.
 
----
-
-## Skin-Vertrag (vorläufig — wird beim Skin-Refactoring neu gefasst)
+### `Skin`-Vertrag (vorläufig — wird beim Skin-Refactoring neu gefasst)
 
 > Dieser Abschnitt ist **nicht in Stein gemeißelt.** Das Skin-System wird ohnehin überarbeitet
 > (die `Skin`-Gottklasse, siehe Anhang); danach gehört dieser Vertrag neu geschrieben.
@@ -235,16 +214,16 @@ Der Skin (`shared.skin`) ist **dumm**: Er kennt keine Domänenklassen.
 - **Einbahn.** Die generischen Bausteine in `shared` rufen den Skin nicht zurück; `shared.skin`
   hängt nur an `shared`.
 
----
+## 4. Aufbau einer Lern-Session
 
-# Aufbau einer Lern-Session
+[!WARNING] Gehört ins Architekturdokument!
 
 Eine Lern-Session ist aus vier Klassen gebaut. Am Beispiel Anki, nach dem Callback-Fix:
 
 ```
-									AnkiDeckSession
-										│
-										▼
+												AnkiDeckSession
+														│
+														▼
    SessionPane  ◄────►  SessionPresenter  ◄────►  SessionProgress
       (GUI)               (Scharnier)            (Karten-Ablauf)
 ```
@@ -260,9 +239,9 @@ ab** — unter anderem sitzt dort die Auswertung an anderer Stelle. Ob region di
 soll, ist offen; die Befunde stehen als `!Diagnose`-Block im Javadoc von `RegionSession`. Eigene
 Session, kein Nebenbei-Fix.
 
----
+## 5. Anhang — Bewusst aufgeschoben
 
-# Anhang — Bewusst aufgeschoben
+[!WARNING] Gehört ins Architekturdokument oder sonstewohin, aber nicht hier
 
 Diese Punkte sind bekannt und absichtlich zurückgestellt — sie verlangen Logik-Umbau und sind
 **kein** Anlass für beiläufige Eingriffe:
