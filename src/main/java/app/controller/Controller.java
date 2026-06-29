@@ -36,7 +36,7 @@ import app.learn.region.model.SessionSpec;
 import app.mattress.TurnDialog;
 import app.messaging.signal.SignalIncrementalImport;
 import app.messaging.whatsapp.WhatsAppIncrementalImport;
-import app.movie.Cleanup;
+import app.movie.MovieCleanup;
 import app.movie.Importer;
 import app.movie.MovieViewerScreen;
 import app.movie.SeriesImporter;
@@ -155,7 +155,7 @@ public class Controller{
 	    
 	    new TurnDialog().showIfDue();
 	    
-	    new Cleanup().run();
+	    new MovieCleanup().run();
 	    
 	    try {
 	    	new SignalIncrementalImport().run();

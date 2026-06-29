@@ -31,9 +31,9 @@ import javafx.scene.layout.VBox;
  *
  * Kein Netzwerkzugriff. Kein getNewTmdbConnection — jede Operation ist atomar für sich.
  */
-public class Cleanup {
+public class MovieCleanup {
 
-    private static final Logger log = Logger.getLogger(Cleanup.class.getName());
+    private static final Logger log = Logger.getLogger(MovieCleanup.class.getName());
 
     private final CrewFilterRepository crewFilterRepo;
     private final PendingRepository pendingRepo;
@@ -41,7 +41,7 @@ public class Cleanup {
     private final TvShowRepository tvShowRepo;
     private final EpisodeRepository episodeRepo;
 
-    public Cleanup() {
+    public MovieCleanup() {
         this.crewFilterRepo = new CrewFilterRepository();
         this.pendingRepo = new PendingRepository();
         this.movieRepo = new MovieRepository();
