@@ -45,13 +45,3 @@ Man liest nur den Block, den man gerade braucht.
 
 JavaFX 25 · Java 25 LTS · SQLite · Jackson · `java.util.logging`. Build mit Maven, Deployment
 über jpackage für Windows.
-
-## Leitgedanken
-
-Ein paar Grundhaltungen, die sich durch alles ziehen — ausführlich in den Design-Regeln:
-
-- **Auffindbarkeit vor Eleganz.** Wichtigstes Ziel ist, nach Monaten den Ort einer Sache
-  *vorhersagen* zu können, ohne zu suchen.
-- **FailFast.** Unerwartetes crasht sofort mit Stacktrace, statt still weiterzulaufen.
-- **Keine Tests.** Einziger Nutzer und Entwickler ist Thorsten; ein Fehler fällt im täglichen
-  Gebrauch sofort auf.
