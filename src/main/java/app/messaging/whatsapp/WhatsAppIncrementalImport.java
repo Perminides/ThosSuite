@@ -112,6 +112,7 @@ public class WhatsAppIncrementalImport {
     public WhatsAppIncrementalImport() {
     	this.whatsAppDir      = Config.get("whatsapp.folder.path");
         this.crypt15Path      = Path.of(Config.get("whatsapp.folder.path"), "Databases", CRYPT15_FILENAME);
+        // !Sofort: Wir haben ein attachments.folder genau hierfür, welches dann von signal, whatsapp und diary genutzt werden kann.
         this.attachmentDir    = Path.of(Config.get("whatsapp.attachmentDir"));
         this.hexKey           = Config.get("whatsapp.key");
         this.dayStartHour     = Config.getInt("whatsapp.daystartHour");

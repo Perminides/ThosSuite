@@ -366,6 +366,7 @@ public class SignalIncrementalImport {
             String baseName = sanitizeFileName(!isBlank(att.fileName()) ? stripExtension(att.fileName()) : "attachment");
             int    seq      = attachSeqPerMsg.merge(signalMsgId, 1, Integer::sum);
             String outName  = baseName + "_" + signalMsgId + "_" + seq + "." + ext;
+         // !Sofort: Wir haben ein attachments.folder genau hierfür, welches dann von signal, whatsapp und diary genutzt werden kann.
             Path   attachDir = Path.of(Config.getString("signal.attachmentDir"));
             Path   outPath   = attachDir.resolve(outName);
 
