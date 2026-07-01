@@ -38,7 +38,7 @@ benennen, am Ende bestanden oder nicht.
 ---
 
 Um diesen Lernkern ist über die Jahre eine kleine Suite gewachsen: Fitness-Tracking, ein
-Tagebuch, ein Nachrichten-Archiv, Filmbewertungen und ein weitere kleinere Helfer.
+Tagebuch, ein Nachrichten-Archiv, Filmbewertungen und weitere kleinere Module.
 
 ## Dokumentation
 
