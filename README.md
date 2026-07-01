@@ -1,4 +1,4 @@
-# ThosSuite
+# Thos Suite
 
 Ein persönliches Lernprogramm von Perminides für Perminides basierend auf
 [Spaced Repetition](https://de.wikipedia.org/wiki/Spaced_Repetition). Zumeist basiert das Lernen auf
