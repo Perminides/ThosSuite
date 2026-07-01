@@ -322,3 +322,36 @@ SessionPresenter / CardProgress und die Richtung der Progress→Session/Presente
 8 ObjectMapper-Vereinheitlichung: fitbit-Importer-Mapper vs. eigener, anders konfigurierter TmdbApiClient-Mapper — nicht blind zusammenwerfen. Offene Logik-Frage.
 
 > Fundament & Regeln: siehe `ThosSuite_Architektur_allgemein.md` und `ThosSuite_Design_Regeln.md`.
+
+Hier die knappe Liste — was wir aus dem Architekturdokument rausgenommen haben und was im Feature-Details-Dokument auftauchen sollte:
+Lern-Kern (aus „Was wird wie gelernt?" und dem Überblick):
+
+Die vier erwarteten Aktionen: MC-Antwort klicken, Antwort tippen, richtigen Shape klicken, unsichtbaren Shape auf großer Karte treffen
+
+Die drei Fragetypen: Bild, Text, markierter Shape (gilt für ImageMap und ShapeMap)
+
+Anki-Deck-Details: Deutschland (ShapeMap, gemischte Kartentypen), Multiple Choice (~6000 reine MC), Welt (ImageMap, verschiebbar, Overlay-Shapes, Verfehlen = falsch + Reset), Hannover (eigenes Anki-Deck)
+
+Region-Deck-Mechanik: ShapeMapPane-Basis, TextInputField vs. Aufforderung, nur Regionen + Hauptorte
+
+Region-Modi entschlüsseln: Click, Elimination, Write, Easy/Hard, Resume bei Click, ShapeMapState für Skin-Wechsel (die Stichwortzeile, die „kein Mensch versteht" — muss erklärt werden)
+
+Freies Spiel: Detail-Mechanik (im Architekturdok nur als Konzept)
+
+Film:
+
+MovieViewerScreen typ-agnostisch (Filme/Serien/Episoden als einheitliche Kacheln)
+
+Tagebuch:
+
+DiaryDialog (Start-Drang auf neuen Eintrag, wenn letzter zu lange her)
+
+DiaryViewerScreen (tag-basierter Query-Parser mit AND/OR/Klammern, Bild-Hover-Vorschau)
+
+Aus „Implementierter Funktionsumfang" (Section ganz gestrichen):
+
+Fitbit: Fetch, Review, Wochenpunkt-Diagramm, Dashboard-Metriken
+
+Alkohol: Startup-Abfrage, Kontostand, Diagramm
+
+Diese gehören als Feature-Details geprüft, falls noch nicht dort
