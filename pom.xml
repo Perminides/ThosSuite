@@ -184,7 +184,7 @@
 					<mainClass>app.ThosSuiteApp</mainClass>
 
 					<type>APP_IMAGE</type>
-					<icon>${project.basedir}/mondrian.ico</icon>
+					<icon>${project.basedir}/src/main/packaging/mondrian.ico</icon>
 
 					<addModules>
 						<addModule>javafx.controls</addModule>
