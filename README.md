@@ -3,7 +3,7 @@
 Ein persönliches Lernprogramm von Perminides für Perminides basierend auf
 [Spaced Repetition](https://de.wikipedia.org/wiki/Spaced_Repetition). Zumeist basiert das Lernen
 auf einer Landkarte: Man klickt an, wo etwas liegt, tippt Namen ein, beantwortet weiterführende
-Fragen oder kreuzt bei Multiple Choice die richtige Antwort an.
+Fragen oder wählt bei Multiple Choice die richtige Antwort aus.
 
 ## Lernbereiche
 
