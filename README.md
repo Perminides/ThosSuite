@@ -5,6 +5,8 @@ für genau einen Nutzer. ThosSuite bündelt mehrere Lebensbereiche in einer Ober
 Geografie-Lernen (Anki- und Region-Decks), Fitness-Tracking, Tagebuch, ein Nachrichten-Archiv,
 Filmbewertungen und ein paar kleinere Helfer.
 
+![Screenshot der Suite](docs/img/ThosSuite1.png)
+
 ## Die drei Dokumente
 
 Die Doku ist in folgende Teile geschnitten:
