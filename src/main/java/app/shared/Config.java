@@ -128,6 +128,10 @@ public class Config {
         }
     }
 
+    /**
+     * !Sofort: save muss raus. Einträge, die sich im Laufe der Suite ändern können, gehören in die suite-db (key_values).
+     * Die config-Datei sollte nicht aus der Suite heraus geändert werden.
+     */
     public static void save() {
         if (!dirty) return;
 
