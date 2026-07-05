@@ -91,7 +91,7 @@ public class ApiClient {
      * @throws RuntimeException wenn Credentials nicht geladen werden können
      *         oder Token-Refresh fehlschlägt
      */
-    ApiClient() {
+    public ApiClient() {
         loadCredentials();
         refreshTokenIfNeeded();
     }
@@ -301,5 +301,5 @@ public class ApiClient {
      * @param data Das geparste Objekt
      * @param originalJson Der originale JSON-String von der API
      */
-    record ApiResponse<T>(T data, String originalJson) {}
+    public record ApiResponse<T>(T data, String originalJson) {}
 }

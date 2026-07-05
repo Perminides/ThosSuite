@@ -112,6 +112,23 @@ public class DataFetcher {
     }
     
     /**
+     * !tmp: Schlanke, öffentliche Projektion der geholten Rohwerte pro Tag für den
+     * Health-Vergleicher (Paket app.tmp). Liefert die ROHEN Schritte (vor der
+     * Dialog-Korrektur, da im PreTask aufgerufen) und die Aktivitätsliste des Tages.
+     * Fällt mit dem Vergleicher im September weg.
+     */
+    public List<FitbitDayProjection> getProjection() {
+        List<FitbitDayProjection> projection = new ArrayList<>();
+        for (DayData day : fetchedDays) {
+            projection.add(new FitbitDayProjection(
+                day.date(),
+                day.daySummary().getSummary().getSteps(),
+                day.activityLogList().getActivities()));
+        }
+        return projection;
+    }
+    
+    /**
      * Container für die abgeholten Daten eines Tages.
      */
     record DayData(

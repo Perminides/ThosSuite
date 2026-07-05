@@ -36,8 +36,8 @@ import app.learn.region.model.SessionSpec;
 import app.mattress.TurnDialog;
 import app.messaging.signal.SignalIncrementalImport;
 import app.messaging.whatsapp.WhatsAppIncrementalImport;
-import app.movie.MovieCleanup;
 import app.movie.Importer;
+import app.movie.MovieCleanup;
 import app.movie.MovieViewerScreen;
 import app.movie.SeriesImporter;
 import app.shared.Config;
@@ -46,6 +46,7 @@ import app.shared.Screen;
 import app.shared.model.CardSortOrder;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
+import app.tmp.Comparison;
 import app.weekday.WeekdayDialog;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
@@ -70,6 +71,8 @@ public class Controller{
     private Screen currentScreen; //!Später natürlich nicht mehr nur MapDeckSessions...
     private CardSortOrder currentSortOrder = CardSortOrder.BY_WRONG_COUNT_DESC; //!Architektur Sofort: Momentan muss die Anfangssortorder an 2 Stellen gesetzt werden. Gruselig!
     private DataFetcher fitbitDataFetcher;
+    private Comparison comparison;        // !tmp
+    private Exception comparisonError;    // !tmp
 
     
     public enum SessionSwitchAction {
@@ -116,67 +119,87 @@ public class Controller{
     	setPlayMenuItemLabels();
     }
     
-	/**
-	 * Wird VOR initializeMainWindow aufgerufen (Splash noch sichtbar). Holt Daten im UI-Thread, blockiert aber die App - Splash bleibt sichtbar.
-	 */
-	public void runPreTasks() {
-		fitbitDataFetcher = new DataFetcher(); // Muss Instanzvariable sein, weil wir Daten für den PostTask übergeben. Das macht tmdb sauberer, wie ich finde...
-		if (Config.get("offline", "false").equals("false")) {
-			fitbitDataFetcher.fetch();
-			new Importer().run();
-		}
-	}
-
-	/**
-	 * Wird NACH splashStage.close() aufgerufen (Splash weg, MainWindow sichtbar).
-	 * Registriert das MainWindow im SkinService, zeigt Dialoge und speichert Daten.
-	 */
-	public void runPostTasks() {
-	    // Owner-Stage registrieren VOR allen Dialogen
-	    SkinService.setOwnerWindow(mainWindow.getStage());
-		// Fitbit-Fehler behandeln
-		if (fitbitDataFetcher.hasError()) {
-			SkinService.get().createAlert(mainWindow.getStage(), "Fitbit-Fehler",
-					"Fehler beim Laden der Fitbit-Daten:\n" + fitbitDataFetcher.getError().getMessage(), false, false).showAndWait();
-		} else {
-			// Fitbit-Dialoge zeigen
-			if (fitbitDataFetcher.hasData()) {
-				DataReviewService fitbitService = new DataReviewService(fitbitDataFetcher);
-				fitbitService.showDialogsAndSave(null);
-			}
-		}
-		
-	    StartupService alcoholService = new StartupService();
-	    alcoholService.checkAndPrompt();
-	    
-	    new DiaryDialog().showNew(mainWindow.getStage());
-	    
-	    new WeekdayDialog().showForDaily();
-	    
-	    new TurnDialog().showIfDue();
-	    
-	    new MovieCleanup().run();
-	    
-	    try {
-	    	new SignalIncrementalImport().run();
-	    } catch (Exception e) {
-	    	Log.error(this.getClass(), "", e);
-			Alert alert = SkinService.get().createAlert(mainWindow.getStage(), "Signal", "Beim Signalimport ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", false, false);
-			alert.showAndWait();
-		}
-	    
-	    try {
-	    	new WhatsAppIncrementalImport().run();
-	    } catch (Exception e) {
-	    	Log.error(this.getClass(), "", e);
-			Alert alert = SkinService.get().createAlert(mainWindow.getStage(), "WhatsApp", "Beim WhatsApp-Import ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", false, false);
-			alert.showAndWait();
-		}
-	    
-	    ImageScaler.processImages();
-
-		// Hier kommen später weitere Post-Tasks (tmdb etc.)
-	}
+    /**
+     * Wird VOR initializeMainWindow aufgerufen (Splash noch sichtbar). Holt Daten im UI-Thread, blockiert aber die App - Splash bleibt sichtbar.
+     */
+    public void runPreTasks() {
+        fitbitDataFetcher = new DataFetcher(); // Muss Instanzvariable sein, weil wir Daten für den PostTask übergeben. Das macht tmdb sauberer, wie ich finde...
+        if (Config.get("offline", "false").equals("false")) {
+            fitbitDataFetcher.fetch();
+            new Importer().run();
+     
+            // !tmp: Health-Vergleich mitlaufen lassen (Übergang bis Fitbit-Abschaltung).
+            //       Fehler NICHT über dem Splash melden, nur merken -> Anzeige im PostTask.
+            try {
+                comparison = new Comparison();
+                comparison.fetch(fitbitDataFetcher.getProjection());
+            } catch (Exception e) {
+                comparisonError = e;
+                Log.error(this.getClass(), "Health-Vergleich fehlgeschlagen", e);
+            }
+        }
+    }
+     
+     
+    // --- runPostTasks (erweitert; nur der Fitbit-Block plus der neue !tmp-Block gezeigt) ---
+     
+    /**
+     * Wird NACH splashStage.close() aufgerufen (Splash weg, MainWindow sichtbar).
+     * Registriert das MainWindow im SkinService, zeigt Dialoge und speichert Daten.
+     */
+    public void runPostTasks() {
+        // Owner-Stage registrieren VOR allen Dialogen
+        SkinService.setOwnerWindow(mainWindow.getStage());
+        // Fitbit-Fehler behandeln
+        if (fitbitDataFetcher.hasError()) {
+            SkinService.get().createAlert(mainWindow.getStage(), "Fitbit-Fehler",
+                    "Fehler beim Laden der Fitbit-Daten:\n" + fitbitDataFetcher.getError().getMessage(), false, false).showAndWait();
+        } else {
+            // Fitbit-Dialoge zeigen
+            if (fitbitDataFetcher.hasData()) {
+                DataReviewService fitbitService = new DataReviewService(fitbitDataFetcher);
+                fitbitService.showDialogsAndSave(null);
+            }
+        }
+     
+        // !tmp: Health-Vergleich direkt nach dem Fitbit-Block anzeigen (jetzt steht das MainWindow).
+        //       Bei Fehler kein Popup (comparison wäre nur teilbefüllt), nur der Hinweis.
+        if (comparisonError != null) {
+            SkinService.get().createAlert(mainWindow.getStage(), "Health-Vergleich",
+                    "Der Health-Vergleich ist heute fehlgeschlagen:\n" + comparisonError.getMessage(), false, false).showAndWait();
+        } else if (comparison != null) {
+            comparison.showPopup();
+        }
+     
+        StartupService alcoholService = new StartupService();
+        alcoholService.checkAndPrompt();
+     
+        new DiaryDialog().showNew(mainWindow.getStage());
+     
+        new WeekdayDialog().showForDaily();
+     
+        new TurnDialog().showIfDue();
+     
+        new MovieCleanup().run();
+     
+        try {
+            new SignalIncrementalImport().run();
+        } catch (Exception e) {
+            Log.error(this.getClass(), "", e);
+            Alert alert = SkinService.get().createAlert(mainWindow.getStage(), "Signal", "Beim Signalimport ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", false, false);
+            alert.showAndWait();
+        }
+     
+        try {
+            new WhatsAppIncrementalImport().run();
+        } catch (Exception e) {
+            Log.error(this.getClass(), "", e);
+            Alert alert = SkinService.get().createAlert(mainWindow.getStage(), "WhatsApp", "Beim WhatsApp-Import ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", false, false);
+            alert.showAndWait();
+        }
+     
+        ImageScaler.processImages();
+    }
     
     public void sessionEnded() {
     	//!Erweiterung Endbedingungen integrieren...
