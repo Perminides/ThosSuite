@@ -1,6 +1,6 @@
 # ThosSuite — Design & Regeln (Paketstruktur, Abhängigkeiten, Benennung)
 
-**Stand:** 28.06.2026 · v1.3
+**Stand:** 06.07.2026 · v1.3
 
 **Charakter dieses Dokuments:** das *Regelwerk* — die Prinzipien, nach denen die Suite
 in Pakete und Klassen geschnitten, benannt und verbunden ist, und *warum*. Vorschreibend:
@@ -154,6 +154,28 @@ es dort findet, statt es neu zu bauen. Maßstab ist nicht „könnte man allgeme
 bei fast allem), sondern „ist es von Natur aus ein Allgemeinwerkzeug". Im Zweifel: Würde ein
 anderes Feature das plausibel auch wollen?
 
+### Pfad-Wissen: Struktur gehört der Suite, Dateien dem Feature
+
+Die Ordner-Struktur der Suite ist Suite-Wissen und liegt in `Config` — als computed Pfade,
+feature-benannte Ordner eingeschlossen (`fitbitFolder`, `learnImageFolder`,
+`diaryAttachmentsFolder`). Dass ein Ordner nur einem Feature dient, macht ihn nicht zu
+Feature-Wissen; die *Hierarchie* kennt die Suite. Zwei scharfe Kanten halten die Regel davon ab,
+mit der Zeit zum Dateinamen-Sammelbecken zu verrotten:
+
+1. **Ordner ja, Dateiname nie.** `Config` liefert Ordner-Knoten. Sobald ein Segment eine
+   konkrete Datei benennt (`.log`, `.json`, `skin_moonlight.properties`, ein Bild- oder
+   Icon-Name), hört `Config` auf — den letzten Schritt resolved die Aufrufstelle im Feature.
+   `Config` bleibt so die Landkarte, nicht das Verzeichnis der Dateien. (Die beiden DB-Dateien
+   sind keine Ausnahme: sie gehen per Parameter an `DB.init` und stehen nie auf der
+   `getPath`-Fläche.)
+2. **Nur eigener Boden.** „Struktur der Suite" ist der Baum, den die Suite besitzt — Hauptordner
+   plus `attachments.folder`. Ein Ordner unter fremdem Wurzelpfad ist die Struktur *dieser
+   fremden App*: `Config` hält nur den fremden Wurzelpfad (`signal.externalFolder`), die
+   Unterstruktur (`attachments.noindex`) bleibt im Feature.
+
+Folge für jede Aufrufstelle: den Ordner von `Config` holen, den laufzeit-variablen oder
+feature-lokalen Namen darunter selbst resolven.
+
 ### Versteckt oder freistehend
 
 Diese Frage betrifft fast nur Datenklassen. Sie entscheidet nicht *wo* eine Klasse wohnt
@@ -180,6 +202,14 @@ Feature-Pakets importiert wird — fast immer aus der Orchestrierung.
 
 **Am Namen ablesbar:** kurzer Name = nur intern benutzt; langer Name mit Präfix = von außen
 importiert. Man sieht es der Klasse an, ohne in den Code zu schauen.
+
+### Namensrolle: Source vs. Repository
+
+Am Suffix ist die Datenquelle ablesbar:
+
+- **`…Repository`** — Zugriff im Repository-Muster. Ohne Zusatz: die Suite-DB
+  (`TmdbMovieRepository`, `diary.Repository`).
+- **`…Source`** — die Daten stammen aus einer Datei (`ConfigFileSource`, `CsvDeckCardSource`).
 
 ### Bildschirm-Kontrakt `Screen`
 
