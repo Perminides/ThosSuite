@@ -89,8 +89,6 @@ public class SuiteExporter {
             Path zipPath = buildZip(files);
             Log.info(this.getClass(), "SuiteExporter: " + files.size() + " Dateien exportiert nach " + zipPath);
             SkinService.get().createAlert(null, "Suite Export", files.size() + " Dateien exportiert:\n" + zipPath.getFileName(), ButtonType.OK).showAndWait();
-            Log.debug(this.getClass(), "Ich werfe jetzt eine RuntimeException!");
-            throw new RuntimeException("Nur zum Debuggen!");
         } catch (Exception e) {
             throw new RuntimeException("Export fehlgeschlagen: " + e.getMessage());
         }
