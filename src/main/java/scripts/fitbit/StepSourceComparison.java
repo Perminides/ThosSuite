@@ -22,17 +22,23 @@ import app.shared.Config;
 
 /**
  * Wegwerf-Messinstrument. Zieht für einen hartcodierten Zeitraum die Tagesschritte
- * aus vier Quellen und gibt sie tab-getrennt in die Konsole, damit sie von Hand
+ * aus mehreren Quellen und gibt sie tab-getrennt in die Konsole, damit sie von Hand
  * gegen die Health-App verglichen werden können:
  *
  * <ul>
  *   <li><b>reconcile</b>   — Health-API, ungekürzter Strom, pro Tag selbst summiert</li>
  *   <li><b>dailyRollUp</b> — Health-API, mit Nicht-getragen-Kürzung, fertig aggregiert</li>
+ *   <li><b>list</b>        — Health-API, roher First-Party-Strom, pro Tag selbst summiert</li>
  *   <li><b>fitbitApi</b>   — Fitbit-Web-API, heutiger Summary-Wert (retroaktiv driftend)</li>
  *   <li><b>fitbitLog</b>   — totalSteps zum Import-Zeitpunkt aus fitbit_import.log</li>
  * </ul>
  *
  * <p>Die App-Zahl kommt NICHT aus der API — die trägt Thorsten manuell daneben.</p>
+ *
+ * <p><b>Zweck als periodischer Drei-Wege-Abgleich:</b> Solange reconcile, dailyRollUp und
+ * list an sauberen Tagen identisch sind, hat Google nichts verändert. Sobald sie
+ * auseinanderlaufen, hat Google an einer Methode gedreht — dann zeigt der Vergleich mit
+ * der App-Spalte, welche sich zur App-Zahl bewegt hat.</p>
  *
  * <p><b>Kein Produktivcode.</b> Bewusst roh und ohne Abstraktion gehalten, damit die
  * Summierung beim Draufschauen nachvollziehbar ist. Die Tageszuordnung läuft über
@@ -42,7 +48,7 @@ import app.shared.Config;
  *
  * <p>Voraussetzungen für den Lauf: {@code ApiClient}-Konstruktor und das Record
  * {@code ApiClient.ApiResponse} müssen auf {@code public} stehen; {@code Config} muss
- * initialisiert sein (siehe Platzhalter in {@link #main}).</p>
+ * initialisiert sein (siehe {@link #main}).</p>
  */
 public class StepSourceComparison {
 
@@ -51,8 +57,8 @@ public class StepSourceComparison {
     private static final String HEALTH_CLIENT_SECRET = "";
     private static final String HEALTH_REFRESH_TOKEN = "";
 
-    private static final LocalDate FROM = LocalDate.of(2026, 6, 1);
-    private static final LocalDate TO   = LocalDate.of(2026, 6, 30);
+    private static final LocalDate FROM = LocalDate.of(2026, 7, 1);
+    private static final LocalDate TO   = LocalDate.of(2026, 7, 4);
     // ==============================================================================
 
     private static final String TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
@@ -63,35 +69,34 @@ public class StepSourceComparison {
     private static final HttpClient   HTTP   = HttpClient.newHttpClient();
 
     public static void main(String[] args) throws Exception {
-    	
-    	Config.init("C:/Users/permi/Documents/Gedächtnis Lernen und so/ThosSuite");
 
-        // TODO: Config so initialisieren, wie die Suite es beim Start tut.
-        //       Der genaue Aufruf ist mir nicht bekannt und wird hier NICHT geraten.
-        //       Muss stehen, BEVOR ApiClient geladen wird (dessen static-Block liest Config).
-        //       Beispiel: Config.init(...);
+        Config.init("C:/Users/permi/Documents/Gedächtnis Lernen und so/ThosSuite");
 
         String accessToken = fetchHealthAccessToken();
 
-        System.out.println(LocalDateTime.now().toString() + " Wir starten mit Health reconcile (das dauert locker 70 Sekunden pro Monat)");
+        System.out.println(LocalDateTime.now() + " Health reconcile (dauert locker 70 Sekunden pro Monat)");
         Map<LocalDate, Long>    reconcile   = fetchReconcileByDay(accessToken);
-        System.out.println(LocalDateTime.now().toString() + " Nun Health dailyRollup");
+        System.out.println(LocalDateTime.now() + " Health dailyRollup");
         Map<LocalDate, Long>    dailyRollUp = fetchDailyRollUpByDay(accessToken);
-        System.out.println(LocalDateTime.now().toString() + " Nun das Fitbit Log");
+        System.out.println(LocalDateTime.now() + " Health list (ebenfalls paginiert, 3 Minuten im Juni aber da hatten wir auch 2 Quellen parallel zeitweise)");
+        Map<LocalDate, Long>    list        = fetchListByDay(accessToken);
+        System.out.println(LocalDateTime.now() + " Fitbit-Log");
         Map<LocalDate, Integer> fitbitLog   = readFitbitLog();
+        System.out.println(LocalDateTime.now() + " Health-Apis sind durch :)");
 
         ApiClient fitbit = new ApiClient(); // Konstruktor für den Lauf public
 
-        System.out.println("Datum\treconcile\tdailyRollUp\tfitbitApi\tfitbitLog\tapp(manuell)");
+        System.out.println("Datum\treconcile\tdailyRollUp\tlist\tfitbitApi\tfitbitLog\tapp(manuell)");
 
         for (LocalDate day = FROM; !day.isAfter(TO); day = day.plusDays(1)) {
             Long    rec    = reconcile.get(day);
             Long    roll   = dailyRollUp.get(day);
+            Long    lst    = list.get(day);
             Integer fitApi = fetchFitbitSummarySteps(fitbit, day);
             Integer log    = fitbitLog.get(day);
 
             System.out.println(
-                    day + "\t" + str(rec) + "\t" + str(roll) + "\t"
+                    day + "\t" + str(rec) + "\t" + str(roll) + "\t" + str(lst) + "\t"
                         + str(fitApi) + "\t" + str(log) + "\t");
         }
     }
@@ -117,8 +122,22 @@ public class StepSourceComparison {
         return MAPPER.readTree(response.body()).get("access_token").asText();
     }
 
-    // --- Health reconcile: ungekürzt, paginiert, pro ziviler Tag summiert ---
+    // --- Health reconcile: rekonziliiert, paginiert, pro ziviler Tag summiert ---
     private static Map<LocalDate, Long> fetchReconcileByDay(String accessToken) throws Exception {
+        return fetchAndSumSteps(accessToken, STEPS_BASE + ":reconcile?filter=");
+    }
+
+    // --- Health list: roher First-Party-Strom, paginiert, pro ziviler Tag summiert ---
+    private static Map<LocalDate, Long> fetchListByDay(String accessToken) throws Exception {
+        return fetchAndSumSteps(accessToken, STEPS_BASE + "?filter=");
+    }
+
+    /**
+     * Gemeinsame Mechanik für reconcile und list: grob übergreifendes UTC-Fenster,
+     * paginiert, Summierung der count-Werte pro zivilem Tag (civilStartTime.date).
+     * Einziger Unterschied ist die urlBasis (mit oder ohne ":reconcile"-Suffix).
+     */
+    private static Map<LocalDate, Long> fetchAndSumSteps(String accessToken, String urlBasis) throws Exception {
         // Grob übergreifendes UTC-Fenster (je ein Tag Rand deckt den Offset locker ab).
         String filter = "steps.interval.start_time >= \"" + FROM.minusDays(1) + "T00:00:00Z\""
                 + " AND steps.interval.start_time < \"" + TO.plusDays(1) + "T00:00:00Z\"";
@@ -127,7 +146,7 @@ public class StepSourceComparison {
         String pageToken = null;
 
         do {
-            String url = STEPS_BASE + ":reconcile?filter=" + enc(filter);
+            String url = urlBasis + enc(filter);
             if (pageToken != null) {
                 url += "&pageToken=" + enc(pageToken);
             }
@@ -141,7 +160,7 @@ public class StepSourceComparison {
 
             HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
-                throw new RuntimeException("reconcile fehlgeschlagen (HTTP "
+                throw new RuntimeException("Abruf fehlgeschlagen (HTTP "
                         + response.statusCode() + "): " + response.body());
             }
 
@@ -206,7 +225,7 @@ public class StepSourceComparison {
     private static Map<LocalDate, Integer> readFitbitLog() throws Exception {
         Path logFile = Config.getPath("logFolder").resolve("fitbit_import.log");
         Map<LocalDate, Integer> byDay = new HashMap<>();
- 
+
         List<String> lines = Files.readAllLines(logFile, StandardCharsets.UTF_8);
         for (String line : lines) {
             if (line.isBlank()) {
@@ -214,12 +233,12 @@ public class StepSourceComparison {
             }
             JsonNode node = MAPPER.readTree(line);
             JsonNode date = node.path("date"); // neues Format: [Jahr, Monat, Tag]
- 
+
             // Altes Log-Format (date als String, kein totalSteps oben) still überspringen.
             if (!date.isArray() || !node.has("totalSteps")) {
                 continue;
             }
- 
+
             LocalDate day = LocalDate.of(date.get(0).asInt(), date.get(1).asInt(), date.get(2).asInt());
             byDay.put(day, node.path("totalSteps").asInt());
         }
