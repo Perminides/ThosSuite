@@ -1651,14 +1651,14 @@ public abstract class Skin {
 	
 	public Button createIconButton(String deckId, IconButtonType buttonType) {
 	    // Icon laden
-		String iconPath = switch (buttonType) {
+		String iconName = switch (buttonType) {
 			case BACK -> backButtonIcon;
 			case SKIP -> skipButtonIcon;
 			case PLAY -> playButtonIcon;
 			case CANCEL -> cancelButtonIcon;
 		};
 
-		Image image = new Image(Config.getPath("iconFolder").resolve(iconPath).toUri().toString());
+		Image image = new Image(Config.getPath("iconFolder").resolve(iconName).toUri().toString());
 		if (buttonType == IconButtonType.BACK)
 		    image = UIUtils.tintImage(image, textActiveComponentColor);
 		ImageView icon = new ImageView(image);
@@ -2071,7 +2071,7 @@ public abstract class Skin {
 
 	    if (!attachments.isEmpty()) {
 	        int thumbHeight = Config.getInt("diary.thumbnailHeight", 120);
-	        Path diaryFolder = Config.getPath("attachments.folder").resolve("diary");
+	        Path diaryFolder = Config.getPath("diaryAttachmentsFolder");
 
 	        FlowPane thumbPane = new FlowPane(8, 8);
 	        thumbPane.getStyleClass().add("diary-card-thumbs");

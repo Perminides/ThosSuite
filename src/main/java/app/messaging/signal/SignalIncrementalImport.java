@@ -59,7 +59,7 @@ import javafx.scene.control.ButtonType;
  * Bei Ablehnung wird blacklisted=1 in msg_chats gesetzt.
  *
  * <h2>Attachments</h2>
- * AES/CBC-Entschlüsselung. Ausgabepfad: [config:signal.attachmentDir]\dateiname.
+ * AES/CBC-Entschlüsselung. Ausgabepfad: [config:signalAttachmentsFolder]\dateiname.
  * In der DB wird nur der Dateiname (relativ zum signal-Verzeichnis) gespeichert.
  * Quelldatei fehlt → FailFast.
  *
@@ -131,7 +131,7 @@ public class SignalIncrementalImport {
 
         long cutoffMs = System.currentTimeMillis() - CUTOFF_BUFFER_MS;
 
-        String signalUrl = "jdbc:sqlite:" + Config.getString("signal.path") + "/sql/db.sqlite"
+        String signalUrl = "jdbc:sqlite:" + Config.getString("signal.externalPath") + "/sql/db.sqlite"
             + "?cipher=sqlcipher&key=x'" + Config.getString("signal.key") + "'&legacy=4";
 
         try (Connection signalConnection = DriverManager.getConnection(signalUrl);
@@ -367,11 +367,11 @@ public class SignalIncrementalImport {
             int    seq      = attachSeqPerMsg.merge(signalMsgId, 1, Integer::sum);
             String outName  = baseName + "_" + signalMsgId + "_" + seq + "." + ext;
          // !Sofort: Wir haben ein attachments.folder genau hierfür, welches dann von signal, whatsapp und diary genutzt werden kann.
-            Path   attachDir = Path.of(Config.getString("signal.attachmentDir"));
+            Path   attachDir = Config.getPath("signalAttachmentsFolder");
             Path   outPath   = attachDir.resolve(outName);
 
             if (!Files.exists(outPath)) {
-                Path encryptedFile = Path.of(Config.getString("signal.path") + "/attachments.noindex/").resolve(att.path());
+                Path encryptedFile = Config.getPath("signal.externalPath").resolve("attachments.noindex").resolve(att.path());
                 if (!Files.exists(encryptedFile))
                     throw new IllegalStateException("[FAILFAST] Quelldatei nicht gefunden: " + encryptedFile + " (messageId=" + signalMsgId + ")");
                 decryptAttachment(encryptedFile, att.localKey(), att.size(), outPath);

@@ -22,7 +22,6 @@ import app.movie.repository.MovieRepository;
 import app.movie.repository.PendingRepository;
 import app.shared.Config;
 import app.shared.DB;
-import app.shared.KeyValueRepository;
 import app.shared.skin.SkinService;
 
 /**
@@ -70,8 +69,7 @@ public class Importer {
      * für Umbewertungen.
      */
     private void importMovies() {
-        KeyValueRepository kvRepo = new KeyValueRepository();
-        LocalDateTime lastImport = kvRepo.getTime("tmdb.lastMovieImport");
+        LocalDateTime lastImport = Config.getTime("tmdb.lastMovieImport");
         if (lastImport.toLocalDate().equals(LocalDate.now())) {
             log.info("TMDB Filmimport heute bereits durchgeführt, überspringe.");
             return;
@@ -87,7 +85,7 @@ public class Importer {
         log.info("Neue Filme importiert: " + newMoviesImported);
 
         // Schritt 3: Rolling-Check für Umbewertungen
-        int lastCheckedPage = kvRepo.getInteger("tmdb.lastCheckedMoviePage");
+        int lastCheckedPage = Config.getInt("tmdb.lastCheckedMoviePage");
         int nextPageToCheck = lastCheckedPage + 1;
         if (nextPageToCheck > totalPages)
             nextPageToCheck = 1;
@@ -98,8 +96,8 @@ public class Importer {
         processReratedMovies(rollingPage);
 
         // Schritt 4: Timestamps aktualisieren
-        kvRepo.setTime("tmdb.lastMovieImport", LocalDateTime.now());
-        kvRepo.setInteger("tmdb.lastCheckedMoviePage", nextPageToCheck);
+        Config.setTime("tmdb.lastMovieImport", LocalDateTime.now());
+        Config.setInt("tmdb.lastCheckedMoviePage", nextPageToCheck);
         log.info("Timestamps aktualisiert");
     }
 

@@ -16,9 +16,9 @@ public class DB {
 	private static Connection connection = null;
 	private static Connection tmdbConnection = null;
 	
-	static {
-		dbPath = Config.getPath("dbFolder").resolve("thossuite.db");
-		tmdbDbPath = Config.getPath("dbFolder").resolve("movies.db");
+	public static void init (Path dbPath, Path tmdbDbPath) {
+		DB.dbPath = dbPath;
+		DB.tmdbDbPath = tmdbDbPath;
 	}
 	
 	/**

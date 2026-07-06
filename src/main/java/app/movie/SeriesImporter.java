@@ -33,7 +33,6 @@ import app.movie.repository.SeasonRepository;
 import app.movie.repository.TvShowRepository;
 import app.shared.Config;
 import app.shared.DB;
-import app.shared.KeyValueRepository;
 import app.shared.skin.SkinService;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
@@ -138,7 +137,6 @@ public class SeriesImporter {
     private final EpisodeRepository episodeRepo;
     private final MovieRepository movieRepo;
     private final CrewFilterRepository crewFilterRepo;
-    private final KeyValueRepository kvRepo;
 
     // Zähler für die Zusammenfassung
     private int newShows;
@@ -156,7 +154,6 @@ public class SeriesImporter {
         this.episodeRepo = new EpisodeRepository();
         this.movieRepo = new MovieRepository();
         this.crewFilterRepo = new CrewFilterRepository();
-        this.kvRepo = new KeyValueRepository();
     }
 
     public void run() {
@@ -180,7 +177,7 @@ public class SeriesImporter {
         processGaps();
 
         // Abschluss
-        kvRepo.setTime("tmdb.lastAdditionalImportRun", LocalDateTime.now());
+        Config.setTime("tmdb.lastAdditionalImportRun", LocalDateTime.now());
         showSummary();
         log.info("TmdbSeriesImporter abgeschlossen");
     }
