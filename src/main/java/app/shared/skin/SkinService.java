@@ -22,7 +22,7 @@ public final class SkinService {
     
     // Statischer Initializer lädt gespeichertes Skin
     static {
-        String savedSkinClass = Config.get("pref_skinClass");
+        String savedSkinClass = Config.get("pref.skinClass");
         
         if (savedSkinClass != null) {
             // Suche Skin in der Liste
@@ -43,7 +43,7 @@ public final class SkinService {
     		return;
     	
         current = skin;
-        Config.set("pref_skinClass", skin.getClass().getSimpleName());
+        Config.set("pref.skinClass", skin.getClass().getSimpleName());
     }
 
     public static Skin get() {

@@ -1,155 +1,136 @@
 package app.shared;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
+/**
+ * Zentrale Fassade fuer alle Suite-Werte. Eine einzige oeffentliche Tür ueber zwei
+ * package-private Stores:
+ * <ul>
+ *   <li>{@link ConfigFileSource} — unveränderliche Werte aus der config-Datei plus
+ *       die daraus abgeleiteten (computed) Pfade.</li>
+ *   <li>{@link KeyValueRepository} — veränderliche Laufzeitwerte in der key_values-Tabelle.</li>
+ * </ul>
+ * Aufrufer wissen nicht, woher ein Wert kommt. Sie lesen und schreiben nur hier.
+ * Die Fassade kennt als Einzige die Partition und routet danach:
+ * Key in der unveränderlichen Menge (Datei oder computed) -&gt; FileSource, sonst -&gt; key_values.
+ * <p>
+ * Kontrakt: throw on miss. Schreiben auf einen unveränderlichen Key wirft (FailFast).
+ * Jede Typumwandlung passiert hier, einmal und zentral.
+ */
 public class Config {
-    private static final LinkedHashMap<String, String> configProps = new LinkedHashMap<>();
-    private static final LinkedHashMap<String, String> computedProps = new LinkedHashMap<>();
-    public static String ROOT;
-    private static boolean dirty = false;
-    private static File configFile;
+
+    private static ConfigFileSource fileSource;
+    private static KeyValueRepository keyValues;
 
     private Config() {}
 
     public static void init(String folderPath) {
-        if (!folderPath.endsWith("/") && !folderPath.endsWith("\\")) {
-            folderPath = folderPath + "/";
-        }
-        ROOT = folderPath;
+        fileSource = new ConfigFileSource(folderPath);
 
-        // 1. config.txt laden
-        configFile = new File(folderPath, "config/config.txt");
-        if (configFile.exists()) {
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(new FileInputStream(configFile), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    line = line.strip();
-                    if (line.isEmpty() || line.startsWith("#")) continue;
-                    int sep = line.indexOf('=');
-                    if (sep < 0) continue;
-                    String key = line.substring(0, sep).strip();
-                    String value = line.substring(sep + 1).strip();
-                    configProps.put(key, value);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("Fehler beim Lesen der config-Datei in " + configFile.getAbsolutePath(), e);
-            }
-        } else {
-            throw new RuntimeException("Ich finde die Config-Datei nicht in " + configFile.getAbsolutePath());
-        }
+        Path dbFolder = Path.of(fileSource.get("dbFolder"));
+        DB.init(dbFolder.resolve("thossuite.db"), dbFolder.resolve("movies.db"));
 
-        // 2. Computed properties in Memory setzen
-        computedProps.put("rootFolder",      folderPath);
-        computedProps.put("imageFolder",     folderPath + "data/images/");
-        computedProps.put("learnImageFolder",     folderPath + "data/images/500x500/");
-        computedProps.put("miscImageFolder", folderPath + "data/images/misc/");
-        computedProps.put("deckFolder",      folderPath + "data/decks/");
-        computedProps.put("iconFolder",      folderPath + "data/icons/");
-        computedProps.put("geoJsonFolder",   folderPath + "data/maps/geojson/");
-        computedProps.put("mapImagesFolder", folderPath + "data/maps/png/");
-        computedProps.put("wallpaperFolder", folderPath + "data/wallpapers/");
-        computedProps.put("dbFolder",        folderPath + "data/");
-        computedProps.put("configFolder",    folderPath + "config/");
-        computedProps.put("fitbitFolder",    folderPath + "fitbit/");
-        computedProps.put("logFolder",       folderPath + "log/");
+        keyValues = new KeyValueRepository();
 
-        dirty = false;
+        checkCollisions();
     }
 
+    /**
+     * Startup-Invariante: kein Tabellen-Key traegt den Namen eines Keys aus der
+     * unveraenderlichen Menge. Diese Kollision entsteht erst durch den gemeinsamen
+     * Namensraum der Fassade — hier wird sie einmalig bewacht.
+     */
+    private static void checkCollisions() {
+        for (String key : keyValues.allKeys()) {
+            if (fileSource.contains(key)) {
+                throw new RuntimeException(
+                        "Kollision: Key liegt in config-Datei/computed UND in key_values: " + key);
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Lesen
+    // -------------------------------------------------------------------------
+
     public static String get(String key) {
-        String value = configProps.get(key);
-        if (value != null) return value;
-        return computedProps.get(key);
+        if (fileSource.contains(key)) {
+            return fileSource.get(key);
+        }
+        return keyValues.get(key);
     }
 
     public static String getString(String key) {
         return get(key);
     }
 
+    /**
+     * Optionaler Config-Wert mit Default. Bewusst nur auf der unveraenderlichen Menge:
+     * Tabellenwerte sind vorab angelegt und kennen keinen Default.
+     */
     public static String get(String key, String defaultValue) {
-        String value = get(key);
-        return value != null ? value : defaultValue;
-    }
-    
-    public static Path getPath(String key) {
-        String value = get(key);
-        if (value == null) {
-            throw new IllegalStateException("Path angefragt, aber Config-Key fehlt: " + key);
+        if (fileSource.contains(key)) {
+            return fileSource.get(key);
         }
-        return Path.of(value);
+        return defaultValue;
     }
 
     public static int getInt(String key) {
         String value = get(key);
-        if (value == null) {
-            throw new IllegalStateException("Int angefragt, aber Config-Key fehlt: " + key);
-        }
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            throw new IllegalStateException("Int angefragt, aber der Wert ist kein Int: " + key + " = " + value, e);
+            throw new RuntimeException("Int angefragt, aber der Wert ist kein Int: " + key + " = " + value, e);
         }
     }
 
     public static int getInt(String key, int defaultValue) {
-        String value = get(key);
-        if (value != null) {
-            try {
-                return Integer.parseInt(value);
-            } catch (NumberFormatException e) {
-                throw new IllegalStateException("Int angefragt, aber der Wert ist kein Int: " + key + " = " + value, e);
-            }
+        if (fileSource.contains(key)) {
+            return getInt(key);
         }
         return defaultValue;
     }
-    
-    
 
-    public static void set(String key, String value) {
-        if (computedProps.containsKey(key)) {
-            throw new RuntimeException("Computed property kann nicht geändert werden: " + key);
-        }
-        String current = configProps.get(key);
-        if (current == null || !current.equals(value)) {
-            configProps.put(key, value);
-            dirty = true;
-        }
+    public static Path getPath(String key) {
+        return Path.of(get(key));
     }
 
-    /**
-     * !Sofort: save muss raus. Einträge, die sich im Laufe der Suite ändern können, gehören in die suite-db (key_values).
-     * Die config-Datei sollte nicht aus der Suite heraus geändert werden.
-     */
-    public static void save() {
-        if (!dirty) return;
+    public static LocalDateTime getTime(String key) {
+        return LocalDateTime.parse(get(key));
+    }
 
-        if (configFile == null) {
-            throw new RuntimeException("Config wurde nicht initialisiert");
-        }
+    public static int getDaysSince(String key) {
+        String value = get(key);
+        LocalDate then = LocalDate.parse(value.substring(0, 10));
+        return (int) ChronoUnit.DAYS.between(then, LocalDate.now());
+    }
 
-        try (BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(configFile), StandardCharsets.UTF_8))) {
-            writer.write("# ThosSuite Configuration");
-            writer.newLine();
-            for (Map.Entry<String, String> entry : configProps.entrySet()) {
-                writer.write(entry.getKey() + "=" + entry.getValue());
-                writer.newLine();
-            }
-            dirty = false;
-        } catch (IOException e) {
-            throw new RuntimeException("Fehler beim Schreiben der config-Datei in " + configFile.getAbsolutePath(), e);
+    // -------------------------------------------------------------------------
+    // Schreiben (nur veraenderliche Keys; Datei/computed wirft)
+    // -------------------------------------------------------------------------
+
+    public static void set(String key, String value) {
+        if (fileSource.contains(key)) {
+            throw new RuntimeException("Unveraenderlicher Key kann nicht geschrieben werden: " + key);
         }
+        keyValues.set(key, value);
+    }
+
+    public static void setInt(String key, int value) {
+        set(key, String.valueOf(value));
+    }
+
+    public static void setTime(String key, LocalDateTime time) {
+        set(key, time.truncatedTo(ChronoUnit.SECONDS).toString());
+    }
+
+    public static void delete(String key) {
+        if (fileSource.contains(key)) {
+            throw new RuntimeException("Unveraenderlicher Key kann nicht geloescht werden: " + key);
+        }
+        keyValues.delete(key);
     }
 }

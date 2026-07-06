@@ -26,7 +26,6 @@ import app.messaging.repository.MessageRepository;
 import app.messaging.whatsapp.repository.WhatsAppSourceRepository;
 import app.shared.Config;
 import app.shared.DB;
-import app.shared.KeyValueRepository;
 import app.shared.Log;
 import app.shared.skin.SkinService;
 import javafx.scene.control.Alert;
@@ -62,8 +61,8 @@ import javafx.scene.control.Alert.AlertType;
  *
  * <p>Konfigurationsschlüssel:
  * <ul>
- *   <li>{@code whatsapp.path}            – Verzeichnis der crypt15-Datei (Filen-Sync)</li>
- *   <li>{@code whatsapp.attachmentDir}   – Zielverzeichnis für verschobene Attachments</li>
+ *   <li>{@code whatsapp.externalPath}    – Verzeichnis der crypt15-Datei (Filen-Sync)</li>
+ *   <li>{@code whatsapp.AttachmentFolder}– Zielverzeichnis für verschobene Attachments</li>
  *   <li>{@code whatsapp.key}             – 64-stelliger Hex-E2E-Backup-Schlüssel</li>
  *   <li>{@code whatsapp.daystartHour}    – Stunde ab der ein neuer "Tag" beginnt (0–23)</li>
  *   <li>{@code whatsapp.warningAfterDays}– Warnung wenn seit so vielen Tagen kein Import</li>
@@ -80,13 +79,12 @@ public class WhatsAppIncrementalImport {
     private static final String SOURCE            = "whatsapp";
     private static final String MEDIA             = "Media/";
 
-    private final KeyValueRepository       kvRepo    = new KeyValueRepository();
     private final MessageRepository        msgRepo   = new MessageRepository();
     private final WhatsAppCrypt15Decryptor decryptor = new WhatsAppCrypt15Decryptor();
     private final WhatsAppSourceRepository waRepo    = new WhatsAppSourceRepository();
 
     // Config
-    private final String whatsAppDir; 
+    private final Path   whatsAppExternalDir; 
     private final Path   crypt15Path;
     private final Path   attachmentDir;
     private final String hexKey;
@@ -110,10 +108,10 @@ public class WhatsAppIncrementalImport {
     private int importedAttachments = 0;
 
     public WhatsAppIncrementalImport() {
-    	this.whatsAppDir      = Config.get("whatsapp.folder.path");
-        this.crypt15Path      = Path.of(Config.get("whatsapp.folder.path"), "Databases", CRYPT15_FILENAME);
+    	this.whatsAppExternalDir      = Config.getPath("whatsapp.externalPath");
+        this.crypt15Path      = Config.getPath("whatsapp.externalPath").resolve("Databases").resolve(CRYPT15_FILENAME);
         // !Sofort: Wir haben ein attachments.folder genau hierfür, welches dann von signal, whatsapp und diary genutzt werden kann.
-        this.attachmentDir    = Path.of(Config.get("whatsapp.attachmentDir"));
+        this.attachmentDir    = Config.getPath("whatsappAttachmentsFolder");
         this.hexKey           = Config.get("whatsapp.key");
         this.dayStartHour     = Config.getInt("whatsapp.daystartHour");
         this.warningAfterDays = Config.getInt("whatsapp.warningAfterDays");
@@ -133,9 +131,9 @@ public class WhatsAppIncrementalImport {
         	return;
         }
         
-        kvRepo.setTime(KV_LAST_CHECK, LocalDateTime.now());
+        Config.setTime(KV_LAST_CHECK, LocalDateTime.now());
         String currentHash = computeHash(crypt15Path);
-        String storedHash  = kvRepo.get(KV_LAST_HASH);
+        String storedHash  = Config.get(KV_LAST_HASH);
 
         if (Objects.equals(currentHash, storedHash)) {
             checkWarning();
@@ -166,7 +164,7 @@ public class WhatsAppIncrementalImport {
             dayStart = dayStart.minusDays(1);
         }
 
-        LocalDateTime lastCheck = kvRepo.getTime(KV_LAST_CHECK);
+        LocalDateTime lastCheck = Config.getTime(KV_LAST_CHECK);
         if (lastCheck == null) return true;
         return lastCheck.isBefore(dayStart);
     }
@@ -176,7 +174,7 @@ public class WhatsAppIncrementalImport {
      * kein erfolgreicher Import stattgefunden hat.
      */
     private void checkWarning() {
-        LocalDateTime lastImportTime = kvRepo.getTime(KV_LAST_IMPORT);
+        LocalDateTime lastImportTime = Config.getTime(KV_LAST_IMPORT);
         if (lastImportTime == null) return;
         if (lastImportTime.isBefore(LocalDateTime.now().minusDays(warningAfterDays))) {
         	Log.warn(this.getClass(), "WhatsApp-import: Uff. Schon lange kein Import mehr gelaufen. Warnung ausgegeben.");
@@ -238,8 +236,8 @@ public class WhatsAppIncrementalImport {
 
         copyAttachments();
         String currentHash = computeHash(crypt15Path);
-        kvRepo.set(KV_LAST_HASH, currentHash);
-        kvRepo.setTime(KV_LAST_IMPORT, LocalDateTime.now());
+        Config.set(KV_LAST_HASH, currentHash);
+        Config.setTime(KV_LAST_IMPORT, LocalDateTime.now());
 
         showSummaryAlert();
     }
@@ -491,7 +489,7 @@ public class WhatsAppIncrementalImport {
                 "'-Präfix: " + filePath + " (_id=" + sourceId + ")");
 
         String relativePath = filePath.replace(",", "_");
-        Path   source       = Path.of(whatsAppDir, filePath);
+        Path   source       = whatsAppExternalDir.resolve(filePath);
         Path   target       = attachmentDir.resolve(relativePath);
 
         if (Files.exists(source)) {

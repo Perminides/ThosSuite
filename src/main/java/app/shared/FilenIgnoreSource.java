@@ -9,7 +9,7 @@ import java.util.List;
 public class FilenIgnoreSource {
 
 	public static void addToIgnore() throws Exception {
-	    Path ignoreFile = Config.get("filenIgnore.path") != null ? Path.of(Config.get("filenIgnore.path")) : null;
+	    Path ignoreFile = Config.get("filenIgnore.path") != null ? Config.getPath("filenIgnore.path") : null;
 	    String lineToAdd = Config.get("filenIgnore.lineToAdd");
 	    if (ignoreFile == null || lineToAdd == null)
 	    	return;
@@ -25,7 +25,7 @@ public class FilenIgnoreSource {
 	}
 
 	public static void removeFromIgnore() throws Exception {
-		Path ignoreFile = Config.get("filenIgnore.path") != null ? Path.of(Config.get("filenIgnore.path")) : null;
+		Path ignoreFile = Config.get("filenIgnore.path") != null ? Config.getPath("filenIgnore.path") : null;
 	    String lineToAdd = Config.get("filenIgnore.lineToAdd");
 	    if (ignoreFile == null || lineToAdd == null)
 	    	return;

@@ -107,7 +107,7 @@ public class Controller{
     	regionDeckService = new RegionDeckService();
     	
     	// Gespeicherte SortOrder laden
-        String savedSort = Config.get("pref_sortOrder", "BY_WRONG_COUNT_DESC");
+        String savedSort = Config.get("pref.sortOrder", "BY_WRONG_COUNT_DESC");
         try {
             currentSortOrder = CardSortOrder.valueOf(savedSort);
         } catch (IllegalArgumentException e) {
@@ -344,7 +344,7 @@ public class Controller{
 
 	public void cardSortOrderSelected(CardSortOrder sort) {
 	    currentSortOrder = sort;
-	    Config.set("pref_sortOrder", sort.name()); // Persistieren
+	    Config.set("pref.sortOrder", sort.name()); // Persistieren
 	    
 	    if (currentScreen == null)
 	        return;

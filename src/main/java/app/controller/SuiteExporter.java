@@ -63,9 +63,9 @@ public class SuiteExporter {
     public void export() {
     	
 		try {
-			this.rootFolder = Paths.get(Config.getString(KEY_ROOT_FOLDER));
-			this.ignoreFile = Paths.get(Config.getString(KEY_CONFIG_FOLDER) + IGNORE_FILE_NAME);
-			this.oneDriveFolder = Paths.get(Config.getString(KEY_ONEDRIVE_FOLDER));
+			this.rootFolder = Config.getPath(KEY_ROOT_FOLDER);
+			this.ignoreFile = Config.getPath(KEY_CONFIG_FOLDER).resolve(IGNORE_FILE_NAME);
+			this.oneDriveFolder = Config.getPath(KEY_ONEDRIVE_FOLDER);
 			this.zipPassword = Config.getString(KEY_ZIP_PASSWORD);
 		} catch (Exception e) {
 			SkinService.get().createAlert(SkinService.getOwnerWindow(), "Kein Export möglich", "Ich kann vermutlich einen Ordner nicht finden.", false, false)
@@ -89,9 +89,10 @@ public class SuiteExporter {
             Path zipPath = buildZip(files);
             Log.info(this.getClass(), "SuiteExporter: " + files.size() + " Dateien exportiert nach " + zipPath);
             SkinService.get().createAlert(null, "Suite Export", files.size() + " Dateien exportiert:\n" + zipPath.getFileName(), ButtonType.OK).showAndWait();
-
+            Log.debug(this.getClass(), "Ich werfe jetzt eine RuntimeException!");
+            throw new RuntimeException("Nur zum Debuggen!");
         } catch (Exception e) {
-            new RuntimeException("Export fehlgeschlagen: " + e.getMessage());
+            throw new RuntimeException("Export fehlgeschlagen: " + e.getMessage());
         }
     }
 
@@ -114,7 +115,7 @@ public class SuiteExporter {
             } else if (line.startsWith("file:")) {
                 rules.add(new IgnoreRule(false, Pattern.compile(line.substring(5).strip())));
             } else {
-                new RuntimeException("SuiteExporter: unbekannte Ignore-Zeile ignoriert: " + line);
+                throw new RuntimeException("SuiteExporter: unbekannte Ignore-Zeile ignoriert: " + line);
             }
         }
         return rules;

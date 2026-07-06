@@ -116,6 +116,11 @@ public class ThosSuiteApp extends Application {
             }
         }
         
+        // Normalisieren. Es sollte keinen Unterschied machen, ob ich mit oder ohne trailing Slash übergebe
+        if (!dataFolder.endsWith("/") && !dataFolder.endsWith("\\")) {
+        	dataFolder = dataFolder + "/";
+        }
+        
         // Läuft die Suite bereits?
         if (!SingleInstanceGuard.lockInstance(Path.of(dataFolder).resolve("log/suite.lock"))) {
         	Alert alert = new Alert(AlertType.WARNING);
@@ -337,13 +342,6 @@ public class ThosSuiteApp extends Application {
     @Override
     public void stop() throws Exception {
         Log.debug(this, "App wird gestoppt, räume auf...");
-        
-        // Config speichern
-        try {
-            app.shared.Config.save();
-        } catch (Exception e) {
-            Log.error(this, "Fehler beim Speichern der Config", e);
-        }
         
         // DB schließen
         try {

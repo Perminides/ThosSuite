@@ -5,11 +5,10 @@ import java.util.Locale;
 
 import app.alc.repository.Repository;
 import app.fitbit.DashboardService;
-import app.learn.model.Deck;
 import app.mattress.repository.MattressRepository;
 import app.messaging.repository.MessageRepository;
 import app.shared.AppClock;
-import app.shared.KeyValueRepository;
+import app.shared.Config;
 import app.shared.Screen;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.skin.SkinService;
@@ -104,8 +103,7 @@ public class DashboardScreen implements Screen {
                     "Heute importierte Nachrichten")
                 );
         
-        KeyValueRepository kvRepo = new KeyValueRepository();
-        int daysSinceLastAdditionalTmdbImport = kvRepo.getDaysSince("tmdb.lastAdditionalImportRun");
+        int daysSinceLastAdditionalTmdbImport = Config.getDaysSince("tmdb.lastAdditionalImportRun");
         
         // Tmdb-Tile erstellen
         view.getChildren().add(
