@@ -5,7 +5,7 @@ import java.util.List;
 
 import app.alc.model.DayEntry;
 import app.alc.model.RatioEntry;
-import app.alc.repository.Repository;
+import app.alc.repository.AlcRepository;
 import app.shared.Log;
 import app.shared.Screen;
 import app.shared.model.SessionSwitchStrategy;
@@ -35,7 +35,7 @@ public class AlcStatisticsScreen implements Screen {
 	   private static final PseudoClass ACHIEVED = PseudoClass.getPseudoClass("achieved");
 	   private static final PseudoClass FAILED = PseudoClass.getPseudoClass("failed");
     
-    private final Repository repository;
+    private final AlcRepository repository;
     
     private StackPane view;
     private DatePicker fromPicker;
@@ -44,7 +44,7 @@ public class AlcStatisticsScreen implements Screen {
     private BarChart<String, Number> chart;
 
     public AlcStatisticsScreen() {
-        this.repository = new Repository();
+        this.repository = new AlcRepository();
     }
 
     @Override

@@ -14,7 +14,7 @@ import app.shared.DB;
 /**
 * <p>Zum regular-Flag (markRegularCast/markRegularCrew) und der zugrunde
  * liegenden Invariante "regulär ⊆ aggregiert" siehe das Klassen-Javadoc von
- * {@code TmdbSeriesImporter}, Abschnitt "Season Regulars".
+ * {@code SeriesImporter}, Abschnitt "Season Regulars".
  */
 public class SeasonRepository {
 

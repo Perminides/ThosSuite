@@ -2,7 +2,7 @@ package scripts.tmdb;
 
 import java.util.List;
 
-import app.movie.repository.TmdbViewerRepository;
+import app.movie.repository.MovieViewerRepository;
 import app.shared.Config;
 import app.shared.model.CardData;
 import app.shared.skin.SkinService;
@@ -19,7 +19,7 @@ import javafx.stage.Stage;
  */
 public class EpisodeRatingReview extends Application {
 
-    private final TmdbViewerRepository repository = new TmdbViewerRepository();
+    private final MovieViewerRepository repository = new MovieViewerRepository();
 
     public static void main(String[] args) {
         launch(args);

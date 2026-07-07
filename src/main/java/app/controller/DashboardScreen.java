@@ -3,7 +3,7 @@ package app.controller;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-import app.alc.repository.Repository;
+import app.alc.repository.AlcRepository;
 import app.fitbit.DashboardService;
 import app.mattress.repository.MattressRepository;
 import app.messaging.repository.MessageRepository;
@@ -60,7 +60,7 @@ public class DashboardScreen implements Screen {
             )
         );
         
-        Repository alcoholRepo = new Repository();
+        AlcRepository alcoholRepo = new AlcRepository();
         int balance = alcoholRepo.getCurrentBalance();
         
         // Alkohol-Tile erstellen

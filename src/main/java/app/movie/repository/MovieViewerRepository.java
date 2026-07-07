@@ -24,7 +24,7 @@ import app.shared.model.CardData;
  *
  * Nur Leseoperationen über die Singleton-Connection.
  */
-public class TmdbViewerRepository {
+public class MovieViewerRepository {
 
     private final int actorsToShow = Config.getInt("tmdb.actorsToShow", 10);
     private final int directorsToShow = Config.getInt("tmdb.directorsToShow", 5);

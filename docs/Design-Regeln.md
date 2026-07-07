@@ -244,32 +244,7 @@ Der Skin (`shared.skin`) ist **dumm**: Er kennt keine Domänenklassen.
 - **Einbahn.** Die generischen Bausteine in `shared` rufen den Skin nicht zurück; `shared.skin`
   hängt nur an `shared`.
 
-## 4. Aufbau einer Lern-Session
-
-[!WARNING] Gehört ins Architekturdokument!
-
-Eine Lern-Session ist aus vier Klassen gebaut. Am Beispiel Anki, nach dem Callback-Fix:
-
-```
-												AnkiDeckSession
-														│
-														▼
-   SessionPane  ◄────►  SessionPresenter  ◄────►  SessionProgress
-      (GUI)               (Scharnier)            (Karten-Ablauf)
-```
-
-- Die **Schale** (`AnkiDeckSession`) sitzt oben und kennt nur den Ablauf (`SessionProgress`) —
-  und den nur in eine Richtung. Der Rückweg „letzte Karte fertig" läuft als Callback
-  (`onLastCardDone`), nicht als gehaltene Session-Referenz.
-- Darunter die Dreierkette **GUI ↔ Presenter ↔ Ablauf.** Beide Kanten sind echt gegenseitig; der
-  Presenter ist das Scharnier zwischen Oberfläche und Ablauf.
-
-**region folgt derselben Vierer-Struktur und denselben Begriffen, weicht in der Umsetzung aber
-ab** — unter anderem sitzt dort die Auswertung an anderer Stelle. Ob region diesem Muster folgen
-soll, ist offen; die Befunde stehen als `!Diagnose`-Block im Javadoc von `RegionSession`. Eigene
-Session, kein Nebenbei-Fix.
-
-## 5. Anhang — Bewusst aufgeschoben
+## 4. Anhang — Bewusst aufgeschoben
 
 [!WARNING] Gehört ins Architekturdokument oder sonstewohin, aber nicht hier
 
