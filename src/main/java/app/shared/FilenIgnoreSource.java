@@ -9,8 +9,8 @@ import java.util.List;
 public class FilenIgnoreSource {
 
 	public static void addToIgnore() throws Exception {
-	    Path ignoreFile = Config.get("filenIgnore.path") != null ? Config.getPath("filenIgnore.path") : null;
-	    String lineToAdd = Config.get("filenIgnore.lineToAdd");
+	    Path ignoreFile = Config.get("filenIgnore.path", null) != null ? Config.getPath("filenIgnore.path") : null;
+	    String lineToAdd = Config.get("filenIgnore.lineToAdd", null);
 	    if (ignoreFile == null || lineToAdd == null)
 	    	return;
 

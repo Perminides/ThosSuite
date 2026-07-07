@@ -45,7 +45,7 @@ Tagebuch, ein Nachrichten-Archiv, Filmbewertungen und weitere kleinere Module.
 Die Doku ist in folgende Teile geschnitten:
 
 **[Architektur-Dokumentation](docs/Architektur-Dokumentation.md)** —
-Das einem LLM immer mitzugebende Fundament: Überblick, technische Basis, Paketstruktur,
+Überblick, technische Basis, Paketstruktur,
 Orchestrierungs-Mechanik, Startup. Was bei jeder Aufgabe gilt, egal welches Feature — die Karte
 für den Wiedereinstieg nach Monaten Pause.
 

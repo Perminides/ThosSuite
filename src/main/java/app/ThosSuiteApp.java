@@ -216,7 +216,10 @@ public class ThosSuiteApp extends Application {
             } catch (Exception e) {
                 e.printStackTrace();
                 Platform.runLater(() -> {
-                    Alert alert = new Alert(AlertType.ERROR, "Kritischer Fehler: " + e.getMessage());
+                	StringWriter sw = new StringWriter();
+                	e.printStackTrace(new PrintWriter(sw));
+                    Alert alert = new Alert(AlertType.ERROR, "Kritischer Fehler: " + sw);
+                    Log.error(this.getClass(), "Fehler in der Initialisierung der Suite", e); // Hoffentlich ist das Log bereits initialisiert ^^
                     alert.showAndWait();
                     System.exit(1);
                 });
