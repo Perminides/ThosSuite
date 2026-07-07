@@ -7,7 +7,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import app.alc.model.Status;
-import app.alc.repository.Repository;
+import app.alc.repository.AlcRepository;
 import app.shared.Log;
 import app.shared.skin.SkinService;
 import javafx.scene.control.Alert;
@@ -16,10 +16,10 @@ import javafx.scene.control.ButtonType;
 
 public class StartupService {
     
-    private final Repository repository;
+    private final AlcRepository repository;
     
     public StartupService() {
-        this.repository = new Repository();
+        this.repository = new AlcRepository();
     }
     
     /**

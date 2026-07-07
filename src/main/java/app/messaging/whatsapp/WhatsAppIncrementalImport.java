@@ -33,12 +33,6 @@ import javafx.scene.control.Alert.AlertType;
 
 /**
  * 
- * TODOS
- * <ul>
- * <li>Unbekannter Chat Fenster lässt sich nicht verschieben, warum nicht?</li>
- * <li>Unbekannter Contact Fenster auch nicht??? Leider nicht probiert.</li>
- * <li>Abschlussnachricht nicht in unserem Skin!</li>
- * </ul>
  * 
  * Inkrementeller WhatsApp-Import in die ThosSuite-Datenbank.
  *

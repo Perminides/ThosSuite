@@ -44,17 +44,17 @@ Tagebuch, ein Nachrichten-Archiv, Filmbewertungen und weitere kleinere Module.
 
 Die Doku ist in folgende Teile geschnitten:
 
-**[Architektur-Dokumentation](docs/Architektur-Dokumentation.md)** —
-Überblick, technische Basis, Paketstruktur,
+**[Architektur-Dokumentation](docs/Architektur-Dokumentation.md)** →
+Der Überblick. Technische Basis, Paketstruktur,
 Orchestrierungs-Mechanik, Startup. Was bei jeder Aufgabe gilt, egal welches Feature — die Karte
 für den Wiedereinstieg nach Monaten Pause.
 
-**[Design-Regeln](docs/Design-Regeln.md)** —
+**[Design-Regeln](docs/Design-Regeln.md)** →
 Das Regelwerk. Nach welchen Prinzipien die Suite in Pakete und Klassen geschnitten, benannt und
 verbunden ist, und *warum*. Hier schlägt man nach, bevor man etwas Neues baut, damit es in die
 Struktur passt.
 
-**[Feature-Details](docs/Feature-Details.md)** —
+**[Feature-Details](docs/Feature-Details.md)** →
 Das Nachschlagewerk. Pro Feature, wie es konkret gebaut ist — Zweck, Mechanik, DB-Schema, Screen.
 Man liest nur den Block, den man gerade braucht.
 

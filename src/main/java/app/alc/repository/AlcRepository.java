@@ -15,7 +15,7 @@ import app.shared.AppClock;
 import app.shared.DB;
 import app.shared.Log;
 
-public class Repository {
+public class AlcRepository {
 
     /**
      * Lädt alle Tage im angegebenen Zeitraum mit berechneter Balance.

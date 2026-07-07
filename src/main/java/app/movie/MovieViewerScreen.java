@@ -2,7 +2,7 @@ package app.movie;
 
 import java.util.List;
 
-import app.movie.repository.TmdbViewerRepository;
+import app.movie.repository.MovieViewerRepository;
 import app.shared.Screen;
 import app.shared.model.CardData;
 import app.shared.model.SessionSwitchStrategy;
@@ -16,7 +16,7 @@ import javafx.scene.layout.VBox;
 
 public class MovieViewerScreen implements Screen {
 
-    private final TmdbViewerRepository repository = new TmdbViewerRepository();
+    private final MovieViewerRepository repository = new MovieViewerRepository();
 
     private VBox view;
     private SuggestionTextField directorField;
