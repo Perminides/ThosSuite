@@ -533,7 +533,7 @@ public class Controller{
         Pane emptyView = new Pane();
         
         // 2. Den "Null"-Hintergrund (Standard-Wallpaper) draufkleben
-        emptyView.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
+        emptyView.setBackground(new Background(SkinService.get().getStartBackgroundImage()));
         
         // 3. In den Anker hängen
         mainWindow.showPane(emptyView);

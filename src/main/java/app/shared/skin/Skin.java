@@ -16,15 +16,15 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import app.shared.Config;
-import app.shared.DashboardTile;
-import app.shared.ImagePane;
 import app.shared.Log;
-import app.shared.MultipleChoicePane;
-import app.shared.SessionInfoLabel;
-import app.shared.SuggestionTextField;
 import app.shared.UIUtils;
 import app.shared.model.BorderParams;
 import app.shared.model.CardData;
+import app.shared.ui.DashboardTile;
+import app.shared.ui.ImagePane;
+import app.shared.ui.MultipleChoicePane;
+import app.shared.ui.SessionInfoLabel;
+import app.shared.ui.SuggestionTextField;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -1504,6 +1504,33 @@ public abstract class Skin {
 	 */
 	public BackgroundImage getBackgroundImage(String mapName, String deckCategoryName) {
 		Path bgPath = Config.getPath("wallpaperFolder").resolve(getBackgroundImageName(mapName, deckCategoryName));
+		BackgroundImage background;
+		try {
+		    Image bgImage = new Image(bgPath.toUri().toString());
+	        background = new BackgroundImage(
+	            bgImage,
+	            BackgroundRepeat.NO_REPEAT,
+	            BackgroundRepeat.NO_REPEAT,
+	            BackgroundPosition.CENTER,
+	            new BackgroundSize(
+	                BackgroundSize.AUTO, 
+	                BackgroundSize.AUTO, 
+	                false, 
+	                false, 
+	                true,  // contain (Bild wird skaliert um reinzupassen. Ändert die Proportionen nicht)
+	                true // cover (Bild wird hochskaliert um alles auszufüllen. Auch gestreckt wenn es sein muss)
+	            )
+	        );
+	    } catch (Exception e) {
+	        throw new RuntimeException("Konnte Hintergrundbild nicht laden: " + bgPath, e);
+	    }
+	    return background;
+	}
+	
+	// !Sofort: Boah, also wie viele getBackgroundImage-Methoden mit Code-Duplizierung denn noch? Das muss refactoret werden! 
+	public BackgroundImage getStartBackgroundImage() {
+		String wallpaperName = emptyWallpaperName == null ? defaultWallpaperName : emptyWallpaperName;
+		Path bgPath = Config.getPath("wallpaperFolder").resolve(wallpaperName);
 		BackgroundImage background;
 		try {
 		    Image bgImage = new Image(bgPath.toUri().toString());

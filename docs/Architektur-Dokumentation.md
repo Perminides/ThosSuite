@@ -1,5 +1,7 @@
 # ThosSuite — Architektur (allgemein)
 
+**Stand:** 06.07.2026
+
 **Charakter:** Das *immer mitzugebende* Fundament — was bei jeder Aufgabe gilt, egal welches
 Feature: Überblick, technische Basis, Paketstruktur, Orchestrierungs-Mechanik, Fundament.
 Feature-Details (Lern-Kern, einzelne Features, konkrete Screens) stehen separat in
@@ -171,30 +173,47 @@ Code nur auf expliziten Zuruf generieren — hält Chats kurz und Diskussionen i
 
 ### Config-System
 
-Zentrale Konfigurationsklasse (`app.shared.Config`) für alle Suite-Einstellungen (Skin,
-Sort-Order, Fenster-Positionen …). Statische Klasse, privater Konstruktor (keine Instanz).
-Gespeichert wird nur einmal beim Shutdown (`Config.save()` aus `ThosSuiteApp.stop()`), und
-auch nur, wenn ein Dirty-Flag gesetzt ist — die set-Methoden setzen es auf true.
+**Eine Fassade, zwei Stores.** `Config` (`app.shared`) ist die einzige öffentliche Tür zu
+allen Suite-Werten — statische Klasse, privater Konstruktor, global erreichbar (der Controller
+reicht deshalb keine Werte durch Konstruktoren). Dahinter liegen zwei package-private Stores,
+die kein Aufrufer direkt sieht:
 
-Der Dirty-Check spart bei einmaligem Speichern pro Session nur einen Datei-Write; er ist
-bewusst so gewollt (kein stumpfes Neuschreiben der Config bei jedem Suite-Ende), auch wenn der
-Effekt klein ist.
+- **`ConfigFileSource`** liest beim Start die config-Datei und hält deren rohe Werte zusammen
+  mit den daraus abgeleiteten (computed) Ordnerpfaden in einer Map. **Read-only**
+- **`KeyValueRepository`** bedient die `key_values`-Tabelle: veränderliche Laufzeitwerte, die
+  Neustarts überdauern (Import-Zeitpunkte, Datei-Hashes, UI-Präferenzen wie Sortierreihenfolge
+  oder zuletzt gewähltes Skin).
 
-**Typisierte Rückgabe — zentral statt verstreut.** Die Getter geben den Wert schon im richtigen
-Typ zurück, mit und ohne Default:
-```java
-Path   p = Config.getPath("iconFolder");
-int    n = Config.getInt("windowWidth", 1280);
-String s = Config.get("offline", "false");
-```
-Die Umwandlung (String → `Path`/`int`/…) passiert **einmal in der Config**, nicht an jeder
-Aufrufstelle. Ein falsches Format crasht damit zentral und sofort (FailFast), statt an zwanzig
-Stellen einzeln. Weitere typisierte Getter kommen dazu, sobald sie gebraucht werden.
+**Routing.** Die Fassade kennt als Einzige die Partition und leitet danach: Key in der
+unveränderlichen Menge (Datei oder computed) → `ConfigFileSource`, sonst → `key_values`. Der
+Aufrufer weiß nie, woher ein Wert kommt; er liest und schreibt nur an der Fassade.
 
-**Zugriffsstrategie:** Jede Klasse holt sich ihre Config-Werte selbst direkt aus `Config`
-(`Config.get(...)`), dort wo sie gebraucht werden. Der Controller reicht beim Erzeugen einer
-Klasse *keine* Config-Werte durch den Konstruktor — das wäre unnötig, weil `Config` ohnehin
-global erreichbar ist.
+**Kontrakt — throw on miss.** Ein unbekannter Key ist per Design ein Bug, kein abzufangender
+Fall. Jeder Key wird vor seinem ersten Lauf mit Startwert angelegt — dieselbe Disziplin für
+Datei- wie Tabellen-Keys. Es gibt kein `Optional`. Wenn Du doch mal einen optionalen Key
+hast, der nicht existieren muss, dann kannst Du diesen mittels get(key, null), also mit null
+als Default-Wert, ermitteln und anschließend auf null checken.
+
+**Schreiben.** `set`/`delete` auf einen Tabellen-Key gehen an `key_values`; dieselben Aufrufe
+auf einen Datei-/computed-Key **werfen sofort** (FailFast) — nur die Fassade kennt die volle
+Partition und erkennt diesen Fall als Bug.
+
+**Typisierung zentral.** Beide Stores liefern rohe Strings; die Umwandlung (String →
+`Path`/`int`/`LocalDateTime`) passiert einmal in der Fassade (`getPath`, `getInt`, `getTime`,
+`getDaysSince`). Ein falsches Format crasht damit zentral und sofort statt an zwanzig Stellen.
+Die Default-Getter (`get(key, default)`, `getInt(key, default)`) fragen bewusst nur die
+unveränderliche Menge — Tabellenwerte sind vorab angelegt und kennen keinen Default.
+
+**Bootstrap — streng linear.** `Config.init(folderPath)` baut zuerst den `ConfigFileSource`
+(Datei gelesen, computed Pfade da), leitet daraus die zwei DB-Pfade ab und reicht sie an
+`DB.init(...)`, erzeugt dann das `KeyValueRepository` und prüft zuletzt die Startup-Invariante.
+`DB` zieht seine Pfade **als Parameter** und hängt an niemandem — kein Rückaufruf in die Config,
+die Konstruktionsreihenfolge bleibt zyklenfrei.
+
+**Startup-Invariante — Kollisions-Check.** Kein Tabellen-Key darf den Namen eines Keys aus der
+unveränderlichen Menge tragen; die Fassade prüft das einmal beim Start und crasht bei Kollision.
+Die DB-Bereitschaft braucht keinen eigenen Guard: Tabellen-Keys laufen ohnehin über die DB, die
+zu diesem Zeitpunkt bereits initialisiert ist.
 
 
 ## 🧭 Orchestrierung (`controller`) — Mechanik

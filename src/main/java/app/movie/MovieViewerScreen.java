@@ -4,11 +4,11 @@ import java.util.List;
 
 import app.movie.repository.TmdbViewerRepository;
 import app.shared.Screen;
-import app.shared.SuggestionTextField;
 import app.shared.model.CardData;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.skin.SkinService;
 import app.shared.skin.Skin.MovieViewerComponents;
+import app.shared.ui.SuggestionTextField;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;

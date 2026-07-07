@@ -1,4 +1,4 @@
-package app.shared;
+package app.shared.ui;
 
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;

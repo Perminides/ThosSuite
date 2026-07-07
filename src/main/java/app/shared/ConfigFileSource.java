@@ -17,8 +17,8 @@ import java.util.LinkedHashMap;
  */
 class ConfigFileSource {
 
-    private final LinkedHashMap<String, String> fileProps = new LinkedHashMap<>();
-    private final LinkedHashMap<String, String> computedProps = new LinkedHashMap<>();
+    private final LinkedHashMap<String, String> props = new LinkedHashMap<>();
+    //private final LinkedHashMap<String, String> computedProps = new LinkedHashMap<>();
 
     ConfigFileSource(String folderPath) {
         if (!folderPath.endsWith("/") && !folderPath.endsWith("\\")) {
@@ -44,46 +44,43 @@ class ConfigFileSource {
                 }
                 String key = line.substring(0, sep).strip();
                 String value = line.substring(sep + 1).strip();
-                fileProps.put(key, value);
+                props.put(key, value);
             }
         } catch (IOException e) {
             throw new RuntimeException("Fehler beim Lesen der config-Datei in " + configFile.getAbsolutePath(), e);
         }
 
-        computedProps.put("rootFolder",       folderPath);
-        computedProps.put("imageFolder",      folderPath + "data/images");
-        computedProps.put("learnImageFolder", folderPath + "data/images/500x500");
-        computedProps.put("miscImageFolder",  folderPath + "data/images/misc");
-        computedProps.put("deckFolder",       folderPath + "data/decks");
-        computedProps.put("iconFolder",       folderPath + "data/icons");
-        computedProps.put("geoJsonFolder",    folderPath + "data/maps/geojson");
-        computedProps.put("mapImagesFolder",  folderPath + "data/maps/png");
-        computedProps.put("wallpaperFolder",  folderPath + "data/wallpapers");
-        computedProps.put("dbFolder",         folderPath + "data");
-        computedProps.put("configFolder",     folderPath + "config");
-        computedProps.put("fitbitFolder",     folderPath + "fitbit");
-        computedProps.put("logFolder",        folderPath + "log");
+        props.put("rootFolder",       folderPath);
+        props.put("imageFolder",      folderPath + "data/images");
+        props.put("learnImageFolder", folderPath + "data/images/500x500");
+        props.put("miscImageFolder",  folderPath + "data/images/misc");
+        props.put("deckFolder",       folderPath + "data/decks");
+        props.put("iconFolder",       folderPath + "data/icons");
+        props.put("geoJsonFolder",    folderPath + "data/maps/geojson");
+        props.put("mapImagesFolder",  folderPath + "data/maps/png");
+        props.put("wallpaperFolder",  folderPath + "data/wallpapers");
+        props.put("dbFolder",         folderPath + "data");
+        props.put("configFolder",     folderPath + "config");
+        props.put("fitbitFolder",     folderPath + "fitbit");
+        props.put("logFolder",        folderPath + "log");
         
-        if (!fileProps.get("attachments.folder").endsWith("/") && !fileProps.get("attachments.folder").endsWith("\\")) {
-        	fileProps.put("attachments.folder", fileProps.get("attachments.folder") + "/");
+        if (!props.get("attachments.folder").endsWith("/") && !props.get("attachments.folder").endsWith("\\")) {
+        	props.put("attachments.folder", props.get("attachments.folder") + "/");
         }
-        computedProps.put("diaryAttachmentsFolder",        fileProps.get("attachments.folder") + "diary");
-        computedProps.put("signalAttachmentsFolder",        fileProps.get("attachments.folder") + "signal");
-        computedProps.put("whatsappAttachmentsFolder",        fileProps.get("attachments.folder") + "whatsapp");
+        props.put("diaryAttachmentsFolder",        props.get("attachments.folder") + "diary");
+        props.put("signalAttachmentsFolder",        props.get("attachments.folder") + "signal");
+        props.put("whatsappAttachmentsFolder",        props.get("attachments.folder") + "whatsapp");
     }
 
     /** Liegt der Key in der unveraenderlichen Menge (Datei oder computed)? */
     boolean contains(String key) {
-        return fileProps.containsKey(key) || computedProps.containsKey(key);
+        return props.containsKey(key);
     }
 
     /** Roher Wert. Wirft, wenn der Key nicht in der Datei/computed liegt (throw on miss). */
     String get(String key) {
-        if (fileProps.containsKey(key)) {
-            return fileProps.get(key);
-        }
-        if (computedProps.containsKey(key)) {
-            return computedProps.get(key);
+        if (props.containsKey(key)) {
+            return props.get(key);
         }
         throw new RuntimeException("Config-Key fehlt in der Datei: " + key);
     }
