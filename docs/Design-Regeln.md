@@ -226,7 +226,7 @@ Am Suffix ist die Datenquelle ablesbar:
 ### `Skin`-Vertrag (vorläufig — wird beim Skin-Refactoring neu gefasst)
 
 > Dieser Abschnitt ist **nicht in Stein gemeißelt.** Das Skin-System wird ohnehin überarbeitet
-> (die `Skin`-Gottklasse, siehe Anhang); danach gehört dieser Vertrag neu geschrieben.
+> und danach gehört dieser Vertrag neu geschrieben.
 
 Der Skin (`shared.skin`) ist **dumm**: Er kennt keine Domänenklassen.
 
@@ -243,22 +243,3 @@ Der Skin (`shared.skin`) ist **dumm**: Er kennt keine Domänenklassen.
   direkt zu rufen.
 - **Einbahn.** Die generischen Bausteine in `shared` rufen den Skin nicht zurück; `shared.skin`
   hängt nur an `shared`.
-
-## 4. Anhang — Bewusst aufgeschoben
-
-[!WARNING] Gehört ins Architekturdokument oder sonstewohin, aber nicht hier
-
-Diese Punkte sind bekannt und absichtlich zurückgestellt — sie verlangen Logik-Umbau und sind
-**kein** Anlass für beiläufige Eingriffe:
-
-- **Chart-Logik in den Statistik-Screens** inline lassen (das Auslagern in Skin-Methoden wäre
-  Logik-Umbau).
-- **`CardSortOrder`** als dumme Enum in `shared.model`; eine Sortier-Factory im `anki`-Paket ist
-  geplant, aber nicht implementiert.
-- **`closeSilent(boolean save)`** — das `save`-Flag ist lern-gefärbt; eigener Schritt.
-- **`Skin`-Klasse aufräumen** (Gottklasse: CSS-Erzeugung, Property-Laden, Layout-Bounds,
-  Komponenten-Bau in einer Klasse).
-- **Komponentenerstellung vereinheitlichen** — ein durchgängiges Muster (gleicher Schnitt,
-  gleicher Bau-/Nutzungsweg).
-- **Lernkern `learn` innen:** region weicht vom Anki-Muster ab und ist zu prüfen — siehe
-  „Aufbau einer Lern-Session" und den `!Architektur`-Block im Javadoc von `RegionSession`.

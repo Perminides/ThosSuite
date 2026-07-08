@@ -73,12 +73,4 @@ public interface Screen {
 	 * @param order
 	 */
 	default void sortOrderChanged() {};
-	
-	/**
-	 * Soll der Speichern Button in diesem Screen aktiv sein?
-	 * @return
-	 */
-	default boolean offersSave() {
-		return false;
-	}
 }
