@@ -35,10 +35,11 @@ public class AnkiDeckSession implements Screen {
 		this.onSessionEnded = onSessionEnded;
 		this.isFreePlay = isFreePlay;
 		CardSortOrder sortOrder = isFreePlay ? CardSortOrder.RANDOM : CardSortOrder.valueOf(Config.get("pref.sortOrder"));
-		this.progress = new SessionProgress(cards, service, type, sortOrder, this::endGracefully);
+		this.progress = new SessionProgress(cards, service, type, sortOrder, this::saveChosen);
 		new SessionPresenter(type, progress); // registriert sich selbst am Progress via setPresenter(this)
 	}
 
+	@Override
 	public void start() {
 		Log.info(this, "=== SESSION START === Session@" + System.identityHashCode(this));
 		progress.start();
@@ -50,6 +51,7 @@ public class AnkiDeckSession implements Screen {
 			progress.sort(CardSortOrder.valueOf(Config.get("pref.sortOrder")));
 	}
 
+	@Override
 	public void refresh() {
 		progress.refresh();
 	}
@@ -71,7 +73,7 @@ public class AnkiDeckSession implements Screen {
 	/**
 	 * Beende die Session, aber gern sauber schön mit Zusammenfassung und so :)
 	 */
-	public void endGracefully() {
+	public void saveChosen() {
 		Pane currentPane = progress.getView(); // Muss vor dem Deaktivieren passieren (Window holen).
 		progress.deactivate();
 		Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Zusammenfassung", createSummary(), false, false);
@@ -93,6 +95,7 @@ public class AnkiDeckSession implements Screen {
 		progress.escClicked();
 	}
 
+	@Override
 	public Pane getView() {
 		return progress.getView();
 	}
@@ -103,6 +106,11 @@ public class AnkiDeckSession implements Screen {
 			return SessionSwitchStrategy.IMMEDIATE;
 		else
 			return SessionSwitchStrategy.OFFER_SAVE;
+	}
+	
+	@Override
+	public boolean offersSave() {
+		return !isFreePlay;
 	}
 
 	private String createSummary() {

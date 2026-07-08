@@ -29,17 +29,17 @@ public interface Screen {
 	/**
 	 * User möchte eine neue Session starten, was soll mit dieser passieren?
 	 */
-	public SessionSwitchStrategy getSwitchStrategy();
+	SessionSwitchStrategy getSwitchStrategy();
 	
 	/**
 	 * Bitte neu aufbauen. Vermutlich hat sich das SKin geändert.
 	 */
-	public void refresh();
+	void refresh();
 	
 	/**
 	 * Da braucht jemand die View. Vermutlich zum Anzeigen im MainWindow.
 	 */
-	public Pane getView();
+	Pane getView();
 	
 	/**
 	 * Manche Screens brauchen einen extra start-Aufruf
@@ -52,23 +52,33 @@ public interface Screen {
 	default void escClicked() {};
 	
 	/**
-	 * Bitte mach deine Aufräumarbeiten (Speichern?) vorm baldigen Schließen aber belästige Thorsten nicht mit PopUps oder ähnlichem.
+	 * Bitte mach deine Aufräumarbeiten (Speichern?) vorm baldigen Schließen aber belästige
+	 * Thorsten nicht mit PopUps oder ähnlichem.
 	 */
 	default void closeSilent(boolean save) {};
 	
 	/**
-	 * Bitte mach deine Aufräumarbeiten (Speichern?) vorm baldigen Schließen und wenn Du noch Rückfragen hast, darfs Du auch PopUps anzeigen.
+	 * Bitte mach deine Aufräumarbeiten (Speichern)
+	 * vorm baldigen Schließen und wenn Du noch Rückfragen hast, darfst Du auch PopUps anzeigen.
 	 */
-	default void endGracefully() {};
+	default void saveChosen() {};
 	
 	/**
 	 * Der User hat auf Pause geklickt.
 	 */
-	public default void reactOnPauseClick() {};
+	default void reactOnPauseClick() {};
 	
 	/**
 	 * Der User hat die Sortierreihenfolge geändert.
 	 * @param order
 	 */
-	public default void sortOrderChanged() {};
+	default void sortOrderChanged() {};
+	
+	/**
+	 * Soll der Speichern Button in diesem Screen aktiv sein?
+	 * @return
+	 */
+	default boolean offersSave() {
+		return false;
+	}
 }

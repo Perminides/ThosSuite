@@ -193,7 +193,7 @@ public class Controller{
     	//!Erweiterung Endbedingungen integrieren...
     	//!Architektur Gehört das PopUp hierhin? Oder in die Session wie aktuell?
     	setLearnMenuItemLabels();
-    	mainWindow.showSaveSession(false);
+    	updateSaveVisibility();
     	showEmptyBackground();
     	currentScreen = null;
     	// !Erweiterung im Popup auch fragen ob eine neue Session gestartet werden soll
@@ -204,11 +204,9 @@ public class Controller{
 	    	if (info instanceof AnkiLearnSessionInfo anki) {
 				List<Card> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // !Später: Wenn Session schon den Service bekommt, um die Session zu speichern, warum holt sie sich nicht auch die Karten zum Spielen. Beantwortung muss erfolgen, wenn freies Spiel implementiert wird!
 				currentScreen = new AnkiDeckSession(dueCards, this::sessionEnded, ankiDeckService, anki.getDeckType(), false);
-				mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
 		    } else if (info instanceof RegionLearnSessionInfo region) {
 		    	Set<ShapeMap> regions = regionDeckService.getRegions(region.getSpec());
 		        currentScreen = new RegionSession(region.getSpec(), regions, this::sessionEnded, regionDeckService);
-		        mainWindow.showSaveSession(false);
 		    }
 	        mainWindow.showPane(currentScreen.getView());
 	        currentScreen.start();
@@ -249,7 +247,6 @@ public class Controller{
 	            // Session starten (ohne Sortierung, gemischt)
 	            currentScreen = new AnkiDeckSession(cards, this::sessionEnded, ankiDeckService, deckType, true);
 	            mainWindow.showPane(currentScreen.getView());
-	            //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar. Warum ist das auskommentiert???
 	            currentScreen.start();
 	        });
 	        
@@ -289,7 +286,6 @@ public class Controller{
 	            // Session starten
 	            currentScreen = new RegionSession(spec, regions, this::sessionEnded, regionDeckService);
 	            mainWindow.showPane(currentScreen.getView());
-	            //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar
 	            currentScreen.start();
 	        });
 	    }
@@ -313,7 +309,7 @@ public class Controller{
 	
 	public void saveMenuItemSelected() {
 		if (currentScreen != null)
-			currentScreen.endGracefully();
+			currentScreen.saveChosen();
 	}
 	
 	public void escPressed() {
@@ -389,14 +385,10 @@ public class Controller{
     private void updateUiAfterSkinChange() {
     	Log.info(this, "=== SKIN CHANGE === currentSession=" 
     	        + (currentScreen == null ? "null" : "Session@" + System.identityHashCode(currentScreen)));
-        mainWindow.buildStyledUi();
-        
-        // !Sofort: Das ist aber architektonisch scheiße, dass ich das hier noch mal aufrufen muss!
-        //mainWindow.setCurrentSortOrder(currentSortOrder);
-        
+        mainWindow.buildStyledUi();        
         if (currentScreen != null) {
             currentScreen.refresh();
-            mainWindow.showSaveSession(true); 
+            updateSaveVisibility();
         } else {
             showEmptyBackground();
         }
@@ -430,6 +422,7 @@ public class Controller{
 		        + (currentScreen == null ? "null" : "Session@" + System.identityHashCode(currentScreen)));
 	    if (currentScreen == null) {
 	        startNewSessionRoutine.run();
+	        updateSaveVisibility();
 	        return;
 	    }
 
@@ -462,6 +455,7 @@ public class Controller{
 	            }
 	            break;
 	    }
+	    updateSaveVisibility();
 	}
 	
 	private SessionSwitchAction showSaveDiscardCancelDialog() {
@@ -518,5 +512,9 @@ public class Controller{
         
         // 3. In den Anker hängen
         mainWindow.showPane(emptyView);
-    }    
+    }
+    
+    private void updateSaveVisibility() {
+        mainWindow.showSaveSession(currentScreen != null && currentScreen.offersSave());
+    }
 }
