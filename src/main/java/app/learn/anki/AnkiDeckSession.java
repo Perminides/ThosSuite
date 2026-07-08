@@ -107,11 +107,6 @@ public class AnkiDeckSession implements Screen {
 		else
 			return SessionSwitchStrategy.OFFER_SAVE;
 	}
-	
-	@Override
-	public boolean offersSave() {
-		return !isFreePlay;
-	}
 
 	private String createSummary() {
 		SessionProgressCounter counter = progress.createSessionProgress();

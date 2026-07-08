@@ -41,7 +41,6 @@ public class MainWindow {
 
 	private final StackPane contentPane;
 	
-    private MenuItem itemSave = null;
     private Menu menuLearn = null;
     private Menu menuOptions = null;
     private Menu menuSort = null;
@@ -59,7 +58,8 @@ public class MainWindow {
     private Runnable onExportSelected = null;
     private Runnable onMovieSelected = null;
     private Runnable onMovieAdditionalRunSelected = null;
-    private Runnable onSaveSelected = null;
+    private Runnable onCloseSelected = null;
+    private Runnable onQuitSelected = null;
     private Runnable onEscPressed = null;
     private Runnable onPausePressed = null;
     private Consumer<PlayMenuItem> onPlayItemSelected = null;
@@ -133,10 +133,13 @@ public class MainWindow {
         
         // DATEI-MENÜ
         Menu menuFile = skin.createMenu("Datei");
-        itemSave = skin.createMenuItem("Speichern und beenden");
-        itemSave.setOnAction(_ -> onSaveSelected.run());
-        itemSave.setDisable(true);
-        menuFile.getItems().add(itemSave);
+        MenuItem item = skin.createMenuItem("Schließen");
+        item.setOnAction(_ -> onCloseSelected.run());
+        menuFile.getItems().add(item);
+        item = skin.createMenuItem("Suite beenden");
+        item.setOnAction(_ -> onQuitSelected.run());
+        menuFile.getItems().add(item);
+        
         
         // OPTIONEN-MENÜ
         menuOptions = skin.createMenu("Optionen");
@@ -144,7 +147,7 @@ public class MainWindow {
         
         String lastSortOrderString = Config.get("pref.sortOrder");
         for (CardSortOrder order : CardSortOrder.values()) {
-            MenuItem item = skin.createMenuItem(order.getDisplayName());
+            item = skin.createMenuItem(order.getDisplayName());
             item.setOnAction(e -> {
             	Config.set("pref.sortOrder", order.name());
                 onSortSelected.run();
@@ -217,7 +220,7 @@ public class MainWindow {
             boolean isCurrentSkin = availableSkin.getClass() == currentSkin.getClass();
             String menuText = (isCurrentSkin ? "✓ " : "") + displayName;
             
-            MenuItem item = skin.createMenuItem(menuText);
+            item = skin.createMenuItem(menuText);
             item.setOnAction(_ -> {
                 if (availableSkin == currentSkin) return;
                 onNewSkinSelected.accept(availableSkin);
@@ -293,10 +296,6 @@ public class MainWindow {
         updateLearnMenuItems();
     }
     
-    public void showSaveSession(boolean enabled) {
-        itemSave.setDisable(!enabled);
-    }
-    
     public void showPane(Pane view) {
     	contentPane.getChildren().setAll(view);
     }
@@ -325,9 +324,12 @@ public class MainWindow {
         });
     }
     
-    // Callback Setter
-    public void setSaveRunnable(Runnable action) {
-        this.onSaveSelected = action;
+    public void setCloseRunnable(Runnable action) {
+        this.onCloseSelected = action;
+    }
+    
+    public void setQuitRunnable(Runnable action) {
+    	this.onQuitSelected = action;
     }
     
     public void setLearnSessionConsumer(Consumer<LearnSessionInfo> consumer) {

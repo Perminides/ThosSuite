@@ -47,11 +47,10 @@ import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import app.tmp.Comparison;
 import app.weekday.WeekdayDialog;
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.Pane;
 
 /**
  * Orchestrates session lifecycle:
@@ -84,7 +83,8 @@ public class Controller{
     	//!Später: Wenn sich herausstellt, dass eh nur der Controller die ganzen Menü-Events erhält, dann darf das MainWindow auch den Controller kennen und die Methoden direkt aufrufen. Außer Claude erklärt mir, was an dieser zirkulären Beziehung nun so gefährlich sein soll...
     	mainWindow.setEscPressedRunnable(this::escPressed);
     	mainWindow.setPausePressedRunnable(this::pausePressed);
-    	mainWindow.setSaveRunnable(this::saveMenuItemSelected);
+    	mainWindow.setCloseRunnable(this::closeSelected);
+    	mainWindow.setQuitRunnable(() -> requestSessionSwitch(Platform::exit));
     	mainWindow.setLearnSessionConsumer(this::onLearnMenuItemSelected);
     	mainWindow.setSortChangedRunnable(this::sortOrderChanged);
     	mainWindow.setSkinChangeConsumer(this::newSkinSelected);
@@ -98,7 +98,7 @@ public class Controller{
     	mainWindow.setMovieRunnable(this::movieSelected);
     	mainWindow.setExtraTmdbImportRunnable(this::additionalTmdbImportSelected);
     	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
-    	showEmptyBackground();
+    	showStartScreen();
     	
     	ankiDeckService = new AnkiDeckService();
     	regionDeckService = new RegionDeckService();
@@ -193,9 +193,7 @@ public class Controller{
     	//!Erweiterung Endbedingungen integrieren...
     	//!Architektur Gehört das PopUp hierhin? Oder in die Session wie aktuell?
     	setLearnMenuItemLabels();
-    	updateSaveVisibility();
-    	showEmptyBackground();
-    	currentScreen = null;
+    	showStartScreen();
     	// !Erweiterung im Popup auch fragen ob eine neue Session gestartet werden soll
     }
 	
@@ -308,27 +306,25 @@ public class Controller{
 	}
 	
 	public void saveMenuItemSelected() {
-		if (currentScreen != null)
-			currentScreen.saveChosen();
+		currentScreen.saveChosen();
 	}
 	
 	public void escPressed() {
-		if (currentScreen != null)
-			currentScreen.escClicked();
+		currentScreen.escClicked();
 	}
 	
 	public void pausePressed() {
-		if (currentScreen != null)
-			currentScreen.reactOnPauseClick();
+		currentScreen.reactOnPauseClick();
 	}
 
 	public void sortOrderChanged() {   
-	    if (currentScreen == null)
-	        return;
 	    currentScreen.sortOrderChanged();
 	}
 	
-	// NEU: Die Refresh-Methode
+	public void closeSelected() {
+	    requestSessionSwitch(this::showStartScreen);
+	}
+	
     private void triggerSkinRefresh() {
         SkinService.refresh();
         updateUiAfterSkinChange();
@@ -386,12 +382,7 @@ public class Controller{
     	Log.info(this, "=== SKIN CHANGE === currentSession=" 
     	        + (currentScreen == null ? "null" : "Session@" + System.identityHashCode(currentScreen)));
         mainWindow.buildStyledUi();        
-        if (currentScreen != null) {
-            currentScreen.refresh();
-            updateSaveVisibility();
-        } else {
-            showEmptyBackground();
-        }
+        currentScreen.refresh();
     }
 	
 	private void setPlayMenuItemLabels() {
@@ -420,11 +411,6 @@ public class Controller{
 	public void requestSessionSwitch(Runnable startNewSessionRoutine) {
 		Log.info(this, "=== REQUEST SESSION SWITCH === currentSession=" 
 		        + (currentScreen == null ? "null" : "Session@" + System.identityHashCode(currentScreen)));
-	    if (currentScreen == null) {
-	        startNewSessionRoutine.run();
-	        updateSaveVisibility();
-	        return;
-	    }
 
 	    switch (currentScreen.getSwitchStrategy()) {
 	        case IMMEDIATE:
@@ -455,7 +441,6 @@ public class Controller{
 	            }
 	            break;
 	    }
-	    updateSaveVisibility();
 	}
 	
 	private SessionSwitchAction showSaveDiscardCancelDialog() {
@@ -503,18 +488,8 @@ public class Controller{
         mainWindow.addLearnItems(regionDeckService.getDueGameInfos());
     }
     
-    private void showEmptyBackground() {
-        // 1. Eine dumme, leere Pane erzeugen
-        Pane emptyView = new Pane();
-        
-        // 2. Den "Null"-Hintergrund (Standard-Wallpaper) draufkleben
-        emptyView.setBackground(new Background(SkinService.get().getStartBackgroundImage()));
-        
-        // 3. In den Anker hängen
-        mainWindow.showPane(emptyView);
-    }
-    
-    private void updateSaveVisibility() {
-        mainWindow.showSaveSession(currentScreen != null && currentScreen.offersSave());
+    private void showStartScreen() {
+        currentScreen = new StartScreen();
+        mainWindow.showPane(currentScreen.getView());
     }
 }
