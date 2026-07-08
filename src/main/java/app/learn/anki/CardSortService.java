@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import app.learn.anki.model.Card;
-import app.shared.model.CardSortOrder;
+import app.learn.anki.model.CardSortOrder;
 
 public class CardSortService {
 

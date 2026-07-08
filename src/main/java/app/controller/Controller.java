@@ -43,7 +43,6 @@ import app.movie.SeriesImporter;
 import app.shared.Config;
 import app.shared.Log;
 import app.shared.Screen;
-import app.shared.model.CardSortOrder;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import app.tmp.Comparison;
@@ -69,7 +68,6 @@ public class Controller{
 	
     private MainWindow mainWindow;
     private Screen currentScreen; //!Später natürlich nicht mehr nur MapDeckSessions...
-    private CardSortOrder currentSortOrder = CardSortOrder.BY_WRONG_COUNT_DESC; //!Architektur Sofort: Momentan muss die Anfangssortorder an 2 Stellen gesetzt werden. Gruselig!
     private DataFetcher fitbitDataFetcher;
     private Comparison comparison;        // !tmp
     private Exception comparisonError;    // !tmp
@@ -88,11 +86,10 @@ public class Controller{
     	mainWindow.setPausePressedRunnable(this::pausePressed);
     	mainWindow.setSaveRunnable(this::saveMenuItemSelected);
     	mainWindow.setLearnSessionConsumer(this::onLearnMenuItemSelected);
-    	mainWindow.setSortConsumer(this::cardSortOrderSelected);
+    	mainWindow.setSortChangedRunnable(this::sortOrderChanged);
     	mainWindow.setSkinChangeConsumer(this::newSkinSelected);
     	mainWindow.setReloadSkinRunnable(this::triggerSkinRefresh);
     	mainWindow.setStatisticsConsumer(this::onStatisticsMenuItemSelected);
-    	mainWindow.setSortOrderSupplier(this::getCardSortOrder);
     	mainWindow.setDiaryCreateRunnable(this::diaryCreateSelected);
     	mainWindow.setDiaryViewRunnable(this::diaryViewSelected);
     	mainWindow.setWeekdayRunnable(this::weekdaySelected);
@@ -105,15 +102,6 @@ public class Controller{
     	
     	ankiDeckService = new AnkiDeckService();
     	regionDeckService = new RegionDeckService();
-    	
-    	// Gespeicherte SortOrder laden
-        String savedSort = Config.get("pref.sortOrder", "BY_WRONG_COUNT_DESC");
-        try {
-            currentSortOrder = CardSortOrder.valueOf(savedSort);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Ungültige SortOrder in config.txt: " + savedSort, e);
-        }
-        mainWindow.setCurrentSortOrder(currentSortOrder);
     	
     	setLearnMenuItemLabels();
     	setPlayMenuItemLabels();
@@ -215,7 +203,7 @@ public class Controller{
 	    requestSessionSwitch(() -> {
 	    	if (info instanceof AnkiLearnSessionInfo anki) {
 				List<Card> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // !Später: Wenn Session schon den Service bekommt, um die Session zu speichern, warum holt sie sich nicht auch die Karten zum Spielen. Beantwortung muss erfolgen, wenn freies Spiel implementiert wird!
-				currentScreen = new AnkiDeckSession(dueCards, this::sessionEnded, ankiDeckService, anki.getDeckType(), currentSortOrder, false);
+				currentScreen = new AnkiDeckSession(dueCards, this::sessionEnded, ankiDeckService, anki.getDeckType(), false);
 				mainWindow.showSaveSession(true); //!Später nur wenn es eine Session ist, wo saven überhaupt geht, also keine Regionssessions
 		    } else if (info instanceof RegionLearnSessionInfo region) {
 		    	Set<ShapeMap> regions = regionDeckService.getRegions(region.getSpec());
@@ -259,7 +247,7 @@ public class Controller{
 	        
 	        requestSessionSwitch(() -> {
 	            // Session starten (ohne Sortierung, gemischt)
-	            currentScreen = new AnkiDeckSession(cards, this::sessionEnded, ankiDeckService, deckType, CardSortOrder.RANDOM, true);
+	            currentScreen = new AnkiDeckSession(cards, this::sessionEnded, ankiDeckService, deckType, true);
 	            mainWindow.showPane(currentScreen.getView());
 	            //mainWindow.showSaveSession(false); // Play-Sessions sind nicht speicherbar. Warum ist das auskommentiert???
 	            currentScreen.start();
@@ -328,10 +316,6 @@ public class Controller{
 			currentScreen.endGracefully();
 	}
 	
-	public CardSortOrder getCardSortOrder() {
-		return currentSortOrder;
-	}
-	
 	public void escPressed() {
 		if (currentScreen != null)
 			currentScreen.escClicked();
@@ -342,13 +326,10 @@ public class Controller{
 			currentScreen.reactOnPauseClick();
 	}
 
-	public void cardSortOrderSelected(CardSortOrder sort) {
-	    currentSortOrder = sort;
-	    Config.set("pref.sortOrder", sort.name()); // Persistieren
-	    
+	public void sortOrderChanged() {   
 	    if (currentScreen == null)
 	        return;
-	    currentScreen.sort(sort); //!Später dann weiß noch nicht, muss geschaut werden ob die Session zu sort überhaupt passt.
+	    currentScreen.sortOrderChanged();
 	}
 	
 	// NEU: Die Refresh-Methode

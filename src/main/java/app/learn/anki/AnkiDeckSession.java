@@ -3,11 +3,12 @@ package app.learn.anki;
 import java.util.List;
 
 import app.learn.anki.model.Card;
+import app.learn.anki.model.CardSortOrder;
 import app.learn.model.Deck;
 import app.learn.model.SessionProgressCounter;
+import app.shared.Config;
 import app.shared.Log;
 import app.shared.Screen;
-import app.shared.model.CardSortOrder;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.skin.SkinService;
 import javafx.scene.control.Alert;
@@ -29,10 +30,11 @@ public class AnkiDeckSession implements Screen {
 	private final Runnable onSessionEnded;
 	private final boolean isFreePlay;
 
-	public AnkiDeckSession(List<Card> cards, Runnable onSessionEnded, AnkiDeckService service, Deck type, CardSortOrder sortOrder, boolean isFreePlay) {
+	public AnkiDeckSession(List<Card> cards, Runnable onSessionEnded, AnkiDeckService service, Deck type, boolean isFreePlay) {
 		Log.info(this, "=== SESSION CONSTRUCTOR === Session@" + System.identityHashCode(this));
 		this.onSessionEnded = onSessionEnded;
 		this.isFreePlay = isFreePlay;
+		CardSortOrder sortOrder = isFreePlay ? CardSortOrder.RANDOM : CardSortOrder.valueOf(Config.get("pref.sortOrder"));
 		this.progress = new SessionProgress(cards, service, type, sortOrder, this::endGracefully);
 		new SessionPresenter(type, progress); // registriert sich selbst am Progress via setPresenter(this)
 	}
@@ -42,8 +44,10 @@ public class AnkiDeckSession implements Screen {
 		progress.start();
 	}
 
-	public void sort(CardSortOrder order) {
-		progress.sort(order);
+	@Override
+	public void sortOrderChanged() {
+		if (!isFreePlay)
+			progress.sort(CardSortOrder.valueOf(Config.get("pref.sortOrder")));
 	}
 
 	public void refresh() {
