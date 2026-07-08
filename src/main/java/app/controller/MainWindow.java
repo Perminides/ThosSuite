@@ -6,9 +6,10 @@ import java.util.function.Supplier;
 
 import app.controller.model.PlayMenuItem;
 import app.controller.model.PlayMenuNode;
+import app.learn.anki.model.CardSortOrder;
 import app.learn.model.LearnSessionInfo;
+import app.shared.Config;
 import app.shared.Log;
-import app.shared.model.CardSortOrder;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import javafx.collections.ObservableList;
@@ -49,7 +50,7 @@ public class MainWindow {
     private List<LearnSessionInfo> todaysLearnSessions;
     
     private Consumer<LearnSessionInfo> onSessionSelected = null;
-    private Consumer<CardSortOrder> onSortSelected = null;
+    private Runnable onSortSelected = null;
     private Consumer<Skin> onNewSkinSelected = null;
     private Runnable onDiaryCreateSelected = null;
     private Runnable onDiaryViewSelected = null;
@@ -58,7 +59,6 @@ public class MainWindow {
     private Runnable onExportSelected = null;
     private Runnable onMovieSelected = null;
     private Runnable onMovieAdditionalRunSelected = null;
-    private Supplier<CardSortOrder> sortOrderSupplier = null;
     private Runnable onSaveSelected = null;
     private Runnable onEscPressed = null;
     private Runnable onPausePressed = null;
@@ -142,20 +142,18 @@ public class MainWindow {
         menuOptions = skin.createMenu("Optionen");
         menuSort = skin.createMenu("Anzeigereihenfolge");
         
-        // !Sofort. Boah. Ok, also ich muss bei Skinwechsel nicht mehr im Controller setCurrentSortOrder aufrufen, was gut ist. Dafür habe ich hier diesen Hack, weil bei der allerersten Initialisierung der Controller noch nicht existiert, was eher eklig ist tbh.
-        CardSortOrder currentSortOrder = null;
-        if (sortOrderSupplier != null)
-        	currentSortOrder = sortOrderSupplier.get();
+        String lastSortOrderString = Config.get("pref.sortOrder");
         for (CardSortOrder order : CardSortOrder.values()) {
             MenuItem item = skin.createMenuItem(order.getDisplayName());
             item.setOnAction(e -> {
-                onSortSelected.accept(order);
+            	Config.set("pref.sortOrder", order.name());
+                onSortSelected.run();
                 // Alle anderen enablen, dieses disablen
                 for (MenuItem menuItem : menuSort.getItems()) {
                     menuItem.setDisable(menuItem == e.getSource());
                 }
             });
-            if (order == currentSortOrder)
+            if (order.name().equals(lastSortOrderString))
             	item.setDisable(true);
             menuSort.getItems().add(item);
         }
@@ -345,8 +343,8 @@ public class MainWindow {
         this.onNewSkinSelected = consumer;
     }
     
-    public void setSortConsumer(Consumer<CardSortOrder> consumer) {
-        this.onSortSelected = consumer;
+    public void setSortChangedRunnable(Runnable action) {
+        this.onSortSelected = action;
     }
     
     public void setEscPressedRunnable(Runnable action) {
@@ -363,10 +361,6 @@ public class MainWindow {
     
     public void setStatisticsConsumer(Consumer<String> consumer) {
         this.onStatisticsSelected = consumer;
-    }
-    
-    public void setSortOrderSupplier(Supplier<CardSortOrder> supplier) {
-    	this.sortOrderSupplier = supplier;
     }
     
     public void setDiaryCreateRunnable(Runnable runner) {
