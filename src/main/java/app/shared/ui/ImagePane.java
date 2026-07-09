@@ -84,6 +84,14 @@ public class ImagePane extends StackPane {
         getChildren().addAll(backgroundRect, imageRect, borderRect);
     }
 
+    /**
+     * Wenn der String null oder leer ist, wird der Bilderrahmen geleert. Das wird bspw. bei Multiple Choice häufiger
+     * genutzt. Wenn das Bild im Lern-Bilder-Ordner nicht gefunden wird, so gibt es eine Exception. Dann stimmt etwas
+     * nicht! Wenn diese Komponente mal außerhalb des Lern-Pakets genutzt wird, muss man hier natürlich nochmal ran.
+     * Aber YAGNI...
+     * 
+     * @param imageName
+     */
     public void setImage(String imageName) {
         if (imageName == null || imageName.isEmpty()) {
             imageRect.setStyle("");

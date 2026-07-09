@@ -1838,9 +1838,10 @@ public abstract class Skin {
 	    // !Architektur: Ohne dieses if waren die Alerts bei Fitbit nicht gestylet (die mit parent = null aufgerufen wurden)
 	    if (dialogPane != null && dialogPane.getScene() != null)
 	    	styleScene(dialogPane.getScene());
-	    // !Architektut: Ohne diesen Listener waren der Großteil der Alerts sonst so im Spiel nicht gestylet...
+	    // !Architektur: Ohne diesen Listener waren der Großteil der Alerts sonst so im Spiel nicht gestylet...
 	    dialogPane.sceneProperty().addListener((_, _, newScene) -> {
-	        if (newScene != null) styleScene(newScene);
+	        if (newScene != null)
+	        	styleScene(newScene);
 	    });
 	    
 	    // Oder lieber gar kein Windows Close-Button oben rechts? Dann 0 setzen!
@@ -1943,6 +1944,17 @@ public abstract class Skin {
 	    return headerBar;
 	}
 
+	/**
+	 * 
+	 * TODO: Dieses Wrapper-Konstrukt hier wurde mal eingeführt, um die Zirkel aus den Paketen rauszubekommen. Allerdings
+	 * wurde dabei echt ein Monster geschaffen. Das muss wieder vereinfacht werden. Noch mal mit frischem Blick drauf
+	 * schauen bitte. Das muss doch einfacher gehen. PS: Wieso gibt es bei ImageMapPane eigentlich nichts vergleichbares?
+	 * 
+	 * @param shapeNodes
+	 * @param mapName
+	 * @param category
+	 * @return
+	 */
 	public Region buildShapeMapWrapper(List<Node> shapeNodes, String mapName, String category) {
 	    Rectangle2D bounds = (Rectangle2D) getFieldValue(mapName + "SessionMapPanel");
 	    if (bounds == null)
