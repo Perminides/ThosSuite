@@ -37,7 +37,7 @@ public class PackageDependencyGraph {
 	private static final String SOURCE_ROOT = "C:/Users/permi/git/ThosSuite/src/main/java/app";
 
 	/** Zieldatei für den DOT-Output. */
-	private static final String OUTPUT_DOT = "C:/Users/permi/Desktop/thossuite_packages.dot";
+	private static final String OUTPUT_DOT = "C:/Users/permi/git/ThosSuite/docs/Paketabhängigkeiten.dot";
 
 	/** Nur Packages mit diesem Präfix gelten als "intern" (Kanten dorthin werden behalten). */
 	private static final String INTERNAL_PREFIX = "app";
