@@ -16,7 +16,6 @@ import app.learn.model.LearnStat;
 import app.learn.model.SessionProgressCounter;
 import app.shared.AppClock;
 import app.shared.Log;
-import javafx.scene.layout.Pane;
 
 /**
  * Kapselt den kompletten Karten-Ablauf einer Anki-Lernsession: Iteration über die Karten,
@@ -44,7 +43,7 @@ class SessionProgress {
 	private Map<Integer, CardProgress> cardProgressById;
 	private List<Card> cards;
 	private int currentIndex = -1;
-	private boolean active = true;
+	private boolean active = true; // !Architektur: Das muss natürlich prozessual ausgeschlossen werden, dass inaktive Sessions wiederbelebt werden und dann kann das hier auch ganz weg.
 
 	public SessionProgress(List<Card> cards, AnkiDeckService service, Deck type, CardSortOrder sortOrder, Runnable onLastCardDone) {
 		Log.info(this, "=== PROGRESS CONSTRUCTOR === Progress@" + System.identityHashCode(this));
@@ -218,12 +217,6 @@ class SessionProgress {
 
 	public boolean hasProgressed() {
 		return currentIndex > 0;
-	}
-
-	public Pane getView() {
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
-		return presenter.getView();
 	}
 
 	/**

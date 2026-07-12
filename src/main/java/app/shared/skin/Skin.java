@@ -21,10 +21,10 @@ import app.shared.UIUtils;
 import app.shared.model.BorderParams;
 import app.shared.model.CardData;
 import app.shared.ui.DashboardTile;
-import app.shared.ui.ImagePane;
 import app.shared.ui.MultipleChoicePane;
 import app.shared.ui.SessionInfoLabel;
 import app.shared.ui.SuggestionTextField;
+import app.shared.ui.components.ImagePane;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -1787,6 +1787,10 @@ public abstract class Skin {
 	 * 
 	 * We struggled quite a bit with having a maxHeight, having it always positioned on center and only having the
 	 * maxHeight if really needed. This made the code quite ugly. But it works for now...
+	 * 
+	 * !Architektur: Das Wissend arum, wie ein javafx Alert funktioniert, liegt hiermit immer noch in den features. Die sauberer Lösung
+	 * wäre eine generische Methode in shared, die einen Alert erstellt, showAndWait aufruft und einen javafx-freien Rückgabetyp zurückgibt.
+	 * Viel besser!
 	 * 
 	 * @param parent
 	 * @param title

@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import app.learn.Progress;
-import app.learn.model.ShapeMap;
+import app.learn.model.MapShape;
 
 public interface SessionProgress extends Progress {
 
@@ -18,9 +18,9 @@ public interface SessionProgress extends Progress {
 	default void elementClicked(String id) {} // CLICK
 	default void textInputChanged(String text) {}; // ELIMINATION, WRITE
 	
-	default Set<String> getIds(Set<ShapeMap> regions) {
+	default Set<String> getIds(Set<MapShape> regions) {
 		Set<String> result = new HashSet<>();
-		for (ShapeMap region : regions)
+		for (MapShape region : regions)
 			result.add(region.id());
 		return result;
 	}

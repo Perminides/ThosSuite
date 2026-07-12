@@ -2,9 +2,9 @@ package app.learn.region;
 
 import java.util.Set;
 
-import app.learn.ShapeMapPane.ShapeMapState;
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
+import app.shared.ui.components.learn.ShapeMapPane.ShapeMapState;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 

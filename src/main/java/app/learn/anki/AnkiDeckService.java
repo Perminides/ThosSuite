@@ -20,6 +20,7 @@ import app.learn.model.LearnSessionInfo;
 import app.shared.Config;
 
 /**
+ * Lädt im Konstruktor alle Maps, Anki-Karten sowie deren Fortschritte 
  * Hält alle Karten aus allen Decks sowie die heute fälligen.
  */
 public class AnkiDeckService {
@@ -90,8 +91,8 @@ public class AnkiDeckService {
 				continue;
 			
 			//Preload Maps von Decks die heute fällig sind. !Später toggle im config berücksichtigen
-			if (type.getMapMetadata() != null)
-				MapService.getInstance().getMap(type);
+			if (type.getMapMetadata() != null) //TODO:  Wann sollte die null sein? Entweder raus oder kommentieren!
+				MapService.getInstance().preload(type);
 						
 			dueCards.put(type, new HashMap<>());
 			allCards.put(type, repo.getAllHints(type));

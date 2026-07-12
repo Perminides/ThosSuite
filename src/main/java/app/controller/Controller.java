@@ -14,7 +14,7 @@ import app.diary.DiaryDialog;
 import app.diary.DiaryViewerScreen;
 import app.fitbit.DataFetcher;
 import app.fitbit.DataReviewService;
-import app.fitbit.FitbitStatisticsScreen;
+import app.fitbit.FitbitStatisticsPresenter;
 import app.learn.ImageScaler;
 import app.learn.anki.AnkiDeckService;
 import app.learn.anki.AnkiDeckSession;
@@ -25,7 +25,7 @@ import app.learn.anki.model.Card;
 import app.learn.model.Deck;
 import app.learn.model.DeckCategory;
 import app.learn.model.LearnSessionInfo;
-import app.learn.model.ShapeMap;
+import app.learn.model.MapShape;
 import app.learn.region.RegionDeckService;
 import app.learn.region.RegionPlayConfigDialog;
 import app.learn.region.RegionPlayConfigDialog.RegionPlayConfig;
@@ -45,6 +45,7 @@ import app.shared.Log;
 import app.shared.Screen;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
+import app.shared.ui.components.fitbit.FitbitStatisticsScreen;
 import app.tmp.Comparison;
 import app.weekday.WeekdayDialog;
 import javafx.application.Platform;
@@ -203,7 +204,7 @@ public class Controller{
 				List<Card> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // !Später: Wenn Session schon den Service bekommt, um die Session zu speichern, warum holt sie sich nicht auch die Karten zum Spielen. Beantwortung muss erfolgen, wenn freies Spiel implementiert wird!
 				currentScreen = new AnkiDeckSession(dueCards, this::sessionEnded, ankiDeckService, anki.getDeckType(), false);
 		    } else if (info instanceof RegionLearnSessionInfo region) {
-		    	Set<ShapeMap> regions = regionDeckService.getRegions(region.getSpec());
+		    	Set<MapShape> regions = regionDeckService.getRegions(region.getSpec());
 		        currentScreen = new RegionSession(region.getSpec(), regions, this::sessionEnded, regionDeckService);
 		    }
 	        mainWindow.showPane(currentScreen.getView());
@@ -273,7 +274,7 @@ public class Controller{
 	        );
 	        
 	        // Regionen holen VOR dem Switch
-	        Set<ShapeMap> regions = regionDeckService.getRegions(spec);
+	        Set<MapShape> regions = regionDeckService.getRegions(spec);
 	        
 	        if (regions.isEmpty()) {
 	            SkinService.get().createAlert(mainWindow.getStage(), null, "Keine Regionen gefunden", false, false).showAndWait();
@@ -296,7 +297,7 @@ public class Controller{
 	        if ("Dashboard".equals(item)) {
 	            currentScreen = new DashboardScreen();
 	        } else if ("Fitbit".equals(item)) {
-	            currentScreen = new FitbitStatisticsScreen();
+	            currentScreen = new FitbitStatisticsScreen(new FitbitStatisticsPresenter());
 	        }  else if ("Alkohol".equals(item)) {
 	            currentScreen = new AlcStatisticsScreen();
 	        }

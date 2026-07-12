@@ -154,6 +154,38 @@ es dort findet, statt es neu zu bauen. Maßstab ist nicht „könnte man allgeme
 bei fast allem), sondern „ist es von Natur aus ein Allgemeinwerkzeug". Im Zweifel: Würde ein
 anderes Feature das plausibel auch wollen?
 
+### Framework-frei oder framework-gebunden
+
+„So lokal wie möglich" beantwortet, *wie weit oben* eine Klasse wohnt. Diese zweite
+Achse beantwortet eine unabhängige Frage: *auf welcher Seite der JavaFX-Grenze* sie
+liegt. Beide zusammen sind das Platzierungswerkzeug — erst die Seite, dann die Höhe.
+
+**Das Kriterium.** Was JavaFX (oder CSS) anfasst, ist framework-**gebunden**. Was ohne
+JavaFX kompiliert — reine Logik, Daten, Geometrie, Schlüssel —, ist framework-**frei**.
+Der Schnitt läuft mitten durch ein Feature: seine Daten- und Ablauflogik ist frei, seine
+sichtbaren Bausteine sind gebunden.
+
+**Die Adresse.** Framework-gebundenes eines Features wohnt nicht im Feature, sondern
+unter `shared.ui.components.<feature>` — also `shared.ui.components.learn` für die
+Karten-Panes, den `MapNodeBuilder`, die `ShapeGeometry`. Framework-freies bleibt oben im
+Feature (`learn.model`, `learn.repository`, `learn`). So sammelt sich das JavaFX-Gebundene
+an einem vorhersagbaren Ort statt im ganzen Feature verstreut, und das Feature selbst wird
+Stück für Stück frei.
+
+**Die Übergangsregel: Die Grenze trägt Daten — keine Domänentypen, keine Nodes.** Was von
+der Feature-Seite nach `shared` hinabreicht, ist framework-freie *Datenvokabel*, nicht der
+Domänentyp des Features und kein fertiger JavaFX-Node. Beleg: `ShapeGeometry` (in
+`shared.ui.components.learn.model`) trägt id und Geometrie über die Grenze; der learn-eigene
+`MapShape` mit seiner Fachlichkeit (Namen, Hauptstadt, Matching) bleibt in `learn.model`
+und wird *nie* hinabgereicht. Der sichtbare Node entsteht erst jenseits der Grenze, im
+`MapNodeBuilder`. So bleibt `shared` frei von Feature-Wissen (Regel 3 bleibt gewahrt) und
+das Feature frei von JavaFX.
+
+Diese Achse ist der Grund, warum ein großer zusammenhängender Klumpen im
+Abhängigkeitsgraphen entsteht, sobald JavaFX *nach unten* in `model`/`repository` eines
+Features greift — und warum er sich auflöst, sobald der Node-Bau jenseits der Grenze sitzt
+und nur noch framework-freie Daten hinabreichen.
+
 ### Pfad-Wissen: Struktur gehört der Suite, Dateien dem Feature
 
 Die Ordner-Struktur der Suite ist Suite-Wissen und liegt in `Config` — als computed Pfade,
@@ -243,3 +275,13 @@ Der Skin (`shared.skin`) ist **dumm**: Er kennt keine Domänenklassen.
   direkt zu rufen.
 - **Einbahn.** Die generischen Bausteine in `shared` rufen den Skin nicht zurück; `shared.skin`
   hängt nur an `shared`.
+- **Fabrik/Daten ist keine Komponente.** Nicht alles in `shared.ui.components` ist ein
+  platzierbarer Baustein. Eine **Komponente** ist eine echte, gekapselte UI-Einheit, die
+  in den Szenengraphen gehängt wird und ihren Zustand hält (`MultipleChoicePane`,
+  `ShapeMapPane`). Eine **Fabrik** (`MapNodeBuilder`) *baut* Nodes, ist aber selbst keiner;
+  ein **Datentyp** (`ShapeGeometry`) *beschreibt*, woraus gebaut wird, und hängt nirgends.
+  Am Namen ablesbar: eine Komponente heißt `…Pane`, eine Fabrik `…Builder`, ein Datentyp
+  trägt seinen Sachnamen. Die Unterscheidung ist *was die Klasse ist*, nicht *wo sie wohnt* —
+  darum steht sie neben „Versteckt oder freistehend", nicht bei der Platzierung. (Die
+  Zielstruktur für Fabriken/Daten unterhalb von `ui.components` ist noch offen; bis dahin
+  liegen sie dort, ohne selbst Komponenten zu sein.)

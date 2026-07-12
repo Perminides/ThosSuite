@@ -5,21 +5,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import app.learn.model.ShapeMap;
+import app.learn.model.MapShape;
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
 
 public class WriteSessionProgress implements SessionProgress {
 
 	private final RegionSession session;
-	private final Set<ShapeMap> sessionRegions;
-	private final List<ShapeMap> toLearnRegions;
+	private final Set<MapShape> sessionRegions;
+	private final List<MapShape> toLearnRegions;
 	private SessionPresenter presenter;
 	private Mode mode;
 	private int currentIndex = -1;
 	private boolean isEndPause = false;
 
-	public WriteSessionProgress(Set<ShapeMap> regions, SessionSpec spec, RegionSession regionSession) {
+	public WriteSessionProgress(Set<MapShape> regions, SessionSpec spec, RegionSession regionSession) {
 		this.sessionRegions = regions;
 		this.session = regionSession;
 		this.mode = spec.getMode();
@@ -47,7 +47,7 @@ public class WriteSessionProgress implements SessionProgress {
 		}
 		
 		String text = "";
-		ShapeMap currentRegion = toLearnRegions.get(currentIndex);
+		MapShape currentRegion = toLearnRegions.get(currentIndex);
 		if (mode == Mode.WRITE_BOTH)
 			text += currentRegion.regionName() + " (" + currentRegion.capitalName() + ")";
 		else if (mode == Mode.WRITE_CAPITAL)
@@ -60,7 +60,7 @@ public class WriteSessionProgress implements SessionProgress {
 
 	@Override
 	public void textInputChanged(String text) {
-		ShapeMap currentRegion = toLearnRegions.get(currentIndex);
+		MapShape currentRegion = toLearnRegions.get(currentIndex);
 
 		boolean isMatch = switch (mode) {
 		case WRITE_BOTH -> currentRegion.isMatching(text);
@@ -86,7 +86,7 @@ public class WriteSessionProgress implements SessionProgress {
 	public void endPause() {
 		if (!isEndPause)
 			return;
-		ShapeMap currentRegion = toLearnRegions.get(currentIndex);
+		MapShape currentRegion = toLearnRegions.get(currentIndex);
 		String result = "Folgendes Element nicht erkannt: \n\n";
 		if (mode == Mode.WRITE_BOTH)
 			result += currentRegion.regionName() + " (" + currentRegion.capitalName() + ")";

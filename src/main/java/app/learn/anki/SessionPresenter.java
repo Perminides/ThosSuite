@@ -172,11 +172,20 @@ public class SessionPresenter {
 	// ========================================
 	
 	public void sessionProgressChanged(SessionProgressCounter progress) {
-		sessionPane.sessionProgressChanged(progress);
+		String text = "Korrekt: " + progress.correct()
+			+ "\nFalsch: " + progress.incorrect()
+			+ "\nOffen: " + (progress.total() - progress.correct() - progress.incorrect());
+		sessionPane.setProgressText(text);
 	}
-	
+
 	public void newCardIncoming(LearnStat stats) {
-		sessionPane.updateCardStats(stats);
+		String text = "";
+		if (stats != null) {
+			text = "Zuletzt gespielt: " + stats.getLastPlayed()
+				+ "\nLevel: " + stats.getCurrentLevel()
+				+ "\nFalsch beantwortet: " + stats.getWrongCount();
+		}
+		sessionPane.setCardHistoryText(text);
 	}
 	
 	/**

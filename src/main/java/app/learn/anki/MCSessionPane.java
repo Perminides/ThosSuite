@@ -6,13 +6,11 @@ import java.util.function.Consumer;
 
 import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
-import app.learn.model.LearnStat;
-import app.learn.model.SessionProgressCounter;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
-import app.shared.ui.ImagePane;
 import app.shared.ui.MultipleChoicePane;
 import app.shared.ui.SessionInfoLabel;
+import app.shared.ui.components.ImagePane;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
@@ -123,24 +121,13 @@ public class MCSessionPane extends Pane implements SessionPane{
 	    presenter.clickedBack();
 	}
 
-	// !Architektur Wenn das jetzt jedes Panel für sich implementiert, dann doch besser ins Interface? Aber das hat keinen Zugriff auf progressArea...
 	@Override
-	public void sessionProgressChanged(SessionProgressCounter progress) {
-		String text = "Korrekt: " + progress.correct() + "\nFalsch: "
-				+ progress.incorrect() + "\nOffen: "
-				+ (progress.total()-progress.correct()-progress.incorrect());
+	public void setProgressText(String text) {
 		progressArea.setText(text);
 	}
 
-
 	@Override
-	public void updateCardStats(LearnStat stats) {
-		String text = "";
-		if (stats != null) {
-		text = "Zuletzt gespielt: " + stats.getLastPlayed()
-			+ "\nLevel: " + stats.getCurrentLevel()
-			+ "\nFalsch beantwortet: " + stats.getWrongCount();
-		}
+	public void setCardHistoryText(String text) {
 		cardHistoryArea.setText(text);
 	}
 	

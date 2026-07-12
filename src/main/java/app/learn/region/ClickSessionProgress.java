@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import app.learn.model.ShapeMap;
+import app.learn.model.MapShape;
 import app.learn.region.SessionPresenter.WrongClickResolution;
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
@@ -35,16 +35,16 @@ public class ClickSessionProgress implements SessionProgress{
 	
 	private SessionPresenter presenter;
 
-	public ClickSessionProgress(Set<ShapeMap> regions, SessionSpec spec, RegionSession regionSession) {
+	public ClickSessionProgress(Set<MapShape> regions, SessionSpec spec, RegionSession regionSession) {
 		this.session = regionSession;
 		this.spec = spec;
 		this.sessionRegions = new HashSet<>();
-		for (ShapeMap region : regions) {
+		for (MapShape region : regions) {
 			sessionRegions.add(region.id());
 		}
 		quizElements = new ArrayList<>();
-		for (ShapeMap region : regions) {
-			if (!region.isInteractive())
+		for (MapShape region : regions) {
+			if (!region.isPlayable())
 				continue;
 			
 			String name = spec.getMode().getCapitalOrRegion() == Mode.CapitalOrRegion.CAPITAL ? region.capitalName() : region.regionName();

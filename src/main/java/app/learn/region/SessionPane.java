@@ -3,13 +3,12 @@ package app.learn.region;
 import java.util.Set;
 
 import app.learn.MapService;
-import app.learn.ShapeMapPane;
-import app.learn.ShapeMapPane.ShapeMapState;
 import app.learn.model.Deck;
-import app.learn.model.GeoMap;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import app.shared.ui.SessionInfoLabel;
+import app.shared.ui.components.learn.ShapeMapPane;
+import app.shared.ui.components.learn.ShapeMapPane.ShapeMapState;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
@@ -30,11 +29,14 @@ public class SessionPane extends Pane {
 	
 	private void initUI(boolean questionAreaVisible) {
         Skin skin = SkinService.get();
-        
-        GeoMap map = MapService.getInstance().getMap(deckType);  // holt sich die SessionPane selbst (sie ist learn)
-        karte = new ShapeMapPane(map, deckType.getMapName(), deckType.getCategory().toString());
+
+        // holt sich die Geometrien selbst (SessionPane ist learn); die framework-freie Karte baut ihre Nodes selbst.
+        karte = new ShapeMapPane(
+                MapService.getInstance().getMap(deckType).getShapeGeometries(),
+                deckType.getMapName(),
+                deckType.getCategory().toString());
         getChildren().add(karte.getView());
-        karte.setListener(id -> mapElementClicked(id));
+        karte.setClickListener(id -> mapElementClicked(id));
     	
     	// !Sofort: Hier wäre allerdings CENTER schon angesagt
     	if (questionAreaVisible) {

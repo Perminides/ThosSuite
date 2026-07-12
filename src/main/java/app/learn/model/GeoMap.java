@@ -1,159 +1,98 @@
 package app.learn.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import javafx.scene.Group;
-import javafx.scene.image.Image;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
+import app.shared.ui.components.learn.model.ShapeGeometry;
 
 /**
- * Nur eine dünne Datenklasse, nichts wildes hier.
- * Wobei, die kann mittlwerweile auch small|300|400 in einen entsprechenden Shape übersetzen :)
+ * Dünne Datenklasse: die Shapes einer Karte (reine Daten inkl. ShapeGeometry) plus der Kartentyp. Framework-frei.
+ *
+ * <p>{@link #geometryFor(Set)} ist die <b>eine</b> Stelle, an der ids in ihre framework-freien Geometrien
+ * übersetzt werden — für alle id-Sorten einer Karte. Konsequent hier, weil {@link #getShape(String)} schon der
+ * Ort ist, an dem man aus einer id ein Shape holt. Die Geometrie→Node-Umsetzung macht dagegen der MapNodeBuilder
+ * (shared); diese Klasse baut nie einen Node.</p>
  */
 public class GeoMap {
-	public enum CircleSizes {
-		EMPTY("empty", 1),
-		ULTRA_SMALL("ultra small", 4),
-		SMALL("small", 10),
-		MIDDLE_SMALL("middle small", 18),
-		MIDDLE("middle", 25),
-		MIDDLE_BIG("middle big", 37),
-		BIG("big", 50),
-		ULTRA_BIG("ultra big", 100);
-		
-		CircleSizes (String csvName, int i) {
-			this.size = i;
-			this.csvName = csvName;
-		}
-		
-		private final int size;
-		private final String csvName;
-		
-		public int getSize() {return size;}
-		public String getName() {return csvName;}
-		
-	    private static CircleSizes fromCsvName(String name) {
-	        for (CircleSizes cs : values()) {
-	            if (cs.csvName.equals(name)) {
-	                return cs;
-	            }
-	        }
-	        return null; // Oder throw Exception
-	    }
-	};
-	
-    private final Map<String, ShapeMap> shapes; 
-    private final MapType type;
-    private final Image backgroundImage;
-    private final Image overlayImage;
-    private final Image inactiveBackgroundImage;
-    private final Image inactiveOverlayImage;
-    
-    public GeoMap(List<ShapeMap> shapes, MapType type, Image backgroundImage, Image overlayImage, Image inactiveImage, Image inactiveOverlayImage) {
-    	this.shapes = new HashMap<>();
-    	for (ShapeMap shape : shapes)
-    		this.shapes.put(shape.id(), shape);
-    	this.type = type;
-    	this.backgroundImage = backgroundImage;
-    	this.overlayImage = overlayImage;
-    	this.inactiveBackgroundImage = inactiveImage;
-    	this.inactiveOverlayImage = inactiveOverlayImage;
-    }
 
-	public Collection<ShapeMap> getShapes() {
+	private final Map<String, MapShape> shapes;
+	private final MapType type;
+
+	public GeoMap(List<MapShape> shapes, MapType type) {
+		this.shapes = new HashMap<>();
+		for (MapShape shape : shapes)
+			this.shapes.put(shape.id(), shape);
+		this.type = type;
+	}
+
+	public Collection<MapShape> getShapes() {
 		return shapes.values();
 	}
-	
+
+	/**
+	 * Die Geometrien aller Shapes dieser Karte — der framework-freie Transport an die {@code ShapeMapPane}
+	 * (shared). Jede Geometrie trägt id und (bei Shape-Karten) type; die Pane bzw. der MapNodeBuilder leiten
+	 * zIndex/Layer-Klasse/interaktiv selbst daraus ab. Reihenfolge egal — die Pane sortiert nach zIndex.
+	 */
+	public List<ShapeGeometry> getShapeGeometries() {
+		List<ShapeGeometry> result = new ArrayList<>();
+		for (MapShape shape : shapes.values())
+			result.add(shape.geometry());
+		return result;
+	}
+
 	public Collection<String> getIds() {
 		return shapes.keySet();
 	}
-	
+
 	public MapType getType() {
 		return type;
 	}
 
+	/** Liefert den Shape zur id oder wirft. Fabriziert nichts. */
+	public MapShape getShape(String id) {
+		MapShape shape = shapes.get(id);
+		if (shape == null)
+			throw new RuntimeException("Kein Shape für diese id: " + id);
+		return shape;
+	}
+
+	/** Übersetzt eine Menge von ids in ihre Geometrien (jede trägt ihre id). Siehe {@link #geometryFor(String)}. */
+	public List<ShapeGeometry> geometryFor(Set<String> ids) {
+		List<ShapeGeometry> result = new ArrayList<>();
+		for (String id : ids)
+			result.add(geometryFor(id));
+		return result;
+	}
+
 	/**
-	 * 
-	 * @param id
-	 * @return Den angefragten Shape oder einen frischen Kreis der angefragten Größe und dem angefragten Mittelpunkt.
+	 * Übersetzt eine id in ihre framework-freie Geometrie. Drei id-Sorten:
+	 * <ul>
+	 *   <li>echtes Shape ("Frankreich", "Donau") → Lookup, die Geometrie steht schon aus dem GeoJSON fest;</li>
+	 *   <li>sichtbarer Kreis ("größe|x|y", z.B. Städte als Punkte) → CIRCLE, Radius aus CircleSizes;</li>
+	 *   <li>Zentrier-Anker ("empty|x|y") → CENTER, kein sichtbares Shape; die Bild-Karte zentriert nur darauf.</li>
+	 * </ul>
 	 */
-	public ShapeMap getShape(String id) {
-		if (shapes.get(id) != null)
-			return shapes.get(id);
-
+	private ShapeGeometry geometryFor(String id) {
 		if (id.contains("|")) {
-            String[] parts = id.split("\\|");
-            String size = parts[0];
-            int x = Integer.parseInt(parts[1]);
-            int y = Integer.parseInt(parts[2]);
-            
-            ShapeMap circleShape = createCircle(id, size, x, y);
-            // empty = nur Map dahinbewegen. Nichts anzeigen. Also entfernen wir die CSS-Klasse.
-            if (id.startsWith("empty|"))
-            	circleShape.shape().getStyleClass().clear();
-            return circleShape;
+			String[] parts = id.split("\\|");
+			CircleSizes size = CircleSizes.fromCsvName(parts[0]);
+			int x = Integer.parseInt(parts[1]);
+			int y = Integer.parseInt(parts[2]);
+			if (size == CircleSizes.EMPTY)
+				return ShapeGeometry.center(id, x, y);
+			return ShapeGeometry.circle(id, x, y, size.getSize());
 		}
-		throw new RuntimeException("Keine Idee, was ich mit dieser ID machen soll tbh..." + id);
+		return getShape(id).geometry();
 	}
 
-	public Image getBackgroundImage() {
-		return backgroundImage;
-	}
-	
-	public Image getOverlayImage() {
-		return overlayImage;
-	}
-	
-	public Image getInactiveImage() {
-		return inactiveBackgroundImage == null ? backgroundImage : inactiveBackgroundImage;
-	}
-	
-	public Image getInactiveOverlayImage() {
-		return inactiveOverlayImage;
-	}
-	
-	public ShapeMap createCircle(CircleSizes size, int x, int y) {
-		return createCircle("", size.getName(), x, y);
-	}
-	
-	private ShapeMap createCircle(String id, String sizeString, int x, int y) {
-	    CircleSizes circleSize = CircleSizes.fromCsvName(sizeString);
-	    int radius = circleSize != null ? circleSize.getSize() : 65;
-
-	    Shape fillShape;
-	    Shape borderShape;
-	    
-	    if (radius != 65) {
-	        // JavaFX Circle
-	        fillShape = new Circle(x, y, radius);
-	        borderShape = new Circle(x, y, radius);
-	    } else {
-	        // Fallback Rectangle
-	        fillShape = new Rectangle(x - radius/2.0, y - radius/2.0, radius, radius);
-	        borderShape = new Rectangle(x - radius/2.0, y - radius/2.0, radius, radius);
-	    }
-	    
-	    // CSS-Klassen setzen
-	    fillShape.getStyleClass().add("first");
-	    borderShape.getStyleClass().add("second");
-	    
-	    // Group erstellen (Fill zuerst, dann Border)
-	    Group group = new Group(fillShape, borderShape);
-	    group.getStyleClass().add("my-image-map-shape");
-	    group.setUserData(id);
-	    group.setId("groupId-" + id);
-	    
-	    return new ShapeMap(id, null, null, null, null, null, null, group, false);
-	}
-
-	public void setShapes(List<ShapeMap> transformed) {
+	public void setShapes(List<MapShape> transformed) {
 		this.shapes.clear();
-		for (ShapeMap ms : transformed)
+		for (MapShape ms : transformed)
 			this.shapes.put(ms.id(), ms);
 	}
 }

@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import app.learn.model.LearnStat;
-import app.learn.model.ShapeMap;
+import app.learn.model.MapShape;
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
 import app.shared.AppClock;
@@ -45,7 +45,7 @@ public class RegionSession implements Screen {
     private final SessionProgress progress;
     private Boolean active;
 
-	public RegionSession(SessionSpec spec, Set<ShapeMap> regions, Runnable onSessionEnded, RegionDeckService regionService) {
+	public RegionSession(SessionSpec spec, Set<MapShape> regions, Runnable onSessionEnded, RegionDeckService regionService) {
     	this.active = true;
 		this.spec = spec;
     	this.service = regionService;
