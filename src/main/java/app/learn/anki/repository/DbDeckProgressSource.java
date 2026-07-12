@@ -15,9 +15,7 @@ import app.learn.model.Deck;
 import app.learn.model.LearnStat;
 import app.shared.AppClock;
 import app.shared.DB;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
+import app.shared.skin.SkinService;
 
 class DbDeckProgressSource {
 		
@@ -80,7 +78,12 @@ class DbDeckProgressSource {
 		                    } else {
 		                        throw e;
 		                    }
-		                    new Alert(AlertType.WARNING, psLog.getParameterMetaData() + " - " + row.cardId() + " Ich versuche es evtl. nochmal...", ButtonType.OK).showAndWait();
+		                    // !Sofort: Besser beim einlesen schon checken, ob es eine Karte ohne Input gibt!
+		                    // Dann kann das hier nur noch passieren, wenn ich aus Versehen Doppelklicke und der zweite Klick der erwartete der
+		                    // zweiten Karte ist und das wäre aber streng genommen nicht mehr alert-würdig. Das ist dann halt so und würde
+		                    // durch den Retry aufgefangen. Außerdem wird das NIE passieren, weil wie unwahrscheinlich ist das denn?
+		                    // Naja, bei MC kann das schon mal passieren natürlich...
+		                    SkinService.get().createAlert(null, "Warnung", psLog.getParameterMetaData() + " - " + row.cardId() + " Ich versuche es evtl. nochmal...", false, false).showAndWait();
 		                }
 		            }
 		            if (!saved)

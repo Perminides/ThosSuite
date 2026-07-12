@@ -27,6 +27,7 @@ import javafx.scene.layout.Pane;
 public class AnkiDeckSession implements Screen {
 
 	private final SessionProgress progress;
+	private final SessionPresenter presenter;
 	private final Runnable onSessionEnded;
 	private final boolean isFreePlay;
 
@@ -36,7 +37,7 @@ public class AnkiDeckSession implements Screen {
 		this.isFreePlay = isFreePlay;
 		CardSortOrder sortOrder = isFreePlay ? CardSortOrder.RANDOM : CardSortOrder.valueOf(Config.get("pref.sortOrder"));
 		this.progress = new SessionProgress(cards, service, type, sortOrder, this::saveChosen);
-		new SessionPresenter(type, progress); // registriert sich selbst am Progress via setPresenter(this)
+		this.presenter = new SessionPresenter(type, progress); // registriert sich selbst am Progress via setPresenter(this)
 	}
 
 	@Override
@@ -74,7 +75,7 @@ public class AnkiDeckSession implements Screen {
 	 * Beende die Session, aber gern sauber schön mit Zusammenfassung und so :)
 	 */
 	public void saveChosen() {
-		Pane currentPane = progress.getView(); // Muss vor dem Deaktivieren passieren (Window holen).
+		Pane currentPane = presenter.getView(); // Muss vor dem Deaktivieren passieren (Window holen).
 		progress.deactivate();
 		Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Zusammenfassung", createSummary(), false, false);
 		alert.showAndWait();
@@ -97,7 +98,7 @@ public class AnkiDeckSession implements Screen {
 
 	@Override
 	public Pane getView() {
-		return progress.getView();
+		return presenter.getView();
 	}
 
 	@Override

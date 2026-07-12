@@ -3,18 +3,18 @@ package app.learn.region;
 import java.util.HashSet;
 import java.util.Set;
 
-import app.learn.model.ShapeMap;
+import app.learn.model.MapShape;
 import app.learn.region.model.SessionSpec;
 
 public class EliminationSessionProgress implements SessionProgress {
 
 	private final RegionSession session;
-	private final Set<ShapeMap> sessionRegions;
+	private final Set<MapShape> sessionRegions;
 	private SessionPresenter presenter;
 	private SessionSpec spec;
 	private boolean hasProgressed = false;
 
-	public EliminationSessionProgress(Set<ShapeMap> regions, SessionSpec spec, RegionSession regionSession) {
+	public EliminationSessionProgress(Set<MapShape> regions, SessionSpec spec, RegionSession regionSession) {
 		this.sessionRegions = regions;
 		this.session = regionSession;
 		this.spec = spec;
@@ -33,7 +33,7 @@ public class EliminationSessionProgress implements SessionProgress {
 	@Override
 	public void cancel() {
 		String result = "Folgende Elemente wurden nicht eliminiert: \n\n";
-		for (ShapeMap mapShape : sessionRegions) {
+		for (MapShape mapShape : sessionRegions) {
 			switch (spec.getMode()) {
             	case ELIMINATION_BOTH -> result = result + mapShape.regionName() + " - " + mapShape.capitalName() + "\n";
             	case ELIMINATION_CITY -> result = result + mapShape.capitalName() + "\n";
@@ -46,9 +46,9 @@ public class EliminationSessionProgress implements SessionProgress {
 
 	@Override
 	public void textInputChanged(String text) {
-	    Set<ShapeMap> matches = new HashSet<>();
+	    Set<MapShape> matches = new HashSet<>();
 	    
-	    for (ShapeMap region : sessionRegions) {
+	    for (MapShape region : sessionRegions) {
 	        boolean isMatch = switch (spec.getMode()) {
 	            case ELIMINATION_BOTH -> region.isMatching(text);
 	            case ELIMINATION_CITY -> region.isMatchingCapital(text);

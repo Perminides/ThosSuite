@@ -10,23 +10,19 @@ import java.util.stream.Collectors;
 
 import app.learn.model.LearnStat;
 import app.shared.AppClock;
-import javafx.geometry.Point2D;
 
 /**
  * Aktueller Ansatz: Jede Karte gibt es genau 1x im Speicher!
  */
 public class Card {
-	private static Integer debug = 0; 
-    public sealed interface Step permits Image, ClickZone, ClickMapElements, Output, Input, MC, MarkZone, MarkMapElements, Pause {}
+    public sealed interface Step permits Image, ClickMapElements, Output, Input, MC, MarkMapElements, Pause {}
     
     public record AnswerOption(String text, boolean correct) {}
     public record Image(String file) implements Step {}
-    public record ClickZone(String file, Point2D point) implements Step {}
     public record ClickMapElements(Set<String> mandatory, Set<String> optional) implements Step {}
     public record Output(String text) implements Step {}
     public record Input(List<String> parts) implements Step {}
     public record MC(Set<AnswerOption> options) implements Step {}
-    public record MarkZone(String file, Point2D point) implements Step {}
     public record MarkMapElements(Set<String> left, Set<String> right) implements Step {} // Momentan ist right immer leer. Vielleicht will ich später aber auch mal die optionalen Shapes berücksichtigen...
     public record Pause() implements Step {}
 
@@ -35,7 +31,6 @@ public class Card {
 	private final String remark;
 	private final Set<String> labels = new HashSet<>();
 	
-	private MC lastMCStep = null;
 	private LearnStat learnStat;
 
 	public Card(List<String> csvTokens, LearnStat learnStat) {

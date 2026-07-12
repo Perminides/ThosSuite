@@ -5,17 +5,14 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import app.learn.MapService;
-import app.learn.ShapeMapPane;
 import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
-import app.learn.model.GeoMap;
-import app.learn.model.LearnStat;
-import app.learn.model.SessionProgressCounter;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
-import app.shared.ui.ImagePane;
 import app.shared.ui.MultipleChoicePane;
 import app.shared.ui.SessionInfoLabel;
+import app.shared.ui.components.ImagePane;
+import app.shared.ui.components.learn.ShapeMapPane;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Background;
@@ -28,6 +25,9 @@ import javafx.scene.layout.Pane;
  * 
  * This pane can be recreated during skin changes (via presenter.refresh()).
  * The Presenter handles state preservation across recreations.
+ * 
+ * Der erste Aufbau dauert übriegns nen Ticken länger. Das liegt nicht am Code, das haben wir gemessen
+ * Kandidat: JIT-Warmup und JavaFX/CSS-Erstinitialisierung. Nichts worüber Du dir Gedanken machen musst.
  */
 public class GermanySessionPane extends Pane implements SessionPane {
 	private static final Deck DECKTYPE = Deck.GERMANY_CARDS; 
@@ -50,11 +50,13 @@ public class GermanySessionPane extends Pane implements SessionPane {
 
     private void initUI() {
         Skin skin = SkinService.get();
-        
-        GeoMap map = MapService.getInstance().getMap(DECKTYPE);  // holt sich die SessionPane selbst (sie ist learn)
-        deutschlandkarte = new ShapeMapPane(map, DECKTYPE.getMapName(), DECKTYPE.getCategory().toString());
+
+        deutschlandkarte = new ShapeMapPane(
+                MapService.getInstance().getMap(DECKTYPE).getShapeGeometries(),
+                DECKTYPE.getMapName(),
+                DECKTYPE.getCategory().toString());
         getChildren().add(deutschlandkarte.getView());
-    	deutschlandkarte.setListener(id -> mapElementClicked(id));
+    	deutschlandkarte.setClickListener(id -> mapElementClicked(id));
     	deutschlandkarte.moveAllToActive();
     	
     	
@@ -188,22 +190,12 @@ public class GermanySessionPane extends Pane implements SessionPane {
 	}
 
 	@Override
-	public void sessionProgressChanged(SessionProgressCounter progress) {
-		String text = "Korrekt: " + progress.correct() + "\nFalsch: "
-				+ progress.incorrect() + "\nOffen: "
-				+ (progress.total()-progress.correct()-progress.incorrect());
+	public void setProgressText(String text) {
 		progressArea.setText(text);
 	}
 
-
 	@Override
-	public void updateCardStats(LearnStat stats) {
-		String text = "";
-		if (stats != null) {
-		text = "Zuletzt gespielt: " + stats.getLastPlayed()
-			+ "\nLevel: " + stats.getCurrentLevel()
-			+ "\nFalsch beantwortet: " + stats.getWrongCount();
-		}
+	public void setCardHistoryText(String text) {
 		cardHistoryArea.setText(text);
 	}
 	

@@ -309,7 +309,6 @@ public class CardProgress implements Progress{
 	    return step instanceof Card.Input
 	        || step instanceof Card.MC
 	        || step instanceof Card.ClickMapElements
-	        || step instanceof Card.ClickZone
 	        || step instanceof Card.Pause;
 	}
 }

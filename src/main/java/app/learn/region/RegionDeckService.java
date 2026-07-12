@@ -12,7 +12,7 @@ import app.learn.model.Deck;
 import app.learn.model.DeckCategory;
 import app.learn.model.LearnSessionInfo;
 import app.learn.model.LearnStat;
-import app.learn.model.ShapeMap;
+import app.learn.model.MapShape;
 import app.learn.region.model.RegionLearnSessionInfo;
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
@@ -26,7 +26,7 @@ public class RegionDeckService {
 	
 	private final RegionDeckRepository repo;
 	
-    private final Map<Deck, Set<ShapeMap>> regionCache = new HashMap<>();
+    private final Map<Deck, Set<MapShape>> regionCache = new HashMap<>();
     private final Map<Deck, Map<Mode, LearnStat>> statCache = new HashMap<>();
 
 	/**
@@ -39,7 +39,7 @@ public class RegionDeckService {
 			if (type.getCategory() != DeckCategory.REGION_DECK)
 				continue;
 
-			Set<ShapeMap> regions = mapService.getPlayableShapesForDeck(type);
+			Set<MapShape> regions = mapService.getPlayableShapesForDeck(type);
 			if (regions != null) {
 				regionCache.put(type, regions);
 			}
@@ -72,8 +72,8 @@ public class RegionDeckService {
 		return result;
 	}
 
-	public Set<ShapeMap> getRegions(SessionSpec spec) {
-		Set<ShapeMap> result = new HashSet<>(regionCache.get(spec.getDeckType())); // Die Original-Sets bleiben HIER!
+	public Set<MapShape> getRegions(SessionSpec spec) {
+		Set<MapShape> result = new HashSet<>(regionCache.get(spec.getDeckType())); // Die Original-Sets bleiben HIER!
 		// For play sessions more than one deck can be combined...
 		if (spec.getAdditonalDeckTypesForPlay() != null) {
 			for (Deck deckType : spec.getAdditonalDeckTypesForPlay()) {
