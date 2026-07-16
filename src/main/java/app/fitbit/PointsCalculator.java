@@ -4,6 +4,7 @@ import app.fitbit.model.json.Activity;
 import app.fitbit.model.json.ActivityDaySummary;
 import app.fitbit.model.json.ActivityLogList;
 import app.shared.Log;
+import app.shared.model.DialogButton;
 import app.shared.skin.SkinService;
 
 /**
@@ -110,7 +111,7 @@ public class PointsCalculator {
                         Log.error(PointsCalculator.class, "Activity: " + activity);
                     }
                     
-                    SkinService.get().createAlert(null, "Achtung", "Scheinbar hat eine Radfahren-Aktion nicht korrekt aufgezeichnet.\nWenn Du magst, trage einfach die Kilometer im Log nach und ändere den Typ auf Bike...", false, false);
+                    SkinService.get().showAlert("Achtung", "Scheinbar hat eine Radfahren-Aktion nicht korrekt aufgezeichnet.\nWenn Du magst, trage einfach die Kilometer im Log nach und ändere den Typ auf Bike...", DialogButton.OK);
                     Log.warn(PointsCalculator.class, 
                         "Outdoor Bike erkannt - möglicherweise fehlerhafte Aufzeichnung. " +
                         "Bitte manuell im Dialog korrigieren!");
@@ -121,7 +122,7 @@ public class PointsCalculator {
                     break;
                     
                 default:
-                	SkinService.get().createAlert(null, "Achtung", "Ich ignoriere die Aktivität " + activity.getActivityName(), false, false);
+                	SkinService.get().showAlert("Achtung", "Ich ignoriere die Aktivität " + activity.getActivityName(), DialogButton.OK);
                     Log.warn(PointsCalculator.class, 
                         "Unbekannte Aktivität wird ignoriert: " + activity.getActivityName());
                     break;

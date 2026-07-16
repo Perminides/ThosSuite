@@ -3,11 +3,12 @@ package app.learn.anki.model;
 import java.util.List;
 import java.util.Set;
 
-import javafx.scene.layout.Pane;
+import app.shared.ScreenView;
 
 public interface SessionPane {
 
-	public Pane asPane();
+	public ScreenView getView();
+	public void rebuild();
 
 	public void setMcSolution(Set<Integer> correctIds);
 	public void setMcCorrect(int id, boolean correct);

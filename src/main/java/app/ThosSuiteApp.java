@@ -166,7 +166,7 @@ public class ThosSuiteApp extends Application {
                 // C) Zurück in den UI-Thread
 				Platform.runLater(() -> {
 					try {
-						// Pre-Tasks (Splash noch sichtbar)
+						// Pre-Tasks (Splash noch sichtbar). Jetzt wird auch der Skin geladen!
 						initializeMainWindow(primaryStage);
 						primaryStage.setOpacity(0); // MainWindow unsichtbar starten
 						

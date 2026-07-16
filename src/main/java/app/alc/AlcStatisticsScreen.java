@@ -8,6 +8,7 @@ import app.alc.model.RatioEntry;
 import app.alc.repository.AlcRepository;
 import app.shared.Log;
 import app.shared.Screen;
+import app.shared.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.skin.SkinService;
 import javafx.collections.FXCollections;
@@ -30,7 +31,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-public class AlcStatisticsScreen implements Screen {
+public class AlcStatisticsScreen implements Screen, ScreenView {
 
 	   private static final PseudoClass ACHIEVED = PseudoClass.getPseudoClass("achieved");
 	   private static final PseudoClass FAILED = PseudoClass.getPseudoClass("failed");
@@ -48,7 +49,12 @@ public class AlcStatisticsScreen implements Screen {
     }
 
     @Override
-    public Pane getView() {
+    public ScreenView getView() {
+    	return this;
+    }
+    
+    @Override
+    public Pane getPane() {
         if (view == null) {
             view = new StackPane();
             view.getStyleClass().add("chart-root");

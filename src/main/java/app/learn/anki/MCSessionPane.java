@@ -2,123 +2,89 @@ package app.learn.anki;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
+import app.shared.ScreenView;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import app.shared.ui.MultipleChoicePane;
 import app.shared.ui.SessionInfoLabel;
+import app.shared.ui.components.ComponentHost;
+import app.shared.ui.components.IconButton;
 import app.shared.ui.components.ImagePane;
-import javafx.scene.control.Button;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.Pane;
 
-public class MCSessionPane extends Pane implements SessionPane{
-	private static final Deck DECKTYPE = Deck.MC_CARDS; 
+public class MCSessionPane implements SessionPane {
+	private static final Deck DECKTYPE = Deck.MC_CARDS;
 
 	private final SessionPresenter presenter;
-    private SessionInfoLabel questionArea;
-    private SessionInfoLabel progressArea;
-    private SessionInfoLabel cardHistoryArea;
-    private MultipleChoicePane mcPane;
-    private Button backButton;
-    private ImagePane imageComponent;
+	private final ComponentHost canvas = new ComponentHost();
 
-    public MCSessionPane (SessionPresenter presenter) {
-        this.presenter = presenter;
-        this.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
-        initUI();
-    }
-    
-    private void initUI() {
-    	Skin skin = SkinService.get();
-    	
-    	questionArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.QUESTION);
-    	questionArea.setText(""); // Initial leer
-        getChildren().add(questionArea);
-    	
-        imageComponent = skin.createImageComponent(DECKTYPE.getId(), DECKTYPE.getCategory().toString());
-    	getChildren().add(imageComponent);
-    	
-    	mcPane = skin.createMultipleChoicePane(DECKTYPE.getId(), DECKTYPE.getCategory().toString());
-    	mcPane.addListener(
-        		new Consumer<Integer>() {
-    				@Override
-    				public void accept(Integer i) {
-    					onAnswerSelected(i);
-    				}
-        		}
-        	);
-    	getChildren().add(mcPane);
-    	
-    	progressArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.PROGRESS);
-    	progressArea.setText("");
-    	getChildren().add(progressArea);
-    	
-    	cardHistoryArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.CARD_HISTORY);
-    	cardHistoryArea.setText("");
-    	getChildren().add(cardHistoryArea);
-    	
-    	backButton = skin.createIconButton(DECKTYPE.getId(), Skin.IconButtonType.BACK);
-    	backButton.setOnAction(_ -> backButtonClicked());
-    	getChildren().add(backButton);
-    }
-    
-	// ========================================
-	// Called from presenter
-	// ========================================
-    
-    // Question
-	
-    public void setQuestion(String text) {
-    	questionArea.setText(text);
-    }
-    
-	// Image
-    public void setImage(String imageName) {
-    	imageComponent.setImage(imageName);
-    }
-    
-    // Multiple Choice
-    
+	private SessionInfoLabel questionArea;
+	private SessionInfoLabel progressArea;
+	private SessionInfoLabel cardHistoryArea;
+	private MultipleChoicePane mcPane;
+	private IconButton backButton;
+	private ImagePane imageComponent;
+
+	public MCSessionPane(SessionPresenter presenter) {
+		this.presenter = presenter;
+		rebuild();
+	}
+
+	@Override
+	public void rebuild() {
+		Skin skin = SkinService.get();
+		
+		canvas.setBackgroundImage(skin.getEmptyBackgroundImage());
+
+		questionArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.QUESTION);
+		questionArea.setText("");
+
+		imageComponent = skin.createImageComponent(DECKTYPE.getId(), DECKTYPE.getCategory().toString());
+
+		mcPane = skin.createMultipleChoicePane(DECKTYPE.getId(), DECKTYPE.getCategory().toString());
+		mcPane.addListener(index -> presenter.clickedMCAnswer(index));
+
+		progressArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.PROGRESS);
+		progressArea.setText("");
+
+		cardHistoryArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.CARD_HISTORY);
+		cardHistoryArea.setText("");
+
+		backButton = new IconButton(skin.createIconButton(DECKTYPE.getId(), Skin.IconButtonType.BACK));
+		backButton.onClick(() -> presenter.clickedBack());
+
+		canvas.setComponents(questionArea, imageComponent, mcPane, progressArea, cardHistoryArea, backButton);
+	}
+
+	@Override
+	public void setQuestion(String text) {
+		questionArea.setText(text);
+	}
+
+	@Override
+	public void setImage(String imageName) {
+		imageComponent.setImage(imageName);
+	}
+
+	@Override
 	public void setMultipleChoice(List<String> answers) {
 		mcPane.initiateMultipleChoice(answers);
 	}
-	
-	/**
-	 * Setzt aktive Buttons auf inaktiv
-	 * @param active
-	 */
-	public void setMCPanelActive(boolean active) {
-		/**if (active)
-			throw new RuntimeException("Das habe ich nicht vorhergesehen.");
-		else
-			mcPanel.inactivateAllActiveButtons();**/
-	}
-	
-	/**
-	 * Setzt alle Buttons auf disabled. Für wenn MC gerade überhaupt nicht gebraucht wird...
-	 */
+
+	@Override
 	public void disableMcPanel() {
-		/**mcPanel.disableAllButtons();**/
-	}
-	
-    public void setMcCorrect(int id, boolean correct) {
-    	mcPane.setCorrect(id, correct);
-    }
-    
-	public void setMcSolution(Set<Integer> correctIds) {
-		mcPane.setCorrectAndInactive(correctIds);
+		/* Original: auskommentiert / no-op */ }
+
+	@Override
+	public void setMcCorrect(int id, boolean correct) {
+		mcPane.setCorrect(id, correct);
 	}
 
-	public void onAnswerSelected(int index) {
-		presenter.clickedMCAnswer(index);
-	}
-	
-	private void backButtonClicked() {
-	    presenter.clickedBack();
+	@Override
+	public void setMcSolution(Set<Integer> correctIds) {
+		mcPane.setCorrectAndInactive(correctIds);
 	}
 
 	@Override
@@ -130,9 +96,9 @@ public class MCSessionPane extends Pane implements SessionPane{
 	public void setCardHistoryText(String text) {
 		cardHistoryArea.setText(text);
 	}
-	
+
 	@Override
-	public Pane asPane() {
-		return this;
+	public ScreenView getView() {
+		return canvas;
 	}
 }

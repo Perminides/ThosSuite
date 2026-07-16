@@ -1,54 +1,38 @@
 package app.diary;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import app.diary.model.Entry;
 import app.diary.repository.Repository;
 import app.shared.Config;
 import app.shared.Screen;
+import app.shared.ScreenView;
+import app.shared.model.DiaryCardData;
 import app.shared.model.SessionSwitchStrategy;
-import app.shared.skin.SkinService;
-import app.shared.skin.Skin.DiaryViewerComponents;
-import javafx.application.Platform;
-import javafx.css.PseudoClass;
-import javafx.geometry.Pos;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import app.shared.ui.components.DiaryViewerScreenView;
 
 public class DiaryViewerScreen implements Screen {
 
-    private static final PseudoClass INVALID_QUERY = PseudoClass.getPseudoClass("invalid-query");
     private static final int DEFAULT_MAX_RESULTS = 100;
 
     private final Repository repository = new Repository();
+    private final DiaryViewerScreenView view = new DiaryViewerScreenView();
 
-    private VBox view;
-    private TextField queryField;
-    private DatePicker fromPicker;
-    private DatePicker toPicker;
-    private VBox resultBox;
+    public DiaryViewerScreen() {
+        view.setSearchListener(this::runSearch);
+        view.setEditListener(this::openEdit);
+    }
 
     @Override
-    public Pane getView() {
-        if (view == null) {
-            view = new VBox();
-            view.setAlignment(Pos.TOP_CENTER);
-            VBox.setVgrow(view, Priority.ALWAYS);
-            buildView();
-        }
+    public ScreenView getView() {
         return view;
     }
 
     @Override
     public void refresh() {
-        buildView();
+        view.rebuild();
     }
 
     @Override
@@ -56,92 +40,43 @@ public class DiaryViewerScreen implements Screen {
         return SessionSwitchStrategy.IMMEDIATE;
     }
 
-    private void buildView() {
-        view.getChildren().clear();
-        view.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
-
-        DiaryViewerComponents components = SkinService.get().createDiaryViewer();
-        fromPicker = components.fromPicker();
-        toPicker = components.toPicker();
-        queryField = components.queryField();
-        resultBox = components.resultBox();
-
-        queryField.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.ENTER) {
-                runSearch();
-            }
-        });
-
-        fromPicker.setOnAction(_ -> runSearch());
-        toPicker.setOnAction(_ -> runSearch());
-
-        VBox.setVgrow(components.root(), Priority.ALWAYS);
-        view.getChildren().add(components.root());
-        Platform.runLater(() -> queryField.requestFocus());
-        runSearch();
-    }
-
-    private void runSearch() {
-        String raw = queryField.getText();
+    private void runSearch(String rawQuery, LocalDate from, LocalDate to) {
         String whereFragment;
-
-        if (raw == null || raw.isBlank()) {
-            // Keine Einschränkung auf Text/Tags — alle Einträge im Zeitraum
+        if (rawQuery == null || rawQuery.isBlank()) {
             whereFragment = "1=1";
-            queryField.pseudoClassStateChanged(INVALID_QUERY, false);
+            view.setQueryValid(true);
         } else {
             try {
-                whereFragment = new QueryParser().parse(raw);
-                queryField.pseudoClassStateChanged(INVALID_QUERY, false);
+                whereFragment = new QueryParser().parse(rawQuery);
+                view.setQueryValid(true);
             } catch (QueryParser.InvalidQueryException e) {
-                queryField.pseudoClassStateChanged(INVALID_QUERY, true);
+                view.setQueryValid(false);
                 return;
             }
         }
 
         int maxResults = Config.getInt("diary.maxResults", DEFAULT_MAX_RESULTS);
-        LocalDate from = fromPicker.getValue();
-        LocalDate to = toPicker.getValue();
+        List<Entry> entries = repository.search(whereFragment, from, to, maxResults + 1);
 
-        List<Entry> entries =
-                repository.search(whereFragment, from, to, maxResults + 1);
+        boolean truncated = entries.size() > maxResults;
+        if (truncated) entries = entries.subList(0, maxResults);
 
-        resultBox.getChildren().clear();
-
-        if (entries.size() > maxResults) {
-            entries = entries.subList(0, maxResults);
-            Label hint = new Label("Mehr als " + maxResults + " Treffer — bitte Suche verfeinern.");
-            hint.getStyleClass().add("diary-viewer-hint");
-            resultBox.getChildren().add(hint);
+        List<DiaryCardData> cards = new ArrayList<>();
+        for (Entry e : entries) {
+            cards.add(new DiaryCardData(
+                    e.createdAt(), e.entryDate(), e.text(), e.tags(), e.attachmentPaths()));
         }
+        view.showResults(cards, truncated, maxResults);
+    }
 
-        for (Entry entry : entries) {
-        	Pane card = SkinService.get().createDiaryCard(
-                    entry.createdAt(),
-                    entry.entryDate(),
-                    entry.text(),
-                    entry.tags(),
-                    entry.attachmentPaths());
-
-            card.setOnMouseClicked(_ -> {
-                DiaryDialog editDialog = new DiaryDialog();
-                editDialog.showEdit(
-                        view.getScene().getWindow(),
-                        entry.createdAt(),
-                        entry.entryDate(),
-                        entry.text(),
-                        entry.tags());
-                runSearch(); // Ergebnisse nach Edit aktualisieren
-            });
-
-            resultBox.getChildren().add(card);
-        }
+    private void openEdit(DiaryCardData c) {
+        new DiaryDialog().showEdit(c.createdAt(), c.entryDate(), c.text(), c.tags());
     }
 
     // -------------------------------------------------------------------------
     // Innere Klasse: QueryParser
     // -------------------------------------------------------------------------
-
+    
     private static class QueryParser {
 
         private String input;

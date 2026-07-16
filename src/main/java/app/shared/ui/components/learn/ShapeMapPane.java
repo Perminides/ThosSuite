@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import app.shared.skin.SkinService;
+import app.shared.ui.components.UiComponent;
 import app.shared.ui.components.learn.model.ShapeGeometry;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
@@ -34,7 +35,7 @@ import javafx.scene.layout.Region;
  * Wrapper = {@code .my-shape-map-pane}, {@code :paused};
  * Shape = {@code .my-map-shape}, {@code :correct/:incorrect/:marked/:active/:inactive}.</p>
  */
-public class ShapeMapPane {
+public class ShapeMapPane implements UiComponent{
 
 	/** Was die Pane pro Shape festhält: den gebauten Node und ob er interaktiv ist (für Klick + moveAllToActive). */
 	private record ShapeNode(Node node, boolean interactive) {}
@@ -61,6 +62,8 @@ public class ShapeMapPane {
 	private final Map<String, ShapeNode> shapes = new HashMap<>();
 
 	// Der vom Skin gebaute, sichtbare Wrapper. Opak — diese Klasse kennt nur Region.
+	// !Sofort: Schau halt in Skin beim shapemapwrapper. Das Konstrukt ist so kompliziert und ich weiß auch nicht
+	// mehr genau warum wir das so gebaut hatten. Was ganz schlecht ist.
 	private final Region view;
 
 	private Consumer<String> clickListener;

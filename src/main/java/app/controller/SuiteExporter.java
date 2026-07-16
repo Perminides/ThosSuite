@@ -3,7 +3,6 @@ package app.controller;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,6 +13,7 @@ import java.util.regex.Pattern;
 
 import app.shared.Config;
 import app.shared.Log;
+import app.shared.model.DialogButton;
 import app.shared.skin.SkinService;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DatePicker;
@@ -68,8 +68,7 @@ public class SuiteExporter {
 			this.oneDriveFolder = Config.getPath(KEY_ONEDRIVE_FOLDER);
 			this.zipPassword = Config.getString(KEY_ZIP_PASSWORD);
 		} catch (Exception e) {
-			SkinService.get().createAlert(SkinService.getOwnerWindow(), "Kein Export möglich", "Ich kann vermutlich einen Ordner nicht finden.", false, false)
-					.showAndWait();
+			SkinService.get().showAlert("Kein Export möglich", "Ich kann vermutlich einen Ordner nicht finden.", DialogButton.OK);
 			return;
 		}
 
@@ -82,13 +81,13 @@ public class SuiteExporter {
             List<Path> files = scanFiles(since.get(), rules);
 
             if (files.isEmpty()) {
-                SkinService.get().createAlert(null, "Suite Export", "Keine geänderten Dateien seit " + since.get() + " gefunden.", ButtonType.OK).showAndWait();
+                SkinService.get().showAlert("Suite Export", "Keine geänderten Dateien seit " + since.get() + " gefunden.", DialogButton.OK);
                 return;
             }
 
             Path zipPath = buildZip(files);
             Log.info(this.getClass(), "SuiteExporter: " + files.size() + " Dateien exportiert nach " + zipPath);
-            SkinService.get().createAlert(null, "Suite Export", files.size() + " Dateien exportiert:\n" + zipPath.getFileName(), ButtonType.OK).showAndWait();
+            SkinService.get().showAlert("Suite Export", files.size() + " Dateien exportiert:\n" + zipPath.getFileName(), DialogButton.OK);
         } catch (Exception e) {
             throw new RuntimeException("Export fehlgeschlagen: " + e.getMessage());
         }

@@ -27,9 +27,9 @@ import app.messaging.whatsapp.repository.WhatsAppSourceRepository;
 import app.shared.Config;
 import app.shared.DB;
 import app.shared.Log;
+import app.shared.model.DialogButton;
 import app.shared.skin.SkinService;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
+import app.shared.ui.dialog.WhatsAppChatDialog;
 
 /**
  * 
@@ -172,11 +172,7 @@ public class WhatsAppIncrementalImport {
         if (lastImportTime == null) return;
         if (lastImportTime.isBefore(LocalDateTime.now().minusDays(warningAfterDays))) {
         	Log.warn(this.getClass(), "WhatsApp-import: Uff. Schon lange kein Import mehr gelaufen. Warnung ausgegeben.");
-            Alert alert = new Alert(AlertType.WARNING);
-            alert.setTitle("WhatsApp-Import");
-            alert.setHeaderText("Kein Import seit " + warningAfterDays + " Tagen");
-            alert.setContentText("Letzter erfolgreicher Import: " + lastImportTime);
-            alert.showAndWait();
+        	SkinService.get().showAlert("Warnung WhatsApp-Import", "Kein Import seit " + warningAfterDays + " Tagen", DialogButton.OK);
         }
     }
 
@@ -338,16 +334,11 @@ public class WhatsAppIncrementalImport {
                 // Album-Kind liegt mehr als 1 Minute nach dem Opener — ungewöhnlich, aber
                 // kann bei großen Videos durch lange Upload-Zeiten vorkommen.
                 // Alert zur manuellen Prüfung, Import läuft trotzdem weiter.
-                Alert alert = new Alert(AlertType.WARNING);
-                alert.setTitle("WhatsApp-Import — Album-Warnung");
-                alert.setHeaderText("Album-Kind liegt " + (diffMs / 1000) + "s nach Opener");
-                alert.setContentText(
-                    "Kind:     _id=" + sourceId + "  (" + formatTs(timestamp) + ")\n" +
+            	SkinService.get().showAlert("WhatsApp-Import — Album-Warnung", "Album-Kind liegt " + (diffMs / 1000) + "s nach Opener\n\n" + "Kind:     _id=" + sourceId + "  (" + formatTs(timestamp) + ")\n" +
                     "Opener:   _id=" + openerSourceId + "  (" + formatTs(openerTimestamp) + ")\n" +
                     "albumKey: " + albumKey + "\n" +
                     "filePath: " + filePath + "\n\n" +
-                    "Das Attachment wird trotzdem an den Opener gehängt.");
-                alert.showAndWait();
+                    "Das Attachment wird trotzdem an den Opener gehängt.", DialogButton.OK);
             }
 
             AttachmentResolution res = resolveAttachment(filePath, sourceId);
@@ -532,7 +523,7 @@ public class WhatsAppIncrementalImport {
     // -------------------------------------------------------------------------
 
     private void showSummaryAlert() {
-        SkinService.get().createAlert(null, "WhatsApp-Import abgeschlossen", importedMessages + " Nachrichten und " + importedAttachments + " Anhänge importiert.", false, false).showAndWait();
+        SkinService.get().showAlert("WhatsApp-Import abgeschlossen", importedMessages + " Nachrichten und " + importedAttachments + " Anhänge importiert.", DialogButton.OK);
     }
 
     // -------------------------------------------------------------------------

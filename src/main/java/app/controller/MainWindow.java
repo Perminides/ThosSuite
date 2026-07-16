@@ -2,7 +2,6 @@ package app.controller;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import app.controller.model.PlayMenuItem;
 import app.controller.model.PlayMenuNode;
@@ -10,6 +9,7 @@ import app.learn.anki.model.CardSortOrder;
 import app.learn.model.LearnSessionInfo;
 import app.shared.Config;
 import app.shared.Log;
+import app.shared.ScreenView;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import javafx.collections.ObservableList;
@@ -22,7 +22,6 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HeaderBar;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -296,8 +295,8 @@ public class MainWindow {
         updateLearnMenuItems();
     }
     
-    public void showPane(Pane view) {
-    	contentPane.getChildren().setAll(view);
+    public void showScreenView(ScreenView view) {
+    	contentPane.getChildren().setAll(view.getPane());
     }
     
     private void initKeyBindings() {

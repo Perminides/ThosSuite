@@ -2,140 +2,120 @@ package app.learn.anki;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import app.learn.MapService;
 import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
 import app.learn.model.GeoMap;
 import app.learn.model.MapImagePaths;
+import app.shared.ScreenView;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import app.shared.ui.MultipleChoicePane;
 import app.shared.ui.SessionInfoLabel;
+import app.shared.ui.components.ComponentHost;
+import app.shared.ui.components.IconButton;
 import app.shared.ui.components.ImagePane;
+import app.shared.ui.components.InputField;
 import app.shared.ui.components.learn.ImageMapPane;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.Pane;
 
-public class ImageMapSessionPane extends Pane implements SessionPane {
+public class ImageMapSessionPane implements SessionPane {
 
 	private final Deck deckType;
 	private final SessionPresenter presenter;
-    private GeoMap map;
-    private TextField textInputField;
-    private SessionInfoLabel questionArea;
-    private SessionInfoLabel progressArea;
-    private SessionInfoLabel cardHistoryArea;
-    private MultipleChoicePane mcPane;
-    private Button backButton;
-    private ImageMapPane mapPane;
-    private ImagePane imageComponent;
+	private final ComponentHost canvas = new ComponentHost();
 
-    public ImageMapSessionPane(SessionPresenter presenter, Deck deckType) {
-        this.presenter = presenter;
-        this.deckType = deckType;
-        this.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
-        initUI();
-    }
+	private GeoMap map;
+	private InputField inputField;
+	private SessionInfoLabel questionArea;
+	private SessionInfoLabel progressArea;
+	private SessionInfoLabel cardHistoryArea;
+	private MultipleChoicePane mcPane;
+	private IconButton backButton;
+	private ImageMapPane mapPane;
+	private ImagePane imageComponent;
 
-    private void initUI() {
-        Skin skin = SkinService.get();
-        map = MapService.getInstance().getMap(deckType);
-        MapImagePaths paths = MapService.getInstance().imagePathsFor(deckType);
-        mapPane = new ImageMapPane(
-        		paths.background(), paths.overlay(), paths.inactiveBackground(), paths.inactiveOverlay(),
-        		skin.getOverlayContentBounds(deckType.getId()));
-        mapPane.setViewportClip(skin.applyImageMapLayout(mapPane, deckType.getId()));  // TODO: Ich verstehe nicht, was hier passiert. Was kein gutes Zeichen ist. Muss diese Zeile hier wirklich hin?
-        mapPane.center(); // jetzt steht die Größe
+	public ImageMapSessionPane(SessionPresenter presenter, Deck deckType) {
+		this.presenter = presenter;
+		this.deckType = deckType;
+		rebuild();
+	}
 
-    	mapPane.setListener(this::mapElementClicked);
-    	getChildren().add(mapPane);
+	@Override
+	public void rebuild() {
+		Skin skin = SkinService.get();
+		canvas.setBackgroundImage(skin.getEmptyBackgroundImage());
+		map = MapService.getInstance().getMap(deckType);
+		MapImagePaths paths = MapService.getInstance().imagePathsFor(deckType);
+		mapPane = new ImageMapPane(
+				paths.background(), paths.overlay(), paths.inactiveBackground(), paths.inactiveOverlay(),
+				skin.getOverlayContentBounds(deckType.getId()));
+		mapPane.setViewportClip(skin.applyImageMapLayout(mapPane, deckType.getId())); // TODO: Ich verstehe nicht, was hier passiert. Muss diese Zeile hier wirklich hin?
+		mapPane.center(); // jetzt steht die Größe
+		mapPane.setListener(id -> presenter.clickedMapElement(id));
 
-    	questionArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.QUESTION);
-    	questionArea.setText("");
-    	getChildren().add(questionArea);
+		questionArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.QUESTION);
+		questionArea.setText("");
 
-    	textInputField = skin.createInputField(deckType.getMapName(), deckType.getCategory().toString());
-        textInputField.setOnKeyReleased(_ -> textInputChanged());
-        getChildren().add(textInputField);
+		inputField = new InputField(skin.createInputField(deckType.getMapName(), deckType.getCategory().toString()));
+		inputField.onType(text -> presenter.typedText(text));
 
-        imageComponent = skin.createImageComponent(deckType.getId(), deckType.getCategory().toString());
-    	getChildren().add(imageComponent);
+		imageComponent = skin.createImageComponent(deckType.getId(), deckType.getCategory().toString());
 
-    	mcPane = skin.createMultipleChoicePane(deckType.getId(), deckType.getCategory().toString());
-    	mcPane.addListener(
-    		new Consumer<Integer>() {
-				@Override
-				public void accept(Integer i) {
-					onAnswerSelected(i);
-				}
-    		}
-    	);
-    	getChildren().add(mcPane);
+		mcPane = skin.createMultipleChoicePane(deckType.getId(), deckType.getCategory().toString());
+		mcPane.addListener(index -> presenter.clickedMCAnswer(index));
 
-    	progressArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.PROGRESS);
-    	progressArea.setText("");
-    	getChildren().add(progressArea); // FEHLER
+		progressArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.PROGRESS);
+		progressArea.setText(""); // FEHLER (Dein Marker — die alte getChildren().add-Zeile ist weg, Signal hier geparkt)
 
-    	cardHistoryArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.CARD_HISTORY);
-    	cardHistoryArea.setText("");
-    	getChildren().add(cardHistoryArea); // FEHLER
+		cardHistoryArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.CARD_HISTORY);
+		cardHistoryArea.setText(""); // FEHLER (Dein Marker)
 
-    	backButton = skin.createIconButton(deckType.getId(), Skin.IconButtonType.BACK);
-    	backButton.setOnAction(_ -> backButtonClicked());
-    	getChildren().add(backButton);
-    }
+		backButton = new IconButton(skin.createIconButton(deckType.getId(), Skin.IconButtonType.BACK));
+		backButton.onClick(() -> presenter.clickedBack());
 
-	// ========================================
-	// Called from presenter
-	// ========================================
+		canvas.setComponents(mapPane, questionArea, inputField, imageComponent, mcPane, progressArea, cardHistoryArea, backButton);
+	}
 
-    // Question
+	@Override
+	public void setQuestion(String text) {
+		questionArea.setText(text);
+	}
 
-    public void setQuestion(String text) {
-    	questionArea.setText(text);
-    }
+	@Override
+	public void setImage(String imageName) {
+		imageComponent.setImage(imageName);
+	}
 
-	// Image
-
-    public void setImage(String imageName) {
-    	imageComponent.setImage(imageName);
-    }
-
-    // Multiple Choice
-
+	@Override
 	public void setMultipleChoice(List<String> answers) {
 		mcPane.initiateMultipleChoice(answers);
 	}
 
-	/**
-	 * Setzt aktive Buttons auf inaktiv. Nach falschem Klick z.B.
-	 * @param active
-	 */
+	@Override
 	public void disableMcPanel() {
 		mcPane.clearAndSetInactive();
 	}
 
-    public void setMcCorrect(int id, boolean correct) {
-    	mcPane.setCorrect(id, correct);
-    }
+	@Override
+	public void setMcCorrect(int id, boolean correct) {
+		mcPane.setCorrect(id, correct);
+	}
 
+	@Override
 	public void setMcSolution(Set<Integer> correctIds) {
 		mcPane.setCorrectAndInactive(correctIds);
 	}
 
-	// Map
+	@Override
+	public void resetMarkers() {
+		mapPane.resetMarkers();
+	}
 
-    public void resetMarkers() {
-    	mapPane.resetMarkers();
-    }
-
-    public void setMapActive(boolean active) {
-    	mapPane.setActive(active);
-    }
+	@Override
+	public void setMapActive(boolean active) {
+		mapPane.setActive(active);
+	}
 
 	@Override
 	public void setIdsInQuestion(Set<String> ids) {
@@ -147,51 +127,25 @@ public class ImageMapSessionPane extends Pane implements SessionPane {
 		mapPane.setMarked(map.geometryFor(ids));
 	}
 
-    @Override
+	@Override
 	public void addIdsToCorrect(Set<String> elements) {
 		mapPane.addToCorrect(map.geometryFor(elements));
-    }
+	}
 
-    @Override
-	public void setIdToIncorrect(String id) { // Die id ist eh null, braucht uns nicht zu interessieren.
-		mapPane.resetMarkers(); // TODO: Wo war die EM 2021? Alle Länder werden grün. Wer gewann? Wenn ich falsch klicke und jetzt eins der 10 nochmal grün wird sehe ich nicht, welches!
-    	mapPane.markLastClickAsIncorrect();
-    }
+	@Override
+	public void setIdToIncorrect(String id) { // id ist eh null
+		mapPane.resetMarkers(); // TODO: EM 2021 — alle Länder grün, welches war falsch?
+		mapPane.markLastClickAsIncorrect();
+	}
 
-    // Input
+	@Override
+	public void setTextFieldActive(boolean active) {
+		inputField.setActive(active);
+	}
 
-    public void setTextFieldActive(boolean active) {
-        if (active) {
-            textInputField.setText("");
-            textInputField.setDisable(false);
-            textInputField.requestFocus();
-        } else {
-            textInputField.setDisable(true);
-        }
-    }
-
+	@Override
 	public void setTextInTextField(String text) {
-		textInputField.setText(text);
-	}
-
-	// ========================================
-	// Called from components
-	// ========================================
-
-	public void onAnswerSelected(int index) {
-		presenter.clickedMCAnswer(index);
-	}
-
-	private void textInputChanged() {
-	    presenter.typedText(textInputField.getText());
-	}
-
-	private void mapElementClicked(String id) {
-	    presenter.clickedMapElement(id);
-	}
-
-	private void backButtonClicked() {
-	    presenter.clickedBack();
+		inputField.setText(text);
 	}
 
 	@Override
@@ -205,7 +159,7 @@ public class ImageMapSessionPane extends Pane implements SessionPane {
 	}
 
 	@Override
-	public Pane asPane() {
-		return this;
+	public ScreenView getView() {
+		return canvas;
 	}
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import app.shared.skin.SkinImageCache;
+import app.shared.ui.components.UiComponent;
 import app.shared.ui.components.learn.model.ShapeGeometry;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
@@ -56,7 +57,7 @@ import javafx.scene.layout.StackPane;
  * 		Shape (group)	= ":correct", ":incorrect", ":marked"
  * 		Shape (path)	= ".first", ".second"
  */
-public class ImageMapPane extends StackPane {
+public class ImageMapPane extends StackPane implements UiComponent{
 
 	// Pseudo-Klassen für CSS
 	private static final PseudoClass CORRECT = PseudoClass.getPseudoClass("correct");
@@ -150,6 +151,11 @@ public class ImageMapPane extends StackPane {
 		double imgH = mainImageView.getImage().getHeight();
 
 		centerOnPoint(imgW / 2.0, imgH / 2.0);
+	}
+	
+    @Override
+	public Node getView() {
+		return this;
 	}
 
 	private void setupInteraction() {

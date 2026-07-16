@@ -9,6 +9,7 @@ import app.activity.ApiClient;
 import app.activity.model.Exercise;
 import app.fitbit.FitbitDayProjection;
 import app.fitbit.model.json.Activity;
+import app.shared.model.DialogButton;
 import app.shared.skin.SkinService;
 
 /**
@@ -81,8 +82,7 @@ public class Comparison {
         }
 
         SkinService.get()
-                .createAlert(null, "Fitbit/Health-Vergleich", message.toString(), false, false)
-                .showAndWait();
+                .showAlert("Fitbit/Health-Vergleich", message.toString(), DialogButton.OK);
     }
 
     // --- Rad-km-Definition: an EINER Stelle, für beide Seiten ---

@@ -1,6 +1,10 @@
 package app.shared;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+
+import javax.imageio.ImageIO;
 
 import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
@@ -11,7 +15,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 
-public class UIUtils {
+public class UiUtils {
     
     /**
      * Konvertiert eine JavaFX-{@link javafx.scene.paint.Color} in einen CSS-kompatiblen Hex-String.
@@ -129,4 +133,13 @@ public class UIUtils {
 	    params.setFill(javafx.scene.paint.Color.TRANSPARENT);
 	    return canvas.snapshot(params, null);
 	}
+	
+    public static int[] getImageDimensions(byte[] imageData) {
+        try {
+            BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageData));
+            return new int[]{img.getWidth(), img.getHeight()};
+        } catch (Exception e) {
+            throw new RuntimeException("getImageDimensions fehlgeschlagen", e);
+        }
+    }
 }

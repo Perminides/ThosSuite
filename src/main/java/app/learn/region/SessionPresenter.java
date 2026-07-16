@@ -4,9 +4,8 @@ import java.util.Set;
 
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
+import app.shared.ScreenView;
 import app.shared.ui.components.learn.ShapeMapPane.ShapeMapState;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 
 /**
  * Intermediary between RegionSessionPane and the RegionSessionProgress.
@@ -22,7 +21,6 @@ public class SessionPresenter {
 	    COMMIT_MISS_AND_CONTINUE     // FreePlay
 	}
 	
-	private final StackPane sessionPaneContainer = new StackPane();
 	private SessionPane sessionPane;
 	private final SessionSpec spec; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 	private final SessionProgress progress;
@@ -34,14 +32,13 @@ public class SessionPresenter {
 	public SessionPresenter(SessionProgress progress, SessionSpec spec) {
 		progress.setPresenter(this);
 		sessionPane = new SessionPane(this, spec.getDeckType(), spec.getMode().getSubCategory() == Mode.SubCategory.CLICK);
-		sessionPaneContainer.getChildren().add(sessionPane);
 		this.progress = progress;
 		this.spec = spec;
 		this.hard = spec.getMode().getEasyHard() == Mode.EasyHard.HARD;
 	}
 	
-	public Pane getView() {
-		return sessionPaneContainer;
+	public ScreenView getView() {
+		return sessionPane.getView();
 	}
 	
 	// ========================================
@@ -50,10 +47,9 @@ public class SessionPresenter {
 	
 	public void refresh() {
 		savedState = new SavedState(sessionPane.getState(), sessionPane.getQuestion());
-		this.sessionPane = new SessionPane(this, spec.getDeckType(), spec.getMode().getSubCategory() == Mode.SubCategory.CLICK);
+		sessionPane.rebuild(spec.getMode().getSubCategory() == Mode.SubCategory.CLICK);
 		sessionPane.setState(savedState.mapState);
 		sessionPane.setQuestion(savedState.text);
-		sessionPaneContainer.getChildren().setAll(sessionPane);
 		savedState = null;
 	}
 

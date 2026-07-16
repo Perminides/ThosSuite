@@ -14,12 +14,12 @@ import app.diary.DiaryDialog;
 import app.diary.DiaryViewerScreen;
 import app.fitbit.DataFetcher;
 import app.fitbit.DataReviewService;
-import app.fitbit.FitbitStatisticsPresenter;
+import app.fitbit.FitbitStatisticsScreen;
 import app.learn.ImageScaler;
 import app.learn.anki.AnkiDeckService;
 import app.learn.anki.AnkiDeckSession;
-import app.learn.anki.AnkiPlayConfigDialog;
-import app.learn.anki.AnkiPlayConfigDialog.AnkiPlayConfig;
+import app.learn.anki.AnkiPlayConfigForm;
+import app.learn.anki.AnkiPlayConfigForm.AnkiPlayConfig;
 import app.learn.anki.model.AnkiLearnSessionInfo;
 import app.learn.anki.model.Card;
 import app.learn.model.Deck;
@@ -27,8 +27,8 @@ import app.learn.model.DeckCategory;
 import app.learn.model.LearnSessionInfo;
 import app.learn.model.MapShape;
 import app.learn.region.RegionDeckService;
-import app.learn.region.RegionPlayConfigDialog;
-import app.learn.region.RegionPlayConfigDialog.RegionPlayConfig;
+import app.learn.region.RegionPlayConfigForm;
+import app.learn.region.RegionPlayConfigForm.RegionPlayConfig;
 import app.learn.region.RegionSession;
 import app.learn.region.model.Mode;
 import app.learn.region.model.RegionLearnSessionInfo;
@@ -43,15 +43,12 @@ import app.movie.SeriesImporter;
 import app.shared.Config;
 import app.shared.Log;
 import app.shared.Screen;
+import app.shared.model.DialogButton;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
-import app.shared.ui.components.fitbit.FitbitStatisticsScreen;
 import app.tmp.Comparison;
 import app.weekday.WeekdayDialog;
 import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 
 /**
  * Orchestrates session lifecycle:
@@ -141,21 +138,21 @@ public class Controller{
         SkinService.setOwnerWindow(mainWindow.getStage());
         // Fitbit-Fehler behandeln
         if (fitbitDataFetcher.hasError()) {
-            SkinService.get().createAlert(mainWindow.getStage(), "Fitbit-Fehler",
-                    "Fehler beim Laden der Fitbit-Daten:\n" + fitbitDataFetcher.getError().getMessage(), false, false).showAndWait();
+            SkinService.get().showAlert("Fitbit-Fehler",
+                    "Fehler beim Laden der Fitbit-Daten:\n" + fitbitDataFetcher.getError().getMessage(), DialogButton.OK);
         } else {
             // Fitbit-Dialoge zeigen
             if (fitbitDataFetcher.hasData()) {
                 DataReviewService fitbitService = new DataReviewService(fitbitDataFetcher);
-                fitbitService.showDialogsAndSave(null);
+                fitbitService.showDialogsAndSave();
             }
         }
      
         // !tmp: Health-Vergleich direkt nach dem Fitbit-Block anzeigen (jetzt steht das MainWindow).
         //       Bei Fehler kein Popup (comparison wäre nur teilbefüllt), nur der Hinweis.
         if (comparisonError != null) {
-            SkinService.get().createAlert(mainWindow.getStage(), "Health-Vergleich",
-                    "Der Health-Vergleich ist heute fehlgeschlagen:\n" + comparisonError.getMessage(), false, false).showAndWait();
+            SkinService.get().showAlert("Health-Vergleich",
+                    "Der Health-Vergleich ist heute fehlgeschlagen:\n" + comparisonError.getMessage(), DialogButton.OK);
         } else if (comparison != null) {
             comparison.showPopup();
         }
@@ -163,7 +160,7 @@ public class Controller{
         StartupService alcoholService = new StartupService();
         alcoholService.checkAndPrompt();
      
-        new DiaryDialog().showNew(mainWindow.getStage());
+        new DiaryDialog().showNew();
      
         new WeekdayDialog().showForDaily();
      
@@ -175,16 +172,14 @@ public class Controller{
             new SignalIncrementalImport().run();
         } catch (Exception e) {
             Log.error(this.getClass(), "", e);
-            Alert alert = SkinService.get().createAlert(mainWindow.getStage(), "Signal", "Beim Signalimport ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", false, false);
-            alert.showAndWait();
+            SkinService.get().showAlert("Signal", "Beim Signalimport ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", DialogButton.OK);
         }
      
         try {
             new WhatsAppIncrementalImport().run();
         } catch (Exception e) {
             Log.error(this.getClass(), "", e);
-            Alert alert = SkinService.get().createAlert(mainWindow.getStage(), "WhatsApp", "Beim WhatsApp-Import ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", false, false);
-            alert.showAndWait();
+            SkinService.get().showAlert("WhatsApp", "Beim WhatsApp-Import ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", DialogButton.OK);
         }
      
         ImageScaler.processImages();
@@ -207,7 +202,7 @@ public class Controller{
 		    	Set<MapShape> regions = regionDeckService.getRegions(region.getSpec());
 		        currentScreen = new RegionSession(region.getSpec(), regions, this::sessionEnded, regionDeckService);
 		    }
-	        mainWindow.showPane(currentScreen.getView());
+	        mainWindow.showScreenView(currentScreen.getView());
 	        currentScreen.start();
 	    });
 	}
@@ -217,14 +212,8 @@ public class Controller{
 	    
 	    if (payload instanceof Deck deckType) {
 	        Set<String> availableLabels = ankiDeckService.getAvailableLabels(deckType);
-	        AnkiPlayConfigDialog dialog = new AnkiPlayConfigDialog(
-	            mainWindow.getStage(),
-	            SkinService.get(),
-	            deckType,
-	            availableLabels
-	        );
 	        
-	        Optional<AnkiPlayConfig> configOpt = dialog.showAndWait();
+	        Optional<AnkiPlayConfig> configOpt = AnkiPlayConfigForm.show(deckType, availableLabels);
 	        if (configOpt.isEmpty()) return;
 	        
 	        AnkiPlayConfig config = configOpt.get();
@@ -238,21 +227,19 @@ public class Controller{
 	        );
 	        
 	        if (cards.isEmpty()) {
-	            SkinService.get().createAlert(mainWindow.getStage(), null, "Keine Karten gefunden", false, false).showAndWait();
+	            SkinService.get().showAlert(null, "Keine Karten gefunden", DialogButton.OK);
 	            return;
 	        }
 	        
 	        requestSessionSwitch(() -> {
 	            // Session starten (ohne Sortierung, gemischt)
 	            currentScreen = new AnkiDeckSession(cards, this::sessionEnded, ankiDeckService, deckType, true);
-	            mainWindow.showPane(currentScreen.getView());
+	            mainWindow.showScreenView(currentScreen.getView());
 	            currentScreen.start();
 	        });
 	        
-	    } else if (payload == DeckCategory.REGION_DECK) {
-	        RegionPlayConfigDialog dialog = new RegionPlayConfigDialog(mainWindow.getStage(), SkinService.get());
-	        
-	        Optional<RegionPlayConfig> configOpt = dialog.showAndWait();
+	    } else if (payload == DeckCategory.REGION_DECK) {	        
+	        Optional<RegionPlayConfig> configOpt = RegionPlayConfigForm.show();
 	        if (configOpt.isEmpty()) return;
 	        
 	        RegionPlayConfig config = configOpt.get();
@@ -277,14 +264,14 @@ public class Controller{
 	        Set<MapShape> regions = regionDeckService.getRegions(spec);
 	        
 	        if (regions.isEmpty()) {
-	            SkinService.get().createAlert(mainWindow.getStage(), null, "Keine Regionen gefunden", false, false).showAndWait();
+	            SkinService.get().showAlert(null, "Keine Regionen gefunden", DialogButton.OK);
 	            return;
 	        }
 	        
 	        requestSessionSwitch(() -> {
 	            // Session starten
 	            currentScreen = new RegionSession(spec, regions, this::sessionEnded, regionDeckService);
-	            mainWindow.showPane(currentScreen.getView());
+	            mainWindow.showScreenView(currentScreen.getView());
 	            currentScreen.start();
 	        });
 	    }
@@ -297,11 +284,11 @@ public class Controller{
 	        if ("Dashboard".equals(item)) {
 	            currentScreen = new DashboardScreen();
 	        } else if ("Fitbit".equals(item)) {
-	            currentScreen = new FitbitStatisticsScreen(new FitbitStatisticsPresenter());
+	            currentScreen = new FitbitStatisticsScreen();
 	        }  else if ("Alkohol".equals(item)) {
 	            currentScreen = new AlcStatisticsScreen();
 	        }
-            mainWindow.showPane(currentScreen.getView());
+            mainWindow.showScreenView(currentScreen.getView());
             currentScreen.start();
 	    });
 	}
@@ -340,13 +327,13 @@ public class Controller{
     }
     
     public void diaryCreateSelected() {
-    	new DiaryDialog().showNew(mainWindow.getStage());
+    	new DiaryDialog().showNew();
     }
     
     public void diaryViewSelected() {
     	requestSessionSwitch(() -> {
     		currentScreen = new DiaryViewerScreen();
-    		mainWindow.showPane(currentScreen.getView());
+    		mainWindow.showScreenView(currentScreen.getView());
     		currentScreen.start();
     	});
     }
@@ -354,7 +341,7 @@ public class Controller{
     public void movieSelected() {
     	requestSessionSwitch(() -> {
     		currentScreen = new MovieViewerScreen();
-    		mainWindow.showPane(currentScreen.getView());
+    		mainWindow.showScreenView(currentScreen.getView());
     		currentScreen.start();
     	});
     }
@@ -445,43 +432,26 @@ public class Controller{
 	}
 	
 	private SessionSwitchAction showSaveDiscardCancelDialog() {
-	    // 1. Buttons definieren
-	    ButtonType btnSave = new ButtonType("Speichern", ButtonBar.ButtonData.YES);
-	    ButtonType btnDiscard = new ButtonType("Verwerfen", ButtonBar.ButtonData.NO);
-	    ButtonType btnCancel = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
-
-	    // 2. Alert direkt mit den Buttons erzeugen
-	    Alert alert = SkinService.get().createAlert(
-	        mainWindow.getStage(), 
+	    DialogButton result = SkinService.get().showAlert(
 	        "Ungespeicherte Änderungen", 
 	        "Du hast ungespeicherten Lernfortschritt...\nSpeichern?", 
-	        btnSave, btnDiscard, btnCancel // <--- Viel sauberer!
+	        DialogButton.SAVE, DialogButton.DISCARD, DialogButton.CANCEL
 	    );
 
-	    // 3. Ergebnis auswerten
-	    Optional<ButtonType> result = alert.showAndWait();
-
-	    if (result.isEmpty()) return SessionSwitchAction.CANCEL;
-
-	    ButtonType chosen = result.get();
-	    if (chosen == btnSave)      return SessionSwitchAction.SAVE_AND_SWITCH;
-	    if (chosen == btnDiscard)   return SessionSwitchAction.DISCARD_AND_SWITCH;
-	    
+	    if (result == DialogButton.CANCEL) return SessionSwitchAction.CANCEL;
+	    if (result == DialogButton.SAVE)      return SessionSwitchAction.SAVE_AND_SWITCH;
+	    if (result == DialogButton.DISCARD)   return SessionSwitchAction.DISCARD_AND_SWITCH;	    
 	    return SessionSwitchAction.CANCEL;
 	}
 	
 	private boolean showConfirmDiscardDialog() {
-	    ButtonType btnConfirm = new ButtonType("Trotzdem beenden", ButtonBar.ButtonData.YES);
-	    ButtonType btnCancel = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
-
-	    Alert alert = SkinService.get().createAlert(
-	        mainWindow.getStage(), 
+	    DialogButton result = SkinService.get().showAlert( 
 	        "Sitzung abbrechen?", 
 	        "Achtung: Der Fortschritt geht verloren.", 
-	        btnConfirm, btnCancel
+	        DialogButton.END_ANYHOW, DialogButton.CANCEL
 	    );
 
-	    return alert.showAndWait().orElse(btnCancel) == btnConfirm;
+	    return result == DialogButton.END_ANYHOW;
 	}
 	
     private void setLearnMenuItemLabels() {
@@ -491,6 +461,6 @@ public class Controller{
     
     private void showStartScreen() {
         currentScreen = new StartScreen();
-        mainWindow.showPane(currentScreen.getView());
+        mainWindow.showScreenView(currentScreen.getView());
     }
 }

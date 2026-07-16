@@ -9,10 +9,10 @@ import app.learn.model.SessionProgressCounter;
 import app.shared.Config;
 import app.shared.Log;
 import app.shared.Screen;
+import app.shared.ScreenView;
+import app.shared.model.DialogButton;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.skin.SkinService;
-import javafx.scene.control.Alert;
-import javafx.scene.layout.Pane;
 
 /**
  * Schale der Anki-Lernsession. Verantwortlich für genau drei Dinge:
@@ -20,9 +20,8 @@ import javafx.scene.layout.Pane;
  *  2) Ansprechpartner für den Controller (Screen),
  *  3) Lebenszyklus: orchestriert Speicher-Trigger und Zusammenfassungs-Alert.
  *
- * Den gesamten Karten-Ablauf (Iteration, Fortschritt, Persistenz-Daten) kapselt der AnkiSessionProgress.
- * Die Schale hält nur diesen einen Progress; der Presenter hängt eine Ebene tiefer am Progress, daher
- * geht getView() über progress.getView() (ein Hop, dafür ein Feld weniger in der Schale).
+ * Die Schale hält den Progress und den Presenter; die View kommt kovariant über presenter.getRoot()
+ * (ein ScreenFrame) — deshalb kein javafx mehr hier.
  */
 public class AnkiDeckSession implements Screen {
 
@@ -59,10 +58,10 @@ public class AnkiDeckSession implements Screen {
 
 	// ==== How to end a session ====
 
-	@Override
 	/**
 	 * Beende die Session ohne weitere Dialoge bitte. Je nach Parameter mit oder ohne Save...
 	 */
+	@Override
 	public void closeSilent(boolean save) {
 		Log.info(this, "=== CLOSE === Session@" + System.identityHashCode(this) + ", save=" + save);
 		progress.deactivate();
@@ -70,15 +69,13 @@ public class AnkiDeckSession implements Screen {
 			progress.save();
 	}
 
-	@Override
 	/**
 	 * Beende die Session, aber gern sauber schön mit Zusammenfassung und so :)
 	 */
+	@Override
 	public void saveChosen() {
-		Pane currentPane = presenter.getView(); // Muss vor dem Deaktivieren passieren (Window holen).
 		progress.deactivate();
-		Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Zusammenfassung", createSummary(), false, false);
-		alert.showAndWait();
+		SkinService.get().showAlert("Zusammenfassung", createSummary(), DialogButton.OK);
 		if (isFreePlay)
 			progress.end();  // Kein Speichern im freien Spiel, nur Presenter-Cleanup.
 		else
@@ -97,7 +94,7 @@ public class AnkiDeckSession implements Screen {
 	}
 
 	@Override
-	public Pane getView() {
+	public ScreenView getView() {
 		return presenter.getView();
 	}
 

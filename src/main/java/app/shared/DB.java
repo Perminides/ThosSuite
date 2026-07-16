@@ -5,9 +5,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
+import app.shared.model.DialogButton;
+import app.shared.skin.SkinService;
 
 public class DB {
 	
@@ -45,7 +44,7 @@ public class DB {
 	public static Connection getConnection() {
 		try {
 			if (connection != null && connection.isClosed()) {
-				new Alert(AlertType.WARNING, "Shit. Die connection ist closed? Wer ist der Übeltäter?", ButtonType.OK).showAndWait();
+				SkinService.get().showAlert("Warnung", "Shit. Die connection ist closed? Wer ist der Übeltäter?", DialogButton.OK);
 			}
 			if (connection == null || connection.isClosed()) {
 				connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath.toString());
@@ -90,7 +89,7 @@ public class DB {
 	public static Connection getTmdbConnection() {
 		try {
 			if (tmdbConnection != null && tmdbConnection.isClosed()) {
-				new Alert(AlertType.WARNING, "Shit. Die connection ist closed? Wer ist der Übeltäter?", ButtonType.OK).showAndWait();
+				SkinService.get().showAlert("Warnung", "Shit. Die connection ist closed? Wer ist der Übeltäter?", DialogButton.OK);
 			}
 			if (tmdbConnection == null || tmdbConnection.isClosed())
 				tmdbConnection = DriverManager.getConnection("jdbc:sqlite:" + tmdbDbPath.toString());
