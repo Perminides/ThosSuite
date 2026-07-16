@@ -4,15 +4,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.Locale;
-import java.util.Optional;
 
 import app.alc.model.Status;
 import app.alc.repository.AlcRepository;
 import app.shared.Log;
+import app.shared.model.DialogButton;
 import app.shared.skin.SkinService;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 
 public class StartupService {
     
@@ -53,39 +50,29 @@ public class StartupService {
     /**
      * !Später: Das Padding ist einigermaßen irre. Buttons nicht bündig mit dem Text. Überall andere Abstände.
      */
-    private boolean showInputDialog(LocalDate date) {
-        // Buttons erstellen
-    	ButtonType btnGreen = new ButtonType("Grün", ButtonBar.ButtonData.OTHER);
-    	ButtonType btnYellow = new ButtonType("Gelb", ButtonBar.ButtonData.OTHER);
-    	ButtonType btnRed = new ButtonType("Rot", ButtonBar.ButtonData.OTHER);
-        ButtonType btnCancel = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
-        
+    private boolean showInputDialog(LocalDate date) {      
         // Wochentag + formatiertes Datum
         String dayOfWeek = date.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.GERMAN);
         String formattedDate = date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
         String message = "Wie war " + dayOfWeek + " der " + formattedDate + "?";
         
         // Alert erstellen
-        Alert alert = SkinService.get().createAlert(
-            null,
+        DialogButton result = SkinService.get().showAlert(
             "Alkohol-Tracker",
             message,
-            btnGreen, btnYellow, btnRed, btnCancel
+            DialogButton.GREEN, DialogButton.YELLOW, DialogButton.RED, DialogButton.CANCEL
         );
         
-        // Ergebnis verarbeiten
-        Optional<ButtonType> result = alert.showAndWait();
-        
-        if (result.isEmpty() || result.get() == btnCancel) {
+        if (result == DialogButton.CANCEL) {
             Log.info(this, "Alkohol-Eingabe abgebrochen");
             return false;
         }
         
         // Status ermitteln
         Status status;
-        if (result.get() == btnGreen) {
+        if (result == DialogButton.GREEN) {
             status = Status.GREEN;
-        } else if (result.get() == btnYellow) {
+        } else if (result == DialogButton.YELLOW) {
             status = Status.YELLOW;
         } else {
             status = Status.RED;

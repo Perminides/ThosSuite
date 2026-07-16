@@ -4,22 +4,13 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
+import app.mattress.model.MattressTurn;
 import app.mattress.repository.MattressRepository;
 import app.shared.Config;
 import app.shared.Log;
+import app.shared.model.AlertOptions;
+import app.shared.model.DialogButton;
 import app.shared.skin.SkinService;
-import app.mattress.model.MattressTurn;
-import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 
 public class TurnDialog {
 
@@ -33,96 +24,33 @@ public class TurnDialog {
 
     public void showIfDue() {
         MattressTurn last = repository.getLastTurn();
-
         if (last != null) {
             long weeksSince = ChronoUnit.WEEKS.between(last.turnedAt(), LocalDateTime.now());
             if (weeksSince < Config.getInt("mattress.dueAfterWeeks", 4)) {
                 return;
             }
         }
-
         show();
     }
-    
+
     public void show() {
-    	MattressTurn last = repository.getLastTurn();
-    	String nextDirection = (last == null || last.direction().equals(DIR_UP_DOWN))
+        MattressTurn last = repository.getLastTurn();
+        String suggested = (last == null || last.direction().equals(DIR_UP_DOWN))
                 ? DIR_RIGHT_LEFT
                 : DIR_UP_DOWN;
+        String other = suggested.equals(DIR_UP_DOWN) ? DIR_RIGHT_LEFT : DIR_UP_DOWN;
 
-        show(nextDirection);
-    }
+        String imgName = suggested.equals(DIR_UP_DOWN) ? IMG_UP_DOWN : IMG_RIGHT_LEFT;
+        Path image = Config.getPath("miscImageFolder").resolve(imgName);
 
-    private void show(String suggestedDirection) {
-        Window owner = SkinService.getOwnerWindow();
+        DialogButton answer = SkinService.get().showAlert("Matratze", "", new AlertOptions().image(image),
+        	      DialogButton.DONE, DialogButton.OTHER_DIRECTION, DialogButton.LATER);
 
-        @SuppressWarnings("unchecked")
-        Dialog<Integer> dialog = (Dialog<Integer>) SkinService.get().createDialog(owner, "Matratze");
-
-        int[] result = { -1 };
-
-        // X-Button: interpretieren als "Mache ich spaeter"
-        dialog.getDialogPane().getScene().getWindow().addEventFilter(
-            WindowEvent.WINDOW_CLOSE_REQUEST, e -> {
-                e.consume();
-                result[0] = 2;
-                dialog.setResult(2);
-            });
-
-        dialog.getDialogPane().setContent(buildContent(dialog, suggestedDirection, result));
-
-        ButtonType cancelType = new ButtonType("", ButtonBar.ButtonData.CANCEL_CLOSE);
-        dialog.getDialogPane().getButtonTypes().add(cancelType);
-
-        var buttonBar = (ButtonBar) dialog.getDialogPane().lookup(".button-bar");
-        if (buttonBar != null) {
-            buttonBar.setMinHeight(0);
-            buttonBar.setPrefHeight(0);
-            buttonBar.setMaxHeight(0);
-            var cancelBtn = dialog.getDialogPane().lookupButton(cancelType);
-            if (cancelBtn != null) {
-                cancelBtn.setVisible(false);
-                cancelBtn.setManaged(false);
-            }
+        switch (answer) {
+            case DONE            -> repository.save(LocalDateTime.now(), suggested);
+            case OTHER_DIRECTION -> repository.save(LocalDateTime.now(), other);
+            case LATER, CANCEL   -> Log.debug(this, "Matratze wenden auf später verschoben.");
+            default              -> throw new IllegalStateException("Unerwarteter DialogButton: " + answer);
         }
-
-        dialog.showAndWait();
-
-        String otherDirection = suggestedDirection.equals(DIR_UP_DOWN) ? DIR_RIGHT_LEFT : DIR_UP_DOWN;
-
-        switch (result[0]) {
-            case 0 -> repository.save(LocalDateTime.now(), suggestedDirection);
-            case 1 -> repository.save(LocalDateTime.now(), otherDirection);
-            case 2 -> Log.debug(this, "Matratze wenden auf später verschoben.");
-        }
-    }
-
-    private VBox buildContent(Dialog<Integer> dialog, String direction, int[] result) {
-        ImageView imageView = new ImageView();
-        imageView.setFitWidth(200);
-        imageView.setFitHeight(150);
-        imageView.setPreserveRatio(true);
-        try {
-            Path imgPath = Config.getPath("miscImageFolder").resolve(direction.equals(DIR_UP_DOWN) ? IMG_UP_DOWN : IMG_RIGHT_LEFT);
-            Image img = new Image(imgPath.toUri().toString());
-            imageView.setImage(SkinService.get().tintImageWithTextColor(img));
-        } catch (Exception e) {
-            throw new RuntimeException("Häh? Wo ist das Bild mit der Matratze?", e);
-        }
-
-        Button btnDone  = new Button("Habe ich getan");
-        Button btnOther = new Button("Andere Richtung genommen");
-        Button btnLater = new Button("Mache ich später");
-
-        btnDone.setOnAction(_ -> { result[0] = 0; dialog.setResult(0); });
-        btnOther.setOnAction(_ -> { result[0] = 1; dialog.setResult(1); });
-        btnLater.setOnAction(_ -> { result[0] = 2; dialog.setResult(2); });
-
-        HBox buttons = new HBox(10, btnDone, btnOther, btnLater);
-        buttons.setAlignment(Pos.CENTER);
-
-        VBox vbox = new VBox(20, imageView, buttons);
-        vbox.setAlignment(Pos.CENTER);
-        return vbox;
     }
 }

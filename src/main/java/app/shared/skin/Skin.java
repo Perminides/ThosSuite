@@ -8,18 +8,22 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import app.shared.Config;
-import app.shared.Log;
-import app.shared.UIUtils;
+import app.shared.UiUtils;
+import app.shared.model.AlertOptions;
 import app.shared.model.BorderParams;
 import app.shared.model.CardData;
+import app.shared.model.DialogButton;
+import app.shared.model.Dismiss;
 import app.shared.ui.DashboardTile;
 import app.shared.ui.MultipleChoicePane;
 import app.shared.ui.SessionInfoLabel;
@@ -72,12 +76,14 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Scale;
 import javafx.stage.Popup;
 import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 
 /**
  * Ja, das ist hier heftige Reflection, es tut mir leid. Aber was ich wollte ist: - Skins, die voneinander erben können - Jedes Skin hat seine eigene
@@ -376,8 +382,8 @@ public abstract class Skin {
 	// region
 	
 	public void styleScene(Scene scene) {
-		menuBarHoverBackground = menuBarHoverBackground == null ? UIUtils.adjustBrightness(menuBarBackground, 20) : menuBarHoverBackground;
-		menuDisabledForeground = menuDisabledForeground == null ? UIUtils.adjustBrightness(textColor, 90) : menuDisabledForeground;
+		menuBarHoverBackground = menuBarHoverBackground == null ? UiUtils.adjustBrightness(menuBarBackground, 20) : menuBarHoverBackground;
+		menuDisabledForeground = menuDisabledForeground == null ? UiUtils.adjustBrightness(textColor, 90) : menuDisabledForeground;
 		menuButtonPadding = menuButtonPadding == null ? font.getSize() * 0.3 + "px " + font.getSize() * 0.4 + "px" : menuButtonPadding;
 		menuItemPadding = menuItemPadding == null ? font.getSize() * 0.1 + "px " + font.getSize() * 0.5 + "px" : menuItemPadding;
 		playFieldBackground = playFieldBackground == null ? menuBarBackground : playFieldBackground;
@@ -480,7 +486,7 @@ public abstract class Skin {
 	    
 	    builder.rule(".button .text, .date-picker .arrow-button .text", "-fx-fill", textActiveComponentColor);
 	    builder.rule(".button:hover, .date-picker .arrow-button:hover", "-fx-background-color", activeComponentHoverColor);
-	    builder.rule(".button:pressed, .date-picker .arrow-button:pressed", "-fx-background-color", UIUtils.adjustBrightness(activeComponentHoverColor, 8));
+	    builder.rule(".button:pressed, .date-picker .arrow-button:pressed", "-fx-background-color", UiUtils.adjustBrightness(activeComponentHoverColor, 8));
 	    // Alternative Effekte (für andere Skins):
 	    //css.rule(".my-mc-button:active:pressed", "-fx-translate-y", "1px");
 	    //css.rule(".my-mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
@@ -501,12 +507,12 @@ public abstract class Skin {
 		
 	    builder.rule(".box .text", "-fx-fill", textActiveComponentColor);
 	    builder.rule(".box:hover", "-fx-background-color", activeComponentHoverColor);
-	    builder.rule(".box:pressed", "-fx-background-color", UIUtils.adjustBrightness(activeComponentHoverColor, 8));
+	    builder.rule(".box:pressed", "-fx-background-color", UiUtils.adjustBrightness(activeComponentHoverColor, 8));
 	    builder.rule(".check-box:selected .mark", "-fx-background-color", textActiveComponentColor); // Die Farbe des Hakens in der Checkbox :-)
 	}
 	
 	private void addScrollbarStyles(CssBuilder builder) {
-		builder.rule(".scroll-bar .track", "-fx-background-color", UIUtils.adjustBrightness(playFieldBackground,10));
+		builder.rule(".scroll-bar .track", "-fx-background-color", UiUtils.adjustBrightness(playFieldBackground,10));
 		builder.rule(".scroll-bar .thumb", "-fx-background-color", activeComponentBgColor);
 		builder.rule(".scroll-bar .thumb:hover", "-fx-background-color", activeComponentHoverColor);
 		builder.rule(".scroll-bar .increment-button, .scroll-bar .decrement-button", "-fx-background-color", menuBarBackground);
@@ -534,6 +540,13 @@ public abstract class Skin {
 	    builder.rule(".combo-box-popup .list-view .list-cell:filled:selected", "-fx-background-color", activeComponentHoverColor);
 	}
 	
+	/**
+	 * !Sofort: Das Padding der Scrollpane (wo eine existiert) und das Padding der ButtonBar ergeben zusammen einen unschönen Abstand
+	 * Man müsste am besten das Padding der Scrollpane, wenn es eine gibt, in einem Dialog auf unten = 0 setzen und nur da.
+	 * Keine Ahnung ob das geht. Und wie das aussieht, wenn darunter keine ButtonBAr mehr mit Padding kommt.
+	 * Nach kurzer Internet-Recherche geht das wohl leider nicht
+	 * @param builder
+	 */
 	private void addDialogStyles(CssBuilder builder) {
 	    // Dialog Container
 	    builder.start(".dialog-pane")
@@ -562,6 +575,7 @@ public abstract class Skin {
 	    // Content in ScrollPane
 	    builder.start(".my-dialog-scrollpane")
 	    .add("-fx-background-color", playFieldBackground)
+	    .add("-fx-padding", "16.7 16.7 0 16.7") // !Sofort. Fieser Hack für das im JavaDoc beschriebene Problem.
 	    .end();
 	    
 	    /* Fix: ScrollPane bekommt Fokus z. B. durch Mausklick und würde
@@ -868,7 +882,7 @@ public abstract class Skin {
 	    builder.rule(".my-mc-button", "-fx-padding", paddingCss);
 	    builder.rule(".my-mc-button:active", "-fx-background-color", activeComponentBgColor);
 	    builder.rule(".my-mc-button:active:hover", "-fx-background-color", activeComponentHoverColor);
-	    builder.rule(".my-mc-button:active:pressed", "-fx-background-color", UIUtils.adjustBrightness(activeComponentHoverColor, 8));
+	    builder.rule(".my-mc-button:active:pressed", "-fx-background-color", UiUtils.adjustBrightness(activeComponentHoverColor, 8));
 	    // Alternative Effekte (für andere Skins):
 	    //css.rule(".my-mc-button:active:pressed", "-fx-translate-y", "1px");
 	    //css.rule(".my-mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
@@ -915,7 +929,7 @@ public abstract class Skin {
 	private void addMyTableStyles(CssBuilder builder) {
 		
 	    builder.start(".my-table-view .table-row-cell:odd")
-	       .add("-fx-background-color", UIUtils.toHex(textColor) + ", " + UIUtils.toHex(playFieldBackground))
+	       .add("-fx-background-color", UiUtils.toHex(textColor) + ", " + UiUtils.toHex(playFieldBackground))
 	       .end();
 	    
 	    builder.start(".my-table-view .table-row-cell:focused")
@@ -923,11 +937,11 @@ public abstract class Skin {
 	    	.end();
 	    
 	    builder.start(".my-table-view .table-row-cell")
-	       .add("-fx-background-color", UIUtils.toHex(textColor) + ", " + UIUtils.toHex(UIUtils.adjustBrightness(playFieldBackground, 5)))
+	       .add("-fx-background-color", UiUtils.toHex(textColor) + ", " + UiUtils.toHex(UiUtils.adjustBrightness(playFieldBackground, 5)))
 	       .end();
 	    
 	    builder.start(".my-table-view .table-row-cell:selected")
-	    	.add("-fx-background-color", UIUtils.toHex(textColor) + ", " + UIUtils.toHex(menuBarHoverBackground))
+	    	.add("-fx-background-color", UiUtils.toHex(textColor) + ", " + UiUtils.toHex(menuBarHoverBackground))
 	    	.add("-fx-background-insets", "0, 0 0 1 0")
 	    	.end();
 	    
@@ -937,7 +951,7 @@ public abstract class Skin {
 	    
 	    builder.start(".my-table-view .column-header, .my-table-view .filler")
 	    	.add("-fx-background-color", menuBarBackground)
-	    	.add("-fx-border-color", "transparent " + UIUtils.toHex(textColor) + " " +  UIUtils.toHex(textColor) + " transparent")
+	    	.add("-fx-border-color", "transparent " + UiUtils.toHex(textColor) + " " +  UiUtils.toHex(textColor) + " transparent")
 	    	.end();
 	    
 	    builder.start(".my-table-view .column-header .label")
@@ -945,7 +959,7 @@ public abstract class Skin {
 	    	.end();
 	    
 	    builder.start(".my-table-view .table-cell")
-	       .add("-fx-border-color", "transparent " + UIUtils.toHex(textColor) + " transparent transparent")
+	       .add("-fx-border-color", "transparent " + UiUtils.toHex(textColor) + " transparent transparent")
 	       .end();
 	    
 	    builder.start(".my-table-view")
@@ -1057,11 +1071,11 @@ public abstract class Skin {
 	    .end();
 	    
 	    builder.start(".chart .axis:bottom")
-	    	.add("-fx-border-color", UIUtils.toHex(textColor) + " transparent transparent transparent") // Es gibt einen Border um die ganze Beschriftung der x-Achse. Der obere Teil dieses Borders ist die x-Achse selbst. Herrje...
+	    	.add("-fx-border-color", UiUtils.toHex(textColor) + " transparent transparent transparent") // Es gibt einen Border um die ganze Beschriftung der x-Achse. Der obere Teil dieses Borders ist die x-Achse selbst. Herrje...
 	    .end();
 	    
 	    builder.start(".chart .axis:left")
-    		.add("-fx-border-color", "transparent " + UIUtils.toHex(textColor) + " transparent transparent") // Siehe oben. Hier müssen wir dann rechts setzen
+    		.add("-fx-border-color", "transparent " + UiUtils.toHex(textColor) + " transparent transparent") // Siehe oben. Hier müssen wir dann rechts setzen
     	.end();
 	    
 	    // Achsen-Titel stylen
@@ -1177,10 +1191,10 @@ public abstract class Skin {
 	    	.add("-fx-fill", textColor)
 	    .end();
 	    builder.start(".date-picker-popup .day-cell.previous-month, .date-picker-popup .day-cell.next-month")
-	       .add("-fx-background-color", UIUtils.adjustBrightness(playFieldBackground, 20))
+	       .add("-fx-background-color", UiUtils.adjustBrightness(playFieldBackground, 20))
 	    .end();
 	    
-	    builder.rule(".date-picker-popup .day-cell:hover", "-fx-background-color", UIUtils.adjustBrightness(playFieldBackground, 40));
+	    builder.rule(".date-picker-popup .day-cell:hover", "-fx-background-color", UiUtils.adjustBrightness(playFieldBackground, 40));
 	    
 	    /**
 	    // === Heutiges Datum ===
@@ -1426,7 +1440,7 @@ public abstract class Skin {
 	    }
 	    
 	    public CssBuilder add(String property, Color color) {
-	        return add(property, UIUtils.toHex(color));
+	        return add(property, UiUtils.toHex(color));
 	    }
 
 	    /**
@@ -1456,7 +1470,7 @@ public abstract class Skin {
 	     * Macht intern start().add().end() automatisch.
 	     */
 	    public CssBuilder rule(String selector, String property, Color color) {
-	        return start(selector).add(property, UIUtils.toHex(color)).end();
+	        return start(selector).add(property, UiUtils.toHex(color)).end();
 	    }
 	    
 	    private void checkSelector(String selector) {
@@ -1699,7 +1713,7 @@ public abstract class Skin {
 
 		Image image = new Image(Config.getPath("iconFolder").resolve(iconName).toUri().toString());
 		if (buttonType == IconButtonType.BACK)
-		    image = UIUtils.tintImage(image, textActiveComponentColor);
+		    image = UiUtils.tintImage(image, textActiveComponentColor);
 		ImageView icon = new ImageView(image);
 	    
 	    // Button erstellen
@@ -1783,109 +1797,141 @@ public abstract class Skin {
 	    return iconView;
 	}
 
-	/**
-	 * 
-	 * We struggled quite a bit with having a maxHeight, having it always positioned on center and only having the
-	 * maxHeight if really needed. This made the code quite ugly. But it works for now...
-	 * 
-	 * !Architektur: Das Wissend arum, wie ein javafx Alert funktioniert, liegt hiermit immer noch in den features. Die sauberer Lösung
-	 * wäre eine generische Methode in shared, die einen Alert erstellt, showAndWait aufruft und einen javafx-freien Rückgabetyp zurückgibt.
-	 * Viel besser!
-	 * 
-	 * @param parent
-	 * @param title
-	 * @param message
-	 * @param showCancelOption
-	 * @param showResumeOption
-	 * @return
-	 */
-	public Alert createAlert(Window parent, String title, String message, ButtonType... buttonTypes) {
-	    Alert alert = new Alert(Alert.AlertType.NONE); 
-	    
-	    // Fallback auf ownerStage wenn parent == null
-	    // !Sofort: Hilfsmethoden ohne Angabe eines parents wären besser. Diese dann nur, wenn man dezidiert ein anderes braucht. Kann also erst einmal private vermutlich
-	    Window effectiveParent = parent != null ? parent : SkinService.getOwnerWindow();
-	    if (effectiveParent != null) {
-	        alert.initOwner(effectiveParent);
-	    }
-	    
+	public DialogButton showAlert(String title, String message, DialogButton... buttons) {
+	    return showAlert(title, message, new AlertOptions(), buttons);
+	}
+
+	// Der eine Kern
+	public DialogButton showAlert(String title, String message, AlertOptions options, DialogButton... buttons) {
+	    Alert alert = new Alert(Alert.AlertType.NONE);
+
+	    if (options.dismiss() == Dismiss.NO_ESC || options.dismiss() == Dismiss.MANDATORY)
+	        UiUtils.inactivateEscPress(alert);
+	    if (options.dismiss() == Dismiss.MANDATORY)
+	        installCloseBlocker(alert);
+
+	    alert.initOwner(SkinService.getOwnerWindow());
 	    alert.initStyle(StageStyle.EXTENDED);
 
-	    // HeaderBar hinzufügen
 	    HeaderBar headerBar = createDialogHeaderBar(title);
 	    alert.getDialogPane().setHeader(headerBar);
-	    
-	    // --- Content Aufbau ---
-	    Label label = new Label(message);
-	    label.setWrapText(true);
-	    label.setMaxWidth(Double.MAX_VALUE);
 
-	    ScrollPane scroll = new ScrollPane(label) {
-	        @Override
-	        protected double computePrefHeight(double width) {
-	            double contentHeight = super.computePrefHeight(width);
-	            return Math.min(contentHeight, 1000);
-	        }
-	    };
-	    
-	    scroll.setFitToWidth(true);
-	    scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-	    scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-	    scroll.getStyleClass().add("my-dialog-scrollpane");
-	    //Log.info(this, "ScrollPane StyleClass: " + scroll.getStyleClass());
-
-	    alert.getDialogPane().setContent(scroll);
-	    alert.getButtonTypes().setAll(buttonTypes);
+	    alert.getDialogPane().setContent(buildAlertContent(message, options.image(), options.isCentered()));
 	    alert.setGraphic(null);
-	   
+
+	    Map<ButtonType, DialogButton> reverse = new LinkedHashMap<>();
+	    for (DialogButton b : buttons)
+	        reverse.put(toButtonType(b), b);
+	    alert.getButtonTypes().setAll(reverse.keySet());
+
 	    DialogPane dialogPane = alert.getDialogPane();
-	    // !Architektur: Ohne dieses if waren die Alerts bei Fitbit nicht gestylet (die mit parent = null aufgerufen wurden)
 	    if (dialogPane != null && dialogPane.getScene() != null)
-	    	styleScene(dialogPane.getScene());
-	    // !Architektur: Ohne diesen Listener waren der Großteil der Alerts sonst so im Spiel nicht gestylet...
+	        styleScene(dialogPane.getScene());
 	    dialogPane.sceneProperty().addListener((_, _, newScene) -> {
 	        if (newScene != null)
-	        	styleScene(newScene);
+	            styleScene(newScene);
 	    });
-	    
-	    // Oder lieber gar kein Windows Close-Button oben rechts? Dann 0 setzen!
-		headerBar.heightProperty().addListener((_, _, newVal) -> {
-			if (alert.getDialogPane().getScene().getWindow() instanceof Stage)
-				HeaderBar.setPrefButtonHeight((Stage) alert.getDialogPane().getScene().getWindow(), (double)newVal);
-		});
 
-		// Direkt vor return alert;
-		Log.info(this, "=== ALERT ERSTELLT ===");
-		Log.info(this, "ScrollPane background: " + scroll.getBackground());
-		if (scroll.getBackground() != null && !scroll.getBackground().getFills().isEmpty()) {
-		    Log.info(this, "ScrollPane background-insets: " + scroll.getBackground().getFills().get(0).getInsets());
-		}
-		Log.info(this, "ScrollPane boundsInLocal: " + scroll.getBoundsInLocal());
-	    return alert;
+	    headerBar.heightProperty().addListener((_, _, newVal) -> {
+	        if (alert.getDialogPane().getScene().getWindow() instanceof Stage stage)
+	            HeaderBar.setPrefButtonHeight(stage, (double) newVal);
+	    });
+
+	    Optional<ButtonType> result = alert.showAndWait();
+	    return result.map(reverse::get).orElse(DialogButton.CANCEL);
 	}
 
 	/**
-	 * Convenience-Methode für Standard-Alerts (OK und optional: Abbrechen / Fortsetzen)
-	 * Zeilenumbrüche einfach mit \n.
+	 * Blockiert das Schließen per Fenster-X. Beim Alert entstehen Scene/Window erst
+	 * spät (lazy), darum über Property-Listener einhängen statt sofort.
 	 */
-	public Alert createAlert(Window parent, String title, String message, boolean showCancelOption, boolean showResumeOption) {
-	    List<ButtonType> buttons = new ArrayList<>();
-	    buttons.add(new ButtonType("OK", ButtonBar.ButtonData.YES));
-	    
-	    if (showCancelOption) {
-	        buttons.add(new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE));
+	private void installCloseBlocker(Alert alert) {
+	    DialogPane pane = alert.getDialogPane();
+	    if (pane.getScene() != null && pane.getScene().getWindow() != null) {
+	        pane.getScene().getWindow().addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, WindowEvent::consume);
+	        return;
 	    }
-	    if (showResumeOption) {
-	        buttons.add(new ButtonType("Fortsetzen", ButtonBar.ButtonData.OTHER));
+	    pane.sceneProperty().addListener((_, _, scene) -> {
+	        if (scene == null)
+	            return;
+	        if (scene.getWindow() != null)
+	            scene.getWindow().addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, WindowEvent::consume);
+	        else
+	            scene.windowProperty().addListener((_, _, win) -> {
+	                if (win != null)
+	                    win.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, WindowEvent::consume);
+	            });
+	    });
+	}
+	
+	private Node buildAlertContent(String message, Path image, boolean centered) {
+	    Node textNode = null;
+	    if (message != null && !message.isBlank()) {
+	        Label label = new Label(message);
+	        label.setWrapText(true);
+	        label.setMaxWidth(Double.MAX_VALUE);
+	        if (centered) {
+	            label.setAlignment(Pos.CENTER);
+	            label.setTextAlignment(TextAlignment.CENTER);
+	        }
+
+	        ScrollPane scroll = new ScrollPane(label) {
+	            @Override
+	            protected double computePrefHeight(double width) {
+	                return Math.min(super.computePrefHeight(width), 1000);
+	            }
+	        };
+	        scroll.setFitToWidth(true);
+	        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+	        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+	        scroll.getStyleClass().add("my-dialog-scrollpane");
+	        textNode = scroll;
 	    }
-	    
-	    // Aufruf der neuen generischen Methode
-	    return createAlert(parent, title, message, buttons.toArray(new ButtonType[0]));
+
+	    ImageView imageNode = null;
+	    if (image != null) {
+	        Image img = new Image(image.toUri().toString());
+	        imageNode = new ImageView(tintImageWithTextColor(img));
+	        imageNode.setPreserveRatio(true);
+	        imageNode.setFitWidth(200);
+	    }
+
+	    if (imageNode != null && textNode != null) {
+	        VBox box = new VBox(15, imageNode, textNode);
+	        box.setAlignment(Pos.CENTER);
+	        return box;
+	    }
+	    if (imageNode != null) {
+	        VBox box = new VBox(imageNode);
+	        box.setAlignment(Pos.CENTER);
+	        return box;
+	    }
+	    if (textNode != null)
+	        return textNode;
+
+	    return new Label("");
+	}
+
+	// --- Die einzige Stelle, die javafx.ButtonType/ButtonData kennt ---
+
+	private ButtonType toButtonType(DialogButton b) {
+	    ButtonBar.ButtonData data = switch (b) {
+        case OK, YES, SAVE, IMPORT, END_ANYHOW, WHITELIST     -> ButtonBar.ButtonData.YES;	        
+        case CANCEL, DISCARD, LATER -> ButtonBar.ButtonData.CANCEL_CLOSE; // wichtig: macht ESC zum Abbrechen
+        case NO, BLACKLIST -> ButtonBar.ButtonData.NO;
+        case GREEN, RED, YELLOW, RESUME, EPISODE, WHOLE_SEASON, DONE, OTHER_DIRECTION,
+        MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY -> ButtonBar.ButtonData.OTHER;
+	    };
+	    return new ButtonType(b.getText(), data);
 	}
 	
 	/**
 	 * For just text with standard buttons, we use alerts. For more sophisticated popups
 	 * like the playConfigDialogs, we create a simple dialog and leave the rest to the caller.
+	 * 
+	 * !Sofort: Siehe Alert. Ist der Parent nicht eh immer das Suitefenster? Muss hier
+	 * das Window nicht besser raus? Wir haben deswegen in diary auch so einen SkinService.getOwnerWindow Hack
+	 * Das wollen wir aber nicht....
 	 * 
 	 * @param parent → Nur übergeben, wenn das Suitefenster bereits sauber angezeigt wird... 
 	 * @return
@@ -1953,6 +1999,11 @@ public abstract class Skin {
 	 * TODO: Dieses Wrapper-Konstrukt hier wurde mal eingeführt, um die Zirkel aus den Paketen rauszubekommen. Allerdings
 	 * wurde dabei echt ein Monster geschaffen. Das muss wieder vereinfacht werden. Noch mal mit frischem Blick drauf
 	 * schauen bitte. Das muss doch einfacher gehen. PS: Wieso gibt es bei ImageMapPane eigentlich nichts vergleichbares?
+	 * An sich kann dieser ganze Block direkt in die ShapeMapPane. Einziges Problem halt, dass Du da keinen Zugriff auf
+	 * die skin-Felder hast, in diesem Fall die konfigurierte Größe der Pane. Aber nen Zirkel würde es nicht erstellen.
+	 * Und wenn die ganze Erstellung im Skin liegen würde und nicht per new ShapeMapPane in learn passieren würde, dann
+	 * gäbe es das Problem nicht. Das ist halt das Problem mit dem new Ansatz und Komponenten wie in Swing bauen lassen.
+	 * Die Komponenten brauchen nun mal fürs Styling die Werte. Zumindest meistens. 
 	 * 
 	 * @param shapeNodes
 	 * @param mapName
@@ -2303,7 +2354,7 @@ public abstract class Skin {
 	        Image posterImage = new Image(imageFile.toURI().toString());
 
 	        if (hasComment) {
-	            posterImage = UIUtils.addPlusSign(posterImage, moviePosterWidth);
+	            posterImage = UiUtils.addPlusSign(posterImage, moviePosterWidth);
 	        }
 
 	        ImageView posterView = new ImageView(posterImage);
@@ -2428,7 +2479,7 @@ public abstract class Skin {
 	}
 	
 	public Image tintImageWithTextColor(Image img) {
-		return UIUtils.tintImage(img, textColor);
+		return UiUtils.tintImage(img, textColor);
 	}
 
 	protected void loadAllConfigs(Path configPath) {

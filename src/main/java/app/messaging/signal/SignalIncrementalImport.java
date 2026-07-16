@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.crypto.Cipher;
@@ -33,9 +32,8 @@ import app.shared.Config;
 import app.shared.DB;
 import app.shared.Log;
 import app.shared.ThrowingConsumer;
+import app.shared.model.DialogButton;
 import app.shared.skin.SkinService;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 
 /**
  * Importiert neue Signal-Nachrichten seit dem letzten erfolgreichen Import-Run in die ThosSuite-DB.
@@ -280,14 +278,10 @@ public class SignalIncrementalImport {
             + "\nNachrichten: " + conv.messageCount()
             + (isBlank(conv.sharedGroupNames()) || "[]".equals(conv.sharedGroupNames()) ? "" : "\nGemeinsame Gruppen: " + conv.sharedGroupNames());
 
-        ButtonType importBtn    = new ButtonType("Importieren", ButtonBar.ButtonData.YES);
-        ButtonType blacklistBtn = new ButtonType("Blacklist",   ButtonBar.ButtonData.NO);
+        DialogButton result = SkinService.get()
+            .showAlert("Neuer Signal-Chat", info, DialogButton.IMPORT, DialogButton.BLACKLIST);
 
-        Optional<ButtonType> result = SkinService.get()
-            .createAlert(SkinService.getOwnerWindow(), "Neuer Signal-Chat", info, importBtn, blacklistBtn)
-            .showAndWait();
-
-        boolean doImport = result.isPresent() && result.get() == importBtn;
+        boolean doImport = result == DialogButton.IMPORT;
         int chatId = repo.insertChat(suiteConnection, signalId, conversationId, conv.isGroup(), displayName, !doImport);
 
         if (doImport)

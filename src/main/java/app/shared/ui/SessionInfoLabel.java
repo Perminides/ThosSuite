@@ -3,7 +3,9 @@ package app.shared.ui;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import app.shared.ui.components.UiComponent;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
@@ -18,7 +20,7 @@ import javafx.scene.text.TextFlow;
  *  		CustomTextLabel	= "custom-text-label"
  *  		text in Nodes	= "text"
  */
-public class SessionInfoLabel extends StackPane {
+public class SessionInfoLabel extends StackPane implements UiComponent{
 
     private final TextFlow textFlow;
     private String rawText = "";
@@ -44,6 +46,11 @@ public class SessionInfoLabel extends StackPane {
 
         setText(text);
     }
+    
+    @Override
+	public Node getView() {
+		return this;
+	}
 
     public void setText(String text) {
         this.rawText = text != null ? text : "";

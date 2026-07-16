@@ -99,7 +99,7 @@ public class DiaryDialog {
     private ListChangeListener<String> tagsListener;
 
     // showNew: Neuen Eintrag erfassen, mit invasiver Logik
-    public void showNew(Window owner) {
+    public void showNew() {
         int invasiveAfterHours = Config.getInt("diary.invasiveAfterHours", DEFAULT_INVASIVE_AFTER_HOURS);
         LocalDateTime lastEntry = repository.findLastEntryTimestamp();
         boolean invasive = lastEntry == null
@@ -107,6 +107,8 @@ public class DiaryDialog {
 
         tagInput.setAllTags(repository.loadAllTags());
         currentAttachmentPaths.clear();
+        
+        Window owner = SkinService.getOwnerWindow();
 
         Dialog<?> dialog = SkinService.get().createDialog(owner, "Tagebuch");
         DatePicker datePicker = new DatePicker(LocalDate.now());
@@ -167,7 +169,7 @@ public class DiaryDialog {
     }
 
     // showEdit: Bestehenden Eintrag bearbeiten, kein invasives Verhalten
-    public void showEdit(Window owner, LocalDateTime createdAt, LocalDate entryDate, String text, List<String> tags) {
+    public void showEdit(LocalDateTime createdAt, LocalDate entryDate, String text, List<String> tags) {
         tagInput.setAllTags(repository.loadAllTags());
         for (String tag : tags) {
             tagInput.addTag(tag);
@@ -176,7 +178,7 @@ public class DiaryDialog {
         currentAttachmentPaths.addAll(repository.loadAttachments(createdAt));
         savedAttachmentPaths = List.copyOf(currentAttachmentPaths);
 
-        Dialog<?> dialog = SkinService.get().createDialog(owner, "Eintrag bearbeiten");
+        Dialog<?> dialog = SkinService.get().createDialog(SkinService.getOwnerWindow(), "Eintrag bearbeiten");
 
         ButtonType cancelType = new ButtonType("", ButtonBar.ButtonData.CANCEL_CLOSE);
         dialog.getDialogPane().getButtonTypes().add(cancelType);
@@ -185,7 +187,7 @@ public class DiaryDialog {
         cancelBtn.setManaged(false);
 
         DatePicker datePicker = new DatePicker(entryDate);
-        dialog.getDialogPane().setContent(buildContent(datePicker, owner));
+        dialog.getDialogPane().setContent(buildContent(datePicker, SkinService.getOwnerWindow()));
         textArea.setText(text);
 
         ButtonType saveButtonType = new ButtonType("Speichern", ButtonBar.ButtonData.OK_DONE);

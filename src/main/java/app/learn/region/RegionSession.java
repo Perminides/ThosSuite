@@ -2,7 +2,6 @@ package app.learn.region;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 import java.util.Set;
 
 import app.learn.model.LearnStat;
@@ -12,13 +11,11 @@ import app.learn.region.model.SessionSpec;
 import app.shared.AppClock;
 import app.shared.Log;
 import app.shared.Screen;
-import app.shared.UIUtils;
+import app.shared.ScreenView;
+import app.shared.model.AlertOptions;
+import app.shared.model.DialogButton;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.skin.SkinService;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.layout.Pane;
 
 // !Später: Das RegionSessionBild croppen und dann den korrekten Rand setzen, wenn isComplete==true. Wobei isComplete meint, dasss das ganze Rechteck ausgefüllt ist.
 // !Sofort: Es wäre schon nice bei Finde uf der Karte (schwer) zu wissen, wie viel noch kommen. Also doch einen Fortschritt bitte.
@@ -103,28 +100,28 @@ public class RegionSession implements Screen {
 		if (!active)
     		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		
-		Pane currentPane = getView();
 		if (!correct) { // Wenn nicht korrekt, dann zeige den Text an. Ok und Abbruch. Und eventuell, wenn erlaubt, auch Fortfahren...
 			Log.info(this, "Alert wird erstellt. correct=" + correct);
+			// !Sofort: Refactor: Skin holt sich das MainWindows selbst herrje!
+			DialogButton result = allowResume
+				    ? SkinService.get().showAlert("Nicht korrekt", text, new AlertOptions().noEsc(),
+				          DialogButton.OK, DialogButton.CANCEL, DialogButton.RESUME)
+				    : SkinService.get().showAlert("Nicht korrekt", text, new AlertOptions().noEsc(),
+				          DialogButton.OK, DialogButton.CANCEL);
 
-			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Nicht korrekt", text, true, allowResume);
-			UIUtils.inactivateEscPress(alert);
-			Optional<ButtonType> result = alert.showAndWait();
-
-			if (!result.isPresent() || result.get().getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) { // Abbruch. Wir speichern nicht, wir beenden sofort.
+			if (result == DialogButton.CANCEL) { // Abbruch. Wir speichern nicht, wir beenden sofort.
 				active = false;
 				onSessionEnded.run();
 				return;
-			} else if (result.get().getButtonData() == ButtonBar.ButtonData.YES) { // Ok. Wir beenden gleich nach dem Speichern.
+			} else if (result == DialogButton.OK) { // Ok. Wir beenden gleich nach dem Speichern.
 				// Nichts weiter zu tun...
-			} else if (result.get().getButtonData() == ButtonBar.ButtonData.OTHER) { // Fortsetzen. Wir setzen fort.
+			} else if (result == DialogButton.RESUME) { // Fortsetzen. Wir setzen fort.
 				progress.resume();
 				return;
 			}
 		} else if (text != null && !text.isEmpty()) { // Ah. Ich soll was anzeigen, obwohl es korrekt war. Vermutlich ein FreePlay. Na egal, zeigen wir halt an...
 			Log.info(this, "Alert wird erstellt. correct=" + correct);
-			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Korrekt", text, false, allowResume);
-	    	alert.showAndWait();
+			SkinService.get().showAlert("Korrekt", text, DialogButton.OK);
 		}
 		
 		if (!spec.isPlaySession()) {
@@ -138,8 +135,7 @@ public class RegionSession implements Screen {
 			if (!correct)
 				stats.incrementWrongCount();
 			service.savePlayedCards(spec, stats, correct, wrongId);
-			Alert alert = SkinService.get().createAlert(currentPane.getScene().getWindow(), "Ausblick", getUntilString(stats.getDueDate()), false, false);
-	    	alert.showAndWait();
+			SkinService.get().showAlert("Ausblick", getUntilString(stats.getDueDate()), DialogButton.OK);
 		}
 		Log.info(this, "RegionsSession " + spec.getDeckType().getDisplayName() + " (play = " + spec.isPlaySession() + ") beendet.");
 		active = false;
@@ -153,7 +149,7 @@ public class RegionSession implements Screen {
 		presenter.refresh();
 	}
 	
-	public Pane getView() {
+	public ScreenView getView() {
 		if (!active)
     		throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		return presenter.getView();

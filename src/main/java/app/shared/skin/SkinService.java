@@ -18,7 +18,7 @@ public final class SkinService {
             new DarkMode()
     ));
     private static Skin current = AVAILABLE_SKINS.get(0); // !Erweiterung Später über config-Datei...
-    private static Window ownerWindow;
+    private static Window ownerWindow = null;
     
     // Statischer Initializer lädt gespeichertes Skin
     static {

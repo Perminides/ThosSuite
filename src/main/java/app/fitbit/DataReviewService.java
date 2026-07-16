@@ -9,8 +9,8 @@ import app.fitbit.DataFetcher.DayData;
 import app.fitbit.model.json.ActivityLogList;
 import app.fitbit.repository.Repository;
 import app.shared.Log;
+import app.shared.model.DialogButton;
 import app.shared.skin.SkinService;
-import javafx.stage.Window;
 
 /**
  * Zeigt Fitbit-Dialoge und speichert die editierten Daten.
@@ -30,7 +30,7 @@ public class DataReviewService {
      * Zeigt für jeden abgeholten Tag einen Dialog.
      * User kann editieren, dann wird gespeichert.
      */
-    public void showDialogsAndSave(Window parentWindow) {
+    public void showDialogsAndSave() {
         List<DayImportResult> results = new ArrayList<>();
         
         for (DayData dayData : dataFetcher.getFetchedDays()) {
@@ -47,7 +47,7 @@ public class DataReviewService {
         
         // Abschluss-Popup mit Zusammenfassung
         if (!results.isEmpty()) {
-            showSummary(parentWindow, results);
+            showSummary(results);
         }
     }
     
@@ -115,20 +115,14 @@ public class DataReviewService {
     /**
      * Zeigt Zusammenfassungs-Popup mit importierten Tagen und Punkten.
      */
-    private void showSummary(Window parentWindow, List<DayImportResult> results) {
+    private void showSummary(List<DayImportResult> results) {
         StringBuilder message = new StringBuilder("Fitbit-Import abgeschlossen:\n\n");
         
         for (DayImportResult result : results) {
             message.append(result.date()).append(" → ").append(result.points()).append(" Punkte\n");
         }
         
-        SkinService.get().createAlert(
-            null,
-            "Fitbit-Import",
-            message.toString(),
-            false,
-            false
-        ).showAndWait();
+        SkinService.get().showAlert("Fitbit-Import", message.toString(), DialogButton.OK);
     }
     
     /**

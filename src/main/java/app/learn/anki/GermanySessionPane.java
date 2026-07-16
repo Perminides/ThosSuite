@@ -2,191 +2,151 @@ package app.learn.anki;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import app.learn.MapService;
 import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
+import app.shared.ScreenView;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import app.shared.ui.MultipleChoicePane;
 import app.shared.ui.SessionInfoLabel;
+import app.shared.ui.components.ComponentHost;
+import app.shared.ui.components.IconButton;
 import app.shared.ui.components.ImagePane;
+import app.shared.ui.components.InputField;
 import app.shared.ui.components.learn.ShapeMapPane;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.Pane;
-
 
 /**
- * UI for the Germany quiz session. Sets its own background from Skin.
- * Size is determined by MainWindow's contentPane.
+ * UI der Deutschland-Session. Hält kein javafx mehr selbst, sondern ein SessionCanvas plus die
+ * Komponenten (über ihre schmalen Fassaden). Das Kompositionswissen — welche Komponenten einen
+ * Deutschland-Screen ausmachen — bleibt hier in learn; das Zusammenstecken macht der Canvas.
  * 
- * This pane can be recreated during skin changes (via presenter.refresh()).
- * The Presenter handles state preservation across recreations.
- * 
- * Der erste Aufbau dauert übriegns nen Ticken länger. Das liegt nicht am Code, das haben wir gemessen
- * Kandidat: JIT-Warmup und JavaFX/CSS-Erstinitialisierung. Nichts worüber Du dir Gedanken machen musst.
  */
-public class GermanySessionPane extends Pane implements SessionPane {
-	private static final Deck DECKTYPE = Deck.GERMANY_CARDS; 
+public class GermanySessionPane implements SessionPane {
+	private static final Deck DECKTYPE = Deck.GERMANY_CARDS;
 
 	private final SessionPresenter presenter;
-    private TextField textInputField;
-    private SessionInfoLabel questionArea;
-    private SessionInfoLabel progressArea;
-    private SessionInfoLabel cardHistoryArea;
-    private MultipleChoicePane mcPane;
-    private Button backButton;
-    private ImagePane imageComponent;
-    private ShapeMapPane deutschlandkarte;
+	private final ComponentHost canvas = new ComponentHost();
 
-    public GermanySessionPane(SessionPresenter presenter) {
-        this.presenter = presenter;
-        this.setBackground(new Background(SkinService.get().getBackgroundImage(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString())));
-        initUI();
-    }
+	private InputField inputField;
+	private SessionInfoLabel questionArea;
+	private SessionInfoLabel progressArea;
+	private SessionInfoLabel cardHistoryArea;
+	private MultipleChoicePane mcPane;
+	private IconButton backButton;
+	private ImagePane imageComponent;
+	private ShapeMapPane deutschlandkarte;
 
-    private void initUI() {
-        Skin skin = SkinService.get();
+	public GermanySessionPane(SessionPresenter presenter) {
+		this.presenter = presenter;
+		rebuild();
+	}
 
-        deutschlandkarte = new ShapeMapPane(
-                MapService.getInstance().getMap(DECKTYPE).getShapeGeometries(),
-                DECKTYPE.getMapName(),
-                DECKTYPE.getCategory().toString());
-        getChildren().add(deutschlandkarte.getView());
-    	deutschlandkarte.setClickListener(id -> mapElementClicked(id));
-    	deutschlandkarte.moveAllToActive();
-    	
-    	
-    	questionArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.QUESTION);
-    	questionArea.setText(""); // Initial leer
-        getChildren().add(questionArea);
-    	
-        textInputField = skin.createInputField(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString());
-        textInputField.setOnKeyReleased(_ -> textInputChanged());
-        getChildren().add(textInputField);
-    	
-    	imageComponent = skin.createImageComponent(DECKTYPE.getId(), DECKTYPE.getCategory().toString());
-    	getChildren().add(imageComponent); 
-    	
-    	mcPane = skin.createMultipleChoicePane(DECKTYPE.getId(), DECKTYPE.getCategory().toString());
-    	mcPane.addListener(
-    		new Consumer<Integer>() {
-				@Override
-				public void accept(Integer i) {
-					onAnswerSelected(i);
-				}
-    		}
-    	);
-    	getChildren().add(mcPane);
-    	
-    	progressArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.PROGRESS);
-    	progressArea.setText("");
-    	getChildren().add(progressArea);
-    	
-    	cardHistoryArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.CARD_HISTORY);
-    	cardHistoryArea.setText("");
-    	getChildren().add(cardHistoryArea);
-    	
-    	backButton = skin.createIconButton(DECKTYPE.getId(), Skin.IconButtonType.BACK);
-    	backButton.setOnAction(_ -> backButtonClicked());
-    	getChildren().add(backButton);
-    }
-	
-	// ========================================
-	// Called from presenter
-	// ========================================
-    
-    // Question
-	
-    public void setQuestion(String text) {
-        questionArea.setText(text);
-    }
-    
-	// Image
-	
-    public void setImage(String imageName) {
-        imageComponent.setImage(imageName);
-    }
-    
-    // Multiple Choice
-    
+	/**
+	 * Sofort: Was nun? new ShapeMapPane oder skin.create?
+	 */
+	public void rebuild() {
+		Skin skin = SkinService.get();
+		
+		canvas.setBackgroundImage(skin.getBackgroundImage(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString()));
+
+		deutschlandkarte = new ShapeMapPane(
+				MapService.getInstance().getMap(DECKTYPE).getShapeGeometries(),
+				DECKTYPE.getMapName(),
+				DECKTYPE.getCategory().toString());
+		deutschlandkarte.setClickListener(id -> presenter.clickedMapElement(id));
+		deutschlandkarte.moveAllToActive();
+
+		questionArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.QUESTION);
+		questionArea.setText("");
+
+		inputField = new InputField(skin.createInputField(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString()));
+		inputField.onType(text -> presenter.typedText(text));
+
+		imageComponent = skin.createImageComponent(DECKTYPE.getId(), DECKTYPE.getCategory().toString());
+
+		mcPane = skin.createMultipleChoicePane(DECKTYPE.getId(), DECKTYPE.getCategory().toString());
+		mcPane.addListener(index -> presenter.clickedMCAnswer(index));
+
+		progressArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.PROGRESS);
+		progressArea.setText("");
+
+		cardHistoryArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.CARD_HISTORY);
+		cardHistoryArea.setText("");
+
+		// !Sofort: Weil wir keinen javafx-Button halten wollen. Aber natürlich darf Skin auch keine javafx-Komponenten mehr rausgeben!
+		backButton = new IconButton(skin.createIconButton(DECKTYPE.getId(), Skin.IconButtonType.BACK));
+		backButton.onClick(() -> presenter.clickedBack());
+
+		canvas.setComponents(deutschlandkarte, questionArea, inputField, imageComponent, mcPane, progressArea, cardHistoryArea, backButton);
+	}
+
+	// ===== Called from presenter =====
+
+	@Override
+	public void setQuestion(String text) {
+		questionArea.setText(text);
+	}
+
+	@Override
+	public void setImage(String imageName) {
+		imageComponent.setImage(imageName);
+	}
+
+	@Override
 	public void setMultipleChoice(List<String> answers) {
 		mcPane.initiateMultipleChoice(answers);
 	}
-	
+
+	@Override
 	public void disableMcPanel() {
 		mcPane.clearAndSetInactive();
 	}
-	
-    public void setMcCorrect(int id, boolean correct) {
-    	mcPane.setCorrect(id, correct);
-    }
-    
+
+	@Override
+	public void setMcCorrect(int id, boolean correct) {
+		mcPane.setCorrect(id, correct);
+	}
+
+	@Override
 	public void setMcSolution(Set<Integer> correctIds) {
 		mcPane.setCorrectAndInactive(correctIds);
 	}
-	
-	// Map
-	
-    public void resetMarkers() {
-    	deutschlandkarte.moveAllToActive();
-    }
-	
+
+	@Override
+	public void resetMarkers() {
+		deutschlandkarte.moveAllToActive();
+	}
+
+	@Override
 	public void addIdsToCorrect(Set<String> elements) {
-    	deutschlandkarte.addToCorrect(elements);
-    }
-	
+		deutschlandkarte.addToCorrect(elements);
+	}
+
 	@Override
 	public void setMarkedIds(Set<String> elements) {
 		deutschlandkarte.addToMarked(elements);
 	}
-    
-    @Override
-    public void setIdToIncorrect(String element) {
-    	deutschlandkarte.addToIncorrect(element);
-    }
-    
-    public void setMapActive(boolean active) {
-    	deutschlandkarte.setInteractive(active);
-    }
-    
-    // Input
-    
-    public void setTextFieldActive(boolean active) {
-        if (active) {
-            textInputField.setText("");
-            textInputField.setDisable(false);
-            textInputField.requestFocus();
-        } else {
-            textInputField.setDisable(true);
-        }
-    }
-    
-	public void setTextInTextField(String text) {
-		textInputField.setText(text); 
-	}	
-	
-	// ========================================
-	// Called from components
-	// ========================================
-	
-	public void onAnswerSelected(int index) {
-		presenter.clickedMCAnswer(index);
-	}
-	
-	private void textInputChanged() {
-	    presenter.typedText(textInputField.getText());
+
+	@Override
+	public void setIdToIncorrect(String element) {
+		deutschlandkarte.addToIncorrect(element);
 	}
 
-	private void mapElementClicked(String id) {
-	    presenter.clickedMapElement(id);
+	@Override
+	public void setMapActive(boolean active) {
+		deutschlandkarte.setInteractive(active);
 	}
-	
-	private void backButtonClicked() {
-	    presenter.clickedBack();
+
+	@Override
+	public void setTextFieldActive(boolean active) {
+		inputField.setActive(active);
+	}
+
+	@Override
+	public void setTextInTextField(String text) {
+		inputField.setText(text);
 	}
 
 	@Override
@@ -198,9 +158,9 @@ public class GermanySessionPane extends Pane implements SessionPane {
 	public void setCardHistoryText(String text) {
 		cardHistoryArea.setText(text);
 	}
-	
+
 	@Override
-	public Pane asPane() {
-		return this;
+	public ScreenView getView() {
+		return canvas;
 	}
 }

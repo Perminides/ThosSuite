@@ -1,4 +1,4 @@
-package app.messaging.whatsapp;
+package app.shared.ui.dialog;
 
 import app.shared.skin.SkinService;
 import javafx.application.Platform;

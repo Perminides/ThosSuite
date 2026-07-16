@@ -11,13 +11,9 @@ import app.movie.repository.EpisodeRepository;
 import app.movie.repository.MovieRepository;
 import app.movie.repository.PendingRepository;
 import app.movie.repository.TvShowRepository;
+import app.shared.model.DialogButton;
 import app.shared.skin.SkinService;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.TextArea;
-import javafx.scene.layout.VBox;
+import app.shared.ui.dialog.TextPromptDialog;
 
 /**
  * PostTask für den TMDB-Import.
@@ -117,24 +113,18 @@ public class MovieCleanup {
      * @return true = whitelist, false = blacklist
      */
     private boolean askWhitelistOrBlacklist(CrewPendingEntry entry) {
-        ButtonType btnWhitelist = new ButtonType("Whitelist", ButtonBar.ButtonData.YES);
-        ButtonType btnBlacklist = new ButtonType("Blacklist", ButtonBar.ButtonData.NO);
-
-        Alert alert = SkinService.get().createAlert(
-            null,
+        DialogButton result = SkinService.get().showAlert(
             "Unbekannter Crew-Job",
             "Person: " + entry.personName + "\n" +
             "Job: " + entry.job + "\n" +
             "Department: " + entry.department + "\n" +
             "Film: " + entry.movieTitle,
-            btnWhitelist, btnBlacklist
+            DialogButton.WHITELIST, DialogButton.BLACKLIST
         );
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isEmpty())
+        if (result != DialogButton.WHITELIST && result != DialogButton.BLACKLIST)
             throw new RuntimeException("Crew-Pending-Dialog wurde ohne Auswahl geschlossen. personId=" + entry.personId + ", job=" + entry.job);
 
-        return result.get() == btnWhitelist;
+        return result == DialogButton.WHITELIST;
     }
 
     /**
@@ -158,28 +148,14 @@ public class MovieCleanup {
      * Zeigt eine TextArea für die Kommentareingabe zu einem Film.
      */
     private String askForComment(NullCommentEntry entry) {
-        TextArea textArea = new TextArea();
-        textArea.setWrapText(true);
-        textArea.setPrefRowCount(6);
-        textArea.setPrefColumnCount(40);
-
-        Dialog<?> dialog = SkinService.get().createDialog(null, "Kommentar eingeben");
-        VBox content = SkinService.get().createDialogContent();
-        content.getChildren().add(new javafx.scene.control.Label(
-            "Film: " + entry.title + " (" + entry.germanTitle + ")\n" +
-            "Bewertet am: " + entry.firstRatedAt + "\n" +
-            "Bewertung: " + entry.rating));
-        content.getChildren().add(textArea);
-
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-
-        Optional<?> result = dialog.showAndWait();
-        if (result.isEmpty() || result.get().equals(ButtonType.CANCEL))
+        String header = "Film: " + entry.title + " (" + entry.germanTitle + ")\n" +
+                        "Bewertet am: " + entry.firstRatedAt + "\n" +
+                        "Bewertung: " + entry.rating;
+        Optional<String> result = TextPromptDialog.show("Kommentar eingeben", header, null);
+        if (result.isEmpty())
             return ".";
-
-        String text = textArea.getText();
-        return (text == null || text.isBlank()) ? "." : text.trim();
+        String text = result.get();
+        return text.isBlank() ? "." : text.trim();
     }
 
     /**
@@ -212,12 +188,10 @@ public class MovieCleanup {
             sb.append(String.join("\n", episodeTitles));
         }
 
-        Alert alert = SkinService.get().createAlert(
-            null,
+        SkinService.get().showAlert(
             "Offene Kommentare",
             sb.toString().trim(),
-            new ButtonType("OK", ButtonBar.ButtonData.OK_DONE)
+            DialogButton.OK
         );
-        alert.showAndWait();
     }
 }

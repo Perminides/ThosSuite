@@ -186,6 +186,14 @@ Abhängigkeitsgraphen entsteht, sobald JavaFX *nach unten* in `model`/`repositor
 Features greift — und warum er sich auflöst, sobald der Node-Bau jenseits der Grenze sitzt
 und nur noch framework-freie Daten hinabreichen.
 
+**Die harte Fassung, binär.** „Feature ist framework-frei" ist kein Richtwert, sondern
+ein Test: `grep -rn "import javafx" src/main/java/app/<feature>/` (Git Bash) muss
+**leer** sein. JavaFX-Importe leben ausschließlich in `shared` oder in der obersten
+Schicht (`controller`) — jedes Feature-Paket ist 100 % frei, oder das Refactoring gilt
+als nicht fertig. Kein „97 %". Und keine geschummelten Scheinlösungen, die den grep
+bestehen, aber JavaFX-*Wissen* ins Feature tragen (Scene-Graph-Navigation, ein
+JavaFX-Objekt opak durchreichen).
+
 ### Pfad-Wissen: Struktur gehört der Suite, Dateien dem Feature
 
 Die Ordner-Struktur der Suite ist Suite-Wissen und liegt in `Config` — als computed Pfade,
@@ -243,17 +251,84 @@ Am Suffix ist die Datenquelle ablesbar:
   (`TmdbMovieRepository`, `diary.Repository`).
 - **`…Source`** — die Daten stammen aus einer Datei (`ConfigFileSource`, `CsvDeckCardSource`).
 
-### Bildschirm-Kontrakt `Screen`
+### Bildschirm-Kontrakt: `Screen`, `ScreenView`, `UiComponent`
 
-- Der Bildschirm-Kontrakt heißt `Screen` und liegt in `shared` (warum dort: siehe „So lokal wie
-  möglich").
-- Nicht-Lern-Oberflächen heißen `…Screen`: `AlcStatisticsScreen`, `FitbitStatisticsScreen`,
-  `DashboardScreen`, `MovieViewerScreen`, `DiaryViewerScreen`.
-- Die Lern-Oberflächen heißen `…Session` (`AnkiDeckSession`, `RegionSession`), weil sie über die
-  reine Bildschirmfläche hinaus die Lernsession tragen.
-- **Inhalt:** ein Interface, alle Methoden drin, leere Defaults erlaubt. Eine Oberfläche muss
-  nicht auf alles reagieren — ein `AlcStatisticsScreen` tut bei `sort()` nichts, und das ist kein
-  Fehler.
+Eine Oberfläche wird über drei Rollen gebaut, jede ein eigenes Interface. Der Grund
+für die Dreiteilung ist die JavaFX-Grenze: die Lebenszyklus-Logik bleibt framework-frei
+im Feature, das Sichtbare liegt framework-gebunden in `shared`.
+
+- **`Screen` (Rolle 1, in `shared`, im Feature implementiert, framework-frei).** Das
+  Controller-zugewandte Interface: refresh, esc, save, sortOrderChanged,
+  `getSwitchStrategy` … Es hat Zugriff auf ein `ScreenView` und reicht es über
+  `getView() : ScreenView` weiter. Die feature-seitige `…Screen`/`…Session`-Klasse
+  nennt nie einen JavaFX-Typ.
+- **`ScreenView` (Rolle 2, in `shared`).** Der mountbare Anzeige-Lieferant:
+  `getPane() : Pane`. `getPane` ruft ausschließlich MainWindow. Heißt bewusst
+  `ScreenView`, nicht `View` — `View` ist in JavaFX zu häufig.
+- **`UiComponent` (Rolle 3, in `shared`).** Die Bausteine im Host: `getNode() : Node`.
+
+**Lesekette:** `Screen → ScreenView → Pane`. MainWindow mountet über
+`screen.getView().getPane()` — hier, und nur hier, überquert der Node die Grenze.
+
+**Warum das Feature frei bleibt:** Die framework-freie Grenze ist der *Typ, den das
+Feature hält* (`ScreenView`, ein shared-Interface), nicht ein Rückgabetyp-Trick. Die
+Feature-Klasse hält ein `ScreenView`-Objekt und reicht es weiter; sie ruft nie
+`getPane()` und nennt keinen JavaFX-Typ.
+
+**refresh = stabiler View + In-place-Rebuild.** Der gemountete `ScreenView` bleibt
+dasselbe Objekt; refresh tauscht nur seine Kinder. Kein Controller-Reshow, kein
+Swap-Container.
+
+**Zwei Bauformen:** (1) eine dedizierte shared-Komponente, die sich selbst baut und
+`ScreenView` implementiert (fitbit: `FitbitScreenView`); (2) ein generischer
+`ComponentHost` (`ScreenView`), der vom Feature gestylte, absolut positionierte
+Komponenten in eine Null-Layout-Pane entgegennimmt (learn). Discriminator: *wer
+positioniert* — eine Layout-Pane (VBox/HBox) selbst → sie ist der View, kein Host;
+der Skin absolut → `ComponentHost`.
+
+**Benennung:** Nicht-Lern-Oberflächen `…Screen`, Lern-Oberflächen `…Session`
+(`AnkiDeckSession`, `RegionSession`).
+
+**Inhalt der Interfaces:** leere Defaults erlaubt — eine Oberfläche muss nicht auf
+alles reagieren (ein `AlcStatisticsScreen` tut bei `sort()` nichts, kein Fehler).
+
+### Dialoge
+
+Dialoge folgen derselben Grenze wie Screens, nur ohne Lebenszyklus: framework-freier
+Input rein → shared-JavaFX-Dialog → framework-freies Ergebnis raus. Sie sind **keine**
+`ScreenView`s (werden nicht gemountet, haben kein `getPane`).
+
+**Vertrag (ausnahmslos).** Ergebnis ist ein record/enum/`Optional`, nie
+`ButtonType`/`Node`. Das Fenster holt sich der Dialog intern über
+`SkinService.getOwnerWindow()` — kein `Window`-Parameter vom Feature. Dismiss/X = immer
+Abbruch (`CANCEL`); der Aufrufer interpretiert (etwa `CANCEL → später`).
+
+**Zwei Stufen.**
+- **Einfach (Auswahl + statischer Inhalt):** ein Alert. `SkinService.get().showAlert(…)`
+  gibt einen suite-eigenen `DialogButton` zurück; nur der Skin kennt `javafx.ButtonType`
+  und übersetzt. Bild optional als Path/Key (der Skin lädt und tint, nicht das Feature).
+- **Komplex (Felder, Mehrfachauswahl, Verflechtung):** eine **bespoke Komponente pro
+  Dialog**. Kein generisches Formular-Framework — einmal gebaut und wieder verworfen,
+  weil es bei der tatsächlichen Stückzahl (kein Dialog-Typ kommt auf fünf) nur
+  Indirektion ohne Wiederverwendung war. Lesbarkeit schlägt Wiederverwendbarkeit.
+
+**Aufteilung einer komplexen Dialog-Klasse.** Das JavaFX (Widgets, `Dialog`,
+`showAndWait`) wandert vollständig nach `shared`; im Feature bleibt nur Domäne: welche
+Felder/Optionen (framework-freie Daten), das Ergebnis-Record und das Mapping.
+Verbindung über einen konkreten, lesbaren Zustandstyp — nicht über abstrakte
+Deskriptoren/ids.
+- **Der Label ist die id.** Anzeigenamen sind eindeutig; das Feature liest die Auswahl
+  per Label zurück und mappt Label → Domänentyp. Kein separates id-Feld. (Wird die
+  Anzeige gekürzt, hält die Checkbox den Volltext in `userData`.)
+- **Reducer nur bei Verflechtung.** Ändert ein Klick den Zustand *anderer* Elemente
+  (Region: Modi verschwinden, Regionen grauen aus), beschreibt eine reine Funktion
+  `Zustand → Zustand` nach jedem Klick den kompletten Sollzustand neu. Hat ein Dialog
+  keine Verflechtung (Anki: unabhängige Felder), braucht er keinen Reducer — das einzige
+  reaktive Stück („OK aktiv?") lebt dann direkt in der Komponente.
+
+*(Platzierung der Screen-Views und Dialog-Komponenten unter `shared` — momentan teils
+`shared.ui.dialog`/flaches `shared.ui.components` statt `shared.ui.components.<feature>`
+— wird nach Abschluss der Dialog-Migration aufgeräumt.)*
 
 ### `Skin`-Vertrag (vorläufig — wird beim Skin-Refactoring neu gefasst)
 

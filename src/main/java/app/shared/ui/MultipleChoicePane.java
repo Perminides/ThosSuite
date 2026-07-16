@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+import app.shared.ui.components.UiComponent;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
@@ -27,7 +29,7 @@ import javafx.scene.text.TextAlignment;
  * CSS-classes
  * 		Button	= "my-mc-button"
  */
-public class MultipleChoicePane extends Pane {
+public class MultipleChoicePane extends Pane implements UiComponent{
 
 	/**
 	 * Die skin-abhängigen Werte, die MC fürs Messen der Antwort-Stufe braucht. Der Skin füllt das Record beim
@@ -68,6 +70,11 @@ public class MultipleChoicePane extends Pane {
             yPos += fixedButtonHeight + verticalGap;
         }
     }
+    
+    @Override
+	public Node getView() {
+		return this;
+	}
 
     private Button createButton(int index, double width, double height) {
         Button btn = new Button();

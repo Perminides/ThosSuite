@@ -7,8 +7,7 @@ import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
 import app.learn.model.LearnStat;
 import app.learn.model.SessionProgressCounter;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import app.shared.ScreenView;
 
 /**
  * Vermittelt zwischen SessionPane (GUI) und SessionProgress (Ablauf): reicht User-Eingaben der
@@ -19,22 +18,21 @@ import javafx.scene.layout.StackPane;
  */
 public class SessionPresenter {
 
-	private final StackPane sessionPaneContainer = new StackPane();
     private SessionPane sessionPane; //!Später MapDeckGamePanel!
     private SessionProgress sessionProgress;
-    private final Deck type; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 
     public SessionPresenter(Deck type, SessionProgress sessionProgress) {
-    	this.type = type;
     	this.sessionProgress = sessionProgress;
     	sessionProgress.setPresenter(this);
         sessionPane = createPanelForType(type);
-        sessionPaneContainer.getChildren().setAll(sessionPane.asPane());
     }
+    
+	public ScreenView getView() {
+		return sessionPane.getView();
+	}
 
     public void refresh() {
-        sessionPane = createPanelForType(type);
-        sessionPaneContainer.getChildren().setAll(sessionPane.asPane());
+        sessionPane.rebuild();
     }
 
     private SessionPane createPanelForType(Deck type) {
@@ -50,10 +48,6 @@ public class SessionPresenter {
     public void end() {
         sessionProgress = null;
     }
-    
-	public Pane getView() {
-		return sessionPaneContainer;
-	}
 	
 	// ========================================
 	// STEP EXECUTION (from Progress)

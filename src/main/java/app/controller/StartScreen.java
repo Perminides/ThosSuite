@@ -1,18 +1,24 @@
 package app.controller;
 
 import app.shared.Screen;
+import app.shared.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.skin.SkinService;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 
-class StartScreen implements Screen {
+/**
+ * !Sofort: Hier wollen wir nicht ernsthaft Screen und Screenview trennen. Aber ich habe jetzt 5 Screens umgestellt
+ * und jeder funktioniert anders. Alle haben Ihre Besonderheiten. Deine Idee, eine Bauanleitung, die überall durchgezogen
+ * wird, rückt in unerreichbare Ferne. Schade. Müssen wir das alles dokumentieren? Ich weiß es auch nicht mehr! 
+ */
+class StartScreen implements Screen, ScreenView {
 	
 	private Pane pane;
 	
 	public StartScreen() {
 		pane = new Pane();
-		pane.setBackground(new Background(SkinService.get().getStartBackgroundImage()));
+		refresh();
 	}
 
 	@Override
@@ -26,7 +32,12 @@ class StartScreen implements Screen {
 	}
 
 	@Override
-	public Pane getView() {
+	public ScreenView getView() {
+		return this;
+	}
+	
+	@Override
+	public Pane getPane() {
 		return pane;
 	}
 

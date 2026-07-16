@@ -1,9 +1,10 @@
 package app.shared.ui.components.fitbit;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.function.BiConsumer;
 
-import app.shared.Screen;
-import app.shared.model.SessionSwitchStrategy;
+import app.shared.ScreenView;
 import app.shared.skin.SkinService;
 import app.shared.ui.components.fitbit.WeekPointsChartData.State;
 import app.shared.ui.components.fitbit.WeekPointsChartData.Week;
@@ -32,57 +33,57 @@ import javafx.scene.layout.VBox;
  * Framework-gebundene Hälfte: zeichnet eine {@link WeekPointsChartData} als Balken plus
  * Ziellinie. Kennt kein Fitbit, keine Repository, keine Fachlogik — die Daten holt sie
  * über einen {@link WeekPointsDataProvider}.
+ * 
+ * !Sofort: Bitte das Naming überall gerade ziehen. Soll die wirklich ...Pane heißen?
+ * 
  */
-public class FitbitStatisticsScreen implements Screen {
+public class WeekPointsChartPane implements ScreenView {
+	
+	private StackPane pane = new StackPane(); 
 
     private static final PseudoClass ACHIEVED = PseudoClass.getPseudoClass("achieved");
     private static final PseudoClass FAILED = PseudoClass.getPseudoClass("failed");
     private static final PseudoClass IN_PROGRESS = PseudoClass.getPseudoClass("in-progress");
 
-    private final WeekPointsDataProvider dataProvider;
-
-    private StackPane view;
-    private DatePicker fromPicker;
+	private DatePicker fromPicker;
     private DatePicker toPicker;
+    private WeekPointsChartData currentChartData;
     private Spinner<Integer> gapSpinner;
-
-    public FitbitStatisticsScreen(WeekPointsDataProvider dataProvider) {
-        this.dataProvider = dataProvider;
+    private BiConsumer<LocalDate, LocalDate> onDateChange;
+    
+    public WeekPointsChartPane() {
+    	pane.getStyleClass().add("chart-root");	
     }
 
-    @Override
-    public Pane getView() {
-        if (view == null) {
-            view = new StackPane();
-            view.getStyleClass().add("chart-root");
-            buildView();
-        }
-        return view;
+    public void setData(WeekPointsChartData chartData) {
+    	this.currentChartData = chartData;
+    	buildView(chartData);
     }
-
-    @Override
-    public void refresh() {
-        buildView();
+    
+    public void onDateChange(BiConsumer<LocalDate, LocalDate> consumer) {
+    	this.onDateChange = consumer;
     }
+    
+    public WeekPointsChartPane getView() {
+		return this;
+	}
 
-    @Override
-    public SessionSwitchStrategy getSwitchStrategy() {
-        return SessionSwitchStrategy.IMMEDIATE;
-    }
-
-    private void buildView() {
-        view.getChildren().clear();
-        view.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
+    private void buildView(WeekPointsChartData chartData) {
+    	pane.getChildren().clear();
+    	// !Sofort: Sollte der Screen nicht entscheiden, welchen Hintergrund seine View bekommen soll?
+    	// An sich vielleicht schon, aber da diese Komponente sich ja eh eigenständig zusammenbaut, finde
+    	// ich es auch konsequent, wenn sie den Background setzt tbh
+    	pane.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
 
         VBox container = new VBox();
         container.getStyleClass().add("chart-container");
         container.getChildren().add(createControlsBar());
 
-        StackPane chartStack = createCharts();
+        StackPane chartStack = createChart(chartData);
         container.getChildren().add(chartStack);
         VBox.setVgrow(chartStack, Priority.ALWAYS);
 
-        view.getChildren().add(container);
+        pane.getChildren().add(container);
     }
 
     private HBox createControlsBar() {
@@ -91,11 +92,11 @@ public class FitbitStatisticsScreen implements Screen {
 
         Label fromLabel = new Label("Von:");
         fromPicker = SkinService.get().createDatePicker(java.time.LocalDate.now().minusYears(2));
-        fromPicker.setOnAction(_ -> updateCharts());
+        fromPicker.setOnAction(_ -> onDateChange.accept(fromPicker.getValue(), toPicker.getValue()));
 
         Label toLabel = new Label("Bis:");
         toPicker = SkinService.get().createDatePicker(java.time.LocalDate.now());
-        toPicker.setOnAction(_ -> updateCharts());
+        toPicker.setOnAction(_ -> onDateChange.accept(fromPicker.getValue(), toPicker.getValue()));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -103,15 +104,14 @@ public class FitbitStatisticsScreen implements Screen {
         Label gapLabel = new Label("Balkenabstand:");
         gapSpinner = new Spinner<>(0, 20, 0);
         gapSpinner.setEditable(true);
-        gapSpinner.valueProperty().addListener((_, _, _) -> updateCharts());
+        gapSpinner.valueProperty().addListener((_, _, _) -> updateChart());
 
         controls.getChildren().addAll(fromLabel, fromPicker, toLabel, toPicker, spacer, gapLabel, gapSpinner);
         return controls;
     }
 
-    private StackPane createCharts() {
-        WeekPointsChartData data = dataProvider.get(fromPicker.getValue(), toPicker.getValue());
-        List<Week> weeks = data.weeks();
+    private StackPane createChart(WeekPointsChartData chartData) {
+        List<Week> weeks = chartData.weeks();
         int categoryGap = gapSpinner.getValue();
 
         if (weeks.isEmpty()) {
@@ -125,7 +125,7 @@ public class FitbitStatisticsScreen implements Screen {
         xAxis.setCategories(categories);
         xAxis.setTickLabelRotation(-45);
 
-        NumberAxis yAxis = new NumberAxis(0, data.yMax(), 500);
+        NumberAxis yAxis = new NumberAxis(0, chartData.yMax(), 500);
 
         BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
         barChart.setLegendVisible(false);
@@ -179,15 +179,12 @@ public class FitbitStatisticsScreen implements Screen {
         return stack;
     }
 
-    private void updateCharts() {
-        if (view == null) {
-            return;
-        }
-        VBox container = (VBox) view.getChildren().get(0);
+    private void updateChart() {
+        VBox container = (VBox) pane.getChildren().get(0);
         if (container.getChildren().size() > 1) {
             container.getChildren().remove(1);
         }
-        StackPane chartStack = createCharts();
+        StackPane chartStack = createChart(currentChartData);
         container.getChildren().add(chartStack);
         VBox.setVgrow(chartStack, Priority.ALWAYS);
     }
@@ -198,4 +195,9 @@ public class FitbitStatisticsScreen implements Screen {
         stack.getChildren().add(emptyChart);
         return stack;
     }
+
+	@Override
+	public Pane getPane() {
+		return pane;
+	}
 }

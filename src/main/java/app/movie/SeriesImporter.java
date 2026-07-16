@@ -1,7 +1,5 @@
 package app.movie;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -10,8 +8,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
-
-import javax.imageio.ImageIO;
 
 import app.movie.model.EpisodeForApi;
 import app.movie.model.TvShowComparisonData;
@@ -33,14 +29,10 @@ import app.movie.repository.SeasonRepository;
 import app.movie.repository.TvShowRepository;
 import app.shared.Config;
 import app.shared.DB;
+import app.shared.UiUtils;
+import app.shared.model.DialogButton;
 import app.shared.skin.SkinService;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.layout.VBox;
+import app.shared.ui.dialog.TextPromptDialog;
 
 /**
  * Orchestriert den manuellen Serien-/Episoden-Import.
@@ -239,11 +231,11 @@ public class SeriesImporter {
                 tvShowRepo.insertTvShow(show, conn);
                 savePoster(show.poster_path, show.id, posterW92, 92,
                         filename -> tvShowRepo.insertTvShowImage(show, 92,
-                                getImageDimensions(posterW92)[1], filename, conn),
+                                UiUtils.getImageDimensions(posterW92)[1], filename, conn),
                         "Serie " + show.name);
                 savePoster(show.poster_path, show.id, posterW154, 154,
                         filename -> tvShowRepo.insertTvShowImage(show, 154,
-                                getImageDimensions(posterW154)[1], filename, conn),
+                        		UiUtils.getImageDimensions(posterW154)[1], filename, conn),
                         "Serie " + show.name);
                 tvShowRepo.insertTvShowRating(rating, comment, conn);
                 processAggregatedCredits(credits, show.id, conn,
@@ -273,7 +265,7 @@ public class SeriesImporter {
         TvShowJSON webData = api.getTvShowDetails(tvShowId);
         if (dbData.differs(webData)) {
             log.info("Seriendaten haben sich geändert: " + showName);
-            Alert alert = SkinService.get().createAlert(null,
+            DialogButton result = SkinService.get().showAlert(
                     "Seriendaten geändert",
                     "Die Daten der Serie \"" + showName + "\" haben sich geändert.\n\n"
                     + "Seasons: " + dbData.numberOfSeasons + " → " + webData.number_of_seasons + "\n"
@@ -281,10 +273,8 @@ public class SeriesImporter {
                     + "Status: " + dbData.status + " → " + webData.status + "\n"
                     + "Last Air Date: " + dbData.lastAirDate + " → " + webData.last_air_date + "\n\n"
                     + "Sollen die Daten aktualisiert werden?",
-                    new ButtonType("Ja", ButtonBar.ButtonData.YES),
-                    new ButtonType("Nein", ButtonBar.ButtonData.NO));
-            Optional<ButtonType> result = alert.showAndWait();
-            if (result.isPresent() && result.get().getButtonData() == ButtonBar.ButtonData.YES) {
+                    DialogButton.YES, DialogButton.NO);
+            if (result == DialogButton.YES) {
                 tvShowRepo.updateTvShowData(webData);
                 updatedShowData++;
             }
@@ -345,11 +335,11 @@ public class SeriesImporter {
                 tvShowRepo.insertTvShow(show, conn);
                 savePoster(show.poster_path, show.id, posterW92, 92,
                         filename -> tvShowRepo.insertTvShowImage(show, 92,
-                                getImageDimensions(posterW92)[1], filename, conn),
+                        		UiUtils.getImageDimensions(posterW92)[1], filename, conn),
                         "Serie " + show.name);
                 savePoster(show.poster_path, show.id, posterW154, 154,
                         filename -> tvShowRepo.insertTvShowImage(show, 154,
-                                getImageDimensions(posterW154)[1], filename, conn),
+                        		UiUtils.getImageDimensions(posterW154)[1], filename, conn),
                         "Serie " + show.name);
                 processAggregatedCredits(credits, show.id, conn,
                         (cast, c) -> tvShowRepo.insertTvShowCast(cast, show.id, c),
@@ -390,7 +380,7 @@ public class SeriesImporter {
                 if (season.poster_path != null && posterW92 != null) {
                     savePoster(season.poster_path, season.id, posterW92, 92,
                             filename -> seasonRepo.insertSeasonImage(season, 92,
-                                    getImageDimensions(posterW92)[1], filename, conn),
+                            		UiUtils.getImageDimensions(posterW92)[1], filename, conn),
                             "Season " + season.name);
                 } else {
                     seasonRepo.copyShowImageToSeason(season, conn);
@@ -398,7 +388,7 @@ public class SeriesImporter {
                 if (season.poster_path != null && posterW154 != null) {
                     savePoster(season.poster_path, season.id, posterW154, 154,
                             filename -> seasonRepo.insertSeasonImage(season, 154,
-                                    getImageDimensions(posterW154)[1], filename, conn),
+                            		UiUtils.getImageDimensions(posterW154)[1], filename, conn),
                             "Season " + season.name);
                 } else {
                     seasonRepo.copyShowImageToSeason(season, conn);
@@ -543,14 +533,14 @@ public class SeriesImporter {
                     byte[] posterW92 = api.getImage(movieDetails.poster_path, "w92");
                     byte[] posterW154 = api.getImage(movieDetails.poster_path, "w154");
                     if (posterW92 != null) {
-                        int[] dim = getImageDimensions(posterW92);
+                        int[] dim = UiUtils.getImageDimensions(posterW92);
                         String filename = buildImageFilename(movieDetails.poster_path, "en-US",
                                 dim[0], dim[1]);
                         saveImageToFileSystem(filename, posterW92);
                         movieRepo.updateMoviePoster(id, dim[0], dim[1], "en-US", movieDetails.poster_path.substring(1), filename);
                     }
                     if (posterW154 != null) {
-                        int[] dim = getImageDimensions(posterW154);
+                        int[] dim = UiUtils.getImageDimensions(posterW154);
                         String filename = buildImageFilename(movieDetails.poster_path, "en-US",
                                 dim[0], dim[1]);
                         saveImageToFileSystem(filename, posterW154);
@@ -591,13 +581,13 @@ public class SeriesImporter {
                     byte[] posterW92 = api.getImage(showDetails.poster_path, "w92");
                     byte[] posterW154 = api.getImage(showDetails.poster_path, "w154");
                     if (posterW92 != null) {
-                        int[] dim = getImageDimensions(posterW92);
+                        int[] dim = UiUtils.getImageDimensions(posterW92);
                         String filename = buildImageFilename(showDetails.poster_path, "en-US", dim[0], dim[1]);
                         saveImageToFileSystem(filename, posterW92);
                         tvShowRepo.insertTvShowImage(id, showDetails.poster_path, dim[0], dim[1], "en-US", filename);
                     }
                     if (posterW154 != null) {
-                        int[] dim = getImageDimensions(posterW154);
+                        int[] dim = UiUtils.getImageDimensions(posterW154);
                         String filename = buildImageFilename(showDetails.poster_path, "en-US", dim[0], dim[1]);
                         saveImageToFileSystem(filename, posterW154);
                         tvShowRepo.insertTvShowImage(id, showDetails.poster_path, dim[0], dim[1], "en-US", filename);
@@ -688,23 +678,18 @@ public class SeriesImporter {
      * Keine Vorschau — die fertige Karte wird anschließend im Viewer
      * kontrolliert. Bei Bedarf kann das Flag direkt in der DB angepasst werden.
      */
-    private void showFlagDialog(int episodeId, String title) {
-        ButtonType btnSeason = new ButtonType("Ganze Staffel", ButtonBar.ButtonData.OTHER);
-        ButtonType btnEpisode = new ButtonType("Nur diese Episode", ButtonBar.ButtonData.OTHER);
- 
-        Alert alert = SkinService.get().createAlert(null,
+    private void showFlagDialog(int episodeId, String title) { 
+        DialogButton result = SkinService.get().showAlert(
                 "Art der Bewertung",
                 "Bezieht sich die Bewertung auf die ganze Staffel oder nur auf diese Episode?\n\n"
                 + title + "\n\n"
                 + "Hinweis: Die Karte anschließend im Viewer kontrollieren. Stimmt das Flag "
                 + "nicht, kann rated_season direkt in der DB angepasst werden.",
-                btnSeason, btnEpisode);
+                DialogButton.WHOLE_SEASON, DialogButton.EPISODE);
  
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isEmpty())
+        if (result != DialogButton.WHOLE_SEASON && result != DialogButton.EPISODE)
             throw new RuntimeException("Flag-Dialog wurde ohne Auswahl geschlossen. episodeId=" + episodeId);
- 
-        episodeRepo.updateEpisodeFlags(episodeId, result.get() == btnSeason);
+        episodeRepo.updateEpisodeFlags(episodeId, result == DialogButton.WHOLE_SEASON);
     }
 
     // =========================================================================
@@ -712,9 +697,7 @@ public class SeriesImporter {
     // =========================================================================
 
     private void showStepAlert(String message) {
-        Alert alert = SkinService.get().createAlert(null, "TMDB Import", message,
-                new ButtonType("OK", ButtonBar.ButtonData.OK_DONE));
-        alert.showAndWait();
+        SkinService.get().showAlert("TMDB Import", message, DialogButton.OK);
     }
 
     private void showSummary() {
@@ -732,54 +715,34 @@ public class SeriesImporter {
             sb.append("Nichts Neues gefunden.");
 
         log.info("Zusammenfassung: " + sb.toString());
-        Alert alert = SkinService.get().createAlert(null, "TMDB Import — Zusammenfassung",
+        SkinService.get().showAlert("TMDB Import — Zusammenfassung",
                 sb.toString().trim(),
-                new ButtonType("OK", ButtonBar.ButtonData.OK_DONE));
-        alert.showAndWait();
+                DialogButton.OK);
     }
 
     private String askForComment(String dialogTitle, String description, String existingComment) {
-        TextArea textArea = new TextArea();
-        textArea.setWrapText(true);
-        textArea.setPrefRowCount(6);
-        textArea.setPrefColumnCount(40);
-        if (existingComment != null && !".".equals(existingComment))
-            textArea.setText(existingComment);
-
-        Dialog<?> dialog = SkinService.get().createDialog(null, dialogTitle);
-        VBox content = SkinService.get().createDialogContent();
-        content.getChildren().add(new Label(description));
-        content.getChildren().add(textArea);
-
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-
-        Optional<?> result = dialog.showAndWait();
-        if (result.isEmpty() || result.get().equals(ButtonType.CANCEL))
+        String prefill = (existingComment != null && !".".equals(existingComment)) ? existingComment : null;
+        Optional<String> result = TextPromptDialog.show(dialogTitle, description, prefill);
+        if (result.isEmpty())
             return ".";
-
-        String text = textArea.getText();
-        return (text == null || text.isBlank()) ? "." : text.trim();
+        String text = result.get();
+        return text.isBlank() ? "." : text.trim();
     }
 
     private boolean askWhitelistOrBlacklist(String personName, String job,
             String department, String contextName) {
-        ButtonType btnWhitelist = new ButtonType("Whitelist", ButtonBar.ButtonData.YES);
-        ButtonType btnBlacklist = new ButtonType("Blacklist", ButtonBar.ButtonData.NO);
-
-        Alert alert = SkinService.get().createAlert(null,
+        DialogButton result = SkinService.get().showAlert(
                 "Unbekannter Crew-Job",
                 "Person: " + personName + "\n"
                 + "Job: " + job + "\n"
                 + "Department: " + department + "\n"
                 + "Kontext: " + contextName,
-                btnWhitelist, btnBlacklist);
+                DialogButton.WHITELIST, DialogButton.BLACKLIST);
 
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isEmpty())
+        if (result != DialogButton.WHITELIST && result !=  DialogButton.BLACKLIST)
             throw new RuntimeException("Crew-Dialog ohne Auswahl geschlossen. job=" + job);
 
-        return result.get() == btnWhitelist;
+        return result == DialogButton.WHITELIST;
     }
 
     // =========================================================================
@@ -798,13 +761,11 @@ public class SeriesImporter {
     private void savePoster(String posterPath, int entityId, byte[] imageData,
             int targetWidth, ImageDbInsert dbInsert, String contextName) {
         if (imageData == null || posterPath == null) {
-            SkinService.get().createAlert(SkinService.getOwnerWindow(),
-                    targetWidth + "er Poster fehlt",
-                    "Für " + contextName, false, false);
+            SkinService.get().showAlert(targetWidth + "er Poster fehlt", "Für " + contextName, DialogButton.OK);
             return;
         }
         try {
-            int[] dim = getImageDimensions(imageData);
+            int[] dim = UiUtils.getImageDimensions(imageData);
             String filename = buildImageFilename(posterPath, "en-US", dim[0], dim[1]);
             saveImageToFileSystem(filename, imageData);
             dbInsert.insert(filename);
@@ -823,15 +784,6 @@ public class SeriesImporter {
             log.fine("Bild gespeichert: " + filename);
         } catch (Exception e) {
             throw new RuntimeException("saveImageToFileSystem fehlgeschlagen. filename: " + filename, e);
-        }
-    }
-
-    private static int[] getImageDimensions(byte[] imageData) {
-        try {
-            BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageData));
-            return new int[]{img.getWidth(), img.getHeight()};
-        } catch (Exception e) {
-            throw new RuntimeException("getImageDimensions fehlgeschlagen", e);
         }
     }
 
