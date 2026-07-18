@@ -8,16 +8,16 @@ import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
 import app.learn.model.GeoMap;
 import app.learn.model.MapImagePaths;
-import app.shared.ScreenView;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
-import app.shared.ui.MultipleChoicePane;
-import app.shared.ui.SessionInfoLabel;
-import app.shared.ui.components.ComponentHost;
-import app.shared.ui.components.IconButton;
-import app.shared.ui.components.ImagePane;
-import app.shared.ui.components.InputField;
+import app.shared.ui.components.MultipleChoicePane;
+import app.shared.ui.components.SuiteIconButton;
+import app.shared.ui.components.SuiteImage;
+import app.shared.ui.components.SuiteInfoLabel;
+import app.shared.ui.components.SuiteTextField;
 import app.shared.ui.components.learn.ImageMapPane;
+import app.shared.ui.contracts.ScreenView;
+import app.shared.ui.surfaces.ComponentHost;
 
 public class ImageMapSessionPane implements SessionPane {
 
@@ -26,14 +26,14 @@ public class ImageMapSessionPane implements SessionPane {
 	private final ComponentHost canvas = new ComponentHost();
 
 	private GeoMap map;
-	private InputField inputField;
-	private SessionInfoLabel questionArea;
-	private SessionInfoLabel progressArea;
-	private SessionInfoLabel cardHistoryArea;
+	private SuiteTextField inputField;
+	private SuiteInfoLabel questionArea;
+	private SuiteInfoLabel progressArea;
+	private SuiteInfoLabel cardHistoryArea;
 	private MultipleChoicePane mcPane;
-	private IconButton backButton;
+	private SuiteIconButton backButton;
 	private ImageMapPane mapPane;
-	private ImagePane imageComponent;
+	private SuiteImage imageComponent;
 
 	public ImageMapSessionPane(SessionPresenter presenter, Deck deckType) {
 		this.presenter = presenter;
@@ -57,7 +57,7 @@ public class ImageMapSessionPane implements SessionPane {
 		questionArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.QUESTION);
 		questionArea.setText("");
 
-		inputField = new InputField(skin.createInputField(deckType.getMapName(), deckType.getCategory().toString()));
+		inputField = new SuiteTextField(skin.createInputField(deckType.getMapName(), deckType.getCategory().toString()));
 		inputField.onType(text -> presenter.typedText(text));
 
 		imageComponent = skin.createImageComponent(deckType.getId(), deckType.getCategory().toString());
@@ -71,7 +71,7 @@ public class ImageMapSessionPane implements SessionPane {
 		cardHistoryArea = skin.createSessionInfoLabel(deckType.getMapName(), deckType.getCategory().toString(), Skin.TextLabelType.CARD_HISTORY);
 		cardHistoryArea.setText(""); // FEHLER (Dein Marker)
 
-		backButton = new IconButton(skin.createIconButton(deckType.getId(), Skin.IconButtonType.BACK));
+		backButton = new SuiteIconButton(skin.createIconButton(deckType.getId(), Skin.IconButtonType.BACK));
 		backButton.onClick(() -> presenter.clickedBack());
 
 		canvas.setComponents(mapPane, questionArea, inputField, imageComponent, mcPane, progressArea, cardHistoryArea, backButton);

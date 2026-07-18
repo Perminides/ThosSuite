@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import app.learn.model.MapShape;
-import app.shared.ui.components.learn.model.ShapeGeometry;
-import app.shared.ui.components.learn.model.ShapeGeometry.Point;
+import app.shared.model.ShapeGeometry;
+import app.shared.model.ShapeGeometry.Point;
 
 /**
  * Diese Klasse kennt nur das MapRepository!

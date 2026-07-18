@@ -13,10 +13,10 @@ import app.learn.model.Deck;
 import app.learn.model.DeckCategory;
 import app.learn.model.MapMetadata;
 import app.learn.region.model.Mode;
-import app.shared.ui.dialog.RegionConfigDialog;
-import app.shared.ui.dialog.RegionDialogState;
-import app.shared.ui.dialog.RegionDialogState.Choice;
-import app.shared.ui.dialog.RegionDialogState.Toggle;
+import app.shared.model.RegionDialogState;
+import app.shared.model.RegionDialogState.Choice;
+import app.shared.model.RegionDialogState.Toggle;
+import app.shared.ui.surfaces.dialogs.RegionConfigDialog;
 
 public final class RegionPlayConfigForm {
 

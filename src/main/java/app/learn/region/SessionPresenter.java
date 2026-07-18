@@ -4,8 +4,8 @@ import java.util.Set;
 
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
-import app.shared.ScreenView;
 import app.shared.ui.components.learn.ShapeMapPane.ShapeMapState;
+import app.shared.ui.contracts.ScreenView;
 
 /**
  * Intermediary between RegionSessionPane and the RegionSessionProgress.

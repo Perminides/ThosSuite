@@ -7,7 +7,7 @@ import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
 import app.learn.model.LearnStat;
 import app.learn.model.SessionProgressCounter;
-import app.shared.ScreenView;
+import app.shared.ui.contracts.ScreenView;
 
 /**
  * Vermittelt zwischen SessionPane (GUI) und SessionProgress (Ablauf): reicht User-Eingaben der

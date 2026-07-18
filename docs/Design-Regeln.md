@@ -1,6 +1,6 @@
 # ThosSuite — Design & Regeln (Paketstruktur, Abhängigkeiten, Benennung)
 
-**Stand:** 06.07.2026 · v1.3
+**Stand:** 17.07.2026 · v1.4
 
 **Charakter dieses Dokuments:** das *Regelwerk* — die Prinzipien, nach denen die Suite
 in Pakete und Klassen geschnitten, benannt und verbunden ist, und *warum*. Vorschreibend:
@@ -32,7 +32,7 @@ Keine Tests! Keine Unit-Tests, keine Test-Infrastruktur,
 Testbarkeit ist kein Designziel. Einziger Nutzer und Entwickler ist Thorsten; ein Fehler
 fällt im täglichen Gebrauch sofort auf und wird direkt behoben.
 
-**Vier feste Regeln:**
+**Feste Regeln:**
 
 1. **Keine Zirkel zwischen Paketen, auch keine transitiven.** Gilt ausnahmslos für alle Pakete.
 2. **Auf oberster Ebene laufen die Abhängigkeiten nur nach unten** (Orchestrierung → Fundament).
@@ -43,6 +43,7 @@ fällt im täglichen Gebrauch sofort auf und wird direkt behoben.
    nicht ineinander. Was zwei davon brauchen, wandert nach unten in `shared`.
 4. **Nicht jede Abweichung von einer Regel ist ein Fehler.** Erst fragen, ob ein guter Grund
    dahintersteckt.
+5. **`null` statt `Optional` bei Rückgaben.** Fehlt ein Rückgabewert, wird `null` zurückgegeben, nicht `Optional`. Ausnahme: Der Wert stammt direkt aus einer `Optional`-liefernden JDK-API (Streams) — dann wird das `Optional` sofort am Entstehungsort ausgepackt (`orElse(null)`), nicht durch eigene Signaturen weitergereicht. `null`-Rückgaben gehören im Javadoc vermerkt.
 
 <!-- TODO: Regel 4 braucht noch ein gutes Beispiel aus der Domäne (Schnitt/Benennung/Abhängigkeit),
      keins aus dem Prozess. Bleibt offen, bis eine echte Stutzer-Stelle auftaucht. -->
@@ -172,6 +173,8 @@ Feature (`learn.model`, `learn.repository`, `learn`). So sammelt sich das JavaFX
 an einem vorhersagbaren Ort statt im ganzen Feature verstreut, und das Feature selbst wird
 Stück für Stück frei.
 
+**Warum Features javafx-frei.** Wartbarkeit bedeutet hier: Der Code bleibt ohne UI-Framework-Kenntnisse lesbar und änderbar. Deshalb sind sämtliche Feature-Pakete vollständig framework-frei; JavaFX ist bewusst in `shared` und `controller` eingezäunt. Der JavaFX-Anteil ist so groß, wie er sein muss — Ziel ist nicht, ihn zu verkleinern, sondern die Grenze scharf zu halten. Auch innerhalb von `shared` gilt Lesbarkeit als Kriterium: vermeidbare Undurchsichtigkeit (unchecked Casts, funktionale Verrenkungen ohne Not) wird minimiert.
+
 **Die Übergangsregel: Die Grenze trägt Daten — keine Domänentypen, keine Nodes.** Was von
 der Feature-Seite nach `shared` hinabreicht, ist framework-freie *Datenvokabel*, nicht der
 Domänentyp des Features und kein fertiger JavaFX-Node. Beleg: `ShapeGeometry` (in
@@ -179,7 +182,7 @@ Domänentyp des Features und kein fertiger JavaFX-Node. Beleg: `ShapeGeometry` (
 `MapShape` mit seiner Fachlichkeit (Namen, Hauptstadt, Matching) bleibt in `learn.model`
 und wird *nie* hinabgereicht. Der sichtbare Node entsteht erst jenseits der Grenze, im
 `MapNodeBuilder`. So bleibt `shared` frei von Feature-Wissen (Regel 3 bleibt gewahrt) und
-das Feature frei von JavaFX.
+das Feature frei von JavaFX. Wo eine Grenze mehrfach überquert wird (rein zum Anzeigen, raus zum Speichern), trägt idealerweise *ein* Grenzobjekt beide Richtungen, statt je Richtung ein eigenes — ein Typ pro Grenze bleibt vorhersagbar.
 
 Diese Achse ist der Grund, warum ein großer zusammenhängender Klumpen im
 Abhängigkeitsgraphen entsteht, sobald JavaFX *nach unten* in `model`/`repository` eines
@@ -298,19 +301,19 @@ Dialoge folgen derselben Grenze wie Screens, nur ohne Lebenszyklus: framework-fr
 Input rein → shared-JavaFX-Dialog → framework-freies Ergebnis raus. Sie sind **keine**
 `ScreenView`s (werden nicht gemountet, haben kein `getPane`).
 
-**Vertrag (ausnahmslos).** Ergebnis ist ein record/enum/`Optional`, nie
-`ButtonType`/`Node`. Das Fenster holt sich der Dialog intern über
-`SkinService.getOwnerWindow()` — kein `Window`-Parameter vom Feature. Dismiss/X = immer
-Abbruch (`CANCEL`); der Aufrufer interpretiert (etwa `CANCEL → später`).
+**Vertrag (ausnahmslos).** Ergebnis ist ein record/enum oder `null` bei komplexeren Dialogen, nie 
+`ButtonType`/`Node`. (Frühere Dialoge geben teils noch `Optional` zurück; das ist nicht
+ mehr erwünscht (Regel 5) und wird nach und nach entfernt.) Das Fenster holt sich der
+ Dialog intern über `SkinService.getOwnerWindow()` — kein `Window`-Parameter vom Feature.
+ Dismiss/X = immer Abbruch (`CANCEL`); der Aufrufer interpretiert (etwa `CANCEL → später`).
 
 **Zwei Stufen.**
-- **Einfach (Auswahl + statischer Inhalt):** ein Alert. `SkinService.get().showAlert(…)`
-  gibt einen suite-eigenen `DialogButton` zurück; nur der Skin kennt `javafx.ButtonType`
-  und übersetzt. Bild optional als Path/Key (der Skin lädt und tint, nicht das Feature).
+- **Einfach (Auswahl + statischer Inhalt):** ein Alert. `SkinService.get().showAlert(…)` gibt einen suite-eigenen `DialogButton` zurück; nur der Skin kennt `javafx.ButtonType` und übersetzt. Zusatzoptionen (Bild als Path, zentrierter Text, ESC-/X-Blockade via `Dismiss`) reicht ein `AlertOptions`-Objekt hinein — Bild lädt und tint der Skin, nicht das Feature.
 - **Komplex (Felder, Mehrfachauswahl, Verflechtung):** eine **bespoke Komponente pro
   Dialog**. Kein generisches Formular-Framework — einmal gebaut und wieder verworfen,
   weil es bei der tatsächlichen Stückzahl (kein Dialog-Typ kommt auf fünf) nur
   Indirektion ohne Wiederverwendung war. Lesbarkeit schlägt Wiederverwendbarkeit.
+- **Sonderfall: zustandsbehafteter Editor.** Ein reicher, über die Zeit veränderlicher Editor (Diary: Text, Tags, Anhänge, invasiver Modus) ist kein Ergebnis-Dialog. Er wird wie ein Screen-Split behandelt: framework-freie Hälfte im Feature (die feature-seitige Klasse mit Domäne — Speichern, Löschen, Regeln), gebundene Hälfte in `shared` (die Widgets). Statt eines Ergebnis-Records reicht **ein einziges** framework-freies Grenzobjekt in beide Richtungen, und die shared-Hälfte meldet über Callbacks zurück (`onSave`, `onDelete`). Fachregeln, die das Verhalten steuern (Schwellen, Timer-Dauer), kommen als framework-freie Werte hinein; ihre JavaFX-Umsetzung liegt in `shared`.
 
 **Aufteilung einer komplexen Dialog-Klasse.** Das JavaFX (Widgets, `Dialog`,
 `showAndWait`) wandert vollständig nach `shared`; im Feature bleibt nur Domäne: welche

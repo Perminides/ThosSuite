@@ -22,7 +22,7 @@ import app.movie.repository.MovieRepository;
 import app.movie.repository.PendingRepository;
 import app.shared.Config;
 import app.shared.DB;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.skin.SkinService;
 
 /**
@@ -165,7 +165,7 @@ public class Importer {
                     saveImageToFileSystem(filename, posterW92);
                     movieRepo.insertMovieImage(movie, 92, dimensions[1], filename, conn);
                 } else {
-                	SkinService.get().showAlert("92er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, DialogButton.OK);
+                	SkinService.get().showAlert("92er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, ButtonEnum.OK);
                 }
                 if (posterW154 != null) {
                     int[] dimensions = getImageDimensions(posterW154);
@@ -173,7 +173,7 @@ public class Importer {
                     saveImageToFileSystem(filename, posterW154);
                     movieRepo.insertMovieImage(movie, 154, dimensions[1], filename, conn);
                 } else {
-                	SkinService.get().showAlert("154er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, DialogButton.OK);
+                	SkinService.get().showAlert("154er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, ButtonEnum.OK);
                 }
                 movieRepo.insertMovieRating(rating, null, conn);
                 processCredits(credits, movie, conn);

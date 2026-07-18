@@ -1,9 +1,9 @@
 package app.controller;
 
-import app.shared.Screen;
-import app.shared.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.skin.SkinService;
+import app.shared.ui.contracts.Screen;
+import app.shared.ui.contracts.ScreenView;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 

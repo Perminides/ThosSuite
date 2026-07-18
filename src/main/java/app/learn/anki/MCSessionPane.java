@@ -5,14 +5,14 @@ import java.util.Set;
 
 import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
-import app.shared.ScreenView;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
-import app.shared.ui.MultipleChoicePane;
-import app.shared.ui.SessionInfoLabel;
-import app.shared.ui.components.ComponentHost;
-import app.shared.ui.components.IconButton;
-import app.shared.ui.components.ImagePane;
+import app.shared.ui.components.MultipleChoicePane;
+import app.shared.ui.components.SuiteIconButton;
+import app.shared.ui.components.SuiteImage;
+import app.shared.ui.components.SuiteInfoLabel;
+import app.shared.ui.contracts.ScreenView;
+import app.shared.ui.surfaces.ComponentHost;
 
 public class MCSessionPane implements SessionPane {
 	private static final Deck DECKTYPE = Deck.MC_CARDS;
@@ -20,12 +20,12 @@ public class MCSessionPane implements SessionPane {
 	private final SessionPresenter presenter;
 	private final ComponentHost canvas = new ComponentHost();
 
-	private SessionInfoLabel questionArea;
-	private SessionInfoLabel progressArea;
-	private SessionInfoLabel cardHistoryArea;
+	private SuiteInfoLabel questionArea;
+	private SuiteInfoLabel progressArea;
+	private SuiteInfoLabel cardHistoryArea;
 	private MultipleChoicePane mcPane;
-	private IconButton backButton;
-	private ImagePane imageComponent;
+	private SuiteIconButton backButton;
+	private SuiteImage imageComponent;
 
 	public MCSessionPane(SessionPresenter presenter) {
 		this.presenter = presenter;
@@ -52,7 +52,7 @@ public class MCSessionPane implements SessionPane {
 		cardHistoryArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.CARD_HISTORY);
 		cardHistoryArea.setText("");
 
-		backButton = new IconButton(skin.createIconButton(DECKTYPE.getId(), Skin.IconButtonType.BACK));
+		backButton = new SuiteIconButton(skin.createIconButton(DECKTYPE.getId(), Skin.IconButtonType.BACK));
 		backButton.onClick(() -> presenter.clickedBack());
 
 		canvas.setComponents(questionArea, imageComponent, mcPane, progressArea, cardHistoryArea, backButton);

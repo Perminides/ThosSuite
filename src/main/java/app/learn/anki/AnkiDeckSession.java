@@ -8,11 +8,11 @@ import app.learn.model.Deck;
 import app.learn.model.SessionProgressCounter;
 import app.shared.Config;
 import app.shared.Log;
-import app.shared.Screen;
-import app.shared.ScreenView;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.skin.SkinService;
+import app.shared.ui.contracts.Screen;
+import app.shared.ui.contracts.ScreenView;
 
 /**
  * Schale der Anki-Lernsession. Verantwortlich für genau drei Dinge:
@@ -75,7 +75,7 @@ public class AnkiDeckSession implements Screen {
 	@Override
 	public void saveChosen() {
 		progress.deactivate();
-		SkinService.get().showAlert("Zusammenfassung", createSummary(), DialogButton.OK);
+		SkinService.get().showAlert("Zusammenfassung", createSummary(), ButtonEnum.OK);
 		if (isFreePlay)
 			progress.end();  // Kein Speichern im freien Spiel, nur Presenter-Cleanup.
 		else

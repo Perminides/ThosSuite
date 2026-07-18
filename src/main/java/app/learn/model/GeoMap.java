@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import app.shared.ui.components.learn.model.ShapeGeometry;
+import app.shared.model.ShapeGeometry;
 
 /**
  * Dünne Datenklasse: die Shapes einer Karte (reine Daten inkl. ShapeGeometry) plus der Kartentyp. Framework-frei.

@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import app.learn.model.Deck;
-import app.shared.ui.dialog.AnkiConfigDialog;
-import app.shared.ui.dialog.AnkiDialogState;
+import app.shared.model.AnkiDialogState;
+import app.shared.ui.surfaces.dialogs.AnkiConfigDialog;
 
 public final class AnkiPlayConfigForm {
 

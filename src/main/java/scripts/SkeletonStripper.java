@@ -55,7 +55,8 @@ public class SkeletonStripper {
 	private static final String OUTPUT_FILE = "C:/Users/permi/Desktop/thossuite_skeleton.txt";
 
 	/** Packages mit diesem Präfix werden komplett übersprungen. */
-	private static final List<String> EXCLUDED_PREFIXES = List.of("app.scripts");
+	private static final List<String> EXCLUDED_PREFIXES = List.of("app.scripts"); // Wird ignoriert wenn INCLUDED nicht leer ist.
+	private static final List<String> INCLUDED_PREFIXES = List.of("app.shared");
 
 	// ===== Ende Konfiguration =====
 
@@ -293,9 +294,17 @@ public class SkeletonStripper {
 	}
 
 	private static boolean isExcluded(String packageName) {
-		for (String prefix : EXCLUDED_PREFIXES) {
-			if (packageName.equals(prefix) || packageName.startsWith(prefix + "."))
-				return true;
+		if (!INCLUDED_PREFIXES.isEmpty()) {
+			for (String prefix : INCLUDED_PREFIXES) {
+				if (packageName.equals(prefix) || packageName.startsWith(prefix + "."))
+					return false;
+			}
+			return true;
+		} else {
+			for (String prefix : EXCLUDED_PREFIXES) {
+				if (packageName.equals(prefix) || packageName.startsWith(prefix + "."))
+					return true;
+			}
 		}
 		return false;
 	}

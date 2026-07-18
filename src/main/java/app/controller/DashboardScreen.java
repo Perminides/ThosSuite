@@ -9,12 +9,12 @@ import app.mattress.repository.MattressRepository;
 import app.messaging.repository.MessageRepository;
 import app.shared.AppClock;
 import app.shared.Config;
-import app.shared.Screen;
-import app.shared.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.skin.SkinService;
-import app.shared.ui.DashboardTile;
-import app.shared.ui.components.DashboardScreenView;
+import app.shared.ui.components.DashboardTile;
+import app.shared.ui.contracts.Screen;
+import app.shared.ui.contracts.ScreenView;
+import app.shared.ui.surfaces.DashboardScreenView;
 import app.weekday.model.WeekdayStats;
 import app.weekday.repository.WeekdayRepository;
 

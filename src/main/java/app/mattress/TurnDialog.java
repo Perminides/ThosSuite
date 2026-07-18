@@ -9,7 +9,7 @@ import app.mattress.repository.MattressRepository;
 import app.shared.Config;
 import app.shared.Log;
 import app.shared.model.AlertOptions;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.skin.SkinService;
 
 public class TurnDialog {
@@ -43,8 +43,8 @@ public class TurnDialog {
         String imgName = suggested.equals(DIR_UP_DOWN) ? IMG_UP_DOWN : IMG_RIGHT_LEFT;
         Path image = Config.getPath("miscImageFolder").resolve(imgName);
 
-        DialogButton answer = SkinService.get().showAlert("Matratze", "", new AlertOptions().image(image),
-        	      DialogButton.DONE, DialogButton.OTHER_DIRECTION, DialogButton.LATER);
+        ButtonEnum answer = SkinService.get().showAlert("Matratze", "", new AlertOptions().image(image),
+        	      ButtonEnum.DONE, ButtonEnum.OTHER_DIRECTION, ButtonEnum.LATER);
 
         switch (answer) {
             case DONE            -> repository.save(LocalDateTime.now(), suggested);

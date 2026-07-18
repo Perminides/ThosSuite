@@ -10,8 +10,8 @@ import app.alc.AlcStatisticsScreen;
 import app.alc.StartupService;
 import app.controller.model.PlayMenuItem;
 import app.controller.model.PlayMenuNode;
-import app.diary.DiaryDialog;
-import app.diary.DiaryViewerScreen;
+import app.diary.DiaryEditorPresenter;
+import app.diary.DiaryScreen;
 import app.fitbit.DataFetcher;
 import app.fitbit.DataReviewService;
 import app.fitbit.FitbitStatisticsScreen;
@@ -42,10 +42,10 @@ import app.movie.MovieViewerScreen;
 import app.movie.SeriesImporter;
 import app.shared.Config;
 import app.shared.Log;
-import app.shared.Screen;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
+import app.shared.ui.contracts.Screen;
 import app.tmp.Comparison;
 import app.weekday.WeekdayDialog;
 import javafx.application.Platform;
@@ -139,7 +139,7 @@ public class Controller{
         // Fitbit-Fehler behandeln
         if (fitbitDataFetcher.hasError()) {
             SkinService.get().showAlert("Fitbit-Fehler",
-                    "Fehler beim Laden der Fitbit-Daten:\n" + fitbitDataFetcher.getError().getMessage(), DialogButton.OK);
+                    "Fehler beim Laden der Fitbit-Daten:\n" + fitbitDataFetcher.getError().getMessage(), ButtonEnum.OK);
         } else {
             // Fitbit-Dialoge zeigen
             if (fitbitDataFetcher.hasData()) {
@@ -152,7 +152,7 @@ public class Controller{
         //       Bei Fehler kein Popup (comparison wäre nur teilbefüllt), nur der Hinweis.
         if (comparisonError != null) {
             SkinService.get().showAlert("Health-Vergleich",
-                    "Der Health-Vergleich ist heute fehlgeschlagen:\n" + comparisonError.getMessage(), DialogButton.OK);
+                    "Der Health-Vergleich ist heute fehlgeschlagen:\n" + comparisonError.getMessage(), ButtonEnum.OK);
         } else if (comparison != null) {
             comparison.showPopup();
         }
@@ -160,7 +160,7 @@ public class Controller{
         StartupService alcoholService = new StartupService();
         alcoholService.checkAndPrompt();
      
-        new DiaryDialog().showNew();
+        new DiaryEditorPresenter().showNew();
      
         new WeekdayDialog().showForDaily();
      
@@ -172,14 +172,14 @@ public class Controller{
             new SignalIncrementalImport().run();
         } catch (Exception e) {
             Log.error(this.getClass(), "", e);
-            SkinService.get().showAlert("Signal", "Beim Signalimport ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", DialogButton.OK);
+            SkinService.get().showAlert("Signal", "Beim Signalimport ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", ButtonEnum.OK);
         }
      
         try {
             new WhatsAppIncrementalImport().run();
         } catch (Exception e) {
             Log.error(this.getClass(), "", e);
-            SkinService.get().showAlert("WhatsApp", "Beim WhatsApp-Import ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", DialogButton.OK);
+            SkinService.get().showAlert("WhatsApp", "Beim WhatsApp-Import ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", ButtonEnum.OK);
         }
      
         ImageScaler.processImages();
@@ -227,7 +227,7 @@ public class Controller{
 	        );
 	        
 	        if (cards.isEmpty()) {
-	            SkinService.get().showAlert(null, "Keine Karten gefunden", DialogButton.OK);
+	            SkinService.get().showAlert(null, "Keine Karten gefunden", ButtonEnum.OK);
 	            return;
 	        }
 	        
@@ -264,7 +264,7 @@ public class Controller{
 	        Set<MapShape> regions = regionDeckService.getRegions(spec);
 	        
 	        if (regions.isEmpty()) {
-	            SkinService.get().showAlert(null, "Keine Regionen gefunden", DialogButton.OK);
+	            SkinService.get().showAlert(null, "Keine Regionen gefunden", ButtonEnum.OK);
 	            return;
 	        }
 	        
@@ -327,12 +327,12 @@ public class Controller{
     }
     
     public void diaryCreateSelected() {
-    	new DiaryDialog().showNew();
+    	new DiaryEditorPresenter().showNew();
     }
     
     public void diaryViewSelected() {
     	requestSessionSwitch(() -> {
-    		currentScreen = new DiaryViewerScreen();
+    		currentScreen = new DiaryScreen();
     		mainWindow.showScreenView(currentScreen.getView());
     		currentScreen.start();
     	});
@@ -432,26 +432,26 @@ public class Controller{
 	}
 	
 	private SessionSwitchAction showSaveDiscardCancelDialog() {
-	    DialogButton result = SkinService.get().showAlert(
+	    ButtonEnum result = SkinService.get().showAlert(
 	        "Ungespeicherte Änderungen", 
 	        "Du hast ungespeicherten Lernfortschritt...\nSpeichern?", 
-	        DialogButton.SAVE, DialogButton.DISCARD, DialogButton.CANCEL
+	        ButtonEnum.SAVE, ButtonEnum.DISCARD, ButtonEnum.CANCEL
 	    );
 
-	    if (result == DialogButton.CANCEL) return SessionSwitchAction.CANCEL;
-	    if (result == DialogButton.SAVE)      return SessionSwitchAction.SAVE_AND_SWITCH;
-	    if (result == DialogButton.DISCARD)   return SessionSwitchAction.DISCARD_AND_SWITCH;	    
+	    if (result == ButtonEnum.CANCEL) return SessionSwitchAction.CANCEL;
+	    if (result == ButtonEnum.SAVE)      return SessionSwitchAction.SAVE_AND_SWITCH;
+	    if (result == ButtonEnum.DISCARD)   return SessionSwitchAction.DISCARD_AND_SWITCH;	    
 	    return SessionSwitchAction.CANCEL;
 	}
 	
 	private boolean showConfirmDiscardDialog() {
-	    DialogButton result = SkinService.get().showAlert( 
+	    ButtonEnum result = SkinService.get().showAlert( 
 	        "Sitzung abbrechen?", 
 	        "Achtung: Der Fortschritt geht verloren.", 
-	        DialogButton.END_ANYHOW, DialogButton.CANCEL
+	        ButtonEnum.END_ANYHOW, ButtonEnum.CANCEL
 	    );
 
-	    return result == DialogButton.END_ANYHOW;
+	    return result == ButtonEnum.END_ANYHOW;
 	}
 	
     private void setLearnMenuItemLabels() {

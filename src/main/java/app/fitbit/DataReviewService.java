@@ -3,13 +3,12 @@ package app.fitbit;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import app.fitbit.DataFetcher.DayData;
 import app.fitbit.model.json.ActivityLogList;
 import app.fitbit.repository.Repository;
 import app.shared.Log;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.skin.SkinService;
 
 /**
@@ -60,20 +59,18 @@ public class DataReviewService {
         Log.info(this, "Zeige Dialog für: " + dayData.date());
         
         // Dialog zeigen
-        ActivityTableDialog dialog = new ActivityTableDialog(
+        ActivityTablePresenter dialog = new ActivityTablePresenter(
             dayData.date(),
             dayData.activityLogList().getActivities(),
             dayData.daySummary()
         );
         
-        Optional<ActivityTableDialog.DialogResult> resultOpt = dialog.showAndWait();
+        ActivityTablePresenter.DialogResult dialogResult = dialog.showAndWait();
         
-        if (resultOpt.isEmpty()) {
+        if (dialogResult == null) {
             // User hat abgebrochen
             return null;
         }
-        
-        ActivityTableDialog.DialogResult dialogResult = resultOpt.get();
         
         // ActivityLogList mit editierten Activities aktualisieren
         ActivityLogList correctedActivityLogList = new ActivityLogList();
@@ -122,7 +119,7 @@ public class DataReviewService {
             message.append(result.date()).append(" → ").append(result.points()).append(" Punkte\n");
         }
         
-        SkinService.get().showAlert("Fitbit-Import", message.toString(), DialogButton.OK);
+        SkinService.get().showAlert("Fitbit-Import", message.toString(), ButtonEnum.OK);
     }
     
     /**

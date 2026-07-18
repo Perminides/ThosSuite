@@ -10,9 +10,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import app.shared.model.ShapeGeometry;
 import app.shared.skin.SkinService;
-import app.shared.ui.components.UiComponent;
-import app.shared.ui.components.learn.model.ShapeGeometry;
+import app.shared.ui.contracts.UiComponent;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
 import javafx.scene.layout.Region;
