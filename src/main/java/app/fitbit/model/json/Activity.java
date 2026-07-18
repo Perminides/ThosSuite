@@ -81,6 +81,7 @@ public class Activity extends Parent{
 	    }
 	    
 	    // Validierung: startTime und originalStartTime sollten gleich sein
+	    // Ja, aber dann solltest Du die Starttime vielleicht nichzt schreibbr machen. Aber egal. Bald eh obsoleter Fitbit Code
 	    if (!startTime.equals(originalStartTime)) {
 	        Log.error(this, "Hurra, ich habe eine Aktivität gefunden wo StartTime <> OrigStartTime ist. " +
 	                        "Schau Dir mal " + activityName + " am " + startTime + " an");

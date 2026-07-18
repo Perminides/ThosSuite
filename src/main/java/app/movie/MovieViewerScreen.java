@@ -1,10 +1,10 @@
 package app.movie;
 
 import app.movie.repository.MovieViewerRepository;
-import app.shared.Screen;
-import app.shared.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
-import app.shared.ui.components.MovieViewerScreenView;
+import app.shared.ui.contracts.Screen;
+import app.shared.ui.contracts.ScreenView;
+import app.shared.ui.surfaces.MovieViewerScreenView;
 
 public class MovieViewerScreen implements Screen {
 

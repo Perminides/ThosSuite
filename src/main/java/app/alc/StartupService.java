@@ -8,7 +8,7 @@ import java.util.Locale;
 import app.alc.model.Status;
 import app.alc.repository.AlcRepository;
 import app.shared.Log;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.skin.SkinService;
 
 public class StartupService {
@@ -57,22 +57,22 @@ public class StartupService {
         String message = "Wie war " + dayOfWeek + " der " + formattedDate + "?";
         
         // Alert erstellen
-        DialogButton result = SkinService.get().showAlert(
+        ButtonEnum result = SkinService.get().showAlert(
             "Alkohol-Tracker",
             message,
-            DialogButton.GREEN, DialogButton.YELLOW, DialogButton.RED, DialogButton.CANCEL
+            ButtonEnum.GREEN, ButtonEnum.YELLOW, ButtonEnum.RED, ButtonEnum.CANCEL
         );
         
-        if (result == DialogButton.CANCEL) {
+        if (result == ButtonEnum.CANCEL) {
             Log.info(this, "Alkohol-Eingabe abgebrochen");
             return false;
         }
         
         // Status ermitteln
         Status status;
-        if (result == DialogButton.GREEN) {
+        if (result == ButtonEnum.GREEN) {
             status = Status.GREEN;
-        } else if (result == DialogButton.YELLOW) {
+        } else if (result == ButtonEnum.YELLOW) {
             status = Status.YELLOW;
         } else {
             status = Status.RED;

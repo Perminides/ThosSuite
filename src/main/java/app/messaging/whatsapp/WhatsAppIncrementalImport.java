@@ -27,9 +27,10 @@ import app.messaging.whatsapp.repository.WhatsAppSourceRepository;
 import app.shared.Config;
 import app.shared.DB;
 import app.shared.Log;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.skin.SkinService;
-import app.shared.ui.dialog.WhatsAppChatDialog;
+import app.shared.ui.surfaces.dialogs.WhatsAppChatDialog;
+import app.shared.ui.surfaces.dialogs.WhatsAppContactDialog;
 
 /**
  * 
@@ -172,7 +173,7 @@ public class WhatsAppIncrementalImport {
         if (lastImportTime == null) return;
         if (lastImportTime.isBefore(LocalDateTime.now().minusDays(warningAfterDays))) {
         	Log.warn(this.getClass(), "WhatsApp-import: Uff. Schon lange kein Import mehr gelaufen. Warnung ausgegeben.");
-        	SkinService.get().showAlert("Warnung WhatsApp-Import", "Kein Import seit " + warningAfterDays + " Tagen", DialogButton.OK);
+        	SkinService.get().showAlert("Warnung WhatsApp-Import", "Kein Import seit " + warningAfterDays + " Tagen", ButtonEnum.OK);
         }
     }
 
@@ -338,7 +339,7 @@ public class WhatsAppIncrementalImport {
                     "Opener:   _id=" + openerSourceId + "  (" + formatTs(openerTimestamp) + ")\n" +
                     "albumKey: " + albumKey + "\n" +
                     "filePath: " + filePath + "\n\n" +
-                    "Das Attachment wird trotzdem an den Opener gehängt.", DialogButton.OK);
+                    "Das Attachment wird trotzdem an den Opener gehängt.", ButtonEnum.OK);
             }
 
             AttachmentResolution res = resolveAttachment(filePath, sourceId);
@@ -431,6 +432,12 @@ public class WhatsAppIncrementalImport {
             rawIdentifier,
             msgRepo.loadKnownContactsByDisplayName(SOURCE)
         );
+        
+        if (result == null) {
+        	throw new IllegalStateException(
+                    "[FAILFAST] WhatsApp-Import abgebrochen: Kein Name im Kontakt-Dialog eingegeben. " +
+                    "rawIdentifier=" + rawIdentifier);
+        }
 
         int contactId;
         if (result.existingContactId() != null) {
@@ -523,7 +530,7 @@ public class WhatsAppIncrementalImport {
     // -------------------------------------------------------------------------
 
     private void showSummaryAlert() {
-        SkinService.get().showAlert("WhatsApp-Import abgeschlossen", importedMessages + " Nachrichten und " + importedAttachments + " Anhänge importiert.", DialogButton.OK);
+        SkinService.get().showAlert("WhatsApp-Import abgeschlossen", importedMessages + " Nachrichten und " + importedAttachments + " Anhänge importiert.", ButtonEnum.OK);
     }
 
     // -------------------------------------------------------------------------

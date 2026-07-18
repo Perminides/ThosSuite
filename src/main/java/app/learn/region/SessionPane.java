@@ -4,22 +4,22 @@ import java.util.Set;
 
 import app.learn.MapService;
 import app.learn.model.Deck;
-import app.shared.ScreenView;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
-import app.shared.ui.SessionInfoLabel;
-import app.shared.ui.components.ComponentHost;
-import app.shared.ui.components.InputField;
+import app.shared.ui.components.SuiteInfoLabel;
+import app.shared.ui.components.SuiteTextField;
 import app.shared.ui.components.learn.ShapeMapPane;
 import app.shared.ui.components.learn.ShapeMapPane.ShapeMapState;
+import app.shared.ui.contracts.ScreenView;
+import app.shared.ui.surfaces.ComponentHost;
 
 public class SessionPane {
 	private final SessionPresenter presenter;
 	private final Deck deckType;
 	private final ComponentHost host = new ComponentHost();
 	private ShapeMapPane karte;
-	private SessionInfoLabel questionArea;
-	private InputField inputField;
+	private SuiteInfoLabel questionArea;
+	private SuiteTextField inputField;
 
 	public SessionPane(SessionPresenter presenter, Deck deckType, boolean questionAreaVisible) {
 		this.presenter = presenter;
@@ -44,7 +44,7 @@ public class SessionPane {
 			questionArea.setText(""); // Initial leer
 			host.setComponents(karte, questionArea);
 		} else {
-			inputField = new InputField(skin.createInputField(deckType.getMapName(), deckType.getCategory().toString()));
+			inputField = new SuiteTextField(skin.createInputField(deckType.getMapName(), deckType.getCategory().toString()));
 			inputField.onType(text -> presenter.typedText(text));
 			host.setComponents(karte, inputField);
 		}

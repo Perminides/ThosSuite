@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import app.shared.ui.components.learn.model.ShapeGeometry;
+import app.shared.model.ShapeGeometry;
 
 /**
  * Reine Datenklasse: die Attribute aus der geoJSON plus die framework-freie {@link ShapeGeometry}. Kein Node —

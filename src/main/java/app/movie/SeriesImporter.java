@@ -30,9 +30,9 @@ import app.movie.repository.TvShowRepository;
 import app.shared.Config;
 import app.shared.DB;
 import app.shared.UiUtils;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.skin.SkinService;
-import app.shared.ui.dialog.TextPromptDialog;
+import app.shared.ui.surfaces.dialogs.TextPromptDialog;
 
 /**
  * Orchestriert den manuellen Serien-/Episoden-Import.
@@ -265,7 +265,7 @@ public class SeriesImporter {
         TvShowJSON webData = api.getTvShowDetails(tvShowId);
         if (dbData.differs(webData)) {
             log.info("Seriendaten haben sich geändert: " + showName);
-            DialogButton result = SkinService.get().showAlert(
+            ButtonEnum result = SkinService.get().showAlert(
                     "Seriendaten geändert",
                     "Die Daten der Serie \"" + showName + "\" haben sich geändert.\n\n"
                     + "Seasons: " + dbData.numberOfSeasons + " → " + webData.number_of_seasons + "\n"
@@ -273,8 +273,8 @@ public class SeriesImporter {
                     + "Status: " + dbData.status + " → " + webData.status + "\n"
                     + "Last Air Date: " + dbData.lastAirDate + " → " + webData.last_air_date + "\n\n"
                     + "Sollen die Daten aktualisiert werden?",
-                    DialogButton.YES, DialogButton.NO);
-            if (result == DialogButton.YES) {
+                    ButtonEnum.YES, ButtonEnum.NO);
+            if (result == ButtonEnum.YES) {
                 tvShowRepo.updateTvShowData(webData);
                 updatedShowData++;
             }
@@ -679,17 +679,17 @@ public class SeriesImporter {
      * kontrolliert. Bei Bedarf kann das Flag direkt in der DB angepasst werden.
      */
     private void showFlagDialog(int episodeId, String title) { 
-        DialogButton result = SkinService.get().showAlert(
+        ButtonEnum result = SkinService.get().showAlert(
                 "Art der Bewertung",
                 "Bezieht sich die Bewertung auf die ganze Staffel oder nur auf diese Episode?\n\n"
                 + title + "\n\n"
                 + "Hinweis: Die Karte anschließend im Viewer kontrollieren. Stimmt das Flag "
                 + "nicht, kann rated_season direkt in der DB angepasst werden.",
-                DialogButton.WHOLE_SEASON, DialogButton.EPISODE);
+                ButtonEnum.WHOLE_SEASON, ButtonEnum.EPISODE);
  
-        if (result != DialogButton.WHOLE_SEASON && result != DialogButton.EPISODE)
+        if (result != ButtonEnum.WHOLE_SEASON && result != ButtonEnum.EPISODE)
             throw new RuntimeException("Flag-Dialog wurde ohne Auswahl geschlossen. episodeId=" + episodeId);
-        episodeRepo.updateEpisodeFlags(episodeId, result == DialogButton.WHOLE_SEASON);
+        episodeRepo.updateEpisodeFlags(episodeId, result == ButtonEnum.WHOLE_SEASON);
     }
 
     // =========================================================================
@@ -697,7 +697,7 @@ public class SeriesImporter {
     // =========================================================================
 
     private void showStepAlert(String message) {
-        SkinService.get().showAlert("TMDB Import", message, DialogButton.OK);
+        SkinService.get().showAlert("TMDB Import", message, ButtonEnum.OK);
     }
 
     private void showSummary() {
@@ -717,7 +717,7 @@ public class SeriesImporter {
         log.info("Zusammenfassung: " + sb.toString());
         SkinService.get().showAlert("TMDB Import — Zusammenfassung",
                 sb.toString().trim(),
-                DialogButton.OK);
+                ButtonEnum.OK);
     }
 
     private String askForComment(String dialogTitle, String description, String existingComment) {
@@ -731,18 +731,18 @@ public class SeriesImporter {
 
     private boolean askWhitelistOrBlacklist(String personName, String job,
             String department, String contextName) {
-        DialogButton result = SkinService.get().showAlert(
+        ButtonEnum result = SkinService.get().showAlert(
                 "Unbekannter Crew-Job",
                 "Person: " + personName + "\n"
                 + "Job: " + job + "\n"
                 + "Department: " + department + "\n"
                 + "Kontext: " + contextName,
-                DialogButton.WHITELIST, DialogButton.BLACKLIST);
+                ButtonEnum.WHITELIST, ButtonEnum.BLACKLIST);
 
-        if (result != DialogButton.WHITELIST && result !=  DialogButton.BLACKLIST)
+        if (result != ButtonEnum.WHITELIST && result !=  ButtonEnum.BLACKLIST)
             throw new RuntimeException("Crew-Dialog ohne Auswahl geschlossen. job=" + job);
 
-        return result == DialogButton.WHITELIST;
+        return result == ButtonEnum.WHITELIST;
     }
 
     // =========================================================================
@@ -761,7 +761,7 @@ public class SeriesImporter {
     private void savePoster(String posterPath, int entityId, byte[] imageData,
             int targetWidth, ImageDbInsert dbInsert, String contextName) {
         if (imageData == null || posterPath == null) {
-            SkinService.get().showAlert(targetWidth + "er Poster fehlt", "Für " + contextName, DialogButton.OK);
+            SkinService.get().showAlert(targetWidth + "er Poster fehlt", "Für " + contextName, ButtonEnum.OK);
             return;
         }
         try {

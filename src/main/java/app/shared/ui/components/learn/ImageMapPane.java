@@ -4,9 +4,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 
+import app.shared.model.ShapeGeometry;
 import app.shared.skin.SkinImageCache;
-import app.shared.ui.components.UiComponent;
-import app.shared.ui.components.learn.model.ShapeGeometry;
+import app.shared.ui.contracts.UiComponent;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;

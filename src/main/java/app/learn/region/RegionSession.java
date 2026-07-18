@@ -10,12 +10,12 @@ import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
 import app.shared.AppClock;
 import app.shared.Log;
-import app.shared.Screen;
-import app.shared.ScreenView;
 import app.shared.model.AlertOptions;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.skin.SkinService;
+import app.shared.ui.contracts.Screen;
+import app.shared.ui.contracts.ScreenView;
 
 // !Später: Das RegionSessionBild croppen und dann den korrekten Rand setzen, wenn isComplete==true. Wobei isComplete meint, dasss das ganze Rechteck ausgefüllt ist.
 // !Sofort: Es wäre schon nice bei Finde uf der Karte (schwer) zu wissen, wie viel noch kommen. Also doch einen Fortschritt bitte.
@@ -103,25 +103,25 @@ public class RegionSession implements Screen {
 		if (!correct) { // Wenn nicht korrekt, dann zeige den Text an. Ok und Abbruch. Und eventuell, wenn erlaubt, auch Fortfahren...
 			Log.info(this, "Alert wird erstellt. correct=" + correct);
 			// !Sofort: Refactor: Skin holt sich das MainWindows selbst herrje!
-			DialogButton result = allowResume
+			ButtonEnum result = allowResume
 				    ? SkinService.get().showAlert("Nicht korrekt", text, new AlertOptions().noEsc(),
-				          DialogButton.OK, DialogButton.CANCEL, DialogButton.RESUME)
+				          ButtonEnum.OK, ButtonEnum.CANCEL, ButtonEnum.RESUME)
 				    : SkinService.get().showAlert("Nicht korrekt", text, new AlertOptions().noEsc(),
-				          DialogButton.OK, DialogButton.CANCEL);
+				          ButtonEnum.OK, ButtonEnum.CANCEL);
 
-			if (result == DialogButton.CANCEL) { // Abbruch. Wir speichern nicht, wir beenden sofort.
+			if (result == ButtonEnum.CANCEL) { // Abbruch. Wir speichern nicht, wir beenden sofort.
 				active = false;
 				onSessionEnded.run();
 				return;
-			} else if (result == DialogButton.OK) { // Ok. Wir beenden gleich nach dem Speichern.
+			} else if (result == ButtonEnum.OK) { // Ok. Wir beenden gleich nach dem Speichern.
 				// Nichts weiter zu tun...
-			} else if (result == DialogButton.RESUME) { // Fortsetzen. Wir setzen fort.
+			} else if (result == ButtonEnum.RESUME) { // Fortsetzen. Wir setzen fort.
 				progress.resume();
 				return;
 			}
 		} else if (text != null && !text.isEmpty()) { // Ah. Ich soll was anzeigen, obwohl es korrekt war. Vermutlich ein FreePlay. Na egal, zeigen wir halt an...
 			Log.info(this, "Alert wird erstellt. correct=" + correct);
-			SkinService.get().showAlert("Korrekt", text, DialogButton.OK);
+			SkinService.get().showAlert("Korrekt", text, ButtonEnum.OK);
 		}
 		
 		if (!spec.isPlaySession()) {
@@ -135,7 +135,7 @@ public class RegionSession implements Screen {
 			if (!correct)
 				stats.incrementWrongCount();
 			service.savePlayedCards(spec, stats, correct, wrongId);
-			SkinService.get().showAlert("Ausblick", getUntilString(stats.getDueDate()), DialogButton.OK);
+			SkinService.get().showAlert("Ausblick", getUntilString(stats.getDueDate()), ButtonEnum.OK);
 		}
 		Log.info(this, "RegionsSession " + spec.getDeckType().getDisplayName() + " (play = " + spec.isPlaySession() + ") beendet.");
 		active = false;

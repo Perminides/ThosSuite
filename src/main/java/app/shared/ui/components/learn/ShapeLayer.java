@@ -11,7 +11,7 @@ package app.shared.ui.components.learn;
  * früher fielen sie im überladenen {@code isInteractive} zusammen. Der doppelte {@code fromJsonId}-Lookup
  * (Pane + Builder) ist bewusst in Kauf genommen; ein 4-Werte-Enum-Scan ist vernachlässigbar.</p>
  */
-enum ShapeLayer {
+public enum ShapeLayer {
 	// Definition: (GeoJsonId, Z-Index, Css-Klasse, Interaktiv?)
 	INTERACTIVE("0", 0, "layer-region", true),
 	NEIGHBOR("1", 10, "layer-neighbor", false),

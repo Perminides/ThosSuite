@@ -11,9 +11,9 @@ import app.movie.repository.EpisodeRepository;
 import app.movie.repository.MovieRepository;
 import app.movie.repository.PendingRepository;
 import app.movie.repository.TvShowRepository;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.skin.SkinService;
-import app.shared.ui.dialog.TextPromptDialog;
+import app.shared.ui.surfaces.dialogs.TextPromptDialog;
 
 /**
  * PostTask für den TMDB-Import.
@@ -113,18 +113,18 @@ public class MovieCleanup {
      * @return true = whitelist, false = blacklist
      */
     private boolean askWhitelistOrBlacklist(CrewPendingEntry entry) {
-        DialogButton result = SkinService.get().showAlert(
+        ButtonEnum result = SkinService.get().showAlert(
             "Unbekannter Crew-Job",
             "Person: " + entry.personName + "\n" +
             "Job: " + entry.job + "\n" +
             "Department: " + entry.department + "\n" +
             "Film: " + entry.movieTitle,
-            DialogButton.WHITELIST, DialogButton.BLACKLIST
+            ButtonEnum.WHITELIST, ButtonEnum.BLACKLIST
         );
-        if (result != DialogButton.WHITELIST && result != DialogButton.BLACKLIST)
+        if (result != ButtonEnum.WHITELIST && result != ButtonEnum.BLACKLIST)
             throw new RuntimeException("Crew-Pending-Dialog wurde ohne Auswahl geschlossen. personId=" + entry.personId + ", job=" + entry.job);
 
-        return result == DialogButton.WHITELIST;
+        return result == ButtonEnum.WHITELIST;
     }
 
     /**
@@ -191,7 +191,7 @@ public class MovieCleanup {
         SkinService.get().showAlert(
             "Offene Kommentare",
             sb.toString().trim(),
-            DialogButton.OK
+            ButtonEnum.OK
         );
     }
 }

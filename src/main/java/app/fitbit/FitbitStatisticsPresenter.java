@@ -10,52 +10,60 @@ import app.fitbit.model.GoalHistoryEntry;
 import app.fitbit.model.WeekData;
 import app.fitbit.repository.Repository;
 import app.shared.Log;
-import app.shared.ui.components.fitbit.WeekPointsChartData;
-import app.shared.ui.components.fitbit.WeekPointsChartData.State;
-import app.shared.ui.components.fitbit.WeekPointsChartData.Week;
-import app.shared.ui.components.fitbit.WeekPointsDataProvider;
+import app.shared.model.BarChartData;
+import app.shared.model.BarChartData.Bar;
+import app.shared.model.BarChartData.State;
+import app.shared.model.BarChartData.TargetLine;
+import app.shared.model.BarChartData.YAxis;
+import app.shared.model.BarChartDataProvider;
 
 /**
  * Framework-freie Hälfte des Fitbit-Statistik-Screens: Datenbeschaffung und Fachlogik.
  * Rundet den Zeitraum auf ganze Wochen, entscheidet je Woche Ziel und Zustand und
  * liefert eine reine Datenbeschreibung. Kein JavaFX, kein CSS.
  */
-public class FitbitStatisticsPresenter implements WeekPointsDataProvider {
+public class FitbitStatisticsPresenter implements BarChartDataProvider {
 
     private final Repository repository = new Repository();
 
     @Override
-    public WeekPointsChartData get(LocalDate from, LocalDate to) {
+    public BarChartData get(LocalDate from, LocalDate to) {
         LocalDate rangeStart = roundToMonday(from);
-        LocalDate rangeEnd = roundToSunday(to);
+        LocalDate rangeEnd   = roundToSunday(to);
 
         List<WeekData> weeks = repository.getWeeksInRange(rangeStart, rangeEnd);
         List<GoalHistoryEntry> goalHistory = repository.getAllGoalHistory();
 
         if (weeks.isEmpty()) {
             Log.warn(this, "Keine Fitbit-Daten im gewählten Zeitraum");
-            return new WeekPointsChartData(List.of(), 0);
+            return new BarChartData(List.of(), null, YAxis.fixed(5000, 500));
         }
 
         LocalDate currentWeekStart = roundToMonday(LocalDate.now());
 
-        List<Week> rows = new ArrayList<>();
+        List<Bar> bars = new ArrayList<>();
+        List<Double> targetY = new ArrayList<>();
         for (WeekData week : weeks) {
             int goal = findGoalForDate(week.weekStart(), goalHistory);
             State state;
-            if (week.weekStart().equals(currentWeekStart)) {
+            if (week.weekStart().equals(currentWeekStart))
                 state = State.IN_PROGRESS;
-            } else {
+            else
                 state = week.points() >= goal ? State.ACHIEVED : State.FAILED;
-            }
-            rows.add(new Week(week.weekStart(), week.points(), goal, state, week.remark()));
+
+            String tooltip = week.weekStart() + " : " + week.points();
+            if (week.remark() != null && !week.remark().isEmpty())
+                tooltip = tooltip + "\n" + week.remark();
+
+            bars.add(new Bar(week.weekStart().toString(), week.points(), state, tooltip));
+            targetY.add((double) goal);
         }
 
         int maxPoints = weeks.stream().mapToInt(WeekData::points).max().orElse(5000);
-        int maxGoal = goalHistory.stream().mapToInt(GoalHistoryEntry::weeklyGoal).max().orElse(4000);
-        int yMax = Math.max(maxPoints, maxGoal) + 500;
+        int maxGoal   = goalHistory.stream().mapToInt(GoalHistoryEntry::weeklyGoal).max().orElse(4000);
+        int yMax      = Math.max(maxPoints, maxGoal) + 500;
 
-        return new WeekPointsChartData(rows, yMax);
+        return new BarChartData(bars, new TargetLine(targetY), YAxis.fixed(yMax, 500));
     }
 
     private int findGoalForDate(LocalDate date, List<GoalHistoryEntry> history) {

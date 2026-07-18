@@ -6,16 +6,16 @@ import java.util.Set;
 import app.learn.MapService;
 import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
-import app.shared.ScreenView;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
-import app.shared.ui.MultipleChoicePane;
-import app.shared.ui.SessionInfoLabel;
-import app.shared.ui.components.ComponentHost;
-import app.shared.ui.components.IconButton;
-import app.shared.ui.components.ImagePane;
-import app.shared.ui.components.InputField;
+import app.shared.ui.components.MultipleChoicePane;
+import app.shared.ui.components.SuiteIconButton;
+import app.shared.ui.components.SuiteImage;
+import app.shared.ui.components.SuiteInfoLabel;
+import app.shared.ui.components.SuiteTextField;
 import app.shared.ui.components.learn.ShapeMapPane;
+import app.shared.ui.contracts.ScreenView;
+import app.shared.ui.surfaces.ComponentHost;
 
 /**
  * UI der Deutschland-Session. Hält kein javafx mehr selbst, sondern ein SessionCanvas plus die
@@ -29,13 +29,13 @@ public class GermanySessionPane implements SessionPane {
 	private final SessionPresenter presenter;
 	private final ComponentHost canvas = new ComponentHost();
 
-	private InputField inputField;
-	private SessionInfoLabel questionArea;
-	private SessionInfoLabel progressArea;
-	private SessionInfoLabel cardHistoryArea;
+	private SuiteTextField inputField;
+	private SuiteInfoLabel questionArea;
+	private SuiteInfoLabel progressArea;
+	private SuiteInfoLabel cardHistoryArea;
 	private MultipleChoicePane mcPane;
-	private IconButton backButton;
-	private ImagePane imageComponent;
+	private SuiteIconButton backButton;
+	private SuiteImage imageComponent;
 	private ShapeMapPane deutschlandkarte;
 
 	public GermanySessionPane(SessionPresenter presenter) {
@@ -61,7 +61,7 @@ public class GermanySessionPane implements SessionPane {
 		questionArea = skin.createSessionInfoLabel(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString(), Skin.TextLabelType.QUESTION);
 		questionArea.setText("");
 
-		inputField = new InputField(skin.createInputField(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString()));
+		inputField = new SuiteTextField(skin.createInputField(DECKTYPE.getMapName(), DECKTYPE.getCategory().toString()));
 		inputField.onType(text -> presenter.typedText(text));
 
 		imageComponent = skin.createImageComponent(DECKTYPE.getId(), DECKTYPE.getCategory().toString());
@@ -76,7 +76,7 @@ public class GermanySessionPane implements SessionPane {
 		cardHistoryArea.setText("");
 
 		// !Sofort: Weil wir keinen javafx-Button halten wollen. Aber natürlich darf Skin auch keine javafx-Komponenten mehr rausgeben!
-		backButton = new IconButton(skin.createIconButton(DECKTYPE.getId(), Skin.IconButtonType.BACK));
+		backButton = new SuiteIconButton(skin.createIconButton(DECKTYPE.getId(), Skin.IconButtonType.BACK));
 		backButton.onClick(() -> presenter.clickedBack());
 
 		canvas.setComponents(deutschlandkarte, questionArea, inputField, imageComponent, mcPane, progressArea, cardHistoryArea, backButton);

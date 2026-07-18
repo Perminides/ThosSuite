@@ -222,7 +222,7 @@ public class Repository {
 
 	public boolean isPathReferencedElsewhere(String relativePath) {
 		try (PreparedStatement ps = DB.getConnection().prepareStatement(
-				"SELECT COUNT(*) FROM all_attachments WHERE path = ?")) {
+				"SELECT COUNT(*) FROM diary_entry_attachment WHERE path = ?")) {
 			ps.setString(1, relativePath);
 			try (ResultSet rs = ps.executeQuery()) {
 				return rs.next() && rs.getInt(1) > 0;

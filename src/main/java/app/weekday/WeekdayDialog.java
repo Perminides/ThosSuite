@@ -10,7 +10,7 @@ import java.util.Locale;
 
 import app.shared.Log;
 import app.shared.model.AlertOptions;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.skin.SkinService;
 import app.weekday.repository.WeekdayRepository;
 
@@ -20,9 +20,9 @@ public class WeekdayDialog {
     private static final int      RANGE_DAYS   = 255_669;
 
     // Reihenfolge = Anzeige-Reihenfolge = Index 0..6 (Montag..Sonntag)
-    private static final List<DialogButton> WEEKDAY_BUTTONS = List.of(
-        DialogButton.MONDAY, DialogButton.TUESDAY, DialogButton.WEDNESDAY,
-        DialogButton.THURSDAY, DialogButton.FRIDAY, DialogButton.SATURDAY, DialogButton.SUNDAY);
+    private static final List<ButtonEnum> WEEKDAY_BUTTONS = List.of(
+        ButtonEnum.MONDAY, ButtonEnum.TUESDAY, ButtonEnum.WEDNESDAY,
+        ButtonEnum.THURSDAY, ButtonEnum.FRIDAY, ButtonEnum.SATURDAY, ButtonEnum.SUNDAY);
 
     private final WeekdayRepository repository = new WeekdayRepository();
 
@@ -43,9 +43,9 @@ public class WeekdayDialog {
         String dateString = formatDate(puzzleDate);
 
         long start = System.currentTimeMillis();
-        DialogButton chosen = SkinService.get().showAlert(
+        ButtonEnum chosen = SkinService.get().showAlert(
         	    "Wochentag berechnen", dateString, new AlertOptions().centered().mandatory(),
-        	    WEEKDAY_BUTTONS.toArray(new DialogButton[0]));
+        	    WEEKDAY_BUTTONS.toArray(new ButtonEnum[0]));
         int seconds = (int) ((System.currentTimeMillis() - start) / 1000);
 
         int chosenIndex = WEEKDAY_BUTTONS.indexOf(chosen);
@@ -62,7 +62,7 @@ public class WeekdayDialog {
 
     private void handleCorrect(int seconds, LocalDate puzzleDate, boolean saveResult) {
         SkinService.get().showAlert("Wochentag berechnen",
-            "Korrekt in " + seconds + " Sekunden.", DialogButton.OK);
+            "Korrekt in " + seconds + " Sekunden.", ButtonEnum.OK);
         if (saveResult)
             repository.save(puzzleDate, seconds);
     }
@@ -70,7 +70,7 @@ public class WeekdayDialog {
     private void handleWrong(LocalDate puzzleDate, boolean saveResult) {
         String correctName = puzzleDate.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.GERMANY);
         SkinService.get().showAlert("Wochentag berechnen",
-            "Leider falsch. " + puzzleDate + " war ein " + correctName + ".", DialogButton.OK);
+            "Leider falsch. " + puzzleDate + " war ein " + correctName + ".", ButtonEnum.OK);
         if (saveResult)
             repository.save(puzzleDate, -1);
     }

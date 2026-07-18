@@ -32,7 +32,7 @@ import app.shared.Config;
 import app.shared.DB;
 import app.shared.Log;
 import app.shared.ThrowingConsumer;
-import app.shared.model.DialogButton;
+import app.shared.model.ButtonEnum;
 import app.shared.skin.SkinService;
 
 /**
@@ -278,10 +278,10 @@ public class SignalIncrementalImport {
             + "\nNachrichten: " + conv.messageCount()
             + (isBlank(conv.sharedGroupNames()) || "[]".equals(conv.sharedGroupNames()) ? "" : "\nGemeinsame Gruppen: " + conv.sharedGroupNames());
 
-        DialogButton result = SkinService.get()
-            .showAlert("Neuer Signal-Chat", info, DialogButton.IMPORT, DialogButton.BLACKLIST);
+        ButtonEnum result = SkinService.get()
+            .showAlert("Neuer Signal-Chat", info, ButtonEnum.IMPORT, ButtonEnum.BLACKLIST);
 
-        boolean doImport = result == DialogButton.IMPORT;
+        boolean doImport = result == ButtonEnum.IMPORT;
         int chatId = repo.insertChat(suiteConnection, signalId, conversationId, conv.isGroup(), displayName, !doImport);
 
         if (doImport)

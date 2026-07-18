@@ -3,8 +3,8 @@ package app.shared.ui.components.learn;
 import java.util.ArrayList;
 import java.util.List;
 
-import app.shared.ui.components.learn.model.ShapeGeometry;
-import app.shared.ui.components.learn.model.ShapeGeometry.Point;
+import app.shared.model.ShapeGeometry;
+import app.shared.model.ShapeGeometry.Point;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.shape.Circle;
@@ -38,7 +38,7 @@ public final class MapNodeBuilder {
 
 	/**
 	 * Deutschland-Shape: immer ein Polygon → ein Path mit "my-map-shape" + Layer-Klasse. id und type kommen aus
-	 * der Geometrie; zIndex/Layer-Klasse/interaktiv leitet {@link ShapeLayer} aus dem type ab.
+	 * der Geometrie; zIndex/Layer-Klasse/interaktiv leitet ShapeLayer aus dem type ab.
 	 */
 	public static Node buildShapeMapNode(ShapeGeometry geometry) {
 		ShapeLayer layer = ShapeLayer.fromJsonId(geometry.type());

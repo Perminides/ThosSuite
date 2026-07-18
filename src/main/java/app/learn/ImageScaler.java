@@ -3,7 +3,7 @@ package app.learn;
 import java.nio.file.Path;
 
 import app.shared.Config;
-import app.shared.image.ImageBatchProcessor;
+import app.shared.ui.surfaces.dialogs.ImageBatchProcessor;
 
 public class ImageScaler {
 

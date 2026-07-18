@@ -22,13 +22,14 @@ import app.shared.UiUtils;
 import app.shared.model.AlertOptions;
 import app.shared.model.BorderParams;
 import app.shared.model.CardData;
-import app.shared.model.DialogButton;
-import app.shared.model.Dismiss;
-import app.shared.ui.DashboardTile;
-import app.shared.ui.MultipleChoicePane;
-import app.shared.ui.SessionInfoLabel;
-import app.shared.ui.SuggestionTextField;
-import app.shared.ui.components.ImagePane;
+import app.shared.model.ButtonEnum;
+import app.shared.model.DiaryAttachment;
+import app.shared.model.DismissEnum;
+import app.shared.ui.components.DashboardTile;
+import app.shared.ui.components.MultipleChoicePane;
+import app.shared.ui.components.SuiteImage;
+import app.shared.ui.components.SuiteInfoLabel;
+import app.shared.ui.components.SuiteSuggestionTextField;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -186,9 +187,9 @@ public abstract class Skin {
 	
 	public record MovieViewerComponents(
 	        Pane root,
-	        SuggestionTextField directorField,
-	        SuggestionTextField actorField,
-	        SuggestionTextField titleField,
+	        SuiteSuggestionTextField directorField,
+	        SuiteSuggestionTextField actorField,
+	        SuiteSuggestionTextField titleField,
 	        VBox resultBox
 	) {}
 	
@@ -1618,7 +1619,7 @@ public abstract class Skin {
 	}
 
 	// Rückgabetyp angepasst
-	public ImagePane createImageComponent(String deckId, String deckCategory) {
+	public SuiteImage createImageComponent(String deckId, String deckCategory) {
 	    // 1. Config laden (wie vorher)
 	    Rectangle2D bounds = (Rectangle2D) getFieldValue(deckId + "SessionImagePanel");
 	    if (bounds == null) 
@@ -1631,7 +1632,7 @@ public abstract class Skin {
 	    // Wenn borderBigComponent.arc() = 20 ist (Radius), braucht Rectangle 40.
 	    
 	    // Instanz erstellen
-	    var pane = new ImagePane(bounds.getWidth(), bounds.getHeight(), arc);
+	    var pane = new SuiteImage(bounds.getWidth(), bounds.getHeight(), arc);
 	    pane.setLayoutX(bounds.getMinX());
 	    pane.setLayoutY(bounds.getMinY());
 
@@ -1642,12 +1643,12 @@ public abstract class Skin {
 	}
 	
 	// --- Bereinigte Factory-Methode ---
-	public SessionInfoLabel createSessionInfoLabel(String deckMapName, String deckCategory, TextLabelType labelType) {
+	public SuiteInfoLabel createSessionInfoLabel(String deckMapName, String deckCategory, TextLabelType labelType) {
         Rectangle2D bounds = (Rectangle2D) getFieldValue(deckMapName + "Session" + labelType + "Panel");
         if (bounds == null)
             bounds = (Rectangle2D) getFieldValue(deckCategory + "Session" + labelType + "Panel");
         
-        SessionInfoLabel label = new SessionInfoLabel("");
+        SuiteInfoLabel label = new SuiteInfoLabel("");
         label.setLayoutX(bounds.getMinX());
         label.setLayoutY(bounds.getMinY());
         
@@ -1797,17 +1798,19 @@ public abstract class Skin {
 	    return iconView;
 	}
 
-	public DialogButton showAlert(String title, String message, DialogButton... buttons) {
+	// !Sofort: Das muss raus in eine AlertFactory, die dann von überall aufgerufen werden kann. SkinServie.get() muss raus aus dem Rest der Suite...
+	
+	public ButtonEnum showAlert(String title, String message, ButtonEnum... buttons) {
 	    return showAlert(title, message, new AlertOptions(), buttons);
 	}
 
 	// Der eine Kern
-	public DialogButton showAlert(String title, String message, AlertOptions options, DialogButton... buttons) {
+	public ButtonEnum showAlert(String title, String message, AlertOptions options, ButtonEnum... buttons) {
 	    Alert alert = new Alert(Alert.AlertType.NONE);
 
-	    if (options.dismiss() == Dismiss.NO_ESC || options.dismiss() == Dismiss.MANDATORY)
+	    if (options.dismiss() == DismissEnum.NO_ESC || options.dismiss() == DismissEnum.MANDATORY)
 	        UiUtils.inactivateEscPress(alert);
-	    if (options.dismiss() == Dismiss.MANDATORY)
+	    if (options.dismiss() == DismissEnum.MANDATORY)
 	        installCloseBlocker(alert);
 
 	    alert.initOwner(SkinService.getOwnerWindow());
@@ -1819,8 +1822,8 @@ public abstract class Skin {
 	    alert.getDialogPane().setContent(buildAlertContent(message, options.image(), options.isCentered()));
 	    alert.setGraphic(null);
 
-	    Map<ButtonType, DialogButton> reverse = new LinkedHashMap<>();
-	    for (DialogButton b : buttons)
+	    Map<ButtonType, ButtonEnum> reverse = new LinkedHashMap<>(); // Die Map von JavaFX-Button auf unseren DialogButton
+	    for (ButtonEnum b : buttons)
 	        reverse.put(toButtonType(b), b);
 	    alert.getButtonTypes().setAll(reverse.keySet());
 
@@ -1838,7 +1841,7 @@ public abstract class Skin {
 	    });
 
 	    Optional<ButtonType> result = alert.showAndWait();
-	    return result.map(reverse::get).orElse(DialogButton.CANCEL);
+	    return result.map(reverse::get).orElse(ButtonEnum.CANCEL); // Wenn Du nur DialogButtons im Rest der Suite haben willst, dann musst Du halt wohl oder überls ein Mapping zwischen denen und den JavaFX-Buttons erstellen, die ButtonType heißen...
 	}
 
 	/**
@@ -1914,7 +1917,7 @@ public abstract class Skin {
 
 	// --- Die einzige Stelle, die javafx.ButtonType/ButtonData kennt ---
 
-	private ButtonType toButtonType(DialogButton b) {
+	private ButtonType toButtonType(ButtonEnum b) {
 	    ButtonBar.ButtonData data = switch (b) {
         case OK, YES, SAVE, IMPORT, END_ANYHOW, WHITELIST     -> ButtonBar.ButtonData.YES;	        
         case CANCEL, DISCARD, LATER -> ButtonBar.ButtonData.CANCEL_CLOSE; // wichtig: macht ESC zum Abbrechen
@@ -2158,7 +2161,7 @@ public abstract class Skin {
 	    return new DiaryViewerComponents(root, fromPicker, toPicker, queryField, resultBox);
 	}
 
-	public VBox createDiaryCard(LocalDateTime createdAt, LocalDate entryDate, String text, List<String> tags, List<String> attachments) {
+	public VBox createDiaryCard(LocalDateTime createdAt, LocalDate entryDate, String text, List<String> tags, List<DiaryAttachment> attachments) {
 	    Label dateLabel = new Label(entryDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
 	    dateLabel.getStyleClass().add("diary-card-date");
 
@@ -2177,7 +2180,6 @@ public abstract class Skin {
 
 	    if (!attachments.isEmpty()) {
 	        int thumbHeight = Config.getInt("diary.thumbnailHeight", 120);
-	        Path diaryFolder = Config.getPath("diaryAttachmentsFolder");
 
 	        FlowPane thumbPane = new FlowPane(8, 8);
 	        thumbPane.getStyleClass().add("diary-card-thumbs");
@@ -2189,9 +2191,12 @@ public abstract class Skin {
 	        tooltip.setAutoFix(false);
 	        tooltip.setStyle("-fx-padding: 0;");
 
-	        for (String relativePath : attachments) {
-	            Path thumbPath    = diaryFolder.resolve("thumbnails").resolve(Path.of(relativePath).getFileName());
-	            Path originalPath = diaryFolder.resolve(relativePath);
+	        // !Sofort: Das muss eine eigene Komponente werden. Ein Thumbnail, dass die vergrößerte Version
+	        // als MouseOver anzeigt ist generisch genug und wird sicher nochmal wieder verwendet.
+	        
+	        for (DiaryAttachment attachment : attachments) {
+	            Path thumbPath    = Path.of(attachment.thumbnailPath());
+	            Path originalPath = Path.of(attachment.imagePath());
 
 	            ImageView iv = new ImageView(new Image(thumbPath.toUri().toString(), -1, thumbHeight, true, true));
 
@@ -2287,9 +2292,9 @@ public abstract class Skin {
 	
 	public MovieViewerComponents createMovieViewer() {
 	    // SWYT-Felder
-	    SuggestionTextField directorField = new SuggestionTextField("Choose Director...");
-	    SuggestionTextField actorField = new SuggestionTextField("Choose Actor...");
-	    SuggestionTextField titleField = new SuggestionTextField("Choose Title...");
+	    SuiteSuggestionTextField directorField = new SuiteSuggestionTextField("Choose Director...");
+	    SuiteSuggestionTextField actorField = new SuiteSuggestionTextField("Choose Actor...");
+	    SuiteSuggestionTextField titleField = new SuiteSuggestionTextField("Choose Title...");
 	 
 	    // Labels für die Felder
 	    Label dirLabel = new Label("Director:");
