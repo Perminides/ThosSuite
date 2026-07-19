@@ -13,7 +13,7 @@ Orte und Sehenswürdigkeiten auf der Weltkarte verorten und vertiefende Fragen b
 ![Welt – Weltkarte mit Orten](docs/img/ThosSuite1.png)
 
 ### Deutschland
-Wissenswertes zu allen Kreisen und kreisfreien Städte auf der Deutschlandkarte.
+Wissenswertes zu allen Kreisen und kreisfreien Städten auf der Deutschlandkarte.
 
 ![Deutschland – Kreise und kreisfreie Städte](docs/img/ThosSuite2.png)
 
