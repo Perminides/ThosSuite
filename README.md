@@ -1,9 +1,9 @@
 # Thos Suite
 
 Ein persönliches Lernprogramm von Perminides für Perminides basierend auf
-[Spaced Repetition](https://de.wikipedia.org/wiki/Spaced_Repetition). Zumeist basiert das Lernen
-auf einer Landkarte: Man klickt an, wo etwas liegt, tippt Namen ein, beantwortet weiterführende
-Fragen oder wählt bei Multiple Choice die richtige Antwort aus.
+[Spaced Repetition](https://de.wikipedia.org/wiki/Spaced_Repetition). Zumeist passiert das Lernen
+auf einer Landkarte: Man klickt an, wo etwas liegt, tippt Antworten auf weiterführende
+Fragen ein oder wählt bei Multiple Choice die richtige Antwort aus.
 
 ## Lernbereiche
 
@@ -13,25 +13,23 @@ Orte und Sehenswürdigkeiten auf der Weltkarte verorten und vertiefende Fragen b
 ![Welt – Weltkarte mit Orten](docs/img/ThosSuite1.png)
 
 ### Deutschland
-Einzelne Kreise und kreisfreie Städte auf der Deutschlandkarte, dazu Wissenswertes aus jeder
-Region.
+Wissenswertes zu allen Kreisen und kreisfreien Städte auf der Deutschlandkarte.
 
 ![Deutschland – Kreise und kreisfreie Städte](docs/img/ThosSuite2.png)
 
 ### Hannover
-Die Straßen und markante Orte Hannovers lernen.
+Die Straßen und markanten Orte Hannovers lernen.
 
 ![Hannover – Straßen auf der Stadtkarte](docs/img/ThosSuite5.png)
 
 ### Multiple Choice
-Reines Faktenwissen ohne Karte.
+Reines Faktenwissen ohne Landkarte.
 
 ![Multiple Choice – Frage mit Antwortvorgaben](docs/img/ThosSuite3.png)
 
 ### Regionen-Serien
 Eine Gebietsgruppe komplett durchgehen (US-Bundesstaaten, Schweizer
-Kantone, Kreise und Städte Niedersachsens und mehr): alle Gebiete auf der Karte finden oder
-benennen, am Ende bestanden oder nicht.
+Kantone, Kreise und Städte Niedersachsens und mehr): alle Gebiete oder deren Hauptorte auf der Karte finden oder benennen; am Ende bestanden oder auch nicht.
 
 ![Regionen-Serie – Gebiete auf der Karte](docs/img/ThosSuite4.png)
 
