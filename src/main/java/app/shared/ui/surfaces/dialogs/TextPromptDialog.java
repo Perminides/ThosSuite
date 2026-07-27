@@ -23,7 +23,7 @@ public class TextPromptDialog {
         if (prefill != null)
             textArea.setText(prefill);
 
-        Dialog<?> dialog = SkinService.get().createDialog(SkinService.getOwnerWindow(), title);
+        Dialog<?> dialog = SkinService.get().createDialog(title);
         VBox content = SkinService.get().createDialogContent();
         content.getChildren().addAll(new Label(headerText), textArea);
         dialog.getDialogPane().setContent(content);

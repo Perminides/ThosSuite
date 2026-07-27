@@ -77,7 +77,7 @@ public class WhatsAppContactDialog {
      * @throws IllegalStateException [FAILFAST] wenn der Dialog ohne Entscheidung geschlossen wird
      */
     public static Result show(String rawIdentifier, Map<String, Integer> knownContacts) {
-        Dialog<?> dialog = SkinService.get().createDialog(SkinService.getOwnerWindow(), TITLE_NEW);
+        Dialog<?> dialog = SkinService.get().createDialog(TITLE_NEW);
 
         // Ergebnis-State
         final Integer[] selectedContactId = {null};

@@ -45,7 +45,7 @@ public final class ActivityTableDialog {
 
     public List<ActivityTableRow> show(String title, List<ActivityTableRow> input) {
     	// 1. Dialog erstellen
-        Dialog<?> dialog = SkinService.get().createDialog(SkinService.getOwnerWindow(), title);
+        Dialog<?> dialog = SkinService.get().createDialog(title);
 
         // 2. TableView erstellen
         TableView<Row> tableView = createTableView();

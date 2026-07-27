@@ -45,7 +45,7 @@ public class AnkiConfigDialog {
     }
 
     public Optional<AnkiDialogState> showAndWait() {
-        Dialog<?> dialog = SkinService.get().createDialog(null, title); // Owner intern
+        Dialog<?> dialog = SkinService.get().createDialog(title); // Owner intern
         DialogPane pane = dialog.getDialogPane();
 
         VBox content = SkinService.get().createDialogContent();

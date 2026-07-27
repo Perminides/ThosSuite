@@ -21,8 +21,8 @@ import app.shared.Config;
 import app.shared.UiUtils;
 import app.shared.model.AlertOptions;
 import app.shared.model.BorderParams;
-import app.shared.model.CardData;
 import app.shared.model.ButtonEnum;
+import app.shared.model.CardData;
 import app.shared.model.DiaryAttachment;
 import app.shared.model.DismissEnum;
 import app.shared.ui.components.DashboardTile;
@@ -30,7 +30,6 @@ import app.shared.ui.components.MultipleChoicePane;
 import app.shared.ui.components.SuiteImage;
 import app.shared.ui.components.SuiteInfoLabel;
 import app.shared.ui.components.SuiteSuggestionTextField;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -80,7 +79,6 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Scale;
 import javafx.stage.Popup;
-import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
@@ -1827,14 +1825,6 @@ public abstract class Skin {
 	        reverse.put(toButtonType(b), b);
 	    alert.getButtonTypes().setAll(reverse.keySet());
 
-	    DialogPane dialogPane = alert.getDialogPane();
-	    if (dialogPane != null && dialogPane.getScene() != null)
-	        styleScene(dialogPane.getScene());
-	    dialogPane.sceneProperty().addListener((_, _, newScene) -> {
-	        if (newScene != null)
-	            styleScene(newScene);
-	    });
-
 	    headerBar.heightProperty().addListener((_, _, newVal) -> {
 	        if (alert.getDialogPane().getScene().getWindow() instanceof Stage stage)
 	            HeaderBar.setPrefButtonHeight(stage, (double) newVal);
@@ -1932,20 +1922,20 @@ public abstract class Skin {
 	 * For just text with standard buttons, we use alerts. For more sophisticated popups
 	 * like the playConfigDialogs, we create a simple dialog and leave the rest to the caller.
 	 * 
-	 * !Sofort: Siehe Alert. Ist der Parent nicht eh immer das Suitefenster? Muss hier
-	 * das Window nicht besser raus? Wir haben deswegen in diary auch so einen SkinService.getOwnerWindow Hack
-	 * Das wollen wir aber nicht....
-	 * 
 	 * @param parent → Nur übergeben, wenn das Suitefenster bereits sauber angezeigt wird... 
 	 * @return
 	 */
-	public Dialog<?> createDialog(Window parent, String title) {
+	public Dialog<?> createDialog(String title) {
 	    Dialog<?> dialog = new Dialog<>();
-	    Window effectiveParent = parent != null ? parent : SkinService.getOwnerWindow();
+	    Window effectiveParent = SkinService.getOwnerWindow();
+	    
+	 // Pflicht: JavaFX bindet die Stylesheets der Dialog-Scene per Bindings.bindContent
+	 // an die Scene des Owners (HeavyweightDialog.updateStageBindings). Ohne Owner bleibt
+	 // der Dialog ungestylt — siehe die rohen Alerts in ThosSuiteApp/DB. Die Bindung ist
+	 // live: ein Skinwechsel wirkt auch auf bereits offene Dialoge.
 	    if (effectiveParent != null) {
 	        dialog.initOwner(effectiveParent);
 	    }
-	    dialog.initOwner(parent); // !Sofort: Was war denn hier der Grund, dann ergibt ja der if darüber keinen Sinn. Hier ist was falsch!
 	    dialog.initStyle(StageStyle.EXTENDED);
 	    
 	    DialogPane dialogPane = dialog.getDialogPane();
@@ -1962,8 +1952,6 @@ public abstract class Skin {
 			if (dialog.getDialogPane().getScene().getWindow() instanceof Stage)
 				HeaderBar.setPrefButtonHeight((Stage) dialog.getDialogPane().getScene().getWindow(), (double)newVal);
 		});
-	    
-	    styleScene(dialogPane.getScene());
 	    
 	    return dialog;
 	}
@@ -2096,21 +2084,10 @@ public abstract class Skin {
 	    return tile;
 	}
 	
+	// !Sofort: Im Tagebuch mit Kalenderwochen und bei den StatisticsScreens ohne. Wieso?
 	public DatePicker createDatePicker(LocalDate defaultDate) {
 		DatePicker result = new DatePicker(defaultDate);
 		result.setShowWeekNumbers(false);
-		result.setOnShowing(_ -> {
-            Platform.runLater(() -> {                
-                Window.getWindows().stream()
-                    .filter(w -> w instanceof PopupWindow)
-                    .forEach(popup -> {
-                        Scene popupScene = popup.getScene();
-                        if (popupScene != null) {
-                            SkinService.get().styleScene(popupScene);
-                        }
-                    });
-            });
-        });
 		return result;
 	}
 	
@@ -2121,7 +2098,6 @@ public abstract class Skin {
 
 	    TextField queryField = new TextField();
 	    queryField.setPromptText("(x or y) and tag:z");
-	    HBox.setHgrow(queryField, Priority.ALWAYS);
 
 	    HBox filterBar = new HBox(12);
 	    filterBar.setAlignment(Pos.CENTER_LEFT);

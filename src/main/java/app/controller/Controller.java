@@ -36,7 +36,7 @@ import app.learn.region.model.SessionSpec;
 import app.mattress.TurnDialog;
 import app.messaging.signal.SignalIncrementalImport;
 import app.messaging.whatsapp.WhatsAppIncrementalImport;
-import app.movie.Importer;
+import app.movie.MovieImporter;
 import app.movie.MovieCleanup;
 import app.movie.MovieViewerScreen;
 import app.movie.SeriesImporter;
@@ -104,7 +104,7 @@ public class Controller{
     	setLearnMenuItemLabels();
     	setPlayMenuItemLabels();
     }
-    
+    // !Sofort: Die Suite sollte vielleicht auch starten, wenn Fitbit / Health oder die tmdb mal gerade down ist?
     /**
      * Wird VOR initializeMainWindow aufgerufen (Splash noch sichtbar). Holt Daten im UI-Thread, blockiert aber die App - Splash bleibt sichtbar.
      */
@@ -112,7 +112,7 @@ public class Controller{
         fitbitDataFetcher = new DataFetcher(); // Muss Instanzvariable sein, weil wir Daten für den PostTask übergeben. Das macht tmdb sauberer, wie ich finde...
         if (Config.get("offline", "false").equals("false")) {
             fitbitDataFetcher.fetch();
-            new Importer().run();
+            new MovieImporter().run();
      
             // !tmp: Health-Vergleich mitlaufen lassen (Übergang bis Fitbit-Abschaltung).
             //       Fehler NICHT über dem Splash melden, nur merken -> Anzeige im PostTask.

@@ -130,7 +130,7 @@ public class DiaryEditor {
     // ---- Dialog- und Content-Aufbau ----------------------------------------
 
     private Dialog<?> buildDialog(String title, boolean withDelete) {
-        Dialog<?> dialog = SkinService.get().createDialog(SkinService.getOwnerWindow(), title);
+        Dialog<?> dialog = SkinService.get().createDialog(title);
         dialog.getDialogPane().setContent(buildContent());
         dialog.setResultConverter(_ -> null);
 
