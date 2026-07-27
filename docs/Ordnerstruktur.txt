@@ -138,8 +138,8 @@
 --------📄 WhatsAppSourceRepository.java
 --📁 movie
 ----📄 ApiClient.java
-----📄 Importer.java
 ----📄 MovieCleanup.java
+----📄 MovieImporter.java
 ----📄 MovieViewerScreen.java
 ----📄 SeriesImporter.java
 ----📁 model
@@ -195,7 +195,6 @@
 ----📄 SingleInstanceGuard.java
 ----📄 ThrowingConsumer.java
 ----📄 UiUtils.java
-----📁 image
 ----📁 model
 ------📄 ActivityTableRow.java
 ------📄 AlertOptions.java
@@ -254,7 +253,7 @@
 ----------📄 ActivityTableDialog.java
 ----------📄 AnkiConfigDialog.java
 ----------📄 DiaryEditor.java
-----------📄 ImageBatchProcessorDialog.java
+----------📄 ImageBatchProcessor.java
 ----------📄 RegionConfigDialog.java
 ----------📄 TextPromptDialog.java
 ----------📄 WhatsAppChatDialog.java
