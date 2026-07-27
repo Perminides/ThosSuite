@@ -46,7 +46,7 @@ public class SuiteExporter {
     private Optional<LocalDate> showDatePickerDialog() {
     	DatePicker picker = SkinService.get().createDatePicker(LocalDate.now().minusDays(7));
 
-        Dialog<?> dialog = SkinService.get().createDialog(null, "Suite Export");
+        Dialog<?> dialog = SkinService.get().createDialog("Suite Export");
         VBox content = SkinService.get().createDialogContent();
         content.getChildren().add(new javafx.scene.control.Label("Änderungen seit welchem Datum exportieren?"));
         content.getChildren().add(picker);

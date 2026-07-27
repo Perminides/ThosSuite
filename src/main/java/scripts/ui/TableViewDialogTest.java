@@ -46,7 +46,7 @@ public class TableViewDialogTest extends Application {
         Config.init("C:/Users/Markgraf/OneDrive/ThosSuite/");
         
         // Dialog erstellen (mit Parent, damit er nicht zentral positioniert wird)
-        Dialog<?> dialog = SkinService.get().createDialog(null, "TableView im Dialog");
+        Dialog<?> dialog = SkinService.get().createDialog("TableView im Dialog");
         
         // TableView erstellen (exakt wie in TableViewExample)
         TableView<Person> tableView = new TableView<>();

@@ -42,16 +42,16 @@ import app.shared.skin.SkinService;
  *
  * Alle Fehler sind fatal — kein stiller Fallback.
  */
-public class Importer {
+public class MovieImporter {
 
-    private static final Logger log = Logger.getLogger(Importer.class.getName());
+    private static final Logger log = Logger.getLogger(MovieImporter.class.getName());
 
     private final ApiClient api;
     private final MovieRepository movieRepo;
     private final CrewFilterRepository crewFilterRepo;
     private final PendingRepository pendingRepo;
 
-    public Importer() {
+    public MovieImporter() {
         this.api = new ApiClient();
         this.movieRepo = new MovieRepository();
         this.crewFilterRepo = new CrewFilterRepository();

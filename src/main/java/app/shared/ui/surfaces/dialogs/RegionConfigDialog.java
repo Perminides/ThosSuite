@@ -36,7 +36,7 @@ public class RegionConfigDialog {
     }
 
     public Optional<RegionDialogState> showAndWait() {
-        Dialog<?> dialog = SkinService.get().createDialog(null, "Regionen spielen"); // Owner intern
+        Dialog<?> dialog = SkinService.get().createDialog("Regionen spielen"); // Owner intern
         DialogPane pane = dialog.getDialogPane();
 
         applying = true;

@@ -30,6 +30,8 @@ public class DashboardScreen implements Screen {
      
         DashboardService fitbitService = new DashboardService();
         int stepsNeeded = fitbitService.calculateRemainingDailySteps(AppClock.TODAY);
+        if (stepsNeeded < 0)
+        	stepsNeeded = 0;
         String formattedSteps = NumberFormat.getInstance(Locale.GERMANY).format(stepsNeeded);
         DashboardTile fitbitTile1 = SkinService.get().createDashboardTile(
             	formattedSteps, 

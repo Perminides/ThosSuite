@@ -29,7 +29,6 @@ import javafx.scene.control.DialogPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.Window;
 
 public class ImageBatchProcessor {
 
@@ -79,10 +78,8 @@ public class ImageBatchProcessor {
     }
 
     private static Optional<SelectionEnum> chooseImage(BufferedImage left, BufferedImage right) {
-        Window owner = SkinService.getOwnerWindow();
-
         @SuppressWarnings("unchecked")
-        Dialog<SelectionEnum> dialog = (Dialog<SelectionEnum>) SkinService.get().createDialog(owner, "Bild auswählen");
+        Dialog<SelectionEnum> dialog = (Dialog<SelectionEnum>) SkinService.get().createDialog("Bild auswählen");
 
         ButtonType cancelType = new ButtonType("", ButtonBar.ButtonData.CANCEL_CLOSE);
         dialog.getDialogPane().getButtonTypes().add(cancelType);

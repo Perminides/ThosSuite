@@ -43,7 +43,7 @@ public class WhatsAppChatDialog {
      * @throws IllegalStateException [FAILFAST] wenn der Dialog ohne Entscheidung geschlossen wird
      */
     public static Result show(String rawIdentifier, String subject, boolean isGroup, String formattedTs) {
-        Dialog<?> dialog = SkinService.get().createDialog(SkinService.getOwnerWindow(), "Unbekannter WhatsApp-Chat");
+        Dialog<?> dialog = SkinService.get().createDialog("Unbekannter WhatsApp-Chat");
 
         // X-Button blockieren
         Stage stage = (Stage) dialog.getDialogPane().getScene().getWindow();
