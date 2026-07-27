@@ -1,8 +1,8 @@
 # Vertagte Punkte
 
-**Stand:** 28.07.2026
+**Stand:** 29.07.2026 · Schritte 1–3c erledigt
 
-Alles, was während der Refactoring-Besprechung (26.–28.07.) bewusst **nicht** sofort gemacht wurde.
+Alles, was während des Refactorings (26.–29.07.) bewusst **nicht** sofort gemacht wurde.
 Sortiert nach **Fälligkeit**, nicht nach Thema — beim Abarbeiten ist „was ist jetzt dran" die
 nützlichere Frage.
 
@@ -12,34 +12,63 @@ Schrittnummern beziehen sich auf `Skin-Refactoring-Plan.md` §8.
 
 ## A · Fällig im laufenden Umbau
 
+### Schritt 3f — die drei restlichen Bau-Methoden
+
+| Punkt | Fundstelle |
+|---|---|
+| `SessionComponent` (Enum) und `SkinProperties.sessionBounds(mapName, kategorie, teil)` kommen zurück — sie waren in 3c kurz angelegt und wieder entfernt, weil Region sie unter dem Übergangsweg nicht brauchte | — |
+| Der **Übergangszustand** in `RegionSessionView` und `AnkiSessionView`: die Komponenten kommen noch über `skin.createSessionInfoLabel` / `createInputField` / `createImageComponent` / `createMultipleChoicePane` / `createIconButton`. Steht in beiden Klassenkommentaren als „kein Dauerzustand" | Klassen-Javadoc |
+| `applyImageMapLayout` — „Ich verstehe nicht, was hier passiert. Muss diese Zeile wirklich hin?" | `ImageSessionMap:40` |
+| Bild-Karte: „EM 2021 — alle Länder grün, welches war falsch?" Das Zurücksetzen vor `markLastClickAsIncorrect()` löscht die bisherigen Markierungen mit | `ImageSessionMap` (`markIncorrect`) |
+| Fragefeld der Region-Session: „Hier wäre allerdings CENTER schon angesagt" | `RegionSessionView:69` |
+
+### Schritt 5 — Architekturdokument
+
+`docs/Architektur-Dokumentation.md`, Abschnitt **„UI-Architektur: Skin-System"** ist nach dem Umbau
+vollständig überholt. Er beschreibt Factory-Methoden, das Fallback-System und die
+`SkinService`-API als „Stand heute korrekt" und trägt bereits den Vermerk *„Refactoring
+ausstehend"*. Neu zu fassen sind mindestens:
+
+- **Konzept** — der Skin baut nichts mehr, er liefert Werte und erzeugt das CSS
+- **Factory-Methoden** — der ganze Abschnitt entfällt
+- **Fallback-System** — bleibt inhaltlich, wandert aber hinter `sessionBounds(...)`
+- **SkinService** — ist nur noch Registry; `setOwnerWindow`/`getOwnerWindow` liegen in `UiUtils`
+- **Paket-Struktur** (§ „Technische Basis") — `shared.ui` / `shared.ui.components`, die vier
+  Sprossen, die drei Wächter
+
+Dazu die Schichtbeschreibung in `Design-Regeln.md`. Beides erst **nach** Schritt 4 — vorher
+veraltet es noch einmal.
+
 ### Schritt 3b — Feature-Oberflächen (Diary, Movie, Dashboard, BarChart)
 
 | Punkt | Fundstelle |
 |---|---|
-| „Das muss doch raus, oder? Wieso baut hier der Skin?" — löst sich, wenn `createMovieViewer` nach `shared.ui` wandert | `MovieViewerScreenView:66` |
+| ~~„Wieso baut hier der Skin?"~~ | **erledigt 28.07.** — `createMovieViewer` ist umgezogen, der Marker gelöscht |
 | Der MovieScreen wird komplett anders aufgebaut als die übrigen | `SuiteSuggestionTextField:30` |
-| Alc- und Fitbit-StatisticScreens sind voll mit UI-Kram | `Skin:124` |
-| Code-Duplizierung in den `getBackgroundImage`-Methoden | `Skin:1350` |
-| `empty` und `default` gehen durcheinander — „hier holt empty das default" | `Skin:1377` |
+| Alc- und Fitbit-StatisticScreens sind voll mit UI-Kram | `Skin` (Klassen-Javadoc) |
+| Code-Duplizierung in den `getBackgroundImage`-Methoden | `Skin`, drei Hintergrund-Methoden |
+| `empty` und `default` gehen durcheinander — „hier holt empty das default" | `Skin.getEmptyBackgroundImage` |
 
 ### Schritt 3c — Session-/Lern-Teile
 
 | Punkt | Fundstelle |
 |---|---|
-| **Zuschnitt der Session-Panes.** Dass sie das Feature verlassen, ist entschieden; offen ist wie (eine Klasse pro Session-Art wie heute, oder anders) und wie viel im Feature bleibt (`SessionPresenter` bleibt) | Plan §4b |
-| Das Feature holt sich ein javafx-`Image` für den Hintergrund und reicht es durch | `ComponentHost:28` |
+| ~~Zuschnitt der Session-Panes~~ | **erledigt 29.07.**, siehe `Learn-Zielbild-3c.md` §0 |
+| ~~Das Feature reicht ein javafx-`Image` durch~~ | **erledigt** — die Panes liegen jetzt in `shared.ui` |
+| ~~`ShapeMapState` im Feature~~ | **erledigt** — als eigenes Record in `shared.model` |
 | Wie mit Hintergrundbildern umgegangen wird, gehört ins Regelwerk | `ComponentHost:33` |
-| **`buildShapeMapWrapper`-Konstrukt.** Der Block gehört in die `ShapeMapPane`; das einzige Hindernis war fehlender Zugriff auf Skin-Felder — unter U3 fällt es weg | `ShapeMapPane:65`, `Skin:1605` |
-| `MultipleChoicePane.Metrics` — „streng genommen sickern skin.properties in eine UI-Komponente". Unter U3 ist das die **Blaupause**, nicht der Sündenfall. TODO umschreiben statt lösen | `Skin:1467` |
-| `overlayContentBounds` beschreibt, wo der Inhalt im Mini-Map-Bild sitzt — gehört eigentlich woandershin | `Skin:1686` |
-| `learn.region.SessionPresenter` importiert `ShapeMapPane.ShapeMapState` — ein verschachtelter Enum einer Komponente, direkt im Feature | — |
+| **`buildShapeMapWrapper`-Konstrukt.** Der Block gehört in die `ShapeMapPane`; das Hindernis (kein Zugriff auf Skin-Felder) ist unter U3 weg | `ShapeMapPane:65` |
+| `MultipleChoicePane.Metrics` — „streng genommen sickern skin.properties in eine UI-Komponente". Unter U3 ist das die **Blaupause**, nicht der Sündenfall. TODO umschreiben statt lösen | `Skin.createMultipleChoicePane` |
+| `overlayContentBounds` beschreibt, wo der Inhalt im Mini-Map-Bild sitzt — gehört eigentlich woandershin | `Skin.getOverlayContentBounds` |
+| **Fehler im freien Spiel:** falsch geklickte Formen verschwinden bei „schwer" nicht, nur die richtigen. Bestehender Fehler, nicht aus dem Umbau | `RegionSessionView:16` |
 
-### Direkt nach 3c — die `SuiteXXX`-Familie durchsehen
+### Jetzt fällig — die `SuiteXXX`-Familie durchsehen
 
-**Der ursprüngliche Grund fällt weg.** Die Fassaden entstanden, weil Features javafx-frei bleiben
-müssen: `GermanySessionPane` durfte kein `TextField` halten, also hielt es ein `SuiteTextField`.
-Nach 3c hält kein Feature mehr irgendeine Komponente — die Panes liegen in `shared.ui`, die Features
-bekommen fertige `ScreenView`s.
+**Der ursprüngliche Grund ist weggefallen.** Die Fassaden entstanden, weil Features javafx-frei
+bleiben müssen: `GermanySessionPane` durfte kein `TextField` halten, also hielt es ein
+`SuiteTextField`. **Seit 3c hält kein Feature mehr irgendeine Komponente** — die Panes liegen in
+`shared.ui`, die Features bekommen fertige `ScreenView`s. Am besten zusammen mit Schritt 3f, weil
+dort ohnehin die Konstruktoren angefasst werden.
 
 **Kriterium:** *Hat die Klasse eigenen Inhalt, oder verbirgt sie nur javafx?*
 
@@ -57,9 +86,14 @@ und der Kontrakt `UiComponent` samt `getView()` steht zur Disposition.
 
 ### Schritt 3d — Chrome/Menüs
 
-| Punkt | Fundstelle |
-|---|---|
-| DatePicker: im Tagebuch mit Kalenderwochen, bei den Statistik-Screens ohne. Warum? | `Skin:1702` |
+Aus dem Skin wandern: `createMenuBar`, `createMenu`, `createMenuItem`,
+`createMainWindowHeaderBar`, `createResponsiveHeaderIcon`. Hängt an `MainWindow`, deshalb zuletzt.
+
+**Offene Gestaltungsfrage — Kalenderwochen im DatePicker.** Ursache geklärt: `DiaryEditor:174`
+macht als einzige Stelle `new DatePicker(...)` und setzt `setShowWeekNumbers` nicht, greift also
+den JavaFX-Default ab. Die drei anderen Stellen gehen über `SuiteDatePicker` (ohne Kalenderwochen).
+Der Unterschied ist **geerbt, nicht gewollt**. Zu entscheiden: nirgends, überall, oder je nach
+Kontext als Parameter — in jedem Fall sollte auch der Editor über `SuiteDatePicker` gehen.
 
 ### Schritt 4 — Aufräumen
 
@@ -90,6 +124,9 @@ und der Kontrakt `UiComponent` samt `getView()` steht zur Disposition.
   — die einzige systematische FailFast-Verletzung im Skin.
 - **Re-Warming des Bildcaches nach Skinwechsel dokumentieren.** Heute lädt die erste Bildkarte nach
   einem Wechsel synchron; das ist bewusst akzeptiert, steht aber nirgends im Code.
+- **Zwei Schlüssel für dasselbe Deck.** Wallpaper werden über die Deck-**Id** aufgelöst
+  (`lk_bbWallpaperName`), Layouts über den **mapName** (`lkSession…Panel`). Beim Aufräumen der
+  Properties vereinheitlichen.
 - **`getContentSize`:** der Loader kennt keinen `Dimension2D`-Zweig, ein `contentSize=…` in einer
   properties-Datei würde still ignoriert. Steht als Kommentar in `SkinProperties`; Parser erweitern,
   falls je gebraucht.

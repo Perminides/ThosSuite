@@ -1,6 +1,6 @@
 # Skin-Refactoring — Vorgehensplan
 
-**Stand:** 28.07.2026 · v4 · Zielbild entschieden (U3), Schritt 1 erledigt
+**Stand:** 29.07.2026 · v5 · Schritte 1–3c erledigt, `Skin` von 2660 auf 1706 Zeilen
 
 **Charakter dieses Dokuments:** das Ergebnis der Vorbesprechung vom 26.–28.07. Es hält fest,
 *was entschieden ist*, *was bewusst vertagt wurde*, *in welcher Reihenfolge* vorgegangen wird —
@@ -64,7 +64,15 @@ grep -rn "app\.shared\.skin" src/main/java/app/{alc,diary,fitbit,learn,mattress,
 grep -rn "app\.shared\.ui\.components" --include=*.java src/main/java/app | grep -v "^src/main/java/app/shared/ui/"
 ```
 
-Alle drei müssen am Ende leer sein. **Heute ist keiner leer** — das ist präzise die Arbeit.
+Alle drei müssen am Ende leer sein. Stand 29.07.:
+
+| | Treffer | wer noch |
+|---|---|---|
+| 1 · Skin kennt UI nicht | 3 | `Skin` baut noch `SuiteInfoLabel`, `SuiteImage`, `MultipleChoicePane` |
+| 2 · Feature kennt Skin nicht | 3 | nur `learn.MapService` |
+| 3 · nur `shared.ui` kennt Bausteine | 1 Datei | nur `Skin` selbst |
+
+**Kein Feature hält mehr eine UI-Komponente.**
 
 Wächter 3 sagt inhaltlich: *Features und `controller` sehen ausschließlich fertige Oberflächen; die
 Bausteine sind Interna von `shared.ui`.* Das ist die Regel „fertige Komponente statt loser Teile" —
@@ -258,6 +266,39 @@ beidem, nur „soll anders aussehen" → View.
 - Geprüft: `Skin` hat kein Instanzfeld mehr, keine verwaisten Importe, keine Aufrufstelle geändert.
   Suite startet, Skinwechsel und Lernsession laufen.
 
+**28.07. — Paketumstellung (Schritt 2) und Alerts/Dialoge (3a).**
+
+- `shared.ui.contracts` → `shared.model`; `components.learn`, `surfaces` und `surfaces.dialogs`
+  aufgelöst. Übrig: `shared.ui` (Oberflächen) und `shared.ui.components` (Bausteine).
+- `Alerts` (zeigt) nach `shared.ui`, `SuiteDialog<R>`/`SuiteHeaderBar` (werden verbaut) nach
+  `shared.ui.components`. `SuiteDialog` als Unterklasse von `javafx.Dialog` statt als Fabrik — damit
+  fielen zwei unchecked Casts weg (`ImageBatchProcessor`, `WhatsAppChatDialog`).
+- Das Owner-Fenster aus `SkinService` nach `shared.UiUtils`.
+- `SuiteExporter`s Inline-Datumsdialog wurde `shared.ui.DatePickerDialog`.
+
+**28.07. — Feature-Oberflächen (3b).**
+
+- **Dashboard:** `DashboardScreen` reicht `DashboardTileData`-Records durch; `DashboardScreenView`
+  baut die Kacheln. `DashboardTile` bekommt die Maße im Konstruktor — `TILE_WIDTH`/`TILE_HEIGHT`
+  waren tot, der Skin überschrieb sie unmittelbar nach dem `new`.
+- **Diary:** `createDiaryViewer`, `createDiaryCard` und das Record `DiaryViewerComponents` sind weg.
+  Neu: `DiaryCard extends VBox` und `SuiteDatePicker`. Der tote Parameter `createdAt` entfiel.
+- **Movie:** `createMovieViewer`, `createCard`, `createLinkedPersonLine`, `setupCommentTooltip` und
+  `MovieViewerComponents` sind weg. Neu: `MovieCard extends HBox`.
+
+**29.07. — learn (3c).**
+
+- **Region:** `learn.region.SessionPane` gelöscht, dafür `shared.ui.RegionSessionView`. Der
+  Presenter treibt sie direkt. `ShapeMapState` als eigenständiges Record nach `shared.model`.
+- **Anki:** die drei Panes (432 Zeilen) gelöscht, dafür `AnkiSessionView` (abstrakt) mit
+  `GermanySessionView`, `McSessionView`, `ImageMapSessionView` — je unter 32 Zeilen.
+- Die zwei Kartensprachen liegen hinter `SessionMap` (`ShapeSessionMap`, `ImageSessionMap`,
+  `NoSessionMap`). `SessionCallbacks` bündelt die vier Rückmeldungen.
+- **Gefunden und behoben:** `beginTx`/`endTx` waren tote No-ops (Interface-Defaults, nie
+  implementiert, viermal gerufen). Und der deck-eigene Hintergrund war seit unbekannt wann bei
+  Germany statt bei MC — sichtbar geworden, weil die drei Konfigurationen erstmals nebeneinander
+  stehen.
+
 Offene Kleinigkeiten: die Kommentare `// Owner intern` bei `AnkiConfigDialog` und
 `RegionConfigDialog` sind überflüssig; der Kommentar bei `createDialog` könnte die **Bindung**
 benennen statt „erbt".
@@ -344,29 +385,41 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
 ## 8. Reihenfolge
 
 ```
-1  ✓ SkinProperties herausgezogen                                        erledigt 28.07.
+1  ✓ SkinProperties herausgezogen                                        28.07.
+2  ✓ Paketumstellung                                                     28.07.
+3a ✓ Alerts + Dialoge                                                    28.07.
+3b ✓ Feature-Oberflächen (Dashboard, Diary, Movie, BarChart)             28.07.
+3c ✓ learn (Region und Anki)                                             29.07.
 
-2  Paketumstellung — reine Eclipse-Moves, keine Logikänderung
-   · shared.ui.contracts        → shared.model
-   · shared.ui.components/**    → shared.ui.components (learn-Unterpaket auflösen)
-   · shared.ui.surfaces         → aufteilen nach §2.3
-   · shared.ui.surfaces.dialogs → aufteilen nach §2.3
-   Zweck: die Zielstruktur wird sichtbar und begehbar, bevor Code hineinaufgelöst wird.
-   Wächter 3 ist danach noch nicht leer (learn hält weiterhin Bausteine) — das räumt 3c.
+── offen ──────────────────────────────────────────────────────────────────────
 
-3  Bau-Methoden aus Skin nach shared.ui auflösen, in Portionen:
-   3a  Dialoge + Alerts        braucht fast nichts (§6a)
-   3b  Feature-Oberflächen     Diary, Movie, Dashboard, BarChart
-   3c  Session-/Lern-Teile     + die Panes verlassen learn (4b)
-   3d  Chrome/Menüs            zuletzt, weil MainWindow daran hängt
+3e  MapService
+    Die letzten drei Skin-Importe in einem Feature. Das Cache-Vorwärmen wandert
+    in den controller (Entscheidung 3.9); imagePathsFor und MapImagePaths entfallen.
+    Klein. Danach ist Wächter 2 leer.
 
-4  Aufräumen
-   Skin enthält danach nur noch die CSS-Erzeugung — kein Rename nötig.
-   Die drei Wächter aus §1.3 auf leer bringen.
+3f  Die drei restlichen Bau-Methoden
+    createSessionInfoLabel, createImageComponent, createMultipleChoicePane.
+    Hier kommen SessionComponent und sessionBounds(...) zurück — die Komponenten
+    nehmen ihre Maße dann selbst entgegen. Zugleich der Anlass für die
+    SuiteXXX-Durchsicht (siehe Vertagte-Punkte.md): SuiteTextField und
+    SuiteIconButton sind danach reine Fassaden ohne Zweck.
+    Danach ist Wächter 1 leer.
 
-5  Regelwerk nachziehen
-   Skin-Vertrag neu, die Ordnung aus §1, der Verantwortungsrahmen aus §4b,
-   StartScreen-Regel, Dialog-Stufe 2a, die drei Wächter als bewachte Zusagen.
+3d  Chrome und Menüs
+    createMenuBar, createMenu, createMenuItem, createMainWindowHeaderBar,
+    createResponsiveHeaderIcon. Zuletzt, weil MainWindow daran hängt.
+
+4   Aufräumen
+    Skin enthält danach nur noch die CSS-Erzeugung — kein Rename nötig.
+    Alle drei Wächter auf leer.
+
+5   Regelwerk und Architekturdokument nachziehen
+    Design-Regeln.md: die Ordnung aus §1, der Verantwortungsrahmen aus §4b in
+    Thorstens Formulierung, StartScreen-Regel, Dialog-Stufe 2a, die drei Wächter
+    als bewachte Zusagen, der neu gefasste Skin-Vertrag.
+    Architektur-Dokumentation.md: der Abschnitt „UI-Architektur: Skin-System" ist
+    dann vollständig überholt.
 ```
 
 **Warum die Paketumstellung vor die Auflösung rückt:** sie ist risikoarm (reine Moves) und liefert

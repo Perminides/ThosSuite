@@ -65,6 +65,22 @@ public class SkinImageCache {
 		get(path);
 	}
 
+	/**
+	 * Wärmt die vier Bilder einer Bild-Karte vor (Splash). Die Pfade löst diese Klasse selbst beim
+	 * Skin auf — der Aufrufer nennt nur den Kartennamen und muss weder Pfade noch {@link Image}
+	 * anfassen.
+	 *
+	 * <p>Nicht gesetzte Varianten (etwa eine Karte ohne inaktives Bild) liefern {@code null}; das
+	 * ist erlaubt und wird still übersprungen.</p>
+	 */
+	public void warmMapImages(String mapName) {
+		Skin skin = SkinService.get();
+		warm(skin.getMapImagePath(mapName));
+		warm(skin.getMapOverlayImagePath(mapName));
+		warm(skin.getMapInactiveImagePath(mapName));
+		warm(skin.getMapInactiveOverlayImagePath(mapName));
+	}
+
 	private void invalidateIfSkinChanged() {
 		Skin current = SkinService.get();
 		if (current != cachedSkin) {
