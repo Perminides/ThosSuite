@@ -5,10 +5,12 @@ import java.util.Set;
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
 import app.shared.model.ScreenView;
-import app.shared.ui.components.ShapeMapPane.ShapeMapState;
+import app.learn.MapService;
+import app.shared.model.ShapeMapState;
+import app.shared.ui.RegionSessionView;
 
 /**
- * Intermediary between RegionSessionPane and the RegionSessionProgress.
+ * Intermediary between RegionSessionView and the RegionSessionProgress.
  * Also holds a final sessionPaneContainer, which is shown in the MainWindow. In case of a skin change,
  * the sessionPane inside this container is recreated. The MainWindow won't realize this :-)
  */
@@ -21,7 +23,7 @@ public class SessionPresenter {
 	    COMMIT_MISS_AND_CONTINUE     // FreePlay
 	}
 	
-	private SessionPane sessionPane;
+	private final RegionSessionView view;
 	private final SessionSpec spec; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 	private final SessionProgress progress;
 	private final boolean hard;
@@ -31,14 +33,20 @@ public class SessionPresenter {
 	
 	public SessionPresenter(SessionProgress progress, SessionSpec spec) {
 		progress.setPresenter(this);
-		sessionPane = new SessionPane(this, spec.getDeckType(), spec.getMode().getSubCategory() == Mode.SubCategory.CLICK);
+		view = new RegionSessionView(
+				spec.getDeckType().getMapName(),
+				spec.getDeckType().getCategory().toString(),
+				MapService.getInstance().getMap(spec.getDeckType()).getShapeGeometries(),
+				spec.getMode().getSubCategory() == Mode.SubCategory.CLICK,
+				this::clickedMapElement,
+				this::typedText);
 		this.progress = progress;
 		this.spec = spec;
 		this.hard = spec.getMode().getEasyHard() == Mode.EasyHard.HARD;
 	}
 	
 	public ScreenView getView() {
-		return sessionPane.getView();
+		return view.getView();
 	}
 	
 	// ========================================
@@ -46,64 +54,64 @@ public class SessionPresenter {
 	// ========================================
 	
 	public void refresh() {
-		savedState = new SavedState(sessionPane.getState(), sessionPane.getQuestion());
-		sessionPane.rebuild(spec.getMode().getSubCategory() == Mode.SubCategory.CLICK);
-		sessionPane.setState(savedState.mapState);
-		sessionPane.setQuestion(savedState.text);
+		savedState = new SavedState(view.getState(), view.getQuestion());
+		view.rebuild(spec.getMode().getSubCategory() == Mode.SubCategory.CLICK);
+		view.setState(savedState.mapState);
+		view.setQuestion(savedState.text);
 		savedState = null;
 	}
 
 	public void weWaitForClick(Set<String> ids) {
-		sessionPane.addIdsToActive(ids);
-		sessionPane.setMapActive(true);
+		view.addIdsToActive(ids);
+		view.setMapActive(true);
 	}
 	
 	public void weWaitForEliminationText(Set<String> ids) {
-		sessionPane.addIdsToInactive(ids);
-		sessionPane.setMapActive(false);
+		view.addIdsToInactive(ids);
+		view.setMapActive(false);
 	}
 	
 	public void weWaitForWriteText(String id) {
-		sessionPane.addIdsToMarked(Set.of(id));
-		sessionPane.setMapActive(true);
+		view.addIdsToMarked(Set.of(id));
+		view.setMapActive(true);
 	}
 	
 	public void prepareWriteSession(Set<String> ids) {
-		sessionPane.addIdsToInactive(ids);
-		sessionPane.setMapActive(false);
+		view.addIdsToInactive(ids);
+		view.setMapActive(false);
 	}
 	
 	public void setCorrectText(String correctText) {
-		sessionPane.setTextInTextField(correctText);
-		sessionPane.setTextFieldActive(false);
+		view.setTextInTextField(correctText);
+		view.setTextFieldActive(false);
 	}
 	
 	public void showQuestion(String text) {
-		sessionPane.setQuestion(text);
+		view.setQuestion(text);
 	}
 	
 	public void handleClickResult(String id, boolean correct, String correctId) {
 		if (correct) {
 			if (hard) {
-				sessionPane.moveCorrectToActive();
+				view.moveCorrectToActive();
 			}
-			sessionPane.addIdsToCorrect(Set.of(id));
+			view.addIdsToCorrect(Set.of(id));
 
 		} else {
 			wrongClickSnapshot = new WrongClickSnapshot(
-				    sessionPane.getState(),
-				    sessionPane.getQuestion(),
+				    view.getState(),
+				    view.getQuestion(),
 				    correctId // expected target
 				);
-			sessionPane.moveAllToActive();
-			sessionPane.setIdToIncorrect(id);
-			sessionPane.addIdsToCorrect(Set.of(correctId));
+			view.moveAllToActive();
+			view.setIdToIncorrect(id);
+			view.addIdsToCorrect(Set.of(correctId));
 		}
 	}
 	
 	public void handleCorrectAnswers(Set<String> matches) {
-		sessionPane.addIdsToCorrect(matches);
-		sessionPane.setTextInTextField("");
+		view.addIdsToCorrect(matches);
+		view.setTextInTextField("");
 	}
 	
 	public void undoWrongClick(WrongClickResolution resolution) {
@@ -112,7 +120,7 @@ public class SessionPresenter {
 	    	base.incorrectShapes().add(wrongClickSnapshot.expectedId());
 	    	base.activeShapes().remove(wrongClickSnapshot.expectedId());
 	    }
-	    sessionPane.setState(base);	    
+	    view.setState(base);	    
 	    wrongClickSnapshot = null;
 	}
 	

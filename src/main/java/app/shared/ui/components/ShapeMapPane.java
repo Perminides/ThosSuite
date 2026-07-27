@@ -16,6 +16,7 @@ import app.shared.skin.SkinService;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
 import javafx.scene.layout.Region;
+import app.shared.model.ShapeMapState;
 
 /**
  * Eine interaktive Karte, die ausschließlich aus Shapes besteht. Einige sind interaktiv, andere nicht.
@@ -40,13 +41,6 @@ public class ShapeMapPane implements UiComponent{
 	/** Was die Pane pro Shape festhält: den gebauten Node und ob er interaktiv ist (für Klick + moveAllToActive). */
 	private record ShapeNode(Node node, boolean interactive) {}
 
-	public static record ShapeMapState(
-			Set<String> correctShapes,
-			Set<String> incorrectShapes,
-			Set<String> markedShapes,
-			Set<String> activeShapes,
-			Set<String> inactiveShapes,
-			boolean interactive) {}
 
 	private static final PseudoClass PAUSED = PseudoClass.getPseudoClass("paused");
 
