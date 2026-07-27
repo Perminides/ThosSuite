@@ -26,17 +26,17 @@ public class SessionPresenter {
     private final AnkiSessionView view;
     private SessionProgress sessionProgress;
 
-    public SessionPresenter(Deck type, SessionProgress sessionProgress) {
+    SessionPresenter(Deck type, SessionProgress sessionProgress) {
     	this.sessionProgress = sessionProgress;
     	sessionProgress.setPresenter(this);
         view = createViewFor(type);
     }
     
-	public ScreenView getView() {
+	ScreenView getView() {
 		return view.getView();
 	}
 
-    public void refresh() {
+    void refresh() {
         view.rebuild();
     }
 
@@ -62,7 +62,7 @@ public class SessionPresenter {
         };
     }
 
-    public void end() {
+    void end() {
         sessionProgress = null;
     }
 	
@@ -70,29 +70,29 @@ public class SessionPresenter {
 	// STEP EXECUTION (from Progress)
 	// ========================================
 	
-	public void showImage(String imageName) {
+	void showImage(String imageName) {
 		view.setImage(imageName);
 	}
 
-	public void showQuestion(String text) {
+	void showQuestion(String text) {
 		view.setQuestion(text);
 	}
 	
-	public void showMultipleChoice (List<String> answers) {
+	void showMultipleChoice (List<String> answers) {
 		view.setMapActive(false);
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);
 		view.setMultipleChoice(answers);
 	}
  
-	public void waitForClick(Set<String> idsInQuestion) {
+	void waitForClick(Set<String> idsInQuestion) {
 		view.setIdsInQuestion(idsInQuestion);
 		view.setMapActive(true);
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);
 		view.disableMcPanel();
 	}
-	public void waitForText() {
+	void waitForText() {
 		view.setTextFieldActive(true);
 		view.setMapActive(false);
 		view.disableMcPanel();
@@ -104,18 +104,18 @@ public class SessionPresenter {
 	
 	// Input
 		
-	public void setCorrectText(String correctText) {
+	void setCorrectText(String correctText) {
 		view.setTextInTextField(correctText);
 		view.setTextFieldActive(false);
 	}
 	
-	public void textIsCorrect() {
+	void textIsCorrect() {
 		view.setTextInTextField("");
 	}
 	
 	// Map
 	
-	public void mapClickChecked(String id, boolean correct, Set<String> corectSet) {
+	void mapClickChecked(String id, boolean correct, Set<String> corectSet) {
 		if (correct) {
 			view.addIdsToCorrect(Set.of(id));
 		}
@@ -126,21 +126,21 @@ public class SessionPresenter {
 			}
 	}
 	
-	public void setCorrectMapElements(Set<String> correctIds) {
+	void setCorrectMapElements(Set<String> correctIds) {
 		view.addIdsToCorrect(correctIds); 
 	}
 	
-	public void markMapElements(Set<String> elements) {
+	void markMapElements(Set<String> elements) {
 		view.setMarkedIds(elements);
 	}
 	
 	// MC
 	
-	public void mcClickChecked(int id, boolean correct) {
+	void mcClickChecked(int id, boolean correct) {
 		view.setMcCorrect(id, correct);
 	}
 	
-	public void setCorrectMc(Set<Integer> correctIds) {
+	void setCorrectMc(Set<Integer> correctIds) {
 		view.setMcSolution(correctIds); 
 	}
 	
@@ -148,26 +148,26 @@ public class SessionPresenter {
 	// USER INPUT (from Panel)
 	// ========================================
 	
-	public void typedText(String text) {
+	void typedText(String text) {
 		sessionProgress.textInputChanged(text);
 	}
 
-	public void clickedMapElement(String id) {
+	void clickedMapElement(String id) {
 		if (sessionProgress.isPaused())
 			sessionProgress.reactOnPauseClick();
 		else
 			sessionProgress.elementClicked(id);
 	}
 	
-	public void clickedPlay() {
+	void clickedPlay() {
 		sessionProgress.reactOnPauseClick();
 	}
 	
-	public void clickedBack() {
+	void clickedBack() {
 		sessionProgress.goBack();
 	}
 	
-	public void clickedMCAnswer(int index) {
+	void clickedMCAnswer(int index) {
 		if (sessionProgress.isPaused())
 			sessionProgress.reactOnPauseClick();
 		else
@@ -178,14 +178,14 @@ public class SessionPresenter {
 	// SESSION NOTIFICATIONS
 	// ========================================
 	
-	public void sessionProgressChanged(SessionProgressCounter progress) {
+	void sessionProgressChanged(SessionProgressCounter progress) {
 		String text = "Korrekt: " + progress.correct()
 			+ "\nFalsch: " + progress.incorrect()
 			+ "\nOffen: " + (progress.total() - progress.correct() - progress.incorrect());
 		view.setProgressText(text);
 	}
 
-	public void newCardIncoming(LearnStat stats) {
+	void newCardIncoming(LearnStat stats) {
 		String text = "";
 		if (stats != null) {
 			text = "Zuletzt gespielt: " + stats.getLastPlayed()
@@ -199,14 +199,14 @@ public class SessionPresenter {
 	 * Remove the image, clean the textfield, question and markers.
 	 * @param correct can be null in case of back button!
 	 */
-	public void cardFinished(Boolean correct) {
+	void cardFinished(Boolean correct) {
 		view.resetMarkers();
 		view.setImage(null);
 		view.setTextInTextField("");
 		view.setQuestion("");
 	}
 	
-	public void pause() { // Von außen wegen Pause: im csv...
+	void pause() { // Von außen wegen Pause: im csv...
 		view.setMapActive(false);
 		view.setTextFieldActive(false);
 		view.disableMcPanel();

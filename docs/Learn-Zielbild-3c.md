@@ -1,8 +1,64 @@
 # 3c — Zielbild für learn
 
-**Stand:** 28.07.2026 · Entwurf zum Draufschauen, nichts entschieden
+**Stand:** 29.07.2026 · **umgesetzt** — Region und Anki sind umgezogen
 
-Gehört zu `Skin-Refactoring-Plan.md` Schritt 3c. Zweck: erst das Bild, dann die Fragen.
+Gehört zu `Skin-Refactoring-Plan.md` Schritt 3c. Zweck war: erst das Bild, dann die Fragen. Das
+Dokument bleibt als Begründung stehen; was tatsächlich entstanden ist, steht in §0.
+
+---
+
+## 0. Was daraus geworden ist
+
+```
+shared.ui
+    RegionSessionView          Karte + Frage ODER Eingabefeld; getState/setState
+    AnkiSessionView (abstrakt) die sechs gemeinsamen Bestandteile
+      GermanySessionView       Shape-Karte · Eingabe · leerer Hintergrund      (29 Z.)
+      McSessionView            keine Karte · keine Eingabe · deck-eigener      (18 Z.)
+      ImageMapSessionView      Bild-Karte  · Eingabe · leerer Hintergrund      (31 Z.)
+
+shared.ui.components
+    SessionMap                 gemeinsames Vokabular über beide Kartensprachen
+      ShapeSessionMap          adressiert über Ids
+      ImageSessionMap          adressiert über Geometrien, holt seine Bildpfade selbst
+      NoSessionMap             tut nichts — damit entfallen alle Null-Wächter
+
+shared.model
+    ShapeMapState              aus ShapeMapPane herausgezogen, unverändert
+    SessionCallbacks           die vier Rückmeldungen gebündelt
+
+gelöscht
+    learn.region.SessionPane · learn.anki.{Germany,MC,ImageMap}SessionPane
+    learn.anki.model.SessionPane (Interface)
+```
+
+**Antworten auf die Fragen aus §5:**
+
+- **A — eine Ansicht oder drei?** Eine abstrakte Basis plus drei Unterklassen. Der erste Versuch war
+  *eine* Klasse mit `MapKind`-Enum und zwölf Konstruktor-Parametern; das war die Union aller
+  Varianten und wurde zu Recht als hässlich verworfen. Mit Vererbung nimmt jede Unterklasse nur,
+  was sie braucht.
+- **B — wie sieht das Grenzpaket aus?** Kein Record. Die Ansicht bekommt Deck-Id, Kartenname,
+  Kategorie, Geometrien (bzw. die Funktion `ids → Geometrien`) und die `SessionCallbacks` direkt im
+  Konstruktor. Ein eigener Spec-Typ hätte nur einen Namen gebraucht, den `learn.region.model`
+  bereits belegt.
+- **C — bleibt der 18-Methoden-Kontrakt?** Ja, aber ohne Interface: er ist jetzt die öffentliche
+  Fläche der Ansicht. Das Interface wurde überflüssig, weil es nur noch eine Anki-Ansicht gibt.
+- **D — `ShapeMapState`: Fachlogik oder Anzeige?** Fachlogik. Es war bereits framework-frei (fünf
+  Mengen von Ids, ein Schalter) und nur zufällig in einer UI-Klasse verschachtelt. Jetzt in
+  `shared.model`, das Feature darf es halten.
+- **E — Reihenfolge?** Region zuerst, wie vorgeschlagen. Hat getragen.
+
+**Zwei Funde, die nur durch den Umzug sichtbar wurden:**
+
+- `beginTx`/`endTx` waren tote No-ops — im Interface als Default deklariert, von keiner Pane
+  implementiert, vom Presenter viermal gerufen.
+- Der deck-eigene Hintergrund lag bei Germany statt bei MC. Der Fehler war seit unbekannt wann
+  drin; er fiel auf, weil die drei Konfigurationen erstmals nebeneinander stehen.
+
+**Erster Belastungstest bestanden:** zwei Änderungen (Hintergrund vertauschen, MC-Panel nicht
+deaktivieren) — beide sofort gefunden, beide ein bis zwei Zeilen, beide an der Stelle, an der man
+sie vermutet.
 
 ---
 

@@ -46,6 +46,7 @@ import app.shared.UiUtils;
 import app.shared.model.ButtonEnum;
 import app.shared.model.Screen;
 import app.shared.skin.Skin;
+import app.shared.skin.SkinImageCache;
 import app.shared.skin.SkinService;
 import app.shared.ui.Alerts;
 import app.tmp.Comparison;
@@ -101,6 +102,11 @@ public class Controller{
     	showStartScreen();
     	
     	ankiDeckService = new AnkiDeckService();
+
+    	// Die großen Kartenbilder vorwärmen, solange der Splash noch steht. Das Feature nennt nur die
+    	// Kartennamen; Pfade und Bilder bleiben auf der Skin-Seite.
+    	for (String mapName : ankiDeckService.getImageMapNames())
+    		SkinImageCache.getInstance().warmMapImages(mapName);
     	regionDeckService = new RegionDeckService();
     	
     	setLearnMenuItemLabels();
