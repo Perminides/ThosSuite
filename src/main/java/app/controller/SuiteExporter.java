@@ -8,18 +8,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 import app.shared.Config;
 import app.shared.Log;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
 import app.shared.ui.Alerts;
-import app.shared.ui.components.SuiteDialog;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.DatePicker;
-import javafx.scene.layout.VBox;
+import app.shared.ui.DatePickerDialog;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.AesKeyStrength;
@@ -27,7 +22,8 @@ import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 
 // TODO: Nur in controller geschoben, damit das mit den Pfeilen besser aussieht. Das kann ja aber auch nicht sein.
-// Gehört an sich eher in shared. Aber braucht halt SkinService zum Zeigen eines Alerts. Was tun?
+// Der alte Grund ("braucht SkinService zum Zeigen eines Alerts") ist weg: die Klasse benutzt jetzt
+// Alerts und DatePickerDialog aus shared.ui und keinen Skin mehr. Ein Umzug nach shared wäre also möglich.
 public class SuiteExporter {
 
     private static final String KEY_ROOT_FOLDER    = "rootFolder";
@@ -44,23 +40,6 @@ public class SuiteExporter {
     public SuiteExporter() {
     }
 
-    private Optional<LocalDate> showDatePickerDialog() {
-    	DatePicker picker = SkinService.get().createDatePicker(LocalDate.now().minusDays(7));
-
-        SuiteDialog<ButtonType> dialog = new SuiteDialog<>("Suite Export");
-        VBox content = dialog.contentBox();
-        content.getChildren().add(new javafx.scene.control.Label("Änderungen seit welchem Datum exportieren?"));
-        content.getChildren().add(picker);
-
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-
-        Optional<?> result = dialog.showAndWait();
-        if (result.isEmpty() || result.get().equals(ButtonType.CANCEL)) return Optional.empty();
-        if (picker.getValue() == null) return Optional.empty();
-        return Optional.of(picker.getValue());
-    }
-
     public void export() {
     	
 		try {
@@ -74,15 +53,16 @@ public class SuiteExporter {
 		}
 
     	
-        Optional<LocalDate> since = showDatePickerDialog();
-        if (since.isEmpty()) return;
+        LocalDate since = DatePickerDialog.show(
+                "Suite Export", "Änderungen seit welchem Datum exportieren?", LocalDate.now().minusDays(7));
+        if (since == null) return;
 
         try {
             List<IgnoreRule> rules = loadIgnoreRules();
-            List<Path> files = scanFiles(since.get(), rules);
+            List<Path> files = scanFiles(since, rules);
 
             if (files.isEmpty()) {
-            	Alerts.show("Suite Export", "Keine geänderten Dateien seit " + since.get() + " gefunden.", ButtonEnum.OK);
+            	Alerts.show("Suite Export", "Keine geänderten Dateien seit " + since + " gefunden.", ButtonEnum.OK);
                 return;
             }
 

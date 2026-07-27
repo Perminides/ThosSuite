@@ -15,7 +15,6 @@ import app.shared.UiUtils;
 import app.shared.model.BorderParams;
 import app.shared.model.CardData;
 import app.shared.model.DiaryAttachment;
-import app.shared.ui.components.DashboardTile;
 import app.shared.ui.components.MultipleChoicePane;
 import app.shared.ui.components.SuiteImage;
 import app.shared.ui.components.SuiteInfoLabel;
@@ -1691,13 +1690,6 @@ public abstract class Skin extends SkinProperties {
 	    return b != null ? b : defaultOverlayContentBounds;
 	}
 	
-	public DashboardTile createDashboardTile(String value, String label) {
-	    DashboardTile tile = new DashboardTile(value, label);
-	    tile.setPrefSize(dashBoardTileWidth, dashBoardTileBottomHeight + dashBoardTileTopHeight);
-	    tile.setMinSize(dashBoardTileWidth, dashBoardTileBottomHeight + dashBoardTileTopHeight);
-	    tile.setMaxSize(dashBoardTileWidth, dashBoardTileBottomHeight + dashBoardTileTopHeight);
-	    return tile;
-	}
 	
 	// !Sofort: Im Tagebuch mit Kalenderwochen und bei den StatisticsScreens ohne. Wieso?
 	public DatePicker createDatePicker(LocalDate defaultDate) {

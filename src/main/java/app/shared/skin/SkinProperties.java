@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 import app.shared.model.BorderParams;
+import app.shared.model.DashboardTileStyle;
 import app.shared.model.DialogStyle;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
@@ -232,6 +233,11 @@ public abstract class SkinProperties {
 	/** Die Werte, die der Dialog- und Alert-Pfad braucht. */
 	public DialogStyle dialogStyle() {
 		return new DialogStyle(font, textColor);
+	}
+
+	/** Die Maße einer Dashboard-Kachel. Höhe = oberer + unterer Teil. */
+	public DashboardTileStyle dashboardTileStyle() {
+		return new DashboardTileStyle(dashBoardTileWidth, dashBoardTileTopHeight + dashBoardTileBottomHeight);
 	}
 
 	// endregion
