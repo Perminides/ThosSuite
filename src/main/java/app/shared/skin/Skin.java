@@ -2,9 +2,6 @@ package app.shared.skin;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,7 +11,6 @@ import app.shared.Config;
 import app.shared.UiUtils;
 import app.shared.model.BorderParams;
 import app.shared.model.CardData;
-import app.shared.model.DiaryAttachment;
 import app.shared.ui.components.MultipleChoicePane;
 import app.shared.ui.components.SuiteImage;
 import app.shared.ui.components.SuiteInfoLabel;
@@ -30,7 +26,6 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -153,13 +148,6 @@ public abstract class Skin extends SkinProperties {
 		}
 	}
 	
-	public record DiaryViewerComponents(
-		    Pane root,
-		    DatePicker fromPicker,
-		    DatePicker toPicker,
-		    TextField queryField,
-		    VBox resultBox
-		) {}
 	
 	public record MovieViewerComponents(
 	        Pane root,
@@ -1692,186 +1680,8 @@ public abstract class Skin extends SkinProperties {
 	
 	
 	// !Sofort: Im Tagebuch mit Kalenderwochen und bei den StatisticsScreens ohne. Wieso?
-	public DatePicker createDatePicker(LocalDate defaultDate) {
-		DatePicker result = new DatePicker(defaultDate);
-		result.setShowWeekNumbers(false);
-		return result;
-	}
 	
-	public DiaryViewerComponents createDiaryViewer() {
-	    // Filterleiste
-	    DatePicker fromPicker = createDatePicker(LocalDate.now().minusMonths(1));
-	    DatePicker toPicker = createDatePicker(LocalDate.now());
 
-	    TextField queryField = new TextField();
-	    queryField.setPromptText("(x or y) and tag:z");
-
-	    HBox filterBar = new HBox(12);
-	    filterBar.setAlignment(Pos.CENTER_LEFT);
-	    filterBar.getStyleClass().add("diary-viewer-filter-bar");
-	    filterBar.getChildren().addAll(
-	            new Label("Von:"), fromPicker,
-	            new Label("Bis:"), toPicker,
-	            queryField);
-
-	    // Ergebnisbereich
-	    VBox resultBox = new VBox(12);
-	    resultBox.setPadding(new Insets(12, 0, 12, 0));
-
-	    // Content-VBox (Karten)
-	    VBox content = new VBox(12);
-	    content.getStyleClass().add("diary-viewer-content");
-	    content.setMaxWidth(diaryViewerContentWidth);
-	    //content.setMinWidth(diaryViewerContentWidth);
-	    content.getChildren().add(resultBox);
-
-	    // ScrollPane
-	    ScrollPane scrollPane = new ScrollPane(content);
-	    scrollPane.setFitToWidth(true);
-	    scrollPane.setFitToHeight(false);
-	    scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-	    scrollPane.getStyleClass().add("diary-viewer-scroll");
-	    scrollPane.setMaxWidth(diaryViewerContentWidth);
-	    scrollPane.setMinWidth(diaryViewerContentWidth);
-
-	    // Äußerer Wrapper — zentriert alles
-	    VBox root = new VBox(12);
-	    root.setAlignment(Pos.TOP_CENTER);
-	    root.getStyleClass().add("diary-viewer-root");
-	    root.getChildren().addAll(filterBar, scrollPane);
-	    VBox.setVgrow(scrollPane, Priority.ALWAYS);
-
-	    return new DiaryViewerComponents(root, fromPicker, toPicker, queryField, resultBox);
-	}
-
-	public VBox createDiaryCard(LocalDateTime createdAt, LocalDate entryDate, String text, List<String> tags, List<DiaryAttachment> attachments) {
-	    Label dateLabel = new Label(entryDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-	    dateLabel.getStyleClass().add("diary-card-date");
-
-	    String tagsText = tags.isEmpty() ? "" : String.join(" · ", tags);
-	    Label tagsLabel = new Label(tagsText);
-	    tagsLabel.getStyleClass().add("diary-card-tags");
-	    tagsLabel.managedProperty().bind(tagsLabel.visibleProperty());
-	    tagsLabel.setVisible(!tags.isEmpty());
-
-	    Label textLabel = new Label(text);
-	    textLabel.getStyleClass().add("diary-card-text");
-	    textLabel.setWrapText(true);
-	    textLabel.setMaxWidth(Double.MAX_VALUE);
-
-	    VBox card = new VBox(6, dateLabel, tagsLabel);
-
-	    if (!attachments.isEmpty()) {
-	        int thumbHeight = Config.getInt("diary.thumbnailHeight", 120);
-
-	        FlowPane thumbPane = new FlowPane(8, 8);
-	        thumbPane.getStyleClass().add("diary-card-thumbs");
-
-	        Tooltip tooltip = new Tooltip();
-	        tooltip.setShowDelay(javafx.util.Duration.millis(300));
-	        tooltip.setShowDuration(javafx.util.Duration.INDEFINITE);
-	        tooltip.setHideDelay(javafx.util.Duration.ZERO);
-	        tooltip.setAutoFix(false);
-	        tooltip.setStyle("-fx-padding: 0;");
-
-	        // !Sofort: Das muss eine eigene Komponente werden. Ein Thumbnail, dass die vergrößerte Version
-	        // als MouseOver anzeigt ist generisch genug und wird sicher nochmal wieder verwendet.
-	        
-	        for (DiaryAttachment attachment : attachments) {
-	            Path thumbPath    = Path.of(attachment.thumbnailPath());
-	            Path originalPath = Path.of(attachment.imagePath());
-
-	            ImageView iv = new ImageView(new Image(thumbPath.toUri().toString(), -1, thumbHeight, true, true));
-
-	            iv.setOnMouseEntered(e -> {
-	                javafx.geometry.Rectangle2D screen = javafx.stage.Screen.getPrimary().getVisualBounds();
-	                double mouseX = e.getScreenX();
-	                double mouseY = e.getScreenY();
-
-	                // Bild einmal laden
-	                Image original = new Image(originalPath.toUri().toString());
-	                double naturalW = original.getWidth();
-	                double naturalH = original.getHeight();
-	                double aspectRatio = naturalW / naturalH;
-
-	                // Schritt 1: Gewinner links/rechts
-	                double leftW  = mouseX - screen.getMinX() - 2 * diaryTooltipMargin;
-	                double rightW = screen.getMaxX() - mouseX - 2 * diaryTooltipMargin;
-	                double hemiH  = screen.getHeight() - 2 * diaryTooltipMargin;
-
-	                boolean useRight  = rightW >= leftW;
-	                double hWinner_W  = useRight ? rightW : leftW;
-
-	                double hLR_imgW, hLR_imgH;
-	                if (naturalW <= hWinner_W && naturalH <= hemiH) {
-	                    hLR_imgW = naturalW; hLR_imgH = naturalH;
-	                } else if (naturalW / hWinner_W >= naturalH / hemiH) {
-	                    hLR_imgW = hWinner_W; hLR_imgH = hWinner_W / aspectRatio;
-	                } else {
-	                    hLR_imgH = hemiH; hLR_imgW = hemiH * aspectRatio;
-	                }
-	                double areaLR = hLR_imgW * hLR_imgH;
-
-	                // Schritt 2: Gewinner oben/unten
-	                double topH  = mouseY - screen.getMinY() - 2 * diaryTooltipMargin;
-	                double botH  = screen.getMaxY() - mouseY - 2 * diaryTooltipMargin;
-	                double hemiW = screen.getWidth() - 2 * diaryTooltipMargin;
-
-	                boolean useBottom = botH >= topH;
-	                double hWinner_H  = useBottom ? botH : topH;
-
-	                double hTB_imgW, hTB_imgH;
-	                if (naturalW <= hemiW && naturalH <= hWinner_H) {
-	                    hTB_imgW = naturalW; hTB_imgH = naturalH;
-	                } else if (naturalW / hemiW >= naturalH / hWinner_H) {
-	                    hTB_imgW = hemiW; hTB_imgH = hemiW / aspectRatio;
-	                } else {
-	                    hTB_imgH = hWinner_H; hTB_imgW = hWinner_H * aspectRatio;
-	                }
-	                double areaTB = hTB_imgW * hTB_imgH;
-
-	                // Schritt 3: Finale Entscheidung
-	                double imgW, imgH, tooltipX, tooltipY;
-
-	                if (areaLR >= areaTB) {
-	                    imgW = hLR_imgW; imgH = hLR_imgH;
-	                    tooltipX = useRight ? mouseX + diaryTooltipMargin : mouseX - diaryTooltipMargin - imgW;
-	                    tooltipY = mouseY - imgH / 2.0;
-	                    tooltipY = Math.max(screen.getMinY() + diaryTooltipMargin, tooltipY);
-	                    tooltipY = Math.min(screen.getMaxY() - diaryTooltipMargin - imgH, tooltipY);
-	                } else {
-	                    imgW = hTB_imgW; imgH = hTB_imgH;
-	                    tooltipY = useBottom ? mouseY + diaryTooltipMargin : mouseY - diaryTooltipMargin - imgH;
-	                    tooltipX = mouseX - imgW / 2.0;
-	                    tooltipX = Math.max(screen.getMinX() + diaryTooltipMargin, tooltipX);
-	                    tooltipX = Math.min(screen.getMaxX() - diaryTooltipMargin - imgW, tooltipX);
-	                }
-
-	                // ImageView mit Originalbild, bei Bedarf via setFitWidth/setFitHeight skaliert
-	                ImageView imageView = new ImageView(original);
-	                if (naturalW > imgW || naturalH > imgH) {
-	                    imageView.setFitWidth(imgW);
-	                    imageView.setFitHeight(imgH);
-	                    imageView.setPreserveRatio(true);
-	                    imageView.setSmooth(true);
-	                }
-
-	                tooltip.setGraphic(imageView);
-	                tooltip.show(iv, tooltipX, tooltipY);
-	            });
-
-	            iv.setOnMouseExited(_ -> tooltip.hide());
-
-	            thumbPane.getChildren().add(iv);
-	        }
-	        card.getChildren().add(thumbPane);
-	    }
-
-	    card.getChildren().add(textLabel);
-	    card.getStyleClass().add("diary-card");
-	    card.setMaxWidth(Double.MAX_VALUE);
-	    return card;
-	}
 	
 	public MovieViewerComponents createMovieViewer() {
 	    // SWYT-Felder

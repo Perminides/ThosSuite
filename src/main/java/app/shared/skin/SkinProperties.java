@@ -9,6 +9,7 @@ import java.util.Properties;
 import app.shared.model.BorderParams;
 import app.shared.model.DashboardTileStyle;
 import app.shared.model.DialogStyle;
+import app.shared.model.DiaryStyle;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
@@ -233,6 +234,11 @@ public abstract class SkinProperties {
 	/** Die Werte, die der Dialog- und Alert-Pfad braucht. */
 	public DialogStyle dialogStyle() {
 		return new DialogStyle(font, textColor);
+	}
+
+	/** Die Werte, die die Tagebuch-Oberfläche braucht. */
+	public DiaryStyle diaryStyle() {
+		return new DiaryStyle(diaryViewerContentWidth, diaryTooltipMargin);
 	}
 
 	/** Die Maße einer Dashboard-Kachel. Höhe = oberer + unterer Teil. */

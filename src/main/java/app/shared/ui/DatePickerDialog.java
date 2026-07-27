@@ -3,12 +3,11 @@ package app.shared.ui;
 import java.time.LocalDate;
 import java.util.Optional;
 
-import app.shared.skin.SkinService;
 import app.shared.ui.components.SuiteDialog;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import app.shared.ui.components.SuiteDatePicker;
 
 /**
  * Fragt ein einzelnes Datum ab.
@@ -29,7 +28,7 @@ public class DatePickerDialog {
 	 * @return das gewählte Datum, oder {@code null} bei Abbruch (auch wenn kein Datum gesetzt ist)
 	 */
 	public static LocalDate show(String title, String question, LocalDate defaultDate) {
-		DatePicker picker = SkinService.get().createDatePicker(defaultDate);
+		SuiteDatePicker picker = new SuiteDatePicker(defaultDate);
 
 		SuiteDialog<ButtonType> dialog = new SuiteDialog<>(title);
 		VBox content = dialog.contentBox();
