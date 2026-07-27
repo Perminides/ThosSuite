@@ -1,4 +1,4 @@
-package app.shared.ui.surfaces;
+package app.shared.ui;
 
 import java.time.LocalDate;
 
@@ -7,8 +7,8 @@ import app.shared.model.BarChartData.Bar;
 import app.shared.model.BarChartData.State;
 import app.shared.model.BarChartData.YAxis;
 import app.shared.model.BarChartDataProvider;
+import app.shared.model.ScreenView;
 import app.shared.skin.SkinService;
-import app.shared.ui.contracts.ScreenView;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;

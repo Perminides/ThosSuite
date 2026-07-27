@@ -9,7 +9,7 @@ import app.alc.model.Status;
 import app.alc.repository.AlcRepository;
 import app.shared.Log;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
+import app.shared.ui.Alerts;
 
 public class StartupService {
     
@@ -57,7 +57,7 @@ public class StartupService {
         String message = "Wie war " + dayOfWeek + " der " + formattedDate + "?";
         
         // Alert erstellen
-        ButtonEnum result = SkinService.get().showAlert(
+        ButtonEnum result = Alerts.show(
             "Alkohol-Tracker",
             message,
             ButtonEnum.GREEN, ButtonEnum.YELLOW, ButtonEnum.RED, ButtonEnum.CANCEL

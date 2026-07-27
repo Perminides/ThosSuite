@@ -10,7 +10,7 @@ import app.shared.Config;
 import app.shared.Log;
 import app.shared.model.AlertOptions;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
+import app.shared.ui.Alerts;
 
 public class TurnDialog {
 
@@ -43,7 +43,7 @@ public class TurnDialog {
         String imgName = suggested.equals(DIR_UP_DOWN) ? IMG_UP_DOWN : IMG_RIGHT_LEFT;
         Path image = Config.getPath("miscImageFolder").resolve(imgName);
 
-        ButtonEnum answer = SkinService.get().showAlert("Matratze", "", new AlertOptions().image(image),
+        ButtonEnum answer = Alerts.show("Matratze", "", new AlertOptions().image(image),
         	      ButtonEnum.DONE, ButtonEnum.OTHER_DIRECTION, ButtonEnum.LATER);
 
         switch (answer) {

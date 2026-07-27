@@ -3,7 +3,7 @@ package app.shared.ui.components;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import app.shared.ui.contracts.UiComponent;
+import app.shared.model.UiComponent;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.layout.Region;

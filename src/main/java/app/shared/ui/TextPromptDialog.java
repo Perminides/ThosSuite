@@ -1,4 +1,4 @@
-package app.shared.ui.surfaces.dialogs;
+package app.shared.ui;
 
 import java.util.Optional;
 
@@ -8,6 +8,7 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
+import app.shared.ui.components.SuiteDialog;
 
 /**
  * Kopftext + mehrzeiliges Textfeld, OK/Abbrechen.
@@ -23,8 +24,8 @@ public class TextPromptDialog {
         if (prefill != null)
             textArea.setText(prefill);
 
-        Dialog<?> dialog = SkinService.get().createDialog(title);
-        VBox content = SkinService.get().createDialogContent();
+        SuiteDialog<ButtonType> dialog = new SuiteDialog<>(title);
+        VBox content = dialog.contentBox();
         content.getChildren().addAll(new Label(headerText), textArea);
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);

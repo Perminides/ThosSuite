@@ -33,7 +33,7 @@ import app.shared.DB;
 import app.shared.Log;
 import app.shared.ThrowingConsumer;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
+import app.shared.ui.Alerts;
 
 /**
  * Importiert neue Signal-Nachrichten seit dem letzten erfolgreichen Import-Run in die ThosSuite-DB.
@@ -278,8 +278,7 @@ public class SignalIncrementalImport {
             + "\nNachrichten: " + conv.messageCount()
             + (isBlank(conv.sharedGroupNames()) || "[]".equals(conv.sharedGroupNames()) ? "" : "\nGemeinsame Gruppen: " + conv.sharedGroupNames());
 
-        ButtonEnum result = SkinService.get()
-            .showAlert("Neuer Signal-Chat", info, ButtonEnum.IMPORT, ButtonEnum.BLACKLIST);
+        ButtonEnum result = Alerts.show("Neuer Signal-Chat", info, ButtonEnum.IMPORT, ButtonEnum.BLACKLIST);
 
         boolean doImport = result == ButtonEnum.IMPORT;
         int chatId = repo.insertChat(suiteConnection, signalId, conversationId, conv.isGroup(), displayName, !doImport);

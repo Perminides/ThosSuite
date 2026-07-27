@@ -15,6 +15,7 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import app.shared.ui.components.SuiteDialog;
 
 public class TableViewDialogTest extends Application {
 
@@ -46,7 +47,7 @@ public class TableViewDialogTest extends Application {
         Config.init("C:/Users/Markgraf/OneDrive/ThosSuite/");
         
         // Dialog erstellen (mit Parent, damit er nicht zentral positioniert wird)
-        Dialog<?> dialog = SkinService.get().createDialog("TableView im Dialog");
+        SuiteDialog<Void> dialog = new SuiteDialog<>("TableView im Dialog");
         
         // TableView erstellen (exakt wie in TableViewExample)
         TableView<Person> tableView = new TableView<>();

@@ -16,7 +16,7 @@ import app.learn.model.LearnStat;
 import app.shared.AppClock;
 import app.shared.DB;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
+import app.shared.ui.Alerts;
 
 class DbDeckProgressSource {
 		
@@ -84,7 +84,7 @@ class DbDeckProgressSource {
 		                    // zweiten Karte ist und das wäre aber streng genommen nicht mehr alert-würdig. Das ist dann halt so und würde
 		                    // durch den Retry aufgefangen. Außerdem wird das NIE passieren, weil wie unwahrscheinlich ist das denn?
 		                    // Naja, bei MC kann das schon mal passieren natürlich...
-		                    SkinService.get().showAlert("Warnung", psLog.getParameterMetaData() + " - " + row.cardId() + " Ich versuche es evtl. nochmal...", ButtonEnum.OK);
+		                    Alerts.show("Warnung", psLog.getParameterMetaData() + " - " + row.cardId() + " Ich versuche es evtl. nochmal...", ButtonEnum.OK);
 		                }
 		            }
 		            if (!saved)

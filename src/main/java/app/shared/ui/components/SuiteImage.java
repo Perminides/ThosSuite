@@ -4,7 +4,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 
 import app.shared.Config;
-import app.shared.ui.contracts.UiComponent;
+import app.shared.model.UiComponent;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;

@@ -15,9 +15,10 @@ import app.shared.Config;
 import app.shared.Log;
 import app.shared.model.ButtonEnum;
 import app.shared.skin.SkinService;
+import app.shared.ui.Alerts;
+import app.shared.ui.components.SuiteDialog;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DatePicker;
-import javafx.scene.control.Dialog;
 import javafx.scene.layout.VBox;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
@@ -46,8 +47,8 @@ public class SuiteExporter {
     private Optional<LocalDate> showDatePickerDialog() {
     	DatePicker picker = SkinService.get().createDatePicker(LocalDate.now().minusDays(7));
 
-        Dialog<?> dialog = SkinService.get().createDialog("Suite Export");
-        VBox content = SkinService.get().createDialogContent();
+        SuiteDialog<ButtonType> dialog = new SuiteDialog<>("Suite Export");
+        VBox content = dialog.contentBox();
         content.getChildren().add(new javafx.scene.control.Label("Änderungen seit welchem Datum exportieren?"));
         content.getChildren().add(picker);
 
@@ -68,7 +69,7 @@ public class SuiteExporter {
 			this.oneDriveFolder = Config.getPath(KEY_ONEDRIVE_FOLDER);
 			this.zipPassword = Config.getString(KEY_ZIP_PASSWORD);
 		} catch (Exception e) {
-			SkinService.get().showAlert("Kein Export möglich", "Ich kann vermutlich einen Ordner nicht finden.", ButtonEnum.OK);
+			Alerts.show("Kein Export möglich", "Ich kann vermutlich einen Ordner nicht finden.", ButtonEnum.OK);
 			return;
 		}
 
@@ -81,13 +82,13 @@ public class SuiteExporter {
             List<Path> files = scanFiles(since.get(), rules);
 
             if (files.isEmpty()) {
-                SkinService.get().showAlert("Suite Export", "Keine geänderten Dateien seit " + since.get() + " gefunden.", ButtonEnum.OK);
+            	Alerts.show("Suite Export", "Keine geänderten Dateien seit " + since.get() + " gefunden.", ButtonEnum.OK);
                 return;
             }
 
             Path zipPath = buildZip(files);
             Log.info(this.getClass(), "SuiteExporter: " + files.size() + " Dateien exportiert nach " + zipPath);
-            SkinService.get().showAlert("Suite Export", files.size() + " Dateien exportiert:\n" + zipPath.getFileName(), ButtonEnum.OK);
+            Alerts.show("Suite Export", files.size() + " Dateien exportiert:\n" + zipPath.getFileName(), ButtonEnum.OK);
         } catch (Exception e) {
             throw new RuntimeException("Export fehlgeschlagen: " + e.getMessage());
         }

@@ -11,7 +11,7 @@ import java.util.Locale;
 import app.shared.Log;
 import app.shared.model.AlertOptions;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
+import app.shared.ui.Alerts;
 import app.weekday.repository.WeekdayRepository;
 
 public class WeekdayDialog {
@@ -43,7 +43,7 @@ public class WeekdayDialog {
         String dateString = formatDate(puzzleDate);
 
         long start = System.currentTimeMillis();
-        ButtonEnum chosen = SkinService.get().showAlert(
+        ButtonEnum chosen = Alerts.show(
         	    "Wochentag berechnen", dateString, new AlertOptions().centered().mandatory(),
         	    WEEKDAY_BUTTONS.toArray(new ButtonEnum[0]));
         int seconds = (int) ((System.currentTimeMillis() - start) / 1000);
@@ -61,7 +61,7 @@ public class WeekdayDialog {
     }
 
     private void handleCorrect(int seconds, LocalDate puzzleDate, boolean saveResult) {
-        SkinService.get().showAlert("Wochentag berechnen",
+    	Alerts.show("Wochentag berechnen",
             "Korrekt in " + seconds + " Sekunden.", ButtonEnum.OK);
         if (saveResult)
             repository.save(puzzleDate, seconds);
@@ -69,7 +69,7 @@ public class WeekdayDialog {
 
     private void handleWrong(LocalDate puzzleDate, boolean saveResult) {
         String correctName = puzzleDate.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.GERMANY);
-        SkinService.get().showAlert("Wochentag berechnen",
+        Alerts.show("Wochentag berechnen",
             "Leider falsch. " + puzzleDate + " war ein " + correctName + ".", ButtonEnum.OK);
         if (saveResult)
             repository.save(puzzleDate, -1);

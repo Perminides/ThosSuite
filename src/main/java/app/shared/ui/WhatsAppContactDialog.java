@@ -1,4 +1,4 @@
-package app.shared.ui.surfaces.dialogs;
+package app.shared.ui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,14 +6,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import app.shared.Log;
-import app.shared.skin.SkinService;
+import app.shared.ui.components.SuiteDialog;
 import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -44,7 +43,7 @@ import javafx.stage.Stage;
  *
  * <p>Das Schließen per X ist blockiert — der Import kann ohne Entscheidung
  * nicht fortgesetzt werden.</p>
- * <p>Titel-Wechsel wird über SkinService.get().setDialogTitle() realisiert, nicht über stage.setTitle().
+ * <p>Titel-Wechsel wird über SuiteDialog.setSuiteTitle() realisiert, nicht über stage.setTitle().
  * Grund: Der Dialog nutzt eine custom HeaderBar mit einem Label als Titel — stage.setTitle() setzt
  * nur den nativen Fenstertitel, der hinter der HeaderBar verborgen ist.</p>
  * Alternativen die verworfen wurden:
@@ -77,7 +76,7 @@ public class WhatsAppContactDialog {
      * @throws IllegalStateException [FAILFAST] wenn der Dialog ohne Entscheidung geschlossen wird
      */
     public static Result show(String rawIdentifier, Map<String, Integer> knownContacts) {
-        Dialog<?> dialog = SkinService.get().createDialog(TITLE_NEW);
+    	SuiteDialog<Void> dialog = new SuiteDialog<>(TITLE_NEW);
 
         // Ergebnis-State
         final Integer[] selectedContactId = {null};
@@ -88,7 +87,7 @@ public class WhatsAppContactDialog {
         stage.setOnCloseRequest(e -> e.consume());
 
         // Content
-        VBox content = SkinService.get().createDialogContent();
+        VBox content = dialog.contentBox();
 
         Label infoLabel = new Label("Unbekannter Kontakt: " + rawIdentifier);
         Label nameLabel = new Label("Name (bestehenden auswählen oder neuen eingeben):");
@@ -132,7 +131,7 @@ public class WhatsAppContactDialog {
             String chosen = matches.get(activeIndex[0]);
             selectedContactId[0] = knownContacts.get(chosen);
             Log.debug(WhatsAppContactDialog.class, "[selectActive] chosen=" + chosen + " selectedContactId=" + selectedContactId[0]);
-            SkinService.get().setDialogTitle(dialog, TITLE_SELECTED);
+            dialog.setSuiteTitle(TITLE_SELECTED);
             Log.debug(WhatsAppContactDialog.class, "[selectActive] Titel gesetzt auf: " + TITLE_SELECTED);
             settingFromCode[0] = true;
             Log.debug(WhatsAppContactDialog.class, "[selectActive] settingFromCode=true, rufe setText auf");
@@ -146,7 +145,7 @@ public class WhatsAppContactDialog {
         	Log.debug(WhatsAppContactDialog.class, "[listener] newVal='" + newVal + "' settingFromCode=" + settingFromCode[0] + " selectedContactId=" + selectedContactId[0]);
             if (!settingFromCode[0]) {
                 selectedContactId[0] = null;
-                SkinService.get().setDialogTitle(dialog, TITLE_NEW);
+                dialog.setSuiteTitle(TITLE_NEW);
                 Log.debug(WhatsAppContactDialog.class, "[listener] Titel zurückgesetzt auf: " + TITLE_NEW);
             }
             okButton.setDisable(newVal == null || newVal.isBlank());
@@ -179,7 +178,7 @@ public class WhatsAppContactDialog {
                 });
                 lbl.setOnMouseClicked(_ -> {
                     selectedContactId[0] = knownContacts.get(match);
-                    SkinService.get().setDialogTitle(dialog, TITLE_SELECTED);
+                    dialog.setSuiteTitle(TITLE_SELECTED); 
                     settingFromCode[0] = true;
                     nameField.setText(match);
                     settingFromCode[0] = false;

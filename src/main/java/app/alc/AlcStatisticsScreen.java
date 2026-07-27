@@ -2,10 +2,10 @@ package app.alc;
 
 import java.time.LocalDate;
 
+import app.shared.model.Screen;
+import app.shared.model.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
-import app.shared.ui.contracts.Screen;
-import app.shared.ui.contracts.ScreenView;
-import app.shared.ui.surfaces.BarChartScreenView;
+import app.shared.ui.BarChartScreenView;
 
 public class AlcStatisticsScreen implements Screen {
 

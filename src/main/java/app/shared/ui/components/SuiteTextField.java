@@ -2,7 +2,7 @@ package app.shared.ui.components;
 
 import java.util.function.Consumer;
 
-import app.shared.ui.contracts.UiComponent;
+import app.shared.model.UiComponent;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 

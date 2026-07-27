@@ -1,4 +1,4 @@
-package app.shared.ui.components.learn;
+package app.shared.ui.components;
 
 /**
  * Die <b>Darstellungs-Ableitung</b> aus dem rohen GeoJSON-{@code type} ("0".."3") einer Shape-Karte:
@@ -11,7 +11,7 @@ package app.shared.ui.components.learn;
  * früher fielen sie im überladenen {@code isInteractive} zusammen. Der doppelte {@code fromJsonId}-Lookup
  * (Pane + Builder) ist bewusst in Kauf genommen; ein 4-Werte-Enum-Scan ist vernachlässigbar.</p>
  */
-public enum ShapeLayer {
+enum ShapeLayer {
 	// Definition: (GeoJsonId, Z-Index, Css-Klasse, Interaktiv?)
 	INTERACTIVE("0", 0, "layer-region", true),
 	NEIGHBOR("1", 10, "layer-neighbor", false),

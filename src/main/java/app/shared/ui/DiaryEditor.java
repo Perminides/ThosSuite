@@ -1,4 +1,4 @@
-package app.shared.ui.surfaces.dialogs;
+package app.shared.ui;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -38,6 +38,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
+import app.shared.ui.components.SuiteDialog;
+import app.shared.UiUtils;
 
 /**
  * Modale Editor-Ansicht für genau einen Tagebucheintrag. Framework-gebundene Hälfte:
@@ -130,7 +132,7 @@ public class DiaryEditor {
     // ---- Dialog- und Content-Aufbau ----------------------------------------
 
     private Dialog<?> buildDialog(String title, boolean withDelete) {
-        Dialog<?> dialog = SkinService.get().createDialog(title);
+        SuiteDialog<Void> dialog = new SuiteDialog<>(title);
         dialog.getDialogPane().setContent(buildContent());
         dialog.setResultConverter(_ -> null);
 
@@ -244,7 +246,7 @@ public class DiaryEditor {
         chooser.setTitle("Bild auswählen");
         chooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Bilder", "*.jpg", "*.jpeg", "*.png", "*.gif", "*.webp"));
-        File chosen = chooser.showOpenDialog(SkinService.getOwnerWindow());
+        File chosen = chooser.showOpenDialog(UiUtils.getOwnerWindow());
         if (chosen == null)
             return;
 

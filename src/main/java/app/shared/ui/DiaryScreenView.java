@@ -1,12 +1,12 @@
-package app.shared.ui.surfaces;
+package app.shared.ui;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Consumer;
 
 import app.shared.model.DiaryCardData;
+import app.shared.model.ScreenView;
 import app.shared.skin.Skin.DiaryViewerComponents;
-import app.shared.ui.contracts.ScreenView;
 import app.shared.skin.SkinService;
 import javafx.application.Platform;
 import javafx.css.PseudoClass;

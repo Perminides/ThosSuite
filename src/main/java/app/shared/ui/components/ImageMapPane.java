@@ -1,12 +1,12 @@
-package app.shared.ui.components.learn;
+package app.shared.ui.components;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 
 import app.shared.model.ShapeGeometry;
+import app.shared.model.UiComponent;
 import app.shared.skin.SkinImageCache;
-import app.shared.ui.contracts.UiComponent;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;

@@ -15,7 +15,7 @@ import app.shared.Config;
 import app.shared.model.DiaryAttachment;
 import app.shared.model.DiaryCardData;
 import app.shared.model.InvasiveConfig;
-import app.shared.ui.surfaces.dialogs.DiaryEditor;
+import app.shared.ui.DiaryEditor;
 
 /**
  * Framework-freie Hälfte des Tagebuch-Editors. Öffnet die modale {@link DiaryEditor}-View

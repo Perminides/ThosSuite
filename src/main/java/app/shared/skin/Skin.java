@@ -6,21 +6,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import app.shared.Config;
 import app.shared.UiUtils;
-import app.shared.model.AlertOptions;
 import app.shared.model.BorderParams;
-import app.shared.model.ButtonEnum;
 import app.shared.model.CardData;
 import app.shared.model.DiaryAttachment;
-import app.shared.model.DismissEnum;
 import app.shared.ui.components.DashboardTile;
 import app.shared.ui.components.MultipleChoicePane;
 import app.shared.ui.components.SuiteImage;
@@ -36,13 +30,8 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.DatePicker;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -70,13 +59,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Scale;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 
 /**
  * Ja, das ist hier heftige Reflection, es tut mir leid. Aber was ich wollte ist: - Skins, die voneinander erben können - Jedes Skin hat seine eigene
@@ -1606,194 +1591,14 @@ public abstract class Skin extends SkinProperties {
 	    return iconView;
 	}
 
-	// !Sofort: Das muss raus in eine AlertFactory, die dann von überall aufgerufen werden kann. SkinServie.get() muss raus aus dem Rest der Suite...
+
+
 	
-	public ButtonEnum showAlert(String title, String message, ButtonEnum... buttons) {
-	    return showAlert(title, message, new AlertOptions(), buttons);
-	}
 
-	// Der eine Kern
-	public ButtonEnum showAlert(String title, String message, AlertOptions options, ButtonEnum... buttons) {
-	    Alert alert = new Alert(Alert.AlertType.NONE);
-
-	    if (options.dismiss() == DismissEnum.NO_ESC || options.dismiss() == DismissEnum.MANDATORY)
-	        UiUtils.inactivateEscPress(alert);
-	    if (options.dismiss() == DismissEnum.MANDATORY)
-	        installCloseBlocker(alert);
-
-	    alert.initOwner(SkinService.getOwnerWindow());
-	    alert.initStyle(StageStyle.EXTENDED);
-
-	    HeaderBar headerBar = createDialogHeaderBar(title);
-	    alert.getDialogPane().setHeader(headerBar);
-
-	    alert.getDialogPane().setContent(buildAlertContent(message, options.image(), options.isCentered()));
-	    alert.setGraphic(null);
-
-	    Map<ButtonType, ButtonEnum> reverse = new LinkedHashMap<>(); // Die Map von JavaFX-Button auf unseren DialogButton
-	    for (ButtonEnum b : buttons)
-	        reverse.put(toButtonType(b), b);
-	    alert.getButtonTypes().setAll(reverse.keySet());
-
-	    headerBar.heightProperty().addListener((_, _, newVal) -> {
-	        if (alert.getDialogPane().getScene().getWindow() instanceof Stage stage)
-	            HeaderBar.setPrefButtonHeight(stage, (double) newVal);
-	    });
-
-	    Optional<ButtonType> result = alert.showAndWait();
-	    return result.map(reverse::get).orElse(ButtonEnum.CANCEL); // Wenn Du nur DialogButtons im Rest der Suite haben willst, dann musst Du halt wohl oder überls ein Mapping zwischen denen und den JavaFX-Buttons erstellen, die ButtonType heißen...
-	}
-
-	/**
-	 * Blockiert das Schließen per Fenster-X. Beim Alert entstehen Scene/Window erst
-	 * spät (lazy), darum über Property-Listener einhängen statt sofort.
-	 */
-	private void installCloseBlocker(Alert alert) {
-	    DialogPane pane = alert.getDialogPane();
-	    if (pane.getScene() != null && pane.getScene().getWindow() != null) {
-	        pane.getScene().getWindow().addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, WindowEvent::consume);
-	        return;
-	    }
-	    pane.sceneProperty().addListener((_, _, scene) -> {
-	        if (scene == null)
-	            return;
-	        if (scene.getWindow() != null)
-	            scene.getWindow().addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, WindowEvent::consume);
-	        else
-	            scene.windowProperty().addListener((_, _, win) -> {
-	                if (win != null)
-	                    win.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, WindowEvent::consume);
-	            });
-	    });
-	}
 	
-	private Node buildAlertContent(String message, Path image, boolean centered) {
-	    Node textNode = null;
-	    if (message != null && !message.isBlank()) {
-	        Label label = new Label(message);
-	        label.setWrapText(true);
-	        label.setMaxWidth(Double.MAX_VALUE);
-	        if (centered) {
-	            label.setAlignment(Pos.CENTER);
-	            label.setTextAlignment(TextAlignment.CENTER);
-	        }
-
-	        ScrollPane scroll = new ScrollPane(label) {
-	            @Override
-	            protected double computePrefHeight(double width) {
-	                return Math.min(super.computePrefHeight(width), 1000);
-	            }
-	        };
-	        scroll.setFitToWidth(true);
-	        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-	        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-	        scroll.getStyleClass().add("my-dialog-scrollpane");
-	        textNode = scroll;
-	    }
-
-	    ImageView imageNode = null;
-	    if (image != null) {
-	        Image img = new Image(image.toUri().toString());
-	        imageNode = new ImageView(tintImageWithTextColor(img));
-	        imageNode.setPreserveRatio(true);
-	        imageNode.setFitWidth(200);
-	    }
-
-	    if (imageNode != null && textNode != null) {
-	        VBox box = new VBox(15, imageNode, textNode);
-	        box.setAlignment(Pos.CENTER);
-	        return box;
-	    }
-	    if (imageNode != null) {
-	        VBox box = new VBox(imageNode);
-	        box.setAlignment(Pos.CENTER);
-	        return box;
-	    }
-	    if (textNode != null)
-	        return textNode;
-
-	    return new Label("");
-	}
-
-	// --- Die einzige Stelle, die javafx.ButtonType/ButtonData kennt ---
-
-	private ButtonType toButtonType(ButtonEnum b) {
-	    ButtonBar.ButtonData data = switch (b) {
-        case OK, YES, SAVE, IMPORT, END_ANYHOW, WHITELIST     -> ButtonBar.ButtonData.YES;	        
-        case CANCEL, DISCARD, LATER -> ButtonBar.ButtonData.CANCEL_CLOSE; // wichtig: macht ESC zum Abbrechen
-        case NO, BLACKLIST -> ButtonBar.ButtonData.NO;
-        case GREEN, RED, YELLOW, RESUME, EPISODE, WHOLE_SEASON, DONE, OTHER_DIRECTION,
-        MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY -> ButtonBar.ButtonData.OTHER;
-	    };
-	    return new ButtonType(b.getText(), data);
-	}
 	
-	/**
-	 * For just text with standard buttons, we use alerts. For more sophisticated popups
-	 * like the playConfigDialogs, we create a simple dialog and leave the rest to the caller.
-	 * 
-	 * @param parent → Nur übergeben, wenn das Suitefenster bereits sauber angezeigt wird... 
-	 * @return
-	 */
-	public Dialog<?> createDialog(String title) {
-	    Dialog<?> dialog = new Dialog<>();
-	    Window effectiveParent = SkinService.getOwnerWindow();
-	    
-	 // Pflicht: JavaFX bindet die Stylesheets der Dialog-Scene per Bindings.bindContent
-	 // an die Scene des Owners (HeavyweightDialog.updateStageBindings). Ohne Owner bleibt
-	 // der Dialog ungestylt — siehe die rohen Alerts in ThosSuiteApp/DB. Die Bindung ist
-	 // live: ein Skinwechsel wirkt auch auf bereits offene Dialoge.
-	    if (effectiveParent != null) {
-	        dialog.initOwner(effectiveParent);
-	    }
-	    dialog.initStyle(StageStyle.EXTENDED);
-	    
-	    DialogPane dialogPane = dialog.getDialogPane();
-	    
-	    HeaderBar headerBar = createDialogHeaderBar(title);
-	    dialogPane.setHeader(headerBar);
-	    
-	    // Oder lieber gar kein Windows Close-Button oben rechts? Dann 0 setzen!
-        // Sicherstellen, dass Minimize und Close-Button die ganze Höhe ausnutzen...
-        // Einigermaßen gefährlich, weil aus der Doku zu Dialogs:
-        // this essentially means that the DialogPane is shown to users inside a Stage,
-        // but future releases may offer alternative options (such as 'lightweight' or 'internal' dialogs).
-	    headerBar.heightProperty().addListener((_, _, newVal) -> {
-			if (dialog.getDialogPane().getScene().getWindow() instanceof Stage)
-				HeaderBar.setPrefButtonHeight((Stage) dialog.getDialogPane().getScene().getWindow(), (double)newVal);
-		});
-	    
-	    return dialog;
-	}
-	
-	public void setDialogTitle(Dialog<?> dialog, String title) {
-	    javafx.scene.Node node = dialog.getDialogPane().getHeader().lookup(".my-title");
-	    if (node instanceof Label label) {
-	        label.setText(title);
-	    }
-	}
 
-	// Im Skin
-	public VBox createDialogContent() {
-	    VBox vbox = new VBox(15);  // Nur Spacing im Konstruktor
-	    vbox.getStyleClass().add("my-dialog-vbox");
-	    return vbox;
-	}
 	
-	private HeaderBar createDialogHeaderBar(String title) {
-	    HeaderBar headerBar = new HeaderBar();
-	    headerBar.getStyleClass().add("my-header-bar");
-	    
-	    Label titleLabel = new Label(title);
-	    titleLabel.getStyleClass().add("my-title");
-	    
-	    double verticalPadding = font.getSize() * 0.3;
-	    titleLabel.setPadding(new javafx.geometry.Insets(verticalPadding, 0, verticalPadding, 0));
-	    
-	    headerBar.setCenter(titleLabel);
-	    HeaderBar.setDragType(titleLabel, HeaderDragType.DRAGGABLE_SUBTREE);
-	    return headerBar;
-	}
 
 	/**
 	 * 
@@ -2269,9 +2074,6 @@ public abstract class Skin extends SkinProperties {
 	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
 	}
 	
-	public Image tintImageWithTextColor(Image img) {
-		return UiUtils.tintImage(img, textColor);
-	}
 
 	 
 	/**

@@ -8,16 +8,16 @@ import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
 import app.learn.model.GeoMap;
 import app.learn.model.MapImagePaths;
+import app.shared.model.ScreenView;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
+import app.shared.ui.ComponentHost;
+import app.shared.ui.components.ImageMapPane;
 import app.shared.ui.components.MultipleChoicePane;
 import app.shared.ui.components.SuiteIconButton;
 import app.shared.ui.components.SuiteImage;
 import app.shared.ui.components.SuiteInfoLabel;
 import app.shared.ui.components.SuiteTextField;
-import app.shared.ui.components.learn.ImageMapPane;
-import app.shared.ui.contracts.ScreenView;
-import app.shared.ui.surfaces.ComponentHost;
 
 public class ImageMapSessionPane implements SessionPane {
 

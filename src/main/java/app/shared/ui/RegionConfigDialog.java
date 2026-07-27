@@ -1,4 +1,4 @@
-package app.shared.ui.surfaces.dialogs;
+package app.shared.ui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +19,7 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import app.shared.ui.components.SuiteDialog;
 
 public class RegionConfigDialog {
 
@@ -36,11 +37,11 @@ public class RegionConfigDialog {
     }
 
     public Optional<RegionDialogState> showAndWait() {
-        Dialog<?> dialog = SkinService.get().createDialog("Regionen spielen"); // Owner intern
+        SuiteDialog<ButtonType> dialog = new SuiteDialog<>("Regionen spielen");
         DialogPane pane = dialog.getDialogPane();
 
         applying = true;
-        VBox content = SkinService.get().createDialogContent();
+        VBox content = dialog.contentBox();
 
         modeCombo.setOnAction(_ -> onChange());
         content.getChildren().add(modeCombo);

@@ -12,10 +12,10 @@ import app.shared.AppClock;
 import app.shared.Log;
 import app.shared.model.AlertOptions;
 import app.shared.model.ButtonEnum;
+import app.shared.model.Screen;
+import app.shared.model.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
-import app.shared.skin.SkinService;
-import app.shared.ui.contracts.Screen;
-import app.shared.ui.contracts.ScreenView;
+import app.shared.ui.Alerts;
 
 // !Später: Das RegionSessionBild croppen und dann den korrekten Rand setzen, wenn isComplete==true. Wobei isComplete meint, dasss das ganze Rechteck ausgefüllt ist.
 // !Sofort: Es wäre schon nice bei Finde uf der Karte (schwer) zu wissen, wie viel noch kommen. Also doch einen Fortschritt bitte.
@@ -104,9 +104,9 @@ public class RegionSession implements Screen {
 			Log.info(this, "Alert wird erstellt. correct=" + correct);
 			// !Sofort: Refactor: Skin holt sich das MainWindows selbst herrje!
 			ButtonEnum result = allowResume
-				    ? SkinService.get().showAlert("Nicht korrekt", text, new AlertOptions().noEsc(),
+				    ? Alerts.show("Nicht korrekt", text, new AlertOptions().noEsc(),
 				          ButtonEnum.OK, ButtonEnum.CANCEL, ButtonEnum.RESUME)
-				    : SkinService.get().showAlert("Nicht korrekt", text, new AlertOptions().noEsc(),
+				    : Alerts.show("Nicht korrekt", text, new AlertOptions().noEsc(),
 				          ButtonEnum.OK, ButtonEnum.CANCEL);
 
 			if (result == ButtonEnum.CANCEL) { // Abbruch. Wir speichern nicht, wir beenden sofort.
@@ -121,7 +121,7 @@ public class RegionSession implements Screen {
 			}
 		} else if (text != null && !text.isEmpty()) { // Ah. Ich soll was anzeigen, obwohl es korrekt war. Vermutlich ein FreePlay. Na egal, zeigen wir halt an...
 			Log.info(this, "Alert wird erstellt. correct=" + correct);
-			SkinService.get().showAlert("Korrekt", text, ButtonEnum.OK);
+			Alerts.show("Korrekt", text, ButtonEnum.OK);
 		}
 		
 		if (!spec.isPlaySession()) {
@@ -135,7 +135,7 @@ public class RegionSession implements Screen {
 			if (!correct)
 				stats.incrementWrongCount();
 			service.savePlayedCards(spec, stats, correct, wrongId);
-			SkinService.get().showAlert("Ausblick", getUntilString(stats.getDueDate()), ButtonEnum.OK);
+			Alerts.show("Ausblick", getUntilString(stats.getDueDate()), ButtonEnum.OK);
 		}
 		Log.info(this, "RegionsSession " + spec.getDeckType().getDisplayName() + " (play = " + spec.isPlaySession() + ") beendet.");
 		active = false;

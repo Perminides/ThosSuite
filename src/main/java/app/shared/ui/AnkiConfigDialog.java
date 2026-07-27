@@ -1,4 +1,4 @@
-package app.shared.ui.surfaces.dialogs;
+package app.shared.ui;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -20,6 +20,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import app.shared.ui.components.SuiteDialog;
 
 public class AnkiConfigDialog {
 
@@ -45,10 +46,10 @@ public class AnkiConfigDialog {
     }
 
     public Optional<AnkiDialogState> showAndWait() {
-        Dialog<?> dialog = SkinService.get().createDialog(title); // Owner intern
+        SuiteDialog<ButtonType> dialog = new SuiteDialog<>(title);
         DialogPane pane = dialog.getDialogPane();
 
-        VBox content = SkinService.get().createDialogContent();
+        VBox content = dialog.contentBox();
 
         // Parameter-Zeile
         minField.setText(minDefault);       minField.setPrefColumnCount(8);
