@@ -1,4 +1,4 @@
-package app.shared.ui.components.learn;
+package app.shared.ui.components;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -11,8 +11,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import app.shared.model.ShapeGeometry;
+import app.shared.model.UiComponent;
 import app.shared.skin.SkinService;
-import app.shared.ui.contracts.UiComponent;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
 import javafx.scene.layout.Region;

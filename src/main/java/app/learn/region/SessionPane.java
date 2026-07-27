@@ -4,14 +4,14 @@ import java.util.Set;
 
 import app.learn.MapService;
 import app.learn.model.Deck;
+import app.shared.model.ScreenView;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
+import app.shared.ui.ComponentHost;
+import app.shared.ui.components.ShapeMapPane;
 import app.shared.ui.components.SuiteInfoLabel;
 import app.shared.ui.components.SuiteTextField;
-import app.shared.ui.components.learn.ShapeMapPane;
-import app.shared.ui.components.learn.ShapeMapPane.ShapeMapState;
-import app.shared.ui.contracts.ScreenView;
-import app.shared.ui.surfaces.ComponentHost;
+import app.shared.ui.components.ShapeMapPane.ShapeMapState;
 
 public class SessionPane {
 	private final SessionPresenter presenter;

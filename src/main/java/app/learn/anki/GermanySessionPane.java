@@ -6,16 +6,16 @@ import java.util.Set;
 import app.learn.MapService;
 import app.learn.anki.model.SessionPane;
 import app.learn.model.Deck;
+import app.shared.model.ScreenView;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
+import app.shared.ui.ComponentHost;
 import app.shared.ui.components.MultipleChoicePane;
+import app.shared.ui.components.ShapeMapPane;
 import app.shared.ui.components.SuiteIconButton;
 import app.shared.ui.components.SuiteImage;
 import app.shared.ui.components.SuiteInfoLabel;
 import app.shared.ui.components.SuiteTextField;
-import app.shared.ui.components.learn.ShapeMapPane;
-import app.shared.ui.contracts.ScreenView;
-import app.shared.ui.surfaces.ComponentHost;
 
 /**
  * UI der Deutschland-Session. Hält kein javafx mehr selbst, sondern ein SessionCanvas plus die

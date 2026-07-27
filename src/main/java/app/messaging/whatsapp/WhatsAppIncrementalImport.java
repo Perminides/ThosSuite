@@ -28,9 +28,9 @@ import app.shared.Config;
 import app.shared.DB;
 import app.shared.Log;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
-import app.shared.ui.surfaces.dialogs.WhatsAppChatDialog;
-import app.shared.ui.surfaces.dialogs.WhatsAppContactDialog;
+import app.shared.ui.Alerts;
+import app.shared.ui.WhatsAppChatDialog;
+import app.shared.ui.WhatsAppContactDialog;
 
 /**
  * 
@@ -173,7 +173,7 @@ public class WhatsAppIncrementalImport {
         if (lastImportTime == null) return;
         if (lastImportTime.isBefore(LocalDateTime.now().minusDays(warningAfterDays))) {
         	Log.warn(this.getClass(), "WhatsApp-import: Uff. Schon lange kein Import mehr gelaufen. Warnung ausgegeben.");
-        	SkinService.get().showAlert("Warnung WhatsApp-Import", "Kein Import seit " + warningAfterDays + " Tagen", ButtonEnum.OK);
+        	Alerts.show("Warnung WhatsApp-Import", "Kein Import seit " + warningAfterDays + " Tagen", ButtonEnum.OK);
         }
     }
 
@@ -335,7 +335,7 @@ public class WhatsAppIncrementalImport {
                 // Album-Kind liegt mehr als 1 Minute nach dem Opener — ungewöhnlich, aber
                 // kann bei großen Videos durch lange Upload-Zeiten vorkommen.
                 // Alert zur manuellen Prüfung, Import läuft trotzdem weiter.
-            	SkinService.get().showAlert("WhatsApp-Import — Album-Warnung", "Album-Kind liegt " + (diffMs / 1000) + "s nach Opener\n\n" + "Kind:     _id=" + sourceId + "  (" + formatTs(timestamp) + ")\n" +
+            	Alerts.show("WhatsApp-Import — Album-Warnung", "Album-Kind liegt " + (diffMs / 1000) + "s nach Opener\n\n" + "Kind:     _id=" + sourceId + "  (" + formatTs(timestamp) + ")\n" +
                     "Opener:   _id=" + openerSourceId + "  (" + formatTs(openerTimestamp) + ")\n" +
                     "albumKey: " + albumKey + "\n" +
                     "filePath: " + filePath + "\n\n" +
@@ -530,7 +530,7 @@ public class WhatsAppIncrementalImport {
     // -------------------------------------------------------------------------
 
     private void showSummaryAlert() {
-        SkinService.get().showAlert("WhatsApp-Import abgeschlossen", importedMessages + " Nachrichten und " + importedAttachments + " Anhänge importiert.", ButtonEnum.OK);
+    	Alerts.show("WhatsApp-Import abgeschlossen", importedMessages + " Nachrichten und " + importedAttachments + " Anhänge importiert.", ButtonEnum.OK);
     }
 
     // -------------------------------------------------------------------------

@@ -12,8 +12,8 @@ import app.movie.repository.MovieRepository;
 import app.movie.repository.PendingRepository;
 import app.movie.repository.TvShowRepository;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
-import app.shared.ui.surfaces.dialogs.TextPromptDialog;
+import app.shared.ui.Alerts;
+import app.shared.ui.TextPromptDialog;
 
 /**
  * PostTask für den TMDB-Import.
@@ -113,7 +113,7 @@ public class MovieCleanup {
      * @return true = whitelist, false = blacklist
      */
     private boolean askWhitelistOrBlacklist(CrewPendingEntry entry) {
-        ButtonEnum result = SkinService.get().showAlert(
+        ButtonEnum result = Alerts.show(
             "Unbekannter Crew-Job",
             "Person: " + entry.personName + "\n" +
             "Job: " + entry.job + "\n" +
@@ -188,7 +188,7 @@ public class MovieCleanup {
             sb.append(String.join("\n", episodeTitles));
         }
 
-        SkinService.get().showAlert(
+        Alerts.show(
             "Offene Kommentare",
             sb.toString().trim(),
             ButtonEnum.OK

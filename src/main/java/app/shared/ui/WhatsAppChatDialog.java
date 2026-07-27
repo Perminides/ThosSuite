@@ -1,4 +1,4 @@
-package app.shared.ui.surfaces.dialogs;
+package app.shared.ui;
 
 import app.shared.skin.SkinService;
 import javafx.application.Platform;
@@ -10,6 +10,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import app.shared.ui.components.SuiteDialog;
 
 /**
  * Modaler Dialog zur Auflösung eines unbekannten WhatsApp-Chats.
@@ -43,7 +44,7 @@ public class WhatsAppChatDialog {
      * @throws IllegalStateException [FAILFAST] wenn der Dialog ohne Entscheidung geschlossen wird
      */
     public static Result show(String rawIdentifier, String subject, boolean isGroup, String formattedTs) {
-        Dialog<?> dialog = SkinService.get().createDialog("Unbekannter WhatsApp-Chat");
+        SuiteDialog<ButtonType> dialog = new SuiteDialog<>("Unbekannter WhatsApp-Chat");
 
         // X-Button blockieren
         Stage stage = (Stage) dialog.getDialogPane().getScene().getWindow();
@@ -52,7 +53,7 @@ public class WhatsAppChatDialog {
         });
 
         // Content
-        VBox content = SkinService.get().createDialogContent();
+        VBox content = dialog.contentBox();
 
         Label infoLabel = new Label(
             "Zeitpunkt:  " + formattedTs + "\n" +
@@ -90,13 +91,15 @@ public class WhatsAppChatDialog {
 
         dialog.showAndWait();
 
-     // TODO: Cast + getResult() raus. Entweder lokal Ergebnis beim Klick selbst
-     // mitschreiben (ActionEvent-Filter → chosen[]), oder via künftigem shared-showDialog,
-     // das wie der Alert einen DialogButton zurückgibt (vertagt auf Diary-Runde).
-        
+        // Der unchecked Cast ist mit SuiteDialog<ButtonType> weggefallen.
+        // TODO: Bleibt, dass hier ein roher javafx-ButtonType ausgewertet wird statt eines
+        //   suite-eigenen Enums — anders als beim Alert, der ButtonEnum liefert. Entweder das
+        //   Ergebnis beim Klick selbst mitschreiben (ActionEvent-Filter), oder SuiteDialog eine
+        //   Variante geben, die wie showAlert ein ButtonEnum zurückgibt.
+
         // Ergebnis auswerten — ButtonType.CANCEL_CLOSE bedeutet X wurde gedrückt,
         // aber das haben wir oben bereits blockiert
-        ButtonType chosen = ((Dialog<ButtonType>) dialog).getResult();
+        ButtonType chosen = dialog.getResult();
         if (chosen == null)
             throw new IllegalStateException(
                 "[FAILFAST] WhatsApp-Import abgebrochen: Kein Ergebnis aus Chat-Dialog. " +

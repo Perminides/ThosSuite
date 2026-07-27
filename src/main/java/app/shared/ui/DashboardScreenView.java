@@ -1,10 +1,10 @@
-package app.shared.ui.surfaces;
+package app.shared.ui;
 
 import java.util.Arrays;
 
+import app.shared.model.ScreenView;
 import app.shared.skin.SkinService;
 import app.shared.ui.components.DashboardTile;
-import app.shared.ui.contracts.ScreenView;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.layout.Background;

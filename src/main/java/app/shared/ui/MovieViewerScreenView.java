@@ -1,12 +1,12 @@
-package app.shared.ui.surfaces;
+package app.shared.ui;
 
 import java.util.List;
 
 import app.shared.model.CardData;
+import app.shared.model.ScreenView;
 import app.shared.skin.Skin.MovieViewerComponents;
 import app.shared.skin.SkinService;
 import app.shared.ui.components.SuiteSuggestionTextField;
-import app.shared.ui.contracts.ScreenView;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;

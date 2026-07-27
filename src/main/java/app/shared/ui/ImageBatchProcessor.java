@@ -1,4 +1,4 @@
-package app.shared.ui.surfaces.dialogs;
+package app.shared.ui;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -17,19 +17,22 @@ import org.imgscalr.Scalr;
 import app.shared.Log;
 import app.shared.model.ButtonEnum;
 import app.shared.model.SelectionEnum;
-import app.shared.skin.SkinService;
+import app.shared.ui.components.SuiteDialog;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+/**
+ * !Sofort: Soweit ich das sehe, ist das jetzt hier nicht nur eine UI-Geschichte, oder?
+ * Die Klasse wirkt einigermaßen deplatziert in shared.ui
+ */
 public class ImageBatchProcessor {
 
     public static void process(Path sourceDir, Path targetDir, Path backupDir, int width, int height) {
@@ -44,7 +47,7 @@ public class ImageBatchProcessor {
 
                 Path target = targetDir.resolve(imgPath.getFileName());
                 if (Files.exists(target)) {
-                    SkinService.get().showAlert("Achtung",
+                	Alerts.show("Achtung",
                             imgPath.getFileName() + " liegt mit dem Namen bereits verkleinert vor.", ButtonEnum.OK);
                     return;
                 }
@@ -78,8 +81,7 @@ public class ImageBatchProcessor {
     }
 
     private static Optional<SelectionEnum> chooseImage(BufferedImage left, BufferedImage right) {
-        @SuppressWarnings("unchecked")
-        Dialog<SelectionEnum> dialog = (Dialog<SelectionEnum>) SkinService.get().createDialog("Bild auswählen");
+        SuiteDialog<SelectionEnum> dialog = new SuiteDialog<>("Bild auswählen");
 
         ButtonType cancelType = new ButtonType("", ButtonBar.ButtonData.CANCEL_CLOSE);
         dialog.getDialogPane().getButtonTypes().add(cancelType);

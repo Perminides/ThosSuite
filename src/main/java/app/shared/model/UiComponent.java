@@ -1,4 +1,4 @@
-package app.shared.ui.contracts;
+package app.shared.model;
 
 import javafx.scene.Node;
 

@@ -36,16 +36,18 @@ import app.learn.region.model.SessionSpec;
 import app.mattress.TurnDialog;
 import app.messaging.signal.SignalIncrementalImport;
 import app.messaging.whatsapp.WhatsAppIncrementalImport;
-import app.movie.MovieImporter;
 import app.movie.MovieCleanup;
+import app.movie.MovieImporter;
 import app.movie.MovieViewerScreen;
 import app.movie.SeriesImporter;
 import app.shared.Config;
 import app.shared.Log;
+import app.shared.UiUtils;
 import app.shared.model.ButtonEnum;
+import app.shared.model.Screen;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
-import app.shared.ui.contracts.Screen;
+import app.shared.ui.Alerts;
 import app.tmp.Comparison;
 import app.weekday.WeekdayDialog;
 import javafx.application.Platform;
@@ -135,10 +137,10 @@ public class Controller{
      */
     public void runPostTasks() {
         // Owner-Stage registrieren VOR allen Dialogen
-        SkinService.setOwnerWindow(mainWindow.getStage());
+    	UiUtils.setOwnerWindow(mainWindow.getStage());
         // Fitbit-Fehler behandeln
         if (fitbitDataFetcher.hasError()) {
-            SkinService.get().showAlert("Fitbit-Fehler",
+        	Alerts.show("Fitbit-Fehler",
                     "Fehler beim Laden der Fitbit-Daten:\n" + fitbitDataFetcher.getError().getMessage(), ButtonEnum.OK);
         } else {
             // Fitbit-Dialoge zeigen
@@ -151,7 +153,7 @@ public class Controller{
         // !tmp: Health-Vergleich direkt nach dem Fitbit-Block anzeigen (jetzt steht das MainWindow).
         //       Bei Fehler kein Popup (comparison wäre nur teilbefüllt), nur der Hinweis.
         if (comparisonError != null) {
-            SkinService.get().showAlert("Health-Vergleich",
+        	Alerts.show("Health-Vergleich",
                     "Der Health-Vergleich ist heute fehlgeschlagen:\n" + comparisonError.getMessage(), ButtonEnum.OK);
         } else if (comparison != null) {
             comparison.showPopup();
@@ -172,14 +174,14 @@ public class Controller{
             new SignalIncrementalImport().run();
         } catch (Exception e) {
             Log.error(this.getClass(), "", e);
-            SkinService.get().showAlert("Signal", "Beim Signalimport ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", ButtonEnum.OK);
+            Alerts.show("Signal", "Beim Signalimport ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", ButtonEnum.OK);
         }
      
         try {
             new WhatsAppIncrementalImport().run();
         } catch (Exception e) {
             Log.error(this.getClass(), "", e);
-            SkinService.get().showAlert("WhatsApp", "Beim WhatsApp-Import ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", ButtonEnum.OK);
+            Alerts.show("WhatsApp", "Beim WhatsApp-Import ist was schiefgelaufen.\nEs wurde nichts in die DB geschrieben.\nBitte anschauen.", ButtonEnum.OK);
         }
      
         ImageScaler.processImages();
@@ -227,7 +229,7 @@ public class Controller{
 	        );
 	        
 	        if (cards.isEmpty()) {
-	            SkinService.get().showAlert(null, "Keine Karten gefunden", ButtonEnum.OK);
+	        	Alerts.show(null, "Keine Karten gefunden", ButtonEnum.OK);
 	            return;
 	        }
 	        
@@ -264,7 +266,7 @@ public class Controller{
 	        Set<MapShape> regions = regionDeckService.getRegions(spec);
 	        
 	        if (regions.isEmpty()) {
-	            SkinService.get().showAlert(null, "Keine Regionen gefunden", ButtonEnum.OK);
+	        	Alerts.show(null, "Keine Regionen gefunden", ButtonEnum.OK);
 	            return;
 	        }
 	        
@@ -432,7 +434,7 @@ public class Controller{
 	}
 	
 	private SessionSwitchAction showSaveDiscardCancelDialog() {
-	    ButtonEnum result = SkinService.get().showAlert(
+	    ButtonEnum result = Alerts.show(
 	        "Ungespeicherte Änderungen", 
 	        "Du hast ungespeicherten Lernfortschritt...\nSpeichern?", 
 	        ButtonEnum.SAVE, ButtonEnum.DISCARD, ButtonEnum.CANCEL
@@ -445,7 +447,7 @@ public class Controller{
 	}
 	
 	private boolean showConfirmDiscardDialog() {
-	    ButtonEnum result = SkinService.get().showAlert( 
+	    ButtonEnum result = Alerts.show( 
 	        "Sitzung abbrechen?", 
 	        "Achtung: Der Fortschritt geht verloren.", 
 	        ButtonEnum.END_ANYHOW, ButtonEnum.CANCEL

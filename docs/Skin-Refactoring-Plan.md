@@ -1,6 +1,6 @@
 # Skin-Refactoring — Vorgehensplan
 
-**Stand:** 28.07.2026 · v3 · Zielbild entschieden (U3), Vorarbeiten erledigt
+**Stand:** 28.07.2026 · v4 · Zielbild entschieden (U3), Schritt 1 erledigt
 
 **Charakter dieses Dokuments:** das Ergebnis der Vorbesprechung vom 26.–28.07. Es hält fest,
 *was entschieden ist*, *was bewusst vertagt wurde*, *in welcher Reihenfolge* vorgegangen wird —
@@ -11,65 +11,95 @@ Die Zielbild-Entscheidung samt verworfener Alternative steht in `Skin-Zielbild-E
 
 ---
 
-## 1. Die Ordnung in `shared` — die eine Regel
+## 1. Die Ordnung — zwei Regeln, drei greps
 
-`shared` hat vier Top-Level-Pakete. Ihre Reihenfolge ist das Einzige, was man sich merken muss.
+### 1.1 Zwischen den Paketen von `shared`
 
 ```
-oben    shared.ui       hier entsteht Oberfläche: Bausteine, Views, Dialoge, Alerts
-        shared.skin     liefert Werte und CSS: A · B · die 7 Skins · SkinService · SkinImageCache
-        shared.model    Records, Enums, + die drei Kontrakte
+oben    shared.ui       Oberfläche — was gezeigt und was verbaut wird
+        shared.skin     SkinProperties · Skin (CSS) · die 7 Skins · SkinService · SkinImageCache
+        shared.model    Records, Enums, die drei Kontrakte
 unten   shared          Config, DB, Log, AppClock, UiUtils
 ```
 
-> **Regel 1** — Für die vier Top-Level-Pakete von `shared` gilt diese feste Ordnung.
-> **Regel 2** — Jedes Paket greift nur nach unten in eigene Unterpakete oder in ein Top-Level-Paket,
-> das in der Ordnung unter ihm steht. Sonst nirgendwohin. Nie seitwärts, nie nach oben.
-> **Regel 3** — Von außen: `controller` darf auf jede Sprosse. **Features nie ins Skin-Paket.**
+> **Nur nach unten.** Ein Paket benutzt, was im Stapel darunter steht. Nie seitwärts, nie nach oben.
+>
+> **Von außen:** `controller` darf auf jede Sprosse. **Features nie ins Skin-Paket.**
 > `shared` greift nie hinaus.
 
-„Nach unten" heißt: benutzen, was im Stapel darunter steht. Dieselbe Konvention wie eine Ebene
-höher im Regelwerk (`controller` oben, `shared` unten).
+**Warum die UI oben steht:** `shared.ui` baut. Der Skin ist ihr Zulieferer — er hält die Werte, die
+CSS nicht ausdrücken kann (Bounds, Fonts, Border, Pfade), und erzeugt das Stylesheet. Wer geliefert
+bekommt, steht oben.
 
-**Warum die UI oben steht:** `shared.ui` ist der Ort, an dem Oberfläche gebaut wird — Bausteine,
-Views, Dialoge gleichermaßen. Der Skin ist ihr Zulieferer: er hält die Werte, die CSS nicht
-ausdrücken kann (Bounds, Fonts, Border, Pfade), und erzeugt das Stylesheet. Wer geliefert bekommt,
-steht oben.
+### 1.2 Innerhalb von `shared.ui`
 
-**Geschwister sind gratis geregelt:** `shared.ui.diary` darf nicht in `shared.ui.movie`. Folgt aus
-„nie seitwärts".
+Dort gibt es genau eine Beziehung, und sie ist immer gleichgerichtet: **etwas wird aus etwas anderem
+zusammengesetzt.** Kein Baustein weiß je, in welcher Oberfläche er landet.
 
-### Zwei Wächter, beide Einzeiler
+> **In `shared.ui` liegen die Oberflächen, in `shared.ui.components` die Bausteine, aus denen sie
+> bestehen. Die Wurzel benutzt `components`, nie umgekehrt.**
+
+Der Discriminator steht schon im Code — die Kontrakte sagen es:
+
+| | wohin |
+|---|---|
+| implementiert `ScreenView`, oder ist ein Dialog / Alert | **`shared.ui`** — es *wird gezeigt* |
+| implementiert `UiComponent`, ist Baustein oder Fabrik | **`shared.ui.components`** — es *wird verbaut* |
+
+Prüffrage in Worten: **wird das Ding gezeigt, oder wird es verbaut?**
+
+Die Feature-Zugehörigkeit steht damit im Klassennamen, nicht im Paketnamen (`DiaryScreenView`,
+`WhatsAppChatDialog`). Bei ~12 Oberflächen ist das kein Suchproblem.
+
+### 1.3 Die drei Wächter
 
 ```bash
-# 1. Der Skin kennt die UI nicht (die Ordnung)
+# 1  Der Skin kennt die UI nicht
 grep -rn "app\.shared\.ui" src/main/java/app/shared/skin/
 
-# 2. Kein Feature kennt den Skin (Regel 3)
+# 2  Kein Feature kennt den Skin
 grep -rn "app\.shared\.skin" src/main/java/app/{alc,diary,fitbit,learn,mattress,messaging,movie,weekday}/
+
+# 3  Nur shared.ui kennt die Bausteine
+grep -rn "app\.shared\.ui\.components" --include=*.java src/main/java/app | grep -v "^src/main/java/app/shared/ui/"
 ```
 
-Beide müssen leer sein. **Heute ist keiner leer** — Wächter 1 wegen der ~28 Bau-Methoden in `Skin`,
-die `shared.ui`-Typen zurückgeben; Wächter 2 wegen sieben Feature-Paketen. Genau das ist die Arbeit.
+Alle drei müssen am Ende leer sein. **Heute ist keiner leer** — das ist präzise die Arbeit.
 
-`controller` ist von Wächter 2 ausgenommen: `MainWindow` braucht `styleScene` und die
-Fenstergeometrie. Das ist Orchestrierung, kein Feature.
+Wächter 3 sagt inhaltlich: *Features und `controller` sehen ausschließlich fertige Oberflächen; die
+Bausteine sind Interna von `shared.ui`.* Das ist die Regel „fertige Komponente statt loser Teile" —
+endlich an der Stelle, an der sie hingehört, nämlich an der Außengrenze. Innerhalb von `shared.ui`
+wird mit Bausteinen und Werten gearbeitet; das ist dort der Job.
 
 ---
 
 ## 2. Zielbild
 
-`Skin` als Klasse verschwindet. Was bleibt:
+### 2.1 `shared.skin` — zwei Klassen plus die Skins
 
-| | Inhalt |
-|---|---|
-| **A** `SkinProperties` (in `shared.skin`) | die ~170 Felder, `loadAllConfigs`, `parse*`, die Resolver mit Fallback — dazu eine **bewusst geschnittene öffentliche API** |
-| **B** CSS (in `shared.skin`) | `styleScene` + 23 `addXxxStyles` + `CssBuilder` |
-| die 7 Skin-Klassen | werden Unterklassen von **A** |
-| `SkinService`, `SkinImageCache` | bleiben in `shared.skin` |
-| **alles Bauen** | wandert nach `shared.ui` — die ~28 heutigen `create…`-Methoden, jeweils zu der Klasse, die sie braucht |
+```
+SkinProperties     die ~140 Felder, loadAllConfigs, parse*, getFieldValue,
+                   die Resolver mit Fallback, contentSize
+                   + eine bewusst geschnittene öffentliche API
 
-### A's öffentliche Fläche
+Skin               erzeugt daraus das CSS: styleScene + 23 addXxxStyles + CssBuilder
+                   extends SkinProperties
+
+DarkMode, FlatWebSkin, BaseColorSkin (+ Blue/Flower/Red/Spicy)
+                   Anzeigename + properties-Datei, extends Skin
+
+SkinService · SkinImageCache
+```
+
+**`Skin` behält seinen Namen.** Wenn die Bau-Methoden abgewandert sind, enthält die Klasse genau die
+CSS-Erzeugung — und das ist, was ein Skin tut. Kein Rename, keine neue Vokabel, null Aufwand. Die
+Feldzugriffe in den 23 `addXxx`-Methoden bleiben unqualifiziert, weil die Vererbungskette steht.
+
+*Ehrlich dazu:* Der Split A/B bringt eine kleinere Datei und eine klare Lesereihenfolge — mehr nicht.
+Vererbung ist die engste Kopplung, die Java hat. Der Split, der wirklich etwas einbringt, ist der
+zwischen A und den **Bau-Methoden**, weil die das Paket wechseln und die Features vom Skin lösen.
+
+### 2.2 A's öffentliche Fläche
 
 Keine Feld-Getter, sondern zweckgeschnittene Records:
 
@@ -80,18 +110,52 @@ public CardStyle     cardStyle();
 public DialogStyle   dialogStyle();
 ```
 
-**Was drinnen bleibt:** die Feldnamen, die Reflection, und die Fallback-Kette (Deck → Kategorie →
-Default) — damit sie nicht in fünfzehn UI-Klassen neu entsteht. Nach außen geht nur, was jemand
-tatsächlich braucht, in der Form, in der er es braucht. Das ist Regel 3.5 („Werte dürfen raus, aber
-nur als bewusst geschnittenes DTO") in groß; `MultipleChoicePane.Metrics` ist das erste Exemplar.
+**Was drinnen bleibt:** Feldnamen, Reflection, und die Fallback-Kette (Deck → Kategorie → Default),
+damit sie nicht in fünfzehn UI-Klassen neu entsteht.
 
-### Blätter bleiben passiv
+Sie wächst nach Bedarf: erst anlegen, wenn eine Klasse nach `shared.ui` wandert und den Wert
+tatsächlich braucht. Nicht auf Verdacht entwerfen.
 
-`SuiteInfoLabel`, `MultipleChoicePane` & Co. *bekommen* Maße, sie *holen* sie nie — alles andere
-hieße, dass jedes Blatt vom Skin weiß. Gelesen wird bei dem Komponierer, der das Blatt einsetzt:
+### 2.3 `shared.ui` — die Zielbelegung
+
+```
+shared.ui                        (Oberflächen — was gezeigt wird)
+    Alerts                       ← neu, aus Skin.showAlert ×2 + Helfern
+    BarChartScreenView
+    DashboardScreenView
+    DiaryScreenView
+    MovieViewerScreenView
+    DiaryEditor
+    ActivityTableDialog
+    AnkiConfigDialog
+    RegionConfigDialog
+    TextPromptDialog
+    WhatsAppChatDialog
+    WhatsAppContactDialog
+    ImageBatchProcessor
+    (später) die learn-Session-Panes
+    (später) DatePickerDialog, aus SuiteExporter herausgelöst
+
+shared.ui.components             (Bausteine — was verbaut wird)
+    SuiteImage · SuiteInfoLabel · SuiteTextField · SuiteIconButton
+    SuiteSuggestionTextField · SuiteTabCommitTextFieldTableCell
+    MultipleChoicePane · DashboardTile · DiaryTagInputComponent
+    ShapeMapPane · ImageMapPane · MapNodeBuilder · ShapeLayer
+    ComponentHost
+    Dialogs                      ← neu: createDialog, createDialogContent,
+                                   createDialogHeaderBar, setDialogTitle
+```
+
+`Dialogs` ist eine **Fabrik**, kein Baustein im engeren Sinn — dieselbe Rolle wie `MapNodeBuilder`,
+der dort heute schon liegt, ohne selbst Komponente zu sein.
+
+### 2.4 Blätter bleiben passiv
+
+`SuiteInfoLabel`, `MultipleChoicePane` & Co. *bekommen* Maße, sie *holen* sie nie. Gelesen wird beim
+Komponierer, der das Blatt einsetzt:
 
 ```java
-// in der Session-Pane, shared.ui.learn
+// in der Session-Pane, shared.ui
 SessionLayout layout = props.sessionLayout(deck, kategorie);
 questionArea = new SuiteInfoLabel("", layout.question());
 mcPane       = new MultipleChoicePane(layout.mc(), props.mcMetrics());
@@ -102,28 +166,23 @@ mcPane       = new MultipleChoicePane(layout.mc(), props.mcMetrics());
 ## 3. Entschieden
 
 1. **U3 — die UI baut.** Siehe `Skin-Zielbild-Entscheidung.md`. Der Preis (öffentliche Wertfläche
-   auf A) ist gesehen und akzeptiert; die Gegenleistung ist eine mit einem grep durchsetzbare Regel.
+   auf A) ist gesehen und akzeptiert; die Gegenleistung ist eine mit greps durchsetzbare Regel.
 2. **Kein Fassaden-Zwischenschritt.** Direkt schneiden, Ordnung vorher festgelegt.
-3. **Genau eine Klasse kümmert sich um die properties** — A hält die Felder *und* lädt sie. Kein
-   separater Loader, der per Reflection in fremde Felder schreibt.
-4. **Namenswissen verlässt `shared.skin` nie.** Niemand fragt nach `hannoverMapOverlayImageName`;
-   die API liefert Records, keine Feldnamen. Gilt heute schon (§7), bleibt bewacht.
-5. **Kein Feature greift je ins Skin-Paket** (Regel 3). Der zweite Wächter aus §1.
-6. **Feature nennt nur Identität.** Ein Feature nennt Deck-Id und Kategorie. Alles Skin-Abhängige —
-   Pfade, Bilder, Maße, Layouts — wird jenseits der Grenze aufgelöst. Erledigt in einem Satz: das
-   Hintergrundbild in `GermanySessionPane`, die drei Skin-Importe in `MapService`, und die Frage,
-   warum eine Feature-Klasse positionierte Widgets anfordert.
-7. **Das einmalige Cache-Wärmen gehört in den `controller`.** Das Feature liefert die Deck-Ids mit
-   Karte, der Controller reicht sie an die Skin-Seite. `MapService.imagePathsFor` und
-   `MapImagePaths` in `learn.model` entfallen.
-8. **`getContentSize()` wird eine echte Property** (Vorbereitung für einen HighRes-Skin) und wird von
-   `MainWindow` direkt aus A gelesen. Unter U3 ist das unauffällig — der Controller darf.
-9. **`Alerts` liegt in `shared.ui`**, nicht im Skin. Die gesamte Dialog-Maschinerie fasst nur zwei
-   Skin-Werte an (§6a), und Features importieren damit nichts Skin-Artiges.
-10. **javafx bleibt in `controller` erlaubt.** `MainWindow` (431 Z.) wird nicht angefasst.
-11. **`shared.ui` wird gemischt geschnitten:** Feature-spezifisches nach `shared.ui.<feature>`,
-    Generisches im Art-Schnitt. Discriminator: steht ein Feature-Name im Klassennamen oder im Zweck?
-    Dashboard zählt als Suite-Chrome, nicht als Feature.
+3. **Genau eine Klasse kümmert sich um die properties.** A hält die Felder *und* lädt sie.
+4. **`Skin` behält seinen Namen** und wird zur CSS-Klasse (§2.1).
+5. **Namenswissen verlässt `shared.skin` nie.** Die API liefert Records, keine Feldnamen.
+6. **Kein Feature greift je ins Skin-Paket** (Wächter 2).
+7. **Nur `shared.ui` kennt `shared.ui.components`** (Wächter 3).
+8. **Feature nennt nur Identität.** Ein Feature nennt Deck-Id und Kategorie. Alles Skin-Abhängige —
+   Pfade, Bilder, Maße, Layouts — wird jenseits der Grenze aufgelöst.
+9. **Das einmalige Cache-Wärmen gehört in den `controller`.** Das Feature liefert die Deck-Ids mit
+   Karte, der Controller reicht sie weiter. `MapService.imagePathsFor` und `MapImagePaths` entfallen.
+10. **`getContentSize()` ist eine Property** — erledigt, liegt in `SkinProperties`.
+11. **`Alerts` liegt in `shared.ui`** (wird gezeigt), **`Dialogs` in `shared.ui.components`**
+    (wird verbaut).
+12. **Die Kontrakte** (`Screen`, `ScreenView`, `UiComponent`) wandern nach `shared.model` — sie sind
+    Definitionen ohne Verhalten, dieselbe Sorte wie die Records.
+13. **javafx bleibt in `controller` erlaubt.** `MainWindow` (431 Z.) wird nicht angefasst.
 
 ---
 
@@ -139,21 +198,16 @@ Ebene tiefer; ob eine Ebene offen oder deklariert ist, sagt der Typ.* Gedeckelt 
   (heute 3 Felder pro Länder-Deck); hannover schrumpft von 16 Zeilen auf 1; FailFast fällt ab.
 - **Dagegen:** ~30 Zeilen Typ-Ablaufen im Loader; Migration aller sieben properties-Dateien,
   einmalig und unumkehrbar; der Loader ist danach nicht mehr in zehn Sekunden erklärt.
-- **Warum vertagbar:** A wird mit den Feldern **genau wie heute** herausgezogen. Die Frage wird
-  danach zu einer Änderung *innerhalb einer einzigen Klasse* — durch das Vertagen billiger, nicht
-  teurer.
+- **Warum vertagbar:** A liegt mit den Feldern **genau wie heute** vor. Die Frage wird zu einer
+  Änderung *innerhalb einer einzigen Klasse* — durch das Vertagen billiger, nicht teurer.
 - **FailFast ist unabhängig billiger zu haben:** ein Startup-Check, der geladene Schlüssel gegen
   deklarierte Feldnamen hält (~15 Zeilen), findet `borderBackButton` ohne Migration.
 
-### 4b. Wohin die Session-Panes wandern — weitgehend entschieden
+### 4b. Zuschnitt der Session-Panes
 
-`GermanySessionPane` & Co. rufen heute sechsmal Bau-Methoden mit Deck-Namen auf und bekommen
-positionierte Widgets zurück. Das endet durch Entscheidung 3.6. Unter U3 ist auch das Ziel klar:
-**`shared.ui.learn`.**
-
-Offen bleibt nur der Zuschnitt — ob eine Klasse pro Session-Art (wie heute) oder anders, und wie
-viel Kompositionswissen dabei im Feature verbleibt (`SessionPresenter` bleibt dort). Wird mit
-Schritt 3c entschieden.
+Dass sie das Feature verlassen und nach `shared.ui` gehen, ist entschieden (3.8). Offen ist nur der
+Zuschnitt — eine Klasse pro Session-Art wie heute, oder anders; und wie viel im Feature bleibt
+(`SessionPresenter` bleibt dort). Wird mit Schritt 3c entschieden.
 
 Der zugehörige Verantwortungsrahmen, der ins Regelwerk gehört:
 
@@ -163,41 +217,50 @@ Der zugehörige Verantwortungsrahmen, der ins Regelwerk gehört:
 | **View** (`shared.ui`) | *welche Bausteine*, *wie verdrahtet* | „diese Session hat Karte, Frage, Eingabefeld, MC, Zurück-Button" |
 | **Skin** | *wie es aussieht, wo es sitzt* | Farben, Fonts, Bounds, welches Wallpaper zu welcher Karte |
 
-Prüffrage für jede Zeile: **wovon hängt sie ab?** Skin-Wechsel → Skin. Fachlogik → Feature. Keins
-von beidem, nur „soll anders aussehen" → View.
+Prüffrage: **wovon hängt die Zeile ab?** Skin-Wechsel → Skin. Fachlogik → Feature. Keins von
+beidem, nur „soll anders aussehen" → View.
 
 ### 4c. Kleineres
 
-- **Kollaps der sieben Skin-Stummelklassen** zu einer Klasse plus Tabelle. Möglich — sie sind aber
-  ein Erweiterungspunkt für einen Skin, der in Java etwas berechnen will. Eigene Frage.
+- **Kollaps der sieben Skin-Stummelklassen** zu einer Klasse plus Tabelle. Sie sind ein
+  Erweiterungspunkt für einen Skin, der in Java etwas berechnen will. Eigene Frage.
 - **Re-Warming des Bildcaches nach Skinwechsel.** Heute lädt die erste Bildkarte nach einem Wechsel
   synchron. Bewusst akzeptiert. **Gehört im Code dokumentiert.**
 - **`StartScreen`** (Screen + ScreenView in einer Klasse): löst sich per Regel — *ein inhaltsloser
   Screen (reines Chrome/Hintergrund) darf sein eigener `ScreenView` sein.*
 - **Dialog-Stufe 2a fehlt im Regelwerk:** der parametrisierte Standarddialog (Primitive rein,
-  Primitive oder `null` raus, kein Feature-seitiges Objekt). `TextPromptDialog`,
-  `WhatsAppChatDialog`, `WhatsAppContactDialog` sehen nur deshalb wie Verstöße aus.
-- **Unterpakete innerhalb von `shared.skin`** sind unter U3 kein Thema mehr — dort bleiben nur
-  ~11 Klassen.
+  Primitive oder `null` raus, kein Feature-seitiges Objekt).
+- **`SuiteExporter`s Inline-Datumsdialog** wird eine eigene Klasse in `shared.ui` — sonst ruft der
+  `controller` die Fabrik `Dialogs` und verletzt Wächter 3.
 
 ---
 
-## 5. Bereits erledigt (27.07.2026)
+## 5. Bereits erledigt
 
-Vorarbeit aus der Besprechung — alles gemessen, nicht vermutet:
+**27.07. — Vorarbeiten am Dialog-Pfad** (alles gemessen, nicht vermutet):
 
 - **`initOwner`-Bug behoben.** `dialog.initOwner(parent)` überschrieb bedingungslos den ermittelten
-  `effectiveParent`; drei Dialoge verloren dadurch ihren Owner. Zeile gelöscht.
+  `effectiveParent`; drei Dialoge verloren dadurch ihren Owner.
 - **`createDialog(Window, String)` → `createDialog(String)`.** Der Parameter war zu 100 % redundant.
   Zehn Aufrufstellen angepasst.
-- **Vier `styleScene`-Aufrufe entfernt** (2× `showAlert` inkl. `sceneProperty`-Listener,
-  1× `createDialog`, 1× DatePicker-Popup). Alle nachweislich entbehrlich — siehe §6.
-- **DatePicker-Block gelöscht.** Nicht nur überflüssig, sondern *schädlich*: eine einfarbige Corona
-  um das Kalender-Popup, die ohne ihn verschwindet. Verwaiste Importe mit entfernt.
+- **Vier `styleScene`-Aufrufe entfernt.** Nachweislich entbehrlich — siehe §6.
+- **DatePicker-Block gelöscht.** Nicht nur überflüssig, sondern schädlich: eine einfarbige Corona
+  um das Kalender-Popup, die ohne ihn verschwindet.
 
-Offene Kleinigkeiten daraus: die Kommentare `// Owner intern` bei `AnkiConfigDialog` und
-`RegionConfigDialog` sind jetzt überflüssig; der neue Kommentar bei `createDialog` könnte die
-**Bindung** benennen statt „erbt".
+**28.07. — Schritt 1: `SkinProperties` herausgezogen.**
+
+- Neue Klasse `app.shared.skin.SkinProperties`, `Skin extends SkinProperties`.
+- Umgezogen: alle 140 Felder, `loadAllConfigs`, die vier `parse*`, `getFieldValue`,
+  `getDisplayName()`.
+- `getContentSize()` ist von hartcodiert zu einem `Dimension2D`-Feld geworden (Vorbereitung für
+  einen HighRes-Skin). Achtung: der Loader kennt keinen `Dimension2D`-Zweig — ein
+  `contentSize=…` in einer properties-Datei würde still ignoriert.
+- Geprüft: `Skin` hat kein Instanzfeld mehr, keine verwaisten Importe, keine Aufrufstelle geändert.
+  Suite startet, Skinwechsel und Lernsession laufen.
+
+Offene Kleinigkeiten: die Kommentare `// Owner intern` bei `AnkiConfigDialog` und
+`RegionConfigDialog` sind überflüssig; der Kommentar bei `createDialog` könnte die **Bindung**
+benennen statt „erbt".
 
 ---
 
@@ -224,15 +287,15 @@ Kopieren, eine lebende Bindung. Kein Fallback, wenn der Owner `null` ist.
 | Rohe `new Alert(...)` in `ThosSuiteApp`/`DB` grau | nie ein `initOwner` → nie gebunden → leere Liste |
 | Skinwechsel wirkt auf offene Dialoge | `styleScene` macht `clear()`+`add()` auf der Hauptscene, die Bindung zieht nach |
 
-**Folge:** `MainWindow:111` ist die einzige Stelle, die das CSS je setzt, und sie muss bleiben. Jede
-weitere `styleScene`-Zeile in einem Dialog- oder Popup-Pfad ist überflüssig. Und `initOwner` ist für
-jeden Dialog **Pflicht** — nicht wegen des Fensterverhaltens, sondern wegen der Optik.
+**Folge:** `MainWindow:111` ist die einzige Stelle, die das CSS je setzt, und sie muss bleiben. Und
+`initOwner` ist für jeden Dialog **Pflicht** — nicht wegen des Fensterverhaltens, sondern wegen der
+Optik.
 
 Quelle: [`HeavyweightDialog.java`, openjdk/jfx](https://raw.githubusercontent.com/openjdk/jfx/master/modules/javafx.controls/src/main/java/javafx/scene/control/HeavyweightDialog.java)
 
 ### 6a. Wie skin-abhängig die Dialoge wirklich sind
 
-Durchgezählt — der gesamte Dialog- und Alert-Apparat fasst **zwei** Skin-Werte an:
+Der gesamte Dialog- und Alert-Apparat fasst **zwei** Skin-Werte an:
 
 | Methode | Skin-Werte |
 |---|---|
@@ -243,8 +306,9 @@ Durchgezählt — der gesamte Dialog- und Alert-Apparat fasst **zwei** Skin-Wert
 | `createDialog`, `showAlert` | keine eigenen |
 
 Dazu `SkinService.getOwnerWindow()` — kein Skin-Wert, sondern das Hauptfenster, aus Bequemlichkeit
-dort geparkt. Beim Umzug nach `shared.ui`: das Padding wandert ins generierte CSS, der Owner wird
-vom `controller` gesetzt, die Tint-Farbe kommt aus A.
+dort geparkt. Beim Umzug: das Padding wandert ins generierte CSS, der Owner wird vom `controller`
+gesetzt, die Tint-Farbe kommt aus A. **Und `shared.ui` darf den Skin ohnehin rufen** — das ist
+abwärts. Ein Push-Mechanismus wird nicht gebraucht.
 
 ---
 
@@ -254,104 +318,106 @@ vom `controller` gesetzt, die Tint-Farbe kommt aus A.
 |---|---|
 | Features javafx-frei | **8 von 8** |
 | javafx sonst | `controller` 4 Dateien; `shared` 34, davon 4 außerhalb `ui`/`skin` |
-| `Skin` | gut 2600 Zeilen, 73 Methoden, 11 Verantwortlichkeiten, ~170 Felder |
+| `Skin` nach Schritt 1 | ~2350 Zeilen, kein Instanzfeld mehr, 20 `create…`-Methoden, 23 `addXxxStyles` |
+| `SkinProperties` | 140 Felder + `contentSize`, 7 Methoden |
 | Skin-Aufrufe von außerhalb `shared` | ~90 Aufrufstellen, 38 davon `showAlert` |
-| `shared.ui` → `shared.skin` | 14 Dateien (8 Dialoge, 4 ScreenViews, 2 Karten-Panes) — unter U3 **erlaubt** |
-| `shared.skin` → `shared.ui` | die ~28 Bau-Methoden — unter U3 **zu beseitigen** |
 
 **Befunde, die den Plan begründen:**
 
-- **Alle sieben Skin-Subklassen sind feldfrei.** Keine deklariert ein Feld, keine setzt einen Wert;
-  sie tragen einen Anzeigenamen und eine properties-Datei. Deshalb kann A alle Felder aufnehmen.
-- **96 Felder hängen an `getFieldValue`:** 72 `Rectangle2D`, 16 `…WallpaperName`, 8 `…MapImageName`.
+- **Alle sieben Skin-Subklassen sind feldfrei** — sie tragen einen Anzeigenamen und eine
+  properties-Datei.
+- **96 Felder hängen an `getFieldValue`:** 69 `Rectangle2D`, 16 `…WallpaperName`, 8 `…MapImageName`.
   Layout-Felder je Deck: `world` 9, `hannover` 8, `germany` 8, `mc` 6, je 3 für
   `us region oz it hs hr es en cs ch br be au`.
 - **Layouts variieren wirklich pro Skin.** `worldSessionMapPanel`: `20,20` (basecolor/darkmode),
-  `930,20` (erbende Skins), `540,20` (flatweb). Ein Skin bestimmt auch die Anordnung.
+  `930,20` (erbende Skins), `540,20` (flatweb).
 - **`hannover` hat 8 Felder, die in keiner properties-Datei vorkommen.** Sie werden in `styleScene`
-  (`Skin.java:398–405`) aus den `world`-Feldern kopiert. Ein Kategorie-Fallback kann das nicht
-  ersetzen: `HANNOVER_CARDS` hat Kategorie `ANKI_DECK`, genau wie `WORLD_CARDS`. Deck-auf-Deck.
+  aus den `world`-Feldern kopiert. Ein Kategorie-Fallback kann das nicht ersetzen:
+  `HANNOVER_CARDS` hat Kategorie `ANKI_DECK`, genau wie `WORLD_CARDS`. Deck-auf-Deck.
 - **`borderBackButton`** steht in `skin_basecolor.properties`, hat kein Feld, wird still ignoriert.
-  Einzige systematische FailFast-Verletzung im Skin.
 - **Namenswissen verlässt `shared.skin` heute schon nicht.**
-- **`createIconButton` hat keinen Fallback** und keinen Null-Check. Kein Fehler — Icon-Buttons gibt
-  es nur bei `germany`, `mc`, `world`. Aber nichts erzwingt das.
-
-Nachprüfen:
-
-```bash
-grep -rn "import javafx" src/main/java/app/learn/
-grep -rn "WallpaperName\|SessionPanel\|MapImageName" --include=*.java src/main/java/app | grep -v "/shared/skin/"
-grep -rn "app\.shared\.ui" src/main/java/app/shared/skin/
-```
+- **`createIconButton` hat keinen Fallback.** Kein Fehler — Icon-Buttons gibt es nur bei `germany`,
+  `mc`, `world`. Aber nichts erzwingt das.
 
 ---
 
 ## 8. Reihenfolge
 
 ```
-1.  A herausziehen (SkinProperties)
-    Basisklasse der sieben Skins. Felder unverändert, getFieldValue bleibt drinnen.
-    Öffentliche API als Records anlegen — erst so viel, wie Schritt 2 braucht.
-    contentSize wird Property. Re-Warming-Entscheidung dokumentieren.
+1  ✓ SkinProperties herausgezogen                                        erledigt 28.07.
 
-2.  B herausziehen (CSS)
-    24 Methoden, in sich geschlossen. Danach ist `Skin` nur noch C.
+2  Paketumstellung — reine Eclipse-Moves, keine Logikänderung
+   · shared.ui.contracts        → shared.model
+   · shared.ui.components/**    → shared.ui.components (learn-Unterpaket auflösen)
+   · shared.ui.surfaces         → aufteilen nach §2.3
+   · shared.ui.surfaces.dialogs → aufteilen nach §2.3
+   Zweck: die Zielstruktur wird sichtbar und begehbar, bevor Code hineinaufgelöst wird.
+   Wächter 3 ist danach noch nicht leer (learn hält weiterhin Bausteine) — das räumt 3c.
 
-3.  C nach shared.ui auflösen — in vier Portionen:
-    3a  Dialoge + Alerts       braucht fast nichts (§6a): Padding → CSS,
-                               Owner vom controller, Tint aus A
-    3b  Feature-Views          Diary, Movie, Dashboard, BarChart
-    3c  Session-/Lern-Teile    + 4b: die Panes verlassen learn nach shared.ui.learn
-    3d  Chrome/Menüs           zuletzt, weil MainWindow daran hängt
+3  Bau-Methoden aus Skin nach shared.ui auflösen, in Portionen:
+   3a  Dialoge + Alerts        braucht fast nichts (§6a)
+   3b  Feature-Oberflächen     Diary, Movie, Dashboard, BarChart
+   3c  Session-/Lern-Teile     + die Panes verlassen learn (4b)
+   3d  Chrome/Menüs            zuletzt, weil MainWindow daran hängt
 
-4.  Aufräumen
-    `Skin` löschen, die 7 Skins auf A umhängen, beide Wächter-greps auf leer bringen.
+4  Aufräumen
+   Skin enthält danach nur noch die CSS-Erzeugung — kein Rename nötig.
+   Die drei Wächter aus §1.3 auf leer bringen.
 
-5.  Regelwerk nachziehen
-    Skin-Vertrag neu, Ordnung aus §1, Verantwortungsrahmen aus §4b, StartScreen-Regel,
-    Dialog-Stufe 2a, die zwei Wächter als bewachte Zusagen.
+5  Regelwerk nachziehen
+   Skin-Vertrag neu, die Ordnung aus §1, der Verantwortungsrahmen aus §4b,
+   StartScreen-Regel, Dialog-Stufe 2a, die drei Wächter als bewachte Zusagen.
 ```
 
-A zuerst, weil `shared.ui` seine API braucht, sobald irgendetwas umzieht. B als Zweites, weil es
-groß und in sich geschlossen ist und `Skin` danach nur noch aus Bau-Methoden besteht. 3a zuerst
-innerhalb von C, weil dort am wenigsten dranhängt.
+**Warum die Paketumstellung vor die Auflösung rückt:** sie ist risikoarm (reine Moves) und liefert
+etwas zum Durchklicken. Fühlt sich die Ordnung beim Navigieren falsch an, merkt man es *bevor* Code
+hineingegossen wird.
+
+**Warum das CSS zuletzt kommt und nichts kostet:** der CSS-Block und die Bau-Methoden sind
+vollständig entkoppelt (geprüft — keine Bau-Methode ruft `styleScene` oder `CssBuilder`; die
+`addXxx` erwähnen `create…` nur in Kommentaren). Wenn die Bau-Methoden abgewandert sind, ist `Skin`
+von selbst die CSS-Klasse. Der ursprünglich geplante Weg — `SkinCss` per Komposition — hätte ~200
+Feldzugriffe zu `props.…` umschreiben müssen, für reine Ordnung.
 
 ---
 
 ## 9. Verworfene Ideen
 
-- **U1 — der Skin baut** (`shared.skin` über `shared.ui`). Die ernsthafte Alternative; verworfen,
-  weil `shared.skin` dann ~25 Klassen samt Diary-Ansicht und WhatsApp-Dialog enthielte und die
-  Regel „kein Feature ins Skin-Paket" nicht greifbar wäre. Vollständige Gegenüberstellung in
-  `Skin-Zielbild-Entscheidung.md`.
+- **U1 — der Skin baut** (`shared.skin` über `shared.ui`). Die ernsthafte Alternative; vollständige
+  Gegenüberstellung in `Skin-Zielbild-Entscheidung.md`.
 - **U2 — Werte per Push in die UI schieben.** U3 mit zusätzlicher Schiebe-Mechanik.
+- **`shared.ui.<feature>`-Zweige** (die frühere Entscheidung 3.11). Ersetzt durch Oberfläche vs.
+  Baustein: innerhalb von `shared.ui` ist „wird gebaut aus" die tragende Beziehung, nicht die
+  Feature-Zugehörigkeit. Die steht im Klassennamen.
+- **Eine fünfte Sprosse `shared.components`.** Sie sollte ein Problem lösen, das eine zu strenge
+  Fassung der Ordnungsregel erzeugt hatte. Mit der korrigierten Regel unnötig.
+- **Der Art-Schnitt `surfaces` / `dialogs` / `components`.** `surfaces` vs. `dialogs` trug nichts —
+  beides sind Oberflächen.
+- **`SkinCss` als eigener Name.** Was übrigbleibt, *ist* der Skin.
 - **Geteilter properties-Leser.** Es soll genau *eine* Klasse für die properties geben.
-- **Umzug der Session-Layouts nach `shared.ui.learn`.** Die Layouts variieren pro Skin, sie gehören
-  skin-seitig. Das Featurewissen steckt in den *Felddeklarationen*, nicht am Ort.
+- **Umzug der Session-Layouts nach `shared.ui`.** Die Layouts variieren pro Skin.
 - **Namensmuster-Magie im Loader.** Entweder die Regel ist generell und in der Datei sichtbar, oder
-  die Ladeseite bleibt unangetastet. Kein Dazwischen.
+  die Ladeseite bleibt unangetastet.
 - **Split der properties-Dateien.** Eine Datei pro Design.
-- **javafx komplett aus `controller`.** Machbar, bewusst nicht gemacht — §3.10.
+- **javafx komplett aus `controller`.**
 - **Dünne `Skin`-Fassade als Zwischenschritt.**
-- **Ein viertes Paket D für Bilder/Pfade.** Kein eigenständiger Schnitt.
-- **Sechsstufige Sprossen-Leiter** und die **Fertigungsketten-Metapher** als Ordnungsregel. Beide
-  korrekt, beide nicht merkbar bzw. nicht in der Paketstruktur gespiegelt. Ersetzt durch §1.
+- **Ein viertes Paket D für Bilder/Pfade.**
+- **Sechsstufige Sprossen-Leiter** und die **Fertigungsketten-Metapher** als Ordnungsregel.
 
 ---
 
 ## 10. Korrekturen an früheren Annahmen
 
-- **`loadAllConfigs` setzt nichts zusammen.** Es macht `props.getProperty(field.getName())` — eine
-  Regel für alle Felder. Zusammengesetzt wird nur auf der *Leseseite*. Die Datei-Reihenfolge ist
-  basecolor → subskin (der Subskin gewinnt).
-- **Die Gottklasse ist ohne Loader-Änderung zerlegbar.** Die Punkt-Notation ist keine Voraussetzung.
+- **`loadAllConfigs` setzt nichts zusammen.** Es macht `props.getProperty(field.getName())`.
+  Zusammengesetzt wird nur auf der *Leseseite*. Datei-Reihenfolge: basecolor → subskin.
+- **Die Gottklasse ist ohne Loader-Änderung zerlegbar.**
 - **`SkinImageCache` ist skin-spezifisch** (hält `cachedSkin`, invalidiert bei Skinwechsel). Bleibt
-  in `shared.skin` — unter U3 dürfen die UI-Klassen ihn rufen.
-- **Dialoge brauchen kein `styleScene`.** Popups auch nicht. Mechanismus ist die
-  Owner-Stylesheet-Bindung, §6.
+  in `shared.skin`; unter U3 dürfen die UI-Klassen ihn rufen.
+- **Dialoge brauchen kein `styleScene`.** Popups auch nicht. §6.
 - **`createIconButton` ohne Fallback ist kein Bug**, nur ungesichert.
 - **Der hannover-Fallback lässt sich nicht über die Kategorie ausdrücken.**
-- **Die zwei `shared.ui → shared.skin`-„Verstöße"** (`ShapeMapPane`, `ImageMapPane`) waren nur unter
-  U1 welche. Unter U3 sind sie legal — und `buildShapeMapWrapper` darf dorthin wandern, wo Dein TODO
-  es haben will: in die `ShapeMapPane`.
+- **Ein Unterpaket darf sein Elternpaket benutzen.** Meine erste Fassung der Ordnungsregel verbot
+  das und war damit strenger als das bestehende Regelwerk (`learn.anki → learn`). Aus dem Fehler
+  folgten die fünfte Sprosse und mehrere Scheinprobleme.
+- **`Alerts` gehört nach `shared.ui`, nicht in `components`** — es wird gezeigt, nicht verbaut. Die
+  Fehlplatzierung wäre ein direkter Verstoß gegen Wächter 3 gewesen.

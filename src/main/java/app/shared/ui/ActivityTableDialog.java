@@ -1,4 +1,4 @@
-package app.shared.ui.surfaces.dialogs;
+package app.shared.ui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +31,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
+import app.shared.ui.components.SuiteDialog;
 
 /**
  * Editierbare Tabelle in einem auto-width-sized Dialog. Fünf feste typisierte Spalten,
@@ -45,7 +46,7 @@ public final class ActivityTableDialog {
 
     public List<ActivityTableRow> show(String title, List<ActivityTableRow> input) {
     	// 1. Dialog erstellen
-        Dialog<?> dialog = SkinService.get().createDialog(title);
+        SuiteDialog<ButtonType> dialog = new SuiteDialog<>(title);
 
         // 2. TableView erstellen
         TableView<Row> tableView = createTableView();

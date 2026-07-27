@@ -23,7 +23,7 @@ import app.movie.repository.PendingRepository;
 import app.shared.Config;
 import app.shared.DB;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
+import app.shared.ui.Alerts;
 
 /**
  * Orchestriert den täglichen TMDB-Import.
@@ -165,7 +165,7 @@ public class MovieImporter {
                     saveImageToFileSystem(filename, posterW92);
                     movieRepo.insertMovieImage(movie, 92, dimensions[1], filename, conn);
                 } else {
-                	SkinService.get().showAlert("92er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, ButtonEnum.OK);
+                	Alerts.show("92er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, ButtonEnum.OK);
                 }
                 if (posterW154 != null) {
                     int[] dimensions = getImageDimensions(posterW154);
@@ -173,7 +173,7 @@ public class MovieImporter {
                     saveImageToFileSystem(filename, posterW154);
                     movieRepo.insertMovieImage(movie, 154, dimensions[1], filename, conn);
                 } else {
-                	SkinService.get().showAlert("154er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, ButtonEnum.OK);
+                	Alerts.show("154er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, ButtonEnum.OK);
                 }
                 movieRepo.insertMovieRating(rating, null, conn);
                 processCredits(credits, movie, conn);

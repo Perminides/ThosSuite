@@ -1,6 +1,4 @@
-package app.shared.ui.contracts;
-
-import app.shared.model.SessionSwitchStrategy;
+package app.shared.model;
 
 /**
  * Vertrag für eine Bildschirmfläche, die das Hauptfenster ausfüllt – die neutrale

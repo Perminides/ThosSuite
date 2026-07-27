@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import app.shared.Config;
-import javafx.stage.Window;
 
 public final class SkinService {
 
@@ -18,7 +17,6 @@ public final class SkinService {
             new DarkMode()
     ));
     private static Skin current = AVAILABLE_SKINS.get(0); // !Erweiterung Später über config-Datei...
-    private static Window ownerWindow = null;
     
     // Statischer Initializer lädt gespeichertes Skin
     static {
@@ -75,17 +73,5 @@ public final class SkinService {
             // Fangen wir generisch, da Reflection viele Exceptions werfen kann (Instantiation, IllegalAccess, etc.)
             throw new RuntimeException("Fehler beim Reload des Skins: " + current.getClass().getSimpleName(), e);
         }
-    }
-    
-    /**
-     * Setzt die Owner-Stage für alle zukünftigen Dialoge/Alerts.
-     * Sollte direkt nach mainWindow.show() aufgerufen werden.
-     */
-    public static void setOwnerWindow(Window window) {
-        ownerWindow = window;
-    }
-    
-    public static Window getOwnerWindow() {
-    	return ownerWindow;
     }
 }

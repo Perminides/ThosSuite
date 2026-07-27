@@ -3,7 +3,7 @@ package app.learn.anki.model;
 import java.util.List;
 import java.util.Set;
 
-import app.shared.ui.contracts.ScreenView;
+import app.shared.model.ScreenView;
 
 public interface SessionPane {
 

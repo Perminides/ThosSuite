@@ -1,9 +1,9 @@
-package app.shared.ui.surfaces;
+package app.shared.ui;
 
 import java.util.Arrays;
 
-import app.shared.ui.contracts.ScreenView;
-import app.shared.ui.contracts.UiComponent;
+import app.shared.model.ScreenView;
+import app.shared.model.UiComponent;
 import javafx.scene.Node;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundImage;

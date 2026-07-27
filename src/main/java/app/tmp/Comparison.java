@@ -10,7 +10,7 @@ import app.activity.model.Exercise;
 import app.fitbit.FitbitDayProjection;
 import app.fitbit.model.json.Activity;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
+import app.shared.ui.Alerts;
 
 /**
  * Übergangs-Vergleicher: stellt pro importiertem Tag die Fitbit-Rohwerte (Master) den
@@ -81,8 +81,7 @@ public class Comparison {
                     row.fitbitBikeKm(), row.healthBikeKm(), row.healthBikeKm() - row.fitbitBikeKm()));
         }
 
-        SkinService.get()
-                .showAlert("Fitbit/Health-Vergleich", message.toString(), ButtonEnum.OK);
+        Alerts.show("Fitbit/Health-Vergleich", message.toString(), ButtonEnum.OK);
     }
 
     // --- Rad-km-Definition: an EINER Stelle, für beide Seiten ---

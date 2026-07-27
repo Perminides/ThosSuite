@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-import app.shared.ui.contracts.UiComponent;
+import app.shared.model.UiComponent;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.Node;

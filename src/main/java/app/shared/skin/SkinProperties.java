@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 import app.shared.model.BorderParams;
+import app.shared.model.DialogStyle;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
@@ -222,6 +223,18 @@ public abstract class SkinProperties {
 	public Dimension2D getContentSize() {
 		return contentSize;
 	}
+
+	// ========== Öffentliche Fläche ==========
+	// region
+	// Nach außen gehen zweckgeschnittene Records, keine Feld-Getter und niemals Property-Namen.
+	// Wächst nach Bedarf: erst anlegen, wenn eine Klasse in shared.ui den Wert wirklich braucht.
+
+	/** Die Werte, die der Dialog- und Alert-Pfad braucht. */
+	public DialogStyle dialogStyle() {
+		return new DialogStyle(font, textColor);
+	}
+
+	// endregion
 	
 	protected void loadAllConfigs(Path configPath) {
 	    try (InputStream in = Files.newInputStream(configPath)) {

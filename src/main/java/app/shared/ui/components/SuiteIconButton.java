@@ -1,6 +1,6 @@
 package app.shared.ui.components;
 
-import app.shared.ui.contracts.UiComponent;
+import app.shared.model.UiComponent;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 

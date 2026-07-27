@@ -1,4 +1,4 @@
-package app.shared.ui.components.learn;
+package app.shared.ui.components;
 
 import java.util.ArrayList;
 import java.util.List;
