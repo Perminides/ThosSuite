@@ -10,6 +10,7 @@ import app.shared.model.BorderParams;
 import app.shared.model.DashboardTileStyle;
 import app.shared.model.DialogStyle;
 import app.shared.model.DiaryStyle;
+import app.shared.model.MovieStyle;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
@@ -239,6 +240,11 @@ public abstract class SkinProperties {
 	/** Die Werte, die die Tagebuch-Oberfläche braucht. */
 	public DiaryStyle diaryStyle() {
 		return new DiaryStyle(diaryViewerContentWidth, diaryTooltipMargin);
+	}
+
+	/** Die Werte, die die Film-Oberfläche braucht. */
+	public MovieStyle movieStyle() {
+		return new MovieStyle(moviePosterWidth, font, contentSize.getWidth(), diaryTooltipMargin);
 	}
 
 	/** Die Maße einer Dashboard-Kachel. Höhe = oberer + unterer Teil. */

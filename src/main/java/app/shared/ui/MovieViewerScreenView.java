@@ -3,11 +3,15 @@ package app.shared.ui;
 import java.util.List;
 
 import app.shared.model.CardData;
+import app.shared.model.MovieStyle;
 import app.shared.model.ScreenView;
-import app.shared.skin.Skin.MovieViewerComponents;
 import app.shared.skin.SkinService;
+import app.shared.ui.components.MovieCard;
 import app.shared.ui.components.SuiteSuggestionTextField;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Background;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -63,16 +67,52 @@ public class MovieViewerScreenView implements ScreenView {
         view.getChildren().clear();
         view.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
 
-        // !Sofort: Das muss doch raus, oder? Wieso baut hier der Skin? Wie ist das bei den anderen?
-        // Diary macht das auch so. Erscheint mir absurd. Der komplexe Code gehört hierhin, nicht ins Skin.
-        // Skin darf meinetwegen innerhalb shared ui properties rausgeben, das wäre ja ok...
-        // Wobei das müssen wir trennen: Jeman dgibt ui properties raus. Dieser jemand ist nur in shared bekannt
-        // Jemand anderes erzeugt z. B. Alerts, der darf überall bekannt sein...
-        MovieViewerComponents components = SkinService.get().createMovieViewer();
-        directorField = components.directorField();
-        actorField = components.actorField();
-        titleField = components.titleField();
-        resultBox = components.resultBox();
+        MovieStyle style = SkinService.get().movieStyle();
+
+        // SWYT-Felder
+        directorField = new SuiteSuggestionTextField("Choose Director...");
+        actorField = new SuiteSuggestionTextField("Choose Actor...");
+        titleField = new SuiteSuggestionTextField("Choose Title...");
+
+        // Labels für die Felder
+        Label dirLabel = new Label("Director:");
+        Label actLabel = new Label("Actor:");
+        Label titLabel = new Label("Title:");
+
+        // SWYT-Felder mit Labels in einer VBox
+        double swytWidth = style.contentWidth() * 0.2;
+        VBox swytPane = new VBox(style.font().getSize() * 0.8);
+        swytPane.getStyleClass().add("movie-viewer-swyt");
+        swytPane.setPrefWidth(swytWidth);
+        swytPane.setMinWidth(swytWidth);
+        swytPane.setMaxWidth(swytWidth);
+        swytPane.getChildren().addAll(
+                dirLabel, directorField.getTextField(),
+                actLabel, actorField.getTextField(),
+                titLabel, titleField.getTextField());
+
+        // Ergebnisbereich
+        resultBox = new VBox(style.font().getSize() * 0.5);
+        resultBox.getStyleClass().add("movie-viewer-results");
+
+        // ScrollPane für Ergebnisse
+        ScrollPane scrollPane = new ScrollPane(resultBox);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(false);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.getStyleClass().add("movie-viewer-scroll");
+
+        // Hauptlayout: SWYT links (20%), Kacheln rechts (70%), je 5% Rand
+        HBox contentBox = new HBox(style.font().getSize());
+        contentBox.getStyleClass().add("movie-viewer-content");
+        HBox.setHgrow(scrollPane, Priority.ALWAYS);
+        contentBox.getChildren().addAll(swytPane, scrollPane);
+
+        // Äußerer Wrapper mit Padding
+        VBox root = new VBox();
+        root.getStyleClass().add("movie-viewer-root");
+        root.getChildren().add(contentBox);
+        VBox.setVgrow(contentBox, Priority.ALWAYS);
 
         directorField.setAllItems(directorNames);
         actorField.setAllItems(actorNames);
@@ -94,16 +134,16 @@ public class MovieViewerScreenView implements ScreenView {
             selectionListener.onTitleSelected(name);
         });
 
-        VBox.setVgrow(components.root(), Priority.ALWAYS);
-        view.getChildren().add(components.root());
+        VBox.setVgrow(root, Priority.ALWAYS);
+        view.getChildren().add(root);
     }
 
     public void showCards(List<CardData> cards) {
         resultBox.getChildren().clear();
-        for (CardData card : cards) {
-            Pane cardPane = SkinService.get().createCard(card, this::onDirectorClicked, this::onActorClicked);
-            resultBox.getChildren().add(cardPane);
-        }
+        MovieStyle style = SkinService.get().movieStyle();
+        for (CardData card : cards)
+            resultBox.getChildren().add(
+                    new MovieCard(card, style, this::onDirectorClicked, this::onActorClicked));
     }
 
     private void onDirectorClicked(String directorName) {

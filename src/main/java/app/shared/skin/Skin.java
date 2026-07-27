@@ -1,20 +1,16 @@
 package app.shared.skin;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import app.shared.Config;
 import app.shared.UiUtils;
 import app.shared.model.BorderParams;
-import app.shared.model.CardData;
 import app.shared.ui.components.MultipleChoicePane;
 import app.shared.ui.components.SuiteImage;
 import app.shared.ui.components.SuiteInfoLabel;
-import app.shared.ui.components.SuiteSuggestionTextField;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -39,19 +35,16 @@ import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.HeaderDragType;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
 import javafx.stage.Popup;
@@ -149,13 +142,6 @@ public abstract class Skin extends SkinProperties {
 	}
 	
 	
-	public record MovieViewerComponents(
-	        Pane root,
-	        SuiteSuggestionTextField directorField,
-	        SuiteSuggestionTextField actorField,
-	        SuiteSuggestionTextField titleField,
-	        VBox resultBox
-	) {}
 	
 
 	
@@ -1111,9 +1097,9 @@ public abstract class Skin extends SkinProperties {
 	        .end();
 	 
 	    // === SWYT-Bereich (links) ===
-	    // Die Breite wird prozentual über prefWidth/maxWidth im createMovieViewer gesetzt?
+	    // Die Breite wird prozentual über prefWidth/maxWidth in MovieViewerScreenView gesetzt?
 	    // Nein — wir nutzen CSS min/max-width nicht, weil die prozentuale Berechnung
-	    // zur Laufzeit im createMovieViewer stattfindet. Hier nur Spacing und Padding.
+	    // zur Laufzeit in MovieViewerScreenView stattfindet. Hier nur Spacing und Padding.
 	    css.start(".movie-viewer-swyt")
 	        .add("-fx-padding", "0")
 	        .end();
@@ -1168,7 +1154,7 @@ public abstract class Skin extends SkinProperties {
 	        .add("-fx-fill", textColor)
 	        .end();
 	 
-	 // === Kommentar-Popup (nutzt Popup statt Tooltip, siehe setupCommentTooltip) ===
+	 // === Kommentar-Popup (nutzt Popup statt Tooltip, siehe MovieCard.setupCommentPopup) ===
         BorderParams border = borderMediumComponent;
 	    css.start(".movie-comment-popup")
 	    	.add("-fx-border-color", border.color())
@@ -1683,170 +1669,7 @@ public abstract class Skin extends SkinProperties {
 	
 
 	
-	public MovieViewerComponents createMovieViewer() {
-	    // SWYT-Felder
-	    SuiteSuggestionTextField directorField = new SuiteSuggestionTextField("Choose Director...");
-	    SuiteSuggestionTextField actorField = new SuiteSuggestionTextField("Choose Actor...");
-	    SuiteSuggestionTextField titleField = new SuiteSuggestionTextField("Choose Title...");
-	 
-	    // Labels für die Felder
-	    Label dirLabel = new Label("Director:");
-	    Label actLabel = new Label("Actor:");
-	    Label titLabel = new Label("Title:");
-	 
-	    // SWYT-Felder mit Labels in einer VBox
-	    double swytWidth = getContentSize().getWidth() * 0.2;
-	    VBox swytPane = new VBox(font.getSize() * 0.8);
-	    swytPane.getStyleClass().add("movie-viewer-swyt");
-	    swytPane.setPrefWidth(swytWidth);
-	    swytPane.setMinWidth(swytWidth);
-	    swytPane.setMaxWidth(swytWidth);
-	    swytPane.getChildren().addAll(
-	            dirLabel, directorField.getTextField(),
-	            actLabel, actorField.getTextField(),
-	            titLabel, titleField.getTextField());
-	 
-	    // Ergebnisbereich
-	    VBox resultBox = new VBox(font.getSize() * 0.5);
-	    resultBox.getStyleClass().add("movie-viewer-results");
-	 
-	    // ScrollPane für Ergebnisse
-	    ScrollPane scrollPane = new ScrollPane(resultBox);
-	    scrollPane.setFitToWidth(true);
-	    scrollPane.setFitToHeight(false);
-	    scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-	    scrollPane.getStyleClass().add("movie-viewer-scroll");
-	 
-	    // Hauptlayout: SWYT links (20%), Kacheln rechts (70%), je 5% Rand
-	    HBox contentBox = new HBox(font.getSize());
-	    contentBox.getStyleClass().add("movie-viewer-content");
-	    HBox.setHgrow(scrollPane, Priority.ALWAYS);
-	    contentBox.getChildren().addAll(swytPane, scrollPane);
-	 
-	    // Äußerer Wrapper mit Padding
-	    VBox root = new VBox();
-	    root.getStyleClass().add("movie-viewer-root");
-	    root.getChildren().add(contentBox);
-	    VBox.setVgrow(contentBox, Priority.ALWAYS);
-	 
-	    return new MovieViewerComponents(root, directorField, actorField, titleField, resultBox);
-	}
 	
-	public Pane createCard(CardData data,
-	        Consumer<String> onDirectorClicked,
-	        Consumer<String> onActorClicked) {
-
-	    boolean hasComment = data.comment() != null
-	            && !data.comment().isEmpty()
-	            && !".".equals(data.comment());
-
-	    // === Poster ===
-	    // Das +-Zeichen wird direkt auf das Bild gemalt (UIUtils.addPlusSign),
-	    // kein separater Badge-Node nötig.
-	    StackPane posterPane = null;
-	    File imageFile = data.imageFilename() != null
-	            ? Config.getPath("imageFolder").resolve("tmdb").resolve(data.imageFilename()).toFile()
-	            : null;
-
-	    if (imageFile != null && imageFile.exists()) {
-	        Image posterImage = new Image(imageFile.toURI().toString());
-
-	        if (hasComment) {
-	            posterImage = UiUtils.addPlusSign(posterImage, moviePosterWidth);
-	        }
-
-	        ImageView posterView = new ImageView(posterImage);
-	        posterView.setFitWidth(moviePosterWidth);
-	        posterView.setPreserveRatio(true);
-	        posterView.setSmooth(true);
-
-	        posterPane = new StackPane(posterView);
-	    }
-
-	    // Kommentar-Popup auf dem Poster
-	    if (hasComment && posterPane != null) {
-	        setupCommentTooltip(posterPane, data.comment());
-	    }
-
-	    // === Rating-Zahl ===
-	    Label ratingLabel = new Label(String.valueOf(data.rating()));
-	    ratingLabel.getStyleClass().add("movie-card-rating");
-	    Text widestRating = new Text("10");
-	    widestRating.setFont(Font.font(font.getFamily(), FontWeight.BOLD, moviePosterWidth * 0.5));
-	    double ratingWidth = widestRating.getLayoutBounds().getWidth();
-	    ratingLabel.setPrefWidth(ratingWidth);
-	    ratingLabel.setMinWidth(Region.USE_PREF_SIZE);
-	    
-
-	    // === Info-Bereich ===
-	    VBox infoBox = new VBox(0);
-	    infoBox.getStyleClass().add("movie-card-info");
-	    HBox.setHgrow(infoBox, Priority.ALWAYS);
-
-	    String headerString = String.join("\n", data.headerLines());
-  	    Label headerLabel = new Label(headerString);
-	    headerLabel.getStyleClass().add("movie-card-header");
-	    infoBox.getChildren().add(headerLabel);
-
-	    // Abstand nach Header-Block
-	    javafx.scene.layout.Region headerSpacer = new javafx.scene.layout.Region();
-	    headerSpacer.setPrefHeight(font.getSize());
-	    infoBox.getChildren().add(headerSpacer);
-	    
-	    
-		String detailString = String.join("\n", data.detailLines());
-		if (detailString != null && !detailString.isEmpty()) {
-			Label detailLabel = new Label(detailString);
-			detailLabel.getStyleClass().add("movie-card-text");
-			infoBox.getChildren().add(detailLabel);
-		}
-		
-	    if (data.ratedAt() != null) {
-	        Label ratedLabel = new Label("Rated: " + data.ratedAt());
-	        ratedLabel.getStyleClass().add("movie-card-text");
-	        infoBox.getChildren().add(ratedLabel);
-	    }
-
-	    if (!data.directors().isEmpty()) {
-	        infoBox.getChildren().add(
-	                createLinkedPersonLine("Director: ", data.directors(), onDirectorClicked));
-	    }
-
-	    if (!data.actors().isEmpty()) {
-	        infoBox.getChildren().add(
-	                createLinkedPersonLine("Stars: ", data.actors(), onActorClicked));
-	    }
-
-	    if (data.overview() != null && !data.overview().isEmpty()) {
-	        javafx.scene.layout.Region overviewSpacer = new javafx.scene.layout.Region();
-	        overviewSpacer.setPrefHeight(font.getSize());
-	        infoBox.getChildren().add(overviewSpacer);
-
-	        Label overviewLabel = new Label(data.overview());
-	        overviewLabel.setWrapText(true);
-	        overviewLabel.getStyleClass().add("movie-card-text");
-	        infoBox.getChildren().add(overviewLabel);
-	    }
-	    
-	 // TODO: Workaround für JDK-8350149 / JDK-8362873: HBox berechnet die Höhe von
-	 // Kindern mit contentBias HORIZONTAL basierend auf deren prefWidth statt
-	 // der tatsächlich zugewiesenen Breite. Ohne diesen Workaround wird die
-	 // Kachel bei Filmen ohne Poster viel zu hoch. Kann entfernt werden,
-	 // sobald der Bug in JavaFX gefixt ist.
-	    infoBox.setPrefWidth(getContentSize().getWidth() * 0.7);
-
-	    // === Kachel zusammenbauen ===
-	    HBox card = new HBox(font.getSize() * 0.5);
-	    card.getStyleClass().add("diary-card");
-	    card.setMaxWidth(Double.MAX_VALUE);
-	    if (posterPane != null) {
-	        card.getChildren().add(posterPane);
-	    }
-	    card.getChildren().addAll(ratingLabel, infoBox);
-	    ratingLabel.setMaxHeight(Double.MAX_VALUE);
-
-	    return card;
-	}
 	
 	// endregion
 
@@ -1878,83 +1701,6 @@ public abstract class Skin extends SkinProperties {
 	
 
 	 
-	/**
-	 * Zeigt einen Kommentar als Popup auf dem Poster-Image.
-	 * 
-	 * Wir nutzen ein Popup statt eines Tooltips, weil der JavaFX-Tooltip
-	 * bei setGraphic() die maxWidth des Graphic-Nodes nicht zuverlässig
-	 * respektiert: Einzeilige Texte (ohne \n) werden nicht umgebrochen,
-	 * mehrzeilige schon. Das ist eine Eigenheit des Tooltip-Layouts,
-	 * kein dokumentierter Bug, aber reproduzierbar (getestet mit JavaFX 25).
-	 * Ein Popup mit einem Label darin bricht zuverlässig um.
-	 */
-	private void setupCommentTooltip(Pane target, String commentText) {
-	    Popup popup = new Popup();
 
-	    target.setOnMouseEntered(e -> {
-	        popup.getContent().clear();
-
-	        double tooltipWidth = target.getScene().getWindow().getWidth() * 0.5;
-
-	        Label content = new Label(commentText);
-	        content.setWrapText(true);
-	        content.setMaxWidth(tooltipWidth);
-	        content.getStyleClass().add("movie-comment-popup");
-
-	        popup.getContent().add(content);
-
-	        // Links oder rechts vom Mauszeiger, je nachdem wo mehr Platz ist
-	        javafx.geometry.Rectangle2D screen = javafx.stage.Screen.getPrimary().getVisualBounds();
-	        double mouseX = e.getScreenX();
-	        double mouseY = e.getScreenY();
-
-	        double leftSpace = mouseX - screen.getMinX();
-	        double rightSpace = screen.getMaxX() - mouseX;
-
-	        double popupX;
-	        if (rightSpace >= leftSpace) {
-	            popupX = mouseX + diaryTooltipMargin;
-	        } else {
-	            popupX = mouseX - diaryTooltipMargin - tooltipWidth;
-	        }
-
-	        double popupY = Math.max(screen.getMinY() + diaryTooltipMargin, mouseY);
-
-	        popup.show(target, popupX, popupY);
-	    });
-
-	    target.setOnMouseExited(_ -> popup.hide());
-	}
-
-	/**
-	 * Baut eine Zeile mit Prefix ("Director: " / "Stars: ") und klickbaren Namen. Die Namen werden als einzelne Labels in einer FlowPane platziert, damit sie
-	 * bei Bedarf umbrechen.
-	 */
-	private Pane createLinkedPersonLine(String prefix, List<String> names, Consumer<String> onClick) {
-		FlowPane flow = new FlowPane();
-		flow.setHgap(0);
-		flow.setVgap(2);
-		flow.getStyleClass().add("movie-card-person-line");
-
-		Label prefixLabel = new Label(prefix);
-		prefixLabel.getStyleClass().add("movie-card-text");
-		flow.getChildren().add(prefixLabel);
-
-		for (int i = 0; i < names.size(); i++) {
-			String name = names.get(i);
-			Label link = new Label(name);
-			link.getStyleClass().add("movie-card-link");
-			link.setOnMouseClicked(_ -> onClick.accept(name));
-			flow.getChildren().add(link);
-
-			if (i < names.size() - 1) {
-				Label comma = new Label(", ");
-				comma.getStyleClass().add("movie-card-text");
-				flow.getChildren().add(comma);
-			}
-		}
-
-		return flow;
-	}
 
 }

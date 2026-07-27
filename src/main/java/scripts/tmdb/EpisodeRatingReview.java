@@ -7,6 +7,7 @@ import app.shared.Config;
 import app.shared.UiUtils;
 import app.shared.model.CardData;
 import app.shared.skin.SkinService;
+import app.shared.ui.components.MovieCard;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
@@ -35,7 +36,7 @@ public class EpisodeRatingReview extends Application {
 
         VBox box = new VBox(10);
         for (CardData card : cards)
-            box.getChildren().add(SkinService.get().createCard(card, _ -> {}, _ -> {}));
+            box.getChildren().add(new MovieCard(card, SkinService.get().movieStyle(), _ -> {}, _ -> {}));
 
         ScrollPane scroll = new ScrollPane(box);
         scroll.setFitToWidth(true);
