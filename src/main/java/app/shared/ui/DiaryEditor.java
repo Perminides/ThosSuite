@@ -8,11 +8,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import app.shared.Config;
+import app.shared.UiUtils;
 import app.shared.model.DiaryAttachment;
 import app.shared.model.DiaryCardData;
 import app.shared.model.InvasiveConfig;
-import app.shared.skin.SkinService;
 import app.shared.ui.components.DiaryTagInputComponent;
+import app.shared.ui.components.SuiteDatePicker;
+import app.shared.ui.components.SuiteDialog;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.binding.BooleanBinding;
@@ -23,7 +25,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
@@ -38,8 +39,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
-import app.shared.ui.components.SuiteDialog;
-import app.shared.UiUtils;
 
 /**
  * Modale Editor-Ansicht für genau einen Tagebucheintrag. Framework-gebundene Hälfte:
@@ -72,7 +71,7 @@ public class DiaryEditor {
     private final List<File> pendingOriginals = new ArrayList<>();     // neu hinzugefügt (kein Thumbnail)
 
     private TextArea textArea;
-    private DatePicker datePicker;
+    private SuiteDatePicker datePicker;
     private FlowPane attachmentPane;
     private Button saveButton;
 
@@ -172,7 +171,7 @@ public class DiaryEditor {
         existing.addAll(initialEntry.attachments());   // bestehende: haben Thumbnail
         pendingOriginals.clear();
 
-        datePicker = new DatePicker(initialEntry.entryDate());
+        datePicker = new SuiteDatePicker(initialEntry.entryDate());
 
         textArea = new TextArea(initialEntry.text());
         textArea.setId("diaryTextArea");

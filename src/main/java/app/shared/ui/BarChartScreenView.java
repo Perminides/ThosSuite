@@ -29,6 +29,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import app.shared.ui.components.SuiteDatePicker;
 
 /**
  * Framework-gebundene, feature-neutrale Hälfte: zeichnet eine {@link BarChartData}
@@ -44,8 +45,8 @@ public class BarChartScreenView implements ScreenView {
     private final StackPane pane = new StackPane();
     private final BarChartDataProvider provider;
 
-    private DatePicker fromPicker;
-    private DatePicker toPicker;
+    private SuiteDatePicker fromPicker;
+    private SuiteDatePicker toPicker;
     private Spinner<Integer> gapSpinner;
     private BarChartData currentData;
     private final LocalDate initialFrom;
@@ -87,12 +88,12 @@ public class BarChartScreenView implements ScreenView {
 
         Label fromLabel = new Label("Von:");
         if (fromPicker == null)
-            fromPicker = SkinService.get().createDatePicker(initialFrom);
+            fromPicker = new SuiteDatePicker(initialFrom);
         fromPicker.setOnAction(_ -> reloadFromControls());
 
         Label toLabel = new Label("Bis:");
         if (toPicker == null)
-            toPicker = SkinService.get().createDatePicker(initialTo);
+            toPicker = new SuiteDatePicker(initialTo);
         toPicker.setOnAction(_ -> reloadFromControls());
 
         Region spacer = new Region();

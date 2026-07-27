@@ -34,6 +34,27 @@ Schrittnummern beziehen sich auf `Skin-Refactoring-Plan.md` §8.
 | `overlayContentBounds` beschreibt, wo der Inhalt im Mini-Map-Bild sitzt — gehört eigentlich woandershin | `Skin:1686` |
 | `learn.region.SessionPresenter` importiert `ShapeMapPane.ShapeMapState` — ein verschachtelter Enum einer Komponente, direkt im Feature | — |
 
+### Direkt nach 3c — die `SuiteXXX`-Familie durchsehen
+
+**Der ursprüngliche Grund fällt weg.** Die Fassaden entstanden, weil Features javafx-frei bleiben
+müssen: `GermanySessionPane` durfte kein `TextField` halten, also hielt es ein `SuiteTextField`.
+Nach 3c hält kein Feature mehr irgendeine Komponente — die Panes liegen in `shared.ui`, die Features
+bekommen fertige `ScreenView`s.
+
+**Kriterium:** *Hat die Klasse eigenen Inhalt, oder verbirgt sie nur javafx?*
+
+| | Zeilen | Befund |
+|---|---|---|
+| `SuiteTextField` | 46 | hält ein `TextField`, reicht vier Methoden durch — reine Verhüllung. Bekommt die fertige javafx-Komponente im Konstruktor („geschummelte Scheinlösung"). **Kandidat zum Löschen.** |
+| `SuiteIconButton` | 29 | dito, eine Methode. **Kandidat zum Löschen.** |
+| `SuiteInfoLabel` | 168 | `extends StackPane`, parst Mini-Markup per Regex, baut Text-Nodes, feste Maße. **Echte Komponente, bleibt.** |
+| `SuiteImage` | 131 | `extends StackPane`, Hintergrund-/Border-Rechtecke, runde Ecken, Bildwechsel. **Echte Komponente, bleibt.** |
+| `SuiteDatePicker` | 9 | trägt keinen Skin-Wert, nur die Entscheidung „keine Kalenderwochen". Überlebt nur über das Argument „Ort einer suite-weiten Festlegung", nicht über das Fassaden-Argument. **Dünnster Fall, legitim zu streichen.** |
+
+**Zwei Folgefragen:** Fallen die reinen Fassaden weg, sind alle verbleibenden Komponenten selbst
+`Node`s. Dann braucht `ComponentHost` kein `UiComponent...` mehr, sondern könnte `Node...` nehmen —
+und der Kontrakt `UiComponent` samt `getView()` steht zur Disposition.
+
 ### Schritt 3d — Chrome/Menüs
 
 | Punkt | Fundstelle |
