@@ -299,6 +299,35 @@ beidem, nur „soll anders aussehen" → View.
   Germany statt bei MC — sichtbar geworden, weil die drei Konfigurationen erstmals nebeneinander
   stehen.
 
+**29.07. — `ShapeMapPane` ist jetzt selbst ein Node (3f, erster Teilschritt).**
+
+- `Skin.buildShapeMapWrapper` (49 Zeilen) gelöscht. Messen, Skalieren, Positionieren und der
+  Strichdicken-Fix stecken jetzt in `ShapeMapPane`, die von `StackPane` erbt. `getView()` liefert
+  `this` und bleibt nur, solange der `ComponentHost` über `UiComponent` einhängt.
+- `node.setStyle("")` ist entfallen. Es sollte Inline-Strichdicken einer früheren Session
+  wegräumen — die Nodes entstehen aber im selben Konstruktor, es konnte nichts zu räumen geben.
+- Neu und öffentlich: `SkinProperties.sessionMapBounds(mapName, kategorie)`. Das erste Session-Maß,
+  das das skin-Paket verlässt; der Property-Name bleibt drin. **Offen:** ob die restlichen zehn
+  ebenfalls benannte Methoden werden oder eine `sessionBounds(mapName, kategorie, teil)` mit
+  Aufzählung — entscheidet sich, wenn die Bau-Methoden nachziehen.
+- Thorstens TODO an der Stelle („Das Konstrukt ist so kompliziert und ich weiß auch nicht mehr genau
+  warum wir das so gebaut hatten") ist damit beantwortet: der Umweg existierte nur, weil die Karte
+  nicht an die Skin-Werte kam. Unter U3 kommt sie ran.
+
+**29.07. — `SuiteTextField` und `SuiteIconButton` erben statt zu verhüllen (3f, zweiter Teilschritt).**
+
+- `SuiteTextField extends TextField`, `SuiteIconButton extends Button`. Beide holen ihre Maße selbst
+  (`new SuiteTextField(mapName, kategorie)` statt `new SuiteTextField(skin.createInputField(…))`).
+- `Skin.createInputField` gelöscht. Sein Javadoc versprach eine CSS-Klasse `input-field`, die die
+  Methode nie gesetzt hat — das Feld wird über `.text-field` gestylt.
+- `Skin.createIconButton` → `iconButtonStyle(deckId, typ)`, liefert das Record `IconButtonStyle`
+  (fertig eingefärbtes Bild + Feld). Das Zusammenbauen — `ImageView`, Style-Klasse, Maße — macht
+  jetzt der Knopf. Dateinamen und Tönungsfarbe bleiben Skin-Werte und bleiben drin.
+- Neu: `SkinProperties.sessionInputBounds(mapName, kategorie)`.
+- Alle drei Klassen behalten vorerst `implements UiComponent` mit `getView() { return this; }` — der
+  `ComponentHost` bekommt noch `UiComponent...`, weil die `SessionMap`-Implementierungen keine Nodes
+  sind. Das fällt zusammen mit ihnen.
+
 Offene Kleinigkeiten: die Kommentare `// Owner intern` bei `AnkiConfigDialog` und
 `RegionConfigDialog` sind überflüssig; der Kommentar bei `createDialog` könnte die **Bindung**
 benennen statt „erbt".
@@ -398,13 +427,14 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
     in den controller (Entscheidung 3.9); imagePathsFor und MapImagePaths entfallen.
     Klein. Danach ist Wächter 2 leer.
 
-3f  Die drei restlichen Bau-Methoden
-    createSessionInfoLabel, createImageComponent, createMultipleChoicePane.
-    Hier kommen SessionComponent und sessionBounds(...) zurück — die Komponenten
-    nehmen ihre Maße dann selbst entgegen. Zugleich der Anlass für die
-    SuiteXXX-Durchsicht (siehe Vertagte-Punkte.md): SuiteTextField und
-    SuiteIconButton sind danach reine Fassaden ohne Zweck.
-    Danach ist Wächter 1 leer.
+3f  Die Bau-Methoden verlassen den Skin — in kleinen Schritten
+    ✓ ShapeMapPane (buildShapeMapWrapper zog ein)                        29.07.
+    ✓ SuiteTextField + SuiteIconButton (Vererbung statt Fassade)         29.07.
+      Offen: createSessionInfoLabel, createImageComponent,
+      createMultipleChoicePane. Die Komponenten nehmen ihre Maße dann selbst
+      entgegen. Danach kann ComponentHost Node... nehmen und UiComponent
+      entfällt — dafür müssen aber auch die SessionMap-Implementierungen
+      Nodes werden. Danach ist Wächter 1 leer.
 
 3d  Chrome und Menüs
     createMenuBar, createMenu, createMenuItem, createMainWindowHeaderBar,
@@ -420,6 +450,11 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
     als bewachte Zusagen, der neu gefasste Skin-Vertrag.
     Architektur-Dokumentation.md: der Abschnitt „UI-Architektur: Skin-System" ist
     dann vollständig überholt.
+
+6 ~ Die Wächter in den Maven-Build                                        28.07.
+    ArchUnit, src/test/java/app/ArchitekturRegelnTest.java. Scharf ist bisher
+    Wächter 2; Wächter 1, Wächter 3 und die Zyklenfreiheit stehen dort
+    auskommentiert und werden freigeschaltet, sobald sie halten (3f bzw. 4).
 ```
 
 **Warum die Paketumstellung vor die Auflösung rückt:** sie ist risikoarm (reine Moves) und liefert

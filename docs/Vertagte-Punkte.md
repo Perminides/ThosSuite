@@ -16,7 +16,7 @@ Schrittnummern beziehen sich auf `Skin-Refactoring-Plan.md` §8.
 
 | Punkt | Fundstelle |
 |---|---|
-| `SessionComponent` (Enum) und `SkinProperties.sessionBounds(mapName, kategorie, teil)` kommen zurück — sie waren in 3c kurz angelegt und wieder entfernt, weil Region sie unter dem Übergangsweg nicht brauchte | — |
+| **Form der Maß-Zugänge entscheiden.** Der erste ist da: `SkinProperties.sessionMapBounds(mapName, kategorie)`, eine benannte Methode. Die Alternative bleibt `sessionBounds(mapName, kategorie, teil)` mit `SessionComponent`-Aufzählung (war in 3c kurz angelegt). Elf Maße insgesamt — ab dem dritten oder vierten sieht man, was sich besser liest | `SkinProperties` |
 | Der **Übergangszustand** in `RegionSessionView` und `AnkiSessionView`: die Komponenten kommen noch über `skin.createSessionInfoLabel` / `createInputField` / `createImageComponent` / `createMultipleChoicePane` / `createIconButton`. Steht in beiden Klassenkommentaren als „kein Dauerzustand" | Klassen-Javadoc |
 | `applyImageMapLayout` — „Ich verstehe nicht, was hier passiert. Muss diese Zeile wirklich hin?" | `ImageSessionMap:40` |
 | Bild-Karte: „EM 2021 — alle Länder grün, welches war falsch?" Das Zurücksetzen vor `markLastClickAsIncorrect()` löscht die bisherigen Markierungen mit | `ImageSessionMap` (`markIncorrect`) |
@@ -70,19 +70,35 @@ bleiben müssen: `GermanySessionPane` durfte kein `TextField` halten, also hielt
 `shared.ui`, die Features bekommen fertige `ScreenView`s. Am besten zusammen mit Schritt 3f, weil
 dort ohnehin die Konstruktoren angefasst werden.
 
+**Entschieden (29.07.): Vererbung statt Fassade.** Eine Fassade schützt eine Grenze — und die Grenze
+(„das Feature darf kein javafx anfassen") gibt es an dieser Stelle nicht mehr; innerhalb von
+`shared.ui` kennen beide Seiten javafx. Was an Thorstens Instinkt wertvoll war, überlebt die
+Vererbung: sinnvoll benannte Methoden wie `setActive(...)` (= leeren + aktivieren + fokussieren)
+bleiben, nur das *Verbot* fällt weg — und das war nie der Punkt. Gegenprobe war `SuiteDialog`: als
+Fassade bräuchte es ~15 Weiterreich-Methoden und `getDialogPane()` (32 Aufrufe) leckt trotzdem
+durch. **Erster Schritt gemacht:** `ShapeMapPane extends StackPane`.
+
 **Kriterium:** *Hat die Klasse eigenen Inhalt, oder verbirgt sie nur javafx?*
 
 | | Zeilen | Befund |
 |---|---|---|
-| `SuiteTextField` | 46 | hält ein `TextField`, reicht vier Methoden durch — reine Verhüllung. Bekommt die fertige javafx-Komponente im Konstruktor („geschummelte Scheinlösung"). **Kandidat zum Löschen.** |
-| `SuiteIconButton` | 29 | dito, eine Methode. **Kandidat zum Löschen.** |
+| `SuiteTextField` | 46 | ✓ erledigt 29.07. — `extends TextField`, holt sein Feld selbst. `setActive(…)` ist geblieben. |
+| `SuiteIconButton` | 29 | ✓ erledigt 29.07. — `extends Button`, holt Bild und Feld selbst über `IconButtonStyle`. |
 | `SuiteInfoLabel` | 168 | `extends StackPane`, parst Mini-Markup per Regex, baut Text-Nodes, feste Maße. **Echte Komponente, bleibt.** |
 | `SuiteImage` | 131 | `extends StackPane`, Hintergrund-/Border-Rechtecke, runde Ecken, Bildwechsel. **Echte Komponente, bleibt.** |
 | `SuiteDatePicker` | 9 | trägt keinen Skin-Wert, nur die Entscheidung „keine Kalenderwochen". Überlebt nur über das Argument „Ort einer suite-weiten Festlegung", nicht über das Fassaden-Argument. **Dünnster Fall, legitim zu streichen.** |
 
-**Zwei Folgefragen:** Fallen die reinen Fassaden weg, sind alle verbleibenden Komponenten selbst
-`Node`s. Dann braucht `ComponentHost` kein `UiComponent...` mehr, sondern könnte `Node...` nehmen —
-und der Kontrakt `UiComponent` samt `getView()` steht zur Disposition.
+**Folgefrage — `UiComponent` abschaffen.** `ShapeMapPane`, `SuiteTextField` und `SuiteIconButton`
+sind seit 29.07. selbst Nodes und implementieren `UiComponent` nur noch mit
+`getView() { return this; }`. Damit `ComponentHost` auf `Node...` umstellen kann, fehlen noch die
+`SessionMap`-Implementierungen (`ShapeSessionMap`, `ImageSessionMap`, `NoSessionMap`) — die sind
+Umbenenner, keine Nodes. Entweder werden auch sie Nodes, oder `SessionMap` behält ein `getView()`
+und der Host nimmt beides.
+
+**Noch offen in der Familie:** `SuiteDatePicker` (dünnster Fall) und die Frage, ob
+`SuiteInfoLabel` / `SuiteImage` / `MultipleChoicePane` ihre Maße im Konstruktor bekommen oder von
+der View nach dem `new` gesetzt werden. `ShapeMapPane`, `SuiteTextField` und `SuiteIconButton` haben
+sie im Konstruktor — das ist der Präzedenzfall.
 
 ### Schritt 3d — Chrome/Menüs
 
@@ -111,6 +127,33 @@ Kontext als Parameter — in jedem Fall sollte auch der Editor über `SuiteDateP
 - **Verantwortungsrahmen** Feature / View / Skin (Plan §4b) eintragen.
 - **Skin-Vertrag** neu fassen — der bestehende Abschnitt ist als „vorläufig" markiert.
 - Die drei Wächter als bewachte Zusagen festschreiben.
+
+### Schritt 6 — die Wächter in den Maven-Build
+
+**Angelegt am 28.07.** — `src/test/java/app/ArchitekturRegelnTest.java`, ArchUnit + JUnit 5 +
+Surefire. Läuft bewusst **nicht** beim Speichern in Eclipse (m2e ruft kein Surefire), sondern bei
+Run As → Maven build oder Run As → JUnit Test.
+
+Gewählt wurde ArchUnit, weil es als einziges alle Regelsorten in einer Sprache abdeckt und
+**Bytecode** liest statt Textzeilen — voll qualifizierte Nutzung ohne `import` rutscht also nicht
+durch. Checkstyle `ImportControl` schied aus, weil es keine Zyklen prüfen kann; javaparser war keine
+eigene Option, weil `scripts/PackageDependencyGraph.java` bereits einen funktionierenden
+Import-Scanner samt SCC-Berechnung enthält.
+
+**Scharf ist bisher nur Wächter 2** (kein Feature kennt den Skin). Die übrigen stehen auskommentiert
+in derselben Datei und werden freigeschaltet, sobald sie halten:
+
+| Regel | frei nach |
+|---|---|
+| Wächter 1 — `shared.skin` kennt `shared.ui` nicht | Schritt 3f |
+| Zyklenfreiheit | Schritt 3f (siehe unten) |
+| Wächter 3 — Bausteine nur aus `shared.ui` heraus | Schritt 4 |
+
+**Ein Zyklus existiert heute:** `app.shared.skin ↔ app.shared.ui.components`. Kein eigener Befund,
+sondern Wächter 1 und 3 von der anderen Seite: der Skin importiert `MultipleChoicePane`/`SuiteImage`/
+`SuiteInfoLabel`, die Bausteine holen sich den `SkinService`. Verschwindet mit 3f.
+
+Offen: die Vier-Sprossen-Ordnung aus Plan §1.1 als `layeredArchitecture()` mit aufnehmen.
 
 ---
 
