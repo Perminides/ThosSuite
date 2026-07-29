@@ -6,8 +6,11 @@ import java.util.function.Function;
 
 import app.shared.model.SessionCallbacks;
 import app.shared.model.ShapeGeometry;
-import app.shared.ui.components.ImageSessionMap;
-import app.shared.ui.components.SessionMap;
+import app.shared.skin.SessionComponent;
+import app.shared.skin.Skin;
+import app.shared.skin.SkinService;
+import app.shared.ui.components.map.ImageMapPane;
+import app.shared.ui.components.map.SessionMap;
 
 /** Welt und Hannover: Bild-Karte, Eingabefeld, leerer Hintergrund. */
 public class ImageMapSessionView extends AnkiSessionView {
@@ -23,7 +26,14 @@ public class ImageMapSessionView extends AnkiSessionView {
 
 	@Override
 	protected SessionMap createMap() {
-		return new ImageSessionMap(deckId(), mapName(), geometrieFuer, callbacks().mapElementClicked());
+		Skin skin = SkinService.get();
+		ImageMapPane karte = new ImageMapPane(
+				skin.mapImages(mapName()),
+				skin.getOverlayContentBounds(deckId()),
+				skin.sessionBounds(deckId(), kategorie(), SessionComponent.MAP),
+				geometrieFuer);
+		karte.setListener(callbacks().mapElementClicked());
+		return karte;
 	}
 
 	@Override protected boolean hasInputField()      { return true; }

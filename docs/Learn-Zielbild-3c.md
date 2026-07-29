@@ -9,18 +9,21 @@ Dokument bleibt als Begründung stehen; was tatsächlich entstanden ist, steht i
 
 ## 0. Was daraus geworden ist
 
+*Nachtrag:* die Karten liegen inzwischen in `shared.ui.components.map`, und die beiden Übersetzer
+`ShapeSessionMap`/`ImageSessionMap` sind entfallen — die Panes setzen `SessionMap` selbst um.
+
 ```
 shared.ui
     RegionSessionView          Karte + Frage ODER Eingabefeld; getState/setState
     AnkiSessionView (abstrakt) die sechs gemeinsamen Bestandteile
-      GermanySessionView       Shape-Karte · Eingabe · leerer Hintergrund      (29 Z.)
+      ShapeMapSessionView       Shape-Karte · Eingabe · leerer Hintergrund      (29 Z.)
       McSessionView            keine Karte · keine Eingabe · deck-eigener      (18 Z.)
       ImageMapSessionView      Bild-Karte  · Eingabe · leerer Hintergrund      (31 Z.)
 
-shared.ui.components
-    SessionMap                 gemeinsames Vokabular über beide Kartensprachen
-      ShapeSessionMap          adressiert über Ids
-      ImageSessionMap          adressiert über Geometrien, holt seine Bildpfade selbst
+shared.ui.components.map
+    SessionMap                 gemeinsames Vokabular, spricht durchgehend Ids
+      ShapeMapPane             arbeitet ohnehin mit Ids
+      ImageMapPane             arbeitet mit Geometrien und übersetzt selbst
       NoSessionMap             tut nichts — damit entfallen alle Null-Wächter
 
 shared.model

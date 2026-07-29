@@ -1,4 +1,4 @@
-package app.shared.ui.components;
+package app.shared.ui.components.map;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ import javafx.scene.shape.PathElement;
  * </ul>
  * CENTER erreicht den Builder nie — die Bild-Karte fängt ihn ab und zentriert nur.</p>
  */
-public final class MapNodeBuilder {
+final class MapNodeBuilder {
 
 	private MapNodeBuilder() {}
 
@@ -40,7 +40,7 @@ public final class MapNodeBuilder {
 	 * Deutschland-Shape: immer ein Polygon → ein Path mit "my-map-shape" + Layer-Klasse. id und type kommen aus
 	 * der Geometrie; zIndex/Layer-Klasse/interaktiv leitet ShapeLayer aus dem type ab.
 	 */
-	public static Node buildShapeMapNode(ShapeGeometry geometry) {
+	static Node buildShapeMapNode(ShapeGeometry geometry) {
 		ShapeLayer layer = ShapeLayer.fromJsonId(geometry.type());
 		return buildShapePath(geometry, layer.styleClass(), layer.interactive());
 	}

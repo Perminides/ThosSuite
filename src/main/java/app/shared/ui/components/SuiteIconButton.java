@@ -1,30 +1,43 @@
 package app.shared.ui.components;
 
 import app.shared.model.UiComponent;
+import app.shared.skin.Skin;
+import app.shared.skin.SkinService;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.image.ImageView;
 
 /**
- * Schmale Fassade um einen Button. Nach außen nur ein Klick-Listener.
+ * Ein Knopf mit Symbol statt Beschriftung. Nach außen nur ein Klick-Listener.
  *
- * Vorerst wird der gestylte + positionierte Button von außen hereingereicht (der allwissende Skin
- * baut ihn). SPÄTER, beim Aufbrechen der Skin-Gottklasse, zieht diese Komponente das Styling selbst
- * an sich — mindestens CSS, vermutlich alles was der Skin heute tut, inkl. Positionierung.
+ * <p>Welche Bilddatei zu welcher Rolle gehört und ob sie eingefärbt wird, hängt am Skin und nicht am
+ * Aufrufer — deshalb holt der Knopf sich das Bild selbst. Übergeben wird nur die Rolle. Das Aussehen
+ * kommt über die eigene Klasse {@code .my-icon-button}, also überall gleich.</p>
  */
-public class SuiteIconButton implements UiComponent {
+public class SuiteIconButton extends Button implements UiComponent {
 
-	private final Button button;
+	/** Ohne feste Lage — für Aufrufer, die die Komponente in ein Layout hängen. */
+	public SuiteIconButton(Skin.IconButtonType rolle) {
+		setGraphic(new ImageView(SkinService.get().iconFor(rolle)));
+		getStyleClass().add("my-icon-button");
+	}
 
-	public SuiteIconButton(Button button) {
-		this.button = button;
+	/** Mit fester Lage — für absolut positionierende Hosts. */
+	public SuiteIconButton(Skin.IconButtonType rolle, Rectangle2D bounds) {
+		this(rolle);
+		setPrefSize(bounds.getWidth(), bounds.getHeight());
+		setLayoutX(bounds.getMinX());
+		setLayoutY(bounds.getMinY());
 	}
 
 	public void onClick(Runnable action) {
-		button.setOnAction(_ -> action.run());
+		setOnAction(_ -> action.run());
 	}
 
+	/** Ist selbst der Node. Bleibt, solange der ComponentHost über {@link UiComponent} einhängt. */
 	@Override
 	public Node getView() {
-		return button;
+		return this;
 	}
 }

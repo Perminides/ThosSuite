@@ -1,4 +1,4 @@
-package app.shared.ui.components;
+package app.shared.ui.components.map;
 
 import java.util.Set;
 
@@ -20,7 +20,7 @@ public class NoSessionMap implements SessionMap {
 	@Override public void setActive(boolean active)       { }
 	@Override public void markCorrect(Set<String> ids)    { }
 	@Override public void markIncorrect(String id)        { }
-	@Override public void markInQuestion(Set<String> ids) { }
+	@Override public void setClickTargets(Set<String> ids)  { }
 	@Override public void mark(Set<String> ids)           { }
 
 	@Override public Node getView() { return leer; }

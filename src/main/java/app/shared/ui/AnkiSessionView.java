@@ -7,14 +7,15 @@ import java.util.Set;
 import app.shared.model.ScreenView;
 import app.shared.model.SessionCallbacks;
 import app.shared.model.UiComponent;
+import app.shared.skin.SessionComponent;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import app.shared.ui.components.MultipleChoicePane;
-import app.shared.ui.components.SessionMap;
 import app.shared.ui.components.SuiteIconButton;
 import app.shared.ui.components.SuiteImage;
 import app.shared.ui.components.SuiteInfoLabel;
 import app.shared.ui.components.SuiteTextField;
+import app.shared.ui.components.map.SessionMap;
 
 /**
  * Die gemeinsame Oberfläche aller Anki-Sessions: Frage, Bild, Multiple Choice, Fortschritt,
@@ -25,19 +26,22 @@ import app.shared.ui.components.SuiteTextField;
  *
  * <p>Was die Lernformen unterscheidet, entscheiden die drei Unterklassen:</p>
  * <pre>
- * GermanySessionView    Shape-Karte · Eingabefeld      · leerer Hintergrund
- * McSessionView         keine Karte · kein Eingabefeld  · deck-eigener Hintergrund (mcWallpaperName)
- * ImageMapSessionView   Bild-Karte  · Eingabefeld       · leerer Hintergrund
+ * ShapeMapSessionView   Shape-Karte · Eingabefeld      · leerer Hintergrund
+ * McSessionView         keine Karte · kein Eingabefeld · deck-eigener Hintergrund (mcWallpaperName)
+ * ImageMapSessionView   Bild-Karte  · Eingabefeld      · leerer Hintergrund
  * </pre>
+ *
+ * <p>Benannt nach dem, was sie sind, nicht nach dem Deck, das sie gerade bedient — deshalb nehmen
+ * sie Deck-Id, Kartenname und Kategorie entgegen und kennen keinen davon.</p>
  *
  * <p><b>Achtung beim Erweitern:</b> {@link #rebuild()} ruft {@link #createMap()} — also eine
  * Methode der Unterklasse. Der Basis-Konstruktor darf es deshalb <b>nicht</b> aufrufen, sonst liefe
  * es, bevor die Felder der Unterklasse gesetzt sind. Jede Unterklasse ruft {@code rebuild()} als
  * <b>letzte</b> Zeile ihres Konstruktors.</p>
  *
- * <p><b>Übergangszustand:</b> TODO: die Komponenten kommen noch über die Bau-Methoden des Skins. Wenn die
- * {@code SuiteXXX}-Durchsicht ansteht, nehmen sie ihre Maße selbst entgegen und die Bau-Methoden
- * verlassen den Skin. Kein Dauerzustand.</p>
+ * <p><b>Übergangszustand:</b> nur noch die Antwortauswahl kommt über eine Bau-Methode des Skins
+ * ({@code createMultipleChoicePane}). Alle übrigen Bestandteile bekommen ihr Feld als
+ * {@code Rectangle2D} übergeben und holen sich beim Skin nur, was ohne Schlüssel auskommt.</p>
  */
 public abstract class AnkiSessionView {
 
@@ -83,7 +87,7 @@ public abstract class AnkiSessionView {
 
 	// ===== Aufbau =====
 
-	/** Neu aufbauen — nötig nach einem Skinwechsel, weil sich alle Maße geändert haben können. */
+	/** Neu aufbauen — nötig auch nach einem Skinwechsel, weil sich alle Maße geändert haben können. */
 	public void rebuild() {
 		Skin skin = SkinService.get();
 
@@ -97,26 +101,28 @@ public abstract class AnkiSessionView {
 		progressArea    = infoLabel(skin, Skin.TextLabelType.PROGRESS);
 		cardHistoryArea = infoLabel(skin, Skin.TextLabelType.CARD_HISTORY);
 
-		imageComponent = skin.createImageComponent(deckId, kategorie);
+		imageComponent = new SuiteImage(skin.sessionBounds(deckId, kategorie, SessionComponent.IMAGE));
 
 		mcPane = skin.createMultipleChoicePane(deckId, kategorie);
 		mcPane.addListener(callbacks.mcAnswerClicked());
 
-		backButton = new SuiteIconButton(skin.createIconButton(deckId, Skin.IconButtonType.BACK));
+		backButton = new SuiteIconButton(Skin.IconButtonType.BACK,
+				skin.sessionBounds(deckId, kategorie, SessionComponent.BACK_BUTTON));
 		backButton.onClick(callbacks.backClicked());
 
 		inputField = null;
 		if (hasInputField()) {
-			inputField = new SuiteTextField(skin.createInputField(mapName, kategorie));
+			inputField = new SuiteTextField(skin.sessionBounds(mapName, kategorie, SessionComponent.TEXT_INPUT));
 			inputField.onType(callbacks.textTyped());
 		}
 
 		canvas.setComponents(bestandteile());
 	}
 
+	/** Die Kennung entscheidet nur über den abweichenden Hintergrund — der Rest steht in {@code .my-info-label}. */
 	private SuiteInfoLabel infoLabel(Skin skin, Skin.TextLabelType typ) {
-		SuiteInfoLabel label = skin.createSessionInfoLabel(mapName, kategorie, typ);
-		label.setText("");
+		SuiteInfoLabel label = new SuiteInfoLabel("", skin.sessionBounds(mapName, kategorie, typ));
+		label.setId(typ + "Label");
 		return label;
 	}
 
@@ -166,5 +172,5 @@ public abstract class AnkiSessionView {
 	public void addIdsToCorrect(Set<String> ids)  { karte.markCorrect(ids); }
 	public void setIdToIncorrect(String id)       { karte.markIncorrect(id); }
 	public void setMarkedIds(Set<String> ids)     { karte.mark(ids); }
-	public void setIdsInQuestion(Set<String> ids) { karte.markInQuestion(ids); }
+	public void setClickTargets(Set<String> ids)  { karte.setClickTargets(ids); }
 }

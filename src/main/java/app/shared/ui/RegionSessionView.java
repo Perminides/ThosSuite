@@ -7,11 +7,12 @@ import java.util.function.Consumer;
 import app.shared.model.ScreenView;
 import app.shared.model.ShapeGeometry;
 import app.shared.model.ShapeMapState;
+import app.shared.skin.SessionComponent;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
-import app.shared.ui.components.ShapeMapPane;
 import app.shared.ui.components.SuiteInfoLabel;
 import app.shared.ui.components.SuiteTextField;
+import app.shared.ui.components.map.ShapeMapPane;
 
 // !Sofort: Leider gibt es noch einen Fehler im freien Spiel. Die falsch geklickten bei schwer verschwinden nicht, nur die richtig geklickten...
 
@@ -26,11 +27,9 @@ import app.shared.ui.components.SuiteTextField;
  * <p>Bekommt alles im Konstruktor: Kartenname, Kategorie, Geometrien und die zwei Rückmeldungen.
  * Sie kennt weder {@code Deck} noch {@code MapService}; das bleibt im Feature.</p>
  *
- * <p><b>Übergangszustand:</b> die Komponenten kommen noch über die Bau-Methoden des Skins
- * ({@code createSessionInfoLabel}, {@code createInputField}), weil dieselben Methoden noch von den
- * drei Anki-Panes gebraucht werden. Wenn die nachziehen, nehmen {@code SuiteInfoLabel} und
- * {@code SuiteTextField} ihre Maße selbst entgegen und die Bau-Methoden verlassen den Skin. Kein
- * Dauerzustand.</p>
+ * <p>Die Bestandteile bekommen ihr Feld als {@code Rectangle2D} übergeben — diese View weiß, welche
+ * Karte gerade läuft, die Bausteine nicht. Beim Skin holen sie sich nur, was ohne Schlüssel
+ * auskommt.</p>
  */
 public class RegionSessionView {
 
@@ -63,17 +62,18 @@ public class RegionSessionView {
 		Skin skin = SkinService.get();
 		host.setBackgroundImage(skin.getBackgroundImage(mapName, kategorie));
 
-		karte = new ShapeMapPane(geometrien, mapName, kategorie);
+		karte = new ShapeMapPane(geometrien, skin.sessionBounds(mapName, kategorie, SessionComponent.MAP));
 		karte.setClickListener(onMapElementClicked);
 
 		// !Sofort: Hier wäre allerdings CENTER schon angesagt
 		if (mitFragefeld) {
-			questionArea = skin.createSessionInfoLabel(mapName, kategorie, Skin.TextLabelType.QUESTION);
-			questionArea.setText("");
+			questionArea = new SuiteInfoLabel("",
+					skin.sessionBounds(mapName, kategorie, Skin.TextLabelType.QUESTION));
+			questionArea.setId(Skin.TextLabelType.QUESTION + "Label");
 			inputField = null;
 			host.setComponents(karte, questionArea);
 		} else {
-			inputField = new SuiteTextField(skin.createInputField(mapName, kategorie));
+			inputField = new SuiteTextField(skin.sessionBounds(mapName, kategorie, SessionComponent.TEXT_INPUT));
 			inputField.onType(onTextTyped);
 			questionArea = null;
 			host.setComponents(karte, inputField);
@@ -86,14 +86,14 @@ public class RegionSessionView {
 
 	// ----- Karte -----
 
-	public void addIdsToActive(Set<String> ids)       { karte.makeActive(ids); }
-	public void addIdsToMarked(Set<String> ids)       { karte.addToMarked(ids); }
-	public void moveAllToActive()                     { karte.moveAllToActive(); }
+	public void addIdsToActive(Set<String> ids)       { karte.markActive(ids); }
+	public void addIdsToMarked(Set<String> ids)       { karte.mark(ids); }
+	public void moveAllToActive()                     { karte.reset(); }
 	public void moveCorrectToActive()                 { karte.moveCorrectToActive(); }
-	public void addIdsToCorrect(Set<String> elements) { karte.addToCorrect(elements); }
-	public void addIdsToInactive(Set<String> elements){ karte.makeInactive(elements); }
-	public void setIdToIncorrect(String element)      { karte.addToIncorrect(element); }
-	public void setMapActive(boolean active)          { karte.setInteractive(active); }
+	public void addIdsToCorrect(Set<String> elements) { karte.markCorrect(elements); }
+	public void addIdsToInactive(Set<String> elements){ karte.markInactive(elements); }
+	public void setIdToIncorrect(String element)      { karte.markIncorrect(element); }
+	public void setMapActive(boolean active)          { karte.setActive(active); }
 
 	public ShapeMapState getState()                   { return karte.getState(); }
 	public void setState(ShapeMapState state)         { karte.setState(state); }

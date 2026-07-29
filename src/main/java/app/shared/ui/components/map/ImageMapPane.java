@@ -1,12 +1,14 @@
-package app.shared.ui.components;
+package app.shared.ui.components.map;
 
-import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
+import app.shared.model.MapImages;
 import app.shared.model.ShapeGeometry;
-import app.shared.model.UiComponent;
 import app.shared.skin.SkinImageCache;
+import app.shared.skin.SkinService;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -21,6 +23,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Rectangle;
 
 /**
  * <p>Eine Karte, die im Grunde ein sehr großes Bild ist. Der Ausschnitt lässt sich per Drag & Drop verschieben.
@@ -36,11 +39,11 @@ import javafx.scene.layout.StackPane;
  *
  * <p>Ein Shape existiert pro id genau einmal im Layer (auffindbar über {@code userData == id}); Zustandswechsel
  * (unsichtbar → correct, marked → correct) passieren am selben Node, nicht als Stapel. Die Nodes leben pro
- * Karte: {@link #resetMarkers()} leert den Layer komplett. Der Falsch-Klick-Marker ist die bewusste Ausnahme —
+ * Karte: {@link #reset()} leert den Layer komplett. Der Falsch-Klick-Marker ist die bewusste Ausnahme —
  * er hat keine wiederauffindbare id (mehrere möglich) und wird schlicht angehängt.</p>
  *
- * <p>Skin-Werte (Größe, Border, Clip-Geometrie) erreichen sie nicht: Größe/Position/CSS-Klasse setzt der Skin von
- * außen auf diese Pane (als generische Region), den Clip baut der Skin und reicht ihn via {@link #setViewportClip(Node)} rein.</p>
+ * <p>Ihr Feld bekommt sie übergeben; Rahmenbreite und Eckradius für den Clip holt sie sich beim Skin, die
+ * hängen nicht vom Aufrufer ab.</p>
  *
  * ImageMapPane
  * |-- Pane viewport (clipped und mit prefSize)
@@ -57,7 +60,7 @@ import javafx.scene.layout.StackPane;
  * 		Shape (group)	= ":correct", ":incorrect", ":marked"
  * 		Shape (path)	= ".first", ".second"
  */
-public class ImageMapPane extends StackPane implements UiComponent{
+public class ImageMapPane extends StackPane implements SessionMap {
 
 	// Pseudo-Klassen für CSS
 	private static final PseudoClass CORRECT = PseudoClass.getPseudoClass("correct");
@@ -72,6 +75,9 @@ public class ImageMapPane extends StackPane implements UiComponent{
 	private final Image inactiveBackground;   // darf null sein (Karte ohne inaktive Variante)
 	private final Image inactiveOverlay;      // darf null sein
 	private final Rectangle2D overlayContentBounds;
+
+	// Ids → Geometrien. Wohnt im Feature (GeoMap), kommt als Funktion herein.
+	private final Function<Set<String>, List<ShapeGeometry>> geometrieFuer;
 
 	// UI Nodes
 	private final Pane viewport;
@@ -94,14 +100,22 @@ public class ImageMapPane extends StackPane implements UiComponent{
 	// Mini-Map Config
 	private static final int MINI_MAP_INSET = 10;
 
-	public ImageMapPane(Path backgroundPath, Path overlayPath, Path inactiveBackgroundPath,
-			Path inactiveOverlayPath, Rectangle2D overlayContentBounds) {
+	/**
+	 * @param bilder               Hintergrund und Overlay, je aktiv und abgeschaltet.
+	 * @param overlayContentBounds Wo der Inhalt im Mini-Map-Bild sitzt.
+	 * @param bounds               Das Feld, in dem die Karte sitzt. Löst der Aufrufer auf.
+	 * @param geometrieFuer        Übersetzt Ids in Geometrien — wohnt im Feature, diese Klasse kennt
+	 *                             weder Karte noch Deck.
+	 */
+	public ImageMapPane(MapImages bilder, Rectangle2D overlayContentBounds, Rectangle2D bounds,
+			Function<Set<String>, List<ShapeGeometry>> geometrieFuer) {
 		SkinImageCache images = SkinImageCache.getInstance();
-		this.background = images.get(backgroundPath);
-		this.overlay = images.get(overlayPath);
-		this.inactiveBackground = images.get(inactiveBackgroundPath);
-		this.inactiveOverlay = images.get(inactiveOverlayPath);
+		this.background = images.get(bilder.background());
+		this.overlay = images.get(bilder.overlay());
+		this.inactiveBackground = images.get(bilder.inactiveBackground());
+		this.inactiveOverlay = images.get(bilder.inactiveOverlay());
 		this.overlayContentBounds = overlayContentBounds;
+		this.geometrieFuer = geometrieFuer;
 
 		// 1. Main Content aufbauen
 		mainImageView = new ImageView();
@@ -111,7 +125,7 @@ public class ImageMapPane extends StackPane implements UiComponent{
 		contentGroup = new Group(mainImageView, shapeLayer);
 		contentGroup.setId("contentGroup");
 
-		// 2. Viewport (ohne Clip — den setzt der Skin via setViewportClip)
+		// 2. Viewport (Clip weiter unten, sobald die Größe steht)
 		viewport = new Pane(contentGroup); // Einfach weglassen? → Eine StackPane ist ein Layout-Manager. Sie versucht zwanghaft, ihre Kinder (Children) zu positionieren – standardmäßig zentriert in der Mitte. Wenn du später versuchst, deine contentGroup (die Karte) zu verschieben (Panning/Verschieben mit der Maus), kämpfst du gegen die StackPane. Eine reine Pane macht kein Layout-Management. Sie sagt: "Setz deine Kinder hin, wo du willst (x, y), mir egal".
 		viewport.setId("viewport");
 
@@ -130,20 +144,32 @@ public class ImageMapPane extends StackPane implements UiComponent{
 
 		updateImages();
 		setupInteraction();
-		// Kein centerMap() hier: die Größe setzt der Skin erst nach dem Bauen.
-		// Die learn-Seite ruft center() explizit, sobald prefSize steht.
+
+		applyBounds(bounds);
+		center(); // jetzt steht die Größe
 	}
 
 	/**
-	 * Hängt den vom Skin gebauten Clip an den internen Viewport. Opaker Node — diese Klasse rechnet mit
-	 * keinem Skin-Wert, sie wendet den fertigen Clip nur an.
+	 * Größe, Lage und Clip. Der Clip ist das programmatische Gegenstück zum {@code #borderOverlay}-Rahmen:
+	 * um die Rahmenbreite eingerückt, damit der Karteninhalt nicht unter den runden Ecken hervorlugt.
 	 */
-	public void setViewportClip(Node clip) {
+	private void applyBounds(Rectangle2D bounds) {
+		setPrefSize(bounds.getWidth(), bounds.getHeight());
+		setMaxSize(bounds.getWidth(), bounds.getHeight());
+		setLayoutX(bounds.getMinX());
+		setLayoutY(bounds.getMinY());
+		getStyleClass().add("my-image-map-pane");
+
+		double bw = SkinService.get().bigComponentBorderWidth();
+		Rectangle clip = new Rectangle(bw, bw, bounds.getWidth() - 2 * bw, bounds.getHeight() - 2 * bw);
+		// arc*2, weil JavaFX den Arc als Durchmesser nimmt und der Skin (wie das CSS) den Radius führt.
+		clip.setArcWidth(SkinService.get().bigComponentCornerRadius() * 2);
+		clip.setArcHeight(SkinService.get().bigComponentCornerRadius() * 2);
 		viewport.setClip(clip);
 	}
 
-	/** Zentriert die Karte. Von der learn-Seite zu rufen, NACHDEM der Skin die Größe gesetzt hat. */
-	public void center() {
+	/** Zentriert die Karte. */
+	private void center() {
 		if (mainImageView.getImage() == null)
 			return;
 
@@ -269,7 +295,28 @@ public class ImageMapPane extends StackPane implements UiComponent{
 	// Shapes (Geometrien mit id, von der learn-Seite)
 	// ========================================
 
-	public void setToCheckShapes(List<ShapeGeometry> shapes) {
+	// ========================================
+	// Das gemeinsame Vokabular (SessionMap) — spricht Ids, übersetzt nach Geometrien
+	// ========================================
+
+	@Override public void reset()                         { resetMarkers(); }
+	@Override public void markCorrect(Set<String> ids)    { addToCorrect(geometrieFuer.apply(ids)); }
+	@Override public void mark(Set<String> ids)           { setMarked(geometrieFuer.apply(ids)); }
+	@Override public void setClickTargets(Set<String> ids) { setClickTargets(geometrieFuer.apply(ids)); }
+
+	/**
+	 * Die Bild-Karte kennt die falsche Form nicht per id — sie merkt sich den letzten Klick selbst.
+	 *
+	 * <p>TODO: „EM 2021 — alle Länder grün, welches war falsch?" Das Zurücksetzen davor löscht die
+	 *   bisherigen Markierungen mit.</p>
+	 */
+	@Override
+	public void markIncorrect(String id) {
+		resetMarkers();
+		markLastClickAsIncorrect();
+	}
+
+	private void setClickTargets(List<ShapeGeometry> shapes) {
 		// Ghost Mode: erstmal ALLES im Layer durchlässig machen. Damit lösen wir das "Spanien liegt unter
 		// Europa"-Problem: Klicks fallen durch das obere (jetzt transparente) Shape auf das darunterliegende.
 		for (Node node : shapeLayer.getChildren())
@@ -314,7 +361,7 @@ public class ImageMapPane extends StackPane implements UiComponent{
 	}
 
 	/** Pro Karte: kompletter Neustart. Kein "Waschen" der Zustände nötig, da kein Node den Reset überlebt. */
-	public void resetMarkers() {
+	private void resetMarkers() {
 		shapeLayer.getChildren().clear();
 	}
 

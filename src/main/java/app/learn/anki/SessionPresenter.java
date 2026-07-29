@@ -11,7 +11,7 @@ import app.learn.model.SessionProgressCounter;
 import app.shared.model.ScreenView;
 import app.shared.model.SessionCallbacks;
 import app.shared.ui.AnkiSessionView;
-import app.shared.ui.GermanySessionView;
+import app.shared.ui.ShapeMapSessionView;
 import app.shared.ui.ImageMapSessionView;
 import app.shared.ui.McSessionView;
 
@@ -54,7 +54,7 @@ public class SessionPresenter {
                 this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack);
 
         return switch(type) {
-            case GERMANY_CARDS -> new GermanySessionView(id, mapName, kategorie, map.getShapeGeometries(), callbacks);
+            case GERMANY_CARDS -> new ShapeMapSessionView(id, mapName, kategorie, map.getShapeGeometries(), callbacks);
             case MC_CARDS      -> new McSessionView(id, mapName, kategorie, callbacks);
             case WORLD_CARDS,
                  HANNOVER_CARDS-> new ImageMapSessionView(id, mapName, kategorie, map::geometryFor, callbacks);
@@ -86,7 +86,7 @@ public class SessionPresenter {
 	}
  
 	void waitForClick(Set<String> idsInQuestion) {
-		view.setIdsInQuestion(idsInQuestion);
+		view.setClickTargets(idsInQuestion);
 		view.setMapActive(true);
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);

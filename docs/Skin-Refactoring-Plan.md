@@ -1,13 +1,16 @@
 # Skin-Refactoring — Vorgehensplan
 
-**Stand:** 29.07.2026 · v5 · Schritte 1–3c erledigt, `Skin` von 2660 auf 1706 Zeilen
+**Stand:** 29.07.2026 · v6 · Schritte 1–3c und der größte Teil von 3f erledigt, dazu der
+Build-Wächter (Schritt 6). `Skin` von 2660 auf 1547 Zeilen.
 
-**Charakter dieses Dokuments:** das Ergebnis der Vorbesprechung vom 26.–28.07. Es hält fest,
-*was entschieden ist*, *was bewusst vertagt wurde*, *in welcher Reihenfolge* vorgegangen wird —
-plus die geprüften Fakten, auf denen das beruht. Kein Regelwerk (das ist `Design-Regeln.md`, es
-wird am Ende nachgezogen), keine Ist-Erfassung (das sind die vier Bestandsaufnahmen).
+**Charakter dieses Dokuments:** es blickt **zurück** — *was entschieden ist*, *was erledigt ist*,
+*in welcher Reihenfolge* vorgegangen wird, plus die geprüften Fakten, auf denen das beruht, und die
+Annahmen, die sich als falsch erwiesen haben.
 
-Die Zielbild-Entscheidung samt verworfener Alternative steht in `Skin-Zielbild-Entscheidung.md`.
+Was **offen** ist, steht ausschließlich in `Vertagte-Punkte.md`. Die Regeln selbst stehen in
+`Design-Regeln.md` (wird am Ende nachgezogen), die Ist-Erfassung in den vier Bestandsaufnahmen, die
+Zielbild-Entscheidung samt verworfener Alternative in `Skin-Zielbild-Entscheidung.md`.
+
 
 ---
 
@@ -68,9 +71,13 @@ Alle drei müssen am Ende leer sein. Stand 29.07.:
 
 | | Treffer | wer noch |
 |---|---|---|
-| 1 · Skin kennt UI nicht | 3 | `Skin` baut noch `SuiteInfoLabel`, `SuiteImage`, `MultipleChoicePane` |
-| 2 · Feature kennt Skin nicht | 3 | nur `learn.MapService` |
-| 3 · nur `shared.ui` kennt Bausteine | 1 Datei | nur `Skin` selbst |
+| 1 · Skin kennt UI nicht | 1 | `Skin` baut noch `MultipleChoicePane` |
+| 2 · Feature kennt Skin nicht | **0** ✓ | — |
+| 3 · nur `shared.ui` kennt Bausteine | 1 Datei | nur `Skin` selbst, aus demselben Grund |
+
+Wächter 1 und 3 haben damit dieselbe einzige Ursache und fallen gemeinsam, sobald
+`createMultipleChoicePane` gegangen ist. Seit 29.07. bewacht ein ArchUnit-Test im Build den
+zweiten; die anderen beiden stehen dort auskommentiert bereit (§5, Schritt 6).
 
 **Kein Feature hält mehr eine UI-Komponente.**
 
@@ -107,67 +114,74 @@ Feldzugriffe in den 23 `addXxx`-Methoden bleiben unqualifiziert, weil die Vererb
 Vererbung ist die engste Kopplung, die Java hat. Der Split, der wirklich etwas einbringt, ist der
 zwischen A und den **Bau-Methoden**, weil die das Paket wechseln und die Features vom Skin lösen.
 
-### 2.2 A's öffentliche Fläche
+### 2.2 Die öffentliche Fläche von `SkinProperties`
 
-Keine Feld-Getter, sondern zweckgeschnittene Records:
+Keine Feld-Getter, sondern zweckgeschnittene Records und Werte. Stand 29.07.:
 
 ```java
-public SessionLayout sessionLayout(String deck, String kategorie);   // fertig aufgelöst
-public McMetrics     mcMetrics();
-public CardStyle     cardStyle();
-public DialogStyle   dialogStyle();
+DialogStyle       dialogStyle();          // Werte-Bündel, ohne Schlüssel
+DiaryStyle        diaryStyle();
+MovieStyle        movieStyle();
+DashboardTileStyle dashboardTileStyle();
+Dimension2D       getContentSize();
+int               bigComponentCornerRadius();
+int               bigComponentBorderWidth();
+
+Rectangle2D sessionBounds(String mapName, String kategorie, SessionComponent teil);
+Rectangle2D sessionBounds(String mapName, String kategorie, Skin.TextLabelType typ);
+MapImages   mapImages(String mapName);    // mit Schlüssel — der Aufrufer löst auf
+Image       iconFor(Skin.IconButtonType rolle);
 ```
 
-**Was drinnen bleibt:** Feldnamen, Reflection, und die Fallback-Kette (Deck → Kategorie → Default),
-damit sie nicht in fünfzehn UI-Klassen neu entsteht.
+Die Trennlinie ist die Schlüssel-Regel (§3.15): was ohne Argument auskommt, holt sich der Baustein
+selbst; was einen Schlüssel braucht, löst der Aufrufer auf und reicht das Ergebnis weiter.
 
-Sie wächst nach Bedarf: erst anlegen, wenn eine Klasse nach `shared.ui` wandert und den Wert
-tatsächlich braucht. Nicht auf Verdacht entwerfen.
+**Was drinnen bleibt:** Feldnamen, Reflection, und die Staffelung (spezifisch → Kategorie), die
+genau einmal existiert — in `SkinProperties.staffelung`.
 
-### 2.3 `shared.ui` — die Zielbelegung
+*Ursprünglich geplant waren `SessionLayout`, `McMetrics` und `CardStyle`.* `SessionLayout` wurde
+verworfen: ein Record mit neun Feldern, von denen je nach Lernform die meisten `null` wären. Die
+Fläche wächst nach Bedarf, nicht auf Verdacht.
+
+### 2.3 `shared.ui` — die Belegung
 
 ```
 shared.ui                        (Oberflächen — was gezeigt wird)
-    Alerts                       ← neu, aus Skin.showAlert ×2 + Helfern
-    BarChartScreenView
-    DashboardScreenView
-    DiaryScreenView
-    MovieViewerScreenView
-    DiaryEditor
-    ActivityTableDialog
-    AnkiConfigDialog
-    RegionConfigDialog
-    TextPromptDialog
-    WhatsAppChatDialog
-    WhatsAppContactDialog
-    ImageBatchProcessor
-    (später) die learn-Session-Panes
-    (später) DatePickerDialog, aus SuiteExporter herausgelöst
+    Alerts
+    BarChartScreenView · DashboardScreenView · DiaryScreenView · MovieViewerScreenView
+    DiaryEditor · ImageBatchProcessor
+    ActivityTableDialog · AnkiConfigDialog · RegionConfigDialog · TextPromptDialog
+    WhatsAppChatDialog · WhatsAppContactDialog · DatePickerDialog
+    AnkiSessionView (abstrakt) + ShapeMapSessionView · McSessionView · ImageMapSessionView
+    RegionSessionView
+    ComponentHost
 
 shared.ui.components             (Bausteine — was verbaut wird)
     SuiteImage · SuiteInfoLabel · SuiteTextField · SuiteIconButton
-    SuiteSuggestionTextField · SuiteTabCommitTextFieldTableCell
-    MultipleChoicePane · DashboardTile · DiaryTagInputComponent
-    ShapeMapPane · ImageMapPane · MapNodeBuilder · ShapeLayer
-    ComponentHost
-    Dialogs                      ← neu: createDialog, createDialogContent,
-                                   createDialogHeaderBar, setDialogTitle
+    SuiteSuggestionTextField · SuiteTabCommitTextFieldTableCell · SuiteDatePicker
+    SuiteDialog · SuiteHeaderBar
+    MultipleChoicePane · DashboardTile · DiaryCard · MovieCard · DiaryTagInputComponent
+
+shared.ui.components.map         (die Karten und ihr Innenleben)
+    SessionMap (Kontrakt) · ShapeMapPane · ImageMapPane · NoSessionMap
+    MapNodeBuilder · ShapeLayer          (beide paketprivat)
 ```
 
-`Dialogs` ist eine **Fabrik**, kein Baustein im engeren Sinn — dieselbe Rolle wie `MapNodeBuilder`,
-der dort heute schon liegt, ohne selbst Komponente zu sein.
+`SuiteDialog` ist eine Unterklasse von `javafx.Dialog` geworden, keine Fabrik — die ursprünglich
+geplante Fabrik `Dialogs` gibt es nicht.
 
-### 2.4 Blätter bleiben passiv
-
-`SuiteInfoLabel`, `MultipleChoicePane` & Co. *bekommen* Maße, sie *holen* sie nie. Gelesen wird beim
-Komponierer, der das Blatt einsetzt:
+### 2.4 Bausteine bekommen ihre Lage, sie holen sie nicht
 
 ```java
-// in der Session-Pane, shared.ui
-SessionLayout layout = props.sessionLayout(deck, kategorie);
-questionArea = new SuiteInfoLabel("", layout.question());
-mcPane       = new MultipleChoicePane(layout.mc(), props.mcMetrics());
+// in der Session-View, shared.ui
+questionArea = new SuiteInfoLabel("", skin.sessionBounds(mapName, kategorie, TextLabelType.QUESTION));
+inputField   = new SuiteTextField(skin.sessionBounds(mapName, kategorie, SessionComponent.TEXT_INPUT));
 ```
+
+Jeder dieser Bausteine hat daneben einen Konstruktor **ohne** Lage, für Aufrufer, die ihn in ein
+Layout hängen statt ihn absolut zu positionieren. Der Lage-Konstruktor delegiert an den anderen,
+damit keiner der beiden unbenutzt ist. Was ohne Schlüssel auskommt — Eckradius, Rahmenbreite,
+Icon-Bild — holt sich der Baustein dagegen selbst (§3.15).
 
 ---
 
@@ -191,55 +205,39 @@ mcPane       = new MultipleChoicePane(layout.mc(), props.mcMetrics());
 12. **Die Kontrakte** (`Screen`, `ScreenView`, `UiComponent`) wandern nach `shared.model` — sie sind
     Definitionen ohne Verhalten, dieselbe Sorte wie die Records.
 13. **javafx bleibt in `controller` erlaubt.** `MainWindow` (431 Z.) wird nicht angefasst.
+14. **Der Verantwortungsrahmen** — wer entscheidet was:
+
+    | Ebene | entscheidet | Beispiel |
+    |---|---|---|
+    | **Feature** | *was* und *wann* | „Deck Deutschland, Frage 7, Antwort war falsch" |
+    | **View** (`shared.ui`) | *welche Bausteine*, *wie verdrahtet* | „diese Session hat Karte, Frage, Eingabefeld, MC, Zurück-Knopf" |
+    | **Skin** | *wie es aussieht, wo es sitzt* | Farben, Fonts, Bounds, welches Wallpaper zu welcher Karte |
+
+    Prüffrage: **wovon hängt die Zeile ab?** Skin-Wechsel → Skin. Fachlogik → Feature. Keins von
+    beidem, nur „soll anders aussehen" → View.
+
+    In Thorstens Formulierung: *„Stell eine Frage" sagt das Feature. „Zeige auf dem Fragepanel
+    diesen Text" passiert in `shared.ui`.*
+15. **Die Schlüssel-Regel** (29.07.): *Ein Baustein holt sich beim Skin, was für jede Verwendung
+    gleich ist. Was von der Verwendung abhängt, bekommt er übergeben.* Ablesbar an der Signatur des
+    Skin-Zugangs — braucht er ein Argument vom Aufrufer, löst der Aufrufer auf. Gilt ausnahmslos,
+    auch für Feature-Bausteine wie `MovieCard`.
+16. **Bausteine erben, sie verhüllen nicht.** `SuiteTextField extends TextField` statt einer Fassade
+    um ein `TextField`. Die Grenze, die Fassaden schützten (Features ohne javafx), verläuft nicht
+    mehr hier — innerhalb von `shared.ui` kennen beide Seiten javafx.
+17. **Bausteine heißen nach dem, was sie sind, nicht nach dem, wofür sie gerade benutzt werden.**
+    Deshalb `ShapeMapSessionView`, nicht `GermanySessionView`. Der Prüfsatz dazu: *was, wenn ein
+    zweites Deck derselben Bauart dazukäme?*
 
 ---
 
-## 4. Vertagt
+## 4. Was offen ist
 
-### 4a. Punkt-Notation in den properties (Map + Record)
+Was offen ist, steht **nicht hier**, sondern in `Vertagte-Punkte.md` — sortiert danach, wann es
+fällig wird. Dieses Dokument blickt zurück (entschieden, erledigt, geprüft, verworfen), jenes nach
+vorn. Ein früherer §4 „Vertagt" führte beides parallel und hatte prompt einen Punkt als *vertagt*
+gelistet, den §5 desselben Dokuments als *erledigt* auswies.
 
-`learnSessionPanel.world.map=20,20,960,960` wird `Map<String, LearnSessionPanel>` — erste Ebene
-offen (Deck-Id aus der Datei), zweite deklariert (Record-Komponente). Regel: *ein Punkt geht eine
-Ebene tiefer; ob eine Ebene offen oder deklariert ist, sagt der Typ.* Gedeckelt auf zwei Ebenen.
-
-- **Dafür:** 96 Felddeklarationen verschwinden; ein neues Deck kostet keine Java-Änderung mehr
-  (heute 3 Felder pro Länder-Deck); hannover schrumpft von 16 Zeilen auf 1; FailFast fällt ab.
-- **Dagegen:** ~30 Zeilen Typ-Ablaufen im Loader; Migration aller sieben properties-Dateien,
-  einmalig und unumkehrbar; der Loader ist danach nicht mehr in zehn Sekunden erklärt.
-- **Warum vertagbar:** A liegt mit den Feldern **genau wie heute** vor. Die Frage wird zu einer
-  Änderung *innerhalb einer einzigen Klasse* — durch das Vertagen billiger, nicht teurer.
-- **FailFast ist unabhängig billiger zu haben:** ein Startup-Check, der geladene Schlüssel gegen
-  deklarierte Feldnamen hält (~15 Zeilen), findet `borderBackButton` ohne Migration.
-
-### 4b. Zuschnitt der Session-Panes
-
-Dass sie das Feature verlassen und nach `shared.ui` gehen, ist entschieden (3.8). Offen ist nur der
-Zuschnitt — eine Klasse pro Session-Art wie heute, oder anders; und wie viel im Feature bleibt
-(`SessionPresenter` bleibt dort). Wird mit Schritt 3c entschieden.
-
-Der zugehörige Verantwortungsrahmen, der ins Regelwerk gehört:
-
-| Ebene | entscheidet | Beispiel |
-|---|---|---|
-| **Feature** | *was* und *wann* | „Deck Deutschland, Frage 7, Antwort war falsch" |
-| **View** (`shared.ui`) | *welche Bausteine*, *wie verdrahtet* | „diese Session hat Karte, Frage, Eingabefeld, MC, Zurück-Button" |
-| **Skin** | *wie es aussieht, wo es sitzt* | Farben, Fonts, Bounds, welches Wallpaper zu welcher Karte |
-
-Prüffrage: **wovon hängt die Zeile ab?** Skin-Wechsel → Skin. Fachlogik → Feature. Keins von
-beidem, nur „soll anders aussehen" → View.
-
-### 4c. Kleineres
-
-- **Kollaps der sieben Skin-Stummelklassen** zu einer Klasse plus Tabelle. Sie sind ein
-  Erweiterungspunkt für einen Skin, der in Java etwas berechnen will. Eigene Frage.
-- **Re-Warming des Bildcaches nach Skinwechsel.** Heute lädt die erste Bildkarte nach einem Wechsel
-  synchron. Bewusst akzeptiert. **Gehört im Code dokumentiert.**
-- **`StartScreen`** (Screen + ScreenView in einer Klasse): löst sich per Regel — *ein inhaltsloser
-  Screen (reines Chrome/Hintergrund) darf sein eigener `ScreenView` sein.*
-- **Dialog-Stufe 2a fehlt im Regelwerk:** der parametrisierte Standarddialog (Primitive rein,
-  Primitive oder `null` raus, kein Feature-seitiges Objekt).
-- **`SuiteExporter`s Inline-Datumsdialog** wird eine eigene Klasse in `shared.ui` — sonst ruft der
-  `controller` die Fabrik `Dialogs` und verletzt Wächter 3.
 
 ---
 
@@ -291,7 +289,7 @@ beidem, nur „soll anders aussehen" → View.
 - **Region:** `learn.region.SessionPane` gelöscht, dafür `shared.ui.RegionSessionView`. Der
   Presenter treibt sie direkt. `ShapeMapState` als eigenständiges Record nach `shared.model`.
 - **Anki:** die drei Panes (432 Zeilen) gelöscht, dafür `AnkiSessionView` (abstrakt) mit
-  `GermanySessionView`, `McSessionView`, `ImageMapSessionView` — je unter 32 Zeilen.
+  `ShapeMapSessionView`, `McSessionView`, `ImageMapSessionView` — je unter 32 Zeilen.
 - Die zwei Kartensprachen liegen hinter `SessionMap` (`ShapeSessionMap`, `ImageSessionMap`,
   `NoSessionMap`). `SessionCallbacks` bündelt die vier Rückmeldungen.
 - **Gefunden und behoben:** `beginTx`/`endTx` waren tote No-ops (Interface-Defaults, nie
@@ -327,6 +325,45 @@ beidem, nur „soll anders aussehen" → View.
 - Alle drei Klassen behalten vorerst `implements UiComponent` mit `getView() { return this; }` — der
   `ComponentHost` bekommt noch `UiComponent...`, weil die `SessionMap`-Implementierungen keine Nodes
   sind. Das fällt zusammen mit ihnen.
+
+**29.07. — Die Bausteine nehmen Maße entgegen (3f, dritter Teilschritt).**
+
+Zugrunde liegt eine Regel, die Thorsten aus einer schlechteren von mir herausgeschält hat. Mein
+erster Versuch lautete „ein Baustein darf sich holen, was nicht sessionabhängig ist" — sein Einwand:
+eine allgemeine Regel darf kein Feature-Wort enthalten. Die tragfähige Fassung ist mechanisch an der
+Signatur ablesbar:
+
+> **Ein Baustein darf sich jeden Skin-Wert selbst holen, für den der Skin keinen Schlüssel vom
+> Aufrufer braucht. Alles, wofür er einen braucht, kommt vom Aufrufer.**
+
+```java
+bigComponentCornerRadius()                  // kein Argument     → Baustein holt selbst
+iconFor(rolle)                              // Rolle, kein Kontext → Baustein holt selbst
+sessionBounds(mapName, kategorie, teil)     // braucht Schlüssel  → Aufrufer löst auf
+```
+
+Ein Schlüssel *ist* der Kontext. Wer einen liefern muss, weiß etwas, das der Baustein nicht wissen
+soll. Die Regel gilt ausnahmslos — auch für `ShapeMapPane`, die deshalb ihr Rechteck übergeben
+bekommt statt es zu holen.
+
+- **Vier Bausteine, je zwei Konstruktoren** — einer ohne Lage (für Layout-Container), einer mit
+  (für absolut positionierende Hosts), der zweite delegiert an den ersten. Keiner ist tot.
+  `SuiteTextField()` · `SuiteIconButton(rolle)` · `SuiteImage(w, h)` · `SuiteInfoLabel(text)`.
+- **`SuiteInfoLabel` bekommt `.my-info-label`.** Vorher hatte sie <b>kein</b> eigenes Aussehen: der
+  Skin stylte ausschließlich `#QuestionLabel`/`#ProgressLabel`/`#HistoryLabel`, außerhalb einer
+  Session war sie nackt. Die drei ID-Regeln waren identisch bis auf die Hintergrundfarbe — jetzt
+  trägt die Klasse alles Gemeinsame, die Kennungen nur noch die Abweichung. Das entspricht der
+  Fallback-Kette, die beim Laden ohnehin schon auf `displayTextBgColor` zurückfällt.
+- **Gelöscht:** `createImageComponent`, `createSessionInfoLabel`, das Record `IconButtonStyle`.
+  `iconButtonStyle(deckId, typ)` wurde zu `iconFor(rolle)` — die Maße kommen jetzt getrennt.
+- **Neu:** `SessionComponent` (Aufzählung, hält die Property-Endung) und
+  `sessionBounds(mapName, kategorie, teil)` mit einer Überladung für `TextLabelType`. Die Staffelung
+  spezifisch→Kategorie steht damit einmal statt sechsmal.
+- Die `* 2`-Umrechnung für den Eckradius ist aus dem Skin in `SuiteImage` gewandert, dorthin also,
+  wo `Rectangle.setArcWidth` gerufen wird. Der Skin führt durchgehend Radien, wie das CSS auch.
+  Der unsichere Kommentar dazu ist beantwortet und weg.
+
+Wächter 1: 3 → **1** (nur noch `MultipleChoicePane`). `mvn test` grün.
 
 Offene Kleinigkeiten: die Kommentare `// Owner intern` bei `AnkiConfigDialog` und
 `RegionConfigDialog` sind überflüssig; der Kommentar bei `createDialog` könnte die **Bindung**
@@ -430,11 +467,12 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
 3f  Die Bau-Methoden verlassen den Skin — in kleinen Schritten
     ✓ ShapeMapPane (buildShapeMapWrapper zog ein)                        29.07.
     ✓ SuiteTextField + SuiteIconButton (Vererbung statt Fassade)         29.07.
-      Offen: createSessionInfoLabel, createImageComponent,
-      createMultipleChoicePane. Die Komponenten nehmen ihre Maße dann selbst
-      entgegen. Danach kann ComponentHost Node... nehmen und UiComponent
-      entfällt — dafür müssen aber auch die SessionMap-Implementierungen
-      Nodes werden. Danach ist Wächter 1 leer.
+    ✓ Alle vier Bausteine nehmen Maße entgegen, Schlüssel-Regel          29.07.
+      Offen: nur noch createMultipleChoicePane. Danach ist Wächter 1 leer
+      und der Zyklus skin↔ui.components aufgelöst — dann können die zwei
+      auskommentierten ArchUnit-Regeln scharf gestellt werden.
+      Danach kann ComponentHost Node... nehmen und UiComponent entfällt —
+      dafür müssen aber auch die SessionMap-Implementierungen Nodes werden.
 
 3d  Chrome und Menüs
     createMenuBar, createMenu, createMenuItem, createMainWindowHeaderBar,
@@ -445,13 +483,13 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
     Alle drei Wächter auf leer.
 
 5   Regelwerk und Architekturdokument nachziehen
-    Design-Regeln.md: die Ordnung aus §1, der Verantwortungsrahmen aus §4b in
+    Design-Regeln.md: die Ordnung aus §1, der Verantwortungsrahmen aus §3.14 in
     Thorstens Formulierung, StartScreen-Regel, Dialog-Stufe 2a, die drei Wächter
     als bewachte Zusagen, der neu gefasste Skin-Vertrag.
     Architektur-Dokumentation.md: der Abschnitt „UI-Architektur: Skin-System" ist
     dann vollständig überholt.
 
-6 ~ Die Wächter in den Maven-Build                                        28.07.
+6 ~ Die Wächter in den Maven-Build                                        29.07.
     ArchUnit, src/test/java/app/ArchitekturRegelnTest.java. Scharf ist bisher
     Wächter 2; Wächter 1, Wächter 3 und die Zyklenfreiheit stehen dort
     auskommentiert und werden freigeschaltet, sobald sie halten (3f bzw. 4).

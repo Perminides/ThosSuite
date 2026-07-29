@@ -1,6 +1,6 @@
 # Vertagte Punkte
 
-**Stand:** 29.07.2026 · Schritte 1–3c erledigt
+**Stand:** 29.07.2026 · Schritte 1–3c, der größte Teil von 3f und der Build-Wächter erledigt
 
 Alles, was während des Refactorings (26.–29.07.) bewusst **nicht** sofort gemacht wurde.
 Sortiert nach **Fälligkeit**, nicht nach Thema — beim Abarbeiten ist „was ist jetzt dran" die
@@ -12,14 +12,13 @@ Schrittnummern beziehen sich auf `Skin-Refactoring-Plan.md` §8.
 
 ## A · Fällig im laufenden Umbau
 
-### Schritt 3f — die drei restlichen Bau-Methoden
+### Schritt 3f — die letzte Bau-Methode
 
 | Punkt | Fundstelle |
 |---|---|
-| **Form der Maß-Zugänge entscheiden.** Der erste ist da: `SkinProperties.sessionMapBounds(mapName, kategorie)`, eine benannte Methode. Die Alternative bleibt `sessionBounds(mapName, kategorie, teil)` mit `SessionComponent`-Aufzählung (war in 3c kurz angelegt). Elf Maße insgesamt — ab dem dritten oder vierten sieht man, was sich besser liest | `SkinProperties` |
-| Der **Übergangszustand** in `RegionSessionView` und `AnkiSessionView`: die Komponenten kommen noch über `skin.createSessionInfoLabel` / `createInputField` / `createImageComponent` / `createMultipleChoicePane` / `createIconButton`. Steht in beiden Klassenkommentaren als „kein Dauerzustand" | Klassen-Javadoc |
-| `applyImageMapLayout` — „Ich verstehe nicht, was hier passiert. Muss diese Zeile wirklich hin?" | `ImageSessionMap:40` |
-| Bild-Karte: „EM 2021 — alle Länder grün, welches war falsch?" Das Zurücksetzen vor `markLastClickAsIncorrect()` löscht die bisherigen Markierungen mit | `ImageSessionMap` (`markIncorrect`) |
+| ✓ **Form der Maß-Zugänge** — entschieden am 29.07.: `sessionBounds(mapName, kategorie, teil)` mit `SessionComponent`, plus eine Überladung für `TextLabelType`. Ausschlag gab, dass die Staffelung spezifisch→Kategorie sonst sechsmal abgeschrieben würde | `SkinProperties` |
+| **`createMultipleChoicePane`** ist die letzte Bau-Methode im Skin. Mit ihr fallen Wächter 1 und 3 und der Zyklus `skin ↔ ui.components` — danach lassen sich die drei auskommentierten ArchUnit-Regeln scharf stellen | `Skin`, `ArchitekturRegelnTest` |
+| Bild-Karte: „EM 2021 — alle Länder grün, welches war falsch?" Das Zurücksetzen vor `markLastClickAsIncorrect()` löscht die bisherigen Markierungen mit | `ImageMapPane.markIncorrect` |
 | Fragefeld der Region-Session: „Hier wäre allerdings CENTER schon angesagt" | `RegionSessionView:69` |
 
 ### Schritt 5 — Architekturdokument
@@ -82,18 +81,56 @@ durch. **Erster Schritt gemacht:** `ShapeMapPane extends StackPane`.
 
 | | Zeilen | Befund |
 |---|---|---|
-| `SuiteTextField` | 46 | ✓ erledigt 29.07. — `extends TextField`, holt sein Feld selbst. `setActive(…)` ist geblieben. |
-| `SuiteIconButton` | 29 | ✓ erledigt 29.07. — `extends Button`, holt Bild und Feld selbst über `IconButtonStyle`. |
-| `SuiteInfoLabel` | 168 | `extends StackPane`, parst Mini-Markup per Regex, baut Text-Nodes, feste Maße. **Echte Komponente, bleibt.** |
-| `SuiteImage` | 131 | `extends StackPane`, Hintergrund-/Border-Rechtecke, runde Ecken, Bildwechsel. **Echte Komponente, bleibt.** |
+| `SuiteTextField` | 46 | ✓ 29.07. — `extends TextField`, zwei Konstruktoren, Aussehen über `.text-field`. |
+| `SuiteIconButton` | 29 | ✓ 29.07. — `extends Button`, holt sein Bild über `iconFor(rolle)`, Maße kommen rein. |
+| `SuiteInfoLabel` | 168 | ✓ 29.07. — bekam `.my-info-label`; vorher kam ihr ganzes Aussehen aus den drei Session-Kennungen. |
+| `SuiteImage` | 131 | ✓ 29.07. — holt den Eckradius selbst, Maße kommen rein. |
 | `SuiteDatePicker` | 9 | trägt keinen Skin-Wert, nur die Entscheidung „keine Kalenderwochen". Überlebt nur über das Argument „Ort einer suite-weiten Festlegung", nicht über das Fassaden-Argument. **Dünnster Fall, legitim zu streichen.** |
 
-**Folgefrage — `UiComponent` abschaffen.** `ShapeMapPane`, `SuiteTextField` und `SuiteIconButton`
-sind seit 29.07. selbst Nodes und implementieren `UiComponent` nur noch mit
-`getView() { return this; }`. Damit `ComponentHost` auf `Node...` umstellen kann, fehlen noch die
-`SessionMap`-Implementierungen (`ShapeSessionMap`, `ImageSessionMap`, `NoSessionMap`) — die sind
-Umbenenner, keine Nodes. Entweder werden auch sie Nodes, oder `SessionMap` behält ein `getView()`
-und der Host nimmt beides.
+**Folgefrage — `UiComponent` abschaffen.** Alle Bausteine sind inzwischen selbst Nodes und
+implementieren `UiComponent` nur noch mit `getView() { return this; }`. Die einzige Ausnahme ist
+`NoSessionMap`, das Nullobjekt: es hält eine leere `Group`. Wird auch das ein Node (etwa indem es
+selbst von `Group` erbt), kann `ComponentHost` auf `Node...` umstellen und `UiComponent` samt
+`getView()` entfallen.
+
+### Das Karten-Konstrukt — umbenennen und erklären
+
+**Umbenennen.** `SessionMap` ist nicht spezifisch genug: „Session" könnte irgendwann auch ein
+kleines Spiel haben. Gemeint ist Lernen. Also `LearnMap`, `ShapeLearnMap`, `ImageLearnMap` — und für
+das Nullobjekt eher `EmptyLearnMap` als `NoLearnMap`, das liest sich sonst wie eine Verneinung des
+Lernens.
+
+**Achtung, Anschlussfrage:** „Session" steckt auch in `SessionComponent`, `sessionBounds(…)`,
+`SessionCallbacks`, `AnkiSessionView`, `RegionSessionView`. Entweder das Wort bedeutet dort
+weiterhin „Lern-Session" und bleibt, oder es zieht mit um. Halbe Umbenennung wäre schlechter als
+gar keine — einmal entscheiden.
+
+**Erklären.** Das Konstrukt braucht einen kurzen Absatz — im Regeldokument oder als Paket-Javadoc.
+Stand nach der Vereinfachung vom 29.07.:
+
+```
+ShapeLayer        Nachschlagetabelle: json-type → zIndex, interaktiv?, CSS-Layer-Klasse
+MapNodeBuilder    Fabrik:             Geometrie → JavaFX-Node
+SessionMap        das gemeinsame Vokabular, spricht durchgehend Ids
+ShapeMapPane      die eine Karte, arbeitet ohnehin mit Ids
+ImageMapPane      die andere Karte, arbeitet mit Geometrien und übersetzt selbst
+NoSessionMap      die Karte der MC-Session, die keine hat (Nullobjekt)
+```
+
+Der Grund für das Interface: die beiden Panes sind sehr verschieden, die View soll beide bedienen,
+ohne zu wissen welche.
+
+✓ **Vereinfacht am 29.07.:** die beiden Übersetzer-Klassen `ShapeSessionMap` und `ImageSessionMap`
+sind weg — die Panes setzen `SessionMap` selbst um. Mitgenommen: `Skin.applyImageMapLayout` (die
+Methode, die die Pane von außen vermaß und einen Clip zurückgab) ist ebenfalls weg, `ImageMapPane`
+bekommt ihr Feld im Konstruktor und baut den Clip selbst. Damit ist auch die Zeile erledigt, die im
+alten Code den Marker *„Ich verstehe nicht, was hier passiert"* trug.
+
+**Neu offen (29.07.): `#QuestionLabel` durch eine Modifikator-Klasse ersetzen.** Jetzt, wo
+`SuiteInfoLabel` wiederverwendbar ist, ist die Kennung die falsche Mechanik — IDs sollen in einer
+Szene eindeutig sein, zwei Info-Labels in einem Dialog brächen das. Sauberer:
+`.my-info-label.question` statt `#QuestionLabel`. Betrifft `addSessionInfoLabelStyles` und die zwei
+`setId(…)`-Aufrufe in den Views.
 
 **Noch offen in der Familie:** `SuiteDatePicker` (dünnster Fall) und die Frage, ob
 `SuiteInfoLabel` / `SuiteImage` / `MultipleChoicePane` ihre Maße im Konstruktor bekommen oder von
@@ -124,13 +161,47 @@ Kontext als Parameter — in jedem Fall sollte auch der Editor über `SuiteDateP
 - **Dialog-Stufe 2a** fehlt: der parametrisierte Standarddialog (Primitive rein, Primitive oder
   `null` raus, kein Feature-seitiges Objekt). `TextPromptDialog`, `WhatsAppChatDialog`,
   `WhatsAppContactDialog` sehen nur deshalb wie Verstöße aus.
-- **Verantwortungsrahmen** Feature / View / Skin (Plan §4b) eintragen.
+- **Verantwortungsrahmen** Feature / View / Skin (Plan §3.14) eintragen.
+- **Die Schlüssel-Regel** (beschlossen 29.07.) — muss ins Regeldokument:
+
+  > **Ein Baustein holt sich beim Skin, was für jede Verwendung gleich ist. Was von der Verwendung
+  > abhängt, bekommt er übergeben.**
+  >
+  > Der Test steht in der Signatur des Skin-Zugangs: **braucht er ein Argument vom Aufrufer, dann
+  > löst der Aufrufer auf und reicht das Ergebnis weiter.** Ein Argument *ist* der Kontext — wer
+  > eines liefern muss, weiß etwas, das der Baustein nicht wissen soll.
+
+  ```java
+  bigComponentCornerRadius()               // kein Argument      → Baustein holt selbst
+  iconFor(rolle)                           // Rolle, kein Kontext → Baustein holt selbst
+  sessionBounds(mapName, kategorie, teil)  // braucht Schlüssel   → Aufrufer löst auf
+  ```
+
+  **Was die Regel nicht sagt.** Thorstens Entwurf enthielt „Komponenten bleiben feature-frei" und
+  stolperte sofort über den eigenen Einwand: *„natürlich ist eine MovieCard nicht featurefrei"*.
+  Zu Recht — das sind zwei Fragen, und nur die erste regelt diese Regel:
+
+  | Frage | geregelt durch |
+  |---|---|
+  | Wer löst den Kontext auf? | **die Schlüssel-Regel** — gilt ausnahmslos für *alle* Bausteine, auch für `MovieCard` und `ShapeMapPane` |
+  | Ist der Baustein an ein Feature gebunden? | eine **Namensfrage**, kein Konstruktionsprinzip |
+
+  `MovieCard` darf sich `moviePosterWidth` holen (kein Schlüssel) und bekommt den Film übergeben
+  (Kontext). Sie bleibt trotzdem eine Film-Komponente. Kein Widerspruch.
+
+  **Nebenregel, die schon Praxis ist:** was ein Baustein sich holt, kommt bevorzugt als
+  zweckgeschnittenes Record (`DialogStyle`, `MovieStyle`, `DashboardTileStyle`), nicht als
+  Feld-Getter — damit keine Property-Namen das skin-Paket verlassen.
+
+- **Keine Streams, außer sie sind unbedingt nötig.** Steht bisher nirgends geschrieben, wurde aber
+  schon zweimal im Review beanstandet (`DashboardScreenView`, `ShapeMapPane`). Gehört ins
+  Regeldokument.
 - **Skin-Vertrag** neu fassen — der bestehende Abschnitt ist als „vorläufig" markiert.
 - Die drei Wächter als bewachte Zusagen festschreiben.
 
 ### Schritt 6 — die Wächter in den Maven-Build
 
-**Angelegt am 28.07.** — `src/test/java/app/ArchitekturRegelnTest.java`, ArchUnit + JUnit 5 +
+**Angelegt am 29.07.** — `src/test/java/app/ArchitekturRegelnTest.java`, ArchUnit + JUnit 5 +
 Surefire. Läuft bewusst **nicht** beim Speichern in Eclipse (m2e ruft kein Surefire), sondern bei
 Run As → Maven build oder Run As → JUnit Test.
 
@@ -186,7 +257,7 @@ Offen: die Vier-Sprossen-Ordnung aus Plan §1.1 als `layeredArchitecture()` mit 
 
 ## C · Eigene Runden
 
-### Punkt-Notation in den properties (Plan §4a)
+### Punkt-Notation in den properties
 
 `learnSessionPanel.world.map=…` → `Map<String, LearnSessionPanel>`. Regel: *ein Punkt geht eine Ebene
 tiefer; ob eine Ebene offen oder deklariert ist, sagt der Typ.* Gedeckelt auf zwei Ebenen.
