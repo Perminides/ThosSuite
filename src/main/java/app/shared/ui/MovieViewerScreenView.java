@@ -6,11 +6,11 @@ import app.shared.model.CardData;
 import app.shared.model.MovieStyle;
 import app.shared.model.ScreenView;
 import app.shared.skin.SkinService;
+import app.shared.ui.components.SuiteBackground;
 import app.shared.ui.components.MovieCard;
 import app.shared.ui.components.SuiteSuggestionTextField;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -60,12 +60,12 @@ public class MovieViewerScreenView implements ScreenView {
 
     public void reapplyBackground() {
         if (view != null)
-            view.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
+            view.setBackground(SuiteBackground.of(SkinService.get().emptyWallpaperPath()));
     }
 
     private void build() {
         view.getChildren().clear();
-        view.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
+        view.setBackground(SuiteBackground.of(SkinService.get().emptyWallpaperPath()));
 
         MovieStyle style = SkinService.get().movieStyle();
 

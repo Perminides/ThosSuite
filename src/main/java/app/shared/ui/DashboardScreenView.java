@@ -7,9 +7,9 @@ import app.shared.model.DashboardTileData;
 import app.shared.model.DashboardTileStyle;
 import app.shared.model.ScreenView;
 import app.shared.skin.SkinService;
+import app.shared.ui.components.SuiteBackground;
 import app.shared.ui.components.DashboardTile;
 import javafx.geometry.Pos;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 
@@ -35,7 +35,7 @@ public class DashboardScreenView implements ScreenView {
 	}
 
 	public void build(List<DashboardTileData> tiles) {
-		pane.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
+		pane.setBackground(SuiteBackground.of(SkinService.get().emptyWallpaperPath()));
 
 		DashboardTileStyle style = SkinService.get().dashboardTileStyle();
 		List<DashboardTile> built = new ArrayList<>();

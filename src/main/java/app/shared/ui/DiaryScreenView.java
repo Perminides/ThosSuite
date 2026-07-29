@@ -8,6 +8,7 @@ import app.shared.model.DiaryCardData;
 import app.shared.model.DiaryStyle;
 import app.shared.model.ScreenView;
 import app.shared.skin.SkinService;
+import app.shared.ui.components.SuiteBackground;
 import app.shared.ui.components.DiaryCard;
 import app.shared.ui.components.SuiteDatePicker;
 import javafx.application.Platform;
@@ -18,7 +19,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -61,7 +61,7 @@ public class DiaryScreenView implements ScreenView {
 
     private void build() {
         view.getChildren().clear();
-        view.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
+        view.setBackground(SuiteBackground.of(SkinService.get().emptyWallpaperPath()));
 
         double contentWidth = SkinService.get().diaryStyle().viewerContentWidth();
 

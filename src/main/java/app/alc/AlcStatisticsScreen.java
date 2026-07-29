@@ -12,7 +12,7 @@ public class AlcStatisticsScreen implements Screen {
     private final BarChartScreenView view = new BarChartScreenView(new AlcStatisticsPresenter(), LocalDate.now().minusYears(1), LocalDate.now());
 
     public AlcStatisticsScreen() {
-        view.reload();
+        view.rebuild();
     }
 
     @Override
@@ -22,7 +22,7 @@ public class AlcStatisticsScreen implements Screen {
 
     @Override
     public void refresh() {
-        view.reload();
+        view.rebuild();
     }
 
     @Override

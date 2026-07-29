@@ -9,6 +9,7 @@ import app.shared.model.BarChartData.YAxis;
 import app.shared.model.BarChartDataProvider;
 import app.shared.model.ScreenView;
 import app.shared.skin.SkinService;
+import app.shared.ui.components.SuiteBackground;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
@@ -22,7 +23,6 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -60,7 +60,7 @@ public class BarChartScreenView implements ScreenView {
     }
 
     /** Lädt neu für den aktuellen Zeitraum und zeichnet. Vom Screen bei refresh gerufen. */
-    public void reload() {
+    public void rebuild() {
         LocalDate from = fromPicker != null ? fromPicker.getValue() : initialFrom;
         LocalDate to   = toPicker   != null ? toPicker.getValue()   : initialTo;
         currentData = provider.get(from, to);
@@ -69,7 +69,7 @@ public class BarChartScreenView implements ScreenView {
 
     private void buildView() {
         pane.getChildren().clear();
-        pane.setBackground(new Background(SkinService.get().getEmptyBackgroundImage()));
+        pane.setBackground(SuiteBackground.of(SkinService.get().emptyWallpaperPath()));
 
         VBox container = new VBox();
         container.getStyleClass().add("chart-container");

@@ -91,7 +91,7 @@ public abstract class AnkiSessionView {
 	public void rebuild() {
 		Skin skin = SkinService.get();
 
-		canvas.setBackgroundImage(skin.getBackgroundImage(mapName, kategorie));
+		canvas.setWallpaper(skin.wallpaperPath(mapName, kategorie));
 
 		karte = createMap();
 

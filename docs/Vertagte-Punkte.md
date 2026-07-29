@@ -46,8 +46,8 @@ veraltet es noch einmal.
 | ~~„Wieso baut hier der Skin?"~~ | **erledigt 28.07.** — `createMovieViewer` ist umgezogen, der Marker gelöscht |
 | Der MovieScreen wird komplett anders aufgebaut als die übrigen | `SuiteSuggestionTextField:30` |
 | Alc- und Fitbit-StatisticScreens sind voll mit UI-Kram | `Skin` (Klassen-Javadoc) |
-| Code-Duplizierung in den `getBackgroundImage`-Methoden | `Skin`, drei Hintergrund-Methoden |
-| `empty` und `default` gehen durcheinander — „hier holt empty das default" | `Skin.getEmptyBackgroundImage` |
+| ~~Code-Duplizierung in den `getBackgroundImage`-Methoden~~ | **erledigt 29.07.** — ein privates `backgroundImage(name)`, drei Einzeiler davor |
+| ~~`empty` und `default` gehen durcheinander~~ | **erledigt 29.07.** — war ein Namensproblem: `empty`→`startScreen`, `default`→`empty`. Siehe Plan §5 |
 
 ### Schritt 3c — Session-/Lern-Teile
 
@@ -205,8 +205,8 @@ Klasse dadurch zu viel wird.
 
 ### Schritt 5 — Regelwerk nachziehen
 
-- **`StartScreen`-Regel:** *ein inhaltsloser Screen (reines Chrome/Hintergrund) darf sein eigener
-  `ScreenView` sein.* Löst den (c)-Fall der ScreenView-Bestandsaufnahme per Regel statt per Code.
+- ~~**`StartScreen`-Regel**~~ — **entfallen 29.07.**: der Fall wurde per Code gelöst statt per
+  Regel. `StartScreen` ist in Screen und ScreenView aufgeteilt wie alle anderen.
 - **Dialog-Stufe 2a** fehlt: der parametrisierte Standarddialog (Primitive rein, Primitive oder
   `null` raus, kein Feature-seitiges Objekt). `TextPromptDialog`, `WhatsAppChatDialog`,
   `WhatsAppContactDialog` sehen nur deshalb wie Verstöße aus.

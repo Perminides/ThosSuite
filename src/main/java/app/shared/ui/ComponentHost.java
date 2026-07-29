@@ -1,12 +1,14 @@
 package app.shared.ui;
 
+import java.nio.file.Path;
+
+import app.shared.ui.components.SuiteBackground;
+
 import java.util.Arrays;
 
 import app.shared.model.ScreenView;
 import app.shared.model.UiComponent;
 import javafx.scene.Node;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.Pane;
 
 /**
@@ -35,8 +37,8 @@ public class ComponentHost implements ScreenView {
 	 * 
 	 * @param image
 	 */
-	public void setBackgroundImage(BackgroundImage image) {
-		pane.setBackground(new Background(image));
+	public void setWallpaper(Path wallpaper) {
+		pane.setBackground(SuiteBackground.of(wallpaper));
 	}
 	
     @Override
