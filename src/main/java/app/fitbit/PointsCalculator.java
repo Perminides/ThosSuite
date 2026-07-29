@@ -5,7 +5,7 @@ import app.fitbit.model.json.ActivityDaySummary;
 import app.fitbit.model.json.ActivityLogList;
 import app.shared.Log;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
+import app.shared.ui.Alerts;
 
 /**
  * Berechnet die Tagespunkte aus den Fitbit-Activities.
@@ -111,7 +111,7 @@ public class PointsCalculator {
                         Log.error(PointsCalculator.class, "Activity: " + activity);
                     }
                     
-                    SkinService.get().showAlert("Achtung", "Scheinbar hat eine Radfahren-Aktion nicht korrekt aufgezeichnet.\nWenn Du magst, trage einfach die Kilometer im Log nach und ändere den Typ auf Bike...", ButtonEnum.OK);
+                    Alerts.show("Achtung", "Scheinbar hat eine Radfahren-Aktion nicht korrekt aufgezeichnet.\nWenn Du magst, trage einfach die Kilometer im Log nach und ändere den Typ auf Bike...", ButtonEnum.OK);
                     Log.warn(PointsCalculator.class, 
                         "Outdoor Bike erkannt - möglicherweise fehlerhafte Aufzeichnung. " +
                         "Bitte manuell im Dialog korrigieren!");
@@ -122,7 +122,7 @@ public class PointsCalculator {
                     break;
                     
                 default:
-                	SkinService.get().showAlert("Achtung", "Ich ignoriere die Aktivität " + activity.getActivityName(), ButtonEnum.OK);
+                	Alerts.show("Achtung", "Ich ignoriere die Aktivität " + activity.getActivityName(), ButtonEnum.OK);
                     Log.warn(PointsCalculator.class, 
                         "Unbekannte Aktivität wird ignoriert: " + activity.getActivityName());
                     break;

@@ -3,7 +3,6 @@ package app.shared.ui.components;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
@@ -27,7 +26,7 @@ import javafx.stage.Popup;
  * !Sofort: Wird aktuell nur von Movie genutzt. Kann man das nicht noch an anderen Stellen wiederverwenden?
  * Z.B. da wo Tags ausgewählt werden (Diary, WhatsApp)
  * 
- * !Sofort: Können wir hier nicht ein UiComponents draus machen? Der ganze MovieScreen wird komplett anders aufgebaut als die restlichen. Das geht so gar nicht...
+ * !Sofort: Können wir das hier nicht als richtige Komponente bauen? Der ganze MovieScreen wird komplett anders aufgebaut als die restlichen. Das geht so gar nicht...
  * 
  * Popup-Mechanik übernommen aus TagInputComponent.
  */
@@ -168,10 +167,12 @@ public class SuiteSuggestionTextField {
 
         String lower = filter.toLowerCase();
         currentMatches.clear();
-        currentMatches.addAll(allItems.stream()
-                .filter(item -> item.toLowerCase().contains(lower))
-                .limit(MAX_SUGGESTIONS)
-                .collect(Collectors.toList()));
+        for (String item : allItems) {
+            if (currentMatches.size() == MAX_SUGGESTIONS)
+                break;
+            if (item.toLowerCase().contains(lower))
+                currentMatches.add(item);
+        }
 
         if (currentMatches.isEmpty()) {
             hideSuggestions();

@@ -1,7 +1,6 @@
 package app.movie;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 import app.movie.model.CrewPendingEntry;
@@ -12,8 +11,8 @@ import app.movie.repository.MovieRepository;
 import app.movie.repository.PendingRepository;
 import app.movie.repository.TvShowRepository;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
-import app.shared.ui.surfaces.dialogs.TextPromptDialog;
+import app.shared.ui.Alerts;
+import app.shared.ui.TextPromptDialog;
 
 /**
  * PostTask für den TMDB-Import.
@@ -113,7 +112,7 @@ public class MovieCleanup {
      * @return true = whitelist, false = blacklist
      */
     private boolean askWhitelistOrBlacklist(CrewPendingEntry entry) {
-        ButtonEnum result = SkinService.get().showAlert(
+        ButtonEnum result = Alerts.show(
             "Unbekannter Crew-Job",
             "Person: " + entry.personName + "\n" +
             "Job: " + entry.job + "\n" +
@@ -151,11 +150,10 @@ public class MovieCleanup {
         String header = "Film: " + entry.title + " (" + entry.germanTitle + ")\n" +
                         "Bewertet am: " + entry.firstRatedAt + "\n" +
                         "Bewertung: " + entry.rating;
-        Optional<String> result = TextPromptDialog.show("Kommentar eingeben", header, null);
-        if (result.isEmpty())
+        String result = TextPromptDialog.show("Kommentar eingeben", header, null);
+        if (result == null || result.isEmpty())
             return ".";
-        String text = result.get();
-        return text.isBlank() ? "." : text.trim();
+        return result.trim();
     }
 
     /**
@@ -188,7 +186,7 @@ public class MovieCleanup {
             sb.append(String.join("\n", episodeTitles));
         }
 
-        SkinService.get().showAlert(
+        Alerts.show(
             "Offene Kommentare",
             sb.toString().trim(),
             ButtonEnum.OK

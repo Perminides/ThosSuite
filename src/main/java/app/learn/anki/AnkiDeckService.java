@@ -15,6 +15,7 @@ import app.learn.anki.model.AnkiLearnSessionInfo;
 import app.learn.anki.repository.DeckRepository;
 import app.learn.anki.repository.PlayedCardData;
 import app.learn.model.Deck;
+import app.learn.model.MapType;
 import app.learn.model.DeckCategory;
 import app.learn.model.LearnSessionInfo;
 import app.shared.Config;
@@ -80,6 +81,9 @@ public class AnkiDeckService {
 	 * </p>
 	 * 
 	 */
+	/** Kartennamen der Bild-Decks — der Controller lässt die Skin-Seite deren Bilder vorwärmen. */
+	private final List<String> imageMapNames = new ArrayList<>();
+
 	public AnkiDeckService() {
 		repo = new DeckRepository();
 		allCards = new EnumMap<>(Deck.class);
@@ -91,8 +95,11 @@ public class AnkiDeckService {
 				continue;
 			
 			//Preload Maps von Decks die heute fällig sind. !Später toggle im config berücksichtigen
-			if (type.getMapMetadata() != null) //TODO:  Wann sollte die null sein? Entweder raus oder kommentieren!
-				MapService.getInstance().preload(type);
+			if (type.getMapMetadata() != null) {
+				MapService.getInstance().preloadShapes(type);
+				if (type.getMapMetadata().getMapType() == MapType.IMAGE)
+					imageMapNames.add(type.getMapName());
+			}
 						
 			dueCards.put(type, new HashMap<>());
 			allCards.put(type, repo.getAllHints(type));
@@ -195,4 +202,12 @@ public class AnkiDeckService {
 		}
 	}
 	
+
+	/**
+	 * Die Kartennamen der Decks mit Bild-Karte. Reine Namen, keine Pfade — das Auflösen und Vorwärmen
+	 * macht die Skin-Seite (siehe {@code SkinImageCache.warmMapImages}).
+	 */
+	public List<String> getImageMapNames() {
+		return imageMapNames;
+	}
 }

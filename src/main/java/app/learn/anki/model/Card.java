@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import app.learn.model.LearnStat;
 import app.shared.AppClock;
@@ -41,7 +40,7 @@ public class Card {
 	public Card(List<String> csvTokens) {
 		id = Integer.parseInt(csvTokens.get(0));
 		remark = csvTokens.get(1);
-		Arrays.stream(csvTokens.get(2).split("\\,")).map(String::trim).forEach(labels::add);
+		labels.addAll(splitAndTrim(csvTokens.get(2)));
 		
 		List<Step> out = new ArrayList<>(); // Ergebnisliste
 		List<List<Step>> segments = null; // Segmente zwischen ShuffleStart und ShuffleEnd
@@ -118,36 +117,45 @@ public class Card {
         };
     }
 
+    /**
+     * Zerlegt einen mit {@code |} getrennten Abschnitt und legt jeden nicht-leeren Teil als Antwort
+     * der gegebenen Sorte ab.
+     */
+    private static void sammleAntworten(String abschnitt, boolean correct, Set<AnswerOption> options) {
+        for (String text : abschnitt.split("\\|")) {
+            String getrimmt = text.trim(); // Sicherheitshalber Leerzeichen entfernen
+            if (!getrimmt.isEmpty())
+                options.add(new AnswerOption(getrimmt, correct));
+        }
+    }
+
     // Multiple Choice
     private static Set<AnswerOption> parseMcAnswers(String mcStepString) {
         Set<AnswerOption> options = new HashSet<>();
         String[] split = mcStepString.split("\\*");
         
         // Teil 1: Die korrekten Antworten (vor dem Sternchen)
-        Arrays.stream(split[0].split("\\|"))
-            .map(String::trim) // Sicherheitshalber Leerzeichen entfernen
-            .filter(s -> !s.isEmpty())
-            .map(x -> new AnswerOption(x, true))
-            .forEach(options::add);
-        
+        sammleAntworten(split[0], true, options);
+
         // Teil 2: Die falschen Antworten (nach dem Sternchen, falls vorhanden)
-        if (split.length > 1) {
-            Arrays.stream(split[1].split("\\|"))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(x -> new AnswerOption(x, false))
-                .forEach(options::add);
-        }
+        if (split.length > 1)
+            sammleAntworten(split[1], false, options);
+
         return options;
     }
+
+	private static Set<String> splitAndTrim(String commaSeparated) {
+		Set<String> result = new HashSet<>();
+		for (String part : commaSeparated.split(","))
+			result.add(part.trim());
+		return result;
+	}
 
 	// --- Click/Mark
 	private static Step parseClickOrMark(String body, boolean isClick) {
 		String[] g = body.split("-");
-		Set<String> left = Arrays.stream(g[0].split(",")).map(String::trim).collect(Collectors.toSet());
-		Set<String> right = new HashSet<>();
-		if (g.length > 1)
-			right = Arrays.stream(g[1].split(",")).map(String::trim).collect(Collectors.toSet());
+		Set<String> left = splitAndTrim(g[0]);
+		Set<String> right = g.length > 1 ? splitAndTrim(g[1]) : new HashSet<>();
 		return isClick ? new ClickMapElements(left, right) : new MarkMapElements(left, right);
 	}
     

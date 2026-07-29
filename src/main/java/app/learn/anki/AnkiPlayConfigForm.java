@@ -9,7 +9,7 @@ import java.util.Set;
 
 import app.learn.model.Deck;
 import app.shared.model.AnkiDialogState;
-import app.shared.ui.surfaces.dialogs.AnkiConfigDialog;
+import app.shared.ui.AnkiConfigDialog;
 
 public final class AnkiPlayConfigForm {
 

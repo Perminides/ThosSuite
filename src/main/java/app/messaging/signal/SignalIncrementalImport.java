@@ -11,7 +11,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -33,7 +32,7 @@ import app.shared.DB;
 import app.shared.Log;
 import app.shared.ThrowingConsumer;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
+import app.shared.ui.Alerts;
 
 /**
  * Importiert neue Signal-Nachrichten seit dem letzten erfolgreichen Import-Run in die ThosSuite-DB.
@@ -278,8 +277,7 @@ public class SignalIncrementalImport {
             + "\nNachrichten: " + conv.messageCount()
             + (isBlank(conv.sharedGroupNames()) || "[]".equals(conv.sharedGroupNames()) ? "" : "\nGemeinsame Gruppen: " + conv.sharedGroupNames());
 
-        ButtonEnum result = SkinService.get()
-            .showAlert("Neuer Signal-Chat", info, ButtonEnum.IMPORT, ButtonEnum.BLACKLIST);
+        ButtonEnum result = Alerts.show("Neuer Signal-Chat", info, ButtonEnum.IMPORT, ButtonEnum.BLACKLIST);
 
         boolean doImport = result == ButtonEnum.IMPORT;
         int chatId = repo.insertChat(suiteConnection, signalId, conversationId, conv.isGroup(), displayName, !doImport);
@@ -436,7 +434,11 @@ public class SignalIncrementalImport {
         addIfNotBlank(candidates, stripBidiControls(name));
         addIfNotBlank(candidates, buildFullName(profileName, profileFamilyName));
         addIfNotBlank(candidates, stripBidiControls(profileFullName));
-        return candidates.stream().max(Comparator.comparingInt(String::length)).orElse(fallback);
+        String laengster = fallback;
+        for (String candidate : candidates)
+            if (laengster == fallback || candidate.length() > laengster.length())
+                laengster = candidate;
+        return laengster;
     }
 
     private String buildFullName(String first, String last) {

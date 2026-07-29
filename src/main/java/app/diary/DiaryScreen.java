@@ -10,10 +10,10 @@ import app.diary.repository.Repository;
 import app.shared.Config;
 import app.shared.model.DiaryAttachment;
 import app.shared.model.DiaryCardData;
+import app.shared.model.Screen;
+import app.shared.model.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
-import app.shared.ui.contracts.Screen;
-import app.shared.ui.contracts.ScreenView;
-import app.shared.ui.surfaces.DiaryScreenView;
+import app.shared.ui.DiaryScreenView;
 
 public class DiaryScreen implements Screen {
 

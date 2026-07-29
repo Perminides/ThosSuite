@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 import app.movie.model.EpisodeForApi;
@@ -31,8 +30,8 @@ import app.shared.Config;
 import app.shared.DB;
 import app.shared.UiUtils;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
-import app.shared.ui.surfaces.dialogs.TextPromptDialog;
+import app.shared.ui.Alerts;
+import app.shared.ui.TextPromptDialog;
 
 /**
  * Orchestriert den manuellen Serien-/Episoden-Import.
@@ -265,7 +264,7 @@ public class SeriesImporter {
         TvShowJSON webData = api.getTvShowDetails(tvShowId);
         if (dbData.differs(webData)) {
             log.info("Seriendaten haben sich geändert: " + showName);
-            ButtonEnum result = SkinService.get().showAlert(
+            ButtonEnum result = Alerts.show(
                     "Seriendaten geändert",
                     "Die Daten der Serie \"" + showName + "\" haben sich geändert.\n\n"
                     + "Seasons: " + dbData.numberOfSeasons + " → " + webData.number_of_seasons + "\n"
@@ -679,7 +678,7 @@ public class SeriesImporter {
      * kontrolliert. Bei Bedarf kann das Flag direkt in der DB angepasst werden.
      */
     private void showFlagDialog(int episodeId, String title) { 
-        ButtonEnum result = SkinService.get().showAlert(
+        ButtonEnum result = Alerts.show(
                 "Art der Bewertung",
                 "Bezieht sich die Bewertung auf die ganze Staffel oder nur auf diese Episode?\n\n"
                 + title + "\n\n"
@@ -697,7 +696,7 @@ public class SeriesImporter {
     // =========================================================================
 
     private void showStepAlert(String message) {
-        SkinService.get().showAlert("TMDB Import", message, ButtonEnum.OK);
+    	Alerts.show("TMDB Import", message, ButtonEnum.OK);
     }
 
     private void showSummary() {
@@ -715,23 +714,22 @@ public class SeriesImporter {
             sb.append("Nichts Neues gefunden.");
 
         log.info("Zusammenfassung: " + sb.toString());
-        SkinService.get().showAlert("TMDB Import — Zusammenfassung",
+        Alerts.show("TMDB Import — Zusammenfassung",
                 sb.toString().trim(),
                 ButtonEnum.OK);
     }
 
     private String askForComment(String dialogTitle, String description, String existingComment) {
         String prefill = (existingComment != null && !".".equals(existingComment)) ? existingComment : null;
-        Optional<String> result = TextPromptDialog.show(dialogTitle, description, prefill);
-        if (result.isEmpty())
+        String result = TextPromptDialog.show(dialogTitle, description, prefill);
+        if (result == null || result.isEmpty())
             return ".";
-        String text = result.get();
-        return text.isBlank() ? "." : text.trim();
+        return result.trim();
     }
 
     private boolean askWhitelistOrBlacklist(String personName, String job,
             String department, String contextName) {
-        ButtonEnum result = SkinService.get().showAlert(
+        ButtonEnum result = Alerts.show(
                 "Unbekannter Crew-Job",
                 "Person: " + personName + "\n"
                 + "Job: " + job + "\n"
@@ -761,7 +759,7 @@ public class SeriesImporter {
     private void savePoster(String posterPath, int entityId, byte[] imageData,
             int targetWidth, ImageDbInsert dbInsert, String contextName) {
         if (imageData == null || posterPath == null) {
-            SkinService.get().showAlert(targetWidth + "er Poster fehlt", "Für " + contextName, ButtonEnum.OK);
+        	Alerts.show(targetWidth + "er Poster fehlt", "Für " + contextName, ButtonEnum.OK);
             return;
         }
         try {
