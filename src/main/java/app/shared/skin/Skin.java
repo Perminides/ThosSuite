@@ -264,6 +264,9 @@ public abstract class Skin extends SkinProperties {
 	       .add("-fx-effect", "dropshadow(gaussian, rgba(255,0,0,1.0), 50, 0, 20, 20)")
 	       .end();
 	    
+	    // Der Titel in der Dialog-Titelleiste. Nur vertikales Padding — sonst erbt er alles vom Label.
+	    builder.rule(".my-dialog-title", "-fx-padding", (font.getSize() * 0.3) + "px 0 " + (font.getSize() * 0.3) + "px 0");
+
 	    // HeaderBar in Dialogs
 	    builder.start(".dialog-pane .header-bar")
 	       .add("-fx-border-color", thinBorderColor)

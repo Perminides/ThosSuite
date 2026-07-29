@@ -34,7 +34,7 @@ public class SuiteDialog<R> extends Dialog<R> {
 
 		initStyle(StageStyle.EXTENDED);
 
-		headerBar = new SuiteHeaderBar(title, SkinService.get().dialogStyle().font());
+		headerBar = new SuiteHeaderBar(title);
 		DialogPane pane = getDialogPane();
 		pane.setHeader(headerBar);
 

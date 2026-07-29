@@ -241,7 +241,7 @@ public abstract class SkinProperties {
 
 	/** Die Werte, die der Dialog- und Alert-Pfad braucht. */
 	public DialogStyle dialogStyle() {
-		return new DialogStyle(font, textColor);
+		return new DialogStyle(textColor);
 	}
 
 	/** Die Werte, die die Tagebuch-Oberfläche braucht. */

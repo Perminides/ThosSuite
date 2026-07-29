@@ -24,7 +24,7 @@ import javafx.stage.Stage;
  * Auflösung, die am besten passt. Deshalb braucht die Leiste die {@link Stage} — die hält die
  * Symbole in mehreren Größen.</p>
  *
- * <p>CSS: die Leiste selbst {@code .my-header-bar}, der Titel {@code .my-title}, der linke Block
+ * <p>CSS: die Leiste selbst {@code .my-header-bar}, der linke Block
  * {@code .my-header-leading} (trägt den Abstand zum Fensterrand).</p>
  */
 public class MainWindowHeaderBar extends HeaderBar {
@@ -37,8 +37,6 @@ public class MainWindowHeaderBar extends HeaderBar {
 
 		Label titleLabel = new Label("Thos Suite (FX)");
 		HeaderBar.setDragType(titleLabel, HeaderDragType.DRAGGABLE_SUBTREE);
-		// !Sofort: Alle "my-title" raus weil es gibt eh kein CSS dafür. Wird auch in den Dialogen genutzt.
-		titleLabel.getStyleClass().add("my-title");
 		setCenter(titleLabel);
 
 		HBox leading = new HBox(0);
