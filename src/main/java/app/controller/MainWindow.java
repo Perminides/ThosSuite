@@ -10,6 +10,7 @@ import app.learn.model.LearnSessionInfo;
 import app.shared.Config;
 import app.shared.Log;
 import app.shared.model.ScreenView;
+import app.shared.ui.MainWindowHeaderBar;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import javafx.collections.ObservableList;
@@ -32,8 +33,6 @@ import javafx.stage.Window;
  * The Stack Pane is sized correctly according to the current skin. All children will be sized by the contentPane.
  * CSS-classes:
  * 		root 		= "my-root",
- * 		headerBar 	= "my-header-bar",
- * 		titleLabel	= "my-title"
  */
 @SuppressWarnings("deprecation")
 public class MainWindow {
@@ -111,12 +110,8 @@ public class MainWindow {
         skin.styleScene(stage.getScene());
         
         // C. Header & Menü (Neu erstellen & setzen)
-        // Hinweis: createMenuBar müssen wir noch so anpassen, dass es die Bar zurückgibt!
-        MenuBar menuBar = buildMenuBar(skin); 
-        
-        headerBar = skin.createMainWindowHeaderBar(stage, menuBar);
-        headerBar.getStyleClass().add("my-header-bar");
-        
+        headerBar = new MainWindowHeaderBar(stage, buildMenuBar());
+
         // D. Sicherstellen, dass Minimize und Close-Button die ganze Höhe ausnutzen...
         headerBar.heightProperty().addListener((_, _, newVal) ->
             HeaderBar.setPrefButtonHeight(stage, newVal.doubleValue())
@@ -125,28 +120,28 @@ public class MainWindow {
         root.setTop(headerBar);
     }
     
-    // Refactoring: Gibt MenuBar zurück statt void
-	private MenuBar buildMenuBar(Skin skin) {
-        MenuBar menuBar = skin.createMenuBar();
+	/** Welche Menüs es gibt, ist Navigation — das entscheidet das Fenster, nicht der Skin. */
+	private MenuBar buildMenuBar() {
+        MenuBar menuBar = new MenuBar();
         HeaderBar.setDragType(menuBar, null);
         
         // DATEI-MENÜ
-        Menu menuFile = skin.createMenu("Datei");
-        MenuItem item = skin.createMenuItem("Schließen");
+        Menu menuFile = new Menu("Datei");
+        MenuItem item = new MenuItem("Schließen");
         item.setOnAction(_ -> onCloseSelected.run());
         menuFile.getItems().add(item);
-        item = skin.createMenuItem("Suite beenden");
+        item = new MenuItem("Suite beenden");
         item.setOnAction(_ -> onQuitSelected.run());
         menuFile.getItems().add(item);
         
         
         // OPTIONEN-MENÜ
-        menuOptions = skin.createMenu("Optionen");
-        menuSort = skin.createMenu("Anzeigereihenfolge");
+        menuOptions = new Menu("Optionen");
+        menuSort = new Menu("Anzeigereihenfolge");
         
         String lastSortOrderString = Config.get("pref.sortOrder");
         for (CardSortOrder order : CardSortOrder.values()) {
-            item = skin.createMenuItem(order.getDisplayName());
+            item = new MenuItem(order.getDisplayName());
             item.setOnAction(e -> {
             	Config.set("pref.sortOrder", order.name());
                 onSortSelected.run();
@@ -162,56 +157,56 @@ public class MainWindow {
         menuOptions.getItems().add(menuSort);
         
         // LERNEN-MENÜ
-        menuLearn = skin.createMenu("Lernen");
+        menuLearn = new Menu("Lernen");
         if (todaysLearnSessions != null) {
             updateLearnMenuItems();
         }
         
         // SPIELEN-MENÜ
-        menuPlay = skin.createMenu("Spielen");
+        menuPlay = new Menu("Spielen");
         if (playMenuNodes != null) {
             updatePlayMenuItems();
         }
         
         // STATISTIK-MENÜ
-        Menu menuStatistics = skin.createMenu("Statistik");
-        MenuItem itemDashboard = skin.createMenuItem("Dashboard");
+        Menu menuStatistics = new Menu("Statistik");
+        MenuItem itemDashboard = new MenuItem("Dashboard");
         itemDashboard.setOnAction(_ -> onStatisticsSelected.accept("Dashboard"));
         menuStatistics.getItems().add(itemDashboard);
-        MenuItem itemFitbit = skin.createMenuItem("Fitbit");
+        MenuItem itemFitbit = new MenuItem("Fitbit");
         itemFitbit.setOnAction(_ -> onStatisticsSelected.accept("Fitbit"));
         menuStatistics.getItems().add(itemFitbit);
-        MenuItem itemAlc = skin.createMenuItem("Alkohol");
+        MenuItem itemAlc = new MenuItem("Alkohol");
         itemAlc.setOnAction(_ -> onStatisticsSelected.accept("Alkohol"));
         menuStatistics.getItems().add(itemAlc);
         
         // MODULE-MENÜ
-        Menu menuModule = skin.createMenu("Module");
-        MenuItem exportItem = skin.createMenuItem("Export");
+        Menu menuModule = new Menu("Module");
+        MenuItem exportItem = new MenuItem("Export");
         exportItem.setOnAction(_ -> onExportSelected.run());
         menuModule.getItems().add(exportItem);
-        MenuItem movieItem = skin.createMenuItem("Filme");
+        MenuItem movieItem = new MenuItem("Filme");
         movieItem.setOnAction(_ -> onMovieSelected.run());
         menuModule.getItems().add(movieItem);
-        MenuItem diaryViewItem = skin.createMenuItem("Tagebuch lesen");
+        MenuItem diaryViewItem = new MenuItem("Tagebuch lesen");
         diaryViewItem.setOnAction(_ -> onDiaryViewSelected.run());
         menuModule.getItems().add(diaryViewItem);
-        MenuItem diaryItem = skin.createMenuItem("Tagebucheintrag erstellen");
+        MenuItem diaryItem = new MenuItem("Tagebucheintrag erstellen");
         diaryItem.setOnAction(_ -> onDiaryCreateSelected.run());
         menuModule.getItems().add(diaryItem);
-        MenuItem additionalMovieItem = skin.createMenuItem("Erweiterter TMDB-Import");
+        MenuItem additionalMovieItem = new MenuItem("Erweiterter TMDB-Import");
         additionalMovieItem.setOnAction(_ -> onMovieAdditionalRunSelected.run());
         menuModule.getItems().add(additionalMovieItem);
-        MenuItem weekdayItem = skin.createMenuItem("Wochentagsberechnung");
+        MenuItem weekdayItem = new MenuItem("Wochentagsberechnung");
         weekdayItem.setOnAction(_ -> onWeekdaySelected.run());
         menuModule.getItems().add(weekdayItem);
-        MenuItem mattressItem = skin.createMenuItem("Matratze");
+        MenuItem mattressItem = new MenuItem("Matratze");
         mattressItem.setOnAction(_ -> onMattressSelected.run());
         menuModule.getItems().add(mattressItem);
 
         
         // ANSICHT-MENÜ
-        Menu menuView = skin.createMenu("Ansicht");
+        Menu menuView = new Menu("Ansicht");
         Skin currentSkin = SkinService.get();
         
         for (Skin availableSkin : SkinService.getAllSkins()) {
@@ -219,7 +214,7 @@ public class MainWindow {
             boolean isCurrentSkin = availableSkin.getClass() == currentSkin.getClass();
             String menuText = (isCurrentSkin ? "✓ " : "") + displayName;
             
-            item = skin.createMenuItem(menuText);
+            item = new MenuItem(menuText);
             item.setOnAction(_ -> {
                 if (availableSkin == currentSkin) return;
                 onNewSkinSelected.accept(availableSkin);
@@ -238,7 +233,7 @@ public class MainWindow {
         spacer2.setDisable(true);
         spacer2.getStyleClass().add("my-spacer");
         menuView.getItems().add(spacer2);
-        MenuItem itemReload = skin.createMenuItem("Aktualisieren");
+        MenuItem itemReload = new MenuItem("Aktualisieren");
         itemReload.setOnAction(_ -> {
             if (onReloadSkin != null) onReloadSkin.run();
         });

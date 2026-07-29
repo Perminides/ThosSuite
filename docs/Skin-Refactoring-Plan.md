@@ -1,8 +1,8 @@
 # Skin-Refactoring — Vorgehensplan
 
-**Stand:** 29.07.2026 · v7 · Schritte 1–3f erledigt. **Alle drei Wächter sind leer und werden
-vom Build bewacht**, der Paketgraph ist zyklenfrei. `Skin` von 2660 auf 1533 Zeilen.
-Offen sind noch 3d (Chrome/Menüs), 4 (Aufräumen) und 5 (Regelwerk).
+**Stand:** 29.07.2026 · v8 · Schritte 1–3f erledigt. **Alle drei Wächter sind leer und werden
+vom Build bewacht**, der Paketgraph ist zyklenfrei. `Skin` von 2660 auf 1447 Zeilen.
+Offen sind noch 4 (Aufräumen) und 5 (Regelwerk).
 
 **Charakter dieses Dokuments:** es blickt **zurück** — *was entschieden ist*, *was erledigt ist*,
 *in welcher Reihenfolge* vorgegangen wird, plus die geprüften Fakten, auf denen das beruht, und die
@@ -107,8 +107,9 @@ DarkMode, FlatWebSkin, BaseColorSkin (+ Blue/Flower/Red/Spicy)
 SkinService · SkinImageCache
 ```
 
-**`Skin` behält seinen Namen.** Seit 29.07. enthält die Klasse (neben den Werte-Zugängen) genau die
-CSS-Erzeugung — und das ist, was ein Skin tut. Kein Rename, keine neue Vokabel, null Aufwand. Die
+**`Skin` behält seinen Namen.** Wenn nach Schritt 4 die Bild-, Pfad- und Werte-Zugänge nach
+`SkinProperties` gewandert sind, enthält die Klasse genau die CSS-Erzeugung — und das ist, was ein
+Skin tut. Kein Rename, keine neue Vokabel, null Aufwand. Die
 Feldzugriffe in den 23 `addXxx`-Methoden bleiben unqualifiziert, weil die Vererbungskette steht.
 
 *Ehrlich dazu:* Der Split A/B bringt eine kleinere Datei und eine klare Lesereihenfolge — mehr nicht.
@@ -156,6 +157,7 @@ shared.ui                        (Oberflächen — was gezeigt wird)
     WhatsAppChatDialog · WhatsAppContactDialog · DatePickerDialog
     AnkiSessionView (abstrakt) + ShapeMapSessionView · McSessionView · ImageMapSessionView
     RegionSessionView
+    MainWindowHeaderBar
     ComponentHost
 
 shared.ui.components             (Bausteine — was verbaut wird)
@@ -381,6 +383,20 @@ Wächter 1: 3 → **1** (nur noch `MultipleChoicePane`). `mvn test` grün.
 **Damit sind alle drei Wächter leer und der Paketgraph zyklenfrei.** Die drei bis dahin
 auskommentierten ArchUnit-Regeln sind scharf gestellt; der Test läuft mit vier Regeln grün.
 
+**29.07. — Chrome und Menüs (3d).**
+
+- `createMenuBar`, `createMenu`, `createMenuItem` waren in voller Länge `return new MenuBar()`,
+  `return new Menu(text)`, `return new MenuItem(text)` — kein Skin-Wert, keine Style-Klasse. Warum
+  es sie gab, ist unbekannt; `MainWindow` durfte javafx immer benutzen. Ersatzlos gestrichen,
+  24 Aufrufstellen wurden `new …`. `buildMenuBar(Skin)` braucht seinen Parameter nicht mehr.
+- `createMainWindowHeaderBar` + `createResponsiveHeaderIcon` wurden `shared.ui.MainWindowHeaderBar`.
+  Sie setzt ihre Style-Klasse selbst; vorher stand das im `MainWindow`.
+- Der einzige Skin-Wert der Leiste war ein Innenabstand (`font.getSize() * 0.5`). Der ist eine
+  CSS-Regel `.my-header-leading` geworden — damit braucht die Leiste **keinen** Skin-Zugang, und es
+  musste kein öffentlicher Schrift-Getter aufgemacht werden.
+- Der Stream in der Symbol-Auswahl wurde eine Schleife. Verhalten unverändert, inklusive der
+  Annahme, dass die Symbole aufsteigend sortiert vorliegen — die steht jetzt im Javadoc.
+
 Offene Kleinigkeiten: die Kommentare `// Owner intern` bei `AnkiConfigDialog` und
 `RegionConfigDialog` sind überflüssig; der Kommentar bei `createDialog` könnte die **Bindung**
 benennen statt „erbt".
@@ -478,6 +494,10 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
       SuiteTextField + SuiteIconButton (Vererbung statt Fassade)
       alle vier Bausteine nehmen Maße entgegen → Schlüssel-Regel
       createMultipleChoicePane, Metrics wird shared.model.McMetrics
+3d ✓ Chrome und Menüs                                                    29.07.
+      drei Fabriken waren pure new X() → ersatzlos, 24 Aufrufstellen
+      Header-Leiste wurde shared.ui.MainWindowHeaderBar
+      MainWindow ist damit noch nicht rund — siehe Vertagte-Punkte.md
 6  ✓ Die Wächter in den Maven-Build                                      29.07.
       ArchUnit, src/test/java/app/ArchitekturRegelnTest.java.
       Vier Regeln scharf: die drei Wächter plus Zyklenfreiheit.
@@ -486,13 +506,12 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
 
 ── offen ──────────────────────────────────────────────────────────────────────
 
-3d  Chrome und Menüs
-    createMenuBar, createMenu, createMenuItem, createMainWindowHeaderBar,
-    createResponsiveHeaderIcon. Zuletzt, weil MainWindow daran hängt.
-    Danach enthält Skin nur noch CSS-Erzeugung und Werte-Zugänge.
-
 4   Aufräumen
-    docs/Ordnerstruktur.txt und docs/Paketabhängigkeiten.dot neu erzeugen —
+    Den Rest von Skin sortieren: die acht Bild-/Pfad-Methoden und die drei
+    Werte-Zugänge (mcMetrics, iconFor, getOverlayContentBounds) gehören zu
+    SkinProperties. Erst danach gilt ohne Fußnote: SkinProperties liefert,
+    Skin erzeugt CSS. Details in Vertagte-Punkte.md.
+    Dann docs/Ordnerstruktur.txt und docs/Paketabhängigkeiten.dot neu erzeugen —
     bewusst nicht zwischendurch, sie veralten bei jedem Move.
 
 5   Regelwerk und Architekturdokument nachziehen
