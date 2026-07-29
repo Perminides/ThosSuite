@@ -26,10 +26,13 @@ import app.shared.ui.components.map.SessionMap;
  *
  * <p>Was die Lernformen unterscheidet, entscheiden die drei Unterklassen:</p>
  * <pre>
- * ShapeMapSessionView   Shape-Karte · Eingabefeld      · leerer Hintergrund
- * McSessionView         keine Karte · kein Eingabefeld · deck-eigener Hintergrund (mcWallpaperName)
- * ImageMapSessionView   Bild-Karte  · Eingabefeld      · leerer Hintergrund
+ * ShapeMapSessionView   Shape-Karte · Eingabefeld
+ * McSessionView         keine Karte · kein Eingabefeld
+ * ImageMapSessionView   Bild-Karte  · Eingabefeld
  * </pre>
+ *
+ * <p>Der Hintergrund unterscheidet sie nicht: jede Session fragt dieselbe Staffelung ab — eigenes
+ * Bild der Karte, sonst das der Kategorie, sonst das leere.</p>
  *
  * <p>Benannt nach dem, was sie sind, nicht nach dem Deck, das sie gerade bedient — deshalb nehmen
  * sie Deck-Id, Kartenname und Kategorie entgegen und kennen keinen davon.</p>
@@ -75,9 +78,6 @@ public abstract class AnkiSessionView {
 
 	protected abstract boolean hasInputField();
 
-	/** {@code true} = eigenes Hintergrundbild des Decks, {@code false} = das leere. */
-	protected abstract boolean usesDeckBackground();
-
 	// ===== Für die Unterklassen =====
 
 	protected String deckId()              { return deckId; }
@@ -91,9 +91,7 @@ public abstract class AnkiSessionView {
 	public void rebuild() {
 		Skin skin = SkinService.get();
 
-		canvas.setBackgroundImage(usesDeckBackground()
-				? skin.getBackgroundImage(mapName, kategorie)
-				: skin.getEmptyBackgroundImage());
+		canvas.setBackgroundImage(skin.getBackgroundImage(mapName, kategorie));
 
 		karte = createMap();
 

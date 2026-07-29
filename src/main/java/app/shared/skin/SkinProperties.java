@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+import app.shared.model.BigComponentStyle;
 import app.shared.model.BorderParams;
 import app.shared.model.DashboardTileStyle;
 import app.shared.model.DialogStyle;
@@ -123,8 +124,8 @@ public abstract class SkinProperties {
 	protected String hannoverMapInactiveImageName = null;
 	protected String hannoverMapOverlayImageName = "Hannover small.png";
 	protected String hannoverMapInactiveOverlayImageName = null;
-	protected String defaultWallpaperName;
 	protected String emptyWallpaperName;
+	protected String startScreenWallpaperName;
 	protected String mcWallpaperName;
 	protected String worldWallpaperName;
 	protected String germanyWallpaperName;
@@ -265,14 +266,14 @@ public abstract class SkinProperties {
 		return staffelung(mapName, kategorie, "Session" + typ + "Panel");
 	}
 
-	/** Der Eckradius großer Komponenten. Hängt am Skin, nicht am Aufrufer — Bausteine holen ihn selbst. */
-	public int bigComponentCornerRadius() {
-		return borderBigComponent.arc();
-	}
-
-	/** Die Rahmenbreite großer Komponenten. Ebenfalls ohne Schlüssel. */
-	public int bigComponentBorderWidth() {
-		return borderBigComponent.width();
+	/**
+	 * Eckradius und Rahmenbreite großer Flächen. Ohne Schlüssel — Bausteine holen sie sich selbst.
+	 *
+	 * <p>Nach außen gehen die zwei gebrauchten Werte, nicht das ganze {@code borderBigComponent}:
+	 * das Feld hat sieben Komponenten und trägt einen Namen, der im skin-Paket bleiben soll.</p>
+	 */
+	public BigComponentStyle bigComponentStyle() {
+		return new BigComponentStyle(borderBigComponent.arc(), borderBigComponent.width());
 	}
 
 	// Erst spezifisch, dann Kategorie. Der Property-Name entsteht nur hier.

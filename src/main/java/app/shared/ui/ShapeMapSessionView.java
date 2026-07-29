@@ -31,5 +31,4 @@ public class ShapeMapSessionView extends AnkiSessionView {
 	}
 
 	@Override protected boolean hasInputField()      { return true; }
-	@Override protected boolean usesDeckBackground() { return false; }
 }

@@ -57,7 +57,7 @@ public class SuiteImage extends StackPane implements UiComponent{
      * die Verdopplung passiert deshalb hier, direkt an der API, die es so will.</p>
      */
     public SuiteImage(double width, double height) {
-        double arcDiameter = SkinService.get().bigComponentCornerRadius() * 2;
+        double arcDiameter = SkinService.get().bigComponentStyle().cornerRadius() * 2;
 
         // 1. Container-Größe fixieren
         setPrefSize(width, height);

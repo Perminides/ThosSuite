@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import app.shared.model.BigComponentStyle;
 import app.shared.model.MapImages;
 import app.shared.model.ShapeGeometry;
 import app.shared.skin.SkinImageCache;
@@ -160,11 +161,14 @@ public class ImageMapPane extends StackPane implements SessionMap {
 		setLayoutY(bounds.getMinY());
 		getStyleClass().add("my-image-map-pane");
 
-		double bw = SkinService.get().bigComponentBorderWidth();
+		BigComponentStyle rahmen = SkinService.get().bigComponentStyle();
+		double bw = rahmen.borderWidth();
+
 		Rectangle clip = new Rectangle(bw, bw, bounds.getWidth() - 2 * bw, bounds.getHeight() - 2 * bw);
-		// arc*2, weil JavaFX den Arc als Durchmesser nimmt und der Skin (wie das CSS) den Radius führt.
-		clip.setArcWidth(SkinService.get().bigComponentCornerRadius() * 2);
-		clip.setArcHeight(SkinService.get().bigComponentCornerRadius() * 2);
+		// Durchmesser, nicht Radius — Rectangle rechnet anders als das CSS.
+		double eckDurchmesser = rahmen.cornerRadius() * 2;
+		clip.setArcWidth(eckDurchmesser);
+		clip.setArcHeight(eckDurchmesser);
 		viewport.setClip(clip);
 	}
 
