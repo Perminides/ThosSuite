@@ -8,15 +8,17 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import app.shared.model.MapImages;
 import javafx.scene.image.Image;
 
 /**
  * Cacht große, skin-abhängige Bilder — und zwar nur für den aktuell aktiven Skin. Wechselt der Skin, wird der Cache
  * geleert (das alte, evtl. dreistellige MB-Bild wird freigegeben).
  *
- * <p>Bewusst generisch gehalten: die Klasse weiß nichts von Karten, Decks oder learn. Sie nimmt einen {@link Path}
- * herein und gibt ein {@link Image} zurück — mehr nicht. Damit importiert sie kein Feature-Paket (Regel 1:
- * zirkelfrei) und steht jedem Feature offen, das später große skin-abhängige Bilder braucht.</p>
+ * <p>Der Cache selbst ist generisch: er nimmt einen {@link Path} und gibt ein {@link Image} zurück, mehr nicht.
+ * Genau einen kartenkundigen Einstieg gibt es — {@link #warmMapImages(String)} löst einen Kartennamen beim Skin
+ * auf. Das ist kein Feature-Wissen: „die Bilder einer Karte" ist mit {@code MapImages} ein Begriff aus
+ * {@code shared.model}, und wo eine Karte ihre Dateien hat, weiß nur der Skin.</p>
  *
  * <p>Diese Klasse ist die einzige Stelle, an der solche Bilder von der Platte gelesen werden. Früher lag das
  * Laden im MapRepository und die Invalidierung im MapService — beides ist hierher konsolidiert.</p>
@@ -66,19 +68,18 @@ public class SkinImageCache {
 	}
 
 	/**
-	 * Wärmt die vier Bilder einer Bild-Karte vor (Splash). Die Pfade löst diese Klasse selbst beim
-	 * Skin auf — der Aufrufer nennt nur den Kartennamen und muss weder Pfade noch {@link Image}
-	 * anfassen.
+	 * Wärmt die vier Bilder einer Bild-Karte vor (Splash). Den Kartennamen löst diese Klasse beim
+	 * Skin auf — der Aufrufer muss weder Pfade noch {@link Image} anfassen.
 	 *
 	 * <p>Nicht gesetzte Varianten (etwa eine Karte ohne inaktives Bild) liefern {@code null}; das
 	 * ist erlaubt und wird still übersprungen.</p>
 	 */
 	public void warmMapImages(String mapName) {
-		Skin skin = SkinService.get();
-		warm(skin.getMapImagePath(mapName));
-		warm(skin.getMapOverlayImagePath(mapName));
-		warm(skin.getMapInactiveImagePath(mapName));
-		warm(skin.getMapInactiveOverlayImagePath(mapName));
+		MapImages bilder = SkinService.get().mapImages(mapName);
+		warm(bilder.background());
+		warm(bilder.overlay());
+		warm(bilder.inactiveBackground());
+		warm(bilder.inactiveOverlay());
 	}
 
 	private void invalidateIfSkinChanged() {

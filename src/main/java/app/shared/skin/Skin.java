@@ -2,7 +2,6 @@ package app.shared.skin;
 
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import app.shared.Config;
@@ -12,19 +11,13 @@ import app.shared.model.MapImages;
 import app.shared.model.McMetrics;
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
 /**
@@ -1266,73 +1259,60 @@ public abstract class Skin extends SkinProperties {
 	 * @param type Darf null sein!
 	 * @return
 	 */
-	public BackgroundImage getBackgroundImage(String mapName, String deckCategoryName) {
-		Path bgPath = Config.getPath("wallpaperFolder").resolve(getBackgroundImageName(mapName, deckCategoryName));
-		BackgroundImage background;
-		try {
-		    Image bgImage = new Image(bgPath.toUri().toString());
-	        background = new BackgroundImage(
-	            bgImage,
-	            BackgroundRepeat.NO_REPEAT,
-	            BackgroundRepeat.NO_REPEAT,
-	            BackgroundPosition.CENTER,
-	            new BackgroundSize(
-	                BackgroundSize.AUTO, 
-	                BackgroundSize.AUTO, 
-	                false, 
-	                false, 
-	                true,  // contain (Bild wird skaliert um reinzupassen. Ändert die Proportionen nicht)
-	                true // cover (Bild wird hochskaliert um alles auszufüllen. Auch gestreckt wenn es sein muss)
-	            )
-	        );
-	    } catch (Exception e) {
-	        throw new RuntimeException("Konnte Hintergrundbild nicht laden: " + bgPath, e);
-	    }
-	    return background;
+	/**
+	 * Der Hintergrund einer Lern-Session: erst die Karte, dann ihre Kategorie, sonst der leere.
+	 */
+	public BackgroundImage getBackgroundImage(String mapName, String kategorie) {
+		return backgroundImage(getBackgroundImageName(mapName, kategorie));
 	}
-	
-	// !Sofort: Boah, also wie viele getBackgroundImage-Methoden mit Code-Duplizierung denn noch? Das muss refactoret werden! 
-	public BackgroundImage getStartBackgroundImage() {
-		String wallpaperName = emptyWallpaperName == null ? defaultWallpaperName : emptyWallpaperName;
-		Path bgPath = Config.getPath("wallpaperFolder").resolve(wallpaperName);
-		BackgroundImage background;
-		try {
-		    Image bgImage = new Image(bgPath.toUri().toString());
-	        background = new BackgroundImage(
-	            bgImage,
-	            BackgroundRepeat.NO_REPEAT,
-	            BackgroundRepeat.NO_REPEAT,
-	            BackgroundPosition.CENTER,
-	            new BackgroundSize(
-	                BackgroundSize.AUTO, 
-	                BackgroundSize.AUTO, 
-	                false, 
-	                false, 
-	                true,  // contain (Bild wird skaliert um reinzupassen. Ändert die Proportionen nicht)
-	                true // cover (Bild wird hochskaliert um alles auszufüllen. Auch gestreckt wenn es sein muss)
-	            )
-	        );
-	    } catch (Exception e) {
-	        throw new RuntimeException("Konnte Hintergrundbild nicht laden: " + bgPath, e);
-	    }
-	    return background;
-	}
-	
-	// TODO: !Sofort: Also mit empty und default geht es aber ein bisschen durcheinander. Hier holt empty das default *lol*
+
+	/**
+	 * Der leere Hintergrund — er lenkt nicht ab und gilt überall, wo nichts Eigenes definiert ist:
+	 * Statistik-Bildschirme, Tagebuch, Filme und die Lernformen ohne eigenes Bild.
+	 */
 	public BackgroundImage getEmptyBackgroundImage() {
-		return getBackgroundImage(null, null);
+		return backgroundImage(emptyWallpaperName);
 	}
-	
+
+	/**
+	 * Der Startbildschirm ist der einzige, der ein geschmücktes Bild bekommt — dort ist sonst nichts
+	 * zu sehen. Fehlt es im Skin, tut es auch der leere.
+	 */
+	public BackgroundImage getStartBackgroundImage() {
+		return backgroundImage(startScreenWallpaperName == null ? emptyWallpaperName : startScreenWallpaperName);
+	}
+
+	/** Die eine Stelle, an der aus einem Dateinamen ein Hintergrund wird. */
+	private BackgroundImage backgroundImage(String wallpaperName) {
+		Path bgPath = Config.getPath("wallpaperFolder").resolve(wallpaperName);
+		try {
+			return new BackgroundImage(
+				new Image(bgPath.toUri().toString()),
+				BackgroundRepeat.NO_REPEAT,
+				BackgroundRepeat.NO_REPEAT,
+				BackgroundPosition.CENTER,
+				new BackgroundSize(
+					BackgroundSize.AUTO,
+					BackgroundSize.AUTO,
+					false,
+					false,
+					true,  // contain: skaliert zum Reinpassen, ohne die Proportionen zu ändern
+					true   // cover:   füllt alles aus, notfalls gestreckt
+				)
+			);
+		} catch (Exception e) {
+			throw new RuntimeException("Konnte Hintergrundbild nicht laden: " + bgPath, e);
+		}
+	}
+
 	private String getBackgroundImageName (String mapName, String categoryName) {
-		if (mapName == null || categoryName == null)
-			return defaultWallpaperName == null ? emptyWallpaperName : defaultWallpaperName;
 		String bgName = (String) getFieldValue(mapName + "WallpaperName");
 		if (bgName != null)
 			return bgName;
 		bgName = (String) getFieldValue(categoryName + "WallpaperName");
 		if (bgName != null)
 			return bgName;
-		return defaultWallpaperName;
+		return emptyWallpaperName;
 	}
 
 	/** Die Maße einer Multiple-Choice-Auswahl. Ohne Schlüssel — die Auswahl holt sie sich selbst. */
@@ -1414,22 +1394,22 @@ public abstract class Skin extends SkinProperties {
 	 * @param id
 	 * @return
 	 */
-	public Path getMapImagePath(String mapName) {
+	private Path getMapImagePath(String mapName) {
 	    String name = (String) getFieldValue(mapName + "MapImageName");
 	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
 	}
 
-	public Path getMapInactiveImagePath(String mapName) {
+	private Path getMapInactiveImagePath(String mapName) {
 	    String name = (String) getFieldValue(mapName + "MapInactiveImageName");
 	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
 	}
 
-	public Path getMapInactiveOverlayImagePath(String mapName) {
+	private Path getMapInactiveOverlayImagePath(String mapName) {
 	    String name = (String) getFieldValue(mapName + "MapInactiveOverlayImageName");
 	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
 	}
 
-	public Path getMapOverlayImagePath(String mapName) {
+	private Path getMapOverlayImagePath(String mapName) {
 	    String name = (String) getFieldValue(mapName + "MapOverlayImageName");
 	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
 	}

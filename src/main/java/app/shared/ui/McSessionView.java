@@ -20,6 +20,5 @@ public class McSessionView extends AnkiSessionView {
 
 	@Override protected SessionMap createMap()       { return new NoSessionMap(); }
 	@Override protected boolean hasInputField()      { return false; }
-	@Override protected boolean usesDeckBackground() { return true; }
 	@Override public void disableMcPanel() {}; // MCPanel darf in einer MC-Session niemals deaktiviert werden. Wird allerdings vermutlich eh nie aufgerufen.
 }
