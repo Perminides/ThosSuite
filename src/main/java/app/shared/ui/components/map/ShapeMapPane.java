@@ -147,7 +147,7 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 		this.clickListener = Objects.requireNonNull(listener, "Wolltest Du ernsthaft gerade null als Listener setzen?");
 	}
 
-	// --- Das gemeinsame Vokabular (SessionMap) ---
+	// --- Das gemeinsame Vokabular (LearnMap) ---
 
 	/** Alle interaktiven Shapes zurück auf Anfang und wieder aktiv. */
 	@Override

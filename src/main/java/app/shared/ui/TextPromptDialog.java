@@ -2,21 +2,19 @@ package app.shared.ui;
 
 import java.util.Optional;
 
-import app.shared.skin.SkinService;
+import app.shared.ui.components.SuiteDialog;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
-import app.shared.ui.components.SuiteDialog;
 
 /**
  * Kopftext + mehrzeiliges Textfeld, OK/Abbrechen.
- * Ergebnis = eingegebener Text; Optional.empty() bei Abbrechen/X.
+ * Ergebnis = eingegebener Text oder null
  */
 public class TextPromptDialog {
 
-    public static Optional<String> show(String title, String headerText, String prefill) {
+    public static String show(String title, String headerText, String prefill) {
         TextArea textArea = new TextArea();
         textArea.setWrapText(true);
         textArea.setPrefRowCount(6);
@@ -32,8 +30,8 @@ public class TextPromptDialog {
 
         Optional<?> result = dialog.showAndWait();
         if (result.isEmpty() || result.get().equals(ButtonType.CANCEL))
-            return Optional.empty();
+            return null;
 
-        return Optional.of(textArea.getText() == null ? "" : textArea.getText());
+        return textArea.getText();
     }
 }

@@ -12,7 +12,7 @@ import app.shared.model.AlertOptions;
 import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
 
-public class TurnDialog {
+public class MattressTurnDialog {
 
     private static final String DIR_UP_DOWN    = "up down";
     private static final String DIR_RIGHT_LEFT = "right left";

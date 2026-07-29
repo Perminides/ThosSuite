@@ -300,7 +300,7 @@ public class ImageMapPane extends StackPane implements LearnMap {
 	// ========================================
 
 	// ========================================
-	// Das gemeinsame Vokabular (SessionMap) — spricht Ids, übersetzt nach Geometrien
+	// Das gemeinsame Vokabular (LearnMap) — spricht Ids, übersetzt nach Geometrien
 	// ========================================
 
 	@Override public void reset()                         { resetMarkers(); }

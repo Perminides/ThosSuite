@@ -26,9 +26,9 @@ import app.shared.ui.components.map.LearnMap;
  *
  * <p>Was die Lernformen unterscheidet, entscheiden die drei Unterklassen:</p>
  * <pre>
- * ShapeMapSessionView   Shape-Karte · Eingabefeld
- * McSessionView         keine Karte · kein Eingabefeld
- * ImageMapSessionView   Bild-Karte  · Eingabefeld
+ * ShapeMapLearnView   Shape-Karte · Eingabefeld
+ * McLearnView         keine Karte · kein Eingabefeld
+ * ImageMapLearnView   Bild-Karte  · Eingabefeld
  * </pre>
  *
  * <p>Der Hintergrund unterscheidet sie nicht: jede Session fragt dieselbe Staffelung ab — eigenes
@@ -155,7 +155,7 @@ public abstract class AnkiLearnView {
 	public void setMcCorrect(int id, boolean correct)   { mcPane.setCorrect(id, correct); }
 	public void setMcSolution(Set<Integer> correctIds)  { mcPane.setCorrectAndInactive(correctIds); }
 
-	/** Schaltet die Antwortauswahl ab. {@code McSessionView} überschreibt das leer — dort wäre es sinnlos. */
+	/** Schaltet die Antwortauswahl ab. {@code McLearnView} überschreibt das leer — dort wäre es sinnlos. */
 	public void disableMcPanel() { mcPane.clearAndSetInactive(); }
 
 	// ===== Eingabefeld =====
