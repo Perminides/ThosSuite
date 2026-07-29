@@ -9,7 +9,7 @@ import app.shared.Config;
 import app.shared.UiUtils;
 import app.shared.model.BorderParams;
 import app.shared.model.MapImages;
-import app.shared.ui.components.MultipleChoicePane;
+import app.shared.model.McMetrics;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -1355,28 +1355,14 @@ public abstract class Skin extends SkinProperties {
 		return defaultWallpaperName;
 	}
 
-	public MultipleChoicePane createMultipleChoicePane(String id, String category) {
-	    Rectangle2D bounds = (Rectangle2D) getFieldValue(id + "SessionMcPanel");
-	    if (bounds == null)
-	        bounds = (Rectangle2D) getFieldValue(category + "SessionMcPanel");
-
+	/** Die Maße einer Multiple-Choice-Auswahl. Ohne Schlüssel — die Auswahl holt sie sich selbst. */
+	public McMetrics mcMetrics() {
 	    Insets insets = borderSmallComponent.insets();
 	    double borderWidth = borderSmallComponent.width();
 	    double horizontalOverhead = insets.getLeft() + insets.getRight() + (borderWidth * 2);
 
-	    // TODO: Hier reichen wir skin-eigene Werte (font, overhead, border, spacing) als Daten nach draußen an MC —
-	    //   wenn auch nur innerhalb von shared. Streng genommen sickern damit skin.properties in eine UI-Komponente.
-	    //   Nochmal prüfen, wie ok das ist. Gegenargument: result.setLayoutX(bounds.getMinX()) unten tut faktisch
-	    //   dasselbe, und nicht jeder UI-Parameter ist per CSS stylebar — ganz verhindern lässt sich das nicht.
-	    //   Also hier vielleicht nicht zu dogmatisch sein.
-	    MultipleChoicePane.Metrics metrics = new MultipleChoicePane.Metrics(
-	            font, horizontalOverhead, borderWidth, mcLineSpacingSqueezed());
-
-	    MultipleChoicePane result = new MultipleChoicePane(
-	            bounds.getWidth(), computeMcButtonHeight(), verticalGapMC, metrics);
-	    result.setLayoutX(bounds.getMinX());
-	    result.setLayoutY(bounds.getMinY());
-	    return result;
+	    return new McMetrics(font, horizontalOverhead, borderWidth, mcLineSpacingSqueezed(),
+	            computeMcButtonHeight(), verticalGapMC);
 	}
 
 	private double computeMcButtonHeight() {

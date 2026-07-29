@@ -1,6 +1,6 @@
 # Vertagte Punkte
 
-**Stand:** 29.07.2026 · Schritte 1–3c, der größte Teil von 3f und der Build-Wächter erledigt
+**Stand:** 29.07.2026 · Schritte 1–3f erledigt, alle Wächter scharf im Build
 
 Alles, was während des Refactorings (26.–29.07.) bewusst **nicht** sofort gemacht wurde.
 Sortiert nach **Fälligkeit**, nicht nach Thema — beim Abarbeiten ist „was ist jetzt dran" die
@@ -12,12 +12,13 @@ Schrittnummern beziehen sich auf `Skin-Refactoring-Plan.md` §8.
 
 ## A · Fällig im laufenden Umbau
 
-### Schritt 3f — die letzte Bau-Methode
+### Schritt 3f — ✓ erledigt am 29.07.
+
+Alle Bau-Methoden haben den Skin verlassen, alle Wächter sind leer und werden vom Build bewacht.
+Was aus dieser Runde offen blieb:
 
 | Punkt | Fundstelle |
 |---|---|
-| ✓ **Form der Maß-Zugänge** — entschieden am 29.07.: `sessionBounds(mapName, kategorie, teil)` mit `SessionComponent`, plus eine Überladung für `TextLabelType`. Ausschlag gab, dass die Staffelung spezifisch→Kategorie sonst sechsmal abgeschrieben würde | `SkinProperties` |
-| **`createMultipleChoicePane`** ist die letzte Bau-Methode im Skin. Mit ihr fallen Wächter 1 und 3 und der Zyklus `skin ↔ ui.components` — danach lassen sich die drei auskommentierten ArchUnit-Regeln scharf stellen | `Skin`, `ArchitekturRegelnTest` |
 | Bild-Karte: „EM 2021 — alle Länder grün, welches war falsch?" Das Zurücksetzen vor `markLastClickAsIncorrect()` löscht die bisherigen Markierungen mit | `ImageMapPane.markIncorrect` |
 | Fragefeld der Region-Session: „Hier wäre allerdings CENTER schon angesagt" | `RegionSessionView:69` |
 
@@ -57,7 +58,7 @@ veraltet es noch einmal.
 | ~~`ShapeMapState` im Feature~~ | **erledigt** — als eigenes Record in `shared.model` |
 | Wie mit Hintergrundbildern umgegangen wird, gehört ins Regelwerk | `ComponentHost:33` |
 | **`buildShapeMapWrapper`-Konstrukt.** Der Block gehört in die `ShapeMapPane`; das Hindernis (kein Zugriff auf Skin-Felder) ist unter U3 weg | `ShapeMapPane:65` |
-| `MultipleChoicePane.Metrics` — „streng genommen sickern skin.properties in eine UI-Komponente". Unter U3 ist das die **Blaupause**, nicht der Sündenfall. TODO umschreiben statt lösen | `Skin.createMultipleChoicePane` |
+| ~~`MultipleChoicePane.Metrics` — „streng genommen sickern skin.properties in eine UI-Komponente"~~ | **erledigt 29.07.** — wurde `shared.model.McMetrics`; nach der Schlüssel-Regel ist das kein Sickern, sondern der Normalfall |
 | `overlayContentBounds` beschreibt, wo der Inhalt im Mini-Map-Bild sitzt — gehört eigentlich woandershin | `Skin.getOverlayContentBounds` |
 | **Fehler im freien Spiel:** falsch geklickte Formen verschwinden bei „schwer" nicht, nur die richtigen. Bestehender Fehler, nicht aus dem Umbau | `RegionSessionView:16` |
 

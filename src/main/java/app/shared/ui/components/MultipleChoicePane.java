@@ -5,9 +5,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+import app.shared.model.McMetrics;
 import app.shared.model.UiComponent;
+import app.shared.skin.SkinService;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
@@ -22,20 +25,13 @@ import javafx.scene.text.TextAlignment;
  * 		- up to 3 lines in small font for very long text (tiny)
  *
  * <p>MC misst selbst, welche Stufe ein Antworttext braucht, und togglet die passende Pseudo-Klasse. Die dafür
- * nötigen, skin-abhängigen Werte kommen gebündelt als {@link Metrics} herein — ein Objekt statt vier loser
- * Parameter. MC importiert nichts aus dem skin-Paket: {@code Metrics} ist sein eigener Eingabe-Kontrakt, den
- * der Skin nur füllt.</p>
+ * nötigen Maße holt es sich als {@link McMetrics} beim Skin — sie hängen an der Schrift und den Rändern, nicht
+ * am Aufrufer. Übergeben wird nur die Breite beziehungsweise das Feld.</p>
  *
  * CSS-classes
  * 		Button	= "my-mc-button"
  */
 public class MultipleChoicePane extends Pane implements UiComponent{
-
-	/**
-	 * Die skin-abhängigen Werte, die MC fürs Messen der Antwort-Stufe braucht. Der Skin füllt das Record beim
-	 * Erzeugen der Pane; MC besitzt nur den Typ und rechnet damit.
-	 */
-	public record Metrics(Font font, double horizontalOverhead, double borderWidth, double lineSpacingSqueezed) {}
 
     // --- Logik-Zustände (Exklusiv) ---
     private static final PseudoClass STATE_INACTIVE = PseudoClass.getPseudoClass("inactive");
@@ -50,24 +46,35 @@ public class MultipleChoicePane extends Pane implements UiComponent{
     private static final PseudoClass STATE_TINY = PseudoClass.getPseudoClass("tiny");
 
     private final List<Button> buttons = new ArrayList<>();
-    private final Metrics metrics;
+    private final McMetrics metrics;
 
     private Consumer<Integer> listener;
 
-    public MultipleChoicePane(double width, double fixedButtonHeight, int verticalGap, Metrics metrics) {
-        this.metrics = metrics;
+    /** Mit fester Lage — für absolut positionierende Hosts. Nur die Breite zählt, die Höhe ergibt sich. */
+    public MultipleChoicePane(Rectangle2D bounds) {
+        this(bounds.getWidth());
+        setLayoutX(bounds.getMinX());
+        setLayoutY(bounds.getMinY());
+    }
 
-        double totalHeight = (fixedButtonHeight * 8) + (verticalGap * 7);
+    /** Ohne feste Lage — für Aufrufer, die die Auswahl in ein Layout hängen. */
+    public MultipleChoicePane(double width) {
+        this.metrics = SkinService.get().mcMetrics();
+
+        double buttonHeight = metrics.buttonHeight();
+        int verticalGap = metrics.verticalGap();
+
+        double totalHeight = (buttonHeight * 8) + (verticalGap * 7);
         this.setPrefSize(width, totalHeight);
 
         double yPos = 0;
         for (int i = 0; i < 8; i++) {
-            Button btn = createButton(i, width, fixedButtonHeight);
+            Button btn = createButton(i, width, buttonHeight);
             btn.setLayoutX(0);
             btn.setLayoutY(yPos);
             buttons.add(btn);
             getChildren().add(btn);
-            yPos += fixedButtonHeight + verticalGap;
+            yPos += buttonHeight + verticalGap;
         }
     }
     
