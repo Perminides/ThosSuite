@@ -1,6 +1,6 @@
 # Vertagte Punkte
 
-**Stand:** 29.07.2026 · Schritte 1–3f erledigt, alle Wächter scharf im Build
+**Stand:** 29.07.2026 · Schritte 1–4 erledigt, alle Wächter scharf im Build. Offen: Schritt 5.
 
 Alles, was während des Refactorings (26.–29.07.) bewusst **nicht** sofort gemacht wurde.
 Sortiert nach **Fälligkeit**, nicht nach Thema — beim Abarbeiten ist „was ist jetzt dran" die
@@ -177,7 +177,7 @@ den JavaFX-Default ab. Die drei anderen Stellen gehen über `SuiteDatePicker` (o
 Der Unterschied ist **geerbt, nicht gewollt**. Zu entscheiden: nirgends, überall, oder je nach
 Kontext als Parameter — in jedem Fall sollte auch der Editor über `SuiteDatePicker` gehen.
 
-### Schritt 4 — Aufräumen
+### Schritt 4 — ✓ erledigt am 29.07.
 
 **Den Rest von `Skin` sortieren.** Nach 3d (Chrome/Menüs) enthält die Klasse zweierlei, und nur
 eines davon ist ein Skin im Sinne von §2.1:

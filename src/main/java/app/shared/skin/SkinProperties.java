@@ -6,19 +6,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+import app.shared.Config;
+import app.shared.UiUtils;
 import app.shared.model.BigComponentStyle;
 import app.shared.model.BorderParams;
 import app.shared.model.DashboardTileStyle;
 import app.shared.model.DialogStyle;
 import app.shared.model.DiaryStyle;
+import app.shared.model.MapImages;
+import app.shared.model.McMetrics;
 import app.shared.model.MovieStyle;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 
 /**
  * Die Werte eines Skins — und das Laden dieser Werte aus einer {@code .properties}-Datei.
@@ -282,6 +288,168 @@ public abstract class SkinProperties {
 		if (bounds == null)
 			bounds = (Rectangle2D) getFieldValue(kategorie + suffix);
 		return bounds;
+	}
+
+	public enum IconButtonType {
+		BACK, SKIP, PLAY, CANCEL
+	};
+
+	public enum TextLabelType {
+		QUESTION("Question"), PROGRESS("Progress"), CARD_HISTORY("History");
+
+		private final String text;
+
+		TextLabelType(final String text) {
+			this.text = text;
+		}
+
+		public String toString() {
+			return text;
+		}
+	}
+
+	/**
+	 * Das Wallpaper einer Lern-Session: erst das der Karte, dann das ihrer Kategorie, sonst das leere.
+	 */
+	public Path wallpaperPath(String mapName, String kategorie) {
+		return wallpaperFolder().resolve(getBackgroundImageName(mapName, kategorie));
+	}
+
+	/**
+	 * Das leere Wallpaper — es lenkt nicht ab und gilt überall, wo nichts Eigenes definiert ist:
+	 * Statistik-Bildschirme, Tagebuch, Filme und die Lernformen ohne eigenes Bild.
+	 */
+	public Path emptyWallpaperPath() {
+		return wallpaperFolder().resolve(emptyWallpaperName);
+	}
+
+	/**
+	 * Der Startbildschirm ist der einzige mit einem geschmückten Bild — dort ist sonst nichts zu sehen.
+	 * Nennt der Skin keines, tut es auch das leere.
+	 */
+	public Path startScreenWallpaperPath() {
+		String name = startScreenWallpaperName == null ? emptyWallpaperName : startScreenWallpaperName;
+		return wallpaperFolder().resolve(name);
+	}
+
+	private Path wallpaperFolder() {
+		return Config.getPath("wallpaperFolder");
+	}
+
+	private String getBackgroundImageName (String mapName, String categoryName) {
+		String bgName = (String) getFieldValue(mapName + "WallpaperName");
+		if (bgName != null)
+			return bgName;
+		bgName = (String) getFieldValue(categoryName + "WallpaperName");
+		if (bgName != null)
+			return bgName;
+		return emptyWallpaperName;
+	}
+
+	/** Die Maße einer Multiple-Choice-Auswahl. Ohne Schlüssel — die Auswahl holt sie sich selbst. */
+	public McMetrics mcMetrics() {
+	    Insets insets = borderSmallComponent.insets();
+	    double borderWidth = borderSmallComponent.width();
+	    double horizontalOverhead = insets.getLeft() + insets.getRight() + (borderWidth * 2);
+
+	    return new McMetrics(font, horizontalOverhead, borderWidth, mcLineSpacingSqueezed(),
+	            computeMcButtonHeight(), verticalGapMC);
+	}
+
+	private double computeMcButtonHeight() {
+	    Insets insets = borderSmallComponent.insets();
+	    double verticalPadding = insets.getTop() + insets.getBottom();
+	    double borderWidth = borderSmallComponent.width();
+
+	    Text dummyText = new Text("Q");
+	    dummyText.setFont(font);
+
+	    // JavaFX ist großzügig mit der Höhe; ein bisschen weniger reicht. Hack wie gehabt.
+	    double h = Math.ceil(dummyText.getLayoutBounds().getHeight() + verticalPadding + (borderWidth * 2));
+	    return Math.round(h * 0.95745f);
+	}
+
+	/** Auch die CSS-Seite braucht den Wert — die zweizeilige MC-Stufe wird dort gestylt. */
+	protected double mcLineSpacingSqueezed() {
+	    return font.getSize() * -0.4;
+	}
+	
+	/**
+	 * Das Bild zu einer Knopf-Rolle, fertig eingefärbt. Hängt am Skin und nicht am Aufrufer — der
+	 * Knopf holt es sich deshalb selbst.
+	 */
+	public Image iconFor(IconButtonType rolle) {
+		String iconName = switch (rolle) {
+			case BACK -> backButtonIcon;
+			case SKIP -> skipButtonIcon;
+			case PLAY -> playButtonIcon;
+			case CANCEL -> cancelButtonIcon;
+		};
+
+		Image image = new Image(Config.getPath("iconFolder").resolve(iconName).toUri().toString());
+		if (rolle == IconButtonType.BACK)
+			image = UiUtils.tintImage(image, textActiveComponentColor);
+
+		return image;
+	}
+
+
+
+
+	
+
+	
+	
+
+	
+
+	// TODO: overlayContentBounds beschreibt, wo der Inhalt im Mini-Map-Bild sitzt — eigentlich
+	// Karten-/Asset-Daten, kein Styling. Liegt nur hier, weil hartcodiert. Sobald berechenbar
+	// (Overlay-Größe + prozentualer Rand), wandert das hoch zur Karte. Bis dahin: Felder mit Defaults.
+	public Rectangle2D getOverlayContentBounds(String id) {
+	    Rectangle2D b = (Rectangle2D) getFieldValue(id + "SessionOverlayContentBounds");
+	    return b != null ? b : defaultOverlayContentBounds;
+	}
+	
+	
+	// !Sofort: Im Tagebuch mit Kalenderwochen und bei den StatisticsScreens ohne. Wieso?
+	
+
+	
+	
+	
+	// endregion
+
+	/**
+	 * Die Kartenbilder werden dann von den MapRepositories geholt
+	 * 
+	 * @param id
+	 * @return
+	 */
+	private Path getMapImagePath(String mapName) {
+	    String name = (String) getFieldValue(mapName + "MapImageName");
+	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
+	}
+
+	private Path getMapInactiveImagePath(String mapName) {
+	    String name = (String) getFieldValue(mapName + "MapInactiveImageName");
+	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
+	}
+
+	private Path getMapInactiveOverlayImagePath(String mapName) {
+	    String name = (String) getFieldValue(mapName + "MapInactiveOverlayImageName");
+	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
+	}
+
+	private Path getMapOverlayImagePath(String mapName) {
+	    String name = (String) getFieldValue(mapName + "MapOverlayImageName");
+	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
+	}
+
+	/** Die vier Bilder einer Karte als Bündel — sie werden nur zusammen gebraucht. */
+	public MapImages mapImages(String mapName) {
+		return new MapImages(getMapImagePath(mapName), getMapOverlayImagePath(mapName),
+				getMapInactiveImagePath(mapName), getMapInactiveOverlayImagePath(mapName));
 	}
 
 	// endregion
