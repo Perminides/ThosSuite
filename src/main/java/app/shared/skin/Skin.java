@@ -10,35 +10,22 @@ import app.shared.UiUtils;
 import app.shared.model.BorderParams;
 import app.shared.model.MapImages;
 import app.shared.model.McMetrics;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.DoubleBinding;
-import javafx.beans.binding.ObjectBinding;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.HeaderBar;
-import javafx.scene.layout.HeaderDragType;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
-import javafx.stage.Stage;
 
 /**
  * Ja, das ist hier heftige Reflection, es tut mir leid. Aber was ich wollte ist: - Skins, die voneinander erben können - Jedes Skin hat seine eigene
@@ -433,6 +420,9 @@ public abstract class Skin extends SkinProperties {
 	    		.add("-fx-border-width", "0 0 1 0") // Die Dicke dieses Striches :-)
 	    		.add("-fx-background-color", menuBarBackground)
 	    		.end();
+
+	    // Abstand von Symbol und Menü zum linken Fensterrand, halbe Schriftgröße.
+	    builder.rule(".my-header-leading", "-fx-padding", "0 0 0 " + (font.getSize() * 0.5) + "px");
 	}
 	
 	/**
@@ -1266,18 +1256,8 @@ public abstract class Skin extends SkinProperties {
 
 	// ========== create-Methoden
 	// region
-	public MenuBar createMenuBar() {
-		MenuBar menuBar = new MenuBar();
-		return menuBar;
-	}
 
-	public Menu createMenu(String text) {
-		return new Menu(text);
-	}
 
-	public MenuItem createMenuItem(String text) {
-		return new MenuItem(text);
-	}
 	
 	/**
 	 * Holt das passende Hintergrundbild zur laufenden Session bzw das "leere", wenn keine Session läuft.
@@ -1401,72 +1381,6 @@ public abstract class Skin extends SkinProperties {
 		return image;
 	}
 
-	public HeaderBar createMainWindowHeaderBar(Stage stage, MenuBar menuBar) {
-	    HeaderBar headerBar = new HeaderBar();
-	    
-	    // CENTER: Title
-	    Label titleLabel = new Label("Thos Suite (FX)");
-	    HeaderBar.setDragType(titleLabel, HeaderDragType.DRAGGABLE_SUBTREE);
-	    titleLabel.getStyleClass().add("my-title");
-	    headerBar.setCenter(titleLabel);
-	    
-	    // LEADING: Icon + MenuBar (Logik direkt hier)
-	    // Wir nutzen Bindings statt runLater!
-	    
-	    // 1. Icon View erstellen (bindet sich an die Header-Höhe)
-	    ImageView iconView = createResponsiveHeaderIcon(stage, headerBar);
-	    
-	    // 2. Layout zusammenbauen
-	    double spacing = font.getSize() * 0.5;
-	    HBox leftBox = new HBox(0); // Items kommen rein, sobald verfügbar
-	    leftBox.setAlignment(Pos.CENTER_LEFT);
-	    leftBox.setPadding(new javafx.geometry.Insets(0, 0, 0, spacing));
-	    
-	    if (iconView != null) {
-	        leftBox.getChildren().add(iconView);
-	    }
-	    leftBox.getChildren().add(menuBar);
-	    
-	    headerBar.setLeading(leftBox);
-	    
-	    return headerBar;
-	}
-
-	// Hilfsmethode für das responsive Icon
-	private ImageView createResponsiveHeaderIcon(Stage stage, HeaderBar headerBar) {
-	    ObservableList<Image> icons = stage.getIcons(); // Schön, dass die Observable ist, aber für uns hier nicht von Belang!
-	    if (icons.isEmpty()) return null;
-
-	    ImageView iconView = new ImageView();
-	    iconView.setPreserveRatio(true);
-	    iconView.setSmooth(true); // Wichtig, aber bei passender Icon-Wahl weniger kritisch
-
-	    // 1. Die Zielgröße berechnen (Live-Wert) Wir nehmen mal 55% der Höhe, zu groß soll das Icon ja auch nicht sein...
-	    DoubleBinding targetSize = headerBar.heightProperty().multiply(0.55);
-	    iconView.fitHeightProperty().bind(targetSize);
-
-	    // 2. Binding für das "beste Bild" definieren
-	    // Das aktualisiert sich automatisch, sobald targetSize sich ändert!
-	    ObjectBinding<Image> bestIconBinding = Bindings.createObjectBinding(() -> {
-	        double neededHeight = targetSize.get();
-	        
-	        // Initialer Layout-Pass kann 0 sein
-	        if (neededHeight <= 0) return icons.get(0); 
-
-	        return icons.stream()
-	            // Nimm alle Icons, die mindestens so groß sind wie benötigt
-	            .filter(img -> img.getHeight() >= neededHeight)
-	            // Von denen nimm das kleinste (um unnötiges Downscaling zu vermeiden)
-	            .min((a, b) -> Double.compare(a.getHeight(), b.getHeight()))
-	            // Fallback: Wenn alle kleiner sind als benötigt, nimm das größte was da ist
-	            .orElse(icons.get(icons.size() - 1));
-	            
-	    }, targetSize); // <--- WICHTIG: Abhängigkeit angeben!
-	    // 3. Verkabeln
-	    iconView.imageProperty().bind(bestIconBinding);
-
-	    return iconView;
-	}
 
 
 

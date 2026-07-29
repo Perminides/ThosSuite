@@ -138,10 +138,38 @@ Szene eindeutig sein, zwei Info-Labels in einem Dialog brächen das. Sauberer:
 der View nach dem `new` gesetzt werden. `ShapeMapPane`, `SuiteTextField` und `SuiteIconButton` haben
 sie im Konstruktor — das ist der Präzedenzfall.
 
-### Schritt 3d — Chrome/Menüs
+### Schritt 3d — ✓ erledigt am 29.07., aber `MainWindow` ist noch nicht rund
 
-Aus dem Skin wandern: `createMenuBar`, `createMenu`, `createMenuItem`,
-`createMainWindowHeaderBar`, `createResponsiveHeaderIcon`. Hängt an `MainWindow`, deshalb zuletzt.
+Die fünf Methoden haben den Skin verlassen: die drei Fabriken waren pure `new X()` ohne einen
+einzigen Skin-Wert und sind ersatzlos gestrichen (24 Aufrufstellen), die Header-Leiste wurde
+`shared.ui.MainWindowHeaderBar`. Was dabei offen blieb — **Thorstens Einwände, keine Nacharbeit an
+3d, sondern eine eigene kleine Runde:**
+
+**1. Eine fertige `MenuBar` über die shared-Grenze zu reichen, ist zu viel.** Erwartbarer wäre:
+`MainWindow` bekommt eine leere Leiste und hängt seine Menüs selbst ein. Zu bedenken beim Umbau:
+das Symbol sitzt *neben* der Menüleiste im selben `leading`-Block. Entweder gibt die Leiste den
+Block heraus (dann wandert das Layout-Wissen doch nach draußen), oder sie bekommt eine Methode
+`setMenuBar(MenuBar)` — dann überquert der Typ die Grenze nur später statt gar nicht. Die Frage ist
+also nicht *ob* der Typ die Grenze überquert, sondern ob `MainWindow` beim Zusammenbau mitwirkt.
+Vielleicht ist die ehrlichere Fassung: die Leiste nimmt die *Menüs* (`List<Menu>`) und baut die
+`MenuBar` selbst.
+
+**2. Kein `getStyleClass()` außerhalb von `shared`.** Heute drei Stellen, alle in `MainWindow`:
+
+```
+MainWindow:82   root.getStyleClass().add("my-root")
+MainWindow:229  spacer.getStyleClass().add("my-spacer")
+MainWindow:234  spacer2.getStyleClass().add("my-spacer")
+```
+
+Das ist die Anzeige-Entscheidung außerhalb der Anzeige-Schicht. Wäre als vierte ArchUnit-Regel
+prüfbar (`noClasses().that().resideOutsideOfPackage("app.shared..").should().callMethod(Styleable,
+"getStyleClass")`) — erst aufstellen, wenn die drei Stellen weg sind.
+
+**3. `my-title` ganz raus.** Die Klasse wird zweimal gesetzt (`MainWindowHeaderBar:41`,
+`SuiteHeaderBar:31`), es gibt aber **keine CSS-Regel dafür** — dasselbe Fossil wie
+`custom-text-label` beim InfoLabel. Entweder beide Titel bekommen eine Regel, oder die Klasse fällt
+an beiden Stellen weg. Marker steht im Code.
 
 **Offene Gestaltungsfrage — Kalenderwochen im DatePicker.** Ursache geklärt: `DiaryEditor:174`
 macht als einzige Stelle `new DatePicker(...)` und setzt `setShowWeekNumbers` nicht, greift also
@@ -151,9 +179,29 @@ Kontext als Parameter — in jedem Fall sollte auch der Editor über `SuiteDateP
 
 ### Schritt 4 — Aufräumen
 
+**Den Rest von `Skin` sortieren.** Nach 3d (Chrome/Menüs) enthält die Klasse zweierlei, und nur
+eines davon ist ein Skin im Sinne von §2.1:
+
+```
+bleibt in Skin      styleScene · 23 × addXxxStyles · CssBuilder
+
+zieht um            getBackgroundImage · getStartBackgroundImage · getEmptyBackgroundImage
+(nach SkinProperties)  getMapImagePath · getMapInactiveImagePath
+                       getMapInactiveOverlayImagePath · getMapOverlayImagePath · mapImages
+                       mcMetrics · iconFor · getOverlayContentBounds
+```
+
+Acht Bild-/Pfad-Methoden plus drei Werte-Zugänge. Alle liefern Werte — teils abgeleitete
+(`BackgroundImage`, getöntes `Image`, gerechnete Maße), aber Werte. Damit gilt danach ohne Fußnote:
+**`SkinProperties` liefert, `Skin` erzeugt CSS.**
+
+Offene Detailfrage dabei: `SkinProperties` müsste `Config` und `UiUtils` kennen (für Pfade und das
+Tönen). Beides liegt in `shared`, also unterhalb — erlaubt, aber vorher einmal anschauen, ob die
+Klasse dadurch zu viel wird.
+
 - `docs/Ordnerstruktur.txt` und `docs/Paketabhängigkeiten.dot` einmal neu erzeugen. Bewusst **nicht**
   zwischendurch — sie veralten bei jedem Move.
-- Die drei Wächter-greps aus Plan §1.3 auf leer bringen.
+- ~~Die drei Wächter-greps aus Plan §1.3 auf leer bringen.~~ **erledigt 29.07.**
 
 ### Schritt 5 — Regelwerk nachziehen
 
