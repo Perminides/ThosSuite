@@ -12,7 +12,7 @@ public class FitbitStatisticsScreen implements Screen {
     private final BarChartScreenView view = new BarChartScreenView(new FitbitStatisticsPresenter(), LocalDate.now().minusYears(2), LocalDate.now());
 
     public FitbitStatisticsScreen() {
-        view.reload();
+        view.rebuild();
     }
 
     @Override
@@ -22,7 +22,7 @@ public class FitbitStatisticsScreen implements Screen {
 
     @Override
     public void refresh() {
-        view.reload();
+        view.rebuild();
     }
 
     @Override

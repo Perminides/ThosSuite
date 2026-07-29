@@ -60,7 +60,7 @@ public class RegionSessionView {
 	/** Neu aufbauen — nötig nach einem Skinwechsel, weil sich alle Maße geändert haben können. */
 	public void rebuild(boolean mitFragefeld) {
 		Skin skin = SkinService.get();
-		host.setBackgroundImage(skin.getBackgroundImage(mapName, kategorie));
+		host.setWallpaper(skin.wallpaperPath(mapName, kategorie));
 
 		karte = new ShapeMapPane(geometrien, skin.sessionBounds(mapName, kategorie, SessionComponent.MAP));
 		karte.setClickListener(onMapElementClicked);

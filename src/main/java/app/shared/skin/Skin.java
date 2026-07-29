@@ -1260,49 +1260,31 @@ public abstract class Skin extends SkinProperties {
 	 * @return
 	 */
 	/**
-	 * Der Hintergrund einer Lern-Session: erst die Karte, dann ihre Kategorie, sonst der leere.
+	 * Das Wallpaper einer Lern-Session: erst das der Karte, dann das ihrer Kategorie, sonst das leere.
 	 */
-	public BackgroundImage getBackgroundImage(String mapName, String kategorie) {
-		return backgroundImage(getBackgroundImageName(mapName, kategorie));
+	public Path wallpaperPath(String mapName, String kategorie) {
+		return wallpaperFolder().resolve(getBackgroundImageName(mapName, kategorie));
 	}
 
 	/**
-	 * Der leere Hintergrund — er lenkt nicht ab und gilt überall, wo nichts Eigenes definiert ist:
+	 * Das leere Wallpaper — es lenkt nicht ab und gilt überall, wo nichts Eigenes definiert ist:
 	 * Statistik-Bildschirme, Tagebuch, Filme und die Lernformen ohne eigenes Bild.
 	 */
-	public BackgroundImage getEmptyBackgroundImage() {
-		return backgroundImage(emptyWallpaperName);
+	public Path emptyWallpaperPath() {
+		return wallpaperFolder().resolve(emptyWallpaperName);
 	}
 
 	/**
-	 * Der Startbildschirm ist der einzige, der ein geschmücktes Bild bekommt — dort ist sonst nichts
-	 * zu sehen. Fehlt es im Skin, tut es auch der leere.
+	 * Der Startbildschirm ist der einzige mit einem geschmückten Bild — dort ist sonst nichts zu sehen.
+	 * Nennt der Skin keines, tut es auch das leere.
 	 */
-	public BackgroundImage getStartBackgroundImage() {
-		return backgroundImage(startScreenWallpaperName == null ? emptyWallpaperName : startScreenWallpaperName);
+	public Path startScreenWallpaperPath() {
+		String name = startScreenWallpaperName == null ? emptyWallpaperName : startScreenWallpaperName;
+		return wallpaperFolder().resolve(name);
 	}
 
-	/** Die eine Stelle, an der aus einem Dateinamen ein Hintergrund wird. */
-	private BackgroundImage backgroundImage(String wallpaperName) {
-		Path bgPath = Config.getPath("wallpaperFolder").resolve(wallpaperName);
-		try {
-			return new BackgroundImage(
-				new Image(bgPath.toUri().toString()),
-				BackgroundRepeat.NO_REPEAT,
-				BackgroundRepeat.NO_REPEAT,
-				BackgroundPosition.CENTER,
-				new BackgroundSize(
-					BackgroundSize.AUTO,
-					BackgroundSize.AUTO,
-					false,
-					false,
-					true,  // contain: skaliert zum Reinpassen, ohne die Proportionen zu ändern
-					true   // cover:   füllt alles aus, notfalls gestreckt
-				)
-			);
-		} catch (Exception e) {
-			throw new RuntimeException("Konnte Hintergrundbild nicht laden: " + bgPath, e);
-		}
+	private Path wallpaperFolder() {
+		return Config.getPath("wallpaperFolder");
 	}
 
 	private String getBackgroundImageName (String mapName, String categoryName) {

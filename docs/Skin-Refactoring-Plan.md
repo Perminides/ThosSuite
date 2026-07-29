@@ -383,6 +383,59 @@ Wächter 1: 3 → **1** (nur noch `MultipleChoicePane`). `mvn test` grün.
 **Damit sind alle drei Wächter leer und der Paketgraph zyklenfrei.** Die drei bis dahin
 auskommentierten ArchUnit-Regeln sind scharf gestellt; der Test läuft mit vier Regeln grün.
 
+**29.07. — Hintergründe als Wert, StartScreen aufgeteilt (Rest von Schritt 4).**
+
+- **Der Skin liefert Pfade, nicht Bilder.** `getBackgroundImage(…)` und die zwei Verwandten sind
+  `wallpaperPath(mapName, kategorie)`, `emptyWallpaperPath()` und `startScreenWallpaperPath()`
+  geworden. `contain`/`cover`/`CENTER`/`NO_REPEAT` sind **keine** Skin-Entscheidung — sie sind für
+  jedes Spielfeld gleich und liegen jetzt in `shared.ui.components.SuiteBackground`.
+- **`SuiteBackground.of(pfad)` liefert einen fertigen `Background`.** Warum eine Fabrik und keine
+  Unterklasse: `Background` **und** `BackgroundImage` sind `final` — die Wertfamilie des
+  layout-Pakets ist versiegelt. Verhüllen brächte auch nichts, weil `Region.setBackground` den Typ
+  ohnehin wieder verlangt; er müsste an jeder Aufrufstelle ausgepackt werden. Die acht Stellen, die
+  vorher alle `pane.setBackground(new Background(x))` schrieben, sagen jetzt nur noch
+  `pane.setBackground(SuiteBackground.of(pfad))`.
+- **`StartScreen` aufgeteilt** in `controller.StartScreen implements Screen` (Navigation) und
+  `shared.ui.StartScreenView implements ScreenView` (Anzeige). Damit implementiert keine Klasse mehr
+  beide Verträge; die acht Screens liegen ausnahmslos bei ihrem Feature, die ScreenViews ausnahmslos
+  in `shared.ui`. **Das löscht eine Sonderregel** — „ein inhaltsloser Screen darf sein eigener
+  ScreenView sein" wird nicht mehr gebraucht.
+- **`reload()` → `rebuild()`** an fünf Stellen. Vier Screens lesen sich jetzt wortgleich als
+  `refresh() { view.rebuild(); }`.
+
+**Verworfen dabei:** eine Vorschrift `rebuild()` auf dem `ScreenView`-Vertrag. Drei der sechs
+Umsetzungen können das nicht — `DashboardScreenView.build(daten)` und
+`MovieViewerScreenView.setNames(…)` brauchen Daten von außen, `ComponentHost` ist eine passive
+Leinwand. Die Vorschrift gibt es ohnehin schon eine Ebene höher: `Screen.refresh()`.
+
+**29.07. — Die Hintergrundbilder (Teil von Schritt 4).**
+
+Ausgelöst durch eine Frage, die wie eine Kleinigkeit aussah: warum heißt eine Methode
+`getEmptyBackgroundImage`, liefert aber `defaultWallpaperName`?
+
+- **Befund:** die zwei Rückfall-Ketten waren gegenläufig. Der Startbildschirm bevorzugte
+  `emptyWallpaperName`, alle anderen kartenlosen Bildschirme `defaultWallpaperName`. Vier der sieben
+  Skins setzen beide Werte, es war also sichtbares Verhalten, kein schlafender Fehler.
+- **Ursache:** ein Namensproblem. `emptyWallpaperName` meinte das *geschmückte* Bild des Skins,
+  `defaultWallpaperName` das *leere*, das nicht ablenkt. Die Namen sagten das Gegenteil.
+- **Umbenannt** (in 6 properties-Dateien und 2 Klassen, zweistufig weil die Namen kollidieren):
+
+  ```
+  emptyWallpaperName    →  startScreenWallpaperName    das geschmückte, nur für den Startbildschirm
+  defaultWallpaperName  →  emptyWallpaperName          das leere, für alles ohne eigenes
+  ```
+
+  **Achtung:** die properties-Dateien liegen außerhalb von git. Dieser Absatz ist die einzige
+  Aufzeichnung der Umbenennung.
+- **`usesDeckBackground()` entfallen** — abstrakte Methode plus drei Implementierungen. Bei zwei von
+  drei Lernformen wurde die Staffelung übersprungen; deshalb las `worldWallpaperName` niemand. Jetzt
+  fragt jede Session dieselbe Kette: eigenes Bild der Karte → das der Kategorie → das leere.
+- **Vier tote properties-Zeilen entfernt** (`lk` in drive/moonlight/spicy, `world` in moonlight) —
+  ihr Wert war identisch mit dem, was die Kette ohnehin liefert. Ausgerechnet, nicht geschätzt.
+- Die drei Hintergrund-Methoden waren zu 20 Zeilen wortgleich; daraus wurde ein privates
+  `backgroundImage(name)`, die drei öffentlichen sind Einzeiler. Der `null/null`-Sonderzweig im
+  Namensauflöser ist damit weg.
+
 **29.07. — Chrome und Menüs (3d).**
 
 - `createMenuBar`, `createMenu`, `createMenuItem` waren in voller Länge `return new MenuBar()`,
