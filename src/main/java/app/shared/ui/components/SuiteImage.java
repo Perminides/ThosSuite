@@ -5,6 +5,8 @@ import java.net.MalformedURLException;
 
 import app.shared.Config;
 import app.shared.model.UiComponent;
+import app.shared.skin.SkinService;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
@@ -34,16 +36,29 @@ public class SuiteImage extends StackPane implements UiComponent{
     private final Rectangle borderRect;
 
     /**
-     * Ja. Leider brauchen wir diese Parameter. Man kann mittels CSS kein Bild beschneiden.
+     * Mit fester Lage — für absolut positionierende Hosts.
+     */
+    public SuiteImage(Rectangle2D bounds) {
+        this(bounds.getWidth(), bounds.getHeight());
+        setLayoutX(bounds.getMinX());
+        setLayoutY(bounds.getMinY());
+    }
+
+    /**
+     * Ohne feste Lage — für Aufrufer, die die Komponente in ein Layout hängen.
+     *
+     * <p>Ja. Leider brauchen wir die Größe als Parameter. Man kann mittels CSS kein Bild beschneiden.
      * Das würde sonst also unter abgerundeten Ecken hervorlugen... Siehe RoundedImageTest, falls noch da...
      * Und nein, das ist jetzt auch kein Riesenproblem: Wir müssen eh das Spielfeld neu aufbauen bei Skinwechsel,
-     * weil sich ja auch Positionen ändern können von Komponenten
-     * 
-     * @param width
-     * @param height
-     * @param arcDiameter
+     * weil sich ja auch Positionen ändern können von Komponenten</p>
+     *
+     * <p>Den Eckradius holt sich die Komponente selbst — der hängt am Skin und nicht am Aufrufer.
+     * {@link Rectangle} will den Durchmesser der Eckrundung, der Skin führt (wie das CSS) den Radius;
+     * die Verdopplung passiert deshalb hier, direkt an der API, die es so will.</p>
      */
-    public SuiteImage(double width, double height, double arcDiameter) {
+    public SuiteImage(double width, double height) {
+        double arcDiameter = SkinService.get().bigComponentCornerRadius() * 2;
+
         // 1. Container-Größe fixieren
         setPrefSize(width, height);
         setMinSize(width, height);

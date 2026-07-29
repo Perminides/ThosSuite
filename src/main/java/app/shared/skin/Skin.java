@@ -8,9 +8,8 @@ import java.util.Set;
 import app.shared.Config;
 import app.shared.UiUtils;
 import app.shared.model.BorderParams;
+import app.shared.model.MapImages;
 import app.shared.ui.components.MultipleChoicePane;
-import app.shared.ui.components.SuiteImage;
-import app.shared.ui.components.SuiteInfoLabel;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -18,7 +17,6 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -26,7 +24,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BackgroundImage;
@@ -41,7 +38,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
-import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
 
 /**
@@ -440,38 +436,39 @@ public abstract class Skin extends SkinProperties {
 	}
 	
 	/**
-	 * Sets the css hard for the Id of the TextLabel: #HistoryLabel, #ProgressLabel , #QuestionLabel
-	 * 
-	 * @param builder
+	 * Grundlage und Abweichung: {@code .my-info-label} trägt alles, was für jedes Info-Label gilt,
+	 * die drei Kennungen ({@code #QuestionLabel}, {@code #ProgressLabel}, {@code #HistoryLabel})
+	 * setzen nur noch den abweichenden Hintergrund.
+	 *
+	 * <p>Damit sieht ein {@code SuiteInfoLabel} auch außerhalb einer Session richtig aus — vorher
+	 * kam sein ganzes Aussehen aus den drei Kennungen, es war also ohne Session nackt.</p>
 	 */
 	private void addSessionInfoLabelStyles(CssBuilder builder) {
-		// History, Progress und Question
-        for (TextLabelType type : TextLabelType.values()) {
-            String selector = "#" + type.toString() + "Label";
-            
-            String fieldName = "displayText" + type.toString() + "BgColor";
-            Color bg = (Color) getFieldValue(fieldName);
-            
-            BorderParams border = borderMediumComponent;
-            Insets insets = border.insets();
-            String padding = String.format("%dpx %dpx %dpx %dpx", (int)insets.getTop(), (int)insets.getRight(), (int)insets.getBottom(), (int)insets.getLeft());
-            
-            // 1. Container Styles (StackPane)
-            // Background, Border, Padding etc. gehören auf den Container
-            builder.start(selector)
-            		.add("-fx-background-color", bg)
-            		.add("-fx-border-color", border.color())
-            		.add("-fx-border-width", border.width() + "px")
-            		.add("-fx-border-radius", border.arc() + "px")
-            		.add("-fx-background-insets", border.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
-            		.add("-fx-background-radius", border.arc() + "px")
-            		.add("-fx-padding", padding)
-            		.end();
-            
-            // 2. Text Styles (Text-Nodes)
-            // Ein StackPane vererbt die Textfarbe NICHT automatisch an Text-Nodes. Wir müssen "Jeden javafx.scene.text.Text innerhalb von selector" ansprechen.
-            builder.rule(selector + " Text", "-fx-fill", textColor);
-        }
+	    BorderParams border = borderMediumComponent;
+	    Insets insets = border.insets();
+	    String padding = String.format("%dpx %dpx %dpx %dpx", (int)insets.getTop(), (int)insets.getRight(), (int)insets.getBottom(), (int)insets.getLeft());
+
+	    builder.start(".my-info-label")
+	    		.add("-fx-background-color", displayTextBgColor)
+	    		.add("-fx-border-color", border.color())
+	    		.add("-fx-border-width", border.width() + "px")
+	    		.add("-fx-border-radius", border.arc() + "px")
+	    		.add("-fx-background-insets", border.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
+	    		.add("-fx-background-radius", border.arc() + "px")
+	    		.add("-fx-padding", padding)
+	    		.end();
+
+	    // Ein StackPane vererbt die Textfarbe NICHT automatisch an Text-Nodes. Wir müssen "Jeden
+	    // javafx.scene.text.Text innerhalb des Labels" ansprechen.
+	    builder.rule(".my-info-label Text", "-fx-fill", textColor);
+
+	    // Nur noch die Abweichung. Die drei Farben fallen bereits beim Laden auf displayTextBgColor
+	    // zurück, wenn sie nicht gesetzt sind — dann schreibt das hier denselben Wert nochmal, was
+	    // nichts kostet und die Regel gleichförmig hält.
+	    for (TextLabelType type : TextLabelType.values()) {
+	        Color bg = (Color) getFieldValue("displayText" + type + "BgColor");
+	        builder.rule("#" + type + "Label", "-fx-background-color", bg);
+	    }
 	}
 	
 	private void addIconButtonStyles(CssBuilder builder) {
@@ -1358,70 +1355,6 @@ public abstract class Skin extends SkinProperties {
 		return defaultWallpaperName;
 	}
 
-	/**
-	 * Creates a TextField with css-class = "input-field"
-	 * 
-	 * @param deck
-	 * @return
-	 */
-	public TextField createInputField(String mapName, String categoryName) {
-	    Rectangle2D bounds = (Rectangle2D) getFieldValue(mapName + "SessionTextInputPanel");
-	    if (bounds == null)
-			bounds = (Rectangle2D) getFieldValue(categoryName + "SessionTextInputPanel");
-	    
-	    TextField textField = new TextField();
-	    textField.setLayoutX(bounds.getMinX());
-	    textField.setLayoutY(bounds.getMinY());
-	    textField.setPrefWidth(bounds.getWidth());
-	    // Höhe wird von Font + Padding bestimmt
-	    
-	    return textField;
-	}
-
-	// Rückgabetyp angepasst
-	public SuiteImage createImageComponent(String deckId, String deckCategory) {
-	    // 1. Config laden (wie vorher)
-	    Rectangle2D bounds = (Rectangle2D) getFieldValue(deckId + "SessionImagePanel");
-	    if (bounds == null) 
-	         bounds = (Rectangle2D) getFieldValue(deckCategory + "SessionImagePanel");
-
-	    // 2. Parameter für Konstruktor vorbereiten
-	    // Wir holen den Radius direkt aus der Config, da Rectangles ihn im Konstruktor wollen
-	    double arc = borderBigComponent.arc() * 2; // JavaFX Arc ist Durchmesser, Config oft Radius? Prüf das kurz! 
-	    // In deinem Upload BorderParams steht "arc". Bei Rectangle ist arcWidth der Durchmesser.
-	    // Wenn borderBigComponent.arc() = 20 ist (Radius), braucht Rectangle 40.
-	    
-	    // Instanz erstellen
-	    var pane = new SuiteImage(bounds.getWidth(), bounds.getHeight(), arc);
-	    pane.setLayoutX(bounds.getMinX());
-	    pane.setLayoutY(bounds.getMinY());
-
-	    // 3. Styling ist jetzt in der Klasse via "my-image-background-layer" vorbereitet.
-	    // Wir müssen nur sicherstellen, dass die CSS-Regeln stimmen.
-
-	    return pane;
-	}
-	
-	// --- Bereinigte Factory-Methode ---
-	public SuiteInfoLabel createSessionInfoLabel(String deckMapName, String deckCategory, TextLabelType labelType) {
-        Rectangle2D bounds = (Rectangle2D) getFieldValue(deckMapName + "Session" + labelType + "Panel");
-        if (bounds == null)
-            bounds = (Rectangle2D) getFieldValue(deckCategory + "Session" + labelType + "Panel");
-        
-        SuiteInfoLabel label = new SuiteInfoLabel("");
-        label.setLayoutX(bounds.getMinX());
-        label.setLayoutY(bounds.getMinY());
-        
-        // StackPane braucht Breite & Höhe für Layout/Zentrierung
-        label.setFixedWidth(bounds.getWidth()); 
-        label.setFixedHeight(bounds.getHeight()); 
-        
-        // ID setzen, damit das CSS oben greift
-        label.setId(labelType.toString() + "Label");
-        
-        return label;
-    }
-
 	public MultipleChoicePane createMultipleChoicePane(String id, String category) {
 	    Rectangle2D bounds = (Rectangle2D) getFieldValue(id + "SessionMcPanel");
 	    if (bounds == null)
@@ -1463,9 +1396,12 @@ public abstract class Skin extends SkinProperties {
 	    return font.getSize() * -0.4;
 	}
 	
-	public Button createIconButton(String deckId, IconButtonType buttonType) {
-	    // Icon laden
-		String iconName = switch (buttonType) {
+	/**
+	 * Das Bild zu einer Knopf-Rolle, fertig eingefärbt. Hängt am Skin und nicht am Aufrufer — der
+	 * Knopf holt es sich deshalb selbst.
+	 */
+	public Image iconFor(IconButtonType rolle) {
+		String iconName = switch (rolle) {
 			case BACK -> backButtonIcon;
 			case SKIP -> skipButtonIcon;
 			case PLAY -> playButtonIcon;
@@ -1473,22 +1409,10 @@ public abstract class Skin extends SkinProperties {
 		};
 
 		Image image = new Image(Config.getPath("iconFolder").resolve(iconName).toUri().toString());
-		if (buttonType == IconButtonType.BACK)
-		    image = UiUtils.tintImage(image, textActiveComponentColor);
-		ImageView icon = new ImageView(image);
-	    
-	    // Button erstellen
-	    Button button = new Button();
-	    button.setGraphic(icon); // Icon setzen
-	    button.getStyleClass().add("my-icon-button");
-	    
-	    // Bounds holen
-	    Rectangle2D bounds = (Rectangle2D) getFieldValue(deckId + "SessionBackButton");
-	    button.setPrefSize(bounds.getWidth(), bounds.getHeight());
-	    button.setLayoutX(bounds.getMinX());
-	    button.setLayoutY(bounds.getMinY());
-	    
-	    return button;
+		if (rolle == IconButtonType.BACK)
+			image = UiUtils.tintImage(image, textActiveComponentColor);
+
+		return image;
 	}
 
 	public HeaderBar createMainWindowHeaderBar(Stage stage, MenuBar menuBar) {
@@ -1567,89 +1491,6 @@ public abstract class Skin extends SkinProperties {
 
 	
 
-	/**
-	 * 
-	 * TODO: Dieses Wrapper-Konstrukt hier wurde mal eingeführt, um die Zirkel aus den Paketen rauszubekommen. Allerdings
-	 * wurde dabei echt ein Monster geschaffen. Das muss wieder vereinfacht werden. Noch mal mit frischem Blick drauf
-	 * schauen bitte. Das muss doch einfacher gehen. PS: Wieso gibt es bei ImageMapPane eigentlich nichts vergleichbares?
-	 * An sich kann dieser ganze Block direkt in die ShapeMapPane. Einziges Problem halt, dass Du da keinen Zugriff auf
-	 * die skin-Felder hast, in diesem Fall die konfigurierte Größe der Pane. Aber nen Zirkel würde es nicht erstellen.
-	 * Und wenn die ganze Erstellung im Skin liegen würde und nicht per new ShapeMapPane in learn passieren würde, dann
-	 * gäbe es das Problem nicht. Das ist halt das Problem mit dem new Ansatz und Komponenten wie in Swing bauen lassen.
-	 * Die Komponenten brauchen nun mal fürs Styling die Werte. Zumindest meistens. 
-	 * 
-	 * @param shapeNodes
-	 * @param mapName
-	 * @param category
-	 * @return
-	 */
-	public Region buildShapeMapWrapper(List<Node> shapeNodes, String mapName, String category) {
-	    Rectangle2D bounds = (Rectangle2D) getFieldValue(mapName + "SessionMapPanel");
-	    if (bounds == null)
-	        bounds = (Rectangle2D) getFieldValue(category + "SessionMapPanel");
-
-	    // Inhalt in eine Group — den Container baut der Skin, nicht die Domäne.
-	    Group contentGroup = new Group();
-	    for (Node node : shapeNodes) {
-	        node.setStyle(""); // Altlasten (alte Inline-Strichdicken der letzten Session) raus → sauber messen.
-	        contentGroup.getChildren().add(node);
-	    }
-
-	    // Messen auf Default-Styles (noch keine Scene → stabile UA-Defaults).
-	    contentGroup.applyCss();
-	    contentGroup.layout();
-	    final double scaleFactor = bounds.getHeight() / contentGroup.getBoundsInLocal().getHeight();
-
-	    Scale scale = new Scale(scaleFactor, scaleFactor);
-	    scale.setPivotX(0);
-	    scale.setPivotY(0);
-	    contentGroup.getTransforms().add(scale);
-
-	    StackPane wrapper = new StackPane(contentGroup); // StackPane zentriert automatisch.
-	    wrapper.getStyleClass().add("my-shape-map-pane");
-	    wrapper.setLayoutX(bounds.getMinX());
-	    wrapper.setLayoutY(bounds.getMinY());
-
-	    // Inverse-Scaling-Fix für konstante Strichdicken — erst wenn die Scene (und damit das Skin-CSS) da ist.
-	    wrapper.sceneProperty().addListener(new javafx.beans.value.ChangeListener<javafx.scene.Scene>() {
-	        @Override
-	        public void changed(javafx.beans.value.ObservableValue<? extends javafx.scene.Scene> obs,
-	                javafx.scene.Scene oldScene, javafx.scene.Scene newScene) {
-	            if (newScene != null) {
-	                contentGroup.applyCss();
-	                for (Node node : contentGroup.getChildren()) {
-	                    if (node instanceof javafx.scene.shape.Shape s) {
-	                        double w = s.getStrokeWidth();
-	                        if (w > 0)
-	                            s.setStyle("-fx-stroke-width: "
-	                                    + String.format(java.util.Locale.US, "%.4f", w / scaleFactor) + "px;");
-	                    }
-	                }
-	                wrapper.sceneProperty().removeListener(this);
-	            }
-	        }
-	    });
-
-	    return wrapper;
-	}
-
-	public Node applyImageMapLayout(Region pane, String id) {
-	    Rectangle2D bounds = (Rectangle2D) getFieldValue(id + "SessionMapPanel");
-	    pane.setPrefSize(bounds.getWidth(), bounds.getHeight());
-	    pane.setMaxSize(bounds.getWidth(), bounds.getHeight());
-	    pane.setLayoutX(bounds.getMinX());
-	    pane.setLayoutY(bounds.getMinY());
-	    pane.getStyleClass().add("my-image-map-pane");
-
-	    // Clip = programmatisches Gegenstück zum #borderOverlay-Border. Um die Border-Breite eingerückt,
-	    // arc*2 weil JavaFX den Arc als Durchmesser nimmt, unsere Config als Radius.
-	    double bw = borderBigComponent.width();
-	    Rectangle clip = new Rectangle(bw, bw, bounds.getWidth() - 2 * bw, bounds.getHeight() - 2 * bw);
-	    clip.setArcWidth(borderBigComponent.arc() * 2);
-	    clip.setArcHeight(borderBigComponent.arc() * 2);
-	    return clip;
-	}
-
 	// TODO: overlayContentBounds beschreibt, wo der Inhalt im Mini-Map-Bild sitzt — eigentlich
 	// Karten-/Asset-Daten, kein Styling. Liegt nur hier, weil hartcodiert. Sobald berechenbar
 	// (Overlay-Größe + prozentualer Rand), wandert das hoch zur Karte. Bis dahin: Felder mit Defaults.
@@ -1691,6 +1532,12 @@ public abstract class Skin extends SkinProperties {
 	public Path getMapOverlayImagePath(String mapName) {
 	    String name = (String) getFieldValue(mapName + "MapOverlayImageName");
 	    return name == null ? null : Config.getPath("mapImagesFolder").resolve(name);
+	}
+
+	/** Die vier Bilder einer Karte als Bündel — sie werden nur zusammen gebraucht. */
+	public MapImages mapImages(String mapName) {
+		return new MapImages(getMapImagePath(mapName), getMapOverlayImagePath(mapName),
+				getMapInactiveImagePath(mapName), getMapInactiveOverlayImagePath(mapName));
 	}
 	
 

@@ -252,6 +252,37 @@ public abstract class SkinProperties {
 		return new DashboardTileStyle(dashBoardTileWidth, dashBoardTileTopHeight + dashBoardTileBottomHeight);
 	}
 
+	/**
+	 * Das Feld, in dem ein Bestandteil einer Session sitzt. Erst der spezifische Name, sonst die
+	 * Kategorie.
+	 */
+	public Rectangle2D sessionBounds(String mapName, String kategorie, SessionComponent teil) {
+		return staffelung(mapName, kategorie, teil.suffix());
+	}
+
+	/** Dasselbe für die drei Textfelder, die über {@link Skin.TextLabelType} unterschieden werden. */
+	public Rectangle2D sessionBounds(String mapName, String kategorie, Skin.TextLabelType typ) {
+		return staffelung(mapName, kategorie, "Session" + typ + "Panel");
+	}
+
+	/** Der Eckradius großer Komponenten. Hängt am Skin, nicht am Aufrufer — Bausteine holen ihn selbst. */
+	public int bigComponentCornerRadius() {
+		return borderBigComponent.arc();
+	}
+
+	/** Die Rahmenbreite großer Komponenten. Ebenfalls ohne Schlüssel. */
+	public int bigComponentBorderWidth() {
+		return borderBigComponent.width();
+	}
+
+	// Erst spezifisch, dann Kategorie. Der Property-Name entsteht nur hier.
+	private Rectangle2D staffelung(String mapName, String kategorie, String suffix) {
+		Rectangle2D bounds = (Rectangle2D) getFieldValue(mapName + suffix);
+		if (bounds == null)
+			bounds = (Rectangle2D) getFieldValue(kategorie + suffix);
+		return bounds;
+	}
+
 	// endregion
 	
 	protected void loadAllConfigs(Path configPath) {

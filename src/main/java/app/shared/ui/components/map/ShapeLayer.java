@@ -1,4 +1,4 @@
-package app.shared.ui.components;
+package app.shared.ui.components.map;
 
 /**
  * Die <b>Darstellungs-Ableitung</b> aus dem rohen GeoJSON-{@code type} ("0".."3") einer Shape-Karte:

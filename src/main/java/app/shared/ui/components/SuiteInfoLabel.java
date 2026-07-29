@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import app.shared.model.UiComponent;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -17,8 +18,8 @@ import javafx.scene.text.TextFlow;
  * Soft hyphening is not possible but if there is a hyphen in a word then it can be wrapped there
  * 
  *  Css-classes:
- *  		CustomTextLabel	= "custom-text-label"
- *  		text in Nodes	= "text"
+ *  		das Label selbst	= "my-info-label"
+ *  		text in Nodes		= "text"
  */
 public class SuiteInfoLabel extends StackPane implements UiComponent{
 
@@ -32,11 +33,28 @@ public class SuiteInfoLabel extends StackPane implements UiComponent{
     // <i>|</i>   -> Erkennt Start- und End-Tag für Italic
     private static final Pattern TAG_PATTERN = Pattern.compile("(?i)(<br\\s*/?>|<b>|</b>|<i>|</i>)");
 
+    /**
+     * Mit fester Lage und Größe — für absolut positionierende Hosts.
+     */
+    public SuiteInfoLabel(String text, Rectangle2D bounds) {
+        this(text);
+        setLayoutX(bounds.getMinX());
+        setLayoutY(bounds.getMinY());
+        setFixedWidth(bounds.getWidth());
+        setFixedHeight(bounds.getHeight());
+    }
+
+    /**
+     * Ohne feste Lage — für Aufrufer, die die Komponente in ein Layout hängen.
+     *
+     * <p>Das Aussehen kommt über {@code .my-info-label}. Die AnkiSessionView setzt zusätzlich eine Kennung
+     * (etwa {@code #QuestionLabel}), die nur den Hintergrund abweichend färbt — alles andere steht
+     * schon in der Klasse. Ohne diese Kennung sieht das Label also nicht falsch aus, nur neutral.</p>
+     */
     public SuiteInfoLabel(String text) {
         this.textFlow = new TextFlow();
 
-        //getStyleClass().add("custom-text-label"); Wird gerade nicht genutzt anscheinend.
-        //this.pseudoClassStateChanged(PseudoClass.getPseudoClass("meine-klasse"), true);
+        getStyleClass().add("my-info-label");
         setAlignment(Pos.CENTER_LEFT);
 
         // Verhindert, dass das StackPane unnötig Platz einnimmt
