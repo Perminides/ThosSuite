@@ -4,10 +4,7 @@ import java.nio.file.Path;
 
 import app.shared.ui.components.SuiteBackground;
 
-import java.util.Arrays;
-
 import app.shared.model.ScreenView;
-import app.shared.model.UiComponent;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 
@@ -21,9 +18,8 @@ public class ComponentHost implements ScreenView {
 
 	private Pane pane = new Pane();
 	
-	public void setComponents(UiComponent... components) {
-		Node[] views = Arrays.stream(components).map(UiComponent::getView).toArray(Node[]::new);
-		pane.getChildren().setAll(views);
+	public void setComponents(Node... components) {
+		pane.getChildren().setAll(components);
 	}
 	
 	/**

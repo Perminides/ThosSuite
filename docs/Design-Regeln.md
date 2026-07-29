@@ -53,6 +53,9 @@ Gebrauch auf" —, trägt hier nämlich **nicht**: ein Strukturverstoß fällt n
 4. **`null` statt `Optional` bei Rückgaben.** Fehlt ein Rückgabewert, wird `null` zurückgegeben, nicht `Optional`. Ausnahme: Der Wert stammt direkt aus einer `Optional`-liefernden JDK-API (Streams) — dann wird das `Optional` sofort am Entstehungsort ausgepackt (`orElse(null)`), nicht durch eigene Signaturen weitergereicht. `null`-Rückgaben gehören im Javadoc vermerkt.
 5. **Keine Streams, außer sie sind unbedingt nötig.** Eine Schleife liest sich nach Monaten
    ohne Anlauf und ist leichte zu debuggen, eine Kette aus `filter`/`map`/`collect` nicht.
+6. **Null-Layout:** keine LayoutManager, feste Positionen (Desktop-App mit fester Auflösung;
+  präzise Kontrolle wichtiger als Flexibilität). Die Rechtecke stehen im Skin, gesetzt werden sie
+  von der Oberfläche in `shared.ui` — der Skin fasst keine Komponente an.
 
 <!-- TODO: Regel 4 braucht noch ein gutes Beispiel aus der Domäne (Schnitt/Benennung/Abhängigkeit),
      keins aus dem Prozess. Bleibt offen, bis eine echte Stutzer-Stelle auftaucht. -->
@@ -254,8 +257,8 @@ Am Suffix ist die Datenquelle ablesbar:
 
 ### Bildschirm-Kontrakt: `Screen` und `ScreenView`
 
-Eine Oberfläche wird über drei Rollen gebaut, jede ein eigenes Interface. Der Grund
-für die Dreiteilung ist die JavaFX-Grenze: die Lebenszyklus-Logik bleibt framework-frei
+Eine Oberfläche wird über zwei Rollen gebaut, jede ein eigenes Interface. Der Grund
+für die Zweiteilung ist die JavaFX-Grenze: die Lebenszyklus-Logik bleibt framework-frei
 im Feature, das Sichtbare liegt framework-gebunden in `shared`.
 
 - **`Screen` (Rolle 1, in `shared`, im Feature implementiert, framework-frei).** Das
@@ -266,10 +269,13 @@ im Feature, das Sichtbare liegt framework-gebunden in `shared`.
 - **`ScreenView` (Rolle 2, in `shared`).** Etwas dass das Hauptfenster ausfüllt. Der mountbare Anzeige-Lieferant:
   `getPane() : Pane`. `getPane` ruft ausschließlich MainWindow. Heißt bewusst
   `ScreenView`, nicht `View` — `View` ist in JavaFX zu häufig.
-- (**`UiComponent` (Rolle 3, in `shared.model`).** Die Bausteine im Host: `getView() : Node`.
-  *Auf dem Weg hinaus* — inzwischen sind alle Bausteine selbst Nodes und implementieren den
-  Kontrakt nur noch mit `return this`. Sobald das letzte Nullobjekt ein Node ist, nimmt
-  `ComponentHost` schlicht `Node...` und der Kontrakt entfällt.)
+
+**Bausteine brauchen keinen dritten Kontrakt.** Sie erben von ihrem JavaFX-Typ und *sind* damit
+Nodes; `ComponentHost` nimmt schlicht `Node...`.
+
+Eine Ausnahme, und man sieht sie: `LearnMap` deklariert ein eigenes `getView()`. Ein Interface kann
+kein `Node` sein — alle drei Karten *sind* welche, der Typ ist es nicht. Wer über den Kontrakt geht,
+braucht deshalb diesen einen Schritt.
 
 **Lesekette:** `Screen → ScreenView → Pane`. MainWindow mountet über
 `screen.getView().getPane()` — hier, und nur hier, überquert der Node die Grenze.
@@ -460,29 +466,27 @@ Der `Suite`-Präfix sagt „suite-weit brauchbar", nicht „wird überall benutz
 das man nur in einer Lern-Session bauen kann, wäre falsch benannt — auch wenn es heute nur dort
 vorkommt.
 
-#### Die vier bewachten Zusagen
+#### Die fünf bewachten Zusagen
 
-Diese vier Regeln sind keine Vorsätze mehr. Sie stehen als ArchUnit-Regeln im Build und brechen ihn:
+Keine Vorsätze — ArchUnit-Regeln in `src/test/java/app/ArchitekturRegelnTest.java`, die den Build
+brechen:
 
 ```
-1  Der Skin kennt die UI nicht          shared.skin → shared.ui  ist verboten
-2  Kein Feature kennt den Skin          feature → shared.skin    ist verboten
-3  Nur shared.ui kennt die Bausteine    → shared.ui.components   nur aus shared.ui
+1  Der Skin kennt die UI nicht          shared.skin → shared.ui      verboten
+2  Kein Feature kennt den Skin          feature → shared.skin        verboten
+3  Nur shared.ui kennt die Bausteine    → shared.ui.components       nur aus shared.ui
 4  Der Paketgraph ist zyklenfrei
+5  Style-Klassen nur in der Anzeige-Schicht
+     getStyleClass() nur in shared.ui und shared.skin
+     Ausnahme: MainWindow — dort entsteht der Fensterrahmen, bevor es etwas zu zeigen gibt
 ```
 
-Dieselben Zusagen lassen sich ohne Build nachsehen — als grep, wenn man nur schnell schauen will:
+Wächter 3 heißt inhaltlich: *Features und `controller` sehen ausschließlich fertige Oberflächen.*
+Das ist „fertige Komponente statt loser Teile" an der Außengrenze; innerhalb von `shared.ui` wird
+mit Bausteinen gearbeitet, das ist dort der Job.
 
-```bash
-grep -rn "app\.shared\.ui"   src/main/java/app/shared/skin/
-grep -rn "app\.shared\.skin" src/main/java/app/{alc,diary,fitbit,learn,mattress,messaging,movie,weekday}/
-grep -rn "app\.shared\.ui\.components" --include=*.java src/main/java/app | grep -v "^src/main/java/app/shared/ui/"
-```
-
-Wächter 3 sagt inhaltlich: *Features und `controller` sehen ausschließlich fertige Oberflächen; die
-Bausteine sind Interna von `shared.ui`.* Das ist die Regel „fertige Komponente statt loser Teile" an
-der Stelle, an der sie hingehört — an der Außengrenze. Innerhalb von `shared.ui` wird mit Bausteinen
-und Werten gearbeitet; das ist dort der Job.
+Geprüft wird Bytecode. Regel 5 prüft auf den **Methodennamen**, nicht auf eine deklarierende Klasse
+— `MenuItem.getStyleClass()` existiert, obwohl `MenuItem` kein `Node` ist.
 
 #### Die Karten — was da eigentlich steht
 

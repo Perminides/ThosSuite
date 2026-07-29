@@ -6,10 +6,10 @@ import java.util.Set;
 
 import app.shared.model.ScreenView;
 import app.shared.model.LearnCallbacks;
-import app.shared.model.UiComponent;
 import app.shared.skin.LearnComponent;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
+import javafx.scene.Node;
 import app.shared.ui.components.MultipleChoicePane;
 import app.shared.ui.components.SuiteIconButton;
 import app.shared.ui.components.SuiteImage;
@@ -124,9 +124,9 @@ public abstract class AnkiLearnView {
 		return label;
 	}
 
-	private UiComponent[] bestandteile() {
-		List<UiComponent> parts = new ArrayList<>();
-		parts.add(karte);
+	private Node[] bestandteile() {
+		List<Node> parts = new ArrayList<>();
+		parts.add(karte.getView()); // die Karte ist ein Interface — der eine Schritt zum Node bleibt
 		parts.add(questionArea);
 		if (inputField != null)
 			parts.add(inputField);
@@ -135,7 +135,7 @@ public abstract class AnkiLearnView {
 		parts.add(progressArea);
 		parts.add(cardHistoryArea);
 		parts.add(backButton);
-		return parts.toArray(new UiComponent[0]);
+		return parts.toArray(new Node[0]);
 	}
 
 	public ScreenView getView() {

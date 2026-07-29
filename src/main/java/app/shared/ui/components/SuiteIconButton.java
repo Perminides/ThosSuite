@@ -1,10 +1,8 @@
 package app.shared.ui.components;
 
-import app.shared.model.UiComponent;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 
@@ -15,7 +13,7 @@ import javafx.scene.image.ImageView;
  * Aufrufer — deshalb holt der Knopf sich das Bild selbst. Übergeben wird nur die Rolle. Das Aussehen
  * kommt über die eigene Klasse {@code .my-icon-button}, also überall gleich.</p>
  */
-public class SuiteIconButton extends Button implements UiComponent {
+public class SuiteIconButton extends Button {
 
 	/** Ohne feste Lage — für Aufrufer, die die Komponente in ein Layout hängen. */
 	public SuiteIconButton(Skin.IconButtonType rolle) {
@@ -35,9 +33,4 @@ public class SuiteIconButton extends Button implements UiComponent {
 		setOnAction(_ -> action.run());
 	}
 
-	/** Ist selbst der Node. Bleibt, solange der ComponentHost über {@link UiComponent} einhängt. */
-	@Override
-	public Node getView() {
-		return this;
-	}
 }

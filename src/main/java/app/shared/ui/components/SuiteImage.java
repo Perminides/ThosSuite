@@ -4,10 +4,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 
 import app.shared.Config;
-import app.shared.model.UiComponent;
 import app.shared.skin.SkinService;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -26,7 +24,7 @@ import javafx.scene.shape.Rectangle;
  * 		borderRect		= "my-image-border-layer"
  * 
  */
-public class SuiteImage extends StackPane implements UiComponent{
+public class SuiteImage extends StackPane {
 
     // Layer 1: Hintergrundfarbe (wenn kein Bild da ist oder Transparenz im Bild)
     private final Rectangle backgroundRect;
@@ -101,10 +99,6 @@ public class SuiteImage extends StackPane implements UiComponent{
         getChildren().addAll(backgroundRect, imageRect, borderRect);
     }
     
-    @Override
-	public Node getView() {
-		return this;
-	}
 
     /**
      * Wenn der String null oder leer ist, wird der Bilderrahmen geleert. Das wird bspw. bei Multiple Choice häufiger

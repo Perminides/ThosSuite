@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import app.shared.model.ShapeGeometry;
-import app.shared.model.UiComponent;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.css.PseudoClass;
@@ -137,7 +136,7 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 		});
 	}
 
-	/** Die Karte ist selbst der Node. Bleibt, solange der ComponentHost über {@link UiComponent} einhängt. */
+	/** Die Karte ist selbst der Node — siehe {@link LearnMap#getView()}. */
 	@Override
 	public Node getView() {
 		return this;

@@ -31,8 +31,6 @@ import javafx.stage.Window;
 /**
  * A wrapper around the stage (the window) of the application. Holds a StackPane as its contentPane, the anchor.
  * The Stack Pane is sized correctly according to the current skin. All children will be sized by the contentPane.
- * CSS-classes:
- * 		root 		= "my-root",
  */
 @SuppressWarnings("deprecation")
 public class MainWindow {
@@ -79,7 +77,6 @@ public class MainWindow {
         
         // 2. Struktur anlegen (Container überleben den Skin-Wechsel)
         root = new BorderPane();
-        root.getStyleClass().add("my-root");
         
         // 3. Unseren Anker direkt hier bauen und einhängen
         contentPane = new StackPane();
