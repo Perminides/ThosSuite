@@ -5,8 +5,8 @@
 Alles, was während des Refactorings (26.–29.07.) bewusst **nicht** sofort gemacht wurde — und
 alles, was dabei aufgefallen ist.
 
-**Abschnitt A ist die Arbeitsliste**: sechs kleine Code-Punkte (A1) und vier Sachfehler (A3), die
-auf nichts warten. B bis E sind Vorrat, nicht Plan.
+**Abschnitt A ist die Arbeitsliste**: sieben kleine Code-Punkte (A1), davon ist nur noch Punkt 7
+offen, und vier Sachfehler (A3), die auf nichts warten. B bis E sind Vorrat, nicht Plan.
 
 Was **erledigt** ist, steht nicht hier, sondern in `Skin-Refactoring-Plan.md` §5.
 
@@ -43,15 +43,10 @@ gelöscht. **Nicht ganz weg:** `LearnMap` deklariert weiterhin ein `Node getView
 kann kein Node sein, die drei Umsetzungen sind welche, der Typ ist es nicht. Genau eine Aufrufstelle
 in `AnkiLearnView` benutzt es.
 
-**3. `SuiteDatePicker` entscheiden.** Neun Zeilen, trägt keinen Skin-Wert, nur die Festlegung „keine
-Kalenderwochen". Überlebt allein über das Argument „Ort einer suite-weiten Entscheidung", nicht über
-das Fassaden-Argument. Dünnster Fall der Familie, legitim zu streichen.
-
-Hängt zusammen mit der **Gestaltungsfrage Kalenderwochen**: `DiaryEditor:174` macht als einzige
-Stelle `new DatePicker(...)` und greift damit den JavaFX-Default ab (mit Kalenderwochen), die drei
-anderen gehen über `SuiteDatePicker` (ohne). Der Unterschied ist **geerbt, nicht gewollt.** Zu
-entscheiden: nirgends, überall, oder je nach Kontext als Parameter — in jedem Fall sollte auch der
-Editor denselben Weg gehen wie die anderen.
+~~**3. `SuiteDatePicker` entscheiden.**~~ **Erledigt 29.07.** Die Klasse bleibt und trägt weiterhin
+die Festlegung „keine Kalenderwochen" — für alle vier Stellen. `DiaryEditor:174` war die einzige,
+die noch direkt `new DatePicker(...)` baute und damit den JavaFX-Default (mit Kalenderwochen)
+abgriff; der Unterschied war geerbt, nicht gewollt.
 
 ~~**4. `#QuestionLabel` durch eine Modifikator-Klasse ersetzen.**~~ **Erledigt 29.07.** Aus
 `#QuestionLabel` wurde `.my-info-label.question`; der Modifikator kommt aus
@@ -64,7 +59,7 @@ Werten (3000 / 25): das Bild ändert sich nicht, also gewinnt das CSS. Die beide
 tot und sind raus — dieselbe Geschichte wie zuvor bei `TILE_WIDTH`/`TILE_HEIGHT`.
 
 ~~**6. Die vorhandenen Streams loswerden.**~~ **Erledigt 29.07.** `java.util.stream` kommt in
-`src/main/java` nicht mehr vor; behalten wurde keine Pipeline. Die im Punkt genannten „36" waren zu
+`src/main/java/app` nicht mehr vor; behalten wurde keine Pipeline. Die im Punkt genannten „36" waren zu
 niedrig gezählt — `Arrays.stream(…)`, `Files.walk(…)`, `Files.list(…)` und `br.lines()` fielen durch
 das Suchmuster. Zwei Funde nebenbei: `MultipleChoiceAnswers.toString()`
 gab die Pipeline statt der Texte aus, und der Ordner-Lauf in `SuiteExporter` schloss seinen
