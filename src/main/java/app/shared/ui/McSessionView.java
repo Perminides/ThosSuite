@@ -1,8 +1,8 @@
 package app.shared.ui;
 
-import app.shared.model.SessionCallbacks;
-import app.shared.ui.components.map.NoSessionMap;
-import app.shared.ui.components.map.SessionMap;
+import app.shared.model.LearnCallbacks;
+import app.shared.ui.components.map.EmptyLearnMap;
+import app.shared.ui.components.map.LearnMap;
 
 /**
  *  Multiple Choice: keine Karte, kein Eingabefeld, leerer Hintergrund. 
@@ -11,14 +11,14 @@ import app.shared.ui.components.map.SessionMap;
  *  Was weiß ich, eins nur für Flaggen oder so. Dann wäre das hier supi einfach zu machen...
  *  Ja, wird nicht passieren, aber bitte, da geht Konsistenz mal vor!
  **/
-public class McSessionView extends AnkiSessionView {
+public class McSessionView extends AnkiLearnView {
 
-	public McSessionView(String deckId, String mapName, String kategorie, SessionCallbacks callbacks) {
+	public McSessionView(String deckId, String mapName, String kategorie, LearnCallbacks callbacks) {
 		super(deckId, mapName, kategorie, callbacks);
 		rebuild(); // muss die letzte Zeile sein, siehe AnkiSessionView
 	}
 
-	@Override protected SessionMap createMap()       { return new NoSessionMap(); }
+	@Override protected LearnMap createMap()       { return new EmptyLearnMap(); }
 	@Override protected boolean hasInputField()      { return false; }
 	@Override public void disableMcPanel() {}; // MCPanel darf in einer MC-Session niemals deaktiviert werden. Wird allerdings vermutlich eh nie aufgerufen.
 }

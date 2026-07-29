@@ -7,7 +7,7 @@ import app.learn.region.model.SessionSpec;
 import app.shared.model.ScreenView;
 import app.learn.MapService;
 import app.shared.model.ShapeMapState;
-import app.shared.ui.RegionSessionView;
+import app.shared.ui.RegionLearnView;
 
 /**
  * Intermediary between RegionSessionView and the RegionSessionProgress.
@@ -23,7 +23,7 @@ public class SessionPresenter {
 	    COMMIT_MISS_AND_CONTINUE     // FreePlay
 	}
 	
-	private final RegionSessionView view;
+	private final RegionLearnView view;
 	private final SessionSpec spec; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 	private final SessionProgress progress;
 	private final boolean hard;
@@ -33,7 +33,7 @@ public class SessionPresenter {
 	
 	public SessionPresenter(SessionProgress progress, SessionSpec spec) {
 		progress.setPresenter(this);
-		view = new RegionSessionView(
+		view = new RegionLearnView(
 				spec.getDeckType().getMapName(),
 				spec.getDeckType().getCategory().toString(),
 				MapService.getInstance().getMap(spec.getDeckType()).getShapeGeometries(),

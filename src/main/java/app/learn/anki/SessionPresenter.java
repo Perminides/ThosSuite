@@ -9,8 +9,8 @@ import app.learn.model.GeoMap;
 import app.learn.model.LearnStat;
 import app.learn.model.SessionProgressCounter;
 import app.shared.model.ScreenView;
-import app.shared.model.SessionCallbacks;
-import app.shared.ui.AnkiSessionView;
+import app.shared.model.LearnCallbacks;
+import app.shared.ui.AnkiLearnView;
 import app.shared.ui.ShapeMapSessionView;
 import app.shared.ui.ImageMapSessionView;
 import app.shared.ui.McSessionView;
@@ -23,7 +23,7 @@ import app.shared.ui.McSessionView;
  */
 public class SessionPresenter {
 
-    private final AnkiSessionView view;
+    private final AnkiLearnView view;
     private SessionProgress sessionProgress;
 
     SessionPresenter(Deck type, SessionProgress sessionProgress) {
@@ -44,13 +44,13 @@ public class SessionPresenter {
      * Die drei Lernformen als eigene Ansichten. Was ein Deck ist und wo seine Geometrien
      * herkommen, weiß nur diese Seite — die Ansicht bekommt Namen, Geometrien und Rückmeldungen.
      */
-    private AnkiSessionView createViewFor(Deck type) {
+    private AnkiLearnView createViewFor(Deck type) {
         GeoMap map = type.getMapMetadata() != null ? MapService.getInstance().getMap(type) : null;
         String id = type.getId();
         String mapName = type.getMapName();
         String kategorie = type.getCategory().toString();
 
-        SessionCallbacks callbacks = new SessionCallbacks(
+        LearnCallbacks callbacks = new LearnCallbacks(
                 this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack);
 
         return switch(type) {

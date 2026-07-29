@@ -12,7 +12,7 @@ import javafx.scene.Node;
  * tut. {@link #getView()} liefert eine leere {@link Group}: sie hängt im Szenengraphen, zeichnet
  * nichts und nimmt in der absolut positionierenden Host-Pane keinen Platz.</p>
  */
-public class NoSessionMap implements SessionMap {
+public class EmptyLearnMap implements LearnMap {
 
 	private final Group leer = new Group();
 

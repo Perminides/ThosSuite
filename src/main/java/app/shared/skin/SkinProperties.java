@@ -263,12 +263,12 @@ public abstract class SkinProperties {
 	 * Das Feld, in dem ein Bestandteil einer Session sitzt. Erst der spezifische Name, sonst die
 	 * Kategorie.
 	 */
-	public Rectangle2D sessionBounds(String mapName, String kategorie, SessionComponent teil) {
+	public Rectangle2D learnComponentBounds(String mapName, String kategorie, LearnComponent teil) {
 		return staffelung(mapName, kategorie, teil.suffix());
 	}
 
 	/** Dasselbe für die drei Textfelder, die über {@link Skin.TextLabelType} unterschieden werden. */
-	public Rectangle2D sessionBounds(String mapName, String kategorie, Skin.TextLabelType typ) {
+	public Rectangle2D learnTextLabelBounds(String mapName, String kategorie, Skin.TextLabelType typ) {
 		return staffelung(mapName, kategorie, "Session" + typ + "Panel");
 	}
 

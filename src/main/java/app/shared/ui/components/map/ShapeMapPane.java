@@ -46,7 +46,7 @@ import app.shared.model.ShapeMapState;
  * Karte = {@code .my-shape-map-pane}, {@code :paused};
  * Shape = {@code .my-map-shape}, {@code :correct/:incorrect/:marked/:active/:inactive}.</p>
  */
-public class ShapeMapPane extends StackPane implements SessionMap {
+public class ShapeMapPane extends StackPane implements LearnMap {
 
 	/** Was die Pane pro Shape festhält: den gebauten Node und ob er interaktiv ist (für Klick + moveAllToActive). */
 	private record ShapeNode(Node node, boolean interactive) {}

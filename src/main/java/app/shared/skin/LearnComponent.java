@@ -9,7 +9,7 @@ package app.shared.skin;
  * <p>Die Textfelder fehlen hier absichtlich: die kommen über {@link Skin.TextLabelType}, der außer
  * dem Maß auch den Anzeigenamen und die CSS-Kennung trägt.</p>
  */
-public enum SessionComponent {
+public enum LearnComponent {
 
 	MAP("SessionMapPanel"),
 	TEXT_INPUT("SessionTextInputPanel"),
@@ -19,7 +19,7 @@ public enum SessionComponent {
 
 	private final String suffix;
 
-	SessionComponent(String suffix) {
+	LearnComponent(String suffix) {
 		this.suffix = suffix;
 	}
 
