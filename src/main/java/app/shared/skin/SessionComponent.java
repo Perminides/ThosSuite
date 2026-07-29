@@ -14,6 +14,7 @@ public enum SessionComponent {
 	MAP("SessionMapPanel"),
 	TEXT_INPUT("SessionTextInputPanel"),
 	IMAGE("SessionImagePanel"),
+	MC("SessionMcPanel"),
 	BACK_BUTTON("SessionBackButton");
 
 	private final String suffix;

@@ -103,7 +103,7 @@ public abstract class AnkiSessionView {
 
 		imageComponent = new SuiteImage(skin.sessionBounds(deckId, kategorie, SessionComponent.IMAGE));
 
-		mcPane = skin.createMultipleChoicePane(deckId, kategorie);
+		mcPane = new MultipleChoicePane(skin.sessionBounds(deckId, kategorie, SessionComponent.MC));
 		mcPane.addListener(callbacks.mcAnswerClicked());
 
 		backButton = new SuiteIconButton(Skin.IconButtonType.BACK,

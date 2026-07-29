@@ -1,7 +1,8 @@
 # Skin-Refactoring — Vorgehensplan
 
-**Stand:** 29.07.2026 · v6 · Schritte 1–3c und der größte Teil von 3f erledigt, dazu der
-Build-Wächter (Schritt 6). `Skin` von 2660 auf 1547 Zeilen.
+**Stand:** 29.07.2026 · v7 · Schritte 1–3f erledigt. **Alle drei Wächter sind leer und werden
+vom Build bewacht**, der Paketgraph ist zyklenfrei. `Skin` von 2660 auf 1533 Zeilen.
+Offen sind noch 3d (Chrome/Menüs), 4 (Aufräumen) und 5 (Regelwerk).
 
 **Charakter dieses Dokuments:** es blickt **zurück** — *was entschieden ist*, *was erledigt ist*,
 *in welcher Reihenfolge* vorgegangen wird, plus die geprüften Fakten, auf denen das beruht, und die
@@ -67,17 +68,17 @@ grep -rn "app\.shared\.skin" src/main/java/app/{alc,diary,fitbit,learn,mattress,
 grep -rn "app\.shared\.ui\.components" --include=*.java src/main/java/app | grep -v "^src/main/java/app/shared/ui/"
 ```
 
-Alle drei müssen am Ende leer sein. Stand 29.07.:
+**Alle drei sind seit 29.07. leer**, und sie bleiben es nicht aus Disziplin: die drei greps sind
+als ArchUnit-Regeln in `src/test/java/app/ArchitekturRegelnTest.java` hinterlegt und brechen den
+Build. Dazu als vierte Regel die Zyklenfreiheit des Paketgraphen — die greps können das nicht
+prüfen, und sie war eine der sieben Ausgangsforderungen.
 
-| | Treffer | wer noch |
-|---|---|---|
-| 1 · Skin kennt UI nicht | 1 | `Skin` baut noch `MultipleChoicePane` |
-| 2 · Feature kennt Skin nicht | **0** ✓ | — |
-| 3 · nur `shared.ui` kennt Bausteine | 1 Datei | nur `Skin` selbst, aus demselben Grund |
+```
+Tests run: 4, Failures: 0, Errors: 0
+```
 
-Wächter 1 und 3 haben damit dieselbe einzige Ursache und fallen gemeinsam, sobald
-`createMultipleChoicePane` gegangen ist. Seit 29.07. bewacht ein ArchUnit-Test im Build den
-zweiten; die anderen beiden stehen dort auskommentiert bereit (§5, Schritt 6).
+Die greps oben bleiben trotzdem stehen: sie sind die Erklärung der Regel in einer Zeile, und man
+kann sie ohne Build laufen lassen.
 
 **Kein Feature hält mehr eine UI-Komponente.**
 
@@ -106,7 +107,7 @@ DarkMode, FlatWebSkin, BaseColorSkin (+ Blue/Flower/Red/Spicy)
 SkinService · SkinImageCache
 ```
 
-**`Skin` behält seinen Namen.** Wenn die Bau-Methoden abgewandert sind, enthält die Klasse genau die
+**`Skin` behält seinen Namen.** Seit 29.07. enthält die Klasse (neben den Werte-Zugängen) genau die
 CSS-Erzeugung — und das ist, was ein Skin tut. Kein Rename, keine neue Vokabel, null Aufwand. Die
 Feldzugriffe in den 23 `addXxx`-Methoden bleiben unqualifiziert, weil die Vererbungskette steht.
 
@@ -129,6 +130,7 @@ int               bigComponentBorderWidth();
 
 Rectangle2D sessionBounds(String mapName, String kategorie, SessionComponent teil);
 Rectangle2D sessionBounds(String mapName, String kategorie, Skin.TextLabelType typ);
+McMetrics   mcMetrics();
 MapImages   mapImages(String mapName);    // mit Schlüssel — der Aufrufer löst auf
 Image       iconFor(Skin.IconButtonType rolle);
 ```
@@ -365,6 +367,20 @@ bekommt statt es zu holen.
 
 Wächter 1: 3 → **1** (nur noch `MultipleChoicePane`). `mvn test` grün.
 
+**29.07. — Die letzte Bau-Methode verlässt den Skin (3f fertig).**
+
+- `createMultipleChoicePane` gelöscht. `MultipleChoicePane.Metrics` wurde zu `shared.model.McMetrics`
+  und hat Knopfhöhe und Zwischenraum gleich mitbekommen — dadurch kann der Skin das Record füllen,
+  ohne die Komponente zu importieren. Genau das war der letzte Faden zwischen den beiden Paketen.
+- Die Auswahl holt sich ihre Maße jetzt über `mcMetrics()` selbst und bekommt nur ihr Feld.
+- Thorstens TODO an der Stelle — *„streng genommen sickern damit skin.properties in eine
+  UI-Komponente, nochmal prüfen wie ok das ist"* — ist damit beantwortet, und zwar nach einer Regel
+  statt nach Gefühl: die Werte hängen an Schrift und Rändern, nicht am Aufrufer. Kein Schlüssel,
+  also holt die Komponente sie selbst (§3.15).
+
+**Damit sind alle drei Wächter leer und der Paketgraph zyklenfrei.** Die drei bis dahin
+auskommentierten ArchUnit-Regeln sind scharf gestellt; der Test läuft mit vier Regeln grün.
+
 Offene Kleinigkeiten: die Kommentare `// Owner intern` bei `AnkiConfigDialog` und
 `RegionConfigDialog` sind überflüssig; der Kommentar bei `createDialog` könnte die **Bindung**
 benennen statt „erbt".
@@ -456,43 +472,36 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
 3a ✓ Alerts + Dialoge                                                    28.07.
 3b ✓ Feature-Oberflächen (Dashboard, Diary, Movie, BarChart)             28.07.
 3c ✓ learn (Region und Anki)                                             29.07.
+3e ✓ MapService — danach war Wächter 2 leer                              29.07.
+3f ✓ Die Bau-Methoden verlassen den Skin — in vier kleinen Schritten     29.07.
+      ShapeMapPane (buildShapeMapWrapper zog ein)
+      SuiteTextField + SuiteIconButton (Vererbung statt Fassade)
+      alle vier Bausteine nehmen Maße entgegen → Schlüssel-Regel
+      createMultipleChoicePane, Metrics wird shared.model.McMetrics
+6  ✓ Die Wächter in den Maven-Build                                      29.07.
+      ArchUnit, src/test/java/app/ArchitekturRegelnTest.java.
+      Vier Regeln scharf: die drei Wächter plus Zyklenfreiheit.
+
+   Damit: alle Wächter leer, Paketgraph zyklenfrei, Build bewacht beides.
 
 ── offen ──────────────────────────────────────────────────────────────────────
-
-3e  MapService
-    Die letzten drei Skin-Importe in einem Feature. Das Cache-Vorwärmen wandert
-    in den controller (Entscheidung 3.9); imagePathsFor und MapImagePaths entfallen.
-    Klein. Danach ist Wächter 2 leer.
-
-3f  Die Bau-Methoden verlassen den Skin — in kleinen Schritten
-    ✓ ShapeMapPane (buildShapeMapWrapper zog ein)                        29.07.
-    ✓ SuiteTextField + SuiteIconButton (Vererbung statt Fassade)         29.07.
-    ✓ Alle vier Bausteine nehmen Maße entgegen, Schlüssel-Regel          29.07.
-      Offen: nur noch createMultipleChoicePane. Danach ist Wächter 1 leer
-      und der Zyklus skin↔ui.components aufgelöst — dann können die zwei
-      auskommentierten ArchUnit-Regeln scharf gestellt werden.
-      Danach kann ComponentHost Node... nehmen und UiComponent entfällt —
-      dafür müssen aber auch die SessionMap-Implementierungen Nodes werden.
 
 3d  Chrome und Menüs
     createMenuBar, createMenu, createMenuItem, createMainWindowHeaderBar,
     createResponsiveHeaderIcon. Zuletzt, weil MainWindow daran hängt.
+    Danach enthält Skin nur noch CSS-Erzeugung und Werte-Zugänge.
 
 4   Aufräumen
-    Skin enthält danach nur noch die CSS-Erzeugung — kein Rename nötig.
-    Alle drei Wächter auf leer.
+    docs/Ordnerstruktur.txt und docs/Paketabhängigkeiten.dot neu erzeugen —
+    bewusst nicht zwischendurch, sie veralten bei jedem Move.
 
 5   Regelwerk und Architekturdokument nachziehen
     Design-Regeln.md: die Ordnung aus §1, der Verantwortungsrahmen aus §3.14 in
-    Thorstens Formulierung, StartScreen-Regel, Dialog-Stufe 2a, die drei Wächter
-    als bewachte Zusagen, der neu gefasste Skin-Vertrag.
+    Thorstens Formulierung, die Schlüssel-Regel aus §3.15, StartScreen-Regel,
+    Dialog-Stufe 2a, keine Streams, der neu gefasste Skin-Vertrag.
+    Die drei Wächter sind dort keine Vorsätze mehr, sondern bewachte Zusagen.
     Architektur-Dokumentation.md: der Abschnitt „UI-Architektur: Skin-System" ist
-    dann vollständig überholt.
-
-6 ~ Die Wächter in den Maven-Build                                        29.07.
-    ArchUnit, src/test/java/app/ArchitekturRegelnTest.java. Scharf ist bisher
-    Wächter 2; Wächter 1, Wächter 3 und die Zyklenfreiheit stehen dort
-    auskommentiert und werden freigeschaltet, sobald sie halten (3f bzw. 4).
+    vollständig überholt.
 ```
 
 **Warum die Paketumstellung vor die Auflösung rückt:** sie ist risikoarm (reine Moves) und liefert

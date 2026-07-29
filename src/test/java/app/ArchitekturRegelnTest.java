@@ -1,6 +1,7 @@
 package app;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -36,31 +37,33 @@ public class ArchitekturRegelnTest {
 			.should().dependOnClassesThat().resideInAPackage("app.shared.skin..")
 			.because("Features bekommen fertige Oberflächen aus shared.ui — der Skin ist deren Innenleben");
 
-	// ===== Kommen dazu, sobald sie halten — heute würden sie den Build brechen =====
-	//
-	// Keine Paketzyklen. Heute genau einer: app.shared.skin <-> app.shared.ui.components. Das ist
-	// derselbe Sachverhalt wie Wächter 1 und 3, nur von der anderen Seite gesehen — der Skin
-	// importiert die Bausteine, die Bausteine holen sich den SkinService. Frei nach Schritt 3f.
-	//
-	// @ArchTest
-	// static final ArchRule keineZyklen = slices()
-	//         .matching("app.(**)")
-	//         .should().beFreeOfCycles();
-	//
-	// Wächter 1 — der Skin kennt die UI nicht. Frei nach Schritt 3f (heute noch drei Importe:
-	// MultipleChoicePane, SuiteImage, SuiteInfoLabel).
-	//
-	// @ArchTest
-	// static final ArchRule derSkinKenntDieUiNicht = noClasses()
-	//         .that().resideInAPackage("app.shared.skin..")
-	//         .should().dependOnClassesThat().resideInAPackage("app.shared.ui..")
-	//         .because("die UI baut, der Skin liefert Werte und erzeugt das CSS");
-	//
-	// Wächter 3 — die Bausteine kennt nur shared.ui. Frei nach Schritt 4.
-	//
-	// @ArchTest
-	// static final ArchRule bausteineNurAusSharedUi = noClasses()
-	//         .that().resideOutsideOfPackage("app.shared.ui..")
-	//         .should().dependOnClassesThat().resideInAPackage("app.shared.ui.components..")
-	//         .because("Bausteine werden verbaut, nicht gezeigt — wer sie braucht, geht über shared.ui");
+	/**
+	 * Wächter 1 — der Skin kennt die UI nicht.
+	 *
+	 * <p>Er hält die Werte, die CSS nicht ausdrücken kann, und erzeugt das Stylesheet. Gebaut wird
+	 * auf der anderen Seite.</p>
+	 */
+	@ArchTest
+	static final ArchRule derSkinKenntDieUiNicht = noClasses()
+			.that().resideInAPackage("app.shared.skin..")
+			.should().dependOnClassesThat().resideInAPackage("app.shared.ui..")
+			.because("die UI baut, der Skin liefert Werte und erzeugt das CSS");
+
+	/**
+	 * Wächter 3 — die Bausteine kennt nur {@code shared.ui}.
+	 *
+	 * <p>Features und {@code controller} sehen ausschließlich fertige Oberflächen; woraus die
+	 * bestehen, ist Sache von {@code shared.ui}.</p>
+	 */
+	@ArchTest
+	static final ArchRule bausteineNurAusSharedUi = noClasses()
+			.that().resideOutsideOfPackage("app.shared.ui..")
+			.should().dependOnClassesThat().resideInAPackage("app.shared.ui.components..")
+			.because("Bausteine werden verbaut, nicht gezeigt — wer sie braucht, geht über shared.ui");
+
+	/** Keine Paketzyklen. Eine von Thorstens sieben Ausgangsforderungen. */
+	@ArchTest
+	static final ArchRule keineZyklen = slices()
+			.matching("app.(**)")
+			.should().beFreeOfCycles();
 }
