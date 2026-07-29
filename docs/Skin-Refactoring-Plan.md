@@ -1,8 +1,8 @@
 # Skin-Refactoring — Vorgehensplan
 
-**Stand:** 29.07.2026 · v8 · Schritte 1–3f erledigt. **Alle drei Wächter sind leer und werden
-vom Build bewacht**, der Paketgraph ist zyklenfrei. `Skin` von 2660 auf 1447 Zeilen.
-Offen sind noch 4 (Aufräumen) und 5 (Regelwerk).
+**Stand:** 29.07.2026 · v9 · Schritte 1–4 erledigt. **Alle drei Wächter sind leer und werden vom
+Build bewacht**, der Paketgraph ist zyklenfrei. `Skin` von 2660 auf **1241** Zeilen und hat genau
+eine öffentliche Methode: `styleScene`. Offen ist nur noch 5 (Regelwerk und Architekturdokument).
 
 **Charakter dieses Dokuments:** es blickt **zurück** — *was entschieden ist*, *was erledigt ist*,
 *in welcher Reihenfolge* vorgegangen wird, plus die geprüften Fakten, auf denen das beruht, und die
@@ -107,9 +107,8 @@ DarkMode, FlatWebSkin, BaseColorSkin (+ Blue/Flower/Red/Spicy)
 SkinService · SkinImageCache
 ```
 
-**`Skin` behält seinen Namen.** Wenn nach Schritt 4 die Bild-, Pfad- und Werte-Zugänge nach
-`SkinProperties` gewandert sind, enthält die Klasse genau die CSS-Erzeugung — und das ist, was ein
-Skin tut. Kein Rename, keine neue Vokabel, null Aufwand. Die
+**`Skin` behält seinen Namen.** Seit Schritt 4 enthält die Klasse genau die CSS-Erzeugung — und
+das ist, was ein Skin tut. Kein Rename, keine neue Vokabel, null Aufwand. Die
 Feldzugriffe in den 23 `addXxx`-Methoden bleiben unqualifiziert, weil die Vererbungskette steht.
 
 *Ehrlich dazu:* Der Split A/B bringt eine kleinere Datei und eine klare Lesereihenfolge — mehr nicht.
@@ -383,7 +382,24 @@ Wächter 1: 3 → **1** (nur noch `MultipleChoicePane`). `mvn test` grün.
 **Damit sind alle drei Wächter leer und der Paketgraph zyklenfrei.** Die drei bis dahin
 auskommentierten ArchUnit-Regeln sind scharf gestellt; der Test läuft mit vier Regeln grün.
 
-**29.07. — Hintergründe als Wert, StartScreen aufgeteilt (Rest von Schritt 4).**
+**29.07. — Schritt 4 abgeschlossen: `Skin` ist nur noch CSS.**
+
+Die sieben Werte-Zugänge sind nach `SkinProperties` gewandert (`wallpaperPath`,
+`emptyWallpaperPath`, `startScreenWallpaperPath`, `mcMetrics`, `iconFor`, `getOverlayContentBounds`,
+`mapImages`) samt ihrer privaten Helfer. Übrig bleibt in `Skin`: **eine** öffentliche Methode
+`styleScene`, dahinter 23 `addXxxStyles` und der `CssBuilder`.
+
+- **Die zwei Aufzählungen zogen mit** (`IconButtonType`, `TextLabelType`) — nicht aus Ordnungsliebe:
+  `SkinProperties` hatte bereits `sessionBounds(…, Skin.TextLabelType)`, die Elternklasse verwies
+  also auf ihr Kind. Alle Aufrufstellen bleiben unverändert, weil geschachtelte Typen vererbt werden
+  und `Skin.TextLabelType` weiterhin auflöst.
+- `mcLineSpacingSqueezed()` musste `protected` statt `private` werden: den Wert braucht auch die
+  CSS-Seite, dort wird die zweizeilige MC-Stufe gestylt. Steht als Satz an der Methode.
+- `SkinProperties` kennt jetzt `Config` und `UiUtils` — beides liegt unterhalb, die Ordnung erlaubt
+  es. Und `computeMcButtonHeight()` baut kurz ein `javafx.scene.text.Text`, um die Schrifthöhe zu
+  messen; das Objekt wird sofort verworfen und gilt bewusst nicht als „bauen".
+
+**29.07. — Hintergründe als Wert, StartScreen aufgeteilt (Teil von Schritt 4).**
 
 - **Der Skin liefert Pfade, nicht Bilder.** `getBackgroundImage(…)` und die zwei Verwandten sind
   `wallpaperPath(mapName, kategorie)`, `emptyWallpaperPath()` und `startScreenWallpaperPath()`
@@ -554,23 +570,16 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
 6  ✓ Die Wächter in den Maven-Build                                      29.07.
       ArchUnit, src/test/java/app/ArchitekturRegelnTest.java.
       Vier Regeln scharf: die drei Wächter plus Zyklenfreiheit.
+4  ✓ Aufräumen — Skin ist nur noch CSS, eine öffentliche Methode        29.07.
 
    Damit: alle Wächter leer, Paketgraph zyklenfrei, Build bewacht beides.
 
 ── offen ──────────────────────────────────────────────────────────────────────
 
-4   Aufräumen
-    Den Rest von Skin sortieren: die acht Bild-/Pfad-Methoden und die drei
-    Werte-Zugänge (mcMetrics, iconFor, getOverlayContentBounds) gehören zu
-    SkinProperties. Erst danach gilt ohne Fußnote: SkinProperties liefert,
-    Skin erzeugt CSS. Details in Vertagte-Punkte.md.
-    Dann docs/Ordnerstruktur.txt und docs/Paketabhängigkeiten.dot neu erzeugen —
-    bewusst nicht zwischendurch, sie veralten bei jedem Move.
-
 5   Regelwerk und Architekturdokument nachziehen
     Design-Regeln.md: die Ordnung aus §1, der Verantwortungsrahmen aus §3.14 in
-    Thorstens Formulierung, die Schlüssel-Regel aus §3.15, StartScreen-Regel,
-    Dialog-Stufe 2a, keine Streams, der neu gefasste Skin-Vertrag.
+    Thorstens Formulierung, die Schlüssel-Regel aus §3.15, Dialog-Stufe 2a,
+    keine Streams, der Karten-Absatz, der neu gefasste Skin-Vertrag.
     Die drei Wächter sind dort keine Vorsätze mehr, sondern bewachte Zusagen.
     Architektur-Dokumentation.md: der Abschnitt „UI-Architektur: Skin-System" ist
     vollständig überholt.
