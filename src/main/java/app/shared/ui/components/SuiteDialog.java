@@ -1,7 +1,6 @@
 package app.shared.ui.components;
 
 import app.shared.UiUtils;
-import app.shared.skin.SkinService;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.layout.HeaderBar;

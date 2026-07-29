@@ -1,10 +1,10 @@
 package app.learn.anki;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import app.learn.Progress;
 import app.learn.anki.model.Card;
@@ -53,6 +53,14 @@ public class CardProgress implements Progress{
 		this.steps = hint.getSteps();
 	}
 	
+	/** Die Antworttexte in ihrer aktuellen Reihenfolge. */
+	private static List<String> texteVon(MultipleChoiceAnswers mc) {
+		List<String> texte = new ArrayList<>();
+		for (AnswerOption option : mc.getAnswerOptions())
+			texte.add(option.text());
+		return texte;
+	}
+
 	public void start() {
 		Log.info(this, "Los geht es mit Karte: " + card.getId());
 	    currentIndex = 0;
@@ -73,9 +81,13 @@ public class CardProgress implements Progress{
 	        return; // Ignorieren
 	    }
 	    
-	    boolean correct = input.parts().stream()
-	        .map(String::toLowerCase)
-	        .anyMatch(p -> p.equals(text.trim().toLowerCase()));
+	    String eingabe = text.trim().toLowerCase();
+	    boolean correct = false;
+	    for (String part : input.parts())
+	        if (part.toLowerCase().equals(eingabe)) {
+	            correct = true;
+	            break;
+	        }
 	    
 	    if (!correct) {
 	        return; // Falsche Eingabe, nichts tun
@@ -273,9 +285,9 @@ public class CardProgress implements Progress{
 								isPaused = true;}
 			case MC mcStep -> {
 				// 1. Alle Texte des aktuellen Steps holen (um Vergleichbarkeit zu haben)
-				Set<String> currentTexts = mcStep.options().stream()
-						.map(AnswerOption::text)
-						.collect(Collectors.toSet());
+				Set<String> currentTexts = new HashSet<>();
+				for (AnswerOption option : mcStep.options())
+					currentTexts.add(option.text());
 				
 				MultipleChoiceAnswers sessionMc;
 
@@ -289,15 +301,11 @@ public class CardProgress implements Progress{
 					sessionMc = new MultipleChoiceAnswers(mcStep.options(), 8); // Konstruktor mit Liste
 					
 					// Merken für den nächsten Step
-					lastMcOrder = sessionMc.getAnswerOptions().stream()
-							.map(AnswerOption::text)
-							.toList();
+					lastMcOrder = texteVon(sessionMc);
 				}
 				
 				activeSessionMC = sessionMc;
-				presenter.showMultipleChoice(sessionMc.getAnswerOptions().stream()
-					    .map(AnswerOption::text)
-					    .toList());
+				presenter.showMultipleChoice(texteVon(sessionMc));
 			}
 			
 			case MarkMapElements left -> presenter.markMapElements(left.left());

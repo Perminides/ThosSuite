@@ -46,9 +46,10 @@ public class SuiteInfoLabel extends StackPane {
     /**
      * Ohne feste Lage — für Aufrufer, die die Komponente in ein Layout hängen.
      *
-     * <p>Das Aussehen kommt über {@code .my-info-label}. Die AnkiLearnView setzt zusätzlich eine Kennung
-     * (etwa {@code #QuestionLabel}), die nur den Hintergrund abweichend färbt — alles andere steht
-     * schon in der Klasse. Ohne diese Kennung sieht das Label also nicht falsch aus, nur neutral.</p>
+     * <p>Das Aussehen kommt über {@code .my-info-label}. Eine Lern-Ansicht setzt zusätzlich einen
+     * Modifikator ({@code .question}, {@code .progress}, {@code .history}), der nur den Hintergrund
+     * abweichend färbt — alles andere steht schon in der Klasse. Ohne ihn sieht das Label nicht
+     * falsch aus, nur neutral.</p>
      */
     public SuiteInfoLabel(String text) {
         this.textFlow = new TextFlow();

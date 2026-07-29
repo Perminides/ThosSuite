@@ -11,7 +11,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -435,7 +434,11 @@ public class SignalIncrementalImport {
         addIfNotBlank(candidates, stripBidiControls(name));
         addIfNotBlank(candidates, buildFullName(profileName, profileFamilyName));
         addIfNotBlank(candidates, stripBidiControls(profileFullName));
-        return candidates.stream().max(Comparator.comparingInt(String::length)).orElse(fallback);
+        String laengster = fallback;
+        for (String candidate : candidates)
+            if (laengster == fallback || candidate.length() > laengster.length())
+                laengster = candidate;
+        return laengster;
     }
 
     private String buildFullName(String first, String last) {

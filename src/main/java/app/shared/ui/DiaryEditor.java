@@ -250,9 +250,13 @@ public class DiaryEditor {
             return;
 
         String abs = chosen.getAbsolutePath();
-        boolean alreadyThere =
-                existing.stream().anyMatch(a -> a.imagePath().equals(abs))
-                || pendingOriginals.stream().anyMatch(f -> f.getAbsolutePath().equals(abs));
+        boolean alreadyThere = false;
+        for (var attachment : existing)
+            if (attachment.imagePath().equals(abs))
+                alreadyThere = true;
+        for (File file : pendingOriginals)
+            if (file.getAbsolutePath().equals(abs))
+                alreadyThere = true;
         if (!alreadyThere) {
             pendingOriginals.add(chosen);
             rebuildAttachmentPane();

@@ -1,8 +1,7 @@
 package app.learn.model;
 
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import app.shared.model.ShapeGeometry;
 
@@ -52,7 +51,10 @@ public record MapShape(String deckId, String regionName, String capitalName, Set
 		if (commaSeparated == null || commaSeparated.isEmpty()) {
 			return Set.of();
 		}
-		return Arrays.stream(commaSeparated.split(",")).map(String::trim).collect(Collectors.toSet());
+		Set<String> result = new HashSet<>();
+		for (String part : commaSeparated.split(","))
+			result.add(part.trim());
+		return result;
 	}
 
 	public boolean isMatchingCapital(String text) {
@@ -66,8 +68,9 @@ public record MapShape(String deckId, String regionName, String capitalName, Set
 		}
 
 		if (altCapitalNames != null)
-			return altCapitalNames.stream()
-					.anyMatch(alt -> alt.toLowerCase().trim().equals(normalized));
+			for (String alt : altCapitalNames)
+				if (alt.toLowerCase().trim().equals(normalized))
+					return true;
 
 		return false;
 	}
@@ -83,8 +86,9 @@ public record MapShape(String deckId, String regionName, String capitalName, Set
 		}
 
 		if (altRegionNames != null)
-			return altRegionNames.stream()
-					.anyMatch(alt -> alt.toLowerCase().trim().equals(normalized));
+			for (String alt : altRegionNames)
+				if (alt.toLowerCase().trim().equals(normalized))
+					return true;
 
 		return false;
 	}

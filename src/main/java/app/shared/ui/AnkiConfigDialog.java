@@ -7,13 +7,11 @@ import java.util.Optional;
 import java.util.Set;
 
 import app.shared.model.AnkiDialogState;
-import app.shared.skin.SkinService;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;

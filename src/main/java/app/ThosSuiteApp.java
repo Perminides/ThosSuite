@@ -66,11 +66,9 @@ public class ThosSuiteApp extends Application {
         Log.info(ThosSuiteApp.class, "End Suite");
         
      // Zeige alle lebenden Non-Daemon Threads !Sofort: Das ist ein Hack weil das Programm manchmal nach diesem Logging noch weiterläuft...
-        Thread.getAllStackTraces().keySet().stream()
-            .filter(t -> !t.isDaemon())  // Nur Non-Daemon Threads (die halten JVM am Leben)
-            .forEach(t -> {
+        for (Thread t : Thread.getAllStackTraces().keySet())
+            if (!t.isDaemon()) // Non-Daemon Threads halten die JVM am Leben
                 Log.info(ThosSuiteApp.class, "Non-Daemon Thread: " + t.getName());
-            });
     }
 
     @Override

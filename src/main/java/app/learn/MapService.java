@@ -2,8 +2,8 @@ package app.learn;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import app.learn.model.Deck;
 import app.learn.model.GeoMap;
@@ -56,9 +56,10 @@ public class MapService {
 	 */
 	public Set<MapShape> getPlayableShapesForDeck(Deck type) {
 		GeoMap map = getMap(type);
-		return map.getShapes().stream()
-				.filter(shape -> type.getId().equals(shape.deckId()))
-				.filter(shape -> shape.isPlayable())
-				.collect(Collectors.toSet());
+		Set<MapShape> playable = new HashSet<>();
+		for (MapShape shape : map.getShapes())
+			if (type.getId().equals(shape.deckId()) && shape.isPlayable())
+				playable.add(shape);
+		return playable;
 	}
 }
