@@ -61,7 +61,7 @@ import javafx.scene.shape.Rectangle;
  * 		Shape (group)	= ":correct", ":incorrect", ":marked"
  * 		Shape (path)	= ".first", ".second"
  */
-public class ImageMapPane extends StackPane implements SessionMap {
+public class ImageMapPane extends StackPane implements LearnMap {
 
 	// Pseudo-Klassen für CSS
 	private static final PseudoClass CORRECT = PseudoClass.getPseudoClass("correct");

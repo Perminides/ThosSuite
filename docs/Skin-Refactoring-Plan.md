@@ -576,6 +576,13 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
 
 ── offen ──────────────────────────────────────────────────────────────────────
 
+A1  Der Code, der sich noch ändert — siehe Vertagte-Punkte.md
+    Session → Learn durchbenennen · MainWindow rund machen · UiComponent
+    abschaffen · SuiteDatePicker entscheiden · #QuestionLabel als
+    Modifikator-Klasse · overlayContentBounds
+    Kommt VOR Schritt 5: das Regelwerk beschreibt einen Zustand, und der
+    ist bis dahin noch in Bewegung.
+
 5   Regelwerk und Architekturdokument nachziehen
     Design-Regeln.md: die Ordnung aus §1, der Verantwortungsrahmen aus §3.14 in
     Thorstens Formulierung, die Schlüssel-Regel aus §3.15, Dialog-Stufe 2a,

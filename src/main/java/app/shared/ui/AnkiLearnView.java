@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Set;
 
 import app.shared.model.ScreenView;
-import app.shared.model.SessionCallbacks;
+import app.shared.model.LearnCallbacks;
 import app.shared.model.UiComponent;
-import app.shared.skin.SessionComponent;
+import app.shared.skin.LearnComponent;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import app.shared.ui.components.MultipleChoicePane;
@@ -15,7 +15,7 @@ import app.shared.ui.components.SuiteIconButton;
 import app.shared.ui.components.SuiteImage;
 import app.shared.ui.components.SuiteInfoLabel;
 import app.shared.ui.components.SuiteTextField;
-import app.shared.ui.components.map.SessionMap;
+import app.shared.ui.components.map.LearnMap;
 
 /**
  * Die gemeinsame Oberfläche aller Anki-Sessions: Frage, Bild, Multiple Choice, Fortschritt,
@@ -46,16 +46,16 @@ import app.shared.ui.components.map.SessionMap;
  * ({@code createMultipleChoicePane}). Alle übrigen Bestandteile bekommen ihr Feld als
  * {@code Rectangle2D} übergeben und holen sich beim Skin nur, was ohne Schlüssel auskommt.</p>
  */
-public abstract class AnkiSessionView {
+public abstract class AnkiLearnView {
 
 	private final String deckId;
 	private final String mapName;
 	private final String kategorie;
-	private final SessionCallbacks callbacks;
+	private final LearnCallbacks callbacks;
 
 	private final ComponentHost canvas = new ComponentHost();
 
-	private SessionMap karte;
+	private LearnMap karte;
 	private SuiteInfoLabel questionArea;
 	private SuiteInfoLabel progressArea;
 	private SuiteInfoLabel cardHistoryArea;
@@ -64,7 +64,7 @@ public abstract class AnkiSessionView {
 	private SuiteIconButton backButton;
 	private SuiteTextField inputField;
 
-	protected AnkiSessionView(String deckId, String mapName, String kategorie, SessionCallbacks callbacks) {
+	protected AnkiLearnView(String deckId, String mapName, String kategorie, LearnCallbacks callbacks) {
 		this.deckId = deckId;
 		this.mapName = mapName;
 		this.kategorie = kategorie;
@@ -74,7 +74,7 @@ public abstract class AnkiSessionView {
 	// ===== Was die Unterklassen festlegen =====
 
 	/** Die Karte dieser Lernform. Nie {@code null} — wer keine hat, liefert eine, die nichts tut. */
-	protected abstract SessionMap createMap();
+	protected abstract LearnMap createMap();
 
 	protected abstract boolean hasInputField();
 
@@ -83,7 +83,7 @@ public abstract class AnkiSessionView {
 	protected String deckId()              { return deckId; }
 	protected String mapName()             { return mapName; }
 	protected String kategorie()           { return kategorie; }
-	protected SessionCallbacks callbacks() { return callbacks; }
+	protected LearnCallbacks callbacks() { return callbacks; }
 
 	// ===== Aufbau =====
 
@@ -99,18 +99,18 @@ public abstract class AnkiSessionView {
 		progressArea    = infoLabel(skin, Skin.TextLabelType.PROGRESS);
 		cardHistoryArea = infoLabel(skin, Skin.TextLabelType.CARD_HISTORY);
 
-		imageComponent = new SuiteImage(skin.sessionBounds(deckId, kategorie, SessionComponent.IMAGE));
+		imageComponent = new SuiteImage(skin.learnComponentBounds(deckId, kategorie, LearnComponent.IMAGE));
 
-		mcPane = new MultipleChoicePane(skin.sessionBounds(deckId, kategorie, SessionComponent.MC));
+		mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, kategorie, LearnComponent.MC));
 		mcPane.addListener(callbacks.mcAnswerClicked());
 
 		backButton = new SuiteIconButton(Skin.IconButtonType.BACK,
-				skin.sessionBounds(deckId, kategorie, SessionComponent.BACK_BUTTON));
+				skin.learnComponentBounds(deckId, kategorie, LearnComponent.BACK_BUTTON));
 		backButton.onClick(callbacks.backClicked());
 
 		inputField = null;
 		if (hasInputField()) {
-			inputField = new SuiteTextField(skin.sessionBounds(mapName, kategorie, SessionComponent.TEXT_INPUT));
+			inputField = new SuiteTextField(skin.learnComponentBounds(mapName, kategorie, LearnComponent.TEXT_INPUT));
 			inputField.onType(callbacks.textTyped());
 		}
 
@@ -119,7 +119,7 @@ public abstract class AnkiSessionView {
 
 	/** Die Kennung entscheidet nur über den abweichenden Hintergrund — der Rest steht in {@code .my-info-label}. */
 	private SuiteInfoLabel infoLabel(Skin skin, Skin.TextLabelType typ) {
-		SuiteInfoLabel label = new SuiteInfoLabel("", skin.sessionBounds(mapName, kategorie, typ));
+		SuiteInfoLabel label = new SuiteInfoLabel("", skin.learnTextLabelBounds(mapName, kategorie, typ));
 		label.setId(typ + "Label");
 		return label;
 	}

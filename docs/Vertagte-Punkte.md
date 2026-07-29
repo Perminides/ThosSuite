@@ -2,159 +2,52 @@
 
 **Stand:** 29.07.2026 · Schritte 1–4 erledigt, alle Wächter scharf im Build. Offen: Schritt 5.
 
-Alles, was während des Refactorings (26.–29.07.) bewusst **nicht** sofort gemacht wurde.
-Sortiert nach **Fälligkeit**, nicht nach Thema — beim Abarbeiten ist „was ist jetzt dran" die
-nützlichere Frage.
+Alles, was während des Refactorings (26.–29.07.) bewusst **nicht** sofort gemacht wurde — und
+alles, was dabei aufgefallen ist.
 
-Schrittnummern beziehen sich auf `Skin-Refactoring-Plan.md` §8.
+**Abschnitt A ist die Arbeitsliste**, sortiert nach Art und in der Reihenfolge, in der es dran ist:
+erst der Code, der sich noch ändert (A1), dann das Regelwerk (A2). Die Sachfehler in A3 warten auf
+nichts davon. B bis E sind Vorrat, nicht Plan.
+
+Was **erledigt** ist, steht nicht hier, sondern in `Skin-Refactoring-Plan.md` §5.
 
 ---
 
-## A · Fällig im laufenden Umbau
+## A · Was noch offen ist
 
-### Schritt 3f — ✓ erledigt am 29.07.
+### A1 · Vor dem Regelwerk — Code, der sich noch ändert
 
-Alle Bau-Methoden haben den Skin verlassen, alle Wächter sind leer und werden vom Build bewacht.
-Was aus dieser Runde offen blieb:
+Diese Punkte kommen **vor** Schritt 5. Das Regelwerk beschreibt einen Zustand; wenn danach noch
+`Session` zu `Learn` wird und `UiComponent` verschwindet, schreiben wir es zweimal.
 
-| Punkt | Fundstelle |
-|---|---|
-| Bild-Karte: „EM 2021 — alle Länder grün, welches war falsch?" Das Zurücksetzen vor `markLastClickAsIncorrect()` löscht die bisherigen Markierungen mit | `ImageMapPane.markIncorrect` |
-| Fragefeld der Region-Session: „Hier wäre allerdings CENTER schon angesagt" | `RegionSessionView:69` |
-
-### Schritt 5 — Architekturdokument
-
-`docs/Architektur-Dokumentation.md`, Abschnitt **„UI-Architektur: Skin-System"** ist nach dem Umbau
-vollständig überholt. Er beschreibt Factory-Methoden, das Fallback-System und die
-`SkinService`-API als „Stand heute korrekt" und trägt bereits den Vermerk *„Refactoring
-ausstehend"*. Neu zu fassen sind mindestens:
-
-- **Konzept** — der Skin baut nichts mehr, er liefert Werte und erzeugt das CSS
-- **Factory-Methoden** — der ganze Abschnitt entfällt
-- **Fallback-System** — bleibt inhaltlich, wandert aber hinter `sessionBounds(...)`
-- **SkinService** — ist nur noch Registry; `setOwnerWindow`/`getOwnerWindow` liegen in `UiUtils`
-- **Paket-Struktur** (§ „Technische Basis") — `shared.ui` / `shared.ui.components`, die vier
-  Sprossen, die drei Wächter
-
-Dazu die Schichtbeschreibung in `Design-Regeln.md`. Beides erst **nach** Schritt 4 — vorher
-veraltet es noch einmal.
-
-### Schritt 3b — Feature-Oberflächen (Diary, Movie, Dashboard, BarChart)
-
-| Punkt | Fundstelle |
-|---|---|
-| ~~„Wieso baut hier der Skin?"~~ | **erledigt 28.07.** — `createMovieViewer` ist umgezogen, der Marker gelöscht |
-| Der MovieScreen wird komplett anders aufgebaut als die übrigen | `SuiteSuggestionTextField:30` |
-| Alc- und Fitbit-StatisticScreens sind voll mit UI-Kram | `Skin` (Klassen-Javadoc) |
-| ~~Code-Duplizierung in den `getBackgroundImage`-Methoden~~ | **erledigt 29.07.** — ein privates `backgroundImage(name)`, drei Einzeiler davor |
-| ~~`empty` und `default` gehen durcheinander~~ | **erledigt 29.07.** — war ein Namensproblem: `empty`→`startScreen`, `default`→`empty`. Siehe Plan §5 |
-
-### Schritt 3c — Session-/Lern-Teile
-
-| Punkt | Fundstelle |
-|---|---|
-| ~~Zuschnitt der Session-Panes~~ | **erledigt 29.07.**, siehe `Learn-Zielbild-3c.md` §0 |
-| ~~Das Feature reicht ein javafx-`Image` durch~~ | **erledigt** — die Panes liegen jetzt in `shared.ui` |
-| ~~`ShapeMapState` im Feature~~ | **erledigt** — als eigenes Record in `shared.model` |
-| Wie mit Hintergrundbildern umgegangen wird, gehört ins Regelwerk | `ComponentHost:33` |
-| **`buildShapeMapWrapper`-Konstrukt.** Der Block gehört in die `ShapeMapPane`; das Hindernis (kein Zugriff auf Skin-Felder) ist unter U3 weg | `ShapeMapPane:65` |
-| ~~`MultipleChoicePane.Metrics` — „streng genommen sickern skin.properties in eine UI-Komponente"~~ | **erledigt 29.07.** — wurde `shared.model.McMetrics`; nach der Schlüssel-Regel ist das kein Sickern, sondern der Normalfall |
-| `overlayContentBounds` beschreibt, wo der Inhalt im Mini-Map-Bild sitzt — gehört eigentlich woandershin | `Skin.getOverlayContentBounds` |
-| **Fehler im freien Spiel:** falsch geklickte Formen verschwinden bei „schwer" nicht, nur die richtigen. Bestehender Fehler, nicht aus dem Umbau | `RegionSessionView:16` |
-
-### Jetzt fällig — die `SuiteXXX`-Familie durchsehen
-
-**Der ursprüngliche Grund ist weggefallen.** Die Fassaden entstanden, weil Features javafx-frei
-bleiben müssen: `GermanySessionPane` durfte kein `TextField` halten, also hielt es ein
-`SuiteTextField`. **Seit 3c hält kein Feature mehr irgendeine Komponente** — die Panes liegen in
-`shared.ui`, die Features bekommen fertige `ScreenView`s. Am besten zusammen mit Schritt 3f, weil
-dort ohnehin die Konstruktoren angefasst werden.
-
-**Entschieden (29.07.): Vererbung statt Fassade.** Eine Fassade schützt eine Grenze — und die Grenze
-(„das Feature darf kein javafx anfassen") gibt es an dieser Stelle nicht mehr; innerhalb von
-`shared.ui` kennen beide Seiten javafx. Was an Thorstens Instinkt wertvoll war, überlebt die
-Vererbung: sinnvoll benannte Methoden wie `setActive(...)` (= leeren + aktivieren + fokussieren)
-bleiben, nur das *Verbot* fällt weg — und das war nie der Punkt. Gegenprobe war `SuiteDialog`: als
-Fassade bräuchte es ~15 Weiterreich-Methoden und `getDialogPane()` (32 Aufrufe) leckt trotzdem
-durch. **Erster Schritt gemacht:** `ShapeMapPane extends StackPane`.
-
-**Kriterium:** *Hat die Klasse eigenen Inhalt, oder verbirgt sie nur javafx?*
-
-| | Zeilen | Befund |
-|---|---|---|
-| `SuiteTextField` | 46 | ✓ 29.07. — `extends TextField`, zwei Konstruktoren, Aussehen über `.text-field`. |
-| `SuiteIconButton` | 29 | ✓ 29.07. — `extends Button`, holt sein Bild über `iconFor(rolle)`, Maße kommen rein. |
-| `SuiteInfoLabel` | 168 | ✓ 29.07. — bekam `.my-info-label`; vorher kam ihr ganzes Aussehen aus den drei Session-Kennungen. |
-| `SuiteImage` | 131 | ✓ 29.07. — holt den Eckradius selbst, Maße kommen rein. |
-| `SuiteDatePicker` | 9 | trägt keinen Skin-Wert, nur die Entscheidung „keine Kalenderwochen". Überlebt nur über das Argument „Ort einer suite-weiten Festlegung", nicht über das Fassaden-Argument. **Dünnster Fall, legitim zu streichen.** |
-
-**Folgefrage — `UiComponent` abschaffen.** Alle Bausteine sind inzwischen selbst Nodes und
-implementieren `UiComponent` nur noch mit `getView() { return this; }`. Die einzige Ausnahme ist
-`NoSessionMap`, das Nullobjekt: es hält eine leere `Group`. Wird auch das ein Node (etwa indem es
-selbst von `Group` erbt), kann `ComponentHost` auf `Node...` umstellen und `UiComponent` samt
-`getView()` entfallen.
-
-### Das Karten-Konstrukt — umbenennen und erklären
-
-**Umbenennen.** `SessionMap` ist nicht spezifisch genug: „Session" könnte irgendwann auch ein
-kleines Spiel haben. Gemeint ist Lernen. Also `LearnMap`, `ShapeLearnMap`, `ImageLearnMap` — und für
-das Nullobjekt eher `EmptyLearnMap` als `NoLearnMap`, das liest sich sonst wie eine Verneinung des
-Lernens.
-
-**Achtung, Anschlussfrage:** „Session" steckt auch in `SessionComponent`, `sessionBounds(…)`,
-`SessionCallbacks`, `AnkiSessionView`, `RegionSessionView`. Entweder das Wort bedeutet dort
-weiterhin „Lern-Session" und bleibt, oder es zieht mit um. Halbe Umbenennung wäre schlechter als
-gar keine — einmal entscheiden.
-
-**Erklären.** Das Konstrukt braucht einen kurzen Absatz — im Regeldokument oder als Paket-Javadoc.
-Stand nach der Vereinfachung vom 29.07.:
+**1. `Session` → `Learn` durchbenennen.** Beschlossen, nicht gemacht. `SessionMap` ist nicht
+spezifisch genug — „Session" könnte irgendwann auch ein kleines Spiel haben, gemeint ist Lernen.
 
 ```
-ShapeLayer        Nachschlagetabelle: json-type → zIndex, interaktiv?, CSS-Layer-Klasse
-MapNodeBuilder    Fabrik:             Geometrie → JavaFX-Node
-SessionMap        das gemeinsame Vokabular, spricht durchgehend Ids
-ShapeMapPane      die eine Karte, arbeitet ohnehin mit Ids
-ImageMapPane      die andere Karte, arbeitet mit Geometrien und übersetzt selbst
-NoSessionMap      die Karte der MC-Session, die keine hat (Nullobjekt)
+SessionMap        → LearnMap
+ShapeMapPane        bleibt (heißt nach der Bauart, nicht nach dem Zweck)
+NoSessionMap      → EmptyLearnMap     („NoLearnMap" läse sich wie eine Verneinung des Lernens)
+SessionComponent  → LearnComponent
+SessionCallbacks  → LearnCallbacks
+sessionBounds(…)  → learnBounds(…)
+AnkiSessionView   → AnkiLearnView
+RegionSessionView → RegionLearnView
 ```
 
-Der Grund für das Interface: die beiden Panes sind sehr verschieden, die View soll beide bedienen,
-ohne zu wissen welche.
+Nicht umbenennen: die paketprivaten Klassen in `learn.anki` und `learn.region` — dort ist „Learn"
+im Paketnamen und wäre doppelt gemoppelt. **Halb umbenannt wäre schlechter als gar nicht.**
 
-✓ **Vereinfacht am 29.07.:** die beiden Übersetzer-Klassen `ShapeSessionMap` und `ImageSessionMap`
-sind weg — die Panes setzen `SessionMap` selbst um. Mitgenommen: `Skin.applyImageMapLayout` (die
-Methode, die die Pane von außen vermaß und einen Clip zurückgab) ist ebenfalls weg, `ImageMapPane`
-bekommt ihr Feld im Konstruktor und baut den Clip selbst. Damit ist auch die Zeile erledigt, die im
-alten Code den Marker *„Ich verstehe nicht, was hier passiert"* trug.
+**2. `MainWindow` rund machen.** Drei Einwände aus der 3d-Runde:
 
-**Neu offen (29.07.): `#QuestionLabel` durch eine Modifikator-Klasse ersetzen.** Jetzt, wo
-`SuiteInfoLabel` wiederverwendbar ist, ist die Kennung die falsche Mechanik — IDs sollen in einer
-Szene eindeutig sein, zwei Info-Labels in einem Dialog brächen das. Sauberer:
-`.my-info-label.question` statt `#QuestionLabel`. Betrifft `addSessionInfoLabelStyles` und die zwei
-`setId(…)`-Aufrufe in den Views.
+*a) Eine fertige `MenuBar` über die shared-Grenze zu reichen, ist zu viel.* Erwartbarer wäre:
+`MainWindow` bekommt eine leere Leiste und hängt seine Menüs selbst ein. Zu bedenken: das Symbol
+sitzt *neben* der Menüleiste im selben `leading`-Block. Entweder gibt die Leiste den Block heraus
+(dann wandert Layout-Wissen nach draußen), oder sie bekommt ein `setMenuBar(MenuBar)` — dann
+überquert der Typ die Grenze nur später statt gar nicht. Die Frage ist also nicht *ob* der Typ die
+Grenze überquert, sondern ob `MainWindow` beim Zusammenbau mitwirkt. Vielleicht ist die ehrlichere
+Fassung: die Leiste nimmt die *Menüs* (`List<Menu>`) und baut die `MenuBar` selbst.
 
-**Noch offen in der Familie:** `SuiteDatePicker` (dünnster Fall) und die Frage, ob
-`SuiteInfoLabel` / `SuiteImage` / `MultipleChoicePane` ihre Maße im Konstruktor bekommen oder von
-der View nach dem `new` gesetzt werden. `ShapeMapPane`, `SuiteTextField` und `SuiteIconButton` haben
-sie im Konstruktor — das ist der Präzedenzfall.
-
-### Schritt 3d — ✓ erledigt am 29.07., aber `MainWindow` ist noch nicht rund
-
-Die fünf Methoden haben den Skin verlassen: die drei Fabriken waren pure `new X()` ohne einen
-einzigen Skin-Wert und sind ersatzlos gestrichen (24 Aufrufstellen), die Header-Leiste wurde
-`shared.ui.MainWindowHeaderBar`. Was dabei offen blieb — **Thorstens Einwände, keine Nacharbeit an
-3d, sondern eine eigene kleine Runde:**
-
-**1. Eine fertige `MenuBar` über die shared-Grenze zu reichen, ist zu viel.** Erwartbarer wäre:
-`MainWindow` bekommt eine leere Leiste und hängt seine Menüs selbst ein. Zu bedenken beim Umbau:
-das Symbol sitzt *neben* der Menüleiste im selben `leading`-Block. Entweder gibt die Leiste den
-Block heraus (dann wandert das Layout-Wissen doch nach draußen), oder sie bekommt eine Methode
-`setMenuBar(MenuBar)` — dann überquert der Typ die Grenze nur später statt gar nicht. Die Frage ist
-also nicht *ob* der Typ die Grenze überquert, sondern ob `MainWindow` beim Zusammenbau mitwirkt.
-Vielleicht ist die ehrlichere Fassung: die Leiste nimmt die *Menüs* (`List<Menu>`) und baut die
-`MenuBar` selbst.
-
-**2. Kein `getStyleClass()` außerhalb von `shared`.** Heute drei Stellen, alle in `MainWindow`:
+*b) Kein `getStyleClass()` außerhalb von `shared`.* Heute drei Stellen, alle in `MainWindow`:
 
 ```
 MainWindow:82   root.getStyleClass().add("my-root")
@@ -162,126 +55,142 @@ MainWindow:229  spacer.getStyleClass().add("my-spacer")
 MainWindow:234  spacer2.getStyleClass().add("my-spacer")
 ```
 
-Das ist die Anzeige-Entscheidung außerhalb der Anzeige-Schicht. Wäre als vierte ArchUnit-Regel
-prüfbar (`noClasses().that().resideOutsideOfPackage("app.shared..").should().callMethod(Styleable,
-"getStyleClass")`) — erst aufstellen, wenn die drei Stellen weg sind.
+Anzeige-Entscheidung außerhalb der Anzeige-Schicht. Wäre als fünfte ArchUnit-Regel prüfbar — erst
+aufstellen, wenn die drei Stellen weg sind.
 
-**3. `my-title` ganz raus.** Die Klasse wird zweimal gesetzt (`MainWindowHeaderBar:41`,
+*c) `my-title` entscheiden.* Die Klasse wird zweimal gesetzt (`MainWindowHeaderBar:41`,
 `SuiteHeaderBar:31`), es gibt aber **keine CSS-Regel dafür** — dasselbe Fossil wie
 `custom-text-label` beim InfoLabel. Entweder beide Titel bekommen eine Regel, oder die Klasse fällt
 an beiden Stellen weg. Marker steht im Code.
 
-**Offene Gestaltungsfrage — Kalenderwochen im DatePicker.** Ursache geklärt: `DiaryEditor:174`
-macht als einzige Stelle `new DatePicker(...)` und setzt `setShowWeekNumbers` nicht, greift also
-den JavaFX-Default ab. Die drei anderen Stellen gehen über `SuiteDatePicker` (ohne Kalenderwochen).
-Der Unterschied ist **geerbt, nicht gewollt**. Zu entscheiden: nirgends, überall, oder je nach
-Kontext als Parameter — in jedem Fall sollte auch der Editor über `SuiteDatePicker` gehen.
+Dazu gehört ein zweiter Punkt, der dieselbe Klasse betrifft: `SuiteHeaderBar` bekommt die `font`
+**ausschließlich** für `font.getSize() * 0.3` — ein Padding. Wandert das in eine CSS-Regel
+`.my-title` (in `addDialogStyles`), entfällt der Konstruktor-Parameter **und** die `font` im
+`DialogStyle`. Beide Fragen zusammen entscheiden: gibt es eine `.my-title`-Regel, dann trägt sie
+auch dieses Padding; gibt es keine, muss der Wert anders untergebracht werden.
+→ `SuiteHeaderBar:22`
 
-### Schritt 4 — ✓ erledigt am 29.07.
+**3. `UiComponent` abschaffen.** Alle Bausteine sind inzwischen selbst Nodes und implementieren den
+Kontrakt nur noch mit `getView() { return this; }`. Die einzige Ausnahme ist `NoSessionMap`, das
+Nullobjekt: es hält eine leere `Group`. Wird auch das ein Node (etwa indem es selbst von `Group`
+erbt), kann `ComponentHost` auf `Node...` umstellen und `UiComponent` samt `getView()` entfallen.
 
-**Den Rest von `Skin` sortieren.** Nach 3d (Chrome/Menüs) enthält die Klasse zweierlei, und nur
-eines davon ist ein Skin im Sinne von §2.1:
+**4. `SuiteDatePicker` entscheiden.** Neun Zeilen, trägt keinen Skin-Wert, nur die Festlegung „keine
+Kalenderwochen". Überlebt allein über das Argument „Ort einer suite-weiten Entscheidung", nicht über
+das Fassaden-Argument. Dünnster Fall der Familie, legitim zu streichen.
 
-```
-bleibt in Skin      styleScene · 23 × addXxxStyles · CssBuilder
+Hängt zusammen mit der **Gestaltungsfrage Kalenderwochen**: `DiaryEditor:174` macht als einzige
+Stelle `new DatePicker(...)` und greift damit den JavaFX-Default ab (mit Kalenderwochen), die drei
+anderen gehen über `SuiteDatePicker` (ohne). Der Unterschied ist **geerbt, nicht gewollt.** Zu
+entscheiden: nirgends, überall, oder je nach Kontext als Parameter — in jedem Fall sollte auch der
+Editor denselben Weg gehen wie die anderen.
 
-zieht um            getBackgroundImage · getStartBackgroundImage · getEmptyBackgroundImage
-(nach SkinProperties)  getMapImagePath · getMapInactiveImagePath
-                       getMapInactiveOverlayImagePath · getMapOverlayImagePath · mapImages
-                       mcMetrics · iconFor · getOverlayContentBounds
-```
+**5. `#QuestionLabel` durch eine Modifikator-Klasse ersetzen.** Jetzt, wo `SuiteInfoLabel`
+wiederverwendbar ist, ist die Kennung die falsche Mechanik — IDs sollen in einer Szene eindeutig
+sein, zwei Info-Labels in einem Dialog brächen das. Sauberer: `.my-info-label.question` statt
+`#QuestionLabel`. Betrifft `addSessionInfoLabelStyles` und die zwei `setId(…)`-Aufrufe in den Views.
 
-Acht Bild-/Pfad-Methoden plus drei Werte-Zugänge. Alle liefern Werte — teils abgeleitete
-(`BackgroundImage`, getöntes `Image`, gerechnete Maße), aber Werte. Damit gilt danach ohne Fußnote:
-**`SkinProperties` liefert, `Skin` erzeugt CSS.**
+**6. Doppelte Innenhöhen in `DashboardTile`.** Die Kachel setzt `TOP_HEIGHT = 300` und
+`BOTTOM_HEIGHT = 100` programmatisch auf ihre beiden Hälften — und dasselbe passiert nochmal im CSS
+(`addDashboardStyles`: `.dashboard-tile-top` mit `dashBoardTileTopHeight` = 250,
+`.dashboard-tile-bottom` mit 100). **Zwei Quellen für dieselbe Größe, und die Zahlen widersprechen
+sich** (300 gegen 250). Vermutlich gewinnt das CSS — dann sind die Konstanten tot, so wie es
+`TILE_WIDTH`/`TILE_HEIGHT` schon waren. Nachmessen, dann eine der beiden Quellen streichen.
+Kein Aufräumen, sondern ein latenter Fehler. → `DashboardTile` (TODO in der Klasse)
 
-Offene Detailfrage dabei: `SkinProperties` müsste `Config` und `UiUtils` kennen (für Pfade und das
-Tönen). Beides liegt in `shared`, also unterhalb — erlaubt, aber vorher einmal anschauen, ob die
-Klasse dadurch zu viel wird.
+**7. `overlayContentBounds` — gehört das in den Skin?** Es beschreibt, wo der Inhalt im
+Mini-Map-Bild sitzt. Das sind Karten-/Asset-Daten, kein Styling; es liegt nur deshalb beim Skin,
+weil es hartcodiert ist. Sobald berechenbar (Overlay-Größe + prozentualer Rand), wandert es hoch zur
+Karte. → `SkinProperties.getOverlayContentBounds`
 
-- `docs/Ordnerstruktur.txt` und `docs/Paketabhängigkeiten.dot` einmal neu erzeugen. Bewusst **nicht**
-  zwischendurch — sie veralten bei jedem Move.
-- ~~Die drei Wächter-greps aus Plan §1.3 auf leer bringen.~~ **erledigt 29.07.**
+---
 
-### Schritt 5 — Regelwerk nachziehen
+### A2 · Schritt 5 — Regelwerk und Architekturdokument
 
-- ~~**`StartScreen`-Regel**~~ — **entfallen 29.07.**: der Fall wurde per Code gelöst statt per
-  Regel. `StartScreen` ist in Screen und ScreenView aufgeteilt wie alle anderen.
-- **Dialog-Stufe 2a** fehlt: der parametrisierte Standarddialog (Primitive rein, Primitive oder
-  `null` raus, kein Feature-seitiges Objekt). `TextPromptDialog`, `WhatsAppChatDialog`,
-  `WhatsAppContactDialog` sehen nur deshalb wie Verstöße aus.
-- **Verantwortungsrahmen** Feature / View / Skin (Plan §3.14) eintragen.
-- **Die Schlüssel-Regel** (beschlossen 29.07.) — muss ins Regeldokument:
+**`Design-Regeln.md`** — neu aufzunehmen:
+
+- **Die Ordnung** aus Plan §1: die vier Sprossen, die Regel „nur nach unten", der Discriminator
+  „wird es gezeigt oder verbaut?"
+- **Der Verantwortungsrahmen** Feature / View / Skin (Plan §3.14), in Thorstens Formulierung:
+  *„Stell eine Frage" sagt das Feature. „Zeige auf dem Fragepanel diesen Text" passiert in
+  `shared.ui`.*
+- **Die Schlüssel-Regel** (Plan §3.15):
 
   > **Ein Baustein holt sich beim Skin, was für jede Verwendung gleich ist. Was von der Verwendung
   > abhängt, bekommt er übergeben.**
   >
   > Der Test steht in der Signatur des Skin-Zugangs: **braucht er ein Argument vom Aufrufer, dann
-  > löst der Aufrufer auf und reicht das Ergebnis weiter.** Ein Argument *ist* der Kontext — wer
-  > eines liefern muss, weiß etwas, das der Baustein nicht wissen soll.
+  > löst der Aufrufer auf und reicht das Ergebnis weiter.** Ein Argument *ist* der Kontext.
 
   ```java
-  bigComponentCornerRadius()               // kein Argument      → Baustein holt selbst
+  bigComponentStyle()                      // kein Argument      → Baustein holt selbst
   iconFor(rolle)                           // Rolle, kein Kontext → Baustein holt selbst
   sessionBounds(mapName, kategorie, teil)  // braucht Schlüssel   → Aufrufer löst auf
   ```
 
-  **Was die Regel nicht sagt.** Thorstens Entwurf enthielt „Komponenten bleiben feature-frei" und
-  stolperte sofort über den eigenen Einwand: *„natürlich ist eine MovieCard nicht featurefrei"*.
-  Zu Recht — das sind zwei Fragen, und nur die erste regelt diese Regel:
+  **Was die Regel nicht sagt:** ob ein Baustein an ein Feature gebunden ist. Das ist eine
+  Namensfrage, kein Konstruktionsprinzip. `MovieCard` darf sich `moviePosterWidth` holen (kein
+  Schlüssel) und bekommt den Film übergeben (Kontext) — und bleibt trotzdem eine Film-Komponente.
 
-  | Frage | geregelt durch |
-  |---|---|
-  | Wer löst den Kontext auf? | **die Schlüssel-Regel** — gilt ausnahmslos für *alle* Bausteine, auch für `MovieCard` und `ShapeMapPane` |
-  | Ist der Baustein an ein Feature gebunden? | eine **Namensfrage**, kein Konstruktionsprinzip |
+  **Nebenregel, schon Praxis:** was ein Baustein sich holt, kommt bevorzugt als zweckgeschnittenes
+  Record (`DialogStyle`, `McMetrics`, `BigComponentStyle`), nicht als Feld-Getter — damit keine
+  Property-Namen das skin-Paket verlassen.
+- **Bausteine erben, sie verhüllen nicht** (Plan §3.16) — mit der Ausnahme, die `SuiteBackground`
+  erzwingt: ist der javafx-Typ `final`, bleibt nur eine Fabrik.
+- **Bausteine heißen nach dem, was sie sind** (Plan §3.17). Prüfsatz: *was, wenn ein zweites Deck
+  derselben Bauart dazukäme?*
+- **Keine Streams, außer sie sind unbedingt nötig.** Bisher nirgends geschrieben, aber zweimal im
+  Review beanstandet (`DashboardScreenView`, `ShapeMapPane`).
+- **Dialog-Stufe 2a** fehlt: der parametrisierte Standarddialog (Primitive rein, Primitive oder
+  `null` raus, kein Feature-seitiges Objekt). `TextPromptDialog`, `WhatsAppChatDialog`,
+  `WhatsAppContactDialog` sehen nur deshalb wie Verstöße aus.
+- **Der Karten-Absatz** — das Konstrukt versteht man beim Draufschauen nicht:
 
-  `MovieCard` darf sich `moviePosterWidth` holen (kein Schlüssel) und bekommt den Film übergeben
-  (Kontext). Sie bleibt trotzdem eine Film-Komponente. Kein Widerspruch.
+  ```
+  ShapeLayer        Nachschlagetabelle: json-type → zIndex, interaktiv?, CSS-Layer-Klasse
+  MapNodeBuilder    Fabrik:             Geometrie → JavaFX-Node
+  SessionMap        das gemeinsame Vokabular, spricht durchgehend Ids
+  ShapeMapPane      die eine Karte, arbeitet ohnehin mit Ids
+  ImageMapPane      die andere Karte, arbeitet mit Geometrien und übersetzt selbst
+  NoSessionMap      die Karte der MC-Session, die keine hat (Nullobjekt)
+  ```
 
-  **Nebenregel, die schon Praxis ist:** was ein Baustein sich holt, kommt bevorzugt als
-  zweckgeschnittenes Record (`DialogStyle`, `MovieStyle`, `DashboardTileStyle`), nicht als
-  Feld-Getter — damit keine Property-Namen das skin-Paket verlassen.
+  Der Grund für das Interface: die beiden Panes sind sehr verschieden, die View soll beide bedienen,
+  ohne zu wissen welche.
+- **Wie mit Hintergrundbildern umgegangen wird** → `ComponentHost:33`
+- **Der Skin-Vertrag** neu gefasst — der bestehende Abschnitt ist als „vorläufig" markiert.
+- **Die vier Wächter als bewachte Zusagen** — sie sind keine Vorsätze mehr, sie brechen den Build.
 
-- **Keine Streams, außer sie sind unbedingt nötig.** Steht bisher nirgends geschrieben, wurde aber
-  schon zweimal im Review beanstandet (`DashboardScreenView`, `ShapeMapPane`). Gehört ins
-  Regeldokument.
-- **Skin-Vertrag** neu fassen — der bestehende Abschnitt ist als „vorläufig" markiert.
-- Die drei Wächter als bewachte Zusagen festschreiben.
+**`Architektur-Dokumentation.md`**, Abschnitt **„UI-Architektur: Skin-System"** ist vollständig
+überholt. Er beschreibt Factory-Methoden, das Fallback-System und die `SkinService`-API als „Stand
+heute korrekt" und trägt bereits den Vermerk *„Refactoring ausstehend"*. Neu zu fassen:
 
-### Schritt 6 — die Wächter in den Maven-Build
+- **Konzept** — der Skin baut nichts mehr, er liefert Werte und erzeugt das CSS
+- **Factory-Methoden** — der ganze Abschnitt entfällt
+- **Fallback-System** — bleibt inhaltlich, wandert aber hinter `sessionBounds(…)`
+- **SkinService** — nur noch Registry; `setOwnerWindow`/`getOwnerWindow` liegen in `UiUtils`
+- **Paket-Struktur** — `shared.ui` / `shared.ui.components` / `.map`, die vier Sprossen, die Wächter
+- **learn** ist gesondert beschrieben und muss nachgezogen werden: die Sessions gehen über einen
+  Presenter statt direkt über eine View. Das ist die eine begründete Abweichung im Screen-Aufbau.
 
-**Angelegt am 29.07.** — `src/test/java/app/ArchitekturRegelnTest.java`, ArchUnit + JUnit 5 +
-Surefire. Läuft bewusst **nicht** beim Speichern in Eclipse (m2e ruft kein Surefire), sondern bei
-Run As → Maven build oder Run As → JUnit Test.
+**Zuletzt:** `docs/Ordnerstruktur.txt` und `docs/Paketabhängigkeiten.dot` neu erzeugen. Bewusst
+nicht zwischendurch — sie veralten bei jedem Move.
 
-Gewählt wurde ArchUnit, weil es als einziges alle Regelsorten in einer Sprache abdeckt und
-**Bytecode** liest statt Textzeilen — voll qualifizierte Nutzung ohne `import` rutscht also nicht
-durch. Checkstyle `ImportControl` schied aus, weil es keine Zyklen prüfen kann; javaparser war keine
-eigene Option, weil `scripts/PackageDependencyGraph.java` bereits einen funktionierenden
-Import-Scanner samt SCC-Berechnung enthält.
+---
 
-**Scharf ist bisher nur Wächter 2** (kein Feature kennt den Skin). Die übrigen stehen auskommentiert
-in derselben Datei und werden freigeschaltet, sobald sie halten:
+### A3 · Sachfehler — warten nicht auf den Umbau
 
-| Regel | frei nach |
+| Fehler | Fundstelle |
 |---|---|
-| Wächter 1 — `shared.skin` kennt `shared.ui` nicht | Schritt 3f |
-| Zyklenfreiheit | Schritt 3f (siehe unten) |
-| Wächter 3 — Bausteine nur aus `shared.ui` heraus | Schritt 4 |
-
-**Ein Zyklus existiert heute:** `app.shared.skin ↔ app.shared.ui.components`. Kein eigener Befund,
-sondern Wächter 1 und 3 von der anderen Seite: der Skin importiert `MultipleChoicePane`/`SuiteImage`/
-`SuiteInfoLabel`, die Bausteine holen sich den `SkinService`. Verschwindet mit 3f.
-
-Offen: die Vier-Sprossen-Ordnung aus Plan §1.1 als `layeredArchitecture()` mit aufnehmen.
+| **Freies Spiel:** falsch geklickte Formen verschwinden bei „schwer" nicht, nur die richtigen | `RegionSessionView:16` |
+| **EM 2021 — „alle Länder grün, welches war falsch?"** Das Zurücksetzen vor `markLastClickAsIncorrect()` löscht die bisherigen Markierungen mit | `ImageMapPane.markIncorrect` |
+| **`MovieViewerScreen.refresh()` baut nicht vollständig neu** — setzt nur den Hintergrund. Ein Skin, der Positionen ändert, greift so nicht. Offen: nur-Hintergrund beibehalten oder voller Rebuild (verwürfe die laufende Suche) | `MovieViewerScreen.refresh` |
+| Fragefeld der Region-Session: „Hier wäre allerdings CENTER schon angesagt" | `RegionSessionView:69` |
 
 ---
 
 ## B · Klein, jederzeit machbar
 
-- **Titel-Padding ins CSS.** `SuiteHeaderBar` bekommt die `font` ausschließlich für
-  `font.getSize() * 0.3`. Gehört nach `addDialogStyles`, Selektor `.my-title`. Danach entfällt der
-  Konstruktor-Parameter **und** die `font` im `DialogStyle`. → `SuiteHeaderBar:22`
 - **FailFast-Startup-Check** für properties-Schlüssel, die kein Feld beanspruchen (~15 Zeilen).
   Findet `borderBackButton` in `skin_basecolor.properties`, das seit unbekannt wann ins Leere läuft
   — die einzige systematische FailFast-Verletzung im Skin.
@@ -293,14 +202,6 @@ Offen: die Vier-Sprossen-Ordnung aus Plan §1.1 als `layeredArchitecture()` mit 
 - **`getContentSize`:** der Loader kennt keinen `Dimension2D`-Zweig, ein `contentSize=…` in einer
   properties-Datei würde still ignoriert. Steht als Kommentar in `SkinProperties`; Parser erweitern,
   falls je gebraucht.
-- **Doppelte Innenhöhen in `DashboardTile`.** Die Kachel setzt `TOP_HEIGHT = 300` und
-  `BOTTOM_HEIGHT = 100` programmatisch auf ihre beiden Hälften — und dasselbe passiert nochmal im
-  CSS (`addDashboardStyles`: `.dashboard-tile-top` mit `dashBoardTileTopHeight` = 250,
-  `.dashboard-tile-bottom` mit 100). Zwei Quellen für dieselbe Größe, und die Zahlen widersprechen
-  sich (300 vs. 250). Vermutlich gewinnt das CSS — dann sind die Konstanten tot, so wie es
-  `TILE_WIDTH`/`TILE_HEIGHT` schon waren (die sind beim Umzug rausgeflogen, weil der Skin sie
-  unmittelbar nach dem Konstruktor überschrieben hat). Nachmessen, dann eine der beiden Quellen
-  streichen. → `DashboardTile` (TODO in der Klasse)
 
 ---
 
@@ -389,6 +290,11 @@ Aufgefallen, aber nichts beschlossen — hier steht bewusst kein Auftrag.
 - **Menu-Styles:** nicht überprüft, ob alle nötig sind. → `Skin:816`
 - **Preload ohne Fälligkeitsfilter:** `AnkiDeckService` wärmt *alle* Anki-Decks mit Karte vor, der
   Kommentar daneben spricht von „Decks die heute fällig sind". Ausdrücklich als unwichtig eingestuft.
+- **Der MovieScreen wird komplett anders aufgebaut als die übrigen.** → `SuiteSuggestionTextField:30`
+- **Alc- und Fitbit-StatisticScreens sind voll mit UI-Kram.** → `Skin` (Klassen-Javadoc)
+- **Die Vier-Sprossen-Ordnung** aus Plan §1.1 als `layeredArchitecture()` in den ArchUnit-Test
+  aufnehmen. Heute prüfen die vier Regeln die drei Wächter und die Zyklenfreiheit, nicht die
+  Reihenfolge der Sprossen.
 
 ---
 

@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 import app.shared.model.ScreenView;
 import app.shared.model.ShapeGeometry;
 import app.shared.model.ShapeMapState;
-import app.shared.skin.SessionComponent;
+import app.shared.skin.LearnComponent;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import app.shared.ui.components.SuiteInfoLabel;
@@ -31,7 +31,7 @@ import app.shared.ui.components.map.ShapeMapPane;
  * Karte gerade läuft, die Bausteine nicht. Beim Skin holen sie sich nur, was ohne Schlüssel
  * auskommt.</p>
  */
-public class RegionSessionView {
+public class RegionLearnView {
 
 	private final String mapName;
 	private final String kategorie;
@@ -45,7 +45,7 @@ public class RegionSessionView {
 	private SuiteInfoLabel questionArea;
 	private SuiteTextField inputField;
 
-	public RegionSessionView(String mapName, String kategorie, List<ShapeGeometry> geometrien,
+	public RegionLearnView(String mapName, String kategorie, List<ShapeGeometry> geometrien,
 			boolean mitFragefeld,
 			Consumer<String> onMapElementClicked,
 			Consumer<String> onTextTyped) {
@@ -62,18 +62,18 @@ public class RegionSessionView {
 		Skin skin = SkinService.get();
 		host.setWallpaper(skin.wallpaperPath(mapName, kategorie));
 
-		karte = new ShapeMapPane(geometrien, skin.sessionBounds(mapName, kategorie, SessionComponent.MAP));
+		karte = new ShapeMapPane(geometrien, skin.learnComponentBounds(mapName, kategorie, LearnComponent.MAP));
 		karte.setClickListener(onMapElementClicked);
 
 		// !Sofort: Hier wäre allerdings CENTER schon angesagt
 		if (mitFragefeld) {
 			questionArea = new SuiteInfoLabel("",
-					skin.sessionBounds(mapName, kategorie, Skin.TextLabelType.QUESTION));
+					skin.learnTextLabelBounds(mapName, kategorie, Skin.TextLabelType.QUESTION));
 			questionArea.setId(Skin.TextLabelType.QUESTION + "Label");
 			inputField = null;
 			host.setComponents(karte, questionArea);
 		} else {
-			inputField = new SuiteTextField(skin.sessionBounds(mapName, kategorie, SessionComponent.TEXT_INPUT));
+			inputField = new SuiteTextField(skin.learnComponentBounds(mapName, kategorie, LearnComponent.TEXT_INPUT));
 			inputField.onType(onTextTyped);
 			questionArea = null;
 			host.setComponents(karte, inputField);
