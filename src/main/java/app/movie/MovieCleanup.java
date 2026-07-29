@@ -1,7 +1,6 @@
 package app.movie;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 import app.movie.model.CrewPendingEntry;
@@ -151,11 +150,10 @@ public class MovieCleanup {
         String header = "Film: " + entry.title + " (" + entry.germanTitle + ")\n" +
                         "Bewertet am: " + entry.firstRatedAt + "\n" +
                         "Bewertung: " + entry.rating;
-        Optional<String> result = TextPromptDialog.show("Kommentar eingeben", header, null);
-        if (result.isEmpty())
+        String result = TextPromptDialog.show("Kommentar eingeben", header, null);
+        if (result == null || result.isEmpty())
             return ".";
-        String text = result.get();
-        return text.isBlank() ? "." : text.trim();
+        return result.trim();
     }
 
     /**

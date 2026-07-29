@@ -10,15 +10,15 @@ import app.shared.ui.components.map.LearnMap;
 import app.shared.ui.components.map.ShapeMapPane;
 
 /** Shape-Karte, Eingabefeld, leerer Hintergrund. Aktuell gibt es nur das Deutschlanddeck dafür, aber wer weiß...*/
-public class ShapeMapSessionView extends AnkiLearnView {
+public class ShapeMapLearnView extends AnkiLearnView {
 
 	private final List<ShapeGeometry> geometrien;
 
-	public ShapeMapSessionView(String deckId, String mapName, String kategorie,
+	public ShapeMapLearnView(String deckId, String mapName, String kategorie,
 			List<ShapeGeometry> geometrien, LearnCallbacks callbacks) {
 		super(deckId, mapName, kategorie, callbacks);
 		this.geometrien = geometrien;
-		rebuild(); // muss die letzte Zeile sein, siehe AnkiSessionView
+		rebuild(); // muss die letzte Zeile sein, siehe AnkiLearnView
 	}
 
 	@Override

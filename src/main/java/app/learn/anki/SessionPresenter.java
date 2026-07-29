@@ -11,9 +11,9 @@ import app.learn.model.SessionProgressCounter;
 import app.shared.model.ScreenView;
 import app.shared.model.LearnCallbacks;
 import app.shared.ui.AnkiLearnView;
-import app.shared.ui.ShapeMapSessionView;
-import app.shared.ui.ImageMapSessionView;
-import app.shared.ui.McSessionView;
+import app.shared.ui.ShapeMapLearnView;
+import app.shared.ui.ImageMapLearnView;
+import app.shared.ui.McLearnView;
 
 /**
  * Vermittelt zwischen der Anzeige (shared.ui) und dem SessionProgress (Ablauf): reicht Eingaben des
@@ -54,10 +54,10 @@ public class SessionPresenter {
                 this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack);
 
         return switch(type) {
-            case GERMANY_CARDS -> new ShapeMapSessionView(id, mapName, kategorie, map.getShapeGeometries(), callbacks);
-            case MC_CARDS      -> new McSessionView(id, mapName, kategorie, callbacks);
+            case GERMANY_CARDS -> new ShapeMapLearnView(id, mapName, kategorie, map.getShapeGeometries(), callbacks);
+            case MC_CARDS      -> new McLearnView(id, mapName, kategorie, callbacks);
             case WORLD_CARDS,
-                 HANNOVER_CARDS-> new ImageMapSessionView(id, mapName, kategorie, map::geometryFor, callbacks);
+                 HANNOVER_CARDS-> new ImageMapLearnView(id, mapName, kategorie, map::geometryFor, callbacks);
             default -> null; // oder throw new IllegalArgumentException?
         };
     }

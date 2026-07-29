@@ -13,15 +13,15 @@ import app.shared.ui.components.map.ImageMapPane;
 import app.shared.ui.components.map.LearnMap;
 
 /** Welt und Hannover: Bild-Karte, Eingabefeld, leerer Hintergrund. */
-public class ImageMapSessionView extends AnkiLearnView {
+public class ImageMapLearnView extends AnkiLearnView {
 
 	private final Function<Set<String>, List<ShapeGeometry>> geometrieFuer;
 
-	public ImageMapSessionView(String deckId, String mapName, String kategorie,
+	public ImageMapLearnView(String deckId, String mapName, String kategorie,
 			Function<Set<String>, List<ShapeGeometry>> geometrieFuer, LearnCallbacks callbacks) {
 		super(deckId, mapName, kategorie, callbacks);
 		this.geometrieFuer = geometrieFuer;
-		rebuild(); // muss die letzte Zeile sein, siehe AnkiSessionView
+		rebuild(); // muss die letzte Zeile sein, siehe AnkiLearnView
 	}
 
 	@Override

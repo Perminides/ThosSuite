@@ -47,7 +47,7 @@ public class SuiteInfoLabel extends StackPane implements UiComponent{
     /**
      * Ohne feste Lage — für Aufrufer, die die Komponente in ein Layout hängen.
      *
-     * <p>Das Aussehen kommt über {@code .my-info-label}. Die AnkiSessionView setzt zusätzlich eine Kennung
+     * <p>Das Aussehen kommt über {@code .my-info-label}. Die AnkiLearnView setzt zusätzlich eine Kennung
      * (etwa {@code #QuestionLabel}), die nur den Hintergrund abweichend färbt — alles andere steht
      * schon in der Klasse. Ohne diese Kennung sieht das Label also nicht falsch aus, nur neutral.</p>
      */

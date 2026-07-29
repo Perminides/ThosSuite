@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 import app.movie.model.EpisodeForApi;
@@ -722,11 +721,10 @@ public class SeriesImporter {
 
     private String askForComment(String dialogTitle, String description, String existingComment) {
         String prefill = (existingComment != null && !".".equals(existingComment)) ? existingComment : null;
-        Optional<String> result = TextPromptDialog.show(dialogTitle, description, prefill);
-        if (result.isEmpty())
+        String result = TextPromptDialog.show(dialogTitle, description, prefill);
+        if (result == null || result.isEmpty())
             return ".";
-        String text = result.get();
-        return text.isBlank() ? "." : text.trim();
+        return result.trim();
     }
 
     private boolean askWhitelistOrBlacklist(String personName, String job,

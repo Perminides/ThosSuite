@@ -1,6 +1,6 @@
 # ThosSuite — Architektur (allgemein)
 
-**Stand:** 06.07.2026
+**Stand:** 29.07.2026 — Abschnitt „UI-Architektur“ nach dem Skin-Refactoring neu gefasst
 
 **Charakter:** Das *immer mitzugebende* Fundament — was bei jeder Aufgabe gilt, egal welches
 Feature: Überblick, technische Basis, Paketstruktur, Orchestrierungs-Mechanik, Fundament.
@@ -51,22 +51,36 @@ Feature-Details-Dokument (Lern-Kern).
 ### Paket-Struktur
 
 Alles liegt unter dem Wurzelpaket `app`. Darunter ist die Suite in **Sorten** von Paketen
-gegliedert (Details und Begründung im Regel-Dokument): ein **Lern-Kern** (`app.learn`), viele
-**Peripherie-Features** (`app.alc`, `app.diary`, `app.fitbit`, `app.mattress`, `app.messaging`,
-`app.movie`, `app.weekday`), ein **Fundament-Dach** (`app.shared` inkl. `app.shared.model` und
-`app.shared.skin`) und die **Orchestrierung** (`app.controller`). Daneben liegt `scripts` als
-eigenes Wurzelpaket — abtrennbare Einmal-Klassen, die nicht zur Suite gehören.
+gegliedert (Details und Begründung im Regel-Dokument): die **Features** (`app.alc`, `app.diary`,
+`app.fitbit`, `app.learn`, `app.mattress`, `app.messaging`, `app.movie`, `app.weekday`), das
+**Fundament** (`app.shared`) und die **Orchestrierung** (`app.controller`). Daneben liegt `scripts`
+als eigenes Wurzelpaket — abtrennbare Einmal-Klassen, die nicht zur Suite gehören.
 
-Der Abhängigkeitsgraph der Pakete liegt separat als `thossuite_packages.dot` (generiert von
-`PackageDependencyGraph`); bei Bedarf neu erzeugen statt von Hand pflegen.
+**Das Fundament hat vier Sprossen**, und die Abhängigkeit läuft nur nach unten:
+
+```
+oben    shared.ui       Oberflächen (Wurzel) und Bausteine (.components, .components.map)
+        shared.skin     SkinProperties (Werte) · Skin (CSS) · die Skins · SkinService · Bildcache
+        shared.model    Records, Enums, die drei Kontrakte
+unten   shared          Config · DB · Log · AppClock · UiUtils
+```
+
+`controller` darf auf jede Sprosse; **ein Feature greift nie ins Skin-Paket**. Diese Zusagen sind
+keine Absicht, sondern geprüft — siehe „Architekturregeln im Build".
+
+Der Abhängigkeitsgraph der Pakete liegt separat als `docs/Paketabhängigkeiten.dot` (generiert von
+`scripts.PackageDependencyGraph`); bei Bedarf neu erzeugen statt von Hand pflegen.
 
 ### Framework & Tools
 - **JavaFX 25**, **Java 25 LTS**
 - **Null-Layout:** keine LayoutManager, feste Positionen (Desktop-App mit fester Auflösung;
-  präzise Kontrolle wichtiger als Flexibilität). Positionen/Größen setzt der Skin.
+  präzise Kontrolle wichtiger als Flexibilität). Die Rechtecke stehen im Skin, gesetzt werden sie
+  von der Oberfläche in `shared.ui` — der Skin fasst keine Komponente an.
 - **Jackson** für JSON-Parsing (GeoJSON, TMDB, Fitbit)
 - **SQLite** für strukturierte Daten. Die Suite besitzt zwei eigene DBs (Suite-DB, Film-DB);
   beim Import wird zusätzlich lesend auf die fremden DBs von Signal und WhatsApp zugegriffen.
+- **ArchUnit + JUnit 5 + Surefire** — ausschließlich für die Architekturregeln, siehe unten. Es gibt
+  keine Unit-Tests und keine Testbarkeit als Designziel.
 
 ### Exception-Handling
 RuntimeExceptions werden bis `ThosSuiteApp` durchgereicht und dort zentral über
@@ -244,6 +258,19 @@ Methoden sind Pflicht, weil der Controller sie immer braucht: `getSwitchStrategy
 Reagiert einer auf `sort()` nicht, ist das **kein** Fehler, sondern beabsichtigte
 Nicht-Zuständigkeit (kein FailFast). Vollständige Signaturen im Code.
 
+Jeder Screen hält seine Anzeige als `ScreenView` und reicht sie über `getView()` weiter — **keine
+Klasse implementiert beides.** Die Kopplung sieht überall gleich aus:
+
+```java
+private final XView view = new XView();
+public ScreenView getView() { return view; }
+public void refresh()       { view.rebuild(); }
+```
+
+Zwei begründete Abweichungen: `DashboardScreen` sammelt in `refresh()` erst seine Daten, weil seine
+View sie braucht; und die beiden Lern-Sessions halten statt einer View einen **Presenter**, der
+`getView()` und `refresh()` weiterreicht — dort treibt ein Ablauf die Anzeige, nicht umgekehrt.
+
 #### Wechsel zwischen Screens
 Jeder Screen meldet über `getSwitchStrategy()`, wie mit ihm beim Verlassen zu verfahren ist:
 
@@ -268,52 +295,130 @@ bleibt einseitig: Die Session ruft einen Callback, statt den Controller zu kenne
 
 ## 🧱 Fundament (`shared`)
 
-### UI-Architektur: Skin-System
-
-**Refactoring ausstehend.** Das Grundkonzept (ein Skin = ein Design, dummer Skin ohne
-Domänenwissen, Einbahn nach unten) bleibt stabil. Die hier beschriebene *Umsetzung* —
-Factory-Methoden, Reflection-Property-Laden, Fallback-System, `SkinService`-API — wird beim
-Skin-Refactoring (Auflösung der `Skin`-Gottklasse, siehe Regel-Dokument) neu gefasst und ist
-dann zu prüfen. Stand heute korrekt.
+### UI-Architektur: Anzeige-Schicht und Skin
 
 #### Konzept
-Ein Skin = ein komplettes visuelles Design. Der Skin (`app.shared.skin`) trifft alle
-Styling-Entscheidungen (Farben, Fonts, Borders) und setzt Positionen/Größen auf die
-UI-Komponenten. Die Komponenten kennen **keine** konkreten Farb-/Layout-Werte; der Skin setzt
-sie via CSS bzw. von außen.
 
-**Schichtlage:** `shared.skin` hängt nur nach unten an `shared` und `shared.model`. Features und
-Lern-Kern hängen ihrerseits am Skin (abwärts). Der Skin kennt **keine** Domänentypen — die Domäne
-reicht ihm dumme DTOs/Keys hinab. (Der Skin-Vertrag im Detail steht im Regel-Dokument.)
+Ein Skin = ein komplettes visuelles Design. **Der Skin baut nichts.** Er hält die Werte, die CSS
+nicht ausdrücken kann (Rechtecke, Fonts, Border, Pfade), und erzeugt daraus das Stylesheet. Gebaut
+wird eine Sprosse darüber, in `shared.ui`.
 
-#### Factory-Methoden
-Der Skin baut die atomaren UI-Bausteine, u. a. Eingabefelder, Antwort-Buttons,
-`MultipleChoicePane`, `DashboardTile`, DatePicker, gestylte Alerts/Dialoge. Für die Karten gilt:
-der Skin liefert Layout/Wrapper, die fachlichen Panes halten ihren Zustand selbst.
+Das ist die Umkehrung des früheren Zustands, in dem der Skin die Komponenten selbst herstellte und
+positionierte. Der Grund für die Umkehrung: so lässt sich als Regel durchsetzen, dass der Skin die
+UI **nicht kennt** — und diese Regel ist per Build prüfbar, die alte war es nicht.
+
+#### Die zwei Klassen im Skin-Paket
+
+```
+SkinProperties     ~140 Felder · lädt sie aus der .properties-Datei · gibt sie über eine
+                   bewusst geschnittene Fläche heraus
+Skin               extends SkinProperties · erzeugt das CSS
+                   genau eine öffentliche Methode: styleScene(Scene)
+```
+
+Dazu die sieben konkreten Skins (`DarkMode`, `FlatWebSkin`, `BaseColorSkin` und die vier
+Farbvarianten) — sie tragen nichts als einen Anzeigenamen und den Namen ihrer properties-Datei.
+Plus `SkinService` als Registry und `SkinImageCache` für die großen Kartenbilder.
+
+#### Was der Skin herausgibt
+
+Keine Feld-Getter, keine Property-Namen — **zweckgeschnittene Records und Werte**:
+
+```java
+DialogStyle · DiaryStyle · MovieStyle · DashboardTileStyle · McMetrics · BigComponentStyle
+MapImages   · Dimension2D getContentSize()
+Rectangle2D learnComponentBounds(mapName, kategorie, teil)
+Rectangle2D learnTextLabelBounds(mapName, kategorie, typ)
+Path        wallpaperPath(mapName, kategorie) · emptyWallpaperPath() · startScreenWallpaperPath()
+Image       iconFor(rolle)
+```
+
+Wer welchen Wert **holt** und wer ihn **übergeben bekommt**, regelt die Schlüssel-Regel im
+Regel-Dokument: braucht der Zugang ein Argument vom Aufrufer, löst der Aufrufer auf.
 
 #### CSS-Generierung
+
 ```java
 scene.getStylesheets().add("data:text/css," + encodedCss);
 ```
 
+`styleScene` baut den Stylesheet-String aus 23 `addXxxStyles`-Methoden über einen `CssBuilder` und
+hängt ihn als Data-URL an die Scene. Bei einem Skinwechsel wird die Scene neu gestylt und alle
+Oberflächen bauen sich neu auf (`Screen.refresh()` → `view.rebuild()`).
+
 #### Reflection-basiertes Property-Laden
-Skin-Properties werden ohne Code-Änderung aus `.properties`-Dateien geladen. **Subskin-Vererbung:**
-ein abgeleiteter Skin lädt erst die Eltern-Config, dann die eigene.
+
+Skin-Properties werden ohne Code-Änderung aus `.properties`-Dateien geladen: `loadAllConfigs` läuft
+die deklarierten Felder ab und sucht zu jedem Feldnamen einen gleichlautenden Schlüssel.
+**Subskin-Vererbung:** ein abgeleiteter Skin lädt erst die Eltern-Config, dann die eigene; das
+Spätere gewinnt.
+
+Achtung: der Loader kennt nur `Color`, `Font`, `BorderParams`, `Integer`, `Rectangle2D` und
+`String`. Ein Schlüssel für einen anderen Feldtyp würde **still ignoriert**.
 
 #### Fallback-System für Layouts
-Region-Decks sollen ein gemeinsames Layout teilen:
+
+Decks sollen sich ein Layout teilen können. Die Staffelung steht genau einmal, in
+`SkinProperties.staffelung(…)`:
+
 ```
-1. spezifisches Layout suchen:  "spainSessionQuestionPanel"
-2. nicht gefunden → Fallback:   "geo_deckSessionQuestionPanel"
-3. alle Region-Decks teilen den Fallback
+1. spezifisch:   esSessionQuestionPanel        (mapName des Decks)
+2. Kategorie:    regionSessionQuestionPanel    (anki | region)
+3. sonst:        null
 ```
 
+Dieselbe Staffelung gilt für die Hintergrundbilder, dort mit einer dritten Stufe:
+`<mapName>WallpaperName` → `<kategorie>WallpaperName` → `emptyWallpaperName`.
+
+Die Property-Namen (`…SessionQuestionPanel`) bleiben unverändert und verlassen das Skin-Paket nie —
+nach außen heißt der Bestandteil `LearnComponent.QUESTION`.
+
 #### SkinService — zentrale Registry
-`getAllSkins()` (Liste aller Skins), `get()` (aktiver Skin), `set(Skin)` (aktivieren),
-`refresh()` (neu laden, für Live-Bearbeitung), `setOwnerWindow(Stage)` (vor Dialogen nötig).
+
+`getAllSkins()` (Liste aller Skins), `get()` (aktiver Skin), `set(Skin)` (aktivieren), `refresh()`
+(neu laden, für Live-Bearbeitung). Das Owner-Fenster für Dialoge liegt **nicht** hier, sondern in
+`UiUtils`.
+
+#### Die Anzeige-Schicht `shared.ui`
+
+```
+shared.ui                    Oberflächen — Screens, Dialoge, Lern-Ansichten, ComponentHost
+shared.ui.components         Bausteine — SuiteTextField, SuiteDialog, DiaryCard, MultipleChoicePane …
+shared.ui.components.map     die zwei Karten samt Innenleben
+```
+
+Ob etwas in die Wurzel oder zu den Bausteinen gehört, entscheidet die Frage *wird es eingebaut oder
+ist es das Fertige* — Details im Regel-Dokument.
+
+**Bausteine erben von ihrem JavaFX-Typ**, sie verhüllen ihn nicht: ein `SuiteTextField` *ist* ein
+`TextField`. Wo JavaFX das verbietet (`Background` und `BackgroundImage` sind `final`), steht
+stattdessen eine Fabrik: `SuiteBackground.of(pfad)`.
+
+#### Architekturregeln im Build
+
+`src/test/java/app/ArchitekturRegelnTest.java` (ArchUnit) prüft vier Zusagen und bricht den Build,
+wenn eine fällt:
+
+```
+1  Der Skin kennt die UI nicht
+2  Kein Feature kennt den Skin
+3  Nur shared.ui kennt die Bausteine
+4  Der Paketgraph ist zyklenfrei
+```
+
+Geprüft wird **Bytecode**, nicht Quelltext — eine voll qualifizierte Nutzung ohne `import` rutscht
+also nicht durch. Der Test läuft bei `mvn test`/`verify`, **nicht** beim Speichern in Eclipse (m2e
+ruft kein Surefire).
+
+Warum überhaupt Tests, wo die Suite sonst keine hat: ein Strukturverstoß fällt im täglichen Gebrauch
+*nicht* auf. Genau deshalb trägt hier das übliche Argument gegen Tests nicht.
+
+**Achtung bei ArchUnit-Versionen:** vor 1.4.1 kennt der Bytecode-Leser Klassendateiversion 69
+(Java 25) nicht und überspringt sie **still**. Die Regeln melden dann „failed to check any classes"
+statt eines Verstoßes.
 
 ## 🧰 Externes
 Einmalige, abtrennbare Standalone-Klassen im Paket `scripts` (Migrationen, Fixes, Prototypen,
 manuelle Tests) — sie laufen einmal und gehören nicht zum Produktivcode: nicht mitgebaut, nicht
 im Build-Ergebnis. Das konkrete Inventar steht nicht hier, sondern ergibt sich aus dem
-`scripts`-Paket bzw. `thossuite_packages.dot`.
+`scripts`-Paket bzw. `docs/Paketabhängigkeiten.dot`.

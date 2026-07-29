@@ -33,7 +33,7 @@ import app.learn.region.RegionSession;
 import app.learn.region.model.Mode;
 import app.learn.region.model.RegionLearnSessionInfo;
 import app.learn.region.model.SessionSpec;
-import app.mattress.TurnDialog;
+import app.mattress.MattressTurnDialog;
 import app.messaging.signal.SignalIncrementalImport;
 import app.messaging.whatsapp.WhatsAppIncrementalImport;
 import app.movie.MovieCleanup;
@@ -172,7 +172,7 @@ public class Controller{
      
         new WeekdayDialog().showForDaily();
      
-        new TurnDialog().showIfDue();
+        new MattressTurnDialog().showIfDue();
      
         new MovieCleanup().run();
      
@@ -359,7 +359,7 @@ public class Controller{
     }
     
     public void mattressSelected() {
-    	new TurnDialog().show();
+    	new MattressTurnDialog().show();
     }
     
     public void exportSelected() {
