@@ -5,10 +5,12 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 
@@ -39,8 +41,15 @@ public class ImageBatchProcessor {
         if (!Files.exists(sourceDir)) return;
         Dimension size = new Dimension(width, height);
 
-        try (Stream<Path> stream = Files.list(sourceDir)) {
-            for (Path imgPath : stream.toList()) {
+        try {
+            // Erst den Ordner einlesen, dann verarbeiten: die Schleife verschiebt die Bilder weg.
+            List<Path> dateien = new ArrayList<>();
+            try (DirectoryStream<Path> inhalt = Files.newDirectoryStream(sourceDir)) {
+                for (Path eintrag : inhalt)
+                    dateien.add(eintrag);
+            }
+
+            for (Path imgPath : dateien) {
                 String name = imgPath.getFileName().toString().toLowerCase();
                 if (!(name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png")))
                     continue;

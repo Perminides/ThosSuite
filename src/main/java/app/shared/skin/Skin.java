@@ -61,7 +61,7 @@ import javafx.scene.paint.Color;
  * 
  * <h3>6. Spezielle Fälle</h3>
  * <ul>
- *   <li><b>CustomTextLabel:</b> Wird über IDs gestylt (#QuestionLabel, #ProgressLabel, #HistoryLabel),
+ *   <li><b>SuiteInfoLabel:</b> Wird über .my-info-label plus einen Modifikator gestylt (.question, .progress, .history),
  *       keine generische Basis-Klasse</li>
  *   <li><b>ListView:</b> Aktuell nur in ComboBox, daher in addComboBoxStyles()
  *       mit Kommentar falls später woanders gebraucht</li>
@@ -392,8 +392,8 @@ public abstract class Skin extends SkinProperties {
 	
 	/**
 	 * Grundlage und Abweichung: {@code .my-info-label} trägt alles, was für jedes Info-Label gilt,
-	 * die drei Kennungen ({@code #QuestionLabel}, {@code #ProgressLabel}, {@code #HistoryLabel})
-	 * setzen nur noch den abweichenden Hintergrund.
+	 * die drei Modifikatoren ({@code .question}, {@code .progress}, {@code .history}) setzen nur noch
+	 * den abweichenden Hintergrund.
 	 *
 	 * <p>Damit sieht ein {@code SuiteInfoLabel} auch außerhalb einer Session richtig aus — vorher
 	 * kam sein ganzes Aussehen aus den drei Kennungen, es war also ohne Session nackt.</p>
@@ -422,7 +422,7 @@ public abstract class Skin extends SkinProperties {
 	    // nichts kostet und die Regel gleichförmig hält.
 	    for (TextLabelType type : TextLabelType.values()) {
 	        Color bg = (Color) getFieldValue("displayText" + type + "BgColor");
-	        builder.rule("#" + type + "Label", "-fx-background-color", bg);
+	        builder.rule(".my-info-label." + type.styleClass(), "-fx-background-color", bg);
 	    }
 	}
 	

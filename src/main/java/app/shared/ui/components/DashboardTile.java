@@ -13,12 +13,6 @@ import javafx.scene.layout.VBox;
  */
 public class DashboardTile extends VBox {
 
-    // TODO: Die beiden Innenhöhen werden zusätzlich per CSS gesetzt (.dashboard-tile-top /
-    //   .dashboard-tile-bottom, siehe addDashboardStyles). Eine der beiden Quellen ist überflüssig
-    //   — vermutlich diese hier, weil das CSS gewinnt. Bewusst nicht im Zuge des Umzugs angefasst.
-    private static final double TOP_HEIGHT = 300;
-    private static final double BOTTOM_HEIGHT = 100;
-
     private final Label topLabel;
     private final Label bottomLabel;
 
@@ -38,7 +32,6 @@ public class DashboardTile extends VBox {
         
         // Oberer Bereich (große Zahl)
         VBox topBox = new VBox(topLabel);
-        topBox.setPrefHeight(TOP_HEIGHT);
         topBox.setAlignment(Pos.CENTER);
         topBox.getStyleClass().add("dashboard-tile-top");
         
@@ -46,7 +39,6 @@ public class DashboardTile extends VBox {
         
         // Unterer Bereich (Beschreibung)
         VBox bottomBox = new VBox(bottomLabel);
-        bottomBox.setPrefHeight(BOTTOM_HEIGHT);
         bottomBox.setAlignment(Pos.CENTER);
         bottomBox.getStyleClass().add("dashboard-tile-bottom");
         

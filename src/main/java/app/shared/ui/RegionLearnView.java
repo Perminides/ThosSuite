@@ -69,7 +69,7 @@ public class RegionLearnView {
 		if (mitFragefeld) {
 			questionArea = new SuiteInfoLabel("",
 					skin.learnTextLabelBounds(mapName, kategorie, Skin.TextLabelType.QUESTION));
-			questionArea.setId(Skin.TextLabelType.QUESTION + "Label");
+			questionArea.getStyleClass().add(Skin.TextLabelType.QUESTION.styleClass());
 			inputField = null;
 			host.setComponents(karte, questionArea);
 		} else {

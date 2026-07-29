@@ -3,7 +3,6 @@ package app.shared.ui;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import app.shared.Log;
 import app.shared.ui.components.SuiteDialog;
@@ -157,9 +156,9 @@ public class WhatsAppContactDialog {
 
             String lower = newVal.toLowerCase();
             matches.clear();
-            matches.addAll(allNames.stream()
-                .filter(n -> n.toLowerCase().contains(lower))
-                .collect(Collectors.toList()));
+            for (String name : allNames)
+                if (name.toLowerCase().contains(lower))
+                    matches.add(name);
 
             if (matches.isEmpty()) {
                 hideSuggestions.run();

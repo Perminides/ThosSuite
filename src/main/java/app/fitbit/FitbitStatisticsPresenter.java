@@ -59,19 +59,27 @@ public class FitbitStatisticsPresenter implements BarChartDataProvider {
             targetY.add((double) goal);
         }
 
-        int maxPoints = weeks.stream().mapToInt(WeekData::points).max().orElse(5000);
-        int maxGoal   = goalHistory.stream().mapToInt(GoalHistoryEntry::weeklyGoal).max().orElse(4000);
+        int maxPoints = 5000;
+        for (WeekData week : weeks)
+            maxPoints = Math.max(maxPoints, week.points());
+
+        int maxGoal = 4000;
+        for (GoalHistoryEntry entry : goalHistory)
+            maxGoal = Math.max(maxGoal, entry.weeklyGoal());
         int yMax      = Math.max(maxPoints, maxGoal) + 500;
 
         return new BarChartData(bars, new TargetLine(targetY), YAxis.fixed(yMax, 500));
     }
 
     private int findGoalForDate(LocalDate date, List<GoalHistoryEntry> history) {
-        return history.stream()
-            .filter(entry -> !entry.validFrom().isAfter(date))
-            .reduce((_, second) -> second)
-            .map(GoalHistoryEntry::weeklyGoal)
-            .orElseThrow(() -> new RuntimeException("Kein Fitbit-Ziel gefunden für " + date));
+        GoalHistoryEntry letztesGueltiges = null;
+        for (GoalHistoryEntry entry : history)
+            if (!entry.validFrom().isAfter(date))
+                letztesGueltiges = entry; // die Liste ist chronologisch — das letzte Treffer gewinnt
+
+        if (letztesGueltiges == null)
+            throw new RuntimeException("Kein Fitbit-Ziel gefunden für " + date);
+        return letztesGueltiges.weeklyGoal();
     }
 
     private LocalDate roundToMonday(LocalDate date) {

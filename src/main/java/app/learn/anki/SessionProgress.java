@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import app.learn.anki.model.Card;
 import app.learn.anki.model.CardSortOrder;
@@ -81,7 +79,9 @@ class SessionProgress {
 			}
 		}
 		CardSortService.getSorter(sortOrder).accept(cards);
-		cards = Stream.concat(newCards.stream(), cards.stream()).collect(Collectors.toCollection(ArrayList::new));
+		List<Card> zusammen = new ArrayList<>(newCards);
+		zusammen.addAll(cards);
+		cards = zusammen;
 		currentIndex = 0;
 		presenter.sessionProgressChanged(createSessionProgress());
 		presenter.newCardIncoming(cards.get(currentIndex).getLearnStat());

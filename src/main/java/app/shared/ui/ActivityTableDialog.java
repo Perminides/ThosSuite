@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import app.shared.Log;
 import app.shared.model.ActivityTableRow;
-import app.shared.skin.SkinService;
 import app.shared.ui.components.SuiteTabCommitTextFieldTableCell;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;

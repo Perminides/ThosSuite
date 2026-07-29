@@ -117,10 +117,10 @@ public abstract class AnkiLearnView {
 		canvas.setComponents(bestandteile());
 	}
 
-	/** Die Kennung entscheidet nur über den abweichenden Hintergrund — der Rest steht in {@code .my-info-label}. */
+	/** Der Modifikator entscheidet nur über den abweichenden Hintergrund — der Rest steht in {@code .my-info-label}. */
 	private SuiteInfoLabel infoLabel(Skin skin, Skin.TextLabelType typ) {
 		SuiteInfoLabel label = new SuiteInfoLabel("", skin.learnTextLabelBounds(mapName, kategorie, typ));
-		label.setId(typ + "Label");
+		label.getStyleClass().add(typ.styleClass());
 		return label;
 	}
 

@@ -131,8 +131,9 @@ public class BarChartScreenView implements ScreenView {
             return emptyChartStack();
 
         CategoryAxis xAxis = new CategoryAxis();
-        ObservableList<String> categories = FXCollections.observableArrayList(
-            currentData.bars().stream().map(Bar::label).toList());
+        ObservableList<String> categories = FXCollections.observableArrayList();
+        for (Bar bar : currentData.bars())
+            categories.add(bar.label());
         xAxis.setCategories(categories);
         xAxis.setTickLabelRotation(-45);
 

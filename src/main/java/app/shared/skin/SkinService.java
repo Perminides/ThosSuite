@@ -24,10 +24,14 @@ public final class SkinService {
         
         if (savedSkinClass != null) {
             // Suche Skin in der Liste
-            current = AVAILABLE_SKINS.stream()
-                .filter(skin -> skin.getClass().getSimpleName().equals(savedSkinClass))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Ungültiges Skin in config.txt: " + savedSkinClass));
+            current = null;
+            for (Skin skin : AVAILABLE_SKINS)
+                if (skin.getClass().getSimpleName().equals(savedSkinClass)) {
+                    current = skin;
+                    break;
+                }
+            if (current == null)
+                throw new RuntimeException("Ungültiges Skin in der Konfiguration: " + savedSkinClass);
         } else {
             // Fallback auf erstes Skin
             current = AVAILABLE_SKINS.get(0);

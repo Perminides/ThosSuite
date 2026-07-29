@@ -7,8 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import app.learn.anki.model.Card.AnswerOption;
 
@@ -18,15 +16,16 @@ public class MultipleChoiceAnswers {
     
  // Konstruktor A: Zufällige Auswahl (für neue Fragen)
     public MultipleChoiceAnswers(Set<AnswerOption> pool, int maxOptions) {
-    	// 1. Alle korrekten Antworten finden (Die MÜSSEN rein)
-        List<AnswerOption> correctOnes = pool.stream()
-            .filter(AnswerOption::correct)
-            .collect(Collectors.toList());
-
-        // 2. Alle falschen Antworten finden und mischen (Pool für Distraktoren)
-        List<AnswerOption> wrongOnes = pool.stream()
-            .filter(opt -> !opt.correct())
-            .collect(Collectors.toList());
+    	// 1. Korrekte und falsche Antworten trennen — die korrekten MÜSSEN rein,
+        //    die falschen sind der Pool für Distraktoren.
+        List<AnswerOption> correctOnes = new ArrayList<>();
+        List<AnswerOption> wrongOnes = new ArrayList<>();
+        for (AnswerOption option : pool) {
+            if (option.correct())
+                correctOnes.add(option);
+            else
+                wrongOnes.add(option);
+        }
         Collections.shuffle(wrongOnes);
 
         // 3. Liste zusammenbauen
@@ -47,8 +46,11 @@ public class MultipleChoiceAnswers {
     
  // Konstruktor B: Vorgegebene Reihenfolge von dem Step davor
     public MultipleChoiceAnswers(Set<AnswerOption> pool, List<String> targetOrder) {
-        Map<String, Boolean> correctness = pool.stream()
-            .collect(Collectors.toMap(AnswerOption::text, AnswerOption::correct));
+        Map<String, Boolean> correctness = new HashMap<>();
+        for (AnswerOption option : pool)
+            if (correctness.put(option.text(), option.correct()) != null)
+                throw new IllegalStateException("Zwei Antworten mit demselben Text: " + option.text());
+
             
         for (String text : targetOrder) {
             // Wir bauen die Optionen exakt so auf, wie das UI sie erwartet
@@ -71,10 +73,10 @@ public class MultipleChoiceAnswers {
     }
     
     public boolean isFinallyCorrect(Set<Integer> clickedIds) {
-    	Set<Integer> correctIndexes = IntStream.range(0, options.size())
-    		    .filter(i -> options.get(i).correct())
-    		    .boxed()
-    		    .collect(Collectors.toSet());
+    	Set<Integer> correctIndexes = new HashSet<>();
+    	for (int i = 0; i < options.size(); i++)
+    		if (options.get(i).correct())
+    			correctIndexes.add(i);
     	return correctIndexes.equals(clickedIds);
     }
     
@@ -102,6 +104,12 @@ public class MultipleChoiceAnswers {
     
     @Override
     public String toString() {
-    	return options.stream().map(ao -> ao.text()).toString();
+    	StringBuilder sb = new StringBuilder("[");
+    	for (AnswerOption option : options) {
+    		if (sb.length() > 1)
+    			sb.append(", ");
+    		sb.append(option.text());
+    	}
+    	return sb.append("]").toString();
     }
 }

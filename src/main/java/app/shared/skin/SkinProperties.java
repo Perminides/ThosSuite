@@ -306,6 +306,16 @@ public abstract class SkinProperties {
 		public String toString() {
 			return text;
 		}
+
+		/**
+		 * Der CSS-Modifikator dieses Feldes — {@code .my-info-label.question} und Verwandte.
+		 *
+		 * <p>Steht bewusst neben dem Property-Baustein: derselbe Textbaustein trägt beide Namen,
+		 * einmal für die Datei ({@code worldSessionQuestionPanel}), einmal fürs Stylesheet.</p>
+		 */
+		public String styleClass() {
+			return text.toLowerCase();
+		}
 	}
 
 	/**

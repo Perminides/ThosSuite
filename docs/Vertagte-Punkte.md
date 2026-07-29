@@ -16,42 +16,26 @@ Was **erledigt** ist, steht nicht hier, sondern in `Skin-Refactoring-Plan.md` §
 
 ### A1 · Kleine Code-Punkte
 
-Sieben Stück, jeder für sich klein. Zwei davon ändern etwas, das im Regelwerk beschrieben ist
+Drei offene, jeder für sich klein. Zwei davon ändern etwas, das im Regelwerk beschrieben ist
 (`UiComponent`, `my-title`) — dort ist es als „auf dem Weg hinaus" vermerkt, aber nach der Änderung
 gehört der Satz nachgezogen.
 
-**1. `MainWindow` rund machen.** Drei Einwände aus der 3d-Runde:
+~~**1. `MainWindow` rund machen.**~~ **Erledigt 29.07.**
 
-*a) Eine fertige `MenuBar` über die shared-Grenze zu reichen, ist zu viel.* Erwartbarer wäre:
-`MainWindow` bekommt eine leere Leiste und hängt seine Menüs selbst ein. Zu bedenken: das Symbol
-sitzt *neben* der Menüleiste im selben `leading`-Block. Entweder gibt die Leiste den Block heraus
-(dann wandert Layout-Wissen nach draußen), oder sie bekommt ein `setMenuBar(MenuBar)` — dann
-überquert der Typ die Grenze nur später statt gar nicht. Die Frage ist also nicht *ob* der Typ die
-Grenze überquert, sondern ob `MainWindow` beim Zusammenbau mitwirkt. Vielleicht ist die ehrlichere
-Fassung: die Leiste nimmt die *Menüs* (`List<Menu>`) und baut die `MenuBar` selbst.
-
-*b) Kein `getStyleClass()` außerhalb von `shared`.* Heute drei Stellen, alle in `MainWindow`:
-
-```
-MainWindow:82   root.getStyleClass().add("my-root")
-MainWindow:229  spacer.getStyleClass().add("my-spacer")
-MainWindow:234  spacer2.getStyleClass().add("my-spacer")
-```
-
-Anzeige-Entscheidung außerhalb der Anzeige-Schicht. Wäre als fünfte ArchUnit-Regel prüfbar — erst
-aufstellen, wenn die drei Stellen weg sind.
-
-*c) `my-title` entscheiden.* Die Klasse wird zweimal gesetzt (`MainWindowHeaderBar:41`,
-`SuiteHeaderBar:31`), es gibt aber **keine CSS-Regel dafür** — dasselbe Fossil wie
-`custom-text-label` beim InfoLabel. Entweder beide Titel bekommen eine Regel, oder die Klasse fällt
-an beiden Stellen weg. Marker steht im Code.
-
-Dazu gehört ein zweiter Punkt, der dieselbe Klasse betrifft: `SuiteHeaderBar` bekommt die `font`
-**ausschließlich** für `font.getSize() * 0.3` — ein Padding. Wandert das in eine CSS-Regel
-`.my-title` (in `addDialogStyles`), entfällt der Konstruktor-Parameter **und** die `font` im
-`DialogStyle`. Beide Fragen zusammen entscheiden: gibt es eine `.my-title`-Regel, dann trägt sie
-auch dieses Padding; gibt es keine, muss der Wert anders untergebracht werden.
-→ `SuiteHeaderBar:22`
+- *a) `MenuBar` über die shared-Grenze* — **bewusst so gelassen.** `MainWindow` ganz nach `shared.ui`
+  zu ziehen scheiterte daran, dass es `PlayMenuItem`, `CardSortOrder` und `LearnSessionInfo` hält —
+  das wäre Feature-Wissen im Fundament. Aufteilen wäre die saubere Variante, kostet bei 426 Zeilen
+  und 17 Callbacks aber mehr, als es einbringt. `MainWindow` ist die einzige Klasse im `controller`
+  mit echtem JavaFX (14 Importe); das ist als benannte Ausnahme in Regel 5 festgehalten.
+- *b) `getStyleClass()` außerhalb `shared`* — `my-root` ist ersatzlos raus (Klasse, auskommentiertes
+  CSS, die Methode `addMainWindowStyles`). Die zwei `my-spacer` bleiben und sind die Ausnahme in
+  **ArchUnit-Regel 5**, die seit 29.07. prüft, dass Style-Klassen nur in der Anzeige-Schicht vergeben
+  werden.
+- *c) `my-title`* — Hauptfenster-Titel verliert die Klasse (es gab nie eine Regel), Dialog-Titel
+  bekommt `.my-dialog-title` samt Padding-Regel. Damit entfällt der `font`-Parameter von
+  `SuiteHeaderBar` **und** die `font` im `DialogStyle`. Der Grund für den Unterschied: im Dialog ist
+  der Titel das einzige Element der Leiste und bestimmt deren Höhe, im Hauptfenster tut das die
+  Menüleiste.
 
 ~~**2. `UiComponent` abschaffen.**~~ **Erledigt 29.07.** `ComponentHost` nimmt `Node...`, die fünf
 Bausteine haben ihr `getView()` verloren, `EmptyLearnMap` erbt von `Group`, der Kontrakt ist
@@ -69,32 +53,25 @@ anderen gehen über `SuiteDatePicker` (ohne). Der Unterschied ist **geerbt, nich
 entscheiden: nirgends, überall, oder je nach Kontext als Parameter — in jedem Fall sollte auch der
 Editor denselben Weg gehen wie die anderen.
 
-**4. `#QuestionLabel` durch eine Modifikator-Klasse ersetzen.** Jetzt, wo `SuiteInfoLabel`
-wiederverwendbar ist, ist die Kennung die falsche Mechanik — IDs sollen in einer Szene eindeutig
-sein, zwei Info-Labels in einem Dialog brächen das. Sauberer: `.my-info-label.question` statt
-`#QuestionLabel`. Betrifft `addSessionInfoLabelStyles` und die zwei `setId(…)`-Aufrufe in den Views.
+~~**4. `#QuestionLabel` durch eine Modifikator-Klasse ersetzen.**~~ **Erledigt 29.07.** Aus
+`#QuestionLabel` wurde `.my-info-label.question`; der Modifikator kommt aus
+`TextLabelType.styleClass()`, also aus derselben Aufzählung, die schon den Property-Baustein trägt.
+Die Spezifität bleibt gleich (zwei Klassen schlagen eine), am Aussehen ändert sich nichts. Geprüft
+vorab: die drei Ids wurden nirgends nachgeschlagen.
 
-**5. Doppelte Innenhöhen in `DashboardTile`.** Die Kachel setzt `TOP_HEIGHT = 300` und
-`BOTTOM_HEIGHT = 100` programmatisch auf ihre beiden Hälften — und dasselbe passiert nochmal im CSS
-(`addDashboardStyles`: `.dashboard-tile-top` mit `dashBoardTileTopHeight` = 250,
-`.dashboard-tile-bottom` mit 100). **Zwei Quellen für dieselbe Größe, und die Zahlen widersprechen
-sich** (300 gegen 250). Vermutlich gewinnt das CSS — dann sind die Konstanten tot, so wie es
-`TILE_WIDTH`/`TILE_HEIGHT` schon waren. Nachmessen, dann eine der beiden Quellen streichen.
-Kein Aufräumen, sondern ein latenter Fehler. → `DashboardTile` (TODO in der Klasse)
+~~**5. Doppelte Innenhöhen in `DashboardTile`.**~~ **Erledigt 29.07.** Nachgemessen mit absurden
+Werten (3000 / 25): das Bild ändert sich nicht, also gewinnt das CSS. Die beiden Konstanten waren
+tot und sind raus — dieselbe Geschichte wie zuvor bei `TILE_WIDTH`/`TILE_HEIGHT`.
 
-**6. Die vorhandenen Streams loswerden.** Regel 6 im Regelwerk sagt seit 29.07. „keine Streams,
-außer sie sind unbedingt nötig" — der Bestand ist damit aber nicht angefasst. Stand heute:
+~~**6. Die vorhandenen Streams loswerden.**~~ **Erledigt 29.07.** `java.util.stream` kommt in
+`src/main/java` nicht mehr vor; behalten wurde keine Pipeline. Die im Punkt genannten „36" waren zu
+niedrig gezählt — `Arrays.stream(…)`, `Files.walk(…)`, `Files.list(…)` und `br.lines()` fielen durch
+das Suchmuster. Zwei Funde nebenbei: `MultipleChoiceAnswers.toString()`
+gab die Pipeline statt der Texte aus, und der Ordner-Lauf in `SuiteExporter` schloss seinen
+`Files.walk`-Stream nie — beides ist mit repariert.
 
-```
-36  .stream() / Collectors     in 15 Dateien
-11  .forEach(…) auf Sammlungen (kein Stream, aber Lambda statt Schleife)
-```
-
-Die dicksten Brocken: `MultipleChoiceAnswers` (8), `CardProgress` (5), `MapShape` und
-`FitbitStatisticsPresenter` (je 3). Nicht alles muss weg — die Regel sagt „außer sie sind unbedingt
-nötig", und ein `Collectors.joining` ist selten das Problem. Sinnvoll wäre, Datei für Datei zu
-fragen: liest sich die Schleife besser? Zwei Stellen sind im Umbau schon so entstanden
-(`DashboardScreenView`, `ShapeMapPane`-Konstruktor, `ComponentHost`).
+Offen bleibt bewusst: fünf `.forEach(…)` auf Sammlungen in `ShapeMapPane`. Das sind keine Streams,
+sondern Lambdas auf einer `Map`; ob die zu Schleifen werden, ist eine eigene Entscheidung.
 
 **7. `overlayContentBounds` — gehört das in den Skin?** Es beschreibt, wo der Inhalt im
 Mini-Map-Bild sitzt. Das sind Karten-/Asset-Daten, kein Styling; es liegt nur deshalb beim Skin,

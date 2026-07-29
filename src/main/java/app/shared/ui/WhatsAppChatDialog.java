@@ -1,6 +1,5 @@
 package app.shared.ui;
 
-import app.shared.skin.SkinService;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.scene.control.ButtonBar;

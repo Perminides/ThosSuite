@@ -2,7 +2,6 @@ package app.shared.ui.components;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -158,10 +157,9 @@ public class DiaryTagInputComponent {
 
         String lower = filter.toLowerCase();
         currentMatches.clear();
-        currentMatches.addAll(allTags.stream()
-                .filter(t -> t.toLowerCase().contains(lower))
-                .filter(t -> !selectedTags.contains(t))
-                .collect(Collectors.toList()));
+        for (String tag : allTags)
+            if (tag.toLowerCase().contains(lower) && !selectedTags.contains(tag))
+                currentMatches.add(tag);
 
         if (currentMatches.isEmpty()) {
             hideSuggestions();
