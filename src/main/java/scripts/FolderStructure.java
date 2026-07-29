@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -18,6 +19,8 @@ public class FolderStructure {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(OUTPUT_FILE))) {
             printTree(root, 0, writer);
         }
+        
+        System.out.println("Geschrieben: " + Path.of(OUTPUT_FILE).toAbsolutePath());
     }
 
     private static void printTree(File file, int depth, BufferedWriter writer) throws IOException {

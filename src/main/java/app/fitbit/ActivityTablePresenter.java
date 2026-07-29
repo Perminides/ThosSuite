@@ -7,7 +7,7 @@ import java.util.List;
 import app.fitbit.model.json.Activity;
 import app.fitbit.model.json.ActivityDaySummary;
 import app.shared.model.ActivityTableRow;
-import app.shared.ui.surfaces.dialogs.ActivityTableDialog;
+import app.shared.ui.ActivityTableDialog;
 
 public class ActivityTablePresenter {
 

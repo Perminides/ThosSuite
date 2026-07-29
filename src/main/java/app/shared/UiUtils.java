@@ -14,8 +14,32 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
+import javafx.stage.Window;
 
 public class UiUtils {
+
+    private static Window ownerWindow;
+
+    /**
+     * Setzt das Fenster, das allen Dialogen und Alerts als Owner dient. Wird einmal vom
+     * {@code Controller} gesetzt, direkt nach {@code mainWindow.show()}.
+     *
+     * <p>Der Owner ist <b>Pflicht</b>, nicht Kosmetik: JavaFX bindet die Stylesheets der
+     * Dialog-Scene per {@code Bindings.bindContent} an die Scene des Owners
+     * ({@code HeavyweightDialog.updateStageBindings}). Ohne Owner bleibt ein Dialog ungestylt —
+     * siehe die rohen Alerts in {@code ThosSuiteApp} und {@code DB}. Die Bindung ist live: ein
+     * Skinwechsel wirkt auch auf bereits offene Dialoge.</p>
+     *
+     * <p>Liegt hier und nicht im {@code SkinService}, weil das Hauptfenster nichts mit Skinning zu
+     * tun hat — es ist bloß der, der immer Parent ist. Etwas geschummelt ist es trotzdem.</p>
+     */
+    public static void setOwnerWindow(Window window) {
+        ownerWindow = window;
+    }
+
+    public static Window getOwnerWindow() {
+        return ownerWindow;
+    }
     
     /**
      * Konvertiert eine JavaFX-{@link javafx.scene.paint.Color} in einen CSS-kompatiblen Hex-String.

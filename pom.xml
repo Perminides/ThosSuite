@@ -15,6 +15,11 @@
 
 		<jackson.version>2.20.0</jackson.version>
 		<javafx.version>25</javafx.version>
+		<!-- Mindestens 1.4.1 — davor kennt der Bytecode-Leser Klassendateiversion 69 (Java 25)
+		     nicht und überspringt sie STILL. Die Regeln melden dann "failed to check any classes",
+		     nicht etwa einen Verstoß. 1.4.2 kann zusätzlich Java 26. -->
+		<archunit.version>1.4.2</archunit.version>
+		<junit.version>5.11.4</junit.version>
 	</properties>
 
 	<dependencies>
@@ -78,9 +83,34 @@
 			<version>3.28.2</version>
 		</dependency>
 
+		<!-- Nur für die Architekturprüfung in src/test. Landen nicht in der Auslieferung. -->
+		<dependency>
+			<groupId>com.tngtech.archunit</groupId>
+			<artifactId>archunit-junit5</artifactId>
+			<version>${archunit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>
+
+			<!-- Führt die Architekturregeln aus (src/test/java/app/ArchitekturRegelnTest.java).
+			     Achtung: Eclipse' inkrementeller Build ruft Surefire NICHT auf. Die Regeln greifen
+			     bei einem echten Maven-Lauf (Run As → Maven build, Ziel test oder verify) oder
+			     direkt über Run As → JUnit Test. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.5.2</version>
+			</plugin>
 			<!-- Nötig weil jpackage die exe schreibgeschützt erstellt:
 			https://bugs.openjdk.org/browse/JDK-8261845 -->
 			<plugin>

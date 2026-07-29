@@ -1,6 +1,8 @@
 package app.controller;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import app.alc.repository.AlcRepository;
@@ -9,86 +11,86 @@ import app.mattress.repository.MattressRepository;
 import app.messaging.repository.MessageRepository;
 import app.shared.AppClock;
 import app.shared.Config;
+import app.shared.model.DashboardTileData;
+import app.shared.model.Screen;
+import app.shared.model.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
-import app.shared.skin.SkinService;
-import app.shared.ui.components.DashboardTile;
-import app.shared.ui.contracts.Screen;
-import app.shared.ui.contracts.ScreenView;
-import app.shared.ui.surfaces.DashboardScreenView;
+import app.shared.ui.DashboardScreenView;
 import app.weekday.model.WeekdayStats;
 import app.weekday.repository.WeekdayRepository;
 
 public class DashboardScreen implements Screen {
-    
+
     private DashboardScreenView view = new DashboardScreenView();
-    
+
     public DashboardScreen() {
         buildContent();
     }
-    
+
     private void buildContent() {
-     
+        List<DashboardTileData> tiles = new ArrayList<>();
+
         DashboardService fitbitService = new DashboardService();
         int stepsNeeded = fitbitService.calculateRemainingDailySteps(AppClock.TODAY);
         if (stepsNeeded < 0)
         	stepsNeeded = 0;
         String formattedSteps = NumberFormat.getInstance(Locale.GERMANY).format(stepsNeeded);
-        DashboardTile fitbitTile1 = SkinService.get().createDashboardTile(
-            	formattedSteps, 
+        tiles.add(new DashboardTileData(
+            	formattedSteps,
                 "Schritte pro Tag noch nötig"
-            );
-        
-        DashboardTile fitbitTile2 = SkinService.get().createDashboardTile(
-            	"" + fitbitService.calculateCurrentStreak(AppClock.TODAY), 
+            ));
+
+        tiles.add(new DashboardTileData(
+            	"" + fitbitService.calculateCurrentStreak(AppClock.TODAY),
                 "Aktueller Fitbit-Streak in Wochen (Rekord: " + fitbitService.calculateRecordStreak() + ")"
-            );
-        
+            ));
+
         AlcRepository alcoholRepo = new AlcRepository();
         int balance = alcoholRepo.getCurrentBalance();
-        DashboardTile alcTile = SkinService.get().createDashboardTile(
-                "" + balance, 
+        tiles.add(new DashboardTileData(
+                "" + balance,
                 "Aktueller Alkoholkontostand"
-            );
-        
+            ));
+
         WeekdayRepository wr = new WeekdayRepository();
         WeekdayStats ws = wr.getWeekdayStats();
-        DashboardTile weekDayTile = SkinService.get().createDashboardTile(
-            	"" + ws.currentStreak(), 
+        tiles.add(new DashboardTileData(
+            	"" + ws.currentStreak(),
                 "Aktueller Wochentags-Streak in Tagen (Rekord: " + ws.maxStreak() + ")"
-            );
-        
+            ));
+
         MattressRepository mr = new MattressRepository();
         long daysUntilMattressTurn = mr.getDaysUntilNextTurn();
-        DashboardTile mattressTile = SkinService.get().createDashboardTile(
-                "" + daysUntilMattressTurn, 
+        tiles.add(new DashboardTileData(
+                "" + daysUntilMattressTurn,
                 "Tage bis zum Wenden der Matratze"
-            );
-        
+            ));
+
         MessageRepository sr = new MessageRepository();
         int messagesToday = sr.getMessageCountToday();
-        DashboardTile messageTile = SkinService.get().createDashboardTile(
-            	"" + messagesToday, 
-                "Heute importierte Nachrichten");
-        
+        tiles.add(new DashboardTileData(
+            	"" + messagesToday,
+                "Heute importierte Nachrichten"));
+
         int daysSinceLastAdditionalTmdbImport = Config.getDaysSince("tmdb.lastAdditionalImportRun");
-        DashboardTile movieTile = SkinService.get().createDashboardTile(
-            	"" + daysSinceLastAdditionalTmdbImport, 
-                "Tage seit letztem Extra-TMDB-Import");
-        
-        view.build(fitbitTile1, fitbitTile2, alcTile, weekDayTile, mattressTile, messageTile, movieTile);
-        
+        tiles.add(new DashboardTileData(
+            	"" + daysSinceLastAdditionalTmdbImport,
+                "Tage seit letztem Extra-TMDB-Import"));
+
+        view.build(tiles);
+
     }
-    
+
     @Override
     public ScreenView getView() {
     	return view;
     }
-    
+
     @Override
     public void refresh() {
     	buildContent();
     }
-    
+
     @Override
     public SessionSwitchStrategy getSwitchStrategy() {
         return SessionSwitchStrategy.IMMEDIATE;

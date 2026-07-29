@@ -3,49 +3,66 @@ package app.learn.anki;
 import java.util.List;
 import java.util.Set;
 
-import app.learn.anki.model.SessionPane;
+import app.learn.MapService;
 import app.learn.model.Deck;
+import app.learn.model.GeoMap;
 import app.learn.model.LearnStat;
 import app.learn.model.SessionProgressCounter;
-import app.shared.ui.contracts.ScreenView;
+import app.shared.model.ScreenView;
+import app.shared.model.LearnCallbacks;
+import app.shared.ui.AnkiLearnView;
+import app.shared.ui.ShapeMapLearnView;
+import app.shared.ui.ImageMapLearnView;
+import app.shared.ui.McLearnView;
 
 /**
- * Vermittelt zwischen SessionPane (GUI) und SessionProgress (Ablauf): reicht User-Eingaben der
- * Pane weiter an den Progress und setzt umgekehrt die Anzeige-Aufrufe des Progress in der Pane um.
+ * Vermittelt zwischen der Anzeige (shared.ui) und dem SessionProgress (Ablauf): reicht Eingaben des
+ * Nutzers an den Progress weiter und setzt umgekehrt dessen Anzeige-Aufrufe in der View um.
  *
- * Hält einen final sessionPaneContainer, der im MainWindow gezeigt wird. Bei einem Skin-Wechsel wird
- * die sessionPane darin neu aufgebaut; das MainWindow merkt davon nichts :-)
+ * Bei einem Skinwechsel baut sich die View neu auf; das MainWindow merkt davon nichts :-)
  */
 public class SessionPresenter {
 
-    private SessionPane sessionPane; //!Später MapDeckGamePanel!
+    private final AnkiLearnView view;
     private SessionProgress sessionProgress;
 
-    public SessionPresenter(Deck type, SessionProgress sessionProgress) {
+    SessionPresenter(Deck type, SessionProgress sessionProgress) {
     	this.sessionProgress = sessionProgress;
     	sessionProgress.setPresenter(this);
-        sessionPane = createPanelForType(type);
+        view = createViewFor(type);
     }
     
-	public ScreenView getView() {
-		return sessionPane.getView();
+	ScreenView getView() {
+		return view.getView();
 	}
 
-    public void refresh() {
-        sessionPane.rebuild();
+    void refresh() {
+        view.rebuild();
     }
 
-    private SessionPane createPanelForType(Deck type) {
+    /**
+     * Die drei Lernformen als eigene Ansichten. Was ein Deck ist und wo seine Geometrien
+     * herkommen, weiß nur diese Seite — die Ansicht bekommt Namen, Geometrien und Rückmeldungen.
+     */
+    private AnkiLearnView createViewFor(Deck type) {
+        GeoMap map = type.getMapMetadata() != null ? MapService.getInstance().getMap(type) : null;
+        String id = type.getId();
+        String mapName = type.getMapName();
+        String kategorie = type.getCategory().toString();
+
+        LearnCallbacks callbacks = new LearnCallbacks(
+                this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack);
+
         return switch(type) {
-            case GERMANY_CARDS -> new GermanySessionPane(this);
-            case MC_CARDS -> new MCSessionPane(this);
-            case WORLD_CARDS -> new ImageMapSessionPane(this, type);
-            case HANNOVER_CARDS -> new ImageMapSessionPane(this, type);
+            case GERMANY_CARDS -> new ShapeMapLearnView(id, mapName, kategorie, map.getShapeGeometries(), callbacks);
+            case MC_CARDS      -> new McLearnView(id, mapName, kategorie, callbacks);
+            case WORLD_CARDS,
+                 HANNOVER_CARDS-> new ImageMapLearnView(id, mapName, kategorie, map::geometryFor, callbacks);
             default -> null; // oder throw new IllegalArgumentException?
         };
     }
-    
-    public void end() {
+
+    void end() {
         sessionProgress = null;
     }
 	
@@ -53,34 +70,32 @@ public class SessionPresenter {
 	// STEP EXECUTION (from Progress)
 	// ========================================
 	
-	public void showImage(String imageName) {
-		sessionPane.setImage(imageName);
+	void showImage(String imageName) {
+		view.setImage(imageName);
 	}
 
-	public void showQuestion(String text) {
-		sessionPane.setQuestion(text);
+	void showQuestion(String text) {
+		view.setQuestion(text);
 	}
 	
-	public void showMultipleChoice (List<String> answers) {
-		sessionPane.setMapActive(false);
-		sessionPane.setTextInTextField("");
-		sessionPane.setTextFieldActive(false);
-		sessionPane.setMultipleChoice(answers);
+	void showMultipleChoice (List<String> answers) {
+		view.setMapActive(false);
+		view.setTextInTextField("");
+		view.setTextFieldActive(false);
+		view.setMultipleChoice(answers);
 	}
  
-	public void waitForClick(Set<String> idsInQuestion) {
-		sessionPane.beginTx();
-		sessionPane.setIdsInQuestion(idsInQuestion);
-		sessionPane.setMapActive(true);
-		sessionPane.endTx();
-		sessionPane.setTextInTextField("");
-		sessionPane.setTextFieldActive(false);
-		sessionPane.disableMcPanel();
+	void waitForClick(Set<String> idsInQuestion) {
+		view.setClickTargets(idsInQuestion);
+		view.setMapActive(true);
+		view.setTextInTextField("");
+		view.setTextFieldActive(false);
+		view.disableMcPanel();
 	}
-	public void waitForText() {
-		sessionPane.setTextFieldActive(true);
-		sessionPane.setMapActive(false);
-		sessionPane.disableMcPanel();
+	void waitForText() {
+		view.setTextFieldActive(true);
+		view.setMapActive(false);
+		view.disableMcPanel();
 	}
 		
 	// ========================================
@@ -89,72 +104,70 @@ public class SessionPresenter {
 	
 	// Input
 		
-	public void setCorrectText(String correctText) {
-		sessionPane.setTextInTextField(correctText);
-		sessionPane.setTextFieldActive(false);
+	void setCorrectText(String correctText) {
+		view.setTextInTextField(correctText);
+		view.setTextFieldActive(false);
 	}
 	
-	public void textIsCorrect() {
-		sessionPane.setTextInTextField("");
+	void textIsCorrect() {
+		view.setTextInTextField("");
 	}
 	
 	// Map
 	
-	public void mapClickChecked(String id, boolean correct, Set<String> corectSet) {
+	void mapClickChecked(String id, boolean correct, Set<String> corectSet) {
 		if (correct) {
-			sessionPane.addIdsToCorrect(Set.of(id));
+			view.addIdsToCorrect(Set.of(id));
 		}
 		else {
-			sessionPane.beginTx();
-			sessionPane.setIdToIncorrect(id);
-			sessionPane.addIdsToCorrect(corectSet);
+				view.setIdToIncorrect(id);
+			view.addIdsToCorrect(corectSet);
 			pause(); 
-			sessionPane.endTx();
-		}
+			}
 	}
 	
-	public void setCorrectMapElements(Set<String> correctIds) {
-		sessionPane.addIdsToCorrect(correctIds); 
+	void setCorrectMapElements(Set<String> correctIds) {
+		view.addIdsToCorrect(correctIds); 
 	}
 	
-	public void markMapElements(Set<String> elements) {
-		sessionPane.setMarkedIds(elements);
+	void markMapElements(Set<String> elements) {
+		view.setMarkedIds(elements);
 	}
 	
 	// MC
 	
-	public void mcClickChecked(int id, boolean correct) {
-		sessionPane.setMcCorrect(id, correct);
+	void mcClickChecked(int id, boolean correct) {
+		view.setMcCorrect(id, correct);
 	}
 	
-	public void setCorrectMc(Set<Integer> correctIds) {
-		sessionPane.setMcSolution(correctIds); 
+	void setCorrectMc(Set<Integer> correctIds) {
+		view.setMcSolution(correctIds); 
 	}
 	
 	// ========================================
 	// USER INPUT (from Panel)
 	// ========================================
 	
-	public void typedText(String text) {
+	void typedText(String text) {
 		sessionProgress.textInputChanged(text);
 	}
 
-	public void clickedMapElement(String id) {
+	void clickedMapElement(String id) {
 		if (sessionProgress.isPaused())
 			sessionProgress.reactOnPauseClick();
 		else
 			sessionProgress.elementClicked(id);
 	}
 	
-	public void clickedPlay() {
+	void clickedPlay() {
 		sessionProgress.reactOnPauseClick();
 	}
 	
-	public void clickedBack() {
+	void clickedBack() {
 		sessionProgress.goBack();
 	}
 	
-	public void clickedMCAnswer(int index) {
+	void clickedMCAnswer(int index) {
 		if (sessionProgress.isPaused())
 			sessionProgress.reactOnPauseClick();
 		else
@@ -165,38 +178,38 @@ public class SessionPresenter {
 	// SESSION NOTIFICATIONS
 	// ========================================
 	
-	public void sessionProgressChanged(SessionProgressCounter progress) {
+	void sessionProgressChanged(SessionProgressCounter progress) {
 		String text = "Korrekt: " + progress.correct()
 			+ "\nFalsch: " + progress.incorrect()
 			+ "\nOffen: " + (progress.total() - progress.correct() - progress.incorrect());
-		sessionPane.setProgressText(text);
+		view.setProgressText(text);
 	}
 
-	public void newCardIncoming(LearnStat stats) {
+	void newCardIncoming(LearnStat stats) {
 		String text = "";
 		if (stats != null) {
 			text = "Zuletzt gespielt: " + stats.getLastPlayed()
 				+ "\nLevel: " + stats.getCurrentLevel()
 				+ "\nFalsch beantwortet: " + stats.getWrongCount();
 		}
-		sessionPane.setCardHistoryText(text);
+		view.setCardHistoryText(text);
 	}
 	
 	/**
 	 * Remove the image, clean the textfield, question and markers.
 	 * @param correct can be null in case of back button!
 	 */
-	public void cardFinished(Boolean correct) {
-		sessionPane.resetMarkers();
-		sessionPane.setImage(null);
-		sessionPane.setTextInTextField("");
-		sessionPane.setQuestion("");
+	void cardFinished(Boolean correct) {
+		view.resetMarkers();
+		view.setImage(null);
+		view.setTextInTextField("");
+		view.setQuestion("");
 	}
 	
-	public void pause() { // Von außen wegen Pause: im csv...
-		sessionPane.setMapActive(false);
-		sessionPane.setTextFieldActive(false);
-		sessionPane.disableMcPanel();
+	void pause() { // Von außen wegen Pause: im csv...
+		view.setMapActive(false);
+		view.setTextFieldActive(false);
+		view.disableMcPanel();
 	}
 
 }

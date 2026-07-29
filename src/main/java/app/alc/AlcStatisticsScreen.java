@@ -2,17 +2,17 @@ package app.alc;
 
 import java.time.LocalDate;
 
+import app.shared.model.Screen;
+import app.shared.model.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
-import app.shared.ui.contracts.Screen;
-import app.shared.ui.contracts.ScreenView;
-import app.shared.ui.surfaces.BarChartScreenView;
+import app.shared.ui.BarChartScreenView;
 
 public class AlcStatisticsScreen implements Screen {
 
     private final BarChartScreenView view = new BarChartScreenView(new AlcStatisticsPresenter(), LocalDate.now().minusYears(1), LocalDate.now());
 
     public AlcStatisticsScreen() {
-        view.reload();
+        view.rebuild();
     }
 
     @Override
@@ -22,7 +22,7 @@ public class AlcStatisticsScreen implements Screen {
 
     @Override
     public void refresh() {
-        view.reload();
+        view.rebuild();
     }
 
     @Override

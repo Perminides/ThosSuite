@@ -9,7 +9,7 @@ import app.fitbit.model.json.ActivityLogList;
 import app.fitbit.repository.Repository;
 import app.shared.Log;
 import app.shared.model.ButtonEnum;
-import app.shared.skin.SkinService;
+import app.shared.ui.Alerts;
 
 /**
  * Zeigt Fitbit-Dialoge und speichert die editierten Daten.
@@ -119,7 +119,7 @@ public class DataReviewService {
             message.append(result.date()).append(" → ").append(result.points()).append(" Punkte\n");
         }
         
-        SkinService.get().showAlert("Fitbit-Import", message.toString(), ButtonEnum.OK);
+        Alerts.show("Fitbit-Import", message.toString(), ButtonEnum.OK);
     }
     
     /**

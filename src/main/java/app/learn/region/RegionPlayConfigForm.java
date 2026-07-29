@@ -16,7 +16,7 @@ import app.learn.region.model.Mode;
 import app.shared.model.RegionDialogState;
 import app.shared.model.RegionDialogState.Choice;
 import app.shared.model.RegionDialogState.Toggle;
-import app.shared.ui.surfaces.dialogs.RegionConfigDialog;
+import app.shared.ui.RegionConfigDialog;
 
 public final class RegionPlayConfigForm {
 
