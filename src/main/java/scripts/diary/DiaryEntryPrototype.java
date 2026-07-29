@@ -1,4 +1,9 @@
 package scripts.diary;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import app.shared.ui.components.SuiteDatePicker;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -6,16 +11,19 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class DiaryEntryPrototype extends Application {
 
@@ -60,7 +68,7 @@ public class DiaryEntryPrototype extends Application {
         HBox topRow = new HBox(16);
         topRow.setAlignment(Pos.CENTER_LEFT);
 
-        DatePicker datePicker = new DatePicker(LocalDate.now());
+        DatePicker datePicker = new SuiteDatePicker(LocalDate.now());
         datePicker.setPrefWidth(150);
 
         tagInput = new TextField();
