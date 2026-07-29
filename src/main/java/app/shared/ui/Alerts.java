@@ -65,7 +65,7 @@ public class Alerts {
 		alert.initOwner(UiUtils.getOwnerWindow()); // Pflicht — sonst bleibt der Alert ungestylt
 		alert.initStyle(StageStyle.EXTENDED);
 
-		SuiteHeaderBar headerBar = new SuiteHeaderBar(title, style.font());
+		SuiteHeaderBar headerBar = new SuiteHeaderBar(title);
 		alert.getDialogPane().setHeader(headerBar);
 
 		alert.getDialogPane().setContent(buildContent(message, options.image(), options.isCentered(), style));
