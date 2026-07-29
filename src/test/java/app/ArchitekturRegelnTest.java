@@ -1,5 +1,7 @@
 package app;
 
+import static com.tngtech.archunit.core.domain.JavaCall.Predicates.target;
+import static com.tngtech.archunit.core.domain.properties.HasName.Predicates.name;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
@@ -66,4 +68,22 @@ public class ArchitekturRegelnTest {
 	static final ArchRule keineZyklen = slices()
 			.matching("app.(**)")
 			.should().beFreeOfCycles();
+
+	/**
+	 * Style-Klassen werden nur in der Anzeige-Schicht vergeben.
+	 *
+	 * <p>Wie etwas aussieht, entscheidet {@code shared.ui} (setzt die Klasse) und {@code shared.skin}
+	 * (schreibt die Regel dazu). Ein {@code getStyleClass().add(…)} anderswo ist eine
+	 * Anzeige-Entscheidung außerhalb der Anzeige-Schicht.</p>
+	 *
+	 * <p><b>Eine benannte Ausnahme:</b> {@code MainWindow} ist das Fenster selbst — die Stelle, an
+	 * der die Anwendung ihren Rahmen baut, bevor es überhaupt etwas zu zeigen gibt. Dass dort JavaFX
+	 * steht, ist kein Verstoß, sondern der Ort, an dem der Rahmen entsteht.</p>
+	 */
+	@ArchTest
+	static final ArchRule styleKlassenNurInDerAnzeigeSchicht = noClasses()
+			.that().resideOutsideOfPackages("app.shared.ui..", "app.shared.skin..")
+			.and().doNotHaveFullyQualifiedName("app.controller.MainWindow")
+			.should().callMethodWhere(target(name("getStyleClass")))
+			.because("wie etwas aussieht, entscheidet die Anzeige-Schicht");
 }

@@ -6,12 +6,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import app.shared.model.McMetrics;
-import app.shared.model.UiComponent;
 import app.shared.skin.SkinService;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
@@ -30,7 +28,7 @@ import javafx.scene.text.TextAlignment;
  * CSS-classes
  * 		Button	= "my-mc-button"
  */
-public class MultipleChoicePane extends Pane implements UiComponent{
+public class MultipleChoicePane extends Pane {
 
     // --- Logik-Zustände (Exklusiv) ---
     private static final PseudoClass STATE_INACTIVE = PseudoClass.getPseudoClass("inactive");
@@ -77,10 +75,6 @@ public class MultipleChoicePane extends Pane implements UiComponent{
         }
     }
     
-    @Override
-	public Node getView() {
-		return this;
-	}
 
     private Button createButton(int index, double width, double height) {
         Button btn = new Button();

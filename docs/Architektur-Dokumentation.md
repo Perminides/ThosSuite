@@ -11,7 +11,7 @@ Feature-Details (Lern-Kern, einzelne Features, konkrete Screens) stehen separat 
 
 ### Was ist ThosSuite?
 Eine persönliche All-in-One-Desktop-Anwendung (JavaFX), die mehrere Lebensbereiche abdeckt.
-Thorsten ist einziger Nutzer und einziger Entwickler.
+Perminides ist einziger Nutzer und einziger Entwickler.
 
 **Lernen:**
 - **Anki-Decks** — karten-basiertes Lernen, bei dem *jede Karte einzeln* ihren
@@ -55,16 +55,6 @@ gegliedert (Details und Begründung im Regel-Dokument): die **Features** (`app.a
 `app.fitbit`, `app.learn`, `app.mattress`, `app.messaging`, `app.movie`, `app.weekday`), das
 **Fundament** (`app.shared`) und die **Orchestrierung** (`app.controller`). Daneben liegt `scripts`
 als eigenes Wurzelpaket — abtrennbare Einmal-Klassen, die nicht zur Suite gehören.
-
-**Das Fundament hat vier Sprossen**, und die Abhängigkeit läuft nur nach unten:
-
-```
-oben    shared.ui       Oberflächen (Wurzel) und Bausteine (.components, .components.map)
-        shared.skin     SkinProperties (Werte) · Skin (CSS) · die Skins · SkinService · Bildcache
-        shared.model    Records, Enums, die drei Kontrakte
-unten   shared          Config · DB · Log · AppClock · UiUtils
-```
-
 `controller` darf auf jede Sprosse; **ein Feature greift nie ins Skin-Paket**. Diese Zusagen sind
 keine Absicht, sondern geprüft — siehe „Architekturregeln im Build".
 
@@ -73,9 +63,6 @@ Der Abhängigkeitsgraph der Pakete liegt separat als `docs/Paketabhängigkeiten.
 
 ### Framework & Tools
 - **JavaFX 25**, **Java 25 LTS**
-- **Null-Layout:** keine LayoutManager, feste Positionen (Desktop-App mit fester Auflösung;
-  präzise Kontrolle wichtiger als Flexibilität). Die Rechtecke stehen im Skin, gesetzt werden sie
-  von der Oberfläche in `shared.ui` — der Skin fasst keine Komponente an.
 - **Jackson** für JSON-Parsing (GeoJSON, TMDB, Fitbit)
 - **SQLite** für strukturierte Daten. Die Suite besitzt zwei eigene DBs (Suite-DB, Film-DB);
   beim Import wird zusätzlich lesend auf die fremden DBs von Signal und WhatsApp zugegriffen.
@@ -258,18 +245,7 @@ Methoden sind Pflicht, weil der Controller sie immer braucht: `getSwitchStrategy
 Reagiert einer auf `sort()` nicht, ist das **kein** Fehler, sondern beabsichtigte
 Nicht-Zuständigkeit (kein FailFast). Vollständige Signaturen im Code.
 
-Jeder Screen hält seine Anzeige als `ScreenView` und reicht sie über `getView()` weiter — **keine
-Klasse implementiert beides.** Die Kopplung sieht überall gleich aus:
-
-```java
-private final XView view = new XView();
-public ScreenView getView() { return view; }
-public void refresh()       { view.rebuild(); }
-```
-
-Zwei begründete Abweichungen: `DashboardScreen` sammelt in `refresh()` erst seine Daten, weil seine
-View sie braucht; und die beiden Lern-Sessions halten statt einer View einen **Presenter**, der
-`getView()` und `refresh()` weiterreicht — dort treibt ein Ablauf die Anzeige, nicht umgekehrt.
+Jeder Screen hält seine Anzeige als `ScreenView` und reicht sie über `getView()` weiter.
 
 #### Wechsel zwischen Screens
 Jeder Screen meldet über `getSwitchStrategy()`, wie mit ihm beim Verlassen zu verfahren ist:

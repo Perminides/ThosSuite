@@ -1,8 +1,12 @@
 # Skin-Refactoring — Vorgehensplan
 
-**Stand:** 29.07.2026 · v9 · Schritte 1–4 erledigt. **Alle drei Wächter sind leer und werden vom
-Build bewacht**, der Paketgraph ist zyklenfrei. `Skin` von 2660 auf **1241** Zeilen und hat genau
-eine öffentliche Methode: `styleScene`. Offen ist nur noch 5 (Regelwerk und Architekturdokument).
+**Stand:** 29.07.2026 · v10 · **Alle Schritte erledigt.** Die drei Wächter sind leer und werden
+vom Build bewacht, der Paketgraph ist zyklenfrei, `Skin` ist von 2660 auf **1241** Zeilen
+geschrumpft und hat genau eine öffentliche Methode: `styleScene`. Regelwerk und Architekturdokument
+sind nachgezogen.
+
+Was noch offen ist, steht in `Vertagte-Punkte.md` — **kein Umbau mehr**, sondern sechs kleine
+Code-Punkte (A1) und vier Sachfehler (A3).
 
 **Charakter dieses Dokuments:** es blickt **zurück** — *was entschieden ist*, *was erledigt ist*,
 *in welcher Reihenfolge* vorgegangen wird, plus die geprüften Fakten, auf denen das beruht, und die
@@ -125,14 +129,14 @@ DiaryStyle        diaryStyle();
 MovieStyle        movieStyle();
 DashboardTileStyle dashboardTileStyle();
 Dimension2D       getContentSize();
-int               bigComponentCornerRadius();
-int               bigComponentBorderWidth();
-
-Rectangle2D sessionBounds(String mapName, String kategorie, SessionComponent teil);
-Rectangle2D sessionBounds(String mapName, String kategorie, Skin.TextLabelType typ);
 McMetrics   mcMetrics();
-MapImages   mapImages(String mapName);    // mit Schlüssel — der Aufrufer löst auf
-Image       iconFor(Skin.IconButtonType rolle);
+BigComponentStyle bigComponentStyle();
+Image       iconFor(IconButtonType rolle);
+
+Rectangle2D learnComponentBounds(mapName, kategorie, LearnComponent teil);   // mit Schlüssel —
+Rectangle2D learnTextLabelBounds(mapName, kategorie, TextLabelType typ);     // der Aufrufer
+MapImages   mapImages(String mapName);                                       // löst auf
+Path        wallpaperPath(mapName, kategorie) · emptyWallpaperPath() · startScreenWallpaperPath();
 ```
 
 Die Trennlinie ist die Schlüssel-Regel (§3.15): was ohne Argument auskommt, holt sich der Baustein
@@ -154,19 +158,19 @@ shared.ui                        (Oberflächen — was gezeigt wird)
     DiaryEditor · ImageBatchProcessor
     ActivityTableDialog · AnkiConfigDialog · RegionConfigDialog · TextPromptDialog
     WhatsAppChatDialog · WhatsAppContactDialog · DatePickerDialog
-    AnkiSessionView (abstrakt) + ShapeMapSessionView · McSessionView · ImageMapSessionView
-    RegionSessionView
-    MainWindowHeaderBar
+    AnkiLearnView (abstrakt) + ShapeMapLearnView · McLearnView · ImageMapLearnView
+    RegionLearnView
+    MainWindowHeaderBar · StartScreenView
     ComponentHost
 
 shared.ui.components             (Bausteine — was verbaut wird)
     SuiteImage · SuiteInfoLabel · SuiteTextField · SuiteIconButton
     SuiteSuggestionTextField · SuiteTabCommitTextFieldTableCell · SuiteDatePicker
-    SuiteDialog · SuiteHeaderBar
+    SuiteDialog · SuiteHeaderBar · SuiteBackground
     MultipleChoicePane · DashboardTile · DiaryCard · MovieCard · DiaryTagInputComponent
 
 shared.ui.components.map         (die Karten und ihr Innenleben)
-    SessionMap (Kontrakt) · ShapeMapPane · ImageMapPane · NoSessionMap
+    LearnMap (Kontrakt) · ShapeMapPane · ImageMapPane · EmptyLearnMap
     MapNodeBuilder · ShapeLayer          (beide paketprivat)
 ```
 
@@ -177,8 +181,8 @@ geplante Fabrik `Dialogs` gibt es nicht.
 
 ```java
 // in der Session-View, shared.ui
-questionArea = new SuiteInfoLabel("", skin.sessionBounds(mapName, kategorie, TextLabelType.QUESTION));
-inputField   = new SuiteTextField(skin.sessionBounds(mapName, kategorie, SessionComponent.TEXT_INPUT));
+questionArea = new SuiteInfoLabel("", skin.learnTextLabelBounds(mapName, kategorie, TextLabelType.QUESTION));
+inputField   = new SuiteTextField(skin.learnComponentBounds(mapName, kategorie, LearnComponent.TEXT_INPUT));
 ```
 
 Jeder dieser Bausteine hat daneben einen Konstruktor **ohne** Lage, für Aufrufer, die ihn in ein
@@ -229,7 +233,7 @@ Icon-Bild — holt sich der Baustein dagegen selbst (§3.15).
     um ein `TextField`. Die Grenze, die Fassaden schützten (Features ohne javafx), verläuft nicht
     mehr hier — innerhalb von `shared.ui` kennen beide Seiten javafx.
 17. **Bausteine heißen nach dem, was sie sind, nicht nach dem, wofür sie gerade benutzt werden.**
-    Deshalb `ShapeMapSessionView`, nicht `GermanySessionView`. Der Prüfsatz dazu: *was, wenn ein
+    Deshalb `ShapeMapLearnView`, nicht `GermanyLearnView`. Der Prüfsatz dazu: *was, wenn ein
     zweites Deck derselben Bauart dazukäme?*
 
 ---
@@ -289,12 +293,12 @@ gelistet, den §5 desselben Dokuments als *erledigt* auswies.
 
 **29.07. — learn (3c).**
 
-- **Region:** `learn.region.SessionPane` gelöscht, dafür `shared.ui.RegionSessionView`. Der
+- **Region:** `learn.region.SessionPane` gelöscht, dafür `shared.ui.RegionLearnView`. Der
   Presenter treibt sie direkt. `ShapeMapState` als eigenständiges Record nach `shared.model`.
-- **Anki:** die drei Panes (432 Zeilen) gelöscht, dafür `AnkiSessionView` (abstrakt) mit
-  `ShapeMapSessionView`, `McSessionView`, `ImageMapSessionView` — je unter 32 Zeilen.
-- Die zwei Kartensprachen liegen hinter `SessionMap` (`ShapeSessionMap`, `ImageSessionMap`,
-  `NoSessionMap`). `SessionCallbacks` bündelt die vier Rückmeldungen.
+- **Anki:** die drei Panes (432 Zeilen) gelöscht, dafür `AnkiLearnView` (abstrakt) mit
+  `ShapeMapLearnView`, `McLearnView`, `ImageMapLearnView` — je unter 32 Zeilen.
+- Die zwei Kartensprachen liegen hinter `LearnMap` (damals noch mit zwei Übersetzer-Klassen,
+  siehe unten). `LearnCallbacks` bündelt die vier Rückmeldungen.
 - **Gefunden und behoben:** `beginTx`/`endTx` waren tote No-ops (Interface-Defaults, nie
   implementiert, viermal gerufen). Und der deck-eigene Hintergrund war seit unbekannt wann bei
   Germany statt bei MC — sichtbar geworden, weil die drei Konfigurationen erstmals nebeneinander
@@ -309,7 +313,7 @@ gelistet, den §5 desselben Dokuments als *erledigt* auswies.
   wegräumen — die Nodes entstehen aber im selben Konstruktor, es konnte nichts zu räumen geben.
 - Neu und öffentlich: `SkinProperties.sessionMapBounds(mapName, kategorie)`. Das erste Session-Maß,
   das das skin-Paket verlässt; der Property-Name bleibt drin. **Offen:** ob die restlichen zehn
-  ebenfalls benannte Methoden werden oder eine `sessionBounds(mapName, kategorie, teil)` mit
+  ebenfalls benannte Methoden werden oder eine `learnComponentBounds(mapName, kategorie, teil)` mit
   Aufzählung — entscheidet sich, wenn die Bau-Methoden nachziehen.
 - Thorstens TODO an der Stelle („Das Konstrukt ist so kompliziert und ich weiß auch nicht mehr genau
   warum wir das so gebaut hatten") ist damit beantwortet: der Umweg existierte nur, weil die Karte
@@ -326,7 +330,7 @@ gelistet, den §5 desselben Dokuments als *erledigt* auswies.
   jetzt der Knopf. Dateinamen und Tönungsfarbe bleiben Skin-Werte und bleiben drin.
 - Neu: `SkinProperties.sessionInputBounds(mapName, kategorie)`.
 - Alle drei Klassen behalten vorerst `implements UiComponent` mit `getView() { return this; }` — der
-  `ComponentHost` bekommt noch `UiComponent...`, weil die `SessionMap`-Implementierungen keine Nodes
+  `ComponentHost` bekommt noch `UiComponent...`, weil die `LearnMap`-Implementierungen keine Nodes
   sind. Das fällt zusammen mit ihnen.
 
 **29.07. — Die Bausteine nehmen Maße entgegen (3f, dritter Teilschritt).**
@@ -342,7 +346,7 @@ Signatur ablesbar:
 ```java
 bigComponentCornerRadius()                  // kein Argument     → Baustein holt selbst
 iconFor(rolle)                              // Rolle, kein Kontext → Baustein holt selbst
-sessionBounds(mapName, kategorie, teil)     // braucht Schlüssel  → Aufrufer löst auf
+learnComponentBounds(mapName, kategorie, teil)  // braucht Schlüssel → Aufrufer löst auf
 ```
 
 Ein Schlüssel *ist* der Kontext. Wer einen liefern muss, weiß etwas, das der Baustein nicht wissen
@@ -359,8 +363,8 @@ bekommt statt es zu holen.
   Fallback-Kette, die beim Laden ohnehin schon auf `displayTextBgColor` zurückfällt.
 - **Gelöscht:** `createImageComponent`, `createSessionInfoLabel`, das Record `IconButtonStyle`.
   `iconButtonStyle(deckId, typ)` wurde zu `iconFor(rolle)` — die Maße kommen jetzt getrennt.
-- **Neu:** `SessionComponent` (Aufzählung, hält die Property-Endung) und
-  `sessionBounds(mapName, kategorie, teil)` mit einer Überladung für `TextLabelType`. Die Staffelung
+- **Neu:** `LearnComponent` (Aufzählung, hält die Property-Endung) und
+  `learnComponentBounds(…)` mit einer Schwester für `TextLabelType`. Die Staffelung
   spezifisch→Kategorie steht damit einmal statt sechsmal.
 - Die `* 2`-Umrechnung für den Eckradius ist aus dem Skin in `SuiteImage` gewandert, dorthin also,
   wo `Rectangle.setArcWidth` gerufen wird. Der Skin führt durchgehend Radien, wie das CSS auch.
@@ -382,6 +386,71 @@ Wächter 1: 3 → **1** (nur noch `MultipleChoicePane`). `mvn test` grün.
 **Damit sind alle drei Wächter leer und der Paketgraph zyklenfrei.** Die drei bis dahin
 auskommentierten ArchUnit-Regeln sind scharf gestellt; der Test läuft mit vier Regeln grün.
 
+**29.07. — `UiComponent` abgeschafft, fünfte ArchUnit-Regel (A1.2 + A1.1b).**
+
+`ComponentHost` nimmt `Node...`, fünf Bausteine haben ihr `getView()` verloren, `EmptyLearnMap` erbt
+von `Group`, der Kontrakt ist gelöscht. **Nicht ganz weg:** `LearnMap` deklariert weiterhin ein
+`getView()` — ein Interface kann kein Node sein, die drei Umsetzungen sind welche, der Typ ist es
+nicht. Eine Aufrufstelle.
+
+`my-root` ist komplett entfernt (Style-Klasse, auskommentiertes CSS, die Methode
+`addMainWindowStyles`, die danach nur noch aus Kommentaren bestand, plus zwei tote Verweise darauf).
+
+Dafür prüft **Regel 5** jetzt, dass `getStyleClass()` nur in `shared.ui` und `shared.skin` vorkommt —
+mit `MainWindow` als benannter Ausnahme. Gegenprobe gemacht: ohne die Ausnahme meldet sie die zwei
+`my-spacer`-Stellen, greift also wirklich. Sie prüft auf den **Methodennamen**, nicht auf eine
+deklarierende Klasse — `MenuItem.getStyleClass()` existiert, obwohl `MenuItem` kein `Node` ist.
+
+**29.07. — `Session` → `Learn` (A1.1).**
+
+„Session" war nicht spezifisch genug — es könnte irgendwann auch ein kleines Spiel eine Session
+haben; gemeint war immer Lernen. Umbenannt in `shared`:
+
+```
+SessionMap        → LearnMap            SessionComponent  → LearnComponent
+NoSessionMap      → EmptyLearnMap       SessionCallbacks  → LearnCallbacks
+AnkiSessionView   → AnkiLearnView       RegionSessionView → RegionLearnView
+ShapeMapSessionView → ShapeMapLearnView   McSessionView → McLearnView
+ImageMapSessionView → ImageMapLearnView   sessionBounds(…) → learnComponentBounds(…)
+```
+
+**Nicht umbenannt:** die Klassen in `learn.anki` und `learn.region` (dort steht „Learn" schon im
+Paketnamen), und die **Property-Namen** in den Skin-Dateien — `…SessionMapPanel` heißt weiter so.
+Nach außen heißt der Bestandteil `LearnComponent.MAP`; die Endung bleibt im skin-Paket.
+
+Das Wort **Session** bleibt der Lernseite vorbehalten und meint dort einen Ablauf mit Anfang, Ende
+und Fortschritt: die Screens heißen weiterhin `AnkiDeckSession` und `RegionSession`.
+
+**29.07. — Schritt 5: Regelwerk und Architekturdokument.**
+
+`Design-Regeln.md` von 364 auf 553 Zeilen, `Architektur-Dokumentation.md` von 319 auf 411.
+
+**Sechs Stellen waren nicht veraltet, sondern falsch:** `shared.ui.components.<feature>` (das Paket
+gibt es nicht), `ShapeGeometry` in `…components.learn.model` (liegt in `shared.model`),
+`UiComponent.getNode()` (heißt `getView()`), `FitbitScreenView` (heißt `BarChartScreenView`),
+`SkinService.get().showAlert(…)` (heißt `Alerts.show(…)`), `SkinService.getOwnerWindow()` (liegt in
+`UiUtils`). Im Architekturdokument dazu: „Positionen/Größen setzt der Skin" (tut er nicht mehr), das
+Fallback-Beispiel `geo_deckSessionQuestionPanel` (den Schlüssel gibt es nicht) und der
+Abhängigkeitsgraph unter falschem Dateinamen.
+
+**Die Test-Regel wurde präzisiert statt gestrichen.** „Keine Tests" galt absolut; seit Schritt 6
+gibt es JUnit und ArchUnit. Neu: keine Unit-Tests, keine Testbarkeit als Designziel, **eine**
+Ausnahme für die Architekturregeln — mit der Begründung, die den Unterschied trägt: der Grund für
+„keine Tests" ist, dass Fehler im Gebrauch auffallen, und genau das tut ein Strukturverstoß nicht.
+
+**Neu aufgenommen:** Regel 6 (keine Streams), die Schlüssel-Regel, der Verantwortungsrahmen,
+Vererbung statt Fassade samt der `final`-Ausnahme, die Benennungsregel mit Thorstens Prüfsatz, die
+vier bewachten Zusagen, der Karten-Absatz, Dialog-Stufe 2a, und die Benennung Screen `…Session` /
+View `…LearnView`.
+
+**Eine Regel ist gestrichen worden, ohne ersetzt zu werden:** „ein inhaltsloser Screen darf sein
+eigener ScreenView sein". Der Fall wurde per Code gelöst.
+
+**Und eine Prüffrage war Murks.** Ich hatte geschrieben: *„Bekommt der `controller` es fertig in die
+Hand → `shared.ui`."* Das ist zirkulär — Wächter 3 sagt bereits, dass der `controller` nur die
+Wurzel sieht — und es macht einen fremden Aufrufer zum Kriterium. Die tragfähige Fassung fragt nur
+nach dem, was **innerhalb** von `shared.ui` passiert: *wird es eingebaut, oder ist es das Fertige?*
+
 **29.07. — Schritt 4 abgeschlossen: `Skin` ist nur noch CSS.**
 
 Die sieben Werte-Zugänge sind nach `SkinProperties` gewandert (`wallpaperPath`,
@@ -390,7 +459,7 @@ Die sieben Werte-Zugänge sind nach `SkinProperties` gewandert (`wallpaperPath`,
 `styleScene`, dahinter 23 `addXxxStyles` und der `CssBuilder`.
 
 - **Die zwei Aufzählungen zogen mit** (`IconButtonType`, `TextLabelType`) — nicht aus Ordnungsliebe:
-  `SkinProperties` hatte bereits `sessionBounds(…, Skin.TextLabelType)`, die Elternklasse verwies
+  `SkinProperties` hatte bereits einen Maß-Zugang mit `Skin.TextLabelType`, die Elternklasse verwies
   also auf ihr Kind. Alle Aufrufstellen bleiben unverändert, weil geschachtelte Typen vererbt werden
   und `Skin.TextLabelType` weiterhin auflöst.
 - `mcLineSpacingSqueezed()` musste `protected` statt `private` werden: den Wert braucht auch die
@@ -574,22 +643,14 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
 
    Damit: alle Wächter leer, Paketgraph zyklenfrei, Build bewacht beides.
 
-── offen ──────────────────────────────────────────────────────────────────────
+5  ✓ Regelwerk und Architekturdokument nachgezogen                       29.07.
+      Design-Regeln.md v2.0 · Architektur-Dokumentation.md
+      Ordnerstruktur.txt und Paketabhängigkeiten.dot neu erzeugt
 
-A1  Der Code, der sich noch ändert — siehe Vertagte-Punkte.md
-    Session → Learn durchbenennen · MainWindow rund machen · UiComponent
-    abschaffen · SuiteDatePicker entscheiden · #QuestionLabel als
-    Modifikator-Klasse · overlayContentBounds
-    Kommt VOR Schritt 5: das Regelwerk beschreibt einen Zustand, und der
-    ist bis dahin noch in Bewegung.
+── nichts mehr offen ──────────────────────────────────────────────────────────
 
-5   Regelwerk und Architekturdokument nachziehen
-    Design-Regeln.md: die Ordnung aus §1, der Verantwortungsrahmen aus §3.14 in
-    Thorstens Formulierung, die Schlüssel-Regel aus §3.15, Dialog-Stufe 2a,
-    keine Streams, der Karten-Absatz, der neu gefasste Skin-Vertrag.
-    Die drei Wächter sind dort keine Vorsätze mehr, sondern bewachte Zusagen.
-    Architektur-Dokumentation.md: der Abschnitt „UI-Architektur: Skin-System" ist
-    vollständig überholt.
+Der Umbau ist zu Ende. Was noch aussteht, steht in Vertagte-Punkte.md und ist
+kein Umbau: sechs kleine Code-Punkte (A1) und vier Sachfehler (A3).
 ```
 
 **Warum die Paketumstellung vor die Auflösung rückt:** sie ist risikoarm (reine Moves) und liefert

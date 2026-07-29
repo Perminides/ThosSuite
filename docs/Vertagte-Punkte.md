@@ -1,13 +1,12 @@
 # Vertagte Punkte
 
-**Stand:** 29.07.2026 · Schritte 1–4 erledigt, alle Wächter scharf im Build. Offen: Schritt 5.
+**Stand:** 29.07.2026 · **Der Umbau ist fertig.** Offen sind nur noch A1 (sechs kleine Punkte) und A3 (vier Sachfehler).
 
 Alles, was während des Refactorings (26.–29.07.) bewusst **nicht** sofort gemacht wurde — und
 alles, was dabei aufgefallen ist.
 
-**Abschnitt A ist die Arbeitsliste**, sortiert nach Art und in der Reihenfolge, in der es dran ist:
-erst der Code, der sich noch ändert (A1), dann das Regelwerk (A2). Die Sachfehler in A3 warten auf
-nichts davon. B bis E sind Vorrat, nicht Plan.
+**Abschnitt A ist die Arbeitsliste**: sechs kleine Code-Punkte (A1) und vier Sachfehler (A3), die
+auf nichts warten. B bis E sind Vorrat, nicht Plan.
 
 Was **erledigt** ist, steht nicht hier, sondern in `Skin-Refactoring-Plan.md` §5.
 
@@ -15,29 +14,13 @@ Was **erledigt** ist, steht nicht hier, sondern in `Skin-Refactoring-Plan.md` §
 
 ## A · Was noch offen ist
 
-### A1 · Vor dem Regelwerk — Code, der sich noch ändert
+### A1 · Kleine Code-Punkte
 
-Diese Punkte kommen **vor** Schritt 5. Das Regelwerk beschreibt einen Zustand; wenn danach noch
-`Session` zu `Learn` wird und `UiComponent` verschwindet, schreiben wir es zweimal.
+Sieben Stück, jeder für sich klein. Zwei davon ändern etwas, das im Regelwerk beschrieben ist
+(`UiComponent`, `my-title`) — dort ist es als „auf dem Weg hinaus" vermerkt, aber nach der Änderung
+gehört der Satz nachgezogen.
 
-**1. `Session` → `Learn` durchbenennen.** Beschlossen, nicht gemacht. `SessionMap` ist nicht
-spezifisch genug — „Session" könnte irgendwann auch ein kleines Spiel haben, gemeint ist Lernen.
-
-```
-SessionMap        → LearnMap
-ShapeMapPane        bleibt (heißt nach der Bauart, nicht nach dem Zweck)
-NoSessionMap      → EmptyLearnMap     („NoLearnMap" läse sich wie eine Verneinung des Lernens)
-SessionComponent  → LearnComponent
-SessionCallbacks  → LearnCallbacks
-sessionBounds(…)  → learnBounds(…)
-AnkiSessionView   → AnkiLearnView
-RegionSessionView → RegionLearnView
-```
-
-Nicht umbenennen: die paketprivaten Klassen in `learn.anki` und `learn.region` — dort ist „Learn"
-im Paketnamen und wäre doppelt gemoppelt. **Halb umbenannt wäre schlechter als gar nicht.**
-
-**2. `MainWindow` rund machen.** Drei Einwände aus der 3d-Runde:
+**1. `MainWindow` rund machen.** Drei Einwände aus der 3d-Runde:
 
 *a) Eine fertige `MenuBar` über die shared-Grenze zu reichen, ist zu viel.* Erwartbarer wäre:
 `MainWindow` bekommt eine leere Leiste und hängt seine Menüs selbst ein. Zu bedenken: das Symbol
@@ -70,12 +53,13 @@ Dazu gehört ein zweiter Punkt, der dieselbe Klasse betrifft: `SuiteHeaderBar` b
 auch dieses Padding; gibt es keine, muss der Wert anders untergebracht werden.
 → `SuiteHeaderBar:22`
 
-**3. `UiComponent` abschaffen.** Alle Bausteine sind inzwischen selbst Nodes und implementieren den
-Kontrakt nur noch mit `getView() { return this; }`. Die einzige Ausnahme ist `NoSessionMap`, das
-Nullobjekt: es hält eine leere `Group`. Wird auch das ein Node (etwa indem es selbst von `Group`
-erbt), kann `ComponentHost` auf `Node...` umstellen und `UiComponent` samt `getView()` entfallen.
+~~**2. `UiComponent` abschaffen.**~~ **Erledigt 29.07.** `ComponentHost` nimmt `Node...`, die fünf
+Bausteine haben ihr `getView()` verloren, `EmptyLearnMap` erbt von `Group`, der Kontrakt ist
+gelöscht. **Nicht ganz weg:** `LearnMap` deklariert weiterhin ein `Node getView()` — ein Interface
+kann kein Node sein, die drei Umsetzungen sind welche, der Typ ist es nicht. Genau eine Aufrufstelle
+in `AnkiLearnView` benutzt es.
 
-**4. `SuiteDatePicker` entscheiden.** Neun Zeilen, trägt keinen Skin-Wert, nur die Festlegung „keine
+**3. `SuiteDatePicker` entscheiden.** Neun Zeilen, trägt keinen Skin-Wert, nur die Festlegung „keine
 Kalenderwochen". Überlebt allein über das Argument „Ort einer suite-weiten Entscheidung", nicht über
 das Fassaden-Argument. Dünnster Fall der Familie, legitim zu streichen.
 
@@ -85,18 +69,32 @@ anderen gehen über `SuiteDatePicker` (ohne). Der Unterschied ist **geerbt, nich
 entscheiden: nirgends, überall, oder je nach Kontext als Parameter — in jedem Fall sollte auch der
 Editor denselben Weg gehen wie die anderen.
 
-**5. `#QuestionLabel` durch eine Modifikator-Klasse ersetzen.** Jetzt, wo `SuiteInfoLabel`
+**4. `#QuestionLabel` durch eine Modifikator-Klasse ersetzen.** Jetzt, wo `SuiteInfoLabel`
 wiederverwendbar ist, ist die Kennung die falsche Mechanik — IDs sollen in einer Szene eindeutig
 sein, zwei Info-Labels in einem Dialog brächen das. Sauberer: `.my-info-label.question` statt
 `#QuestionLabel`. Betrifft `addSessionInfoLabelStyles` und die zwei `setId(…)`-Aufrufe in den Views.
 
-**6. Doppelte Innenhöhen in `DashboardTile`.** Die Kachel setzt `TOP_HEIGHT = 300` und
+**5. Doppelte Innenhöhen in `DashboardTile`.** Die Kachel setzt `TOP_HEIGHT = 300` und
 `BOTTOM_HEIGHT = 100` programmatisch auf ihre beiden Hälften — und dasselbe passiert nochmal im CSS
 (`addDashboardStyles`: `.dashboard-tile-top` mit `dashBoardTileTopHeight` = 250,
 `.dashboard-tile-bottom` mit 100). **Zwei Quellen für dieselbe Größe, und die Zahlen widersprechen
 sich** (300 gegen 250). Vermutlich gewinnt das CSS — dann sind die Konstanten tot, so wie es
 `TILE_WIDTH`/`TILE_HEIGHT` schon waren. Nachmessen, dann eine der beiden Quellen streichen.
 Kein Aufräumen, sondern ein latenter Fehler. → `DashboardTile` (TODO in der Klasse)
+
+**6. Die vorhandenen Streams loswerden.** Regel 6 im Regelwerk sagt seit 29.07. „keine Streams,
+außer sie sind unbedingt nötig" — der Bestand ist damit aber nicht angefasst. Stand heute:
+
+```
+36  .stream() / Collectors     in 15 Dateien
+11  .forEach(…) auf Sammlungen (kein Stream, aber Lambda statt Schleife)
+```
+
+Die dicksten Brocken: `MultipleChoiceAnswers` (8), `CardProgress` (5), `MapShape` und
+`FitbitStatisticsPresenter` (je 3). Nicht alles muss weg — die Regel sagt „außer sie sind unbedingt
+nötig", und ein `Collectors.joining` ist selten das Problem. Sinnvoll wäre, Datei für Datei zu
+fragen: liest sich die Schleife besser? Zwei Stellen sind im Umbau schon so entstanden
+(`DashboardScreenView`, `ShapeMapPane`-Konstruktor, `ComponentHost`).
 
 **7. `overlayContentBounds` — gehört das in den Skin?** Es beschreibt, wo der Inhalt im
 Mini-Map-Bild sitzt. Das sind Karten-/Asset-Daten, kein Styling; es liegt nur deshalb beim Skin,
@@ -105,76 +103,14 @@ Karte. → `SkinProperties.getOverlayContentBounds`
 
 ---
 
-### A2 · Schritt 5 — Regelwerk und Architekturdokument
+### A2 · ✓ Regelwerk und Architekturdokument — erledigt 29.07.
 
-**`Design-Regeln.md`** — neu aufzunehmen:
+`Design-Regeln.md` steht auf v2.0, `Architektur-Dokumentation.md` ist nachgezogen,
+`Ordnerstruktur.txt` und `Paketabhängigkeiten.dot` sind neu erzeugt. Was dabei geändert wurde und
+welche sechs Stellen schlicht falsch waren, steht in `Skin-Refactoring-Plan.md` §5.
 
-- **Die Ordnung** aus Plan §1: die vier Sprossen, die Regel „nur nach unten", der Discriminator
-  „wird es gezeigt oder verbaut?"
-- **Der Verantwortungsrahmen** Feature / View / Skin (Plan §3.14), in Thorstens Formulierung:
-  *„Stell eine Frage" sagt das Feature. „Zeige auf dem Fragepanel diesen Text" passiert in
-  `shared.ui`.*
-- **Die Schlüssel-Regel** (Plan §3.15):
-
-  > **Ein Baustein holt sich beim Skin, was für jede Verwendung gleich ist. Was von der Verwendung
-  > abhängt, bekommt er übergeben.**
-  >
-  > Der Test steht in der Signatur des Skin-Zugangs: **braucht er ein Argument vom Aufrufer, dann
-  > löst der Aufrufer auf und reicht das Ergebnis weiter.** Ein Argument *ist* der Kontext.
-
-  ```java
-  bigComponentStyle()                      // kein Argument      → Baustein holt selbst
-  iconFor(rolle)                           // Rolle, kein Kontext → Baustein holt selbst
-  sessionBounds(mapName, kategorie, teil)  // braucht Schlüssel   → Aufrufer löst auf
-  ```
-
-  **Was die Regel nicht sagt:** ob ein Baustein an ein Feature gebunden ist. Das ist eine
-  Namensfrage, kein Konstruktionsprinzip. `MovieCard` darf sich `moviePosterWidth` holen (kein
-  Schlüssel) und bekommt den Film übergeben (Kontext) — und bleibt trotzdem eine Film-Komponente.
-
-  **Nebenregel, schon Praxis:** was ein Baustein sich holt, kommt bevorzugt als zweckgeschnittenes
-  Record (`DialogStyle`, `McMetrics`, `BigComponentStyle`), nicht als Feld-Getter — damit keine
-  Property-Namen das skin-Paket verlassen.
-- **Bausteine erben, sie verhüllen nicht** (Plan §3.16) — mit der Ausnahme, die `SuiteBackground`
-  erzwingt: ist der javafx-Typ `final`, bleibt nur eine Fabrik.
-- **Bausteine heißen nach dem, was sie sind** (Plan §3.17). Prüfsatz: *was, wenn ein zweites Deck
-  derselben Bauart dazukäme?*
-- **Keine Streams, außer sie sind unbedingt nötig.** Bisher nirgends geschrieben, aber zweimal im
-  Review beanstandet (`DashboardScreenView`, `ShapeMapPane`).
-- **Dialog-Stufe 2a** fehlt: der parametrisierte Standarddialog (Primitive rein, Primitive oder
-  `null` raus, kein Feature-seitiges Objekt). `TextPromptDialog`, `WhatsAppChatDialog`,
-  `WhatsAppContactDialog` sehen nur deshalb wie Verstöße aus.
-- **Der Karten-Absatz** — das Konstrukt versteht man beim Draufschauen nicht:
-
-  ```
-  ShapeLayer        Nachschlagetabelle: json-type → zIndex, interaktiv?, CSS-Layer-Klasse
-  MapNodeBuilder    Fabrik:             Geometrie → JavaFX-Node
-  SessionMap        das gemeinsame Vokabular, spricht durchgehend Ids
-  ShapeMapPane      die eine Karte, arbeitet ohnehin mit Ids
-  ImageMapPane      die andere Karte, arbeitet mit Geometrien und übersetzt selbst
-  NoSessionMap      die Karte der MC-Session, die keine hat (Nullobjekt)
-  ```
-
-  Der Grund für das Interface: die beiden Panes sind sehr verschieden, die View soll beide bedienen,
-  ohne zu wissen welche.
-- **Wie mit Hintergrundbildern umgegangen wird** → `ComponentHost:33`
-- **Der Skin-Vertrag** neu gefasst — der bestehende Abschnitt ist als „vorläufig" markiert.
-- **Die vier Wächter als bewachte Zusagen** — sie sind keine Vorsätze mehr, sie brechen den Build.
-
-**`Architektur-Dokumentation.md`**, Abschnitt **„UI-Architektur: Skin-System"** ist vollständig
-überholt. Er beschreibt Factory-Methoden, das Fallback-System und die `SkinService`-API als „Stand
-heute korrekt" und trägt bereits den Vermerk *„Refactoring ausstehend"*. Neu zu fassen:
-
-- **Konzept** — der Skin baut nichts mehr, er liefert Werte und erzeugt das CSS
-- **Factory-Methoden** — der ganze Abschnitt entfällt
-- **Fallback-System** — bleibt inhaltlich, wandert aber hinter `sessionBounds(…)`
-- **SkinService** — nur noch Registry; `setOwnerWindow`/`getOwnerWindow` liegen in `UiUtils`
-- **Paket-Struktur** — `shared.ui` / `shared.ui.components` / `.map`, die vier Sprossen, die Wächter
-- **learn** ist gesondert beschrieben und muss nachgezogen werden: die Sessions gehen über einen
-  Presenter statt direkt über eine View. Das ist die eine begründete Abweichung im Screen-Aufbau.
-
-**Zuletzt:** `docs/Ordnerstruktur.txt` und `docs/Paketabhängigkeiten.dot` neu erzeugen. Bewusst
-nicht zwischendurch — sie veralten bei jedem Move.
+**Nachzuziehen, sobald A1 durch ist:** das Regelwerk beschreibt `UiComponent` als „auf dem Weg
+hinaus" und nennt `my-title` — beides ändert sich mit A1.2 und A1.1c.
 
 ---
 
@@ -182,10 +118,10 @@ nicht zwischendurch — sie veralten bei jedem Move.
 
 | Fehler | Fundstelle |
 |---|---|
-| **Freies Spiel:** falsch geklickte Formen verschwinden bei „schwer" nicht, nur die richtigen | `RegionSessionView:16` |
+| **Freies Spiel:** falsch geklickte Formen verschwinden bei „schwer" nicht, nur die richtigen | `RegionLearnView:17` |
 | **EM 2021 — „alle Länder grün, welches war falsch?"** Das Zurücksetzen vor `markLastClickAsIncorrect()` löscht die bisherigen Markierungen mit | `ImageMapPane.markIncorrect` |
 | **`MovieViewerScreen.refresh()` baut nicht vollständig neu** — setzt nur den Hintergrund. Ein Skin, der Positionen ändert, greift so nicht. Offen: nur-Hintergrund beibehalten oder voller Rebuild (verwürfe die laufende Suche) | `MovieViewerScreen.refresh` |
-| Fragefeld der Region-Session: „Hier wäre allerdings CENTER schon angesagt" | `RegionSessionView:69` |
+| Fragefeld der Region-Session: „Hier wäre allerdings CENTER schon angesagt" | `RegionLearnView:68` |
 
 ---
 
@@ -293,7 +229,7 @@ Aufgefallen, aber nichts beschlossen — hier steht bewusst kein Auftrag.
 - **Der MovieScreen wird komplett anders aufgebaut als die übrigen.** → `SuiteSuggestionTextField:30`
 - **Alc- und Fitbit-StatisticScreens sind voll mit UI-Kram.** → `Skin` (Klassen-Javadoc)
 - **Die Vier-Sprossen-Ordnung** aus Plan §1.1 als `layeredArchitecture()` in den ArchUnit-Test
-  aufnehmen. Heute prüfen die vier Regeln die drei Wächter und die Zyklenfreiheit, nicht die
+  aufnehmen. Heute prüfen die fünf Regeln die drei Wächter, die Zyklenfreiheit und die Style-Klassen, nicht die
   Reihenfolge der Sprossen.
 
 ---

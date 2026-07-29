@@ -2,7 +2,7 @@ package app.shared.ui.components.map;
 
 import java.util.Set;
 
-import app.shared.model.UiComponent;
+import javafx.scene.Node;
 
 /**
  * Die Karte einer Lern-Session — ein gemeinsames Vokabular über zwei sehr verschiedene Karten.
@@ -19,7 +19,7 @@ import app.shared.model.UiComponent;
  * es gibt nichts zu platzieren. Und die Bild-Karte kennt die falsch geklickte Form nicht per id, sie
  * merkt sich den letzten Klick selbst.</p>
  */
-public interface LearnMap extends UiComponent {
+public interface LearnMap {
 
 	/** Alles zurück auf Anfang — keine Markierungen mehr. */
 	void reset();
@@ -43,4 +43,13 @@ public interface LearnMap extends UiComponent {
 
 	/** Diese Formen hervorheben (Hinweis, nicht Bewertung). */
 	void mark(Set<String> ids);
+
+	/**
+	 * Der Node dieser Karte — immer sie selbst.
+	 *
+	 * <p>Die Methode überlebt, weil ein Interface kein {@link Node} sein kann: alle drei Umsetzungen
+	 * <em>sind</em> Nodes, der Typ {@code LearnMap} ist es nicht. Wer eine Karte einhängen will,
+	 * braucht deshalb diesen einen Schritt.</p>
+	 */
+	Node getView();
 }

@@ -3,7 +3,6 @@ package app.shared.ui.components;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import app.shared.model.UiComponent;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
@@ -21,7 +20,7 @@ import javafx.scene.text.TextFlow;
  *  		das Label selbst	= "my-info-label"
  *  		text in Nodes		= "text"
  */
-public class SuiteInfoLabel extends StackPane implements UiComponent{
+public class SuiteInfoLabel extends StackPane {
 
     private final TextFlow textFlow;
     private String rawText = "";
@@ -65,10 +64,6 @@ public class SuiteInfoLabel extends StackPane implements UiComponent{
         setText(text);
     }
     
-    @Override
-	public Node getView() {
-		return this;
-	}
 
     public void setText(String text) {
         this.rawText = text != null ? text : "";

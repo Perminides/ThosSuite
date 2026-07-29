@@ -2,9 +2,7 @@ package app.shared.ui.components;
 
 import java.util.function.Consumer;
 
-import app.shared.model.UiComponent;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
 import javafx.scene.control.TextField;
 
 /**
@@ -15,7 +13,7 @@ import javafx.scene.control.TextField;
  * <p>Das Aussehen kommt über die JavaFX-eigene Klasse {@code .text-field}, die der Skin suite-weit
  * gestaltet. Die Komponente sieht deshalb überall richtig aus, auch ohne Maße.</p>
  */
-public class SuiteTextField extends TextField implements UiComponent {
+public class SuiteTextField extends TextField {
 
 	/** Ohne feste Lage — für Aufrufer, die die Komponente in ein Layout hängen. */
 	public SuiteTextField() {
@@ -47,9 +45,4 @@ public class SuiteTextField extends TextField implements UiComponent {
 		}
 	}
 
-	/** Ist selbst der Node. Bleibt, solange der ComponentHost über {@link UiComponent} einhängt. */
-	@Override
-	public Node getView() {
-		return this;
-	}
 }

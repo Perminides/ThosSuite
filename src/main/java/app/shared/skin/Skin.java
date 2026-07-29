@@ -55,7 +55,7 @@ import javafx.scene.paint.Color;
  * <h3>5. Code-Duplikation bei Kontext-spezifischem Styling</h3>
  * <p>Wenn eine Komponente in verschiedenen Kontexten anders aussieht,
  * wird sie in BEIDEN Methoden gestylt (mit Kommentar-Warnung).</p>
- * <p>Beispiel: {@code .header-bar} wird in {@code addMainWindowStyles()} 
+ * <p>Beispiel: {@code .my-header-bar} wird in {@code addMenuStyles()} 
  * UND {@code addDialogStyles()} gestylt.</p>
  * <p>Kommentar: "⚠️ ACHTUNG: Identische Styles auch in addDialogStyles()"</p>
  * 
@@ -157,7 +157,6 @@ public abstract class Skin extends SkinProperties {
 	    addIconButtonStyles(css);
 	    addImageMapStyles(css);
 	    addImagePaneStyles(css);
-	    addMainWindowStyles(css);
 	    addMultipleChoiceStyles(css);
 	    addShapeMapStyles(css);
 	    addMyTableStyles(css);
@@ -266,7 +265,6 @@ public abstract class Skin extends SkinProperties {
 	       .end();
 	    
 	    // HeaderBar in Dialogs
-	    // ⚠️ ACHTUNG: Identische Styles auch in addMainWindowStyles() für .my-main-window .header-bar
 	    builder.start(".dialog-pane .header-bar")
 	       .add("-fx-border-color", thinBorderColor)
 	       .add("-fx-border-width", "0 0 " + thinBorderWidth + " 0")
@@ -519,21 +517,6 @@ public abstract class Skin extends SkinProperties {
 	       .end();
 	}
 	
-	private void addMainWindowStyles(CssBuilder builder) {
-	    // Root Container (Stage Border)
-		// Siehe  Kommentar im Dialog. Wegen Windows 11 rausgenommen, der hat eigenen Border und runde Ecken un ddas verträgt sich leider so gar nicht... 
-	 /**   css.start(".my-root")
-	       .add("-fx-border-color", stageBorderColor) // Wir wollen einen weißen Rahmen um das gesamte Fenster!
-	       .add("-fx-border-width", "1px") // Einen dünnen.
-	       .end();**/
-	    
-	    // HeaderBar in MainWindow
-	    /**css.start(".my-root .header-bar")
-	       .add("-fx-border-color", "aqua")
-	       .add("-fx-border-width", "0 0 1 0")
-	       .add("-fx-background-color", "aqua")
-	       .end();**/
-	}
 
 	private void addShapeMapStyles(CssBuilder builder) {
 	    // Basis-Styling für alle Shapes (Border wird gezeichnet)

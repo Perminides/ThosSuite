@@ -27,7 +27,7 @@ import javafx.stage.Popup;
  * !Sofort: Wird aktuell nur von Movie genutzt. Kann man das nicht noch an anderen Stellen wiederverwenden?
  * Z.B. da wo Tags ausgewählt werden (Diary, WhatsApp)
  * 
- * !Sofort: Können wir hier nicht ein UiComponents draus machen? Der ganze MovieScreen wird komplett anders aufgebaut als die restlichen. Das geht so gar nicht...
+ * !Sofort: Können wir das hier nicht als richtige Komponente bauen? Der ganze MovieScreen wird komplett anders aufgebaut als die restlichen. Das geht so gar nicht...
  * 
  * Popup-Mechanik übernommen aus TagInputComponent.
  */
