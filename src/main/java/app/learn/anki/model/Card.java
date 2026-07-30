@@ -46,6 +46,7 @@ public class Card {
 		List<List<Step>> segments = null; // Segmente zwischen ShuffleStart und ShuffleEnd
 		List<Step> cur = null; // Aktuelles Segment
 
+		boolean cardExpectsInput = false;
 		for (String raw : csvTokens.subList(3, csvTokens.size())) {
 			try {
 				String s = raw.trim();
@@ -78,6 +79,16 @@ public class Card {
 				if (end) {
 					if (cur != null)
 						segments.add(cur);
+
+					// Jedes Segment muss selbst nach Input fragen. Gewürfelt wird die Reihenfolge der
+					// Segmente — eines ohne Input rutscht deshalb an JEDER Position unbemerkt durch,
+					// und je nach Wurf mal hier, mal dort. Die Prüfung auf Kartenebene reicht nicht:
+					// die ist schon zufrieden, wenn irgendein anderes Segment etwas fragt.
+					for (int i = 0; i < segments.size(); i++)
+						if (!expectsInput(segments.get(i)))
+							throw new RuntimeException("Shuffle-Segment " + (i + 1) + " von " + segments.size()
+									+ " erwartet keinen Input");
+
 					Collections.shuffle(segments);
 					for (var seg : segments)
 						out.addAll(seg);
@@ -87,6 +98,8 @@ public class Card {
 
 				if (!s.isEmpty()) {
 					Step step = parseStep(s);
+					if (expectsInput(step))
+						cardExpectsInput = true;
 					if (segments == null)
 						out.add(step);
 					else
@@ -96,7 +109,30 @@ public class Card {
 				throw new RuntimeException("Problem beim parsen des Hints " + id + " in Step" + raw + " in " + csvTokens, e);
 			}
 		}
-		steps = List.copyOf(out);
+		// Ein <ShuffleStart> ohne <ShuffleEnd> verlöre sonst alles, was seitdem gesammelt wurde:
+		// die Schritte liegen in segments/cur und werden nie an out angehängt. Die Karte käme dabei
+		// sogar durch die Input-Prüfung, weil cardExpectsInput von genau diesen verlorenen Schritten
+		// gesetzt worden sein kann — sie wäre also verstümmelt und trotzdem still.
+		if (segments != null)
+			throw new RuntimeException("<ShuffleStart> ohne <ShuffleEnd>\n" + String.join("\n", csvTokens));
+
+		if (cardExpectsInput)
+			steps = List.copyOf(out);
+		else
+			throw new RuntimeException("Karte erwartet keinen Input\n" + String.join("\n", csvTokens));
+	}
+
+	/** Die drei Schritte, bei denen die Karte etwas von mir will. Alles andere zeigt nur an. */
+	private static boolean expectsInput(Step step) {
+		return step instanceof MC || step instanceof Input || step instanceof ClickMapElements;
+	}
+
+	/** Ob in dieser Folge überhaupt irgendwo nach Input gefragt wird. */
+	private static boolean expectsInput(List<Step> steps) {
+		for (Step step : steps)
+			if (expectsInput(step))
+				return true;
+		return false;
 	}
 	
 	   // --- Parsing eines einzelnen Step-Strings (ohne Marker) ---

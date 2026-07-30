@@ -16,26 +16,24 @@ public final class SkinService {
             new SpicySkin(),
             new DarkMode()
     ));
-    private static Skin current = AVAILABLE_SKINS.get(0); // !Erweiterung Später über config-Datei...
-    
-    // Statischer Initializer lädt gespeichertes Skin
+    private static Skin current;
+
+    /*
+     * Das zuletzt gewählte Skin. Kein Fallback auf das erste der Liste: `pref.skinClass` ist ein
+     * Tabellen-Key und damit vorab angelegt — Config wirft bei einem fehlenden Key, statt null zu
+     * liefern. Fehlt der Key, kommen wir hier also gar nicht an; steht ein unbekannter Name drin,
+     * werfen wir selbst.
+     */
     static {
         String savedSkinClass = Config.get("pref.skinClass");
-        
-        if (savedSkinClass != null) {
-            // Suche Skin in der Liste
-            current = null;
-            for (Skin skin : AVAILABLE_SKINS)
-                if (skin.getClass().getSimpleName().equals(savedSkinClass)) {
-                    current = skin;
-                    break;
-                }
-            if (current == null)
-                throw new RuntimeException("Ungültiges Skin in der Konfiguration: " + savedSkinClass);
-        } else {
-            // Fallback auf erstes Skin
-            current = AVAILABLE_SKINS.get(0);
-        }
+
+        for (Skin skin : AVAILABLE_SKINS)
+            if (skin.getClass().getSimpleName().equals(savedSkinClass)) {
+                current = skin;
+                break;
+            }
+        if (current == null)
+            throw new RuntimeException("Ungültiges Skin in der Konfiguration: " + savedSkinClass);
     }
 
     private SkinService() {} // keine Instanz erlaubt

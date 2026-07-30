@@ -24,17 +24,10 @@ import app.shared.ui.Alerts;
  * Benennst Du den Anzeigetext eines Decks je um („Welt" → „Weltkarte"), verwaisen sämtliche
  * historischen Zeilen — stillschweigend, es fällt nur als plötzlich leere Statistik auf. Der
  * stabile Schlüssel wäre {@code Deck.getId()}; die Umstellung kostet eine Datenmigration.
- *
- * <p>!Architektur: Der Name dieser Klasse steht quer zur Regel. Laut Regelwerk heißt der
- * SQL-Ausführer gegen die Suite-DB {@code …Repository}, {@code …Source} steht für eine Datei als
- * Quelle. Hier ist es umgekehrt: {@code DbDeckProgressSource} und {@code CsvDeckCardSource} führen
- * die Arbeit aus, {@code DeckRepository} ist nur der Wrapper darüber. Zu entscheiden ist, welche
- * Klasse den Namen {@code Repository} verdient — der Wrapper bündelt zwei Quellen (CSV + DB), das
- * ist die eigentliche Frage.</p>
  */
-class DbDeckProgressSource {
+class DbDeckProgressRepository {
 
-		DbDeckProgressSource() {
+		DbDeckProgressRepository() {
 		}
 
 		Map<String, LearnStat> loadAll(Deck type) {
@@ -93,11 +86,6 @@ class DbDeckProgressSource {
 		                    } else {
 		                        throw e;
 		                    }
-		                    // !Sofort: Besser beim einlesen schon checken, ob es eine Karte ohne Input gibt!
-		                    // Dann kann das hier nur noch passieren, wenn ich aus Versehen Doppelklicke und der zweite Klick der erwartete der
-		                    // zweiten Karte ist und das wäre aber streng genommen nicht mehr alert-würdig. Das ist dann halt so und würde
-		                    // durch den Retry aufgefangen. Außerdem wird das NIE passieren, weil wie unwahrscheinlich ist das denn?
-		                    // Naja, bei MC kann das schon mal passieren natürlich...
 		                    Alerts.show("Warnung", psLog.getParameterMetaData() + " - " + row.cardId() + " Ich versuche es evtl. nochmal...", ButtonEnum.OK);
 		                }
 		            }
