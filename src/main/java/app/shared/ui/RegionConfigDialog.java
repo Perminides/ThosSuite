@@ -34,6 +34,8 @@ public class RegionConfigDialog {
         this.reduce = reduce;
     }
 
+    // !Sofort: Gibt Optional zurück statt record oder null — siehe die gleichlautende Notiz in
+    // AnkiConfigDialog. Beide zusammen umstellen.
     public Optional<RegionDialogState> showAndWait() {
         SuiteDialog<ButtonType> dialog = new SuiteDialog<>("Regionen spielen");
         DialogPane pane = dialog.getDialogPane();

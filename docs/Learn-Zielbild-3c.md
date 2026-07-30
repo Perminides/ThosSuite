@@ -246,7 +246,7 @@ das Grenzpaket. Wenn das trägt, sind die Anki-Panes dieselbe Mechanik in größ
 
 - **`buildShapeMapWrapper`** in die `ShapeMapPane` ziehen (Dein TODO). Eigener Schritt nach 3c —
   während eines Umzugs umzubauen mischt zwei Fehlerquellen.
-- **Die `SuiteXXX`-Durchsicht** (siehe `Vertagte-Punkte.md`). Erst danach, wenn feststeht, was die
+- **Die `SuiteXXX`-Durchsicht.** Erst danach, wenn feststeht, was die
   Panes wirklich halten.
 - **Der `!Sofort` in `ComponentHost`** („zwingt eine Klasse im Feature, sich ein javafx Image zu
   holen") erledigt sich von selbst, sobald die Panes in `shared.ui` liegen.

@@ -43,6 +43,9 @@ public class AnkiConfigDialog {
         this.labelColumns = labelColumns;
     }
 
+    // !Sofort: Gibt Optional zurück statt record oder null — verstößt gegen den Dialog-Vertrag im
+    // Regelwerk ("Ergebnis ist ein record/enum oder null, nie ButtonType/Node oder Optional") und
+    // gegen die Grundregel "null statt Optional bei Rückgaben". Betrifft auch RegionConfigDialog.
     public Optional<AnkiDialogState> showAndWait() {
         SuiteDialog<ButtonType> dialog = new SuiteDialog<>(title);
         DialogPane pane = dialog.getDialogPane();

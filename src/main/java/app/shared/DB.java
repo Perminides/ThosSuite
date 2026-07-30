@@ -45,6 +45,11 @@ public class DB {
 		try {
 			if (connection != null && connection.isClosed()) {
 				// Aktuell darf nicht von ganz oben in den Skin gegriffen werden
+				// TODO: Dieser Alert bleibt ungestylt, weil er keinen Owner setzt und damit die
+				// Hauptscene (und deren Stylesheet) nicht erbt. Gilt genauso für die vier rohen
+				// Alerts in ThosSuiteApp. Beim Start ist das teils unvermeidbar — da existiert die
+				// Hauptscene noch nicht. Hier läuft die Suite aber schon; ob man die späteren Fälle
+				// auf Alerts.show(…) umstellt, ist offen.
 				Alert alert = new Alert(AlertType.WARNING);
 				alert.setContentText("Shit. Die connection ist closed? Wer ist der Übeltäter?");
 				alert.showAndWait();

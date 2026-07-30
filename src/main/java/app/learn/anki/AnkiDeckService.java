@@ -94,7 +94,8 @@ public class AnkiDeckService {
 			if (type.getCategory() != DeckCategory.ANKI_DECK)
 				continue;
 			
-			//Preload Maps von Decks die heute fällig sind. !Später toggle im config berücksichtigen
+			// Preload der Karten-Shapes: bewusst für *alle* Anki-Decks mit Karte, nicht nur die heute
+			// fälligen — ein Fälligkeitsfilter lohnt bei vier Decks nicht. !Später toggle im config berücksichtigen
 			if (type.getMapMetadata() != null) {
 				MapService.getInstance().preloadShapes(type);
 				if (type.getMapMetadata().getMapType() == MapType.IMAGE)

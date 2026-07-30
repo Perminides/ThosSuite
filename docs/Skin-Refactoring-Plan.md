@@ -5,14 +5,15 @@ vom Build bewacht, der Paketgraph ist zyklenfrei, `Skin` ist von 2660 auf **1241
 geschrumpft und hat genau eine öffentliche Methode: `styleScene`. Regelwerk und Architekturdokument
 sind nachgezogen.
 
-Was noch offen ist, steht in `Vertagte-Punkte.md` — **kein Umbau mehr**, sondern sechs kleine
-Code-Punkte (A1) und vier Sachfehler (A3).
+Der Umbau ist durch, und die damals vertagten Punkte sind es auch — teils erledigt, teils als
+Marker (`!Sofort`, `!Später`, `!Architektur`, `TODO`) an ihre Stelle im Code gewandert. Offene
+Aufgaben stehen ausschließlich dort.
 
 **Charakter dieses Dokuments:** es blickt **zurück** — *was entschieden ist*, *was erledigt ist*,
 *in welcher Reihenfolge* vorgegangen wird, plus die geprüften Fakten, auf denen das beruht, und die
 Annahmen, die sich als falsch erwiesen haben.
 
-Was **offen** ist, steht ausschließlich in `Vertagte-Punkte.md`. Die Regeln selbst stehen in
+Was **offen** ist, steht ausschließlich als Marker im Code. Die Regeln selbst stehen in
 `Design-Regeln.md` (wird am Ende nachgezogen), die Ist-Erfassung in den vier Bestandsaufnahmen, die
 Zielbild-Entscheidung samt verworfener Alternative in `Skin-Zielbild-Entscheidung.md`.
 
@@ -240,8 +241,8 @@ Icon-Bild — holt sich der Baustein dagegen selbst (§3.15).
 
 ## 4. Was offen ist
 
-Was offen ist, steht **nicht hier**, sondern in `Vertagte-Punkte.md` — sortiert danach, wann es
-fällig wird. Dieses Dokument blickt zurück (entschieden, erledigt, geprüft, verworfen), jenes nach
+Was offen ist, steht **nicht hier**, sondern als Marker an der betroffenen Stelle im Code. Dieses
+Dokument blickt zurück (entschieden, erledigt, geprüft, verworfen), der Code blickt nach
 vorn. Ein früherer §4 „Vertagt" führte beides parallel und hatte prompt einen Punkt als *vertagt*
 gelistet, den §5 desselben Dokuments als *erledigt* auswies.
 
@@ -635,7 +636,7 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
 3d ✓ Chrome und Menüs                                                    29.07.
       drei Fabriken waren pure new X() → ersatzlos, 24 Aufrufstellen
       Header-Leiste wurde shared.ui.MainWindowHeaderBar
-      MainWindow ist damit noch nicht rund — siehe Vertagte-Punkte.md
+      MainWindow ist damit noch nicht rund — bewusst so gelassen (siehe §5)
 6  ✓ Die Wächter in den Maven-Build                                      29.07.
       ArchUnit, src/test/java/app/ArchitekturRegelnTest.java.
       Vier Regeln scharf: die drei Wächter plus Zyklenfreiheit.
@@ -649,8 +650,8 @@ abwärts. Ein Push-Mechanismus wird nicht gebraucht.
 
 ── nichts mehr offen ──────────────────────────────────────────────────────────
 
-Der Umbau ist zu Ende. Was noch aussteht, steht in Vertagte-Punkte.md und ist
-kein Umbau: sechs kleine Code-Punkte (A1) und vier Sachfehler (A3).
+Der Umbau ist zu Ende. Was danach noch anstand, ist erledigt oder als Marker
+an seiner Stelle im Code gelandet — kein Umbau mehr.
 ```
 
 **Warum die Paketumstellung vor die Auflösung rückt:** sie ist risikoarm (reine Moves) und liefert

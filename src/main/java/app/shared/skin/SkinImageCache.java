@@ -22,6 +22,11 @@ import javafx.scene.image.Image;
  *
  * <p>Diese Klasse ist die einzige Stelle, an der solche Bilder von der Platte gelesen werden. Früher lag das
  * Laden im MapRepository und die Invalidierung im MapService — beides ist hierher konsolidiert.</p>
+ *
+ * <p><b>Kein Re-Warming nach einem Skinwechsel.</b> Vorgewärmt wird nur beim Start, über den Splash. Nach
+ * einem Wechsel ist der Cache leer, und die erste Bildkarte lädt ihr dreistelliges MB-Bild deshalb synchron —
+ * das hängt kurz. Bewusst akzeptiert: ein Skinwechsel ist selten, und asynchron nachzuladen hieße, die
+ * Nebenläufigkeits-Zusage der Suite (alles auf dem FX-Thread) für einen Randfall aufzugeben.</p>
  */
 public class SkinImageCache {
 

@@ -314,6 +314,17 @@ public class ImageMapPane extends StackPane implements LearnMap {
 
 	/**
 	 * Die Bild-Karte kennt die falsche Form nicht per id — sie merkt sich den letzten Klick selbst.
+	 * Der Parameter bleibt deshalb ungenutzt; er kommt aus {@link LearnMap}, wo die Shape-Karte ihn braucht.
+	 *
+	 * <p>Das Leeren davor ist <b>Absicht</b>: nach einem Fehler wird die volle Lösung gezeigt, und was
+	 * vorher im Layer lag, soll dabei nicht stehenbleiben — vor allem nicht die optionalen Antworten,
+	 * die zwar akzeptiert, aber bewusst nicht mitgelernt werden sollen.</p>
+	 *
+	 * <p>Zwei Invarianten halten das heil: ein Falsch-Klick liegt immer außerhalb von
+	 * {@code mandatory ∪ optional} (läge er drin, wäre er richtig), und klickbar sind nur genau diese
+	 * Formen. Daraus folgt beides — der Marker kann nie unter einer aufgedeckten Form liegen, und
+	 * {@code lastClick} ist frisch, weil ein falscher Klick zwangsläufig am Node vorbei zum Viewport
+	 * geht. Wer die Klickziele weiter fasst, holt sich beide Fehler ein.</p>
 	 */
 	@Override
 	public void markIncorrect(String id) {
