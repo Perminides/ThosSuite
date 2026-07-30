@@ -136,6 +136,10 @@ public abstract class SkinProperties {
 	protected String worldWallpaperName;
 	protected String germanyWallpaperName;
 	protected String regionWallpaperName;
+	// !Sofort: Dieses Feld ist tot. `getBackgroundImageName` schlägt `<mapName>WallpaperName` nach,
+	// und alle Bundesland-Decks haben mapName "lk" — gesucht wird also `lkWallpaperName`. Der Name
+	// hier ist dagegen die Deck-Id von Brandenburg. Wallpaper über die Deck-Id, Layouts über den
+	// mapName: beim Aufräumen der properties auf einen Schlüssel vereinheitlichen.
 	protected String lk_bbWallpaperName;
 	protected String itWallpaperName;
 	protected String esWallpaperName;
@@ -473,6 +477,19 @@ public abstract class SkinProperties {
 
 	// endregion
 	
+	// !Sofort: Ein Schlüssel in der properties-Datei, für den es kein Feld gibt, wird hier still
+	// übergangen (value == null → continue greift nur andersherum: Feld ohne Schlüssel). Ein
+	// FailFast-Check nach dem Laden — jeden props-Schlüssel gegen die Feldnamen halten und bei
+	// Unbekanntem crashen — sind rund 15 Zeilen und findet sofort `borderBackButton` in
+	// skin_basecolor.properties, das seit unbekannt wann ins Leere läuft. Das ist die einzige
+	// systematische FailFast-Verletzung im Skin.
+	//
+	// !Später: Punkt-Notation in den properties. `learnSessionPanel.world.map=…` →
+	// Map<String, LearnSessionPanel>, Regel: ein Punkt geht eine Ebene tiefer, ob eine Ebene offen
+	// oder deklariert ist sagt der Typ, gedeckelt auf zwei Ebenen. Dafür: 96 Felddeklarationen weg,
+	// ein neues Deck kostet keine Java-Änderung mehr (heute 3 Felder pro Länder-Deck), hannover
+	// schrumpft von 16 Zeilen auf 1, FailFast fällt ab. Dagegen: ~30 Zeilen Typ-Ablaufen hier drin
+	// und eine einmalige, unumkehrbare Migration aller sieben properties-Dateien.
 	protected void loadAllConfigs(Path configPath) {
 	    try (InputStream in = Files.newInputStream(configPath)) {
 	        Properties props = new Properties();

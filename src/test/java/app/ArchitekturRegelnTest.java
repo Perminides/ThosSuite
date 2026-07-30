@@ -86,4 +86,8 @@ public class ArchitekturRegelnTest {
 			.and().doNotHaveFullyQualifiedName("app.controller.MainWindow")
 			.should().callMethodWhere(target(name("getStyleClass")))
 			.because("wie etwas aussieht, entscheidet die Anzeige-Schicht");
+
+	// !Später: Die Vier-Sprossen-Ordnung innerhalb von shared (ui → skin → model → shared) als
+	// layeredArchitecture() aufnehmen. Die fünf Regeln hier prüfen die drei Wächter, die
+	// Zyklenfreiheit und die Style-Klassen — die *Reihenfolge* der Sprossen prüft bislang nichts.
 }
