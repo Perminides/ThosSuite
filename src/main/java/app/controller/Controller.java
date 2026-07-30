@@ -68,6 +68,11 @@ public class Controller{
     private MainWindow mainWindow;
     private Screen currentScreen; //!Später natürlich nicht mehr nur MapDeckSessions...
     private DataFetcher fitbitDataFetcher;
+    // Fehler der drei Start-Importe. Sie werden im PreTask nur gemerkt und erst im PostTask
+    // gemeldet — während des Splashs gibt es kein Hauptfenster, und über den Splash gehört kein
+    // Dialog. Siehe runPreTasks.
+    private Exception fitbitError;
+    private Exception movieImportError;
     private Comparison comparison;        // !tmp
     private Exception comparisonError;    // !tmp
 
@@ -111,18 +116,37 @@ public class Controller{
     	setLearnMenuItemLabels();
     	setPlayMenuItemLabels();
     }
-    // !Sofort: Die Suite sollte vielleicht auch starten, wenn Fitbit / Health oder die tmdb mal gerade down ist?
     /**
      * Wird VOR initializeMainWindow aufgerufen (Splash noch sichtbar). Holt Daten im UI-Thread, blockiert aber die App - Splash bleibt sichtbar.
+     *
+     * <p><b>Ein toter Dienst darf den Start nicht reißen.</b> Fitbit, TMDB und Health sind fremde
+     * Server; dass einer gerade nicht erreichbar ist, ist ein alltäglicher Zustand und kein
+     * Programmierfehler — dieselbe Begründung wie beim fehlenden Attachment im Architekturdokument.
+     * Alle drei werfen deshalb ehrlich, und hier, an der Orchestrierungs-Grenze, wird einmal
+     * entschieden, das auszuhalten. Die bewusste Ausnahme von FailFast steht also sichtbar dort, wo
+     * die Regel gemacht wird, statt in den Datenklassen vergraben zu sein.</p>
+     *
+     * <p>Gemeldet wird nichts von hier: über dem Splash gehört kein Dialog hin. Die Fehler werden
+     * gemerkt und in {@link #runPostTasks()} zu <b>einer</b> Meldung zusammengefasst.</p>
      */
     public void runPreTasks() {
         fitbitDataFetcher = new DataFetcher(); // Muss Instanzvariable sein, weil wir Daten für den PostTask übergeben. Das macht tmdb sauberer, wie ich finde...
         if (Config.get("offline", "false").equals("false")) {
-            fitbitDataFetcher.fetch();
-            new MovieImporter().run();
-     
+            try {
+                fitbitDataFetcher.fetch();
+            } catch (Exception e) {
+                fitbitError = e;
+                Log.error(this.getClass(), "Fitbit-Abruf fehlgeschlagen", e);
+            }
+
+            try {
+                new MovieImporter().run();
+            } catch (Exception e) {
+                movieImportError = e;
+                Log.error(this.getClass(), "TMDB-Import fehlgeschlagen", e);
+            }
+
             // !tmp: Health-Vergleich mitlaufen lassen (Übergang bis Fitbit-Abschaltung).
-            //       Fehler NICHT über dem Splash melden, nur merken -> Anzeige im PostTask.
             try {
                 comparison = new Comparison();
                 comparison.fetch(fitbitDataFetcher.getProjection());
@@ -134,8 +158,6 @@ public class Controller{
     }
      
      
-    // --- runPostTasks (erweitert; nur der Fitbit-Block plus der neue !tmp-Block gezeigt) ---
-     
     /**
      * Wird NACH splashStage.close() aufgerufen (Splash weg, MainWindow sichtbar).
      * Registriert das MainWindow im SkinService, zeigt Dialoge und speichert Daten.
@@ -143,24 +165,26 @@ public class Controller{
     public void runPostTasks() {
         // Owner-Stage registrieren VOR allen Dialogen
     	UiUtils.setOwnerWindow(mainWindow.getStage());
-        // Fitbit-Fehler behandeln
-        if (fitbitDataFetcher.hasError()) {
-        	Alerts.show("Fitbit-Fehler",
-                    "Fehler beim Laden der Fitbit-Daten:\n" + fitbitDataFetcher.getError().getMessage(), ButtonEnum.OK);
-        } else {
-            // Fitbit-Dialoge zeigen
-            if (fitbitDataFetcher.hasData()) {
-                DataReviewService fitbitService = new DataReviewService(fitbitDataFetcher);
-                fitbitService.showDialogsAndSave();
-            }
-        }
-     
-        // !tmp: Health-Vergleich direkt nach dem Fitbit-Block anzeigen (jetzt steht das MainWindow).
-        //       Bei Fehler kein Popup (comparison wäre nur teilbefüllt), nur der Hinweis.
-        if (comparisonError != null) {
-        	Alerts.show("Health-Vergleich",
-                    "Der Health-Vergleich ist heute fehlgeschlagen:\n" + comparisonError.getMessage(), ButtonEnum.OK);
-        } else if (comparison != null) {
+
+        // Die Fehler der drei Start-Importe in EINER Meldung. An einem Tag ohne Netz wären es sonst
+        // drei Alerts hintereinander, die alle dasselbe sagen.
+        List<String> fehlgeschlagen = new ArrayList<>();
+        if (fitbitError != null)
+            fehlgeschlagen.add("Fitbit: " + fitbitError.getMessage());
+        if (movieImportError != null)
+            fehlgeschlagen.add("TMDB: " + movieImportError.getMessage());
+        if (comparisonError != null)
+            fehlgeschlagen.add("Health-Vergleich: " + comparisonError.getMessage());
+
+        if (!fehlgeschlagen.isEmpty())
+            Alerts.show("Importe fehlgeschlagen", String.join("\n\n", fehlgeschlagen), ButtonEnum.OK);
+
+        // Jeder Folgeschritt hängt daran, ob SEIN Import geklappt hat.
+        if (fitbitError == null && fitbitDataFetcher.hasData())
+            new DataReviewService(fitbitDataFetcher).showDialogsAndSave();
+
+        // !tmp: Bei Fehler kein Popup — comparison wäre nur teilbefüllt.
+        if (comparisonError == null && comparison != null) {
             comparison.showPopup();
         }
      
