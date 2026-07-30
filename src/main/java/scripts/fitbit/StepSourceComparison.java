@@ -21,7 +21,8 @@ import app.fitbit.ApiClient;
 import app.shared.Config;
 
 /**
- * Wegwerf-Messinstrument. Zieht für einen hartcodierten Zeitraum die Tagesschritte
+ * Messinstrument — <b>kein Wegwerfstück</b>, es verfolgt laufend die Lücke zwischen Health und
+ * Fitbit und wird bis zum Cutover gebraucht. Zieht für einen hartcodierten Zeitraum die Tagesschritte
  * aus mehreren Quellen und gibt sie tab-getrennt in die Konsole, damit sie von Hand
  * gegen die Health-App verglichen werden können:
  *
@@ -53,13 +54,14 @@ import app.shared.Config;
 public class StepSourceComparison {
 
     // ===================== Hartcodiert: vor dem Lauf ausfüllen =====================
-    private static final String HEALTH_CLIENT_ID     = "";
-    private static final String HEALTH_CLIENT_SECRET = "";
-    private static final String HEALTH_REFRESH_TOKEN = "";
-
-    private static final LocalDate FROM = LocalDate.of(2026, 7, 1);
-    private static final LocalDate TO   = LocalDate.of(2026, 7, 4);
+    private static final LocalDate FROM = LocalDate.of(2026, 7, 5);
+    private static final LocalDate TO   = LocalDate.of(2026, 7, 29);
     // ==============================================================================
+    //
+    // Die Zugangsdaten stehen bewusst NICHT hier, sondern kommen aus der config-Datei —
+    // dieselben drei Schlüssel, die auch app.activity.ApiClient liest. Grund: diese Datei ist
+    // versioniert und rutscht bei einem „alles committen" mit. Am 30.07. genau so passiert;
+    // GitHub Push Protection hat den Push gestoppt, bevor etwas hochging.
 
     private static final String TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
     private static final String STEPS_BASE =
@@ -103,9 +105,9 @@ public class StepSourceComparison {
 
     // --- Health: Access-Token aus dem statischen Refresh-Token holen ---
     private static String fetchHealthAccessToken() throws Exception {
-        String body = "client_id="      + enc(HEALTH_CLIENT_ID)
-                + "&client_secret="      + enc(HEALTH_CLIENT_SECRET)
-                + "&refresh_token="      + enc(HEALTH_REFRESH_TOKEN)
+        String body = "client_id="       + enc(Config.get("healthClientId"))
+                + "&client_secret="      + enc(Config.get("healthClientSecret"))
+                + "&refresh_token="      + enc(Config.get("healthRefreshToken"))
                 + "&grant_type=refresh_token";
 
         HttpRequest request = HttpRequest.newBuilder()
