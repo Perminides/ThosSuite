@@ -58,6 +58,7 @@ public class ThosSuiteApp extends Application {
     private MainWindow mainWindow;
     private Controller controller;
 
+    // !Sofort: Warum muss ich manchmal nach dem Start erst mit der Maus das Fenster verlassen, damit es responsiv wird und manchmal nicht?
     public static void main(String[] args) {
     	// JavaFX DatePicker nutzt Locale.getDefault(Category.FORMAT) für Monatsnamen.
     	// Windows-Regionsformat kann abweichen von der Sprache → explizit auf Deutsch setzen.

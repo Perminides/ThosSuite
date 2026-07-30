@@ -52,7 +52,18 @@ public class Alerts {
 		return show(title, message, new AlertOptions(), buttons);
 	}
 
-	/** Der eine Kern. */
+	/**
+	 * 
+	 * Wenn ein ImagePath mitgegeben wird, so werden die nicht transparenten Teile mit der Textfarbe eingefärbt.
+	 * Das ist sehr speziell für den Matratze wenden Dialog gebaut und gehört verbessert, wenn auch andere Bilder
+	 * angezeigt werden sollen.
+	 * 
+	 * @param title
+	 * @param message
+	 * @param options
+	 * @param buttons
+	 * @return
+	 */
 	public static ButtonEnum show(String title, String message, AlertOptions options, ButtonEnum... buttons) {
 		DialogStyle style = SkinService.get().dialogStyle();
 		Alert alert = new Alert(Alert.AlertType.NONE);
@@ -134,10 +145,6 @@ public class Alerts {
 
 		ImageView imageNode = null;
 		if (image != null) {
-			// !Architektur: Das Bild wird mit der Textfarbe eingefärbt — unintuitiv und im
-			// Grunde ein Hack. Es funktioniert nur für einfarbige Icons; ein Foto käme
-			// monochrom heraus. Gehört überdacht, sobald es einen zweiten Aufrufer gibt.
-			// Bisher: genau einer (mattress.TurnDialog).
 			Image img = new Image(image.toUri().toString());
 			imageNode = new ImageView(UiUtils.tintImage(img, style.textColor()));
 			imageNode.setPreserveRatio(true);

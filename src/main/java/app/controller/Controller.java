@@ -193,11 +193,10 @@ public class Controller{
     }
     
     public void sessionEnded() {
-    	//!Erweiterung Endbedingungen integrieren...
+    	//!Idee: Endbedingungen integrieren...
     	//!Architektur Gehört das PopUp hierhin? Oder in die Session wie aktuell?
     	setLearnMenuItemLabels();
     	showStartScreen();
-    	// !Erweiterung im Popup auch fragen ob eine neue Session gestartet werden soll
     }
 	
 	public void onLearnMenuItemSelected(LearnSessionInfo info) {

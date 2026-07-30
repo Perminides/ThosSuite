@@ -14,11 +14,11 @@ import app.learn.model.LearnStat;
 public class DeckRepository {
 
     private final CsvDeckCardSource csv;
-    private final DbDeckProgressSource db;
+    private final DbDeckProgressRepository db;
 
     public DeckRepository() {
     	csv = new CsvDeckCardSource(); //!Später: Hier muss der GameType mitgegeben werden
-    	db = new DbDeckProgressSource();
+    	db = new DbDeckProgressRepository();
     }
 
 	public List<Card> getAllHints(Deck type) {

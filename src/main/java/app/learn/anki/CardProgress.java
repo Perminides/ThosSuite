@@ -309,7 +309,6 @@ public class CardProgress implements Progress{
 			}
 			
 			case MarkMapElements left -> presenter.markMapElements(left.left());
-			default -> throw new IllegalStateException("Unsupported step: " + step);
 		}
 	}
 	
