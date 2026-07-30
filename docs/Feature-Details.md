@@ -408,3 +408,25 @@ Blick zusammen. `FlowPane` aus Kacheln (`createDashboardTile()` des Skins), in f
 Jede Kachel ruft das Repository bzw. den Service ihres Features direkt — der Controller greift von
 oben in alle herab (siehe Architektur → Orchestrierung). Implementiert `Screen` mit
 `SessionSwitchStrategy.IMMEDIATE`.
+---
+
+## 💡 Wunschliste
+
+Features, die es noch nicht gibt. **Keine Schuld und keine Aufgabenliste** — offene Arbeit an
+bestehendem Code steht als Marker im Code selbst, nicht hier. Was hier steht, hat noch keine
+Codestelle, an der ein Marker sitzen könnte.
+
+**Lernen:** automatische Endbedingungen für Anki-Sessions · graphische Fortschrittsanzeige
+innerhalb einer Session · Fast Hints (Tippen mit Zeitlimit) · weitere Region-Decks (z. B.
+Frankreich).
+
+**Statistiken:** schwerste Regionen und Performance-Trends · Dashboard als Startbildschirm statt
+des leeren Hintergrunds.
+
+**Film:** eigene Anzeige-Varianten für Serien, Staffeln und Episoden im Viewer · manueller
+TMDB-Vollabgleich mit Dashboard-Kachel („Zeit seit letztem Lauf") · die veraltete
+Episoden-Flag-Struktur (`rated_season`, `directors_from_show`, `actors_from_show`) ablösen.
+
+**Nachrichten:** monatlicher Konsistenz-Check (am 5., für den Vormonat, nur bei vollständiger
+Vormonats-Abdeckung; Status-Anzeige statt FailFast) · WhatsApp-Zitate (`quote_message_id` über den
+Join `message_quoted.key_id → message._id`).

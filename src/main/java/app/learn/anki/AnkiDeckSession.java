@@ -98,6 +98,9 @@ public class AnkiDeckSession implements Screen {
 		return presenter.getView();
 	}
 
+	// !Später: Als einzige Screen-Methode liest diese hier direkt (hasProgressed, isFreePlay) statt in
+	// eine geguardete Progress-Methode zu delegieren — sie knallt deshalb auf einer toten Session nicht,
+	// wie alle anderen es täten. Aktuell harmlos, weil sie nur vor dem Schließen gerufen wird.
 	@Override
 	public SessionSwitchStrategy getSwitchStrategy() {
 		if (!progress.hasProgressed() || isFreePlay)

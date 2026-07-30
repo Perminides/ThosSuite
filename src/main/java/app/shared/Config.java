@@ -27,6 +27,18 @@ public class Config {
 
     private Config() {}
 
+    /**
+     * Streng lineare Konstruktion — <b>die Reihenfolge ist keine Kosmetik.</b>
+     *
+     * <p>{@code DB} bekommt seine Pfade hier als <b>Parameter</b> und fragt sie nicht selbst bei der
+     * Fassade ab. Genau das hält den Bootstrap baubar. Zöge {@code DB} sie stattdessen aus
+     * {@code Config}, entstünde ein Konstruktionszyklus: Fassade braucht {@code KeyValueRepository}
+     * → braucht {@code DB} → braucht {@code dbFolder} aus der Fassade. Das kompiliert klaglos und
+     * zeigt sich erst, wenn man eine gültige Konstruktionsreihenfolge sucht und keine findet.</p>
+     *
+     * <p>Deshalb liest hier nur der {@code ConfigFileSource}, und zwar <i>vor</i> {@code DB.init}.
+     * Wer das später „vereinfacht", zerlegt den Start.</p>
+     */
     public static void init(String folderPath) {
         fileSource = new ConfigFileSource(folderPath);
 

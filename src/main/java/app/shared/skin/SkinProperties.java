@@ -38,7 +38,7 @@ import javafx.scene.text.Text;
  * properties-Datei; ein abgeleiteter Skin lädt erst die Eltern-Config, dann die eigene, und das
  * Spätere gewinnt.</p>
  *
- * <p><b>Ordnung (siehe {@code docs/Skin-Refactoring-Plan.md} §1).</b> {@code shared.skin} liegt
+ * <p><b>Ordnung (siehe {@code docs/Design-Regeln.md}, „Die Anzeige-Schicht").</b> {@code shared.skin} liegt
  * <em>unter</em> {@code shared.ui}: die UI-Schicht liest hier Werte, dieses Paket kennt
  * {@code shared.ui} nicht. Und kein Feature-Paket greift jemals hierher — beides ist per grep
  * bewacht.</p>

@@ -11,7 +11,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 
 /**
- * Die Ordnungsregeln aus {@code docs/Skin-Refactoring-Plan.md} §1 — als Prüfung statt als Vorsatz.
+ * Die Ordnungsregeln aus {@code docs/Design-Regeln.md} — als Prüfung statt als Vorsatz.
  *
  * <p>Solange sie von Hand gegreppt wurden, waren sie eine Gewohnheit. Hier brechen sie den Build.
  * Geprüft wird der <b>Bytecode</b>, nicht der Quelltext: eine voll qualifizierte Nutzung ohne

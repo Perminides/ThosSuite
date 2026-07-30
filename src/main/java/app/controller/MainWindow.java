@@ -404,7 +404,9 @@ public class MainWindow {
 	    if (menuSort == null) return; // Noch nicht initialisiert
 	    
 	    for (MenuItem item : menuSort.getItems()) {
-	        // Vergleich über DisplayName (das steht im MenuItem-Text)
+	        // !Sofort: Der Menüeintrag wird über seinen Anzeigetext identifiziert. Eine Umbenennung
+	        // in CardSortOrder.getDisplayName() bricht die Zuordnung still — dann wird schlicht kein
+	        // Eintrag mehr disabled. Sauber wäre userData mit dem Enum-Wert beim Bauen des Menüs.
 	        boolean isCurrentOrder = item.getText().equals(sortOrder.getDisplayName());
 	        item.setDisable(isCurrentOrder);
 	    }
