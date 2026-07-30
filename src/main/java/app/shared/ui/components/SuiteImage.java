@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 
 import app.shared.Config;
+import app.shared.model.BigComponentStyle;
 import app.shared.skin.SkinService;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.image.Image;
@@ -55,34 +56,51 @@ public class SuiteImage extends StackPane {
      * die Verdopplung passiert deshalb hier, direkt an der API, die es so will.</p>
      */
     public SuiteImage(double width, double height) {
-        double arcDiameter = SkinService.get().bigComponentStyle().cornerRadius() * 2;
+        BigComponentStyle rahmen = SkinService.get().bigComponentStyle();
+        double bw = rahmen.borderWidth();
+        double arcDiameter = rahmen.cornerRadius() * 2;
+
+        // Die beiden Inhaltsebenen enden an der INNENkante des Rahmens, nicht an seiner Außenkante.
+        // Das ist die Entsprechung zu -fx-background-insets, das es hier nicht gibt: die Eigenschaft
+        // gehört zur Region, und ein Rectangle ist keine — seine Maße sind auch nicht per CSS setzbar.
+        //
+        // Warum das nötig ist: der Rahmen wird per stroke-type: inside gezeichnet, seine Außenkante
+        // liegt also exakt auf dem Pfad und wird an der Rundung antialiasiert. Diese äußerste Pixelreihe
+        // ist nur teilweise deckend — eine Füllung mit derselben Kontur scheint dort hindurch. Bei
+        // kontrastreichem Hintergrund sieht man den Saum. Betrifft Hintergrund UND Bild; das Bild ist
+        // eine ImagePattern-Füllung und lugt genauso hervor.
+        //
+        // Zwei Zweien mit verschiedenen Gründen: die Maße schrumpfen um 2*bw (links und rechts, oben
+        // und unten), der Eckradius nur um bw (der wird vom Eckmittelpunkt gemessen) — und das *2 am
+        // Ende ist die Umrechnung Radius → Durchmesser, die setArcWidth verlangt.
+        double innerWidth = width - 2 * bw;
+        double innerHeight = height - 2 * bw;
+        double innerArcDiameter = Math.max(0, rahmen.cornerRadius() - bw) * 2;
 
         // 1. Container-Größe fixieren
         setPrefSize(width, height);
         setMinSize(width, height);
         setMaxSize(width, height);
-        
-        // !Sofort: Hier  auch noch den -fx-background-insets Fix einführen. Analog ImageMapPane 
 
         // ---------------------------------------------------------
-        // Layer 1: Hintergrund (Unten)
+        // Layer 1: Hintergrund (Unten) — eingerückt
         // ---------------------------------------------------------
-        backgroundRect = new Rectangle(width, height);
-        backgroundRect.setArcWidth(arcDiameter);
-        backgroundRect.setArcHeight(arcDiameter);
+        backgroundRect = new Rectangle(innerWidth, innerHeight);
+        backgroundRect.setArcWidth(innerArcDiameter);
+        backgroundRect.setArcHeight(innerArcDiameter);
         backgroundRect.getStyleClass().add("my-image-background-layer");
         // HIER WICHTIG: Den Border-Style entfernen wir hier!
 
         // ---------------------------------------------------------
-        // Layer 2: Bild (Mitte)
+        // Layer 2: Bild (Mitte) — eingerückt
         // ---------------------------------------------------------
-        imageRect = new Rectangle(width, height);
-        imageRect.setArcWidth(arcDiameter);
-        imageRect.setArcHeight(arcDiameter);
+        imageRect = new Rectangle(innerWidth, innerHeight);
+        imageRect.setArcWidth(innerArcDiameter);
+        imageRect.setArcHeight(innerArcDiameter);
         imageRect.setFill(Color.TRANSPARENT);
 
         // ---------------------------------------------------------
-        // Layer 3: Rahmen (Oben)
+        // Layer 3: Rahmen (Oben) — volle Größe, die StackPane zentriert die kleineren Ebenen darin
         // ---------------------------------------------------------
         borderRect = new Rectangle(width, height);
         borderRect.setArcWidth(arcDiameter);

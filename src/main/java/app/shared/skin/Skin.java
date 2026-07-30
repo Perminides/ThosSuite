@@ -70,8 +70,6 @@ import javafx.scene.paint.Color;
  * TODO: Die beiden Alc- und FitbitStatisticScreens sind so voll mit UI-Kram. Ist das korrekt?
  * An sich sollte die Restsuite frei davon sein!
  * 
- * TODO: Gottklasse: CSS-Erzeugung, Property-Laden, Layout-Bounds, Komponenten-Bau in einer Klasse. Nope!
- * 
  * TODO: - **Komponentenerstellung vereinheitlichen** — ein durchgängiges Muster (gleicher Schnitt, gleicher Bau-/Nutzungsweg).
  * Und denk dran, auch in Swing oder JavaFX gibt man den einzelnen Komponenten Werte über setter und getter oder im Konstruktor mit
  * Das ist kein an sich verbotenes Muster solange die Aufrufe halt nur aus einem dezidierten Paket kommen. Das ist kein

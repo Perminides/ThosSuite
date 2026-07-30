@@ -41,10 +41,9 @@ public class DB {
 	 * führt zu SQLITE_BUSY. Eclipse erkennt dies nicht automatisch, da die Ressourcen
 	 * über Methodenaufrufe geholt werden — die Verantwortung liegt beim Aufrufer.
 	 *
-	 * <p>!Sofort: Diese Klasse hält sich an vier Stellen selbst nicht daran —
-	 * {@code connection.createStatement().execute("PRAGMA foreign_keys = ON")} schließt sein
-	 * {@code Statement} nie (hier und in den drei Schwestermethoden). Ausgerechnet die Regel, die
-	 * oben als kritisch steht. Fix ist ein try-with-resources um das Statement.</p>
+	 * <p>Das {@code Statement} für das PRAGMA bleibt bewusst ungeschlossen: {@code PRAGMA foreign_keys}
+	 * ist ein Setter und liefert kein ResultSet, es gibt also keinen offenen Cursor und damit keinen
+	 * {@code SQLITE_BUSY}-Fall. Es läuft einmal je Verbindungsaufbau und stirbt mit der Connection.</p>
 	 */
 	public static Connection getConnection() {
 		try {
@@ -107,9 +106,10 @@ public class DB {
 				alert.setContentText("Shit. Die connection ist closed? Wer ist der Übeltäter?");
 				alert.showAndWait();
 			}
-			if (tmdbConnection == null || tmdbConnection.isClosed())
+			if (tmdbConnection == null || tmdbConnection.isClosed()) {
 				tmdbConnection = DriverManager.getConnection("jdbc:sqlite:" + tmdbDbPath.toString());
-			tmdbConnection.createStatement().execute("PRAGMA foreign_keys = ON");
+				tmdbConnection.createStatement().execute("PRAGMA foreign_keys = ON");
+			}
 		} catch (Exception e) {
 			throw new RuntimeException("SQL error while getting connection", e);
 		}
@@ -135,6 +135,8 @@ public class DB {
 		try {
 		if (connection != null && !connection.isClosed())
 			connection.close();
+		if (tmdbConnection != null && !tmdbConnection.isClosed())
+			tmdbConnection.close();
 		} catch (SQLException e) {
 			throw new RuntimeException("SQL error while closing connection ", e);
 		}
