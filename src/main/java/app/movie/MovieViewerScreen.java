@@ -31,10 +31,7 @@ public class MovieViewerScreen implements Screen {
 
     @Override
     public void refresh() {
-        // TODO (dein Punkt, übernommen): optimistisch — setzt nur den Hintergrund neu. Ein Skin, der
-        // Positionen/Komponenten ändert, greift so nicht. Offen: nur-Background beibehalten vs. voller
-        // Rebuild (verwürfe die laufende Suche). Gehört zu "der Rest", bewusst nicht jetzt entschieden.
-        view.reapplyBackground();
+        view.rebuild();
     }
 
     @Override

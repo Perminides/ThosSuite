@@ -88,8 +88,8 @@ public abstract class SkinProperties {
 	protected Integer imageMapLineShapeInnerWidth = 12;
 	protected Integer imageMapShapeMarkedOuterWidth = 7;
 	protected Integer imageMapShapeMarkedInnerWidth = 4;
-	protected Rectangle2D worldSessionOverlayContentBounds = new Rectangle2D(11, 11, 410, 254);
-	protected Rectangle2D defaultOverlayContentBounds      = new Rectangle2D(0, 0, 390, 300);
+	protected Integer imageMapOverlayContentInset = 11;         // Welt: weich auslaufender Rahmen im Bild
+	protected Integer hannoverImageMapOverlayContentInset = 0;  // Hannover: Karte bis an jede Kante
 	
 	protected Double shapeMapStandardBorderWidth = 1.8;
 	protected Double shapeMapFederalStateBorderWidth = 2.8; // für Niedersachsen z. B.
@@ -413,12 +413,21 @@ public abstract class SkinProperties {
 
 	
 
-	// TODO: overlayContentBounds beschreibt, wo der Inhalt im Mini-Map-Bild sitzt — eigentlich
-	// Karten-/Asset-Daten, kein Styling. Liegt nur hier, weil hartcodiert. Sobald berechenbar
-	// (Overlay-Größe + prozentualer Rand), wandert das hoch zur Karte. Bis dahin: Felder mit Defaults.
-	public Rectangle2D getOverlayContentBounds(String id) {
-	    Rectangle2D b = (Rectangle2D) getFieldValue(id + "SessionOverlayContentBounds");
-	    return b != null ? b : defaultOverlayContentBounds;
+	/**
+	 * Wie breit der Rahmen im Mini-Map-Bild ringsum ist. <b>Wo</b> der Inhalt darin sitzt, rechnet die
+	 * Karte selbst aus — sie hat das Bild und damit dessen Maße, der Skin hat nur den Rand.
+	 *
+	 * <p>Zuvor stand hier das fertige Rechteck. Das war auf die 432×276-Overlays eingestellt und lag bei
+	 * den 430×274-Varianten zwei Pixel daneben; relativ gerechnet passt es zu jedem Bild.</p>
+	 *
+	 * <p>Der Wert hängt am Bild, nicht am Skin-Geschmack: die Welt-Overlays haben einen weich
+	 * auslaufenden Rahmen eingebacken, Hannovers Karte reicht bis an jede Kante. Deshalb die
+	 * Staffelung wie bei den Wallpapern — {@code <mapName>ImageMapOverlayContentInset} schlägt den
+	 * allgemeinen Wert.</p>
+	 */
+	public int imageMapOverlayContentInset(String mapName) {
+	    Integer inset = (Integer) getFieldValue(mapName + "ImageMapOverlayContentInset");
+	    return inset != null ? inset : imageMapOverlayContentInset;
 	}
 	
 	

@@ -201,11 +201,18 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 			updateShapeState(id, INACTIVE);
 	}
 
-	public void moveCorrectToActive() {
+	/**
+	 * Alles Abgehakte verschwindet wieder: was richtig geklickt wurde ({@code CORRECT}) <b>und</b> was
+	 * verpasst wurde ({@code INCORRECT}), fällt zurück auf {@code ACTIVE}. Für den „schwer"-Modus, in dem
+	 * nichts stehenbleiben soll — sonst verrät eine rot markierte Region den Rest der Session, wo sie liegt.
+	 */
+	public void moveResolvedToActive() {
 		shapes.values().forEach(shape -> {
 			Node node = shape.node();
-			if (node.getPseudoClassStates().contains(CORRECT)) {
+			Set<PseudoClass> states = node.getPseudoClassStates();
+			if (states.contains(CORRECT) || states.contains(INCORRECT)) {
 				node.pseudoClassStateChanged(CORRECT, false);
+				node.pseudoClassStateChanged(INCORRECT, false);
 				node.pseudoClassStateChanged(ACTIVE, true);
 			}
 		});

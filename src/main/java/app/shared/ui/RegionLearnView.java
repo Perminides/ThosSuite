@@ -14,8 +14,6 @@ import app.shared.ui.components.SuiteInfoLabel;
 import app.shared.ui.components.SuiteTextField;
 import app.shared.ui.components.map.ShapeMapPane;
 
-// !Sofort: Leider gibt es noch einen Fehler im freien Spiel. Die falsch geklickten bei schwer verschwinden nicht, nur die richtig geklickten...
-
 /**
  * Die Oberfläche einer Region-Session: eine Karte, dazu entweder ein Fragefeld (Klick-Modi) oder
  * ein Eingabefeld (Schreib- und Eliminierungs-Modi).
@@ -89,7 +87,7 @@ public class RegionLearnView {
 	public void addIdsToActive(Set<String> ids)       { karte.markActive(ids); }
 	public void addIdsToMarked(Set<String> ids)       { karte.mark(ids); }
 	public void moveAllToActive()                     { karte.reset(); }
-	public void moveCorrectToActive()                 { karte.moveCorrectToActive(); }
+	public void moveResolvedToActive()                { karte.moveResolvedToActive(); }
 	public void addIdsToCorrect(Set<String> elements) { karte.markCorrect(elements); }
 	public void addIdsToInactive(Set<String> elements){ karte.markInactive(elements); }
 	public void setIdToIncorrect(String element)      { karte.markIncorrect(element); }

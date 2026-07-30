@@ -29,6 +29,7 @@ public class ClickSessionProgress implements SessionProgress{
 	private final List<QuizElement> quizElements;
 	private final Set<String> notFound = new TreeSet<>();
 	private final SessionSpec spec;
+	private final boolean easy;
 	private boolean isPaused = false;
 	private int currentIndex = -1;
 	private String lastClickedId = null;
@@ -38,6 +39,7 @@ public class ClickSessionProgress implements SessionProgress{
 	public ClickSessionProgress(Set<MapShape> regions, SessionSpec spec, RegionSession regionSession) {
 		this.session = regionSession;
 		this.spec = spec;
+		this.easy = spec.getMode().getEasyHard() == Mode.EasyHard.EASY;
 		this.sessionRegions = new HashSet<>();
 		for (MapShape region : regions) {
 			sessionRegions.add(region.id());
@@ -84,14 +86,27 @@ public class ClickSessionProgress implements SessionProgress{
 		nextStep();
 	}
 
+	/**
+	 * Die Pause geht vor: nach einem Fehler heißt <em>jeder</em> Klick „weiter", auch der auf einen
+	 * markierten Kreis.
+	 *
+	 * <p>Danach gilt bei „leicht": was nicht mehr in {@link #sessionRegions} steht, ist durch und
+	 * nimmt keine Klicks mehr an. Dieselbe Menge geht an {@code weWaitForClick} — was also nicht
+	 * mehr aktiv gesetzt wird, wird auch nicht mehr gewertet. Bei „schwer" ist das Gegenteil richtig:
+	 * dort sind alle Kreise unsichtbar und damit alle potenziell falsch, ein Treffer auf etwas
+	 * längst Erledigtes ist ein echter Fehlgriff.</p>
+	 */
 	@Override
 	public void elementClicked(String id) {
-		lastClickedId = id;
 		if (isPaused) {
 			endPause();
 			return;
 		}
-		
+
+		if (easy && !sessionRegions.contains(id))
+			return;
+
+		lastClickedId = id;
 		if (quizElements.get(currentIndex).getShapeId().equals(id)) {
 			presenter.handleClickResult(id, true, null);
 			sessionRegions.remove(id);
