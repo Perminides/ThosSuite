@@ -50,7 +50,10 @@ import javafx.scene.text.Text;
  */
 public abstract class SkinProperties {
 
-	// !Sofort: Wenn Du die borderColor auch in den borderParams angibst, kannst Du sie mit borderColor nicht mehr global setzen! Das muss da raus oder borderColor überschreibt das. Eins von beiden
+	// borderColor ist der Ersatzwert, nicht der Zwang: bleibt der Farb-Slot in einem borderParams
+	// leer (1,,10,20,10,20,10), wird sie eingesetzt — steht dort eine Farbe, gewinnt die. Ein Skin
+	// mit unterschiedlich gefärbten Rändern bleibt damit möglich. Eingesetzt wird im
+	// Defaults-Durchlauf von styleScene, nicht beim Parsen (siehe BorderParams.withFallbackColor).
 	// !Sofort: Mal aktuelleres Design ausprobieren: Button mit runden Ecken, ohne Border und mit box-shadow. Sicher sehr interessant, aber ich fürchte das wird ein Refactoring-Alptraum, weil Du immer den Platz für den Schatten brauchst überall...
 	// !Sofort: Einfacher als box-shadow wäre ein Design mit transparenten Hintergründen der Buttons und TextFields und so und ohne Border. Hehe...
 	
@@ -220,7 +223,10 @@ public abstract class SkinProperties {
 	protected Rectangle2D hrSessionTextInputPanel;
 
 	protected Integer verticalGapMC;
-	
+
+	/** Innenabstand der Diagramm-Wurzel (Alkohol- und Fitbit-Statistik). CSS-Schreibweise, vier Werte. */
+	protected String chartRootPadding = "50px 50px 50px 50px";
+
 	/**
 	 * Ist die Breite der ContentPane. Menüzeile und Border um die Rootpane sowie der Windows-Border
 	 * gehören nicht dazu! --- Fenster = Spielfeld [+ Menü] + 2xBorder --- Von daher: Wenn deine Font
@@ -468,9 +474,6 @@ public abstract class SkinProperties {
 
 	// endregion
 	
-	// !Sofort: Ein Schlüssel in der properties-Datei, für den es kein Feld gibt, wird hier still
-	// übergangen (value == null → continue greift nur andersherum: Feld ohne Schlüssel). Ein
-	// FailFast-Check nach dem Laden — jeden props-Schlüssel gegen die Feldnamen halten und bei
 	// !Später: Punkt-Notation in den properties. `learnSessionPanel.world.map=…` →
 	// Map<String, LearnSessionPanel>, Regel: ein Punkt geht eine Ebene tiefer, ob eine Ebene offen
 	// oder deklariert ist sagt der Typ, gedeckelt auf zwei Ebenen. Dafür: 96 Felddeklarationen weg,
@@ -578,16 +581,29 @@ public abstract class SkinProperties {
 	 * @param value
 	 * @return
 	 */
+	/**
+	 * Der Farb-Slot darf leer bleiben ({@code 1,,10,20,10,20,10}) — dann steht die Farbe auf
+	 * {@code null} und der Defaults-Durchlauf in {@code styleScene} setzt die globale
+	 * {@code borderColor} ein. Die Position ist fest, der leere Slot deshalb eindeutig.
+	 *
+	 * <p>Achtung: {@code parseColor} kann auch {@code r,g,b,a} mit Kommas. Innerhalb von
+	 * BorderParams zerschösse das die Positionen — dort sind Farben faktisch nur als Hex erlaubt.</p>
+	 */
 	protected BorderParams parseBorderParams(String value) {
 		String[] values = value.split(",");
 		if (values.length == 7)
-			return BorderParams.of(Integer.parseInt(values[0]), parseColor(values[1]),
+			return BorderParams.of(Integer.parseInt(values[0]), parseColorOrNull(values[1]),
 					new Insets(Integer.parseInt(values[2]), Integer.parseInt(values[3]), Integer.parseInt(values[4]), Integer.parseInt(values[5])),
 					Integer.parseInt(values[6]) / 2);
 		else if (values.length == 3)
-			return BorderParams.of(Integer.parseInt(values[0]), parseColor(values[1]), Integer.parseInt(values[2]) / 2);
+			return BorderParams.of(Integer.parseInt(values[0]), parseColorOrNull(values[1]), Integer.parseInt(values[2]) / 2);
 		else
 			throw new RuntimeException("Das Borderparams-Format kenne ich nicht: " + value);
+	}
+
+	/** Leerer Farb-Slot heißt „nimm die globale borderColor" — siehe {@link #parseBorderParams}. */
+	private Color parseColorOrNull(String value) {
+		return value.isBlank() ? null : parseColor(value);
 	}
 
 	protected Rectangle2D parseRectangle(String value) {

@@ -28,7 +28,7 @@ public class DashboardScreenView implements ScreenView {
 	private final FlowPane pane = new FlowPane();
 
 	public DashboardScreenView() {
-		// !Sofort: Magic Numbers
+		// !Später: Magic Numbers — gehört in die gemeinsame Runde über alle Magic Numbers der Suite.
 		pane.setHgap(20);
 		pane.setVgap(20);
 		pane.setAlignment(Pos.CENTER);

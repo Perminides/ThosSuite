@@ -31,6 +31,29 @@ public record BorderParams (
 	        return new BorderParams(width, color, insets, arc, 0, focusedColor, disabledColor);
 	    } 
 	 
+	 /**
+	  * Füllt fehlende Farben aus einem Ersatzwert.
+	  *
+	  * <p>Bleibt der Farb-Slot in den properties leer ({@code 1,,10,20,10,20,10}), steht hier
+	  * {@code null} — dann greift die globale {@code borderColor}. Wer eine Farbe angibt, behält sie,
+	  * auch wenn sie von der globalen abweicht: ein Skin mit unterschiedlich gefärbten Rändern bleibt
+	  * damit möglich.</p>
+	  *
+	  * <p>Aufgelöst wird das <b>nicht</b> beim Parsen, sondern erst im Defaults-Durchlauf von
+	  * {@code styleScene}. Der Loader läuft die Felder in Deklarationsreihenfolge ab und
+	  * {@code borderColor} steht dort <em>nach</em> den BorderParams; bei einem abgeleiteten Skin
+	  * kommt sie womöglich sogar erst aus der Eltern-Datei. Beim Parsen wäre sie also noch nicht da.</p>
+	  */
+	 public BorderParams withFallbackColor(Color fallback) {
+	        if (color != null && focusedColor != null && disabledColor != null)
+	            return this;
+	        return new BorderParams(width,
+	                color != null ? color : fallback,
+	                insets, arc, focusWidth,
+	                focusedColor != null ? focusedColor : fallback,
+	                disabledColor != null ? disabledColor : fallback);
+	 }
+
 	 /**public BorderParams withInsets(Insets newInsets) {
 	        return of(this.width, this.color, newInsets, this.arc);
 	 }**/
