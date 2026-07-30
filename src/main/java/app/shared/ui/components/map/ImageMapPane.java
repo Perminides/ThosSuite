@@ -314,9 +314,6 @@ public class ImageMapPane extends StackPane implements LearnMap {
 
 	/**
 	 * Die Bild-Karte kennt die falsche Form nicht per id — sie merkt sich den letzten Klick selbst.
-	 *
-	 * <p>TODO: „EM 2021 — alle Länder grün, welches war falsch?" Das Zurücksetzen davor löscht die
-	 *   bisherigen Markierungen mit.</p>
 	 */
 	@Override
 	public void markIncorrect(String id) {

@@ -63,11 +63,12 @@ public class RegionLearnView {
 		karte = new ShapeMapPane(geometrien, skin.learnComponentBounds(mapName, kategorie, LearnComponent.MAP));
 		karte.setClickListener(onMapElementClicked);
 
-		// !Sofort: Hier wäre allerdings CENTER schon angesagt
 		if (mitFragefeld) {
 			questionArea = new SuiteInfoLabel("",
 					skin.learnTextLabelBounds(mapName, kategorie, Skin.TextLabelType.QUESTION));
 			questionArea.getStyleClass().add(Skin.TextLabelType.QUESTION.styleClass());
+			// Einzeiliger Streifen mit einem einzelnen Namen darin — linksbündig sähe verloren aus.
+			questionArea.centerText();
 			inputField = null;
 			host.setComponents(karte, questionArea);
 		} else {

@@ -1,12 +1,13 @@
 # Vertagte Punkte
 
-**Stand:** 30.07.2026 · **Der Umbau ist fertig.** A1 ist durch; aus A3 sind noch zwei Punkte offen.
+**Stand:** 30.07.2026 · **Der Umbau ist fertig, Abschnitt A ist leer.** Offen ist nur noch Vorrat.
 
 Alles, was während des Refactorings (26.–29.07.) bewusst **nicht** sofort gemacht wurde — und
 alles, was dabei aufgefallen ist.
 
-**Abschnitt A ist die Arbeitsliste**: sieben kleine Code-Punkte (A1), alle erledigt, und vier
-Sachfehler (A3), von denen zwei noch offen sind. B bis E sind Vorrat, nicht Plan.
+**Abschnitt A war die Arbeitsliste**: sieben kleine Code-Punkte (A1) und vier Sachfehler (A3) — drei
+davon behoben, einer als nicht reproduzierbar verworfen. Alles durch. **B bis E sind Vorrat, nicht
+Plan**; wer hier nach der nächsten Aufgabe sucht, sucht in einer Ideensammlung.
 
 Was **erledigt** ist, steht nicht hier, sondern in `Skin-Refactoring-Plan.md` §5.
 
@@ -102,12 +103,36 @@ Die Nachzieh-Notiz zu `UiComponent`/`my-title` ist erledigt: beides steht im Reg
 
 ---
 
-### A3 · Sachfehler — warten nicht auf den Umbau
+### A3 · ✓ Sachfehler — erledigt 30.07.
 
-| Fehler | Fundstelle |
-|---|---|
-| **EM 2021 — „alle Länder grün, welches war falsch?"** Das Zurücksetzen vor `markLastClickAsIncorrect()` löscht die bisherigen Markierungen mit. Zweite Ursache dazugefunden: der Aufrufer platziert direkt danach die grünen Shapes, und `place()` hängt sie **hinter** den Marker — das `toFront()` von vorhin ist damit wertlos | `ImageMapPane.markIncorrect` |
-| Fragefeld der Region-Session: „Hier wäre allerdings CENTER schon angesagt" | `RegionLearnView` |
+~~**EM 2021 — „alle Länder grün, welches war falsch?"**~~ **Verworfen 30.07., nicht reproduzierbar.**
+Fünfmal gespielt, nichts aufgefallen; auch nach Monaten täglichem Welt-Lernen nicht. Der Code wurde
+trotzdem durchgerechnet, damit die Idee nicht als frische wiederkommt:
+
+- Das Leeren des Layers in `markIncorrect` ist **gewollt**. Es kann nur zwei Dinge treffen, und beide
+  sollen so sein: die *optionalen* Antworten verschwinden (die werden zwar akzeptiert, sollen aber
+  nach einem Fehler nicht als Lösung gezeigt und mitgelernt werden), und eine `MarkMapElements`-
+  Markierung der Frage verschwindet (die Frage weiß man nach einem Klick noch). Bei einer Karte mit
+  nur `mandatory` ändert das Leeren optisch ohnehin nichts — die volle Lösung baut alles neu auf.
+- Die vermutete **Z-Reihenfolge** ist kein Problem: ein Falsch-Klick liegt per Definition außerhalb
+  von `mandatory ∪ optional`, aufgedeckt wird nur `mandatory`. Der Marker kann nie darunterliegen.
+- Das vermutete **veraltete `lastClick`** ebenfalls nicht: klickbar sind nur `mandatory ∪ optional`,
+  ein Treffer darauf ist immer richtig. Ein falscher Klick geht zwangsläufig zum Viewport — und der
+  setzt `lastClick`. Deshalb ist auch der Parameter `id` dort immer `null`.
+
+Beide letzten Punkte hängen an genau diesen Invarianten; wer die Klickziele einmal weiter fasst,
+holt sich die Fehler ein.
+
+~~**Fragefeld der Region-Session: CENTER.**~~ **Erledigt 30.07.** Die Ausrichtung hängt am Schnitt
+des Feldes: das Anki-Fragefeld ist ein Textblock (500×330, mehrzeilige CSV-Frage), das der
+Region-Session ein einzeiliger Streifen (500×50) mit einem einzelnen Namen darin — 70px Text in
+500px Feld. Deshalb `SuiteInfoLabel.centerText()`, gerufen nur von `RegionLearnView`; Anki bleibt
+linksbündig, dort fransen zentrierte Zeilenenden aus.
+
+Wirksam ist die Textausrichtung im `TextFlow`, **nicht** `setAlignment` am StackPane: `setFixedWidth`
+gibt dem `TextFlow` die volle Feldbreite, waagerecht gibt es also nichts zu verschieben. Bewusst
+nicht über den Skin gelöst — die Klasse `.question` tragen beide Felder, und die Ausrichtung ändert
+sich mit dem Skin nicht.
 
 ~~**Freies Spiel: falsch geklickte Formen verschwinden bei „schwer" nicht.**~~ **Erledigt 30.07.**
 Zwei Ursachen, beide in `region.SessionPresenter`.
