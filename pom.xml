@@ -127,7 +127,7 @@
 				</configuration>
 			</plugin>
 
-			<!-- Hält app.misc (Wegwerf-/Analyse-Code) aus der ausgelieferten JAR -->
+			<!-- Hält scripts (Wegwerf-/Analyse-Code) aus der ausgelieferten JAR -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -242,6 +242,10 @@
 							--enable-native-access=javafx.graphics,ALL-UNNAMED</option>
 					</javaOptions>
 
+					<!-- !Später: Der Datenordner steht hier als absoluter Pfad und bindet den Build an
+					     genau diesen Rechner. Für den Eigengebrauch in Ordnung, aber ein Umzug oder ein
+					     zweiter Rechner bricht das gepackte Paket still — die Suite fragt dann per
+					     Verzeichniswahl nach. Sauberer wäre eine Property, die beim Bauen gesetzt wird. -->
 					<arguments>
 						<argument>C:/Users/permi/Documents/Gedächtnis Lernen und so/ThosSuite/</argument>
 					</arguments>

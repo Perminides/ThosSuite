@@ -18,8 +18,22 @@ import app.shared.DB;
 import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
 
+/**
+ * !Architektur: Der Deck-<b>Anzeigename</b> ist der Schlüssel. In {@code card_learn_stat} und
+ * {@code card_log} steht in der Spalte {@code deck} das Ergebnis von {@code Deck.getDisplayName()}.
+ * Benennst Du den Anzeigetext eines Decks je um („Welt" → „Weltkarte"), verwaisen sämtliche
+ * historischen Zeilen — stillschweigend, es fällt nur als plötzlich leere Statistik auf. Der
+ * stabile Schlüssel wäre {@code Deck.getId()}; die Umstellung kostet eine Datenmigration.
+ *
+ * <p>!Architektur: Der Name dieser Klasse steht quer zur Regel. Laut Regelwerk heißt der
+ * SQL-Ausführer gegen die Suite-DB {@code …Repository}, {@code …Source} steht für eine Datei als
+ * Quelle. Hier ist es umgekehrt: {@code DbDeckProgressSource} und {@code CsvDeckCardSource} führen
+ * die Arbeit aus, {@code DeckRepository} ist nur der Wrapper darüber. Zu entscheiden ist, welche
+ * Klasse den Namen {@code Repository} verdient — der Wrapper bündelt zwei Quellen (CSV + DB), das
+ * ist die eigentliche Frage.</p>
+ */
 class DbDeckProgressSource {
-		
+
 		DbDeckProgressSource() {
 		}
 

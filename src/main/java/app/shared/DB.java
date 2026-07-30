@@ -40,6 +40,11 @@ public class DB {
 	 * Connection verhindert den Commit auf {@link #getNewConnection()} und
 	 * führt zu SQLITE_BUSY. Eclipse erkennt dies nicht automatisch, da die Ressourcen
 	 * über Methodenaufrufe geholt werden — die Verantwortung liegt beim Aufrufer.
+	 *
+	 * <p>!Sofort: Diese Klasse hält sich an vier Stellen selbst nicht daran —
+	 * {@code connection.createStatement().execute("PRAGMA foreign_keys = ON")} schließt sein
+	 * {@code Statement} nie (hier und in den drei Schwestermethoden). Ausgerechnet die Regel, die
+	 * oben als kritisch steht. Fix ist ein try-with-resources um das Statement.</p>
 	 */
 	public static Connection getConnection() {
 		try {

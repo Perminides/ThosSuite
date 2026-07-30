@@ -386,6 +386,10 @@ public class ImageMapPane extends StackPane implements LearnMap {
 	// Node (userData == id) — vorhandenen wiederverwenden, sonst frisch bauen und anhängen.
 	private Node place(ShapeGeometry geometry) {
 		if (geometry.kind() == ShapeGeometry.Kind.CENTER) {
+			// Achtung: Kommt ein CENTER-Anker zusammen mit echten Shapes herein, gewinnt am Ende die
+			// Zentrierung auf die Shapes — recenterIfNeeded läuft danach und der Anker liegt nicht im
+			// Layer, zählt dort also nicht mit. In der Praxis kommt CENTER allein, aber wissen sollte
+			// man es, bevor man die beiden mischt.
 			centerOnPoint(geometry.centerX(), geometry.centerY());
 			return null;
 		}
