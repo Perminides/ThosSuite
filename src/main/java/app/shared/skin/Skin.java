@@ -94,6 +94,9 @@ public abstract class Skin extends SkinProperties {
 		menuItemPadding = menuItemPadding == null ? font.getSize() * 0.1 + "px " + font.getSize() * 0.5 + "px" : menuItemPadding;
 		playFieldBackground = playFieldBackground == null ? menuBarBackground : playFieldBackground;
 		borderShapeColor = borderShapeColor == null ? borderColor : borderShapeColor;
+		borderSmallComponent = borderSmallComponent.withFallbackColor(borderColor);
+		borderMediumComponent = borderMediumComponent.withFallbackColor(borderColor);
+		borderBigComponent = borderBigComponent.withFallbackColor(borderColor);
 		textActiveComponentColor = textActiveComponentColor == null ? textColor : textActiveComponentColor;
 		dashBoardTileTopFontSize = dashBoardTileTopFontSize == null ? (int)font.getSize()*4 : dashBoardTileTopFontSize;
 		dashBoardTileBottomFontSize = dashBoardTileBottomFontSize == null ? (int)font.getSize() : dashBoardTileBottomFontSize;
@@ -693,7 +696,7 @@ public abstract class Skin extends SkinProperties {
 	    
 	    // === Unterer Bereich (Beschreibung) ===
 	    builder.start(".dashboard-tile-bottom")
-	       .add("-fx-background-color", menuBarBackground) // !Sofort: Was soll denn der Default hier mal sein???
+	       .add("-fx-background-color", menuBarBackground) // bewusst ohne Default: jeder Skin setzt die Menüfarbe selbst
 	       .add("-fx-pref-height", dashBoardTileBottomHeight + "px")
 	       .add("-fx-border-color", borderBigComponent.color())
 	       .add("-fx-border-width", borderBigComponent.width() + "px 0 0 0") // Trennstrich oben
@@ -782,7 +785,7 @@ public abstract class Skin extends SkinProperties {
 	       .end();
 	    
 	    builder.start(".chart-root")
-	    	.add("-fx-padding", "50px 50px 50px 50px") // !Sofort: Wird ausgelagert in properties!
+	    	.add("-fx-padding", chartRootPadding)
 	    .end();
 
 	    builder.rule(".chart-plot-background", "-fx-background-color", "transparent");
@@ -927,7 +930,8 @@ public abstract class Skin extends SkinProperties {
 		.end();
 	}
 	
-	// !Sofort: Magic Numbers
+	// !Später: Magic Numbers — gehört in eine eigene Runde über alle Magic Numbers der Suite,
+	// nicht als Einzelfix hier.
 	// !Sofort: Highlight-Background der Labels ignoriert Border-Radius der VBox — JavaFX clippt Children nicht an abgerundeten Ecken, Lösung: Clip im Skin setzen
 	private void addSuggestionBoxStyles(CssBuilder builder) {
 		builder.start(".suggestion-box")
