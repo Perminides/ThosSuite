@@ -170,8 +170,17 @@ Alle in der Lese-DTO `Exercise` gekapselt. Das war der aufwändigste Teil der An
   offline-`if`, try-catch → Fehler merken, nicht über dem Splash melden); `runPostTasks`
   (Option A: direkt nach dem Fitbit-Block; Fehler → Alert, sonst `showPopup()`).
 
-**Wegwerf-Messskripte (jederzeit löschbar):**
-- `scripts.StepSourceComparison`, `scripts.StepsListSum` — dienten der Datenanalyse. Erledigt.
+**Messskripte:**
+- `scripts.StepSourceComparison` — **wird weiterhin gebraucht**, nicht löschen. Damit werden die
+  Unterschiede zwischen Health und Fitbit verfolgt, solange die Lücke offen ist. *(Korrigiert
+  30.07.: stand hier fälschlich als „jederzeit löschbar, erledigt" — das galt nur für die einmalige
+  Analyse im Juli.)*
+- `scripts.StepsListSum` — diente der einmaligen Datenanalyse, erledigt.
+
+> ⚠️ `StepSourceComparison` trägt seine Zugangsdaten im Quelltext und ist versioniert. Beim
+> „alles committen" rutscht sie deshalb mit — am 30.07. genau so passiert, GitHub Push Protection
+> hat den Push gestoppt. Auf GitHub gelandet ist nie etwas. Dauerhafte Abhilfe: die drei Werte aus
+> der Config lesen, wie `app.activity.ApiClient` es tut.
 
 ---
 
