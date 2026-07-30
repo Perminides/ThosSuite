@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import app.learn.model.Deck;
@@ -20,11 +19,12 @@ public final class AnkiPlayConfigForm {
 
     private AnkiPlayConfigForm() {}
 
-    public static Optional<AnkiPlayConfig> show(Deck deckType, Set<String> availableLabels) {
+    /** Die gewählte Konfiguration, oder {@code null} wenn der Nutzer abbricht. */
+    public static AnkiPlayConfig show(Deck deckType, Set<String> availableLabels) {
         String title = deckType.getDisplayName() + " spielen";
-        Optional<AnkiDialogState> result =
+        AnkiDialogState result =
                 new AnkiConfigDialog(title, "0", "50000000", "20", labelColumns(availableLabels)).showAndWait();
-        return result.map(AnkiPlayConfigForm::toConfig);
+        return result == null ? null : toConfig(result);
     }
 
     // Labels sortiert, in Spalten zu je 10

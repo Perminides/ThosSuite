@@ -63,13 +63,10 @@ class ConfigFileSource {
         props.put("configFolder",     folderPath + "config");
         props.put("fitbitFolder",     folderPath + "fitbit");
         props.put("logFolder",        folderPath + "log");
-        
-        if (!props.get("attachments.folder").endsWith("/") && !props.get("attachments.folder").endsWith("\\")) {
-        	props.put("attachments.folder", props.get("attachments.folder") + "/");
-        }
-        props.put("diaryAttachmentsFolder",        props.get("attachments.folder") + "diary");
-        props.put("signalAttachmentsFolder",        props.get("attachments.folder") + "signal");
-        props.put("whatsappAttachmentsFolder",        props.get("attachments.folder") + "whatsapp");
+
+        // Kein computed Unterordner je Feature: unter attachments.folder liegt ein Ordner pro Nutzer
+        // (diary, signal, whatsapp), und den setzt die Aufrufstelle selbst per resolve(...) zusammen.
+        // Sonst stünde dasselbe Wissen zweimal — hier als Schlüssel und dort als Ordnername.
     }
 
     /** Liegt der Key in der unveraenderlichen Menge (Datei oder computed)? */

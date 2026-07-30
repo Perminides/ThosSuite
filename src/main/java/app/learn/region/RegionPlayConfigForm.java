@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import app.learn.model.Deck;
@@ -29,11 +28,12 @@ public final class RegionPlayConfigForm {
     private RegionPlayConfigForm() {}
 
     // Start
-    public static Optional<RegionPlayConfig> show() {
+    /** Was gespielt werden soll, oder {@code null} wenn der Nutzer abbricht. */
+    public static RegionPlayConfig show() {
         RegionDialogState initial = getInitialState(); // Im initialen Zustand ist alles anklickbar, deswegen brauchen wir kein reduce aufzurufen hier.
-        Optional<RegionDialogState> result =
+        RegionDialogState result =
                 new RegionConfigDialog(initial, RegionPlayConfigForm::reduce).showAndWait();
-        return result.map(RegionPlayConfigForm::toConfig);
+        return result == null ? null : toConfig(result);
     }
 
     /**

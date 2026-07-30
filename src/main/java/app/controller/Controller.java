@@ -3,7 +3,6 @@ package app.controller;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import app.alc.AlcStatisticsScreen;
@@ -221,11 +220,9 @@ public class Controller{
 	    if (payload instanceof Deck deckType) {
 	        Set<String> availableLabels = ankiDeckService.getAvailableLabels(deckType);
 	        
-	        Optional<AnkiPlayConfig> configOpt = AnkiPlayConfigForm.show(deckType, availableLabels);
-	        if (configOpt.isEmpty()) return;
-	        
-	        AnkiPlayConfig config = configOpt.get();
-	        
+	        AnkiPlayConfig config = AnkiPlayConfigForm.show(deckType, availableLabels);
+	        if (config == null) return;
+
 	        List<Card> cards = ankiDeckService.getCardsForPlay(
 	            deckType,
 	            config.minIndex(),
@@ -247,11 +244,9 @@ public class Controller{
 	        });
 	        
 	    } else if (payload == DeckCategory.REGION_DECK) {	        
-	        Optional<RegionPlayConfig> configOpt = RegionPlayConfigForm.show();
-	        if (configOpt.isEmpty()) return;
-	        
-	        RegionPlayConfig config = configOpt.get();
-	        
+	        RegionPlayConfig config = RegionPlayConfigForm.show();
+	        if (config == null) return;
+
 	        Set<Deck> selectedDecks = config.selectedDecks();
 	        Mode mode = config.mode();
 	        

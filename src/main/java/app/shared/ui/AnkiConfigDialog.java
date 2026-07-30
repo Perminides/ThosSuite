@@ -3,7 +3,6 @@ package app.shared.ui;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import app.shared.model.AnkiDialogState;
@@ -43,10 +42,8 @@ public class AnkiConfigDialog {
         this.labelColumns = labelColumns;
     }
 
-    // !Sofort: Gibt Optional zurück statt record oder null — verstößt gegen den Dialog-Vertrag im
-    // Regelwerk ("Ergebnis ist ein record/enum oder null, nie ButtonType/Node oder Optional") und
-    // gegen die Grundregel "null statt Optional bei Rückgaben". Betrifft auch RegionConfigDialog.
-    public Optional<AnkiDialogState> showAndWait() {
+    /** Der eingestellte Zustand, oder {@code null} wenn der Nutzer abbricht. */
+    public AnkiDialogState showAndWait() {
         SuiteDialog<ButtonType> dialog = new SuiteDialog<>(title);
         DialogPane pane = dialog.getDialogPane();
 
@@ -97,10 +94,9 @@ public class AnkiConfigDialog {
 
         dialog.setOnShown(_ -> Platform.runLater(() -> { minField.requestFocus(); minField.selectAll(); }));
 
-        Optional<?> result = dialog.showAndWait();
-        return (result.isPresent() && result.get() == ButtonType.OK)
-                ? Optional.of(readState())
-                : Optional.empty();
+        // Das Optional kommt aus der JavaFX-API und wird hier, am Entstehungsort, ausgepackt.
+        ButtonType chosen = dialog.showAndWait().orElse(null);
+        return chosen == ButtonType.OK ? readState() : null;
     }
 
     private void updateOk() {
