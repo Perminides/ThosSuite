@@ -9,6 +9,7 @@ import javafx.scene.Node;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 
 /**
@@ -65,6 +66,20 @@ public class SuiteInfoLabel extends StackPane {
         setText(text);
     }
     
+
+    /**
+     * Zentriert den Text waagerecht — für einzeilige Felder, in denen linksbündig verloren aussieht.
+     * Bei mehrzeiligem Fließtext (Anki-Frage, 500×330) bleibt linksbündig richtig, dort fransen
+     * zentrierte Zeilenenden aus.
+     *
+     * <p>Es muss der {@code TextFlow} sein und nicht das StackPane: der bekommt in
+     * {@link #setFixedWidth(double)} die volle Feldbreite und füllt das StackPane damit aus — für
+     * {@link #setAlignment} bleibt waagerecht nichts zu verschieben. Senkrecht zentriert der
+     * Konstruktor ohnehin schon.</p>
+     */
+    public void centerText() {
+        textFlow.setTextAlignment(TextAlignment.CENTER);
+    }
 
     public void setText(String text) {
         this.rawText = text != null ? text : "";
