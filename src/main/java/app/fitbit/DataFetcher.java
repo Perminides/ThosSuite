@@ -19,8 +19,7 @@ public class DataFetcher {
     private final Repository repository;
     private ApiClient importer;
     private List<DayData> fetchedDays;
-    private Exception fetchError;
-    
+
     public DataFetcher() {
         this.repository = new Repository();
         this.fetchedDays = new ArrayList<>();
@@ -29,10 +28,13 @@ public class DataFetcher {
     /**
      * Holt alle fehlenden Fitbit-Daten synchron.
      * Blockiert den aufrufenden Thread (Splash bleibt sichtbar).
-     * Sammelt Fehler statt zu werfen.
+     *
+     * <p><b>Wirft</b>, wenn etwas schiefgeht — auch bei einem toten Netz. Ob das den Start reißen
+     * darf, ist eine Aussage über den Startablauf und gehört deshalb dem Controller, nicht dieser
+     * Klasse. Der fängt an der Orchestrierungs-Grenze, genau wie beim Health-Vergleich und beim
+     * TMDB-Import.</p>
      */
     public void fetch() {
-        try {
             // 1. Letztes importiertes Datum ermitteln
             Optional<LocalDate> lastDateOpt = repository.getLastImportedDate();
             
@@ -70,11 +72,6 @@ public class DataFetcher {
                 DayData dayData = fetchDay(date);
                 fetchedDays.add(dayData);
             }
-            
-        } catch (Exception e) {
-            Log.error(this, "Fehler beim Fitbit-Daten-Abruf", e);
-            this.fetchError = e;
-        }
     }
     
     /**
@@ -97,14 +94,6 @@ public class DataFetcher {
     
     public boolean hasData() {
         return !fetchedDays.isEmpty();
-    }
-    
-    public boolean hasError() {
-        return fetchError != null;
-    }
-    
-    public Exception getError() {
-        return fetchError;
     }
     
     public List<DayData> getFetchedDays() {
