@@ -4,7 +4,9 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 import app.shared.Config;
 import app.shared.UiUtils;
@@ -136,11 +138,7 @@ public abstract class SkinProperties {
 	protected String worldWallpaperName;
 	protected String germanyWallpaperName;
 	protected String regionWallpaperName;
-	// !Sofort: Dieses Feld ist tot. `getBackgroundImageName` schlägt `<mapName>WallpaperName` nach,
-	// und alle Bundesland-Decks haben mapName "lk" — gesucht wird also `lkWallpaperName`. Der Name
-	// hier ist dagegen die Deck-Id von Brandenburg. Wallpaper über die Deck-Id, Layouts über den
-	// mapName: beim Aufräumen der properties auf einen Schlüssel vereinheitlichen.
-	protected String lk_bbWallpaperName;
+	protected String lkWallpaperName;
 	protected String itWallpaperName;
 	protected String esWallpaperName;
 	protected String csWallpaperName;
@@ -433,14 +431,7 @@ public abstract class SkinProperties {
 	    Integer inset = (Integer) getFieldValue(mapName + "ImageMapOverlayContentInset");
 	    return inset != null ? inset : imageMapOverlayContentInset;
 	}
-	
-	
-	// !Sofort: Im Tagebuch mit Kalenderwochen und bei den StatisticsScreens ohne. Wieso?
-	
 
-	
-	
-	
 	// endregion
 
 	/**
@@ -480,10 +471,6 @@ public abstract class SkinProperties {
 	// !Sofort: Ein Schlüssel in der properties-Datei, für den es kein Feld gibt, wird hier still
 	// übergangen (value == null → continue greift nur andersherum: Feld ohne Schlüssel). Ein
 	// FailFast-Check nach dem Laden — jeden props-Schlüssel gegen die Feldnamen halten und bei
-	// Unbekanntem crashen — sind rund 15 Zeilen und findet sofort `borderBackButton` in
-	// skin_basecolor.properties, das seit unbekannt wann ins Leere läuft. Das ist die einzige
-	// systematische FailFast-Verletzung im Skin.
-	//
 	// !Später: Punkt-Notation in den properties. `learnSessionPanel.world.map=…` →
 	// Map<String, LearnSessionPanel>, Regel: ein Punkt geht eine Ebene tiefer, ob eine Ebene offen
 	// oder deklariert ist sagt der Typ, gedeckelt auf zwei Ebenen. Dafür: 96 Felddeklarationen weg,
@@ -494,6 +481,8 @@ public abstract class SkinProperties {
 	    try (InputStream in = Files.newInputStream(configPath)) {
 	        Properties props = new Properties();
 	        props.load(in);
+
+	        checkKeysHaveFields(props, configPath);
 
 	        // ganze Klassenhierarchie durchlaufen
 	        for (Class<?> cls = this.getClass(); cls != null; cls = cls.getSuperclass()) {
@@ -524,6 +513,31 @@ public abstract class SkinProperties {
 	    } catch (Exception e) {
 	        throw new RuntimeException("Probleme beim Lesen der Skins", e);
 	    }
+	}
+
+	/**
+	 * FailFast: jeder Schlüssel der Datei muss ein gleichnamiges Feld haben.
+	 *
+	 * <p>Die Befüllung läuft in die andere Richtung — sie geht die <em>Felder</em> durch und fragt zu
+	 * jedem, ob die Datei einen Schlüssel dafür hat. Ein Schlüssel <em>ohne</em> Feld kommt dort nie
+	 * vorbei und wurde deshalb still übergangen; genau so liefen {@code borderBackButton} und
+	 * {@code inactiveButtonBgColor} über Jahre ins Leere. Dieser Durchlauf ist die Gegenrichtung.</p>
+	 *
+	 * <p>Läuft <b>vor</b> der Befüllung, damit eine kaputte Datei abbricht, bevor sie halb angewandt
+	 * ist. Und je Datei, nicht je Skin — ein abgeleiteter Skin lädt erst die Eltern-Datei, dann seine
+	 * eigene, und beide müssen für sich stimmen.</p>
+	 */
+	private void checkKeysHaveFields(Properties props, Path configPath) {
+	    Set<String> felder = new HashSet<>();
+	    for (Class<?> cls = this.getClass(); cls != null; cls = cls.getSuperclass())
+	        for (Field field : cls.getDeclaredFields())
+	            felder.add(field.getName());
+
+	    for (String key : props.stringPropertyNames())
+	        if (!felder.contains(key))
+	            throw new RuntimeException("Schlüssel ohne Feld in " + configPath.getFileName() + ": '"
+	                    + key + "'. Entweder das Feld fehlt oder der Schlüssel ist ein Tippfehler —"
+	                    + " stillschweigend ignorieren tun wir ihn jedenfalls nicht mehr.");
 	}
 
 	protected Color parseColor(String value) {

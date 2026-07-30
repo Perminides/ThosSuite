@@ -139,6 +139,7 @@ public class MainWindow {
         String lastSortOrderString = Config.get("pref.sortOrder");
         for (CardSortOrder order : CardSortOrder.values()) {
             item = new MenuItem(order.getDisplayName());
+            item.setUserData(order); // damit setCurrentSortOrder den Eintrag nicht über seinen Text suchen muss
             item.setOnAction(e -> {
             	Config.set("pref.sortOrder", order.name());
                 onSortSelected.run();
@@ -404,11 +405,9 @@ public class MainWindow {
 	    if (menuSort == null) return; // Noch nicht initialisiert
 	    
 	    for (MenuItem item : menuSort.getItems()) {
-	        // !Sofort: Der Menüeintrag wird über seinen Anzeigetext identifiziert. Eine Umbenennung
-	        // in CardSortOrder.getDisplayName() bricht die Zuordnung still — dann wird schlicht kein
-	        // Eintrag mehr disabled. Sauber wäre userData mit dem Enum-Wert beim Bauen des Menüs.
-	        boolean isCurrentOrder = item.getText().equals(sortOrder.getDisplayName());
-	        item.setDisable(isCurrentOrder);
+	        // Über userData, nicht über den Anzeigetext — sonst bräche eine Umbenennung in
+	        // CardSortOrder.getDisplayName() die Zuordnung still.
+	        item.setDisable(item.getUserData() == sortOrder);
 	    }
 	}
 

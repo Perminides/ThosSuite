@@ -23,11 +23,6 @@ public class ComponentHost implements ScreenView {
 	}
 	
 	/**
-	 * !Sofort: Hiermit zwingst Du eine KLasse im Feature sich ein javafx Image zu holen und das an den ComponentHost
-	 * weiterzureichen. Das ist gechummelt! Sauberer wäre eine Featurewissenfreie Enum mitzugeben, über die sich der
-	 * Host das passende BackgroundImage vom Skin holt. Jaha. Keine Ahnung, ob Du das wirklich so streng nehmen willst.
-	 * Aber sauber ist das hier halt nicht!
-	 * 
 	 * !Sofort: Du musst auch in der Dokumentation sowas hier festhalten, oder? Also wie wird mit Hintergrundbildern in dem
 	 * ganzen Konstrukt umgegangen. Uff.
 	 * 
