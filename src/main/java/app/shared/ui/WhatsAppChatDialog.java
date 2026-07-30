@@ -91,10 +91,12 @@ public class WhatsAppChatDialog {
         dialog.showAndWait();
 
         // Der unchecked Cast ist mit SuiteDialog<ButtonType> weggefallen.
-        // TODO: Bleibt, dass hier ein roher javafx-ButtonType ausgewertet wird statt eines
-        //   suite-eigenen Enums — anders als beim Alert, der ButtonEnum liefert. Entweder das
-        //   Ergebnis beim Klick selbst mitschreiben (ActionEvent-Filter), oder SuiteDialog eine
-        //   Variante geben, die wie showAlert ein ButtonEnum zurückgibt.
+        //
+        // Dass hier ein roher javafx-ButtonType ausgewertet wird, ist kein Verstoß gegen den
+        // Dialog-Vertrag: der verlangt, dass nach *außen* ein record/enum oder null geht — und das
+        // tut show(...) mit Result. Der ButtonType verlässt diese Klasse nie, er wird in shared.ui
+        // ausgewertet, also dort, wo JavaFX die Umgangssprache ist. Alerts übersetzt nur deshalb nach
+        // ButtonEnum, weil sein Ergebnis an Features geht; hier tut es das nicht.
 
         // Ergebnis auswerten — ButtonType.CANCEL_CLOSE bedeutet X wurde gedrückt,
         // aber das haben wir oben bereits blockiert

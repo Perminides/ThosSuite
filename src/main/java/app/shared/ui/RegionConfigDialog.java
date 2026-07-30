@@ -2,7 +2,6 @@ package app.shared.ui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import app.shared.model.RegionDialogState;
@@ -34,9 +33,8 @@ public class RegionConfigDialog {
         this.reduce = reduce;
     }
 
-    // !Sofort: Gibt Optional zurück statt record oder null — siehe die gleichlautende Notiz in
-    // AnkiConfigDialog. Beide zusammen umstellen.
-    public Optional<RegionDialogState> showAndWait() {
+    /** Der eingestellte Zustand, oder {@code null} wenn der Nutzer abbricht. */
+    public RegionDialogState showAndWait() {
         SuiteDialog<ButtonType> dialog = new SuiteDialog<>("Regionen spielen");
         DialogPane pane = dialog.getDialogPane();
 
@@ -70,10 +68,9 @@ public class RegionConfigDialog {
 
         render(initial);
 
-        Optional<?> result = dialog.showAndWait();
-        return (result.isPresent() && result.get() == ButtonType.OK)
-                ? Optional.of(readState())
-                : Optional.empty();
+        // Das Optional kommt aus der JavaFX-API und wird hier, am Entstehungsort, ausgepackt.
+        ButtonType chosen = dialog.showAndWait().orElse(null);
+        return chosen == ButtonType.OK ? readState() : null;
     }
 
     private void onChange() {

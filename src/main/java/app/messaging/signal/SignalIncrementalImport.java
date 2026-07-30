@@ -56,7 +56,7 @@ import app.shared.ui.Alerts;
  * Bei Ablehnung wird blacklisted=1 in msg_chats gesetzt.
  *
  * <h2>Attachments</h2>
- * AES/CBC-Entschlüsselung. Ausgabepfad: [config:signalAttachmentsFolder]\dateiname.
+ * AES/CBC-Entschlüsselung. Ausgabepfad: [config:attachments.folder]\signal\dateiname.
  * In der DB wird nur der Dateiname (relativ zum signal-Verzeichnis) gespeichert.
  * Quelldatei fehlt → FailFast.
  *
@@ -358,8 +358,7 @@ public class SignalIncrementalImport {
             String baseName = sanitizeFileName(!isBlank(att.fileName()) ? stripExtension(att.fileName()) : "attachment");
             int    seq      = attachSeqPerMsg.merge(signalMsgId, 1, Integer::sum);
             String outName  = baseName + "_" + signalMsgId + "_" + seq + "." + ext;
-         // !Sofort: Wir haben ein attachments.folder genau hierfür, welches dann von signal, whatsapp und diary genutzt werden kann.
-            Path   attachDir = Config.getPath("signalAttachmentsFolder");
+            Path   attachDir = Config.getPath("attachments.folder").resolve("signal");
             Path   outPath   = attachDir.resolve(outName);
 
             if (!Files.exists(outPath)) {
