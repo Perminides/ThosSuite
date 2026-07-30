@@ -10,9 +10,8 @@ import app.shared.model.ShapeMapState;
 import app.shared.ui.RegionLearnView;
 
 /**
- * Intermediary between RegionSessionView and the RegionSessionProgress.
- * Also holds a final sessionPaneContainer, which is shown in the MainWindow. In case of a skin change,
- * the sessionPane inside this container is recreated. The MainWindow won't realize this :-)
+ * Intermediary between RegionLearnView and the RegionSessionProgress.
+ * Bei einem Skinwechsel baut sich die View neu auf; das MainWindow merkt davon nichts :-)
  */
 public class SessionPresenter {
 	// Wir speichern auch die Frage für Skinwechsel
@@ -93,7 +92,7 @@ public class SessionPresenter {
 	public void handleClickResult(String id, boolean correct, String correctId) {
 		if (correct) {
 			if (hard) {
-				view.moveCorrectToActive();
+				view.moveResolvedToActive();
 			}
 			view.addIdsToCorrect(Set.of(id));
 
@@ -114,13 +113,31 @@ public class SessionPresenter {
 		view.setTextInTextField("");
 	}
 	
+	/**
+	 * Der gezeigte Vergleich (ein rot, ein grün) verschwindet, sobald es weitergeht.
+	 *
+	 * <p>Bei „schwer" bleibt danach <b>nichts</b> stehen — weder der verpasste Kreis noch das Grün
+	 * früherer Treffer. Es gibt dort also auch nichts wiederherzustellen, die Karte wird schlicht
+	 * geleert. Würde man stattdessen den Schnappschuss von vor dem Falsch-Klick einspielen, käme
+	 * altes Grün zurück und neues Rot käme dazu; nach zwei Fehlern in Folge stünde die halbe Karte
+	 * bunt da.</p>
+	 *
+	 * <p>Bei „leicht" ist genau das Gegenteil gewollt: der Stand von vorher lebt weiter, und der
+	 * verpasste Kreis bleibt im freien Spiel rot markiert.</p>
+	 */
 	public void undoWrongClick(WrongClickResolution resolution) {
+	    if (hard) {
+	        view.moveAllToActive();
+	        wrongClickSnapshot = null;
+	        return;
+	    }
+
 	    ShapeMapState base = wrongClickSnapshot.beforeMap();
 	    if (resolution == WrongClickResolution.COMMIT_MISS_AND_CONTINUE) {
 	    	base.incorrectShapes().add(wrongClickSnapshot.expectedId());
 	    	base.activeShapes().remove(wrongClickSnapshot.expectedId());
 	    }
-	    view.setState(base);	    
+	    view.setState(base);
 	    wrongClickSnapshot = null;
 	}
 	

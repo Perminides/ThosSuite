@@ -43,8 +43,8 @@ import javafx.scene.shape.Rectangle;
  * Karte: {@link #reset()} leert den Layer komplett. Der Falsch-Klick-Marker ist die bewusste Ausnahme —
  * er hat keine wiederauffindbare id (mehrere möglich) und wird schlicht angehängt.</p>
  *
- * <p>Ihr Feld bekommt sie übergeben; Rahmenbreite und Eckradius für den Clip holt sie sich beim Skin, die
- * hängen nicht vom Aufrufer ab.</p>
+ * <p>Ihr Feld und den Rahmen im Minikarten-Bild bekommt sie übergeben — beides hängt davon ab, welche
+ * Karte gerade läuft. Rahmenbreite und Eckradius für den Clip holt sie sich beim Skin, die nicht.</p>
  *
  * ImageMapPane
  * |-- Pane viewport (clipped und mit prefSize)
@@ -75,7 +75,7 @@ public class ImageMapPane extends StackPane implements LearnMap {
 	private final Image overlay;
 	private final Image inactiveBackground;   // darf null sein (Karte ohne inaktive Variante)
 	private final Image inactiveOverlay;      // darf null sein
-	private final Rectangle2D overlayContentBounds;
+	private final int overlayContentInset;
 
 	// Ids → Geometrien. Wohnt im Feature (GeoMap), kommt als Funktion herein.
 	private final Function<Set<String>, List<ShapeGeometry>> geometrieFuer;
@@ -102,20 +102,22 @@ public class ImageMapPane extends StackPane implements LearnMap {
 	private static final int MINI_MAP_INSET = 10;
 
 	/**
-	 * @param bilder               Hintergrund und Overlay, je aktiv und abgeschaltet.
-	 * @param overlayContentBounds Wo der Inhalt im Mini-Map-Bild sitzt.
-	 * @param bounds               Das Feld, in dem die Karte sitzt. Löst der Aufrufer auf.
-	 * @param geometrieFuer        Übersetzt Ids in Geometrien — wohnt im Feature, diese Klasse kennt
-	 *                             weder Karte noch Deck.
+	 * @param bilder              Hintergrund und Overlay, je aktiv und abgeschaltet.
+	 * @param overlayContentInset Wie breit der Rahmen im Minikarten-Bild ringsum ist — hängt am Bild
+	 *                            und damit an der Karte, löst deshalb der Aufrufer auf. <b>Wo</b> der
+	 *                            Inhalt sitzt, rechnet diese Klasse daraus selbst: sie hat das Bild.
+	 * @param bounds              Das Feld, in dem die Karte sitzt. Löst der Aufrufer auf.
+	 * @param geometrieFuer       Übersetzt Ids in Geometrien — wohnt im Feature, diese Klasse kennt
+	 *                            weder Karte noch Deck.
 	 */
-	public ImageMapPane(MapImages bilder, Rectangle2D overlayContentBounds, Rectangle2D bounds,
+	public ImageMapPane(MapImages bilder, int overlayContentInset, Rectangle2D bounds,
 			Function<Set<String>, List<ShapeGeometry>> geometrieFuer) {
 		SkinImageCache images = SkinImageCache.getInstance();
 		this.background = images.get(bilder.background());
 		this.overlay = images.get(bilder.overlay());
 		this.inactiveBackground = images.get(bilder.inactiveBackground());
 		this.inactiveOverlay = images.get(bilder.inactiveOverlay());
-		this.overlayContentBounds = overlayContentBounds;
+		this.overlayContentInset = overlayContentInset;
 		this.geometrieFuer = geometrieFuer;
 
 		// 1. Main Content aufbauen
@@ -240,11 +242,13 @@ public class ImageMapPane extends StackPane implements LearnMap {
 	        return;
 	    }
 
-	    double contentX = e.getX() - overlayContentBounds.getMinX();
-	    double contentY = e.getY() - overlayContentBounds.getMinY();
+	    // Die Inhaltsfläche ist das Bild abzüglich des Rahmens — relativ zum tatsächlich geladenen
+	    // Overlay gerechnet, weil die Skins unterschiedlich große Minikarten mitbringen.
+	    double contentX = e.getX() - overlayContentInset;
+	    double contentY = e.getY() - overlayContentInset;
 
-	    double scaleX = mainImageView.getImage().getWidth() / overlayContentBounds.getWidth();
-	    double scaleY = mainImageView.getImage().getHeight() / overlayContentBounds.getHeight();
+	    double scaleX = mainImageView.getImage().getWidth() / (overlay.getWidth() - 2 * overlayContentInset);
+	    double scaleY = mainImageView.getImage().getHeight() / (overlay.getHeight() - 2 * overlayContentInset);
 
 	    double mainMapX = contentX * scaleX;
 	    double mainMapY = contentY * scaleY;

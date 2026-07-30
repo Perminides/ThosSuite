@@ -1,12 +1,12 @@
 # Vertagte Punkte
 
-**Stand:** 29.07.2026 · **Der Umbau ist fertig.** Offen sind nur noch A1 (sechs kleine Punkte) und A3 (vier Sachfehler).
+**Stand:** 30.07.2026 · **Der Umbau ist fertig.** A1 ist durch; aus A3 sind noch zwei Punkte offen.
 
 Alles, was während des Refactorings (26.–29.07.) bewusst **nicht** sofort gemacht wurde — und
 alles, was dabei aufgefallen ist.
 
-**Abschnitt A ist die Arbeitsliste**: sieben kleine Code-Punkte (A1), davon ist nur noch Punkt 7
-offen, und vier Sachfehler (A3), die auf nichts warten. B bis E sind Vorrat, nicht Plan.
+**Abschnitt A ist die Arbeitsliste**: sieben kleine Code-Punkte (A1), alle erledigt, und vier
+Sachfehler (A3), von denen zwei noch offen sind. B bis E sind Vorrat, nicht Plan.
 
 Was **erledigt** ist, steht nicht hier, sondern in `Skin-Refactoring-Plan.md` §5.
 
@@ -14,11 +14,7 @@ Was **erledigt** ist, steht nicht hier, sondern in `Skin-Refactoring-Plan.md` §
 
 ## A · Was noch offen ist
 
-### A1 · Kleine Code-Punkte
-
-Drei offene, jeder für sich klein. Zwei davon ändern etwas, das im Regelwerk beschrieben ist
-(`UiComponent`, `my-title`) — dort ist es als „auf dem Weg hinaus" vermerkt, aber nach der Änderung
-gehört der Satz nachgezogen.
+### A1 · ✓ Kleine Code-Punkte — alle erledigt
 
 ~~**1. `MainWindow` rund machen.**~~ **Erledigt 29.07.**
 
@@ -68,10 +64,31 @@ gab die Pipeline statt der Texte aus, und der Ordner-Lauf in `SuiteExporter` sch
 Offen bleibt bewusst: fünf `.forEach(…)` auf Sammlungen in `ShapeMapPane`. Das sind keine Streams,
 sondern Lambdas auf einer `Map`; ob die zu Schleifen werden, ist eine eigene Entscheidung.
 
-**7. `overlayContentBounds` — gehört das in den Skin?** Es beschreibt, wo der Inhalt im
-Mini-Map-Bild sitzt. Das sind Karten-/Asset-Daten, kein Styling; es liegt nur deshalb beim Skin,
-weil es hartcodiert ist. Sobald berechenbar (Overlay-Größe + prozentualer Rand), wandert es hoch zur
-Karte. → `SkinProperties.getOverlayContentBounds`
+~~**7. `overlayContentBounds` — gehört das in den Skin?**~~ **Erledigt 30.07.** Aufgeteilt statt
+verschoben: der Skin liefert nur noch den **Rand** (`imageMapOverlayContentInset(mapName)`), *wo* der
+Inhalt sitzt rechnet die Karte selbst — sie hat das Overlay-Bild und damit dessen Maße.
+
+Vorher nachgemessen, und das hat zwei Sachen geklärt. Erstens ist der Wert **nicht** aus dem Bild
+ableitbar, wie zuerst vermutet: der Welt-Rahmen ist weichgezeichnet (~19.600 halbtransparente
+Pixel), die streng opake Box wäre 10px zu schmal. Der Rand bleibt also ein Wert. Zweitens war das
+alte hartcodierte `(11, 11, 410, 254)` auf die **432×276**-Overlays eingestellt (432 − 2·11 = 410) —
+fünf der sieben Welt-Overlays sind aber 430×274, dort lag es zwei Pixel daneben. Relativ gerechnet
+passt es zu jedem Bild; der Fehler ist nebenbei mit weg.
+
+**Der Wert bleibt pro Karte gestaffelt** (`<mapName>ImageMapOverlayContentInset` schlägt den
+allgemeinen), und zwar weil er am *Bild* hängt und nicht am Skin-Geschmack: die Welt-Overlays haben
+einen weich auslaufenden Rahmen eingebacken, Hannovers Karte reicht bis an jede Kante. Ein global
+gültiger Wert wurde zwischendurch probiert und wieder verworfen — mit Rand 11 auf einem rahmenlosen
+Bild lag ein Minikarten-Klick am Rand gut 400 Kartenpixel daneben, bei 960px Fenster also fast eine
+halbe Fensterbreite. Die Fehleinschätzung kam davon, die Abweichung an der Kartenbreite zu messen
+(3 %) statt am sichtbaren Fenster.
+
+Keine properties-Datei hat die alten Schlüssel je gesetzt, es gab also nichts zu migrieren.
+
+**Am Asset nachgezogen:** `Hannover small.png` war 390×300 mit einem 15px breiten transparenten
+Streifen rechts (daher hing die Minikarte optisch schief) und im Seitenverhältnis nicht maßstabsgleich
+zur 14000×10500-Hauptkarte. Neu ist sie 400×300 ohne Rand — damit sind `scaleX` und `scaleY` beide
+exakt 35.
 
 ---
 
@@ -81,8 +98,7 @@ Karte. → `SkinProperties.getOverlayContentBounds`
 `Ordnerstruktur.txt` und `Paketabhängigkeiten.dot` sind neu erzeugt. Was dabei geändert wurde und
 welche sechs Stellen schlicht falsch waren, steht in `Skin-Refactoring-Plan.md` §5.
 
-**Nachzuziehen, sobald A1 durch ist:** das Regelwerk beschreibt `UiComponent` als „auf dem Weg
-hinaus" und nennt `my-title` — beides ändert sich mit A1.2 und A1.1c.
+Die Nachzieh-Notiz zu `UiComponent`/`my-title` ist erledigt: beides steht im Regelwerk nicht mehr.
 
 ---
 
@@ -90,10 +106,43 @@ hinaus" und nennt `my-title` — beides ändert sich mit A1.2 und A1.1c.
 
 | Fehler | Fundstelle |
 |---|---|
-| **Freies Spiel:** falsch geklickte Formen verschwinden bei „schwer" nicht, nur die richtigen | `RegionLearnView:17` |
-| **EM 2021 — „alle Länder grün, welches war falsch?"** Das Zurücksetzen vor `markLastClickAsIncorrect()` löscht die bisherigen Markierungen mit | `ImageMapPane.markIncorrect` |
-| **`MovieViewerScreen.refresh()` baut nicht vollständig neu** — setzt nur den Hintergrund. Ein Skin, der Positionen ändert, greift so nicht. Offen: nur-Hintergrund beibehalten oder voller Rebuild (verwürfe die laufende Suche) | `MovieViewerScreen.refresh` |
-| Fragefeld der Region-Session: „Hier wäre allerdings CENTER schon angesagt" | `RegionLearnView:68` |
+| **EM 2021 — „alle Länder grün, welches war falsch?"** Das Zurücksetzen vor `markLastClickAsIncorrect()` löscht die bisherigen Markierungen mit. Zweite Ursache dazugefunden: der Aufrufer platziert direkt danach die grünen Shapes, und `place()` hängt sie **hinter** den Marker — das `toFront()` von vorhin ist damit wertlos | `ImageMapPane.markIncorrect` |
+| Fragefeld der Region-Session: „Hier wäre allerdings CENTER schon angesagt" | `RegionLearnView` |
+
+~~**Freies Spiel: falsch geklickte Formen verschwinden bei „schwer" nicht.**~~ **Erledigt 30.07.**
+Zwei Ursachen, beide in `region.SessionPresenter`.
+
+`moveCorrectToActive` schaltete nur `CORRECT → ACTIVE`; die verpasste Region wird aber in
+`undoWrongClick(COMMIT_MISS_AND_CONTINUE)` dauerhaft auf `INCORRECT` gesetzt und aus `sessionRegions`
+entfernt — sie blieb den Rest der Session rot stehen und verriet, wo sie liegt. Die Methode heißt
+jetzt `moveResolvedToActive` und nimmt `INCORRECT` mit.
+
+Das allein reichte nicht: `undoWrongClick` spielte beim Weiterklicken den Schnappschuss von *vor*
+dem Falsch-Klick ein — mitsamt dem Grün früherer Treffer — und trug das neue Rot obendrauf. Nach
+zwei Fehlern in Folge stand die halbe Karte bunt da, und `moveResolvedToActive` kam nie zum Zug,
+weil es nur am *richtigen* Klick hängt. Bei „schwer" gibt es nichts wiederherzustellen, die Karte
+wird jetzt schlicht geleert; das rot/grün-Paar ist damit nur bis zum Weiterklicken zu sehen.
+„Leicht" bleibt in beiden Punkten unberührt.
+
+**Dabei aufgefallen und mit erledigt (30.07.): erledigte Kreise nahmen bei „leicht" weiter Klicks
+an.** `ClickSessionProgress.elementClicked` ignoriert jetzt Ids, die nicht mehr in `sessionRegions`
+stehen — dieselbe Menge, die an `weWaitForClick` geht. Damit gilt: *was nicht mehr aktiv gesetzt
+wird, wird auch nicht mehr gewertet.* Bewusst **nur bei „leicht"**: bei „schwer" sind alle Kreise
+unsichtbar und damit alle potenziell falsch, dort ist der Fehlgriff auf etwas längst Erledigtes ein
+echter Fehler und macht den Modus aus. Die Pause-Abfrage steht vor dem Filter, ein Klick auf einen
+markierten Kreis heißt also weiterhin „weiter". Kein `mouseTransparent` — die Karte kennt die Regeln
+nicht, das entscheidet das Feature.
+
+Zwei Randnotizen dazu: `lastClickedId` stand vor der Pause-Abfrage und wurde deshalb vom
+*Weiter*-Klick überschrieben, bevor `endPause()` daraus die Meldung „Statt X wurde Y geklickt"
+baute — sie nannte also die falsche Region. Durch das Umstellen stimmt sie. Und der Fall „leicht +
+Lernsession" ist ungetestet, weil dafür gerade kein Deck fällig war.
+
+~~**`MovieViewerScreen.refresh()` baut nicht vollständig neu.**~~ **Erledigt 30.07.** Entschieden:
+voller Rebuild, laufende Suche überlebt. `MovieViewerScreenView.rebuild()` merkt sich die drei
+Feldinhalte und die zuletzt gezeigten Kacheln, baut neu und schreibt beides zurück — ohne erneute
+Abfrage. Dafür hat `SuiteSuggestionTextField` ein `setTextSilent`/`getText` bekommen, den stillen
+Gegenspieler zu `setTextAndTrigger`. `reapplyBackground()` ist entfallen.
 
 ---
 

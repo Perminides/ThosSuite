@@ -305,6 +305,7 @@ DialogStyle · DiaryStyle · MovieStyle · DashboardTileStyle · McMetrics · Bi
 MapImages   · Dimension2D getContentSize()
 Rectangle2D learnComponentBounds(mapName, kategorie, teil)
 Rectangle2D learnTextLabelBounds(mapName, kategorie, typ)
+int         imageMapOverlayContentInset(mapName)
 Path        wallpaperPath(mapName, kategorie) · emptyWallpaperPath() · startScreenWallpaperPath()
 Image       iconFor(rolle)
 ```

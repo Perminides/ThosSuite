@@ -29,7 +29,7 @@ public class ImageMapLearnView extends AnkiLearnView {
 		Skin skin = SkinService.get();
 		ImageMapPane karte = new ImageMapPane(
 				skin.mapImages(mapName()),
-				skin.getOverlayContentBounds(deckId()),
+				skin.imageMapOverlayContentInset(mapName()),
 				skin.learnComponentBounds(deckId(), kategorie(), LearnComponent.MAP),
 				geometrieFuer);
 		karte.setListener(callbacks().mapElementClicked());

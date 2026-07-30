@@ -40,6 +40,9 @@ public class MovieViewerScreenView implements ScreenView {
     private SuiteSuggestionTextField titleField;
     private VBox resultBox;
 
+    /** Was gerade in den Kacheln steht — gemerkt, damit ein Neuaufbau die Anzeige wiederherstellen kann. */
+    private List<CardData> shownCards = List.of();
+
     public void setSelectionListener(SelectionListener l) { this.selectionListener = l; }
 
     public void setNames(List<String> directors, List<String> actors, List<String> titles) {
@@ -58,9 +61,32 @@ public class MovieViewerScreenView implements ScreenView {
         return view;
     }
 
-    public void reapplyBackground() {
-        if (view != null)
-            view.setBackground(SuiteBackground.of(SkinService.get().emptyWallpaperPath()));
+    /**
+     * Kompletter Neuaufbau nach einem Skinwechsel — auch Maße, Schriften und Kacheln kommen aus dem
+     * Skin, ein bloßer Hintergrundtausch griffe also zu kurz.
+     *
+     * <p>Die laufende Suche überlebt: die drei Feldinhalte werden still zurückgeschrieben (kein
+     * Callback, kein Popup) und die zuletzt gezeigten Kacheln neu gebaut. Eine erneute Abfrage
+     * braucht es dafür nicht.</p>
+     *
+     * <p>Vor dem ersten {@link #getPane()} gibt es nichts aufzubauen — dann baut ohnehin erst der
+     * Mount, und zwar bereits mit dem neuen Skin.</p>
+     */
+    public void rebuild() {
+        if (view == null)
+            return;
+
+        String director = directorField.getText();
+        String actor = actorField.getText();
+        String title = titleField.getText();
+        List<CardData> cards = shownCards;
+
+        build();
+
+        directorField.setTextSilent(director);
+        actorField.setTextSilent(actor);
+        titleField.setTextSilent(title);
+        showCards(cards);
     }
 
     private void build() {
@@ -139,6 +165,7 @@ public class MovieViewerScreenView implements ScreenView {
     }
 
     public void showCards(List<CardData> cards) {
+        shownCards = cards;
         resultBox.getChildren().clear();
         MovieStyle style = SkinService.get().movieStyle();
         for (CardData card : cards)

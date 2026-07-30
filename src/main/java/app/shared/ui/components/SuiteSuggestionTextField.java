@@ -89,6 +89,21 @@ public class SuiteSuggestionTextField {
     }
 
     /**
+     * Setzt den Text ohne Callback und ohne Popup — zum Wiederherstellen nach einem Neuaufbau.
+     * Der Gegenspieler zu {@link #setTextAndTrigger(String)}: derselbe Text, aber niemand erfährt davon.
+     */
+    public void setTextSilent(String text) {
+        suppressSuggestions = true;
+        textField.setText(text);
+        suppressSuggestions = false;
+    }
+
+    /** Liefert den aktuellen Feldinhalt — nie {@code null}. */
+    public String getText() {
+        return textField.getText() == null ? "" : textField.getText();
+    }
+
+    /**
      * Leert das Textfeld ohne Callback oder Popup auszulösen.
      */
     public void clearSilent() {
