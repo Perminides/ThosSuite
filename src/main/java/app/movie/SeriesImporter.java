@@ -28,7 +28,7 @@ import app.movie.repository.SeasonRepository;
 import app.movie.repository.TvShowRepository;
 import app.shared.Config;
 import app.shared.DB;
-import app.shared.UiUtils;
+import app.shared.ImageUtils;
 import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
 import app.shared.ui.TextPromptDialog;
@@ -230,11 +230,11 @@ public class SeriesImporter {
                 tvShowRepo.insertTvShow(show, conn);
                 savePoster(show.poster_path, show.id, posterW92, 92,
                         filename -> tvShowRepo.insertTvShowImage(show, 92,
-                                UiUtils.getImageDimensions(posterW92)[1], filename, conn),
+                                ImageUtils.dimensions(posterW92)[1], filename, conn),
                         "Serie " + show.name);
                 savePoster(show.poster_path, show.id, posterW154, 154,
                         filename -> tvShowRepo.insertTvShowImage(show, 154,
-                        		UiUtils.getImageDimensions(posterW154)[1], filename, conn),
+                        		ImageUtils.dimensions(posterW154)[1], filename, conn),
                         "Serie " + show.name);
                 tvShowRepo.insertTvShowRating(rating, comment, conn);
                 processAggregatedCredits(credits, show.id, conn,
@@ -334,11 +334,11 @@ public class SeriesImporter {
                 tvShowRepo.insertTvShow(show, conn);
                 savePoster(show.poster_path, show.id, posterW92, 92,
                         filename -> tvShowRepo.insertTvShowImage(show, 92,
-                        		UiUtils.getImageDimensions(posterW92)[1], filename, conn),
+                        		ImageUtils.dimensions(posterW92)[1], filename, conn),
                         "Serie " + show.name);
                 savePoster(show.poster_path, show.id, posterW154, 154,
                         filename -> tvShowRepo.insertTvShowImage(show, 154,
-                        		UiUtils.getImageDimensions(posterW154)[1], filename, conn),
+                        		ImageUtils.dimensions(posterW154)[1], filename, conn),
                         "Serie " + show.name);
                 processAggregatedCredits(credits, show.id, conn,
                         (cast, c) -> tvShowRepo.insertTvShowCast(cast, show.id, c),
@@ -379,7 +379,7 @@ public class SeriesImporter {
                 if (season.poster_path != null && posterW92 != null) {
                     savePoster(season.poster_path, season.id, posterW92, 92,
                             filename -> seasonRepo.insertSeasonImage(season, 92,
-                            		UiUtils.getImageDimensions(posterW92)[1], filename, conn),
+                            		ImageUtils.dimensions(posterW92)[1], filename, conn),
                             "Season " + season.name);
                 } else {
                     seasonRepo.copyShowImageToSeason(season, conn);
@@ -387,7 +387,7 @@ public class SeriesImporter {
                 if (season.poster_path != null && posterW154 != null) {
                     savePoster(season.poster_path, season.id, posterW154, 154,
                             filename -> seasonRepo.insertSeasonImage(season, 154,
-                            		UiUtils.getImageDimensions(posterW154)[1], filename, conn),
+                            		ImageUtils.dimensions(posterW154)[1], filename, conn),
                             "Season " + season.name);
                 } else {
                     seasonRepo.copyShowImageToSeason(season, conn);
@@ -532,14 +532,14 @@ public class SeriesImporter {
                     byte[] posterW92 = api.getImage(movieDetails.poster_path, "w92");
                     byte[] posterW154 = api.getImage(movieDetails.poster_path, "w154");
                     if (posterW92 != null) {
-                        int[] dim = UiUtils.getImageDimensions(posterW92);
+                        int[] dim = ImageUtils.dimensions(posterW92);
                         String filename = buildImageFilename(movieDetails.poster_path, "en-US",
                                 dim[0], dim[1]);
                         saveImageToFileSystem(filename, posterW92);
                         movieRepo.updateMoviePoster(id, dim[0], dim[1], "en-US", movieDetails.poster_path.substring(1), filename);
                     }
                     if (posterW154 != null) {
-                        int[] dim = UiUtils.getImageDimensions(posterW154);
+                        int[] dim = ImageUtils.dimensions(posterW154);
                         String filename = buildImageFilename(movieDetails.poster_path, "en-US",
                                 dim[0], dim[1]);
                         saveImageToFileSystem(filename, posterW154);
@@ -580,13 +580,13 @@ public class SeriesImporter {
                     byte[] posterW92 = api.getImage(showDetails.poster_path, "w92");
                     byte[] posterW154 = api.getImage(showDetails.poster_path, "w154");
                     if (posterW92 != null) {
-                        int[] dim = UiUtils.getImageDimensions(posterW92);
+                        int[] dim = ImageUtils.dimensions(posterW92);
                         String filename = buildImageFilename(showDetails.poster_path, "en-US", dim[0], dim[1]);
                         saveImageToFileSystem(filename, posterW92);
                         tvShowRepo.insertTvShowImage(id, showDetails.poster_path, dim[0], dim[1], "en-US", filename);
                     }
                     if (posterW154 != null) {
-                        int[] dim = UiUtils.getImageDimensions(posterW154);
+                        int[] dim = ImageUtils.dimensions(posterW154);
                         String filename = buildImageFilename(showDetails.poster_path, "en-US", dim[0], dim[1]);
                         saveImageToFileSystem(filename, posterW154);
                         tvShowRepo.insertTvShowImage(id, showDetails.poster_path, dim[0], dim[1], "en-US", filename);
@@ -763,7 +763,7 @@ public class SeriesImporter {
             return;
         }
         try {
-            int[] dim = UiUtils.getImageDimensions(imageData);
+            int[] dim = ImageUtils.dimensions(imageData);
             String filename = buildImageFilename(posterPath, "en-US", dim[0], dim[1]);
             saveImageToFileSystem(filename, imageData);
             dbInsert.insert(filename);

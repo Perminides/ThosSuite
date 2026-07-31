@@ -1,7 +1,5 @@
 package app.movie;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -10,8 +8,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
-import javax.imageio.ImageIO;
 
 import app.movie.model.json.CastJSON;
 import app.movie.model.json.CreditListJSON;
@@ -24,6 +20,7 @@ import app.movie.repository.MovieRepository;
 import app.movie.repository.PendingRepository;
 import app.shared.Config;
 import app.shared.DB;
+import app.shared.ImageUtils;
 import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
 
@@ -169,7 +166,7 @@ public class MovieImporter {
             try {
                 movieRepo.insertMovie(movie, conn);
                 if (posterW92 != null) {
-                    int[] dimensions = getImageDimensions(posterW92);
+                    int[] dimensions = ImageUtils.dimensions(posterW92);
                     String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
                     saveImageToFileSystem(filename, posterW92);
                     geschriebenePoster.add(filename);
@@ -178,7 +175,7 @@ public class MovieImporter {
                 	Alerts.show("92er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, ButtonEnum.OK);
                 }
                 if (posterW154 != null) {
-                    int[] dimensions = getImageDimensions(posterW154);
+                    int[] dimensions = ImageUtils.dimensions(posterW154);
                     String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
                     saveImageToFileSystem(filename, posterW154);
                     geschriebenePoster.add(filename);
@@ -263,19 +260,6 @@ public class MovieImporter {
             log.fine("Bild gespeichert: " + filename);
         } catch (Exception e) {
             throw new RuntimeException("saveImageToFileSystem fehlgeschlagen. filename: " + filename, e);
-        }
-    }
-
-    /**
-     * Ermittelt Breite und Höhe eines Bildes aus den Rohdaten.
-     * @return int[] mit [width, height]
-     */
-    private static int[] getImageDimensions(byte[] imageData) {
-        try {
-            BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageData));
-            return new int[]{img.getWidth(), img.getHeight()};
-        } catch (Exception e) {
-            throw new RuntimeException("getImageDimensions fehlgeschlagen", e);
         }
     }
 

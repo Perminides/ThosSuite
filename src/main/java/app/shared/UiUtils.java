@@ -1,10 +1,6 @@
 package app.shared;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-
-import javax.imageio.ImageIO;
 
 import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
@@ -16,6 +12,11 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Window;
 
+
+/**
+ * Diverse JavaFx Bildmanipulationen für die Anzeige.
+ * Manipulationen an Bild<b>dateien</b> findest Du in ImageUtils.</p>
+ */
 public class UiUtils {
 
     private static Window ownerWindow;
@@ -136,7 +137,6 @@ public class UiUtils {
 	
 	/**
 	 * Malt ein +-Zeichen unten rechts auf ein Bild.
-	 * Analog zu ImageWizard.addPlusSign() in der Geosuite.
 	 */
 	public static Image addPlusSign(Image source, int targetWidth) {
 	    double scale = targetWidth / source.getWidth();
@@ -158,12 +158,4 @@ public class UiUtils {
 	    return canvas.snapshot(params, null);
 	}
 	
-    public static int[] getImageDimensions(byte[] imageData) {
-        try {
-            BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageData));
-            return new int[]{img.getWidth(), img.getHeight()};
-        } catch (Exception e) {
-            throw new RuntimeException("getImageDimensions fehlgeschlagen", e);
-        }
-    }
 }

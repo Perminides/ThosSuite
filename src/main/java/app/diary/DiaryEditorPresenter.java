@@ -12,6 +12,7 @@ import java.util.List;
 
 import app.diary.repository.Repository;
 import app.shared.Config;
+import app.shared.ImageUtils;
 import app.shared.model.DiaryAttachment;
 import app.shared.model.DiaryCardData;
 import app.shared.model.InvasiveConfig;
@@ -176,8 +177,8 @@ public class DiaryEditorPresenter {
             java.awt.image.BufferedImage original = javax.imageio.ImageIO.read(sourcePath.toFile());
             double ratio = (double) thumbHeight / original.getHeight();
             int thumbWidth = (int) (original.getWidth() * ratio);
-            java.awt.image.BufferedImage scaled = org.imgscalr.Scalr.resize(
-                    original, org.imgscalr.Scalr.Method.QUALITY, thumbWidth, thumbHeight);
+            java.awt.image.BufferedImage scaled = ImageUtils.scaleSmooth(
+                    original, thumbWidth, thumbHeight, org.imgscalr.Scalr.Method.QUALITY);
 
             String filename = thumbPath.getFileName().toString().toLowerCase();
             String format;
