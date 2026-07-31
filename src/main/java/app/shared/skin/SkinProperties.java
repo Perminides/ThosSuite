@@ -497,7 +497,7 @@ public abstract class SkinProperties {
 
 	// endregion
 	
-	// !Später: Punkt-Notation in den properties. `learnSessionPanel.world.map=…` →
+	// !Architektur: Punkt-Notation in den properties. `learnSessionPanel.world.map=…` →
 	// Map<String, LearnSessionPanel>, Regel: ein Punkt geht eine Ebene tiefer, ob eine Ebene offen
 	// oder deklariert ist sagt der Typ, gedeckelt auf zwei Ebenen. Dafür: 96 Felddeklarationen weg,
 	// ein neues Deck kostet keine Java-Änderung mehr (heute 3 Felder pro Länder-Deck), hannover
