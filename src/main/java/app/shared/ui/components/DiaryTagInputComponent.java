@@ -5,61 +5,55 @@ import java.util.List;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.css.PseudoClass;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
-import javafx.stage.Popup;
-import javafx.scene.layout.VBox;
 
 /**
- * !Sofort: Kann man die generischer machen und von Movie und WhatsApp mitnutzen lassen?
+ * Mehrfachauswahl von Tags: ein Vorschlagsfeld, darunter das Gewählte als Chips.
+ *
+ * <p>Die Vorschlagsmechanik steckt vollständig im {@link SuiteSuggestionTextField}. Hier bleibt
+ * allein, was das Tagebuch daraus macht: aus einer Auswahl wird ein Chip, aus Freitext ein neuer
+ * Tag, und was schon als Chip dasteht, wird nicht nochmal vorgeschlagen.</p>
+ *
+ * <p>Kein Node, sondern zwei — Feld und Chips landen beim Aufrufer an verschiedenen Stellen im
+ * Layout, deshalb gibt es sie einzeln heraus statt in einer gemeinsamen Box.</p>
  */
 public class DiaryTagInputComponent {
 
-    private static final PseudoClass HIGHLIGHTED = PseudoClass.getPseudoClass("highlighted");
     private static final String TAG_REMOVE_BUTTON = "tag-chip-remove";
 
     private final ObservableList<String> selectedTags = FXCollections.observableArrayList();
-    private final List<String> currentMatches = new ArrayList<>();
     private List<String> allTags = new ArrayList<>();
 
+    private final SuiteSuggestionTextField tagInput;
     private final FlowPane chipPane;
-    private final TextField tagInput;
-    private final Popup suggestionPopup;
-    private final VBox suggestionBox;
-
-    private int activeIndex = -1;
-    private boolean suppressSuggestions = false;
 
     public DiaryTagInputComponent() {
-        tagInput = new TextField();
-        tagInput.setPromptText("Tag hinzufügen...");
+        tagInput = new SuiteSuggestionTextField("Tag hinzufügen...");
         tagInput.setPrefWidth(200);
+
+        // Aus der Liste gewählt.
+        tagInput.setOnSelected(this::addTag);
+
+        // Selbst getippt: ENTER kommt nur hier an, wenn die Vorschlagsliste zu ist.
+        tagInput.setOnAction(_ -> {
+            String text = tagInput.getText().trim();
+            if (!text.isEmpty())
+                addTag(text);
+        });
 
         chipPane = new FlowPane(6, 6);
         chipPane.setAlignment(Pos.CENTER_LEFT);
         chipPane.setPadding(new Insets(4));
         chipPane.managedProperty().bind(chipPane.visibleProperty());
         updateChipPaneVisibility();
-
-        suggestionBox = new VBox();
-        suggestionBox.getStyleClass().add("suggestion-box");
-
-        suggestionPopup = new Popup();
-        suggestionPopup.setAutoHide(true);
-        suggestionPopup.getContent().add(suggestionBox);
-
-        setupTagAutocomplete();
     }
 
-    public TextField getTagInput() {
+    public SuiteSuggestionTextField getTagInput() {
         return tagInput;
     }
 
@@ -73,61 +67,7 @@ public class DiaryTagInputComponent {
 
     public void setAllTags(List<String> tags) {
         this.allTags = new ArrayList<>(tags);
-    }
-
-    public void reset() {
-        selectedTags.clear();
-        rebuildChips();
-        suppressSuggestions = true;
-        tagInput.clear();
-        suppressSuggestions = false;
-        hideSuggestions();
-    }
-
-    public void requestFocus() {
-        tagInput.requestFocus();
-    }
-
-    private void setupTagAutocomplete() {
-        tagInput.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-            if (!suggestionPopup.isShowing() || currentMatches.isEmpty()) {
-                return;
-            }
-            switch (e.getCode()) {
-                case ENTER, TAB -> {
-                    e.consume();
-                    if (activeIndex >= 0 && activeIndex < currentMatches.size()) {
-                        addTag(currentMatches.get(activeIndex));
-                    }
-                }
-                case DOWN -> {
-                    e.consume();
-                    setActiveIndex(Math.min(activeIndex + 1, currentMatches.size() - 1));
-                }
-                case UP -> {
-                    e.consume();
-                    setActiveIndex(Math.max(activeIndex - 1, 0));
-                }
-                case ESCAPE -> {
-                    e.consume();
-                    hideSuggestions();
-                }
-                default -> {}
-            }
-        });
-
-        tagInput.setOnAction(_ -> {
-            String text = tagInput.getText().trim();
-            if (!text.isEmpty()) {
-                addTag(text);
-            }
-        });
-
-        tagInput.textProperty().addListener((_, _, newVal) -> {
-            if (!suppressSuggestions) {
-                updateSuggestions(newVal);
-            }
-        });
+        refreshSuggestionPool();
     }
 
     public void addTag(String tag) {
@@ -135,84 +75,36 @@ public class DiaryTagInputComponent {
         if (!trimmed.isEmpty() && !selectedTags.contains(trimmed)) {
             selectedTags.add(trimmed);
             rebuildChips();
+            refreshSuggestionPool();
         }
-        suppressSuggestions = true;
-        tagInput.clear();
-        suppressSuggestions = false;
-        hideSuggestions();
+        tagInput.clearSilent();
         tagInput.requestFocus();
     }
 
-    private void hideSuggestions() {
-        suggestionPopup.hide();
-        currentMatches.clear();
-        activeIndex = -1;
+    public void reset() {
+        selectedTags.clear();
+        rebuildChips();
+        refreshSuggestionPool();
+        tagInput.clearSilent();
     }
 
-    private void updateSuggestions(String filter) {
-        if (filter == null || filter.isBlank()) {
-            hideSuggestions();
-            return;
-        }
+    public void requestFocus() {
+        tagInput.requestFocus();
+    }
 
-        String lower = filter.toLowerCase();
-        currentMatches.clear();
+    /** Was schon als Chip dasteht, gehört nicht mehr in die Vorschläge. */
+    private void refreshSuggestionPool() {
+        List<String> uebrig = new ArrayList<>();
         for (String tag : allTags)
-            if (tag.toLowerCase().contains(lower) && !selectedTags.contains(tag))
-                currentMatches.add(tag);
-
-        if (currentMatches.isEmpty()) {
-            hideSuggestions();
-            return;
-        }
-
-        rebuildSuggestionBox();
-        activeIndex = 0;
-        highlightActive();
-        showPopupBelowInput();
-    }
-
-    private void rebuildSuggestionBox() {
-        suggestionBox.getChildren().clear();
-        for (int i = 0; i < currentMatches.size(); i++) {
-            String match = currentMatches.get(i);
-            Label label = new Label(match);
-            label.setMaxWidth(Double.MAX_VALUE);
-
-            int index = i;
-            label.setOnMouseEntered(_ -> setActiveIndex(index));
-            label.setOnMouseClicked(_ -> addTag(match));
-
-            suggestionBox.getChildren().add(label);
-        }
-        suggestionBox.setPrefWidth(tagInput.getWidth());
-    }
-
-    private void setActiveIndex(int index) {
-        activeIndex = index;
-        highlightActive();
-    }
-
-    private void highlightActive() {
-        var children = suggestionBox.getChildren();
-        for (int i = 0; i < children.size(); i++) {
-            Label label = (Label) children.get(i);
-            label.pseudoClassStateChanged(HIGHLIGHTED, i == activeIndex);
-        }
-    }
-
-    private void showPopupBelowInput() {
-        Bounds bounds = tagInput.localToScreen(tagInput.getBoundsInLocal());
-        if (bounds != null) {
-            suggestionPopup.show(tagInput, bounds.getMinX(), bounds.getMaxY() + 2);
-        }
+            if (!selectedTags.contains(tag))
+                uebrig.add(tag);
+        tagInput.setAllItems(uebrig);
     }
 
     private void rebuildChips() {
         chipPane.getChildren().clear();
-        for (String tag : selectedTags) {
+        for (String tag : selectedTags)
             chipPane.getChildren().add(createChip(tag));
-        }
         updateChipPaneVisibility();
     }
 
@@ -227,6 +119,7 @@ public class DiaryTagInputComponent {
         removeBtn.setOnAction(_ -> {
             selectedTags.remove(tag);
             rebuildChips();
+            refreshSuggestionPool();
             tagInput.requestFocus();
         });
         removeBtn.setFocusTraversable(false);
