@@ -13,56 +13,57 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 
 /**
- * Textfeld mit Autocomplete-Dropdown (SWYT = "Search While You Type").
- * 
- * Einfache Single-Select-Variante: Der Benutzer tippt, sieht Vorschläge,
- * wählt per Enter/Klick einen aus. Bei Auswahl wird der Callback aufgerufen.
- * 
- * Die Vorschlagsliste wird clientseitig gefiltert (contains, case-insensitive).
- * Die Reihenfolge der Vorschläge entspricht der Reihenfolge in der übergebenen
- * Liste — der Aufrufer ist verantwortlich für die Sortierung (z.B. nach
- * Häufigkeit bewerteter Filme).
- * 
- * !Sofort: Wird aktuell nur von Movie genutzt. Kann man das nicht noch an anderen Stellen wiederverwenden?
- * Z.B. da wo Tags ausgewählt werden (Diary, WhatsApp)
- * 
- * !Sofort: Können wir das hier nicht als richtige Komponente bauen? Der ganze MovieScreen wird komplett anders aufgebaut als die restlichen. Das geht so gar nicht...
- * 
- * Popup-Mechanik übernommen aus TagInputComponent.
+ * Ein Textfeld, das während des Tippens passende Vorschläge unter sich einblendet
+ * (SWYT = „Search While You Type").
+ *
+ * <p>Es <b>ist</b> ein {@link TextField} — wer es einbaut, hängt es direkt in sein Layout und nutzt
+ * alles, was ein Textfeld kann: {@code setPromptText}, {@code setPrefWidth}, {@code setOnAction},
+ * {@code requestFocus}.</p>
+ *
+ * <p>Was es <b>nicht</b> entscheidet: was eine Auswahl bedeutet. Über {@link #setOnSelected} meldet
+ * es nur, dass der Benutzer einen Eintrag aus der Liste genommen hat. Ob daraus ein Chip wird
+ * (Tagebuch), eine Kontakt-Id (WhatsApp) oder ein Filter (Filme), ist Sache des Aufrufers. Ebenso
+ * die Reihenfolge: gefiltert wird stabil in der Reihenfolge der übergebenen Liste, sortieren muss
+ * der Aufrufer.</p>
+ *
+ * <p>Freitext, der auf keinen Vorschlag passt, läuft am Popup vorbei: dann ist es zu, ENTER wird
+ * nicht abgefangen und landet beim {@code setOnAction} des Aufrufers. Genau daran unterscheiden
+ * Tagebuch und WhatsApp „aus der Liste gewählt" von „selbst getippt".</p>
+ *
+ * <p>Reihenfolge bei einer Auswahl: erst steht der Text im Feld, dann kommt der Callback. Ein
+ * {@code textProperty}-Listener des Aufrufers hat also bereits gefeuert, wenn
+ * {@link #setOnSelected} an der Reihe ist — wer beides nutzt, darf im Callback das letzte Wort
+ * behalten.</p>
+ *
+ * <p>CSS: Liste = {@code .suggestion-box}, hervorgehobene Zeile = {@code :highlighted}.</p>
  */
-public class SuiteSuggestionTextField {
+public class SuiteSuggestionTextField extends TextField {
 
     private static final PseudoClass HIGHLIGHTED = PseudoClass.getPseudoClass("highlighted");
     private static final int MAX_SUGGESTIONS = 20;
 
-    private final TextField textField;
-    private final Popup suggestionPopup;
-    private final VBox suggestionBox;
+    private final Popup suggestionPopup = new Popup();
+    private final VBox suggestionBox = new VBox();
 
     private List<String> allItems = new ArrayList<>();
     private final List<String> currentMatches = new ArrayList<>();
     private int activeIndex = -1;
+
+    /** Gesetzt, solange wir den Text selbst schreiben — sonst löste unser eigenes setText neue Vorschläge aus. */
     private boolean suppressSuggestions = false;
 
-    /** Wird aufgerufen, wenn ein Vorschlag ausgewählt wird (Enter, Klick). */
+    /** Wird aufgerufen, wenn ein Vorschlag ausgewählt wird (Enter, Tab, Klick). */
     private Consumer<String> onSelected;
 
     public SuiteSuggestionTextField(String promptText) {
-        textField = new TextField();
-        textField.setPromptText(promptText);
+        setPromptText(promptText);
 
-        suggestionBox = new VBox();
         suggestionBox.getStyleClass().add("suggestion-box");
 
-        suggestionPopup = new Popup();
         suggestionPopup.setAutoHide(true);
         suggestionPopup.getContent().add(suggestionBox);
 
         setupListeners();
-    }
-
-    public TextField getTextField() {
-        return textField;
     }
 
     public void setAllItems(List<String> items) {
@@ -74,18 +75,14 @@ public class SuiteSuggestionTextField {
     }
 
     /**
-     * Setzt den Text programmatisch und löst den Callback aus,
-     * ohne das Suggestion-Popup zu öffnen.
+     * Setzt den Text programmatisch und löst den Callback aus, ohne die Vorschlagsliste zu öffnen.
      * Wird von den Links in den Filmkacheln aufgerufen.
      */
     public void setTextAndTrigger(String text) {
-        suppressSuggestions = true;
-        textField.setText(text);
-        suppressSuggestions = false;
+        setTextSilent(text);
         hideSuggestions();
-        if (onSelected != null) {
+        if (onSelected != null)
             onSelected.accept(text);
-        }
     }
 
     /**
@@ -94,37 +91,28 @@ public class SuiteSuggestionTextField {
      */
     public void setTextSilent(String text) {
         suppressSuggestions = true;
-        textField.setText(text);
+        setText(text);
         suppressSuggestions = false;
     }
 
-    /** Liefert den aktuellen Feldinhalt — nie {@code null}. */
-    public String getText() {
-        return textField.getText() == null ? "" : textField.getText();
-    }
-
-    /**
-     * Leert das Textfeld ohne Callback oder Popup auszulösen.
-     */
+    /** Leert das Feld, ohne Callback oder Popup auszulösen. */
     public void clearSilent() {
         suppressSuggestions = true;
-        textField.clear();
+        clear();
         suppressSuggestions = false;
     }
 
     // -------------------------------------------------------------------------
 
     private void setupListeners() {
-        textField.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-            if (!suggestionPopup.isShowing() || currentMatches.isEmpty()) {
+        addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+            if (!suggestionPopup.isShowing() || currentMatches.isEmpty())
                 return;
-            }
             switch (e.getCode()) {
                 case ENTER, TAB -> {
                     e.consume();
-                    if (activeIndex >= 0 && activeIndex < currentMatches.size()) {
+                    if (activeIndex >= 0 && activeIndex < currentMatches.size())
                         selectItem(currentMatches.get(activeIndex));
-                    }
                 }
                 case DOWN -> {
                     e.consume();
@@ -142,30 +130,25 @@ public class SuiteSuggestionTextField {
             }
         });
 
-        textField.textProperty().addListener((_, _, newVal) -> {
-            if (!suppressSuggestions) {
+        textProperty().addListener((_, _, newVal) -> {
+            if (!suppressSuggestions)
                 updateSuggestions(newVal);
-            }
         });
 
         // Popup schließen wenn das Feld den Fokus verliert
-        textField.focusedProperty().addListener((_, _, focused) -> {
-            if (!focused) {
+        focusedProperty().addListener((_, _, focused) -> {
+            if (!focused)
                 hideSuggestions();
-            }
         });
     }
 
     private void selectItem(String item) {
-        suppressSuggestions = true;
-        textField.setText(item);
-        suppressSuggestions = false;
+        setTextSilent(item);
         hideSuggestions();
         // Gesamten Text markieren, damit Weitertippen ihn ersetzt
-        textField.selectAll();
-        if (onSelected != null) {
+        selectAll();
+        if (onSelected != null)
             onSelected.accept(item);
-        }
     }
 
     private void hideSuggestions() {
@@ -213,7 +196,7 @@ public class SuiteSuggestionTextField {
 
             suggestionBox.getChildren().add(label);
         }
-        suggestionBox.setPrefWidth(textField.getWidth());
+        suggestionBox.setPrefWidth(getWidth());
     }
 
     private void setActiveIndex(int index) {
@@ -230,9 +213,8 @@ public class SuiteSuggestionTextField {
     }
 
     private void showPopupBelowInput() {
-        Bounds bounds = textField.localToScreen(textField.getBoundsInLocal());
-        if (bounds != null) {
-            suggestionPopup.show(textField, bounds.getMinX(), bounds.getMaxY() + 2);
-        }
+        Bounds bounds = localToScreen(getBoundsInLocal());
+        if (bounds != null)
+            suggestionPopup.show(this, bounds.getMinX(), bounds.getMaxY() + 2);
     }
 }

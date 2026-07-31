@@ -113,9 +113,9 @@ public class MovieViewerScreenView implements ScreenView {
         swytPane.setMinWidth(swytWidth);
         swytPane.setMaxWidth(swytWidth);
         swytPane.getChildren().addAll(
-                dirLabel, directorField.getTextField(),
-                actLabel, actorField.getTextField(),
-                titLabel, titleField.getTextField());
+                dirLabel, directorField,
+                actLabel, actorField,
+                titLabel, titleField);
 
         // Ergebnisbereich
         resultBox = new VBox(style.font().getSize() * 0.5);

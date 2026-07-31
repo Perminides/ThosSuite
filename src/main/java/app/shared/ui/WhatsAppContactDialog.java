@@ -1,21 +1,16 @@
 package app.shared.ui;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
-import app.shared.Log;
 import app.shared.ui.components.SuiteDialog;
+import app.shared.ui.components.SuiteSuggestionTextField;
 import javafx.application.Platform;
-import javafx.css.PseudoClass;
-import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import javafx.stage.Popup;
 import javafx.stage.Stage;
 
 /**
@@ -25,6 +20,10 @@ import javafx.stage.Stage;
  * der noch nicht in der Suite-DB bekannt ist. Der Nutzer kann entweder
  * einen bestehenden Kontakt auswählen (per Autocomplete-Vorschlagsliste)
  * oder einen neuen Namen eingeben.</p>
+ *
+ * <p>Die Vorschlagsmechanik selbst steckt im {@link SuiteSuggestionTextField}. Hier bleibt nur, was
+ * sie für diesen Dialog bedeutet: eine Auswahl aus der Liste liefert eine contact_id und wechselt
+ * den Titel, alles Selbstgetippte legt einen neuen Kontakt an.</p>
  *
  * <p>Autocomplete-Verhalten:
  * <ul>
@@ -53,8 +52,6 @@ import javafx.stage.Stage;
  */
 public class WhatsAppContactDialog {
 
-    private static final PseudoClass HIGHLIGHTED = PseudoClass.getPseudoClass("highlighted");
-
     private static final String TITLE_NEW      = "Neuer WhatsApp-Kontakt";
     private static final String TITLE_SELECTED = "Ausgewählter WhatsApp-Kontakt";
 
@@ -77,9 +74,8 @@ public class WhatsAppContactDialog {
     public static Result show(String rawIdentifier, Map<String, Integer> knownContacts) {
     	SuiteDialog<Void> dialog = new SuiteDialog<>(TITLE_NEW);
 
-        // Ergebnis-State
+        // Ergebnis-State. Array, weil die Lambdas unten aus einer statischen Methode heraus zugreifen.
         final Integer[] selectedContactId = {null};
-        final boolean[] settingFromCode   = {false};
 
         // X-Button blockieren
         Stage stage = (Stage) dialog.getDialogPane().getScene().getWindow();
@@ -90,8 +86,8 @@ public class WhatsAppContactDialog {
 
         Label infoLabel = new Label("Unbekannter Kontakt: " + rawIdentifier);
         Label nameLabel = new Label("Name (bestehenden auswählen oder neuen eingeben):");
-        TextField nameField = new TextField();
-        nameField.setPromptText("Name...");
+        SuiteSuggestionTextField nameField = new SuiteSuggestionTextField("Name...");
+        nameField.setAllItems(new ArrayList<>(knownContacts.keySet()));
 
         content.getChildren().addAll(infoLabel, nameLabel, nameField);
         dialog.getDialogPane().setContent(content);
@@ -103,135 +99,17 @@ public class WhatsAppContactDialog {
         Button okButton = (Button) dialog.getDialogPane().lookupButton(okBtn);
         okButton.setDisable(true);
 
-        // Autocomplete
-        List<String> allNames      = new ArrayList<>(knownContacts.keySet());
-        List<String> matches       = new ArrayList<>();
-        VBox         suggestionBox = new VBox();
-        suggestionBox.getStyleClass().add("suggestion-box");
-        Popup popup = new Popup();
-        popup.setAutoHide(true);
-        popup.getContent().add(suggestionBox);
-        final int[] activeIndex = {-1};
-
-        Runnable hideSuggestions = () -> {
-            popup.hide();
-            matches.clear();
-            activeIndex[0] = -1;
-        };
-
-        Runnable highlightActive = () -> {
-            var children = suggestionBox.getChildren();
-            for (int i = 0; i < children.size(); i++) {
-                children.get(i).pseudoClassStateChanged(HIGHLIGHTED, i == activeIndex[0]);
-            }
-        };
-
-        Runnable selectActive = () -> {
-            String chosen = matches.get(activeIndex[0]);
-            selectedContactId[0] = knownContacts.get(chosen);
-            Log.debug(WhatsAppContactDialog.class, "[selectActive] chosen=" + chosen + " selectedContactId=" + selectedContactId[0]);
-            dialog.setSuiteTitle(TITLE_SELECTED);
-            Log.debug(WhatsAppContactDialog.class, "[selectActive] Titel gesetzt auf: " + TITLE_SELECTED);
-            settingFromCode[0] = true;
-            Log.debug(WhatsAppContactDialog.class, "[selectActive] settingFromCode=true, rufe setText auf");
-            nameField.setText(chosen);
-            settingFromCode[0] = false;
-            Log.debug(WhatsAppContactDialog.class, "[selectActive] settingFromCode=false");
-            hideSuggestions.run();
-        };
-
+        // Jede Texteingabe heißt erst einmal: neuer Kontakt. Kam sie aus der Vorschlagsliste, meldet
+        // sich gleich danach setOnSelected und nimmt es zurück — der Callback kommt nach dem Text.
         nameField.textProperty().addListener((_, _, newVal) -> {
-        	Log.debug(WhatsAppContactDialog.class, "[listener] newVal='" + newVal + "' settingFromCode=" + settingFromCode[0] + " selectedContactId=" + selectedContactId[0]);
-            if (!settingFromCode[0]) {
-                selectedContactId[0] = null;
-                dialog.setSuiteTitle(TITLE_NEW);
-                Log.debug(WhatsAppContactDialog.class, "[listener] Titel zurückgesetzt auf: " + TITLE_NEW);
-            }
+            selectedContactId[0] = null;
+            dialog.setSuiteTitle(TITLE_NEW);
             okButton.setDisable(newVal == null || newVal.isBlank());
-            if (newVal == null || newVal.isBlank()) {
-                hideSuggestions.run();
-                return;
-            }
-            if (settingFromCode[0]) return;
-
-            String lower = newVal.toLowerCase();
-            matches.clear();
-            for (String name : allNames)
-                if (name.toLowerCase().contains(lower))
-                    matches.add(name);
-
-            if (matches.isEmpty()) {
-                hideSuggestions.run();
-                return;
-            }
-
-            suggestionBox.getChildren().clear();
-            for (int i = 0; i < matches.size(); i++) {
-                String match = matches.get(i);
-                Label lbl = new Label(match);
-                lbl.setMaxWidth(Double.MAX_VALUE);
-                int idx = i;
-                lbl.setOnMouseEntered(_ -> {
-                    activeIndex[0] = idx;
-                    highlightActive.run();
-                });
-                lbl.setOnMouseClicked(_ -> {
-                    selectedContactId[0] = knownContacts.get(match);
-                    dialog.setSuiteTitle(TITLE_SELECTED); 
-                    settingFromCode[0] = true;
-                    nameField.setText(match);
-                    settingFromCode[0] = false;
-                    hideSuggestions.run();
-                });
-                suggestionBox.getChildren().add(lbl);
-            }
-
-            activeIndex[0] = 0;
-            highlightActive.run();
-
-            Bounds bounds = nameField.localToScreen(nameField.getBoundsInLocal());
-            if (bounds != null) {
-                suggestionBox.setPrefWidth(nameField.getWidth());
-                popup.show(nameField, bounds.getMinX(), bounds.getMaxY() + 2);
-            }
         });
 
-        nameField.setOnKeyPressed(e -> {
-            switch (e.getCode()) {
-                case ENTER -> {
-                    if (popup.isShowing()) {
-                        e.consume();
-                        selectActive.run();
-                    }
-                }
-                case TAB -> {
-                    if (popup.isShowing()) {
-                        e.consume();
-                        selectActive.run();
-                    }
-                }
-                case DOWN -> {
-                    if (popup.isShowing()) {
-                        e.consume();
-                        activeIndex[0] = Math.min(activeIndex[0] + 1, matches.size() - 1);
-                        highlightActive.run();
-                    }
-                }
-                case UP -> {
-                    if (popup.isShowing()) {
-                        e.consume();
-                        activeIndex[0] = Math.max(activeIndex[0] - 1, 0);
-                        highlightActive.run();
-                    }
-                }
-                case ESCAPE -> {
-                    if (popup.isShowing()) {
-                        e.consume();
-                        hideSuggestions.run();
-                    }
-                }
-                default -> {}
-            }
+        nameField.setOnSelected(name -> {
+            selectedContactId[0] = knownContacts.get(name);
+            dialog.setSuiteTitle(TITLE_SELECTED);
         });
 
         dialog.setOnShown(_ -> Platform.runLater(() -> {
