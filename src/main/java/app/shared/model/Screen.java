@@ -33,17 +33,6 @@ public interface Screen {
 	 */
 	void refresh();
 	
-	/**
-	 * Da braucht jemand die View. Vermutlich zum Anzeigen im MainWindow.
-	 * !Sofort: Passt das hier überhaupt rein? Also wenn Screen nicht nur ein Empfänger von Befehlen ist sondern sich auch
-	 * um die Anzeige kümmert, dann sehe ich nicht mehr wozu man nun auch ScreenFrame braucht... An sich finde ich es ja auch
-	 * sehr gut beides in einem Interfacew abzufrühstücken Es gibt halt ein fensteraufüllendes-Objekt, welches im Spielfeld
-	 * angezueigt werden will. Ok, darfs Du, aber dann musst Du dem MainWindow Zugriff auf eine Pane(Node/StackPane (weiß
-	 * gerade nicht) geben, die er bei sich einhängt und Du musst bestimmte Events vom Controller verarbeiten (und darfst
-	 * die auch ignorieren). Und du musst dem Controller sagen, ob Du jederzeit durch einen anderen Screen ersetzt werden
-	 * darfst.
-	 * 
-	 */
 	ScreenView getView();
 	
 	/**

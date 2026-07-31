@@ -54,8 +54,8 @@ public abstract class SkinProperties {
 	// leer (1,,10,20,10,20,10), wird sie eingesetzt — steht dort eine Farbe, gewinnt die. Ein Skin
 	// mit unterschiedlich gefärbten Rändern bleibt damit möglich. Eingesetzt wird im
 	// Defaults-Durchlauf von styleScene, nicht beim Parsen (siehe BorderParams.withFallbackColor).
-	// !Sofort: Mal aktuelleres Design ausprobieren: Button mit runden Ecken, ohne Border und mit box-shadow. Sicher sehr interessant, aber ich fürchte das wird ein Refactoring-Alptraum, weil Du immer den Platz für den Schatten brauchst überall...
-	// !Sofort: Einfacher als box-shadow wäre ein Design mit transparenten Hintergründen der Buttons und TextFields und so und ohne Border. Hehe...
+	// !Idee: Mal aktuelleres Design ausprobieren: Button mit runden Ecken, ohne Border und mit box-shadow. Sicher sehr interessant, aber ich fürchte das wird ein Refactoring-Alptraum, weil Du immer den Platz für den Schatten brauchst überall...
+	// !Idee: Einfacher als box-shadow wäre ein Design mit transparenten Hintergründen der Buttons und TextFields und so und ohne Border. Hehe...
 	
 	public abstract String getDisplayName();
 
@@ -436,6 +436,21 @@ public abstract class SkinProperties {
 	public int imageMapOverlayContentInset(String mapName) {
 	    Integer inset = (Integer) getFieldValue(mapName + "ImageMapOverlayContentInset");
 	    return inset != null ? inset : imageMapOverlayContentInset;
+	}
+
+	/**
+	 * Wie viel Rand die Shape-Karte für ihre Striche freihalten muss.
+	 *
+	 * <p>Zweckgeschnitten, nicht der Feldname: die Karte will nicht wissen, wie breit ein
+	 * Bundesland-Strich ist, sondern wie viel Platz sie freihalten muss, damit nichts über ihr Feld
+	 * hinausragt. Deshalb der <b>breitere</b> der beiden Striche — und einmal ganz, nicht halb, denn
+	 * er fällt oben wie unten an, je zur Hälfte.</p>
+	 *
+	 * <p>Gilt für mittig gezeichnete Striche (JavaFX-Voreinstellung). Setzte ein Skin je
+	 * {@code -fx-stroke-type: inside}, wäre hier zu viel freigehalten.</p>
+	 */
+	public double shapeMapStrokeReserve() {
+	    return Math.max(shapeMapStandardBorderWidth, shapeMapFederalStateBorderWidth);
 	}
 
 	// endregion

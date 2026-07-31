@@ -5,23 +5,18 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import app.shared.model.ShapeGeometry;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import app.shared.skin.SkinService;
 import javafx.css.PseudoClass;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Shape;
-import javafx.scene.transform.Scale;
 import app.shared.model.ShapeMapState;
 
 /**
@@ -36,10 +31,14 @@ import app.shared.model.ShapeMapState;
  * übergeben: welche Karte gerade gebaut wird, weiß der Aufrufer, nicht sie.</p>
  *
  * <p>Warum skaliert wird: die Shapes tragen ihre Originalkoordinaten aus dem GeoJSON, das Feld im Skin ist
- * dagegen frei konfigurierbar. Gemessen wird <b>vor</b> dem Einhängen in eine Scene, damit die UA-Defaults
- * gelten und nicht schon das Skin-CSS. Die Skalierung trifft auch die Strichdicken — die werden deshalb
- * repariert, sobald die Scene (und damit das echte CSS) da ist. Die Bild-Karte braucht davon nichts: Bitmap,
- * keine Vektor-Striche.</p>
+ * dagegen frei konfigurierbar. Skaliert werden die <b>Koordinaten</b> beim Bauen ({@code ShapeGeometry.scaled}),
+ * nicht der fertige Node über eine Transformation. Der Unterschied: eine Transformation trifft alles, was der
+ * Node zeichnet — Strichbreiten und Effekte eingeschlossen. So bleibt ein 1,8px-Strich 1,8px breit und ein
+ * 15px-Schatten 15px, unabhängig davon, wie stark die Karte gestaucht wird. Die Bild-Karte braucht davon
+ * nichts: Bitmap, keine Vektor-Striche.</p>
+ *
+ * <p>Die gecachten Geometrien aus dem {@code MapService} bleiben dabei unangetastet — {@code scaled} gibt neue
+ * Instanzen zurück. Bei einem Skinwechsel wird die Pane ohnehin komplett neu gebaut und rechnet neu.</p>
  *
  * <p>CSS (vom Skin gesetzt):
  * Karte = {@code .my-shape-map-pane}, {@code :paused};
@@ -76,13 +75,15 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 	public ShapeMapPane(List<ShapeGeometry> geometries, Rectangle2D bounds) {
 		Group contentGroup = new Group();
 
+		double faktor = scaleFactor(geometries, bounds);
+
 		// Nach zIndex sortiert einhängen — die Reihenfolge in der Group ist die Zeichenreihenfolge.
 		List<ShapeGeometry> nachEbene = new ArrayList<>(geometries);
 		nachEbene.sort(Comparator.comparingInt(g -> ShapeLayer.fromJsonId(g.type()).zIndex()));
 
 		for (ShapeGeometry geometry : nachEbene) {
 			boolean interactive = ShapeLayer.fromJsonId(geometry.type()).interactive();
-			Node node = MapNodeBuilder.buildShapeMapNode(geometry);
+			Node node = MapNodeBuilder.buildShapeMapNode(geometry.scaled(faktor));
 			shapes.put(geometry.id(), new ShapeNode(node, interactive));
 
 			if (interactive)
@@ -96,44 +97,42 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 
 		resetAllStates();
 
-		// Messen, solange noch keine Scene da ist — dann gelten die UA-Defaults und nicht schon das Skin-CSS.
-		contentGroup.applyCss();
-		contentGroup.layout();
-		double scaleFactor = bounds.getHeight() / contentGroup.getBoundsInLocal().getHeight();
-
-		Scale scale = new Scale(scaleFactor, scaleFactor);
-		scale.setPivotX(0);
-		scale.setPivotY(0);
-		contentGroup.getTransforms().add(scale);
-
 		getChildren().add(contentGroup); // StackPane zentriert.
 		getStyleClass().add("my-shape-map-pane");
 		setLayoutX(bounds.getMinX());
 		setLayoutY(bounds.getMinY());
 
-		fixStrokeWidthsOnceStyled(contentGroup, scaleFactor);
 	}
 
 	/**
-	 * Die Skalierung zieht die Strichdicken mit. Sobald die Scene da ist, steht die vom CSS gewollte Dicke fest
-	 * und wird per Inline-Style durch den Faktor geteilt — danach hängt sich der Listener selbst wieder aus.
+	 * Der Maßstab, mit dem die Geometrie in ihr Feld passt — reine Arithmetik über die Punkte.
+	 *
+	 * <p>Gerechnet wird über die Höhe: {@code (Feldhöhe − Strichbreite) / Geometriehöhe}. Der Strich
+	 * wird abgezogen statt mitskaliert, weil er als CSS-Wert in voller Breite gezeichnet wird — er
+	 * braucht oben und unten je seine halbe Breite, zusammen also eine ganze.</p>
+	 *
+	 * <p>Früher wurde stattdessen der fertig gebaute Node vermessen, und zwar zwingend <em>vor</em> dem
+	 * Einhängen in eine Scene, damit die JavaFX-Voreinstellungen galten und nicht schon das Skin-CSS.
+	 * Das war der Grund für {@code applyCss()}/{@code layout()} an dieser Stelle und für die
+	 * nachträgliche Strichdicken-Reparatur. Beides ist entfallen: die Ausdehnung steht in den Punkten,
+	 * dafür muss nichts gerendert werden.</p>
 	 */
-	private void fixStrokeWidthsOnceStyled(Group contentGroup, double scaleFactor) {
-		sceneProperty().addListener(new ChangeListener<Scene>() {
-			@Override
-			public void changed(ObservableValue<? extends Scene> obs, Scene oldScene, Scene newScene) {
-				if (newScene == null)
-					return;
+	private static double scaleFactor(List<ShapeGeometry> geometries, Rectangle2D bounds) {
+		double minY = Double.MAX_VALUE;
+		double maxY = -Double.MAX_VALUE;
 
-				contentGroup.applyCss();
-				for (Node node : contentGroup.getChildren())
-					if (node instanceof Shape s && s.getStrokeWidth() > 0)
-						s.setStyle("-fx-stroke-width: "
-								+ String.format(Locale.US, "%.4f", s.getStrokeWidth() / scaleFactor) + "px;");
+		for (ShapeGeometry geometry : geometries)
+			for (List<ShapeGeometry.Point> ring : geometry.paths())
+				for (ShapeGeometry.Point p : ring) {
+					minY = Math.min(minY, p.y());
+					maxY = Math.max(maxY, p.y());
+				}
 
-				sceneProperty().removeListener(this);
-			}
-		});
+		double geometrieHoehe = maxY - minY;
+		if (geometrieHoehe <= 0)
+			throw new IllegalStateException("Shape-Karte ohne Ausdehnung — keine Punkte in den Geometrien?");
+
+		return (bounds.getHeight() - SkinService.get().shapeMapStrokeReserve()) / geometrieHoehe;
 	}
 
 	/** Die Karte ist selbst der Node — siehe {@link LearnMap#getView()}. */

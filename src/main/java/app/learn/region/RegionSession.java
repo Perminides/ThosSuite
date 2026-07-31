@@ -17,8 +17,8 @@ import app.shared.model.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.ui.Alerts;
 
-// !Später: Das RegionSessionBild croppen und dann den korrekten Rand setzen, wenn isComplete==true. Wobei isComplete meint, dasss das ganze Rechteck ausgefüllt ist.
-// !Sofort: Es wäre schon nice bei Finde uf der Karte (schwer) zu wissen, wie viel noch kommen. Also doch einen Fortschritt bitte.
+// !Idee: Das RegionSessionBild croppen und dann den korrekten Rand setzen, wenn isComplete==true. Wobei isComplete meint, dasss das ganze Rechteck ausgefüllt ist.
+// !Idee: Es wäre schon nice bei Finde uf der Karte (schwer) zu wissen, wie viel noch kommen. Also doch einen Fortschritt bitte.
 /**
  * Schale der Regions-Lernsession und Ansprechpartner für den Controller (Screen). Hält den
  * SessionProgress (je nach Modus Click/Elimination/Write) und den Presenter; wertet über end(...)

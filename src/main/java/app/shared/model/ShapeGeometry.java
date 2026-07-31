@@ -1,5 +1,6 @@
 package app.shared.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -83,6 +84,28 @@ public final class ShapeGeometry {
 	/** Zentrier-Anker: kein sichtbares Shape. Die Bild-Karte zentriert nur auf x/y, baut keinen Node. */
 	public static ShapeGeometry center(String id, double x, double y) {
 		return new ShapeGeometry(id, Kind.CENTER, List.of(), x, y, 0, null);
+	}
+
+	/**
+	 * Dieselbe Form in einem anderen Maßstab — alle Punkte, Mittelpunkte und Radien mit {@code faktor}
+	 * multipliziert. Gibt eine <b>neue</b> Instanz zurück; das Original bleibt unangetastet, denn die
+	 * Geometrien liegen gecacht im {@code MapService} und werden zwischen Skins geteilt.
+	 *
+	 * <p>Damit skaliert die Shape-Karte ihre Formen einmal beim Bauen, statt eine {@code Scale} an den
+	 * fertigen Node zu hängen. Der Unterschied ist nicht kosmetisch: eine Transformation trifft
+	 * <em>alles</em>, was der Node zeichnet — Strichbreiten und Effekte eingeschlossen. Skalierte
+	 * Koordinaten treffen nur die Form, und 15 px Schatten bleiben 15 px, egal wie stark die Karte
+	 * gestaucht wird.</p>
+	 */
+	public ShapeGeometry scaled(double faktor) {
+		List<List<Point>> skaliert = new ArrayList<>(paths.size());
+		for (List<Point> ring : paths) {
+			List<Point> neu = new ArrayList<>(ring.size());
+			for (Point p : ring)
+				neu.add(new Point(p.x() * faktor, p.y() * faktor));
+			skaliert.add(neu);
+		}
+		return new ShapeGeometry(id, kind, skaliert, centerX * faktor, centerY * faktor, radius * faktor, type);
 	}
 
 	public String id() { return id; }
