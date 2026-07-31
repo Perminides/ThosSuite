@@ -22,12 +22,6 @@ public class ComponentHost implements ScreenView {
 		pane.getChildren().setAll(components);
 	}
 	
-	/**
-	 * !Sofort: Du musst auch in der Dokumentation sowas hier festhalten, oder? Also wie wird mit Hintergrundbildern in dem
-	 * ganzen Konstrukt umgegangen. Uff.
-	 * 
-	 * @param image
-	 */
 	public void setWallpaper(Path wallpaper) {
 		pane.setBackground(SuiteBackground.of(wallpaper));
 	}

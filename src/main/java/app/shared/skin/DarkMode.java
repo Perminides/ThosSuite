@@ -2,7 +2,6 @@ package app.shared.skin;
 
 import app.shared.Config;
 
-// !Sofort: Leider ist DarkMode sauhässlich. Da musst Du nochmal ran...
 public class DarkMode extends Skin {
 
 	@Override
