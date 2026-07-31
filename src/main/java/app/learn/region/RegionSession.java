@@ -102,7 +102,6 @@ public class RegionSession implements Screen {
 		
 		if (!correct) { // Wenn nicht korrekt, dann zeige den Text an. Ok und Abbruch. Und eventuell, wenn erlaubt, auch Fortfahren...
 			Log.info(this, "Alert wird erstellt. correct=" + correct);
-			// !Sofort: Refactor: Skin holt sich das MainWindows selbst herrje!
 			ButtonEnum result = allowResume
 				    ? Alerts.show("Nicht korrekt", text, new AlertOptions().noEsc(),
 				          ButtonEnum.OK, ButtonEnum.CANCEL, ButtonEnum.RESUME)

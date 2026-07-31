@@ -112,6 +112,18 @@ public class SessionPresenter {
 		view.addIdsToCorrect(matches);
 		view.setTextInTextField("");
 	}
+
+	/**
+	 * Schreib-Modus im freien Spiel: das aufgegebene Element bleibt rot auf der Karte stehen.
+	 *
+	 * <p>Das Eingabefeld muss dabei wieder freigeschaltet werden — {@link #setCorrectText} hat es
+	 * gesperrt, um die angezeigte Lösung nicht überschreibbar zu machen.</p>
+	 */
+	public void handleMissedWrite(String id) {
+		view.setIdToIncorrect(id);
+		view.setTextInTextField("");
+		view.setTextFieldActive(true);
+	}
 	
 	/**
 	 * Der gezeigte Vergleich (ein rot, ein grün) verschwindet, sobald es weitergeht.
