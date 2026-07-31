@@ -65,11 +65,6 @@ public class ThosSuiteApp extends Application {
     	Locale.setDefault(Locale.GERMANY);    	
         launch(args); // JavaFX Application.launch() startet die App und den JavaFX Application Thread
         Log.info(ThosSuiteApp.class, "End Suite");
-        
-     // Zeige alle lebenden Non-Daemon Threads !Sofort: Das ist ein Hack weil das Programm manchmal nach diesem Logging noch weiterläuft...
-        for (Thread t : Thread.getAllStackTraces().keySet())
-            if (!t.isDaemon()) // Non-Daemon Threads halten die JVM am Leben
-                Log.info(ThosSuiteApp.class, "Non-Daemon Thread: " + t.getName());
     }
 
     @Override

@@ -143,7 +143,7 @@ public class MovieCard extends HBox {
 			infoBox.getChildren().add(overviewLabel);
 		}
 
-		// TODO: Workaround für JDK-8350149 / JDK-8362873: HBox berechnet die Höhe von
+		// !Blocked: Workaround für JDK-8350149 / JDK-8362873: HBox berechnet die Höhe von
 		// Kindern mit contentBias HORIZONTAL basierend auf deren prefWidth statt
 		// der tatsächlich zugewiesenen Breite. Ohne diesen Workaround wird die
 		// Kachel bei Filmen ohne Poster viel zu hoch. Kann entfernt werden,

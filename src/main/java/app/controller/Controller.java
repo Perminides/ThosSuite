@@ -66,7 +66,7 @@ public class Controller{
 	private final RegionDeckService regionDeckService;
 	
     private MainWindow mainWindow;
-    private Screen currentScreen; //!Später natürlich nicht mehr nur MapDeckSessions...
+    private Screen currentScreen;
     private DataFetcher fitbitDataFetcher;
     // Fehler der drei Start-Importe. Sie werden im PreTask nur gemerkt und erst im PostTask
     // gemeldet — während des Splashs gibt es kein Hauptfenster, und über den Splash gehört kein
@@ -85,7 +85,7 @@ public class Controller{
     
     public Controller(MainWindow mainWindow) throws InterruptedException {
     	this.mainWindow = mainWindow;
-    	//!Später: Wenn sich herausstellt, dass eh nur der Controller die ganzen Menü-Events erhält, dann darf das MainWindow auch den Controller kennen und die Methoden direkt aufrufen. Außer Claude erklärt mir, was an dieser zirkulären Beziehung nun so gefährlich sein soll...
+    	//!Architektur: Wenn sich herausstellt, dass eh nur der Controller die ganzen Menü-Events erhält, dann darf das MainWindow auch den Controller kennen und die Methoden direkt aufrufen. Außer Claude erklärt mir, was an dieser zirkulären Beziehung nun so gefährlich sein soll...
     	mainWindow.setEscPressedRunnable(this::escPressed);
     	mainWindow.setPausePressedRunnable(this::pausePressed);
     	mainWindow.setCloseRunnable(this::closeSelected);
@@ -303,8 +303,6 @@ public class Controller{
 	    }
 	}
 	
-	// !Später: "Speichern" wird bei Statistik-Screens nicht ausgeblendet (anders als Region).
-	// Prüfen ob Bug — save ergibt für Stats keinen Sinn. Sichtbarkeit an Screen-Typ koppeln?
 	public void onStatisticsMenuItemSelected(String item) {
 	    requestSessionSwitch(() -> {
 	        if ("Dashboard".equals(item)) {

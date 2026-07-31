@@ -142,18 +142,12 @@ public abstract class AnkiLearnView {
 		return canvas;
 	}
 
-	// !Später: Fünf der folgenden Namen benennen ein Bedienelement statt einer Absicht und stehen damit
-	// quer zur Regel „‚Stell eine Frage' sagt das Feature, ‚zeige diesen Text' passiert in shared.ui":
-	// setTextInTextField, setTextFieldActive, setProgressText, setCardHistoryText, disableMcPanel.
-	// Gleiches Muster außerhalb von learn: MovieViewerScreenView.showCards(…) — „zeig diese Filme" wäre
-	// die Absicht. Reine Umbenennung, aber sie trifft beide Presenter; eigene kleine Runde.
-
 	// ===== Frage, Bild, Fortschritt =====
 
 	public void setQuestion(String text)        { questionArea.setText(text); }
 	public void setImage(String imageName)      { imageComponent.setImage(imageName); }
-	public void setProgressText(String text)    { progressArea.setText(text); }
-	public void setCardHistoryText(String text) { cardHistoryArea.setText(text); }
+	public void setProgress(String text)    { progressArea.setText(text); }
+	public void setCardHistory(String text) { cardHistoryArea.setText(text); }
 
 	// ===== Antwortauswahl =====
 

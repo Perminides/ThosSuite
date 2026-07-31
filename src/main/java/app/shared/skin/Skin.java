@@ -66,26 +66,8 @@ import javafx.scene.paint.Color;
  *   <li><b>ListView:</b> Aktuell nur in ComboBox, daher in addComboBoxStyles()
  *       mit Kommentar falls später woanders gebraucht</li>
  * </ul>
- * 
- * TODO: Die beiden Alc- und FitbitStatisticScreens sind so voll mit UI-Kram. Ist das korrekt?
- * An sich sollte die Restsuite frei davon sein!
- * 
- * TODO: - **Komponentenerstellung vereinheitlichen** — ein durchgängiges Muster (gleicher Schnitt, gleicher Bau-/Nutzungsweg).
- * Und denk dran, auch in Swing oder JavaFX gibt man den einzelnen Komponenten Werte über setter und getter oder im Konstruktor mit
- * Das ist kein an sich verbotenes Muster solange die Aufrufe halt nur aus einem dezidierten Paket kommen. Das ist kein
- * leaken von Skin-Wissen in die Suite an sich. Aber vielleicht sollten die Komponenten auch besser hier liegen?
- * Also die Komponenten per se feature-agnostik bauen? Aber naja. Du willst ja nicht Swing oder JavaFX nachbauen! 
- * 
  */
-@SuppressWarnings("deprecation")
 public abstract class Skin extends SkinProperties {
-
-	
-	
-
-	
-	// ========== CSS ==========
-	// region
 	
 	public void styleScene(Scene scene) {
 		menuBarHoverBackground = menuBarHoverBackground == null ? UiUtils.adjustBrightness(menuBarBackground, 20) : menuBarHoverBackground;
@@ -252,7 +234,7 @@ public abstract class Skin extends SkinProperties {
 	 * !Sofort: Das Padding der Scrollpane (wo eine existiert) und das Padding der ButtonBar ergeben zusammen einen unschönen Abstand
 	 * Man müsste am besten das Padding der Scrollpane, wenn es eine gibt, in einem Dialog auf unten = 0 setzen und nur da.
 	 * Keine Ahnung ob das geht. Und wie das aussieht, wenn darunter keine ButtonBAr mehr mit Padding kommt.
-	 * Nach kurzer Internet-Recherche geht das wohl leider nicht
+	 * Nach kurzer Internet-Recherche geht das wohl leider nicht. Fieser Hack unten.
 	 * @param builder
 	 */
 	private void addDialogStyles(CssBuilder builder) {
@@ -285,7 +267,7 @@ public abstract class Skin extends SkinProperties {
 	    // Content in ScrollPane
 	    builder.start(".my-dialog-scrollpane")
 	    .add("-fx-background-color", playFieldBackground)
-	    .add("-fx-padding", "16.7 16.7 0 16.7") // !Sofort. Fieser Hack für das im JavaDoc beschriebene Problem.
+	    .add("-fx-padding", "16.7 16.7 0 16.7") // !Der fiese Hack für das im JavaDoc beschriebene Problem.
 	    .end();
 	    
 	    /* Fix: ScrollPane bekommt Fokus z. B. durch Mausklick und würde
@@ -1095,9 +1077,9 @@ public abstract class Skin extends SkinProperties {
 	    	.add("-fx-border-radius", border.arc() + "px")
     		.add("-fx-background-insets", border.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
     		.add("-fx-background-radius", border.arc() + "px")
-	        .add("-fx-background-color", disabledComponentBgColor)  // TODO: anpassen             // TODO: anpassen
-	        .add("-fx-padding", font.getSize() * 0.5 + "px") // TODO: anpassen
-	        .add("-fx-font-size", font.getSize() + "px")      // TODO: anpassen
+	        .add("-fx-background-color", disabledComponentBgColor)  // !Später: anpassen -> Stand auch bei den folgenden 3 Zeilen. Äh, was genau???
+	        .add("-fx-padding", font.getSize() * 0.5 + "px")
+	        .add("-fx-font-size", font.getSize() + "px")
 	        .end();
 	    
 	    //css.rule(".movie-comment-popup .text", "-fx-fill", textColor);
@@ -1203,24 +1185,4 @@ public abstract class Skin extends SkinProperties {
 	        return sb.toString();
 	    }
 	}
-	
-	// endregion
-
-	// ========== create-Methoden
-	// region
-
-
-	
-	/**
-	 * Holt das passende Hintergrundbild zur laufenden Session bzw das "leere", wenn keine Session läuft.
-	 * Packt dieses in ein javafx.scene.layout.BackgroundImage. Kleinere werden hochskaliert damit sie passen.
-	 * 
-	 * @param type Darf null sein!
-	 * @return
-	 */
-	
-
-	 
-
-
 }

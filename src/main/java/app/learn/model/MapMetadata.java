@@ -7,7 +7,7 @@ public enum MapMetadata {
 	USA(MapType.SHAPE, "usa states.geojson", null),
 	CARIBBEAN(MapType.SHAPE, "carribean.geojson", null),
 	ENGLAND(MapType.SHAPE, "england.geojson", null),
-	BERLIN(MapType.SHAPE, "berlin.geojson", null), // !Sofort: Willste in Bertlin nicht noch die Bezirksgrenzen hinzufügen? Wäre flott gemacht :)
+	BERLIN(MapType.SHAPE, "berlin.geojson", null), // !Idee: Willste in Berlin nicht noch die Bezirksgrenzen hinzufügen? Wäre flott gemacht :)
 	SCHWEIZ(MapType.SHAPE, "schweiz.geojson", null),
 	HANNOVER_STADTTEILE(MapType.SHAPE, "hannover_stadtteile.geojson", null),
 	OZEANIEN(MapType.SHAPE, "ozeanien.geojson", null),

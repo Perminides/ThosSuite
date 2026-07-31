@@ -163,7 +163,6 @@ public class SeriesImporter {
         processRatedEpisodes();
 
         // Step 3: Lücken-Check
-        // TODO: Unbedingt SOFORT: auf serien und episoden erweitern, sollte easy as a pie sein. Meinte Claude zumindest
         showStepAlert("Wir schauen mal, ob fehlende Poster oder Zusammenfassungen nachgeholt werden können.");
         processGaps();
 
@@ -221,7 +220,7 @@ public class SeriesImporter {
                         ? " / " + show.german_name : ""),
                 null);
 
-        // TODO: tmdb.posterWidths=92,154
+        // !Später: Magic Numbers -> tmdb.posterWidths=92,154 in config?
         byte[] posterW92 = show.poster_path != null ? api.getImage(show.poster_path, "w92") : null;
         byte[] posterW154 = show.poster_path != null ? api.getImage(show.poster_path, "w154") : null;
 

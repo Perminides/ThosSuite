@@ -23,7 +23,7 @@ import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 
-// TODO: Nur in controller geschoben, damit das mit den Pfeilen besser aussieht. Das kann ja aber auch nicht sein.
+// !Architektur: Nur in controller geschoben, damit das mit den Pfeilen besser aussieht. Das kann ja aber auch nicht sein.
 // Der alte Grund ("braucht SkinService zum Zeigen eines Alerts") ist weg: die Klasse benutzt jetzt
 // Alerts und DatePickerDialog aus shared.ui und keinen Skin mehr. Ein Umzug nach shared wäre also möglich.
 public class SuiteExporter {

@@ -5,8 +5,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
+import app.shared.model.ButtonEnum;
+import app.shared.ui.Alerts;
 
 public class DB {
 	
@@ -48,15 +48,7 @@ public class DB {
 	public static Connection getConnection() {
 		try {
 			if (connection != null && connection.isClosed()) {
-				// Aktuell darf nicht von ganz oben in den Skin gegriffen werden
-				// TODO: Dieser Alert bleibt ungestylt, weil er keinen Owner setzt und damit die
-				// Hauptscene (und deren Stylesheet) nicht erbt. Gilt genauso für die vier rohen
-				// Alerts in ThosSuiteApp. Beim Start ist das teils unvermeidbar — da existiert die
-				// Hauptscene noch nicht. Hier läuft die Suite aber schon; ob man die späteren Fälle
-				// auf Alerts.show(…) umstellt, ist offen.
-				Alert alert = new Alert(AlertType.WARNING);
-				alert.setContentText("Shit. Die connection ist closed? Wer ist der Übeltäter?");
-				alert.showAndWait();
+				Alerts.show("Warnung", "Shit. Die connection ist closed? Wer ist der Übeltäter?", ButtonEnum.OK);
 			}
 			if (connection == null || connection.isClosed()) {
 				connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath.toString());
@@ -101,10 +93,7 @@ public class DB {
 	public static Connection getTmdbConnection() {
 		try {
 			if (tmdbConnection != null && tmdbConnection.isClosed()) {
-				// Aktuell darf nicht von ganz oben in den Skin gegriffen werden
-				Alert alert = new Alert(AlertType.WARNING);
-				alert.setContentText("Shit. Die connection ist closed? Wer ist der Übeltäter?");
-				alert.showAndWait();
+				Alerts.show("Warnung", "Shit. Die connection ist closed? Wer ist der Übeltäter?", ButtonEnum.OK);
 			}
 			if (tmdbConnection == null || tmdbConnection.isClosed()) {
 				tmdbConnection = DriverManager.getConnection("jdbc:sqlite:" + tmdbDbPath.toString());

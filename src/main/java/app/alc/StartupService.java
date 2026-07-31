@@ -45,11 +45,6 @@ public class StartupService {
         }
     }
 
-
-    
-    /**
-     * !Später: Das Padding ist einigermaßen irre. Buttons nicht bündig mit dem Text. Überall andere Abstände.
-     */
     private boolean showInputDialog(LocalDate date) {      
         // Wochentag + formatiertes Datum
         String dayOfWeek = date.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.GERMAN);

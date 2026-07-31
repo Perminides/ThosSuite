@@ -72,25 +72,9 @@ class DbDeckProgressRepository {
 		            psLog.setString(1, type.getDisplayName());
 		            psLog.setInt(2, row.cardId());
 		            psLog.setBoolean(4, row.correctFlag());
-		            //!Später: Remove this dirty hack and go with millis if this happens more often...
-		            boolean saved = false;
-		            int attempts = 0;
-		            while (!saved && attempts < 5) {
-		                try {
-		                    psLog.setString(3, row.playedTimestamp().truncatedTo(ChronoUnit.SECONDS).minus(attempts, ChronoUnit.SECONDS).toString());
-		                    psLog.execute();
-		                    saved = true;
-		                } catch (SQLException e) {
-		                    if (e.getMessage().contains("UNIQUE constraint")) {
-		                        attempts++;
-		                    } else {
-		                        throw e;
-		                    }
-		                    Alerts.show("Warnung", psLog.getParameterMetaData() + " - " + row.cardId() + " Ich versuche es evtl. nochmal...", ButtonEnum.OK);
-		                }
-		            }
-		            if (!saved)
-		                throw new RuntimeException("Alter, nach 5 Versuchen konnte ich immer noch nicht speichern...");
+		            //!Sofort: Claude draufschauen lassen. Ich habe den Hack entfernt...
+		            psLog.setString(3, row.playedTimestamp().truncatedTo(ChronoUnit.SECONDS).toString());
+		            psLog.execute();
 		        }
 		        conn.commit();
 		    } catch (Exception e) {

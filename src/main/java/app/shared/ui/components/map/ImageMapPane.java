@@ -291,7 +291,7 @@ public class ImageMapPane extends StackPane implements LearnMap {
 	private void updateImages() {
 		Image inactiveMain = inactiveBackground != null ? inactiveBackground : background;
 
-		// TODO: Guard 1:1 aus der alten GeoMap-Fassung übernommen. Er greift real fast nie (background ist bei
+		// Später: Guard 1:1 aus der alten GeoMap-Fassung übernommen. Er greift real fast nie (background ist bei
 		// Bild-Karten gesetzt); bewusst NICHT angefasst — das ist eine eigene Runde (FailFast-Frage).
 		if (inactiveMain == null && inactiveOverlay == null && mainImageView.getImage() != null)
 			return;

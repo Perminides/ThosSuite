@@ -182,7 +182,7 @@ public class SessionPresenter {
 		String text = "Korrekt: " + progress.correct()
 			+ "\nFalsch: " + progress.incorrect()
 			+ "\nOffen: " + (progress.total() - progress.correct() - progress.incorrect());
-		view.setProgressText(text);
+		view.setProgress(text);
 	}
 
 	void newCardIncoming(LearnStat stats) {
@@ -192,7 +192,7 @@ public class SessionPresenter {
 				+ "\nLevel: " + stats.getCurrentLevel()
 				+ "\nFalsch beantwortet: " + stats.getWrongCount();
 		}
-		view.setCardHistoryText(text);
+		view.setCardHistory(text);
 	}
 	
 	/**
