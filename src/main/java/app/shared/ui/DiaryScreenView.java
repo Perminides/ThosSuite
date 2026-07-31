@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import app.shared.model.DiaryCardData;
-import app.shared.model.DiaryStyle;
 import app.shared.model.ScreenView;
 import app.shared.skin.SkinService;
 import app.shared.ui.components.SuiteBackground;
@@ -130,9 +129,8 @@ public class DiaryScreenView implements ScreenView {
             hint.getStyleClass().add("diary-viewer-hint");
             resultBox.getChildren().add(hint);
         }
-        DiaryStyle style = SkinService.get().diaryStyle();
         for (DiaryCardData c : cards) {
-            DiaryCard card = new DiaryCard(c, style);
+            DiaryCard card = new DiaryCard(c);
             card.setOnMouseClicked(_ -> {
                 editListener.accept(c); // Screen öffnet Edit-Dialog (blockierend)
                 fireSearch();           // nach Edit neu suchen
