@@ -118,7 +118,7 @@ public abstract class SkinProperties {
 	protected Integer dashBoardTileBottomFontSize; // font * 2
 	
 	protected Integer diaryViewerContentWidth = 1200; // Hartcodiert. Für andere Auflösungen dann überschreiben.
-	protected Integer diaryTooltipMargin = 20;
+	protected Integer popupMonitorMargin = 20; // Abstand eines Popups zum Bildschirmrand (Tagebuch wie Film)
 	
 	protected Integer moviePosterWidth = 154;
 
@@ -254,12 +254,20 @@ public abstract class SkinProperties {
 
 	/** Die Werte, die die Tagebuch-Oberfläche braucht. */
 	public DiaryStyle diaryStyle() {
-		return new DiaryStyle(diaryViewerContentWidth, diaryTooltipMargin);
+		return new DiaryStyle(diaryViewerContentWidth);
+	}
+
+	/**
+	 * Wie viel Abstand ein Popup zum Bildschirmrand hält. Ohne Schlüssel — der Wert ist für jede
+	 * Verwendung derselbe, der Baustein holt ihn sich also selbst (siehe {@code SuiteThumbnail}).
+	 */
+	public double popupMonitorMargin() {
+		return popupMonitorMargin;
 	}
 
 	/** Die Werte, die die Film-Oberfläche braucht. */
 	public MovieStyle movieStyle() {
-		return new MovieStyle(moviePosterWidth, font, contentSize.getWidth(), diaryTooltipMargin);
+		return new MovieStyle(moviePosterWidth, font, contentSize.getWidth(), popupMonitorMargin);
 	}
 
 	/** Die Maße einer Dashboard-Kachel. Höhe = oberer + unterer Teil. */
