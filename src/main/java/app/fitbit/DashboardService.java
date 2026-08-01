@@ -37,8 +37,10 @@ public class DashboardService {
             nextDay = monday;
         }
         
-        // 5. Verbleibende Tage berechnen
-        int t = (int) nextDay.datesUntil(sunday.plusDays(1)).count();
+        // 5. Verbleibende Tage berechnen (nextDay inklusive, sunday inklusive).
+        // Math.max, weil between negativ wird, sobald nextDay hinter dem Sonntag liegt — der
+        // vorherige datesUntil(...).count() lieferte dort still 0.
+        int t = (int) Math.max(0, ChronoUnit.DAYS.between(nextDay, sunday.plusDays(1)));
         
         // 6. Punkte dieser Woche holen
         int p = repository.getPointsForWeek(today);
