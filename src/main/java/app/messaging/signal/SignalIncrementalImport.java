@@ -325,7 +325,7 @@ public class SignalIncrementalImport {
      * <li>+ "_"</li>
      * <li>+ Hochzählendes int bei mehreren Attachments pro Nachricht. Dass wir hier nicht einfach das Feld orderInMessage aus der Signal-DB genommen haben, war ein fehler, aber es funktioniert anscheinend.</li>
      * <li>+ "."</li>
-     * <li>+ Dateiendung aus dem Mapping. Da es ja manchmal keins gab und wir eh nur bekannte importieren wollen, ignorieren wir hier die Endung aus dem filename, falls der bekannt sein sollte. Wir nehmen stattdessen den aus unserer internen Mapping-Tabelle. Ja, die liegt nur im Code vor. Ob das clever ist, da sind sich Claude ("super") und Thorsten ("Mist") uneins.</li></ul> 
+     * <li>+ Dateiendung aus dem Mapping. Da es ja manchmal keins gab und wir eh nur bekannte importieren wollen, ignorieren wir hier die Endung aus dem filename, falls der bekannt sein sollte. Wir nehmen stattdessen den aus unserer internen Mapping-Tabelle. Ja, die liegt nur im Code vor. Ob das clever ist, da sind sich Claude ("super") und Perminides ("Mist") uneins.</li></ul> 
      * 
      * @param signalConnection
      * @param signalMsgId

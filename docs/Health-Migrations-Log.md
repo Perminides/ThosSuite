@@ -1,6 +1,6 @@
 # Health-Migrations-Log
 
-**Charakter dieses Dokuments:** Übergabe an das September-Ich. Kein Dokument, das Thorsten
+**Charakter dieses Dokuments:** Übergabe an das September-Ich. Kein Dokument, das Perminides
 lesen wird — es ist die Notiz an den Entwickler-Instanz, die beim Cutover von Fitbit auf
 Google Health die Arbeit fortsetzt. Hier stehen die getroffenen Entscheidungen *und warum*,
 die offenen Punkte und der grobe Plan. Bewusst ausführlich.
@@ -42,7 +42,7 @@ steps"), aktiv in Bearbeitung. Es ist also gut möglich, dass sich die ~1 % noch
 schließen. **Genau das ist der Zweck des Vergleichs-Popups:** Es sensibilisiert täglich, und
 wenn es von „Δ -177" auf „identisch" springt, hat Google den Bug gefixt.
 
-**Das ungelöste Kernproblem:** Am letzten Wochentag steuert Thorsten live nach der Uhr. Läuft die
+**Das ungelöste Kernproblem:** Am letzten Wochentag steuert Perminides live nach der Uhr. Läuft die
 Suite auf Health, verbucht sie ~1 % weniger → Uhr sagt „geschafft", Suite sagt „knapp verfehlt".
 Über die API nicht lösbar. **Entscheidung vertagt:** die ~1 % akzeptieren (Wochenziel großzügig
 setzen) *oder* auf Googles Fix warten. Ein fester Sicherheitsabschlag hilft nur bedingt, weil die
@@ -69,7 +69,7 @@ einzeln** liefert (`reconcile` fasst zusammen).
 **Dokumentierter Bruch (bewusst):** Schritte über `dailyRollUp` (rekonziliiert), Aktivitäten über
 `list` (roh, pro Quelle, **ungemerged**). An Mehrquellen-Tagen (Health Connect schreibt mit)
 zählt `list` Aktivitäten potenziell **doppelt**. Aktuell tolerierbar, weil im Schatten und weil
-Thorsten das Handy-Tracking abschalten will. **Beim Master-Umbau auflösen** — entweder `reconcile`
+Perminides das Handy-Tracking abschalten will. **Beim Master-Umbau auflösen** — entweder `reconcile`
 für Aktivitäten (mit Verlust der Einzel-Provenienz) oder `list` mit eigener Deduplizierung.
 
 ---
@@ -137,11 +137,11 @@ Alle in der Lese-DTO `Exercise` gekapselt. Das war der aufwändigste Teil der An
 - Seit **19.06.** (Akku der Uhr war leer) trackt das **Smartphone** Schritte über Health Connect
   und schreibt in den rekonziliierten Strom. Das erzeugt Mehrquellen-Tage: `reconcile`/`dailyRollUp`
   laufen dort auseinander, `list` zählt doppelt.
-- Thorsten will das Handy-Schreibrecht für Schritte entziehen. Das bereinigt **nur künftige** Tage,
+- Perminides will das Handy-Schreibrecht für Schritte entziehen. Das bereinigt **nur künftige** Tage,
   nicht die Historie (die schreibt man nicht um).
 - **Fitbit-Web-API hat auf Mehrquellen-Tagen ein GRÖSSERES Problem:** sie revidiert rückwirkend
   (Tracker-Priorität überschreibt Handy-Schritte; 19.06.: Import-Zeitpunkt 7198 → heute 2728).
-  „Fitbit war immer konsistent" stimmt für solche Tage also nicht. → Anmerkung Thorsten: Das stimmt
+  „Fitbit war immer konsistent" stimmt für solche Tage also nicht. → Anmerkung Perminides: Das stimmt
   nicht! Die 2728 war schon immer die Antwort der Fitbit-Api. Ich habe das vermutlich manuell angepasst.
 
 ---
@@ -150,7 +150,7 @@ Alle in der Lese-DTO `Exercise` gekapselt. Das war der aufwändigste Teil der An
 
 **Bleibender Kern (`app.activity`, wird der Master):**
 - `app.activity.model.Exercise` — unveränderliche Lese-DTO (Record). Kapselt `distanceKm()` und
-  `localDate()`. *(Exercise wird von Thorsten ins `model`-Unterpaket verschoben; `ApiClient`
+  `localDate()`. *(Exercise wird von Perminides ins `model`-Unterpaket verschoben; `ApiClient`
   braucht dann den passenden Import.)*
 - `app.activity.ApiClient` — Health-Client: refresh (aus Config), `fetchDailySteps` (dailyRollUp),
   `fetchActivities` (exercise-list, paginiert). *(Methode `MAPPER_readTree` hat hässlichen Namen →
@@ -191,7 +191,7 @@ im PostTask (erst da steht das MainWindow — kein Alert über dem Splash). Der 
 Master-Start **niemals** reißen. Das ist eine **bewusste Ausnahme** von FailFast, lokalisiert an
 der Orchestrierungs-Grenze — **nicht** in den Datenklassen (anders als Fitbits `DataFetcher`, der
 den Fehler selbst sammelt; genau das wollen wir hier nicht nachahmen, es ist die Aufweichung, die
-Thorsten missfällt).
+Perminides missfällt).
 
 ---
 
@@ -256,11 +256,11 @@ separate Audit-Tabelle (kein Mehrzeilen-Verlauf nötig, same key, same row). Das
 
 ## 12. NICHT neu herleiten (abgeschlossen, nicht relitigieren)
 
-- Keine API-Methode erreicht die App-/Uhr-Zahl. Nicht erneut testen. → Anmerkung Thorsten: Das
+- Keine API-Methode erreicht die App-/Uhr-Zahl. Nicht erneut testen. → Anmerkung Perminides: Das
 ist falsch. Wir müssen das sogar testen. Vielleicht wurde an den anderen API-Punkten mittlerweile
 etwas geändert und neuerdings gibt es doch einen Weg an die echten Zahlen zu kommen!
 - Die ~1 % sind **nicht** die Nicht-getragen-Kürzung.
 - Health Connect liegt **über** der Uhr — nicht die Antwort.
 - Refresh-Token in Production-unverifiziert **dauerhaft** (Eigengebrauch <100 Nutzer).
-- Die App = die Uhr = die Live-Zahl, nach der Thorsten am letzten Wochentag steuert (empirisch
+- Die App = die Uhr = die Live-Zahl, nach der Perminides am letzten Wochentag steuert (empirisch
   bestätigt: Live-Uhr = spätere App-Tagessumme).

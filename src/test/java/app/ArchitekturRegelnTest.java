@@ -68,7 +68,7 @@ public class ArchitekturRegelnTest {
 			.should().dependOnClassesThat().resideInAPackage("app.shared.ui.components..")
 			.because("Bausteine werden verbaut, nicht gezeigt — wer sie braucht, geht über shared.ui");
 
-	/** Keine Paketzyklen. Eine von Thorstens sieben Ausgangsforderungen. */
+	/** Keine Paketzyklen. Eine von Perminidess sieben Ausgangsforderungen. */
 	@ArchTest
 	static final ArchRule keineZyklen = slices()
 			.matching("app.(**)")

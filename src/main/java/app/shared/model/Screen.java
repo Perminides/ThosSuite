@@ -47,7 +47,7 @@ public interface Screen {
 	
 	/**
 	 * Bitte mach deine Aufräumarbeiten (Speichern?) vorm baldigen Schließen aber belästige
-	 * Thorsten nicht mit PopUps oder ähnlichem.
+	 * Perminides nicht mit PopUps oder ähnlichem.
 	 */
 	default void closeSilent(boolean save) {};
 	

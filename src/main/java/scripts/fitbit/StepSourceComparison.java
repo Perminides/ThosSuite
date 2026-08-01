@@ -34,7 +34,7 @@ import app.shared.Config;
  *   <li><b>fitbitLog</b>   — totalSteps zum Import-Zeitpunkt aus fitbit_import.log</li>
  * </ul>
  *
- * <p>Die App-Zahl kommt NICHT aus der API — die trägt Thorsten manuell daneben.</p>
+ * <p>Die App-Zahl kommt NICHT aus der API — die trägt Perminides manuell daneben.</p>
  *
  * <p><b>Zweck als periodischer Drei-Wege-Abgleich:</b> Solange reconcile, dailyRollUp und
  * list an sauberen Tagen identisch sind, hat Google nichts verändert. Sobald sie
