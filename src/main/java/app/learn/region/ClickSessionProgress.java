@@ -129,11 +129,6 @@ public class ClickSessionProgress implements SessionProgress{
 	}
 	
 	@Override
-	public boolean isPause() {
-		return !notFound.isEmpty();
-	}
-	
-	@Override
 	public void setPresenter(SessionPresenter presenter) {
 		this.presenter = presenter;
 	}

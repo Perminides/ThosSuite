@@ -109,11 +109,6 @@ public class WriteSessionProgress implements SessionProgress {
 	}
 
 	@Override
-	public boolean isPause() {
-		return isEndPause;
-	}
-
-	@Override
 	public boolean hasProgressed() {
 		return currentIndex > 0;
 	}
