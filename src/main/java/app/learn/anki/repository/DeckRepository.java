@@ -17,7 +17,7 @@ public class DeckRepository {
     private final DbDeckProgressRepository db;
 
     public DeckRepository() {
-    	csv = new CsvDeckCardSource(); //!Später: Hier muss der GameType mitgegeben werden > Aha, wieso?
+    	csv = new CsvDeckCardSource();
     	db = new DbDeckProgressRepository();
     }
 

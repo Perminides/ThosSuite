@@ -71,9 +71,8 @@ class DbDeckProgressRepository {
 
 		            psLog.setString(1, type.getDisplayName());
 		            psLog.setInt(2, row.cardId());
-		            psLog.setBoolean(4, row.correctFlag());
-		            //!Sofort: Claude draufschauen lassen. Ich habe den Hack entfernt...
 		            psLog.setString(3, row.playedTimestamp().truncatedTo(ChronoUnit.SECONDS).toString());
+		            psLog.setBoolean(4, row.correctFlag());
 		            psLog.execute();
 		        }
 		        conn.commit();

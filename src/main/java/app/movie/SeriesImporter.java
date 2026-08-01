@@ -220,7 +220,7 @@ public class SeriesImporter {
                         ? " / " + show.german_name : ""),
                 null);
 
-        // !Später: Magic Numbers -> tmdb.posterWidths=92,154 in config?
+        // !MagicNumber -> tmdb.posterWidths=92,154 in config?
         byte[] posterW92 = show.poster_path != null ? api.getImage(show.poster_path, "w92") : null;
         byte[] posterW154 = show.poster_path != null ? api.getImage(show.poster_path, "w154") : null;
 

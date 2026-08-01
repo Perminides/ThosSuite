@@ -85,7 +85,10 @@ public class Controller{
     
     public Controller(MainWindow mainWindow) throws InterruptedException {
     	this.mainWindow = mainWindow;
-    	//!Architektur: Wenn sich herausstellt, dass eh nur der Controller die ganzen Menü-Events erhält, dann darf das MainWindow auch den Controller kennen und die Methoden direkt aufrufen. Außer Claude erklärt mir, was an dieser zirkulären Beziehung nun so gefährlich sein soll...
+    	//Wenn sich herausstellt, dass eh nur der Controller die ganzen Menü-Events erhält,
+    	//dann darf das MainWindow auch den Controller kennen und die Methoden direkt aufrufen.
+    	//Außer Claude erklärt mir, was an dieser zirkulären Beziehung nun so gefährlich sein soll...
+    	//Claude meinte raus damit, aber ich habe mich mittlerweile so dran gewöhnt *lol*
     	mainWindow.setEscPressedRunnable(this::escPressed);
     	mainWindow.setPausePressedRunnable(this::pausePressed);
     	mainWindow.setCloseRunnable(this::closeSelected);

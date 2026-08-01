@@ -231,7 +231,7 @@ public abstract class Skin extends SkinProperties {
 	}
 	
 	/**
-	 * !Sofort: Das Padding der Scrollpane (wo eine existiert) und das Padding der ButtonBar ergeben zusammen einen unschönen Abstand
+	 * !MagicNumber: Das Padding der Scrollpane (wo eine existiert) und das Padding der ButtonBar ergeben zusammen einen unschönen Abstand
 	 * Man müsste am besten das Padding der Scrollpane, wenn es eine gibt, in einem Dialog auf unten = 0 setzen und nur da.
 	 * Keine Ahnung ob das geht. Und wie das aussieht, wenn darunter keine ButtonBAr mehr mit Padding kommt.
 	 * Nach kurzer Internet-Recherche geht das wohl leider nicht. Fieser Hack unten.
@@ -912,9 +912,10 @@ public abstract class Skin extends SkinProperties {
 		.end();
 	}
 	
-	// !Später: Magic Numbers — gehört in eine eigene Runde über alle Magic Numbers der Suite,
+	// !MagicNumber — gehört in eine eigene Runde über alle Magic Numbers der Suite,
 	// nicht als Einzelfix hier.
-	// !Sofort: Highlight-Background der Labels ignoriert Border-Radius der VBox — JavaFX clippt Children nicht an abgerundeten Ecken, Lösung: Clip im Skin setzen
+	// Highlight-Background der Labels ignoriert Border-Radius der VBox — JavaFX clippt Children
+	// nicht an abgerundeten Ecken, Lösung: Clip im Skin setzen wenn du mal runde Ecken im Vorschlagsfenster haben willst.
 	private void addSuggestionBoxStyles(CssBuilder builder) {
 		builder.start(".suggestion-box")
 	    	.add("-fx-background-color", menuBarBackground)
@@ -1077,7 +1078,7 @@ public abstract class Skin extends SkinProperties {
 	    	.add("-fx-border-radius", border.arc() + "px")
     		.add("-fx-background-insets", border.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
     		.add("-fx-background-radius", border.arc() + "px")
-	        .add("-fx-background-color", disabledComponentBgColor)  // !Später: anpassen -> Stand auch bei den folgenden 3 Zeilen. Äh, was genau???
+	        .add("-fx-background-color", disabledComponentBgColor)  // !Später: DURCH ALLE PROPERTIES GEHEN. DOKUMENTATION. WAS WIRD WOFÜR GENUTZT? WORAUF ACHTEN BEI NEUEM SKIN? EINEN SKIN TESTER BAUEN. Diese 3 Zeilen hier sind ein bisschen aus der Not geboren und weil ich nicht mehr durch die ganzen Felder durchsteige.
 	        .add("-fx-padding", font.getSize() * 0.5 + "px")
 	        .add("-fx-font-size", font.getSize() + "px")
 	        .end();
