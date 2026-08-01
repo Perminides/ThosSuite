@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import app.fitbit.model.GoalHistoryEntry;
 import app.fitbit.model.WeekData;
@@ -41,9 +40,9 @@ public class Repository {
     /**
      * Lädt das Datum des letzten importierten Tages aus der Datenbank.
      * 
-     * @return Das letzte importierte Datum, oder Optional.empty() wenn noch keine Daten vorhanden
+     * @return Das letzte importierte Datum, oder null wenn noch keine Daten vorhanden
      */
-    public Optional<LocalDate> getLastImportedDate() {
+    public LocalDate getLastImportedDate() {
         String sql = "SELECT MAX(date) as last_date FROM fitbit";
         Connection conn = DB.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql);
@@ -54,12 +53,12 @@ public class Repository {
                 if (dateString != null) {
                     LocalDate lastDate = LocalDate.parse(dateString);
                     Log.debug(this, "Letztes importiertes Fitbit-Datum: " + lastDate);
-                    return Optional.of(lastDate);
+                    return lastDate;
                 }
             }
 
             Log.debug(this, "Keine Fitbit-Daten in DB gefunden");
-            return Optional.empty();
+            return null;
 
         } catch (SQLException e) {
             throw new RuntimeException("Fehler beim Laden des letzten Fitbit-Datums", e);

@@ -30,8 +30,8 @@ import app.messaging.signal.repository.SignalSourceRepository;
 import app.shared.Config;
 import app.shared.DB;
 import app.shared.Log;
-import app.shared.ThrowingConsumer;
 import app.shared.model.ButtonEnum;
+import app.shared.model.ThrowingConsumer;
 import app.shared.ui.Alerts;
 
 /**

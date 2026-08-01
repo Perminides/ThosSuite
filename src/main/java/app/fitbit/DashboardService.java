@@ -27,7 +27,7 @@ public class DashboardService {
         LocalDate sunday = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
         
         // 2. Letzten importierten Tag holen
-        LocalDate lastDay = repository.getLastImportedDate().orElse(monday.minusDays(1));
+        LocalDate lastDay = repository.getLastImportedDate() == null ? monday.minusDays(1) : repository.getLastImportedDate();
         
         // 3. Nächster fehlender Tag
         LocalDate nextDay = lastDay.plusDays(1);

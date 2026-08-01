@@ -31,9 +31,10 @@ Das verbietet *nicht* jeden try-catch — nur den, der einen Fehler schluckt und
 weiterlaufen lässt. Legitim bleibt zweierlei: try-with-resources (schließt nur, fängt
 nichts) und ein catch, das ausschließlich aufräumt oder zurückrollt und die Exception
 danach **weiterwirft** (etwa `rollback()` beim Import). Sobald ein catch den Ablauf
-fortsetzt, als wäre nichts gewesen, ist es falsch — der Fehler soll fliegen.
+fortsetzt, als wäre nichts gewesen, ist es falsch — der Fehler soll fliegen. Oder in
+einem Alert bzw. PopUp angezeigt werden (Apis nicht erreichbar etc.)
 
-Keine Tests — mit **einer** Ausnahme. Keine Unit-Tests, keine Test-Infrastruktur für
+Keine Tests — mit **einer** Ausnahme (ArchUnit s. u.). Keine Unit-Tests, keine Test-Infrastruktur für
 Fachlogik, Testbarkeit ist kein Designziel. Einziger Nutzer und Entwickler ist Perminides; ein Fehler
 fällt im täglichen Gebrauch sofort auf und wird direkt behoben.
 
@@ -133,8 +134,7 @@ liegt, ist von Feature zu Feature verschieden:
 
 - `messaging` teilt wenig — `signal` und `whatsapp` teilen sich fast nur das Datenbank-Schema,
   alles andere ist zweig-exklusiv.
-- `learn` teilt viel — Maps, Shapes, Sessions und Fortschritt liegen gemeinsam im Kern; `anki`
-  und `region` halten nur ihr Exklusives.
+- `learn` teilt viel im model-Paket und einiges im Kern; `anki` und `region` halten ihre Exklusives.
 
 **Richtung:** Zweige greifen nach oben auf den geteilten Kern zu. Der Kern greift nie zurück nach
 unten in einen Zweig, und die Zweige kennen einander nicht — so bleibt es zirkelfrei (Regel 1).
@@ -205,8 +205,8 @@ Feature tragen (Scene-Graph-Navigation, ein JavaFX-Objekt opak durchreichen).
 ### Pfad-Wissen: Struktur gehört der Suite, Dateien dem Feature
 
 Die Ordner-Struktur der Suite ist Suite-Wissen und liegt in `Config` — als computed Pfade,
-feature-benannte Ordner eingeschlossen (`fitbitFolder`, `learnImageFolder`,
-`diaryAttachmentsFolder`). Dass ein Ordner nur einem Feature dient, macht ihn nicht zu
+feature-benannte Ordner eingeschlossen (`fitbitFolder`, `learnImageFolder`).
+Dass ein Ordner nur einem Feature dient, macht ihn nicht zu
 Feature-Wissen; die *Hierarchie* kennt die Suite. Zwei scharfe Kanten halten die Regel davon ab,
 mit der Zeit zum Dateinamen-Sammelbecken zu verrotten:
 
@@ -216,7 +216,7 @@ mit der Zeit zum Dateinamen-Sammelbecken zu verrotten:
    `Config` bleibt so die Landkarte, nicht das Verzeichnis der Dateien.
 2. **Nur eigener Boden.** „Struktur der Suite" ist der Baum, den die Suite besitzt — Hauptordner
    plus `attachments.folder`. Ein Ordner unter fremdem Wurzelpfad ist die Struktur *dieser
-   fremden App*: `Config` hält nur den fremden Wurzelpfad (`signal.externalFolder`), die
+   fremden App*: `Config` hält nur den fremden Wurzelpfad (`signal.externalPath`), die
    Unterstruktur (`attachments.noindex`) bleibt im Feature.
 
 Folge für jede Aufrufstelle: den Ordner von `Config` holen, den laufzeit-variablen oder
@@ -239,7 +239,7 @@ Klassen werden **ohne** Domänenpräfix benannt. Der Präfix (der Name des Featu
 Zweigen der des Zweigs) kommt erst dazu, wenn die Klasse zum ersten Mal von **außerhalb** ihres
 Feature-Pakets importiert wird — fast immer aus der Orchestrierung.
 
-- Nur intern genutzt → kein Präfix: `diary.Repository`, `learnRepository`.
+- Nur intern genutzt → kein Präfix: `diary.repository.Repository`, `fitbit.repository.Repository`.
 - **Ausnahme:** Namen, die genauso heißen würden wie ihr Paket oder zu allgemein wären (`Dialog`,
   `Screen`), behalten auch intern einen eigenen Namen — sonst ist `new Dialog()` nicht von
   JavaFX' eigenem `Dialog` zu unterscheiden.
@@ -261,12 +261,12 @@ Eine Oberfläche wird über zwei Rollen gebaut, jede ein eigenes Interface. Der 
 für die Zweiteilung ist die JavaFX-Grenze: die Lebenszyklus-Logik bleibt framework-frei
 im Feature, das Sichtbare liegt framework-gebunden in `shared`.
 
-- **`Screen` (Rolle 1, in `shared`, im Feature implementiert, framework-frei).** Das
+- **`Screen` (Rolle 1, in `shared.model`, im Feature implementiert, framework-frei).** Das
   Controller-zugewandte Interface: refresh, esc, save, sortOrderChanged,
   `getSwitchStrategy` … Es hat Zugriff auf ein `ScreenView` und reicht es über
   `getView() : ScreenView` weiter. Die feature-seitige `…Screen`/`…Session`-Klasse
   nennt nie einen JavaFX-Typ.
-- **`ScreenView` (Rolle 2, in `shared`).** Etwas dass das Hauptfenster ausfüllt. Der mountbare Anzeige-Lieferant:
+- **`ScreenView` (Rolle 2, in `shared.model`).** Etwas dass das Hauptfenster ausfüllt. Der mountbare Anzeige-Lieferant:
   `getPane() : Pane`. `getPane` ruft ausschließlich MainWindow. Heißt bewusst
   `ScreenView`, nicht `View` — `View` ist in JavaFX zu häufig.
 
@@ -339,7 +339,8 @@ Input rein → shared-JavaFX-Dialog → framework-freies Ergebnis raus. Sie sind
  Dismiss/X = immer Abbruch (`CANCEL`); der Aufrufer interpretiert (etwa `CANCEL → später`).
 
 **Zwei Stufen.**
-- **Einfach (Auswahl + statischer Inhalt):** ein Alert. `Alerts.show(…)` (in `shared.ui`) gibt einen suite-eigenen `ButtonEnum` zurück; nur diese Klasse kennt `javafx.ButtonType` und übersetzt. Zusatzoptionen (Bild als Path, zentrierter Text, ESC-/X-Blockade via `Dismiss`) reicht ein `AlertOptions`-Objekt hinein — Bild lädt und tint der Skin, nicht das Feature.
+- **Einfach (Auswahl + statischer Inhalt):** ein Alert. `Alerts.show(…)` (in `shared.ui`) gibt einen suite-eigenen `ButtonEnum` zurück; nur diese Klasse kennt `javafx.ButtonType` und übersetzt, niemals
+die Aufrufer des Alerts. Zusatzoptionen (Bild als Path, zentrierter Text, ESC-/X-Blockade via `DismissEnum`) reicht ein `AlertOptions`-Objekt hinein — Bild lädt und tint der Skin, nicht das Feature.
 - **Komplex (Felder, Mehrfachauswahl, Verflechtung):** eine **bespoke Komponente pro
   Dialog**. Kein generisches Formular-Framework
 - **Parametrisiert:** der Standarddialog, der nur Primitive hinein- und Primitive
@@ -365,13 +366,13 @@ Deskriptoren/ids.
 ### Die Anzeige-Schicht: `shared.ui`, `shared.ui.components`, `shared.skin`
 
 Innerhalb von `shared` gibt es vier Sprossen. Ein Paket benutzt, was darunter steht — nie seitwärts,
-nie nach oben.
+nie nach oben. Unvollständige Liste:
 
 ```
 oben    shared.ui       Oberflächen und Bausteine — hier wird gebaut
         shared.skin     SkinProperties (Werte) · Skin (CSS) · die Skins · SkinService · Bildcache
         shared.model    Records, Enums, die drei Kontrakte
-unten   shared          Config, DB, Log, AppClock, UiUtils
+unten   shared          Config, DB, Log, AppClock, UiUtils, ...
 ```
 
 Von außen: `controller` darf auf jede Sprosse (außer shared.ui.component). **Ein Feature greift nie ins Skin-Paket.**
@@ -387,7 +388,7 @@ geliefert bekommt, steht oben.
 
 Prüffrage: **Wird es eingebaut, oder ist es das Fertige?**
 
-- Baut es etwas anderes in `shared.ui` dieses wo ein → `components`.
+- Baut etwas anderes in `shared.ui` dieses irgendwo ein → `components`.
 - Ist es selbst die fertige Fläche, die herausgereicht wird → `shared.ui`.
 
 Zwei Titelleisten machen den Unterschied greifbar: `SuiteHeaderBar` wird von `SuiteDialog`
@@ -449,7 +450,7 @@ nur „soll anders aussehen" → View.
 
 Ein `SuiteTextField` **ist** ein `TextField`, es hält keins.
 
-**Ausnahme, wenn JavaFX sie erzwingt.** Ist der Typ `final`, geht Erben nicht. Dann eine **Fabrik**: `SuiteBackground.of(pfad)` liefert einen fertigen `javafx.Background`.
+**Ausnahme, wenn JavaFX sie erzwingt.** Ist der Typ `final`, geht Erben nicht. Dann eine **Fabrik**: `SuiteBackground.of(pfad)` liefert einen fertigen `javafx.Background`. In diesem Sinne ist auch DiaryTagInputComponent eine Art Fabrik, sie liefert allerdings zwei getrennte Bausteine per get-Methode.
 
 **Zwei Konstruktoren, wenn der Baustein positioniert werden kann.** Einer ohne Lage (für Aufrufer,
 die ihn in ein Layout hängen), einer mit `Rectangle2D` (für absolut positionierende Hosts). Der

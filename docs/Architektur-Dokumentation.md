@@ -21,7 +21,7 @@ Perminides ist einziger Nutzer und einziger Entwickler.
   einzelne Frage. Decks: Autonome Regionen Spaniens, Stadtteile Hannovers, Städte der
   Region Hannover, Bezirke Bayerns, Bundesländer Österreichs, Länder Ozeaniens, Kantone
   der Schweiz, traditionelle Grafschaften Englands, Länder der Karibik, Ortsteile Berlins,
-  Bundesstaaten der USA, Regionen Italiens.
+  Bundesstaaten der USA, Regionen Italiens und last but not least die deutschen Bundesländer.
 - **Freies Spiel** — jedes Anki- und Region-Deck lässt sich auch außer der Reihe spielen,
   unabhängig von der Fälligkeit und ohne den Lernfortschritt zu verändern (etwa, um Besuch
   etwas zu zeigen).
@@ -44,7 +44,7 @@ Feature-Details-Dokument (Lern-Kern).
 - Signal- und WhatsApp-Nachrichten werden inkrementell beim Start in die Suite-DB importiert.
 
 **Dashboard:**
-- Key-Metrics auf einen Blick (Fitbit-Streak, Restschritte, Alkohol-Kontostand)
+- Key-Metrics auf einen Blick (Fitbit-Streak, Restschritte, Alkohol-Kontostand, etc.)
 
 ## 🗝️ Technische Basis
 
@@ -55,7 +55,7 @@ gegliedert (Details und Begründung im Regel-Dokument): die **Features** (`app.a
 `app.fitbit`, `app.learn`, `app.mattress`, `app.messaging`, `app.movie`, `app.weekday`), das
 **Fundament** (`app.shared`) und die **Orchestrierung** (`app.controller`). Daneben liegt `scripts`
 als eigenes Wurzelpaket — abtrennbare Einmal-Klassen, die nicht zur Suite gehören.
-`controller` darf auf jede Sprosse; **ein Feature greift nie ins Skin-Paket**. Diese Zusagen sind
+`controller` darf auf jede Sprosse (außer shared.ui.component); **ein Feature greift nie ins Skin-Paket**. Diese Zusagen sind
 keine Absicht, sondern geprüft — siehe „Architekturregeln im Build".
 
 Der Abhängigkeitsgraph der Pakete liegt separat als `docs/Paketabhängigkeiten.dot` (generiert von
@@ -70,15 +70,16 @@ Der Abhängigkeitsgraph der Pakete liegt separat als `docs/Paketabhängigkeiten.
   keine Unit-Tests und keine Testbarkeit als Designziel.
 
 ### Exception-Handling
-RuntimeExceptions werden bis `ThosSuiteApp` durchgereicht und dort zentral über
+RuntimeExceptions werden in der Regel bis `ThosSuiteApp` durchgereicht und dort zentral über
 `Thread.setDefaultUncaughtExceptionHandler(...)` behandelt: Alert mit Stacktrace, dann
 Prozessende. Ob ein konkreter Laufzeitfehler fatal (globaler Handler) oder lokal behebbar ist,
 ist eine Einzelfallentscheidung an der jeweiligen Stelle.
 
 ### Nebenläufigkeit
-Keine Threads; alles läuft auf dem JavaFX Application Thread. Einzige Ausnahme: die
+Keine Threads; alles läuft auf dem JavaFX Application Thread. Einzige Ausnahmen: die
 Startup-Initialisierung (ein Hintergrund-Thread für Config, Logging, Font-Loading sowie das
-Setzen der DB auf `.filen.ignore`) mit Splash-Screen-Pattern. Auch die PreTasks mit externen
+Setzen der DB auf `.filen.ignore`) mit Splash-Screen-Pattern und ein unschöner Hack bei der
+Anzeige der Tabelle mit Fitbit-Daten. Auch die PreTasks mit externen
 API-Calls (Fitbit) laufen nicht in eigenen Threads, sondern über `Platform.runLater` auf dem
 FX-Thread.
 
@@ -229,15 +230,14 @@ Er hält **genau einen aktiven Screen** (`currentScreen`) und routet die laufend
 ESC, Pause, Sortier-Wechsel gehen an den aktuellen Screen, der entscheidet selbst, ob er reagiert.
 Ein Screen-Wechsel ersetzt diesen einen aktiven Screen (siehe Session-Management). Daneben
 orchestriert der Controller den Skin-Wechsel zur Laufzeit (MainWindow neu aufbauen, aktuellen
-Screen refreshen) und hält die aktuelle Sortierreihenfolge (aus Config geladen, bei Änderung
-persistiert).
+Screen refreshen).
 
 Die externen Anstöße beim Start (Pre-/PostTasks) laufen ebenfalls über den Controller, sind aber
 oben im Startup-Flow beschrieben.
 
 ### Session-Management
 
-#### Bildschirm-Kontrakt `Screen` (`app.shared`)
+#### Bildschirm-Kontrakt `Screen` (`app.shared.model`)
 Der neutrale Vertrag, über den der Controller jeden aktiven Inhalt gleich behandelt — Lern-Sessions
 wie Nicht-Lern-Screens (`AlcStatisticsScreen`, `DashboardScreen`, `MovieViewerScreen` …). Drei
 Methoden sind Pflicht, weil der Controller sie immer braucht: `getSwitchStrategy()`, `refresh()`,
@@ -286,29 +286,19 @@ UI **nicht kennt** — und diese Regel ist per Build prüfbar, die alte war es n
 #### Die zwei Klassen im Skin-Paket
 
 ```
-SkinProperties     ~140 Felder · lädt sie aus der .properties-Datei · gibt sie über eine
+SkinProperties     Über 100 Felder · lädt sie aus der .properties-Datei · gibt sie über eine
                    bewusst geschnittene Fläche heraus
 Skin               extends SkinProperties · erzeugt das CSS
                    genau eine öffentliche Methode: styleScene(Scene)
 ```
 
-Dazu die sieben konkreten Skins (`DarkMode`, `FlatWebSkin`, `BaseColorSkin` und die vier
+Dazu die sechs konkreten Skins (`DarkMode`, `FlatWebSkin` und die vier
 Farbvarianten) — sie tragen nichts als einen Anzeigenamen und den Namen ihrer properties-Datei.
 Plus `SkinService` als Registry und `SkinImageCache` für die großen Kartenbilder.
 
 #### Was der Skin herausgibt
 
 Keine Feld-Getter, keine Property-Namen — **zweckgeschnittene Records und Werte**:
-
-```java
-DialogStyle · DiaryStyle · MovieStyle · DashboardTileStyle · McMetrics · BigComponentStyle
-MapImages   · Dimension2D getContentSize()
-Rectangle2D learnComponentBounds(mapName, kategorie, teil)
-Rectangle2D learnTextLabelBounds(mapName, kategorie, typ)
-int         imageMapOverlayContentInset(mapName)
-Path        wallpaperPath(mapName, kategorie) · emptyWallpaperPath() · startScreenWallpaperPath()
-Image       iconFor(rolle)
-```
 
 Wer welchen Wert **holt** und wer ihn **übergeben bekommt**, regelt die Schlüssel-Regel im
 Regel-Dokument: braucht der Zugang ein Argument vom Aufrufer, löst der Aufrufer auf.
@@ -319,7 +309,7 @@ Regel-Dokument: braucht der Zugang ein Argument vom Aufrufer, löst der Aufrufer
 scene.getStylesheets().add("data:text/css," + encodedCss);
 ```
 
-`styleScene` baut den Stylesheet-String aus 23 `addXxxStyles`-Methoden über einen `CssBuilder` und
+`styleScene` baut den Stylesheet-String aus diversen `addXxxStyles`-Methoden über einen `CssBuilder` und
 hängt ihn als Data-URL an die Scene. Bei einem Skinwechsel wird die Scene neu gestylt und alle
 Oberflächen bauen sich neu auf (`Screen.refresh()` → `view.rebuild()`).
 
@@ -373,22 +363,7 @@ stattdessen eine Fabrik: `SuiteBackground.of(pfad)`.
 
 #### Architekturregeln im Build
 
-`src/test/java/app/ArchitekturRegelnTest.java` (ArchUnit) prüft vier Zusagen und bricht den Build,
-wenn eine fällt:
-
-```
-1  Der Skin kennt die UI nicht
-2  Kein Feature kennt den Skin
-3  Nur shared.ui kennt die Bausteine
-4  Der Paketgraph ist zyklenfrei
-```
-
-Geprüft wird **Bytecode**, nicht Quelltext — eine voll qualifizierte Nutzung ohne `import` rutscht
-also nicht durch. Der Test läuft bei `mvn test`/`verify`, **nicht** beim Speichern in Eclipse (m2e
-ruft kein Surefire).
-
-Warum überhaupt Tests, wo die Suite sonst keine hat: ein Strukturverstoß fällt im täglichen Gebrauch
-*nicht* auf. Genau deshalb trägt hier das übliche Argument gegen Tests nicht.
+Werden von ArchUnit beim mvn-build überwacht. Details siehe Regeldokument.
 
 **Achtung bei ArchUnit-Versionen:** vor 1.4.1 kennt der Bytecode-Leser Klassendateiversion 69
 (Java 25) nicht und überspringt sie **still**. Die Regeln melden dann „failed to check any classes"

@@ -3,7 +3,6 @@ package app.fitbit;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import app.fitbit.model.json.ActivityDaySummary;
 import app.fitbit.model.json.ActivityLogList;
@@ -36,21 +35,21 @@ public class DataFetcher {
      */
     public void fetch() {
             // 1. Letztes importiertes Datum ermitteln
-            Optional<LocalDate> lastDateOpt = repository.getLastImportedDate();
+            LocalDate lastDateOpt = repository.getLastImportedDate();
             
-            if (lastDateOpt.isEmpty()) {
+            if (lastDateOpt == null) {
                 throw new RuntimeException(
                     "Kein Fitbit-Import-History gefunden. " +
                     "Bitte manuell das erste Datum in die Datenbank eintragen."
                 );
             }
             
-            LocalDate startDate = lastDateOpt.get().plusDays(1);
+            LocalDate startDate = lastDateOpt.plusDays(1);
             LocalDate yesterday = LocalDate.now().minusDays(1);
             
             // 2. Prüfen ob Import nötig
             if (startDate.isAfter(yesterday)) {
-                Log.debug(this, "Kein Fitbit-Import nötig. Letzter Import: " + lastDateOpt.get());
+                Log.debug(this, "Kein Fitbit-Import nötig. Letzter Import: " + lastDateOpt);
                 return;
             }
             

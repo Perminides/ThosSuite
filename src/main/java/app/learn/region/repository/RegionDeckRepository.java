@@ -7,10 +7,10 @@ import app.learn.region.model.SessionSpec;
  * Ein sehr schlanker Wrapper um die db-Source
  */
 public class RegionDeckRepository {
-	private final DbRegionDeckProgressSource db;
+	private final DbRegionDeckProgressRepository db;
     
     public RegionDeckRepository() {
-    	db = new DbRegionDeckProgressSource();
+    	db = new DbRegionDeckProgressRepository();
     }
 	
 	public LearnStat getLearnStat(SessionSpec spec) {

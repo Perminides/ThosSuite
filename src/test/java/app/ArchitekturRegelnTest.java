@@ -90,4 +90,9 @@ public class ArchitekturRegelnTest {
 	// !Später: Die Vier-Sprossen-Ordnung innerhalb von shared (ui → skin → model → shared) als
 	// layeredArchitecture() aufnehmen. Die fünf Regeln hier prüfen die drei Wächter, die
 	// Zyklenfreiheit und die Style-Klassen — die *Reihenfolge* der Sprossen prüft bislang nichts.
+	
+	/** !Sofort: Ungedeckt bleiben: Regel 2 (Abwärtsrichtung/Sprossenordnung — der Test räumt das in Zeile 90-92 selbst ein),
+	 *  Regel 3 (Seitwärtsgriff, siehe Fund 4), Regel 4 (Optional, siehe Fund 9), Regel 5 (Streams), Regel 6 (Null-Layout)
+	 *   und vor allem „jedes Feature-Paket ist 100 % framework-frei" — die am nachdrücklichsten formulierte Zusage des 
+	 *   Regeldokuments hat keine Regel. **/ 
 }
