@@ -13,7 +13,6 @@ public interface SessionProgress extends Progress {
 	boolean hasProgressed();
 	default void resume() {}; // Elimination und Write nicht implementiert
 	default void endPause() {}; // Elimination nicht implementiert
-	default boolean isPause() {return false;}; // Elimination nicht implementiert
 	default void cancel() {};  // Elimination nicht implementiert
 	default void elementClicked(String id) {} // CLICK
 	default void textInputChanged(String text) {}; // ELIMINATION, WRITE

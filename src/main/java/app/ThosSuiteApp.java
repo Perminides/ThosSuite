@@ -41,6 +41,7 @@ import javafx.stage.StageStyle;
 public class ThosSuiteApp extends Application {
 	
 	// TODO: In Amerika fehlt ein Strich zwischen Utah und Arizona
+	// !Später: Bleibt die App jetzt immer in Version 2.1 eigentlich? Der Splash sagt übrigens 1.0
 	
 	/** JavaFX-Nachteile
 	 * 
