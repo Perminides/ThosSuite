@@ -12,9 +12,9 @@ import app.learn.region.model.SessionSpec;
 import app.shared.AppClock;
 import app.shared.DB;
 
-public class DbRegionDeckProgressSource {
+public class DbRegionDeckProgressRepository {
 
-	public DbRegionDeckProgressSource() {
+	public DbRegionDeckProgressRepository() {
 	}
 
 	LearnStat load(SessionSpec sessionSpec) {

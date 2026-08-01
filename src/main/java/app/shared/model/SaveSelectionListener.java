@@ -1,3 +1,3 @@
-package app.shared;
+package app.shared.model;
 
 public interface SaveSelectionListener { void onSaveMenuItemSelected(); }

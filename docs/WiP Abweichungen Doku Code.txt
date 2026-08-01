@@ -1,0 +1,170 @@
+Ich habe beide Dokumente vollständig gelesen, den ArchUnit-Test und die pom.xml dazu, und bin danach paketweise durch src/main/java/app gegangen (scripts ausgelassen). Hier die Abweichungen, absteigend nach Irreführungspotenzial.
+
+1. Zwei Pakete existieren im Code, in beiden Dokumenten aber gar nicht
+Dokument: Architektur-Dokumentation.md:54-57 („die Features (app.alc, app.diary, app.fitbit, app.learn, app.mattress, app.messaging, app.movie, app.weekday)"), identisch Design-Regeln.md:71-73 und im Richtungsdiagramm Design-Regeln.md:88-94.
+
+Code: app/activity/ApiClient.java:1, app/activity/model/Exercise.java:1, app/tmp/Comparison.java:1, app/tmp/HealthImportLog.java:1.
+
+Es gibt zwei weitere Pakete direkt unter app — app.activity (Google-Health-API, OAuth2, Schritte/Aktivitäten) und app.tmp (Fitbit-↔-Health-Vergleich, Übergangscode) —, die in der Paketstruktur beider Dokumente fehlen, obwohl app.tmp fest im Startablauf hängt (Controller.java:151, Controller.java:187). Randnotiz: docs/Paketabhängigkeiten.dot kennt beide bereits (Zeilen 10, 52) — nur die Prosa-Dokumente nicht.
+
+2. Der ArchUnit-Test hat fünf Regeln, das Architektur-Dokument nennt vier
+Dokument: Architektur-Dokumentation.md:374-384 („prüft vier Zusagen") mit der Auflistung 1–4.
+
+Code: ArchitekturRegelnTest.java:84 — styleKlassenNurInDerAnzeigeSchicht ist eine fünfte, den Build brechende Regel.
+
+Das Regeldokument führt sie unter „Die fünf bewachten Zusagen" korrekt (Design-Regeln.md:469-482); das Architektur-Dokument ist an dieser Stelle veraltet, die beiden Dokumente widersprechen sich also gegenseitig.
+
+3. Screen/ScreenView liegen in app.shared.model, nicht in app.shared
+Dokument: Architektur-Dokumentation.md:240 („Bildschirm-Kontrakt Screen (app.shared)"), ebenso Design-Regeln.md:264 und Design-Regeln.md:269 („in shared").
+
+Code: app/shared/model/Screen.java:1, app/shared/model/ScreenView.java:1.
+
+Beide Kontrakte wohnen eine Sprosse tiefer als angegeben; die Sprossen-Tabelle in Design-Regeln.md:373 („shared.model — Records, Enums, die drei Kontrakte") sagt es richtig, der Fließtext beider Dokumente falsch.
+
+4. Regel 3 (kein Seitwärtsgriff auf oberster Ebene) wird verletzt
+Dokument: Design-Regeln.md:52 („Kein Paket auf oberster Ebene greift seitwärts in ein anderes."), Design-Regeln.md:102.
+
+Code: app/tmp/Comparison.java:8-11 — import app.activity.ApiClient, app.activity.model.Exercise, app.fitbit.FitbitDayProjection, app.fitbit.model.json.Activity.
+
+app.tmp greift von der obersten Ebene seitwärts in zwei andere oberste Pakete; die Klasse begründet das selbst als Wegwerf-Gerüst, in den Regeln steht dafür keine Ausnahme. Keine ArchUnit-Regel deckt Regel 3 ab, deshalb bricht nichts.
+
+5. Der Controller fängt Exceptions und läuft weiter — in beiden Dokumenten steht das Gegenteil
+Dokument: Design-Regeln.md:23-34 („Fehler werden nicht weggefangen … Sobald ein catch den Ablauf fortsetzt, als wäre nichts gewesen, ist es falsch"), Architektur-Dokumentation.md:72-76.
+
+Code: Controller.java:135-156 (Fitbit, TMDB, Health-Vergleich) und Controller.java:202-214 (Signal-, WhatsApp-Import).
+
+Fünf catch-Blöcke schlucken den Fehler, melden ihn per Alert und laufen weiter. Der Code erklärt das im Javadoc (Controller.java:122-130) als bewusste Ausnahme an der Orchestrierungs-Grenze — in den beiden Dokumenten kommt diese Ausnahme nirgends vor.
+
+6. PreTasks: drei statt zwei
+Dokument: Architektur-Dokumentation.md:116 und Architektur-Dokumentation.md:123-125 („Fitbit-Fetch und der Film-Import (TMDB). Beide nur, wenn …").
+
+Code: Controller.java:149-156.
+
+Es gibt einen dritten PreTask — den Health-Vergleich (app.tmp.Comparison.fetch) —, der ebenfalls unter dem offline-Flag hängt.
+
+7. Die Sortierreihenfolge hält nicht der Controller
+Dokument: Architektur-Dokumentation.md:232-233 („[der Controller] hält die aktuelle Sortierreihenfolge (aus Config geladen, bei Änderung persistiert)").
+
+Code: MainWindow.java:139-151 liest und schreibt pref.sortOrder; Controller.java:332-334 reicht nur ein parameterloses sortOrderChanged() durch; die Session liest den Wert selbst wieder aus der Config (AnkiDeckSession.java:37, AnkiDeckSession.java:51).
+
+Laden und Persistieren sitzen im MainWindow, nicht im Controller; der Controller hält den Wert überhaupt nicht.
+
+8. BaseColorSkin ist abstrakt — es gibt sechs wählbare Skins, nicht sieben konkrete
+Dokument: Architektur-Dokumentation.md:295-296 („Dazu die sieben konkreten Skins (DarkMode, FlatWebSkin, BaseColorSkin und die vier Farbvarianten)").
+
+Code: BaseColorSkin.java:5 (public abstract class), SkinService.java:11-18 — die Registry führt sechs Einträge: BlueGradient, RedGradient, FlatWeb, Flower, Spicy, DarkMode.
+
+BaseColorSkin ist die Elternklasse der vier Farbvarianten (Subskin-Vererbung), kein auswählbarer Skin.
+
+9. Regel 4 (null statt Optional) wird verletzt
+Dokument: Design-Regeln.md:53 („null statt Optional bei Rückgaben … Ausnahme: Der Wert stammt direkt aus einer Optional-liefernden JDK-API … nicht durch eigene Signaturen weitergereicht").
+
+Code: fitbit/repository/Repository.java:46 gibt Optional<LocalDate> aus einer eigenen Signatur zurück, fitbit/DataFetcher.java:39 reicht es weiter und packt es erst dort aus.
+
+Das ist keine JDK-Optional-Quelle, sondern ein selbstgebautes Optional.of/Optional.empty aus einem ResultSet — der einzige Fall dieser Art im gesamten Anwendungscode.
+
+10. diaryAttachmentsFolder existiert nicht
+Dokument: Design-Regeln.md:208-210 („als computed Pfade, feature-benannte Ordner eingeschlossen (fitbitFolder, learnImageFolder, diaryAttachmentsFolder)").
+
+Code: ConfigFileSource.java:53-69 — fitbitFolder und learnImageFolder gibt es, diaryAttachmentsFolder nicht; der Kommentar in Zeile 67-69 begründet die Gegenentscheidung ausdrücklich. Die Aufrufstellen resolven selbst: DiaryScreen.java:21, DiaryEditorPresenter.java:198, WhatsAppIncrementalImport.java:108.
+
+Das Beispiel im Regeldokument nennt genau den Fall, gegen den sich der Code entschieden hat.
+
+11. DbRegionDeckProgressSource heißt …Source, liest aber die Suite-DB
+Dokument: Design-Regeln.md:250-256 („…Source — die Daten stammen aus einer Datei").
+
+Code: DbRegionDeckProgressSource.java:15-23 — DB.getConnection(), SQL auf region_learn_stat. Das Gegenstück im Anki-Zweig heißt regelkonform DbDeckProgressRepository.java:1.
+
+12. Nebenläufigkeit: es gibt einen zweiten Hintergrund-Thread
+Dokument: Architektur-Dokumentation.md:78-83 („Keine Threads … Einzige Ausnahme: die Startup-Initialisierung").
+
+Code: ActivityTableDialog.java:90-97 — ein Executors.newSingleThreadScheduledExecutor() als Timeout-Wächter für das Auto-Sizing des Dialogs.
+
+13. Nicht nur Alerts kennt javafx.ButtonType
+Dokument: Design-Regeln.md:342 („Alerts.show(…) … gibt einen suite-eigenen ButtonEnum zurück; nur diese Klasse kennt javafx.ButtonType und übersetzt").
+
+Code: ButtonType steht in 14 Dateien, u. a. ThosSuiteApp.java:87-89, ActivityTableDialog.java:75, DatePickerDialog.java:41, TextPromptDialog.java:31, SuiteIconButton.java, SkinProperties.java.
+
+Die Aussage stimmt für den Alert-Pfad, ist aber als Absolutsatz formuliert und dadurch falsch.
+
+14. DiaryTagInputComponent erbt nicht von einem JavaFX-Typ und ist keine Fabrik
+Dokument: Design-Regeln.md:448-452 („Ein SuiteTextField ist ein TextField, es hält keins. Ausnahme, wenn JavaFX sie erzwingt … Dann eine Fabrik") und Design-Regeln.md:516-521.
+
+Code: DiaryTagInputComponent.java:25 — public class DiaryTagInputComponent ohne extends, hält zwei Nodes und gibt sie über Getter heraus (begründet in Zeile 22-23: „Kein Node, sondern zwei").
+
+Das ist ein dritter Fall neben „Baustein erbt" und „Fabrik", den das Regeldokument nicht kennt; auch die Namensregel („eine Komponente heißt …Pane oder trägt ihren Sachnamen, eine Fabrik …Builder oder bietet ein of(…)") greift für den Namen nicht.
+
+15. Die Region-Deck-Liste unterschlägt die 15 Landkreis-Decks
+Dokument: Architektur-Dokumentation.md:20-24 — zwölf Decks aufgezählt.
+
+Code: Deck.java:10-24 — allein 15 BUNDESLAND_*-Decks (Landkreise je Bundesland, mapName „lk"), dazu vier Berlin-Decks statt einem, sowie „Hannover Region", „Bayern Reg" etc. Insgesamt 33 Region-Decks statt der zwölf genannten.
+
+16. PostTasks-Liste unvollständig
+Dokument: Architektur-Dokumentation.md:129-131.
+
+Code: Controller.java:165-217 — zusätzlich zur genannten Liste laufen dort die Sammelmeldung der fehlgeschlagenen Start-Importe (Zeile 171-180) und das Health-Vergleichs-Popup (Zeile 187-189).
+
+17. „Presenter" ist keine Lern-Session-Ausnahme mehr
+Dokument: Design-Regeln.md:300-303 („die zwei Lern-Sessions halten statt einer View einen Presenter; das ist eine begründete Abweichung").
+
+Code: Presenter gibt es in vier weiteren Paketen und in anderer Rolle (framework-freie Hälfte / Datenlieferant): AlcStatisticsPresenter.java:23, FitbitStatisticsPresenter.java:25, ActivityTablePresenter.java:12, DiaryEditorPresenter.java:36.
+
+Das Wort trägt im Code inzwischen zwei verschiedene Bedeutungen; das Dokument kennt nur die eine und nennt sie eine Ausnahme von zweien.
+
+18. „controller darf auf jede Sprosse" — ohne die Bausteine-Ausnahme
+Dokument: Architektur-Dokumentation.md:58 („controller darf auf jede Sprosse").
+
+Code: ArchitekturRegelnTest.java:61-64 — bausteineNurAusSharedUi verbietet allem außerhalb app.shared.ui.. den Zugriff auf app.shared.ui.components.., also auch dem Controller.
+
+Design-Regeln.md:377 hat die Einschränkung („außer shared.ui.component"), das Architektur-Dokument nicht.
+
+19. Regeln im Dokument, die ArchUnit nicht abdeckt
+Dokument: Design-Regeln.md:45-58 (Regeln 1–6) und die betont „harte Fassung, binär" in Design-Regeln.md:190 und Design-Regeln.md:201-203.
+
+Code: ArchitekturRegelnTest.java prüft nur die drei Wächter, die Zyklenfreiheit und die Style-Klassen.
+
+Ungedeckt bleiben: Regel 2 (Abwärtsrichtung/Sprossenordnung — der Test räumt das in Zeile 90-92 selbst ein), Regel 3 (Seitwärtsgriff, siehe Fund 4), Regel 4 (Optional, siehe Fund 9), Regel 5 (Streams), Regel 6 (Null-Layout) und vor allem „jedes Feature-Paket ist 100 % framework-frei" — die am nachdrücklichsten formulierte Zusage des Regeldokuments hat keine Regel. Umgekehrt habe ich nichts gefunden: alle fünf ArchUnit-Regeln samt ihrer Ausnahmen (app.controller.. beim Skin, MainWindow bei getStyleClass) stehen im Regeldokument.
+
+Zur Einordnung, keine Wertung: Regel 5 (Streams) wird im Code eingehalten — null Treffer für .stream()/Collectors. im gesamten app-Baum. Die drei Wächter halten ebenfalls, per Import geprüft.
+
+20. Zahlenangaben im Skin-Kapitel
+Dokument: Architektur-Dokumentation.md:322 („aus 23 addXxxStyles-Methoden") und Architektur-Dokumentation.md:289 („SkinProperties ~140 Felder").
+
+Code: Skin.java hat 22 addXxxStyles-Methoden; SkinProperties.java hat 157 protected-Felder.
+
+21. Die dokumentierte Skin-Ausgabefläche ist unvollständig
+Dokument: Architektur-Dokumentation.md:303-311 („Was der Skin herausgibt").
+
+Code: Nicht gelistet sind src/main/java/app/shared/skin/SkinProperties.java:264, src/main/java/app/shared/skin/SkinProperties.java:460 und src/main/java/app/shared/skin/SkinProperties.java:493 — letzteres liefert das im Dokument als Record genannte MapImages, die Zugangsmethode selbst fehlt aber.
+
+22. LearnComponent fehlt in der Skin-Paket-Inventur
+Dokument: Architektur-Dokumentation.md:286-297 („Die zwei Klassen im Skin-Paket" + Skins + SkinService + SkinImageCache), Design-Regeln.md:372.
+
+Code: app/shared/skin/LearnComponent.java:12 — ein public enum im Skin-Paket, das an der Außengrenze steht (learnComponentBounds(…, LearnComponent teil)). Das Architektur-Dokument erwähnt es nur beiläufig im Fließtext (Zeile 351), in keiner der beiden Inventuren.
+
+23. signal.externalFolder heißt im Code signal.externalPath
+Dokument: Design-Regeln.md:219.
+
+Code: SignalIncrementalImport.java:365 — Config.getPath("signal.externalPath"). Der Rest des Beispiels (attachments.noindex bleibt im Feature) stimmt.
+
+24. Dashboard: drei Kacheln dokumentiert, sieben im Code
+Dokument: Architektur-Dokumentation.md:47 („Fitbit-Streak, Restschritte, Alkohol-Kontostand").
+
+Code: DashboardScreen.java:38-78 — dazu Wochentags-Streak, Tage bis Matratzenwende, heute importierte Nachrichten, Tage seit letztem Extra-TMDB-Import.
+
+25. ImageUtils fehlt in der Sprossen-Auflistung
+Dokument: Design-Regeln.md:374 („unten shared — Config, DB, Log, AppClock, UiUtils").
+
+Code: app/shared/ImageUtils.java:27, aus der Aufräumrunde (Commit „Bilddatei-Manipulationen gebundlet in ImageUtils"). Ebenfalls nicht gelistet: ConfigFileSource, KeyValueRepository, FilenIgnoreSource, SingleInstanceGuard, SaveSelectionListener, ThrowingConsumer.
+
+Unsichere Funde (eher Formulierung als echte Abweichung — aufgenommen statt ausgelassen)
+„learn teilt viel — Maps, Shapes, Sessions und Fortschritt liegen gemeinsam im Kern" (Design-Regeln.md:136-137). Im Kern app.learn liegen nur ImageScaler, MapService und Progress.java:9 (ein Interface für die Level-Berechnung). Sessions, SessionProgress und SessionPresenter gibt es je doppelt und ausschließlich in den Zweigen learn.anki und learn.region. „Sessions liegen gemeinsam im Kern" trifft so nicht zu — es sei denn, gemeint ist SessionProgressCounter in learn.model.
+„die zwei Karten samt Innenleben" (Architektur-Dokumentation.md:365, Design-Regeln.md:398-399) vs. drei LearnMap-Umsetzungen (ShapeMapPane.java:47, ImageMapPane.java:64, EmptyLearnMap.java:15). Das Regeldokument spricht 120 Zeilen vorher selbst von „alle drei Karten" (Design-Regeln.md:277) — vermutlich ist „zwei echte Karten + Nullobjekt" gemeint, gelesen wird es anders.
+Das Benennungsbeispiel learnRepository (Design-Regeln.md:249). app.diary.repository.Repository gibt es (Repository.java), eine Repository-Klasse in app.learn nicht — dort heißen sie MapRepository, DeckRepository, RegionDeckRepository. Das Beispiel zeigt auf nichts Existierendes.
+app.activity.ApiClient trägt keinen Präfix, wird aber von außen importiert (Design-Regeln.md:238-240: Präfix, sobald von außerhalb des Feature-Pakets importiert). Comparison.java:8 importiert ihn. Nach der Regel müsste er einen Präfix tragen — hängt allerdings daran, ob man app.tmp überhaupt als „außerhalb" wertet, und es gibt drei gleichnamige ApiClient-Klassen (activity, fitbit, movie).
+Die „drei Kontrakte" in shared.model (Design-Regeln.md:373). In shared.model liegen drei Interfaces (Screen, ScreenView, BarChartDataProvider), zwei weitere aber im Wurzelpaket: SaveSelectionListener.java:3 und ThrowingConsumer.java:2. Ob die als „Kontrakte" zählen, sagt das Dokument nicht.
+Dismiss vs. DismissEnum (Design-Regeln.md:342 nennt „ESC-/X-Blockade via Dismiss"). Die Klasse heißt DismissEnum.java:3. Reine Namensfrage.
+app.controller.model ist nirgends beschrieben. Der Innenschnitt-Abschnitt (Design-Regeln.md:105-125) gilt ausdrücklich für Feature-Pakete; dass die Orchestrierung ebenfalls ein model hat (PlayMenuItem.java, PlayMenuNode.java), steht in keinem der beiden Dokumente.
+Config liefert an einer Stelle einen Dateipfad (Design-Regeln.md:213-216: „Ordner ja, Dateiname nie"). FilenIgnoreSource.java:12 holt filenIgnore.path — die .filen.ignore-Datei selbst. Es ist ein roher Datei-Key, kein computed Pfad; die Regel spricht von der computed Struktur, deckt den Fall also womöglich gar nicht ab.
+Ein schluckender catch in einer Modellklasse (Design-Regeln.md:28: „Kein defensives try-catch"). fitbit/model/json/Activity.java:57 — catch (Exception e) {}. Er umschließt allerdings nur eine Diagnose-Ausgabe, unmittelbar danach wird geworfen (Zeile 58); der Ablauf läuft also nicht normal weiter. Nach dem Buchstaben der Regel ein Verstoß, nach ihrem Sinn wohl keiner.
+Außerhalb des Auftrags, aber im selben Zug aufgefallen (Javadoc im Code, nicht in den beiden Dokumenten): CardSortOrder.java:8-10 begründet seinen Ort mit Screen#sortOrderChanged(CardSortOrder) und Controller.cardSortOrderSelected — beide Signaturen gibt es nicht mehr (Screen.java:69 ist parameterlos). AnkiDeckSession.java:24 verweist auf einen Typ ScreenFrame, den es im Code nicht gibt.

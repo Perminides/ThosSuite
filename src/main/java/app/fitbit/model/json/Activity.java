@@ -48,16 +48,19 @@ public class Activity extends Parent{
 	public String getDistanceUnit() {
 		return distanceUnit;
 	}
+	
 	public void setDistanceUnit(String distanceUnit) {
 		this.distanceUnit = distanceUnit;
 		if (distanceUnit != null && distanceUnit.equals("")) {
 			Log.error(this, "Ich hätte als distance Kilometer erwartet und nicht " + distanceUnit);
 			try {
 				Log.error(this, new ObjectMapper().writeValueAsString(this));
-			} catch (Exception e) {} 
+			} catch (Exception e) {
+			}
 			throw new RuntimeException("Ich hätte als distance Kilometer erwartet und nicht " + distanceUnit);
 		}
 	}
+	
 	public String getStartTime() {
 		return startTime;
 	}
