@@ -1,9 +1,14 @@
 package app;
 
+import static com.tngtech.archunit.base.DescribedPredicate.alwaysTrue;
 import static com.tngtech.archunit.core.domain.JavaCall.Predicates.target;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.core.domain.properties.HasName.Predicates.name;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
+
+import java.util.Optional;
 
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -87,12 +92,116 @@ public class ArchitekturRegelnTest {
 			.should().callMethodWhere(target(name("getStyleClass")))
 			.because("wie etwas aussieht, entscheidet die Anzeige-Schicht");
 
-	// !Später: Die Vier-Sprossen-Ordnung innerhalb von shared (ui → skin → model → shared) als
-	// layeredArchitecture() aufnehmen. Die fünf Regeln hier prüfen die drei Wächter, die
-	// Zyklenfreiheit und die Style-Klassen — die *Reihenfolge* der Sprossen prüft bislang nichts.
-	
-	/** !Sofort: Ungedeckt bleiben: Regel 2 (Abwärtsrichtung/Sprossenordnung — der Test räumt das in Zeile 90-92 selbst ein),
-	 *  Regel 3 (Seitwärtsgriff, siehe Fund 4), Regel 4 (Optional, siehe Fund 9), Regel 5 (Streams), Regel 6 (Null-Layout)
-	 *   und vor allem „jedes Feature-Paket ist 100 % framework-frei" — die am nachdrücklichsten formulierte Zusage des 
-	 *   Regeldokuments hat keine Regel. **/ 
+	/**
+	 * Die Sprossenordnung in {@code shared}, Teil 1 — {@code shared.model} kennt nichts über sich.
+	 *
+	 * <p>Die Leiter lautet ui → skin → model → shared. Ein {@code model} ist Datenvokabular; wer es
+	 * lädt, baut oder anzeigt, geht es nichts an. Die oberste Kante (skin → ui) bewacht bereits
+	 * Wächter 1, die beiden unteren diese Regel und ihre Nachbarin.</p>
+	 */
+	@ArchTest
+	static final ArchRule sharedModelKenntNichtsDarueber = noClasses()
+			.that().resideInAPackage("app.shared.model..")
+			.should().dependOnClassesThat().resideInAnyPackage("app.shared.ui..", "app.shared.skin..")
+			.because("ein model ist Datenvokabular — es weiß nicht, wer es lädt oder anzeigt");
+
+	/**
+	 * Die Sprossenordnung in {@code shared}, Teil 2 — die Wurzel kennt nichts über sich.
+	 *
+	 * <p>{@code Config}, {@code DB}, {@code Log}, {@code AppClock}, {@code UiUtils} sind das
+	 * Fundament des Fundaments. Griffen sie nach oben, gäbe es keine Reihenfolge mehr, in der die
+	 * Suite überhaupt baubar wäre — dasselbe Problem, das {@code Config.init} mit seiner streng
+	 * linearen Konstruktion umgeht.</p>
+	 *
+	 * <p>{@code "app.shared"} <b>ohne</b> {@code ..} meint genau die Wurzel und nicht den Teilbaum.</p>
+	 */
+	@ArchTest
+	static final ArchRule sharedWurzelKenntNichtsDarueber = noClasses()
+			.that().resideInAPackage("app.shared")
+			.should().dependOnClassesThat().resideInAnyPackage(
+					"app.shared.ui..", "app.shared.skin..", "app.shared.model..")
+			.because("die unterste Sprosse trägt — sie greift nicht nach oben");
+
+	/**
+	 * Regel 2 und 3 des Regeldokuments in einem Ausdruck: auf oberster Ebene läuft alles nach
+	 * unten, und seitwärts greift niemand.
+	 *
+	 * <p>Eine Abhängigkeit zwischen zwei obersten Paketen ist nur erlaubt, wenn sie aus
+	 * {@code controller} kommt (der darf nach unten in jedes Feature) oder nach {@code shared} geht
+	 * (dorthin darf jeder). Alles andere fällt: Feature → Feature (Regel 3), Feature → controller
+	 * (Aufwärtsgriff), shared → Feature (das Fundament kennt kein einzelnes Feature).</p>
+	 *
+	 * <p>Bewusst über {@code slices} statt über eine {@code layeredArchitecture()} mit einem Layer
+	 * je Feature: die müsste alle Feature-Pakete aufzählen und wäre beim nächsten neuen Feature
+	 * still unvollständig. So wird ein neues oberstes Paket automatisch mitbewacht.</p>
+	 *
+	 * <p>{@code ThosSuiteApp} liegt direkt in {@code app} und fällt aus dem Schnitt
+	 * {@code app.(*)..} heraus — es braucht keine Ausnahme.</p>
+	 *
+	 * <p><b>Eine befristete Ausnahme: {@code app.tmp}.</b> Das Wegwerf-Gerüst des
+	 * Fitbit-/Health-Vergleichs steht über beiden Seiten und greift deshalb in {@code fitbit} und
+	 * {@code activity}. Die Ausnahme steht hier sichtbar, statt dass die Regel fehlt. Fällt
+	 * {@code app.tmp} weg, fällt diese Zeile mit — greift dann noch etwas seitwärts, bricht der
+	 * Build, und das ist richtig so. Umgekehrt bleibt {@code app.tmp} als <i>Ziel</i> geschützt:
+	 * ein Feature darf es weiterhin nicht anfassen, nur {@code controller} darf das.</p>
+	 */
+	@ArchTest
+	static final ArchRule keinSeitwaertsgriffAufObersterEbene = slices()
+			.matching("app.(*)..")
+			.should().notDependOnEachOther()
+			.ignoreDependency(resideInAPackage("app.controller.."), alwaysTrue())
+			.ignoreDependency(alwaysTrue(), resideInAPackage("app.shared.."))
+			.ignoreDependency(resideInAPackage("app.tmp.."), alwaysTrue()) // !tmp — siehe Javadoc
+			.because("auf oberster Ebene geht es nur nach unten: controller hinab, alle nach shared");
+
+	/**
+	 * Regel 4 — {@code null} statt {@code Optional} bei Rückgaben.
+	 *
+	 * <p>Geprüft wird der Rückgabetyp; mehr geht nicht. Die dokumentierte Ausnahme rutscht damit
+	 * von selbst durch: ein {@code Optional} aus einer JDK-API ({@code Dialog.showAndWait()}) wird
+	 * am Entstehungsort in eine lokale Variable ausgepackt und taucht in keiner Signatur auf.</p>
+	 *
+	 * <p>Der zweite Halbsatz der Regel — {@code null}-Rückgaben gehören ins Javadoc — bleibt
+	 * ungeprüft. Kommentare sieht der Bytecode nicht.</p>
+	 */
+	@ArchTest
+	static final ArchRule keineOptionalRueckgaben = noMethods()
+			.should().haveRawReturnType(Optional.class)
+			.because("fehlt ein Rückgabewert, kommt null zurück — Optional wird nicht weitergereicht");
+
+	/**
+	 * Regel 5 — keine Streams.
+	 *
+	 * <p><b>Diese Regel ist schärfer als ihr Text im Regeldokument.</b> Dort steht „außer sie sind
+	 * unbedingt nötig"; ArchUnit kennt kein „unbedingt nötig" und verbietet sie ganz. Wird einer
+	 * doch einmal gebraucht, ist das Aufmachen dieser Regel der bewusste Schritt dahin — statt
+	 * dass die Kette nebenbei einzieht. Genau das ist die Absicht.</p>
+	 */
+	@ArchTest
+	static final ArchRule keineStreams = noClasses()
+			.should().dependOnClassesThat().resideInAPackage("java.util.stream..")
+			.because("eine Schleife liest sich nach Monaten ohne Anlauf, eine filter/map/collect-Kette nicht");
+
+	/**
+	 * Die harte Fassung von „jedes Feature-Paket ist 100 % framework-frei".
+	 *
+	 * <p>JavaFX ist in {@code shared} und {@code controller} eingezäunt. Ausgenommen ist außerdem
+	 * das Wurzelpaket {@code app} selbst — dort liegt {@code ThosSuiteApp}, das eine
+	 * {@code javafx.application.Application} <i>ist</i> und es sein muss. {@code "app"} ohne
+	 * {@code ..} meint genau diese Wurzel, nicht den Teilbaum darunter.</p>
+	 *
+	 * <p>Weil Bytecode geprüft wird und nicht der Import-Block, greift auch die Nachhut der Regel:
+	 * ein opak durchgereichtes JavaFX-Objekt trägt den Typ in der Signatur und fällt auf. Was ein
+	 * Feature nach {@code shared} hinabreicht, bleibt damit zwangsläufig framework-freies
+	 * Datenvokabular.</p>
+	 */
+	@ArchTest
+	static final ArchRule featuresSindFrameworkFrei = noClasses()
+			.that().resideOutsideOfPackages("app.shared..", "app.controller..", "app")
+			.should().dependOnClassesThat().resideInAnyPackage("javafx..")
+			.because("Feature-Code bleibt ohne UI-Framework-Kenntnisse lesbar und änderbar");
+
+	// Ungeprüft bleibt bewusst Regel 6 (Null-Layout): „keine LayoutManager" hieße ein Verbot von
+	// VBox/HBox, und die kommen legitim vor (DiaryCard extends VBox). Da ist keine Regel drin, die
+	// nicht mehr Fehlalarme als Nutzen brächte.
 }

@@ -11,6 +11,7 @@ konkret gibt (der Klassenbaum, der Ist-Zustand), steht im Architektur-Dokument.
 1. Grundlage: Maßstab und feste Regeln
 2. Die Pakete
 3. Die Klassen
+4. Die bewachten Zusagen
 
 ## 1. Grundlage: Maßstab und feste Regeln
 
@@ -366,7 +367,7 @@ Deskriptoren/ids.
 ### Die Anzeige-Schicht: `shared.ui`, `shared.ui.components`, `shared.skin`
 
 Innerhalb von `shared` gibt es vier Sprossen. Ein Paket benutzt, was darunter steht — nie seitwärts,
-nie nach oben. Unvollständige Liste:
+nie nach oben. Liste (Beispiele unvollständig):
 
 ```
 oben    shared.ui       Oberflächen und Bausteine — hier wird gebaut
@@ -467,28 +468,6 @@ Der `Suite`-Präfix sagt „suite-weit brauchbar", nicht „wird überall benutz
 das man nur in einer Lern-Session bauen kann, wäre falsch benannt — auch wenn es heute nur dort
 vorkommt.
 
-#### Die fünf bewachten Zusagen
-
-Keine Vorsätze — ArchUnit-Regeln in `src/test/java/app/ArchitekturRegelnTest.java`, die den Build
-brechen:
-
-```
-1  Der Skin kennt die UI nicht          shared.skin → shared.ui      verboten
-2  Kein Feature kennt den Skin          feature → shared.skin        verboten
-3  Nur shared.ui kennt die Bausteine    → shared.ui.components       nur aus shared.ui
-4  Der Paketgraph ist zyklenfrei
-5  Style-Klassen nur in der Anzeige-Schicht
-     getStyleClass() nur in shared.ui und shared.skin
-     Ausnahme: MainWindow — dort entsteht der Fensterrahmen, bevor es etwas zu zeigen gibt
-```
-
-Wächter 3 heißt inhaltlich: *Features und `controller` sehen ausschließlich fertige Oberflächen.*
-Das ist „fertige Komponente statt loser Teile" an der Außengrenze; innerhalb von `shared.ui` wird
-mit Bausteinen gearbeitet, das ist dort der Job.
-
-Geprüft wird Bytecode. Regel 5 prüft auf den **Methodennamen**, nicht auf eine deklarierende Klasse
-— `MenuItem.getStyleClass()` existiert, obwohl `MenuItem` kein `Node` ist.
-
 #### Die Karten — was da eigentlich steht
 
 Das Konstrukt in `shared.ui.components.map` erklärt:
@@ -520,3 +499,30 @@ Nicht alles in `shared.ui.components` ist ein platzierbarer Baustein.
 
 Am Namen ablesbar: eine Komponente heißt `…Pane` oder trägt ihren Sachnamen, eine Fabrik `…Builder`
 oder bietet ein `of(…)`. Die Unterscheidung ist *was die Klasse ist*, nicht *wo sie wohnt*.
+
+## 4. Die bewachten Zusagen
+
+Keine Vorsätze, sondern ArchUnit-Regeln, die den Build brechen. **Was** bewacht wird, steht hier;
+**warum** und **mit welchen Ausnahmen**, steht im Javadoc der jeweiligen Regel in
+`src/test/java/app/ArchitekturRegelnTest.java`.
+
+```
+ 1  Der Skin kennt die UI nicht           shared.skin → shared.ui
+ 2  Kein Feature kennt den Skin           feature → shared.skin
+ 3  Nur shared.ui kennt die Bausteine     → shared.ui.components
+ 4  Der Paketgraph ist zyklenfrei
+ 5  Style-Klassen nur in der Anzeige-Schicht    getStyleClass() nur in shared.ui, shared.skin
+ 6  shared.model kennt nichts über sich   → shared.ui, shared.skin
+ 7  shared (Wurzel) kennt nichts drüber   → shared.ui, .skin, .model
+ 8  Oberste Ebene läuft nur abwärts       nur aus controller heraus oder nach shared hinein
+ 9  Keine Optional-Rückgaben
+10  Keine Streams
+11  Features sind framework-frei          javafx nur in shared, controller, app-Wurzel
+```
+
+Geprüft wird Bytecode, nicht Quelltext.
+
+Wächter 10 ist **schärfer als die feste Regel 5**: die erlaubt Streams „wenn unbedingt nötig", der
+Wächter verbietet sie ganz.
+
+Ungeprüft bleiben die feste Regel 6 (Null-Layout) und der Javadoc-Vermerk bei `null`-Rückgaben.
