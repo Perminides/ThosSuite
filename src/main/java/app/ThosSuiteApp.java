@@ -19,6 +19,7 @@ import app.shared.DB;
 import app.shared.FilenIgnoreSource;
 import app.shared.Log;
 import app.shared.SingleInstanceGuard;
+import app.shared.ui.StartupDiagnostics;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
@@ -40,21 +41,8 @@ import javafx.stage.StageStyle;
 
 public class ThosSuiteApp extends Application {
 	
-	// TODO: In Amerika fehlt ein Strich zwischen Utah und Arizona
-	// !Später: Bleibt die App jetzt immer in Version 2.1 eigentlich? Der Splash sagt übrigens 1.0
-	
-	/** JavaFX-Nachteile
-	 * 
-	 * https://bugs.openjdk.org/browse/JDK-8227679
-	 * Font-Rendering schlechter → Wäre ein Showstopper gewesen, aber ist seit "Adjust Clear Type Text" nicht mehr vorhanden und konnte auch auf anderen Laptops nicht reproduziert werden...
-	 * Icon-Spacing umständlich
-     * Kein HTML in Labels. Keine einzelnen Wörte fett. Wir haben einen Work-Around implementiert. Glaube, dass man das so nennen muss...
-     * Anfangsruckler beim Hovereffekt in der Deutschlandkarte
-     * Für Soft-Hyphens hat auch JavaFX keine vernünftige Lösung. Und naja, siehe oben zu HTML in Labels...
-     * Es gibt keine Möglichkeit eine Table ein einem Alert anzuzeigen, der genau so groß ist, wie die Tabelle sein muss. Es ist nicht möglich. Ich habe 1.5 Tage an meinem Fitbit Alert gesessen und muss leider aufgeben. Superhack gefunden...
-     * Es ist sauschwierig einen Alert/Dialog ohne parent-Window mittig ohne Ruckler anzuzeigen. Also beim startup, wenn das Spielfeld noch nicht existiert...
-     * 
-	 */
+	// !Sofort: In Amerika fehlt ein Strich zwischen Utah und Arizona
+	// !Idee: Du brauchst keine Versionierung. Nimm das 1.0 aus dem Splash raus und die Versionsnummer aus der pom
 
     private MainWindow mainWindow;
     private Controller controller;
@@ -181,6 +169,10 @@ public class ThosSuiteApp extends Application {
 						mainWindow.show();
 						mainWindow.centerOnScreen();
 
+						// !tmp: Startdiagnose. Muss hier stehen — vor der PauseTransition und vor dem
+						// Zurückdrehen der Deckkraft, damit der Übergang mitgeschrieben wird.
+						StartupDiagnostics.watch(primaryStage);
+
 						// 500ms warten, damit CSS vollständig angewendet wird
 						javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(500));
 						pause.setOnFinished(_ -> {
@@ -193,6 +185,9 @@ public class ThosSuiteApp extends Application {
 							Platform.runLater(() -> {
 								controller.runPostTasks(); // Zeigt Startup-Dialoge (Fitbit, Alkohol)
 								primaryStage.setOpacity(1); // MainWindow wird NACH den Dialogen sichtbar
+								// !tmp: Der Ist-Wert direkt danach — die eine Zahl, an der die Diagnose hängt.
+								Log.info(ThosSuiteApp.class, "Startdiagnose opacity zurueckgedreht, ist jetzt "
+										+ primaryStage.getOpacity());
 								// Nochmal runLater für toFront - kommt dann garantiert nach allem
 							    Platform.runLater(() -> {
 							        primaryStage.toFront();
