@@ -22,12 +22,6 @@ import app.shared.ui.Alerts;
  *
  * Die Schale hält den Progress und den Presenter; die View kommt über presenter.getView()
  * (ein ScreenView) — deshalb kein javafx mehr hier.
- *
- * !Später: Das Zusammenspiel View ↔ Presenter ↔ Progress ist nirgends im Ganzen beschrieben, weder
- * hier noch für Region — und die beiden Zweige sind unterschiedlich geschnitten (siehe die
- * Auswertungs-Asymmetrie im Javadoc von RegionSession). Gehört einmal zusammenhängend aufgeschrieben,
- * für beide Zweige nebeneinander. Diese Notiz ist der Sammelpunkt dafür; bitte nicht auf mehrere
- * Klassen verteilen.
  */
 public class AnkiDeckSession implements Screen {
 
@@ -105,9 +99,6 @@ public class AnkiDeckSession implements Screen {
 		return presenter.getView();
 	}
 
-	// !Später: Als einzige Screen-Methode liest diese hier direkt (hasProgressed, isFreePlay) statt in
-	// eine geguardete Progress-Methode zu delegieren — sie knallt deshalb auf einer toten Session nicht,
-	// wie alle anderen es täten. Aktuell harmlos, weil sie nur vor dem Schließen gerufen wird.
 	@Override
 	public SessionSwitchStrategy getSwitchStrategy() {
 		if (!progress.hasProgressed() || isFreePlay)

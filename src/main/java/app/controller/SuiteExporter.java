@@ -23,9 +23,15 @@ import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 
-// !Architektur: Nur in controller geschoben, damit das mit den Pfeilen besser aussieht. Das kann ja aber auch nicht sein.
-// Der alte Grund ("braucht SkinService zum Zeigen eines Alerts") ist weg: die Klasse benutzt jetzt
-// Alerts und DatePickerDialog aus shared.ui und keinen Skin mehr. Ein Umzug nach shared wäre also möglich.
+/**
+ * Sichert die Suite nach außen: sammelt unter dem Wurzelordner alle Dateien ein, die seit einem
+ * im Dialog gewählten Stichtag angefasst wurden, und legt sie als AES-verschlüsseltes Zip im
+ * OneDrive-Ordner ab. Was nicht mitsoll, steht als Zeilen-Regel in {@code export.ignore.txt}.
+ *
+ * <p><b>Warum hier und nicht woanders:</b> Der Export ist ein Querschnitt über die ganze Suite —
+ * er kennt kein einzelnes Feature, sondern nur den Wurzelordner. Das ist dieselbe Sorte Sache wie
+ * das Dashboard und gehört damit in die Orchestrierung.
+ */
 public class SuiteExporter {
 
     private static final String KEY_ROOT_FOLDER    = "rootFolder";

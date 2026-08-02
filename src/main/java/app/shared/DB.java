@@ -5,9 +5,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-
 public class DB {
 	
 	private static Path dbPath = null;
@@ -23,8 +20,8 @@ public class DB {
 	/**
 	 * Gibt die gemeinsame Singleton-Connection zur ThosSuite-Datenbank zurück.
 	 *
-	 * Diese Connection wird lazy initialisiert und bei Bedarf neu geöffnet falls sie
-	 * geschlossen wurde. Sie ist für den normalen Datenbankbetrieb in der gesamten Suite
+	 * Diese Connection wird lazy initialisiert und bleibt danach die gesamte Laufzeit offen.
+	 * Sie ist für den normalen Datenbankbetrieb in der gesamten Suite
 	 * gedacht — sowohl für Lesezugriffe als auch für nicht-transaktionale Schreiboperationen.
 	 *
 	 * Achtung: Da immer dieselbe Connection-Instanz zurückgegeben wird, darf diese
@@ -47,24 +44,15 @@ public class DB {
 	 */
 	public static Connection getConnection() {
 		try {
-			if (connection != null && connection.isClosed()) {
-				// Aktuell darf nicht von ganz oben aus shared in den Skin gegriffen werden. Das ist
-				// ja aber für Alerts ein bisschen unglücklich, oder? Wobei es hier gerade das einzige
-				// Mal wirklich stört. Ich habe aber auch keine bessere Idee.
-				// !Architektur: Dieser Alert bleibt ungestylt, weil er keinen Owner setzt und damit die
-				// Hauptscene (und deren Stylesheet) nicht erbt. Gilt genauso für die vier rohen
-				// Alerts in ThosSuiteApp. Beim Start ist das teils unvermeidbar — da existiert die
-				// Hauptscene noch nicht. Hier läuft die Suite aber schon; ob man die späteren Fälle
-				// auf Alerts.show(…) umstellt, ist offen.
-				Alert alert = new Alert(AlertType.WARNING);
-				alert.setContentText("Shit. Die connection ist closed? Wer ist der Übeltäter?");
-				alert.showAndWait();
-			}
-			if (connection == null || connection.isClosed()) {
+			if (connection != null && connection.isClosed())
+				throw new IllegalStateException("[FAILFAST] Die Suite-Connection ist geschlossen. "
+						+ "Sie bleibt die gesamte Laufzeit offen und wird nur beim Shutdown geschlossen — "
+						+ "hier hat sie also jemand geschlossen, der es nicht durfte.");
+			if (connection == null) {
 				connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath.toString());
 				connection.createStatement().execute("PRAGMA foreign_keys = ON");
 			}
-		} catch (Exception e) {
+		} catch (SQLException e) {
 			throw new RuntimeException("SQL error while getting connection", e);
 		}
 		return connection;
@@ -102,17 +90,15 @@ public class DB {
 	 **/
 	public static Connection getTmdbConnection() {
 		try {
-			if (tmdbConnection != null && tmdbConnection.isClosed()) {
-				// Aktuell darf nicht von ganz oben in den Skin gegriffen werden
-				Alert alert = new Alert(AlertType.WARNING);
-				alert.setContentText("Shit. Die connection ist closed? Wer ist der Übeltäter?");
-				alert.showAndWait();
-			}
-			if (tmdbConnection == null || tmdbConnection.isClosed()) {
+			if (tmdbConnection != null && tmdbConnection.isClosed())
+				throw new IllegalStateException("[FAILFAST] Die Film-Connection ist geschlossen. "
+						+ "Sie bleibt die gesamte Laufzeit offen und wird nur beim Shutdown geschlossen — "
+						+ "hier hat sie also jemand geschlossen, der es nicht durfte.");
+			if (tmdbConnection == null) {
 				tmdbConnection = DriverManager.getConnection("jdbc:sqlite:" + tmdbDbPath.toString());
 				tmdbConnection.createStatement().execute("PRAGMA foreign_keys = ON");
 			}
-		} catch (Exception e) {
+		} catch (SQLException e) {
 			throw new RuntimeException("SQL error while getting connection", e);
 		}
 		return tmdbConnection;
