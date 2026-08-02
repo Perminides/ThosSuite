@@ -41,9 +41,6 @@ import javafx.stage.StageStyle;
 
 public class ThosSuiteApp extends Application {
 	
-	// !Sofort: In Amerika fehlt ein Strich zwischen Utah und Arizona
-	// !Idee: Du brauchst keine Versionierung. Nimm das 1.0 aus dem Splash raus und die Versionsnummer aus der pom
-
     private MainWindow mainWindow;
     private Controller controller;
 

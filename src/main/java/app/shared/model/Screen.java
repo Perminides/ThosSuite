@@ -46,16 +46,17 @@ public interface Screen {
 	default void escClicked() {};
 	
 	/**
-	 * Bitte mach deine Aufräumarbeiten (Speichern?) vorm baldigen Schließen aber belästige
-	 * Perminides nicht mit PopUps oder ähnlichem.
+	 * Bitte mach deine Aufräumarbeiten vorm baldigen Schließen aber belästige
+	 * Perminides nicht mit PopUps oder ähnlichem. Speichern darfst Du nur, wenn
+	 * der Wert auf true steht, sonst ist das nicht gewollt.
 	 */
 	default void closeSilent(boolean save) {};
 	
 	/**
-	 * Bitte mach deine Aufräumarbeiten (Speichern)
-	 * vorm baldigen Schließen und wenn Du noch Rückfragen hast, darfst Du auch PopUps anzeigen.
+	 * Bitte mach deine Aufräumarbeiten inklusive Speichern vorm baldigen Schließen und wenn
+	 * Du noch Rückfragen hast, darfst Du auch PopUps anzeigen.
 	 */
-	default void saveChosen() {};
+	default void closeLoud() {};
 	
 	/**
 	 * Der User hat auf Pause geklickt.

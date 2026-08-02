@@ -116,27 +116,23 @@ public class CardProgress implements Progress{
 	    boolean correct = input.mandatory().contains(id) 
 	                   || input.optional().contains(id);
 	    
-	    // ----- FALSCH -----
 	    if (!correct) {
+	        // ----- FALSCH -----
 	    	clickedIds.clear();
 	    	playedTimestamp = LocalDateTime.now();
 	        correctlyAnswered = false;
 	        presenter.mapClickChecked(id, correct, input.mandatory());
 	        isPaused = true;
-	        return;
+	    } else {
+	        presenter.mapClickChecked(id, true, null);
+	        if (clickedIds.containsAll(input.mandatory())) {
+	            // ----- VOLLSTÄNDIG -----
+	            clickedIds.clear();
+	            currentIndex++;
+	            runSteps();
+	        }
+	        // ----- NOCH NICHT VOLLSTÄNDIG ----- : auf die restlichen Pflicht-Klicks warten
 	    }
-	    
-	    presenter.mapClickChecked(id, true, null);
-	    
-	    // ----- NOCH NICHT VOLLSTÄNDIG -----
-	    if (!clickedIds.containsAll(input.mandatory())) {
-	        return; // Noch nicht alle Pflicht-Elemente geklickt
-	    }
-	    
-	    // ----- VOLLSTÄNDIG -----
-	    clickedIds.clear();
-	    currentIndex++;
-	    runSteps();
 	}
 	
 	// ========================================
@@ -166,26 +162,21 @@ public class CardProgress implements Progress{
 	    boolean correct = activeSessionMC.isCorrectSoFar(clickedMcAnswers);
 	    presenter.mcClickChecked(index, correct);
 	    
-	    // ----- FALSCH -----
 	    if (!correct) {
+	        // ----- FALSCH -----
 	    	playedTimestamp = LocalDateTime.now();
 	    	correctlyAnswered = false;
 	    	clickedMcAnswers.clear();
 	    	// Lösung für die aktuell angezeigten Optionen anzeigen
 	        presenter.setCorrectMc(activeSessionMC.getCorrectIndexes());
 	        isPaused = true;
-	        return;
+	    } else if (activeSessionMC.isFinallyCorrect(clickedMcAnswers)) {
+	        // ----- VOLLSTÄNDIG -----
+	        clickedMcAnswers.clear();
+	        currentIndex++;
+	        runSteps();
 	    }
-	    
-	    // ----- NOCH NICHT VOLLSTÄNDIG -----
-	    if (!activeSessionMC.isFinallyCorrect(clickedMcAnswers)) {
-	        return; // Noch nicht alle Pflicht-Elemente geklickt
-	    }
-	    
-	    // ----- VOLLSTÄNDIG -----
-	    clickedMcAnswers.clear();
-	    currentIndex++;
-	    runSteps();
+	    // ----- NOCH NICHT VOLLSTÄNDIG ----- : auf die restlichen Pflicht-Klicks warten
 	}
 	
 	// ========================================
@@ -200,27 +191,25 @@ public class CardProgress implements Progress{
 
 		if (correctlyAnswered != null && !correctlyAnswered) {
 			cardFinished();
-			return;
+		} else {
+			currentIndex++;
+			runSteps();
 		}
-		
-		currentIndex++;
-		runSteps();
 	}
 	
 	public void cancel() {
-		// ESC beendet auch eine Pause. Convenience...
 		if (isPaused) {
+			// ESC beendet auch eine Pause. Convenience...
 			endPause();
-			return;
-		}
-		
-		// ESC während des Wartens auf Input beendet die Karte
-		Step step = steps.get(currentIndex);
-		if (step instanceof Input (var parts)) {   
-			presenter.setCorrectText(parts.get(0));
-			playedTimestamp = LocalDateTime.now();
-			correctlyAnswered = false;
-			isPaused = true;
+		} else {
+			// ESC während des Wartens auf Input beendet die Karte
+			Step step = steps.get(currentIndex);
+			if (step instanceof Input (var parts)) {
+				presenter.setCorrectText(parts.get(0));
+				playedTimestamp = LocalDateTime.now();
+				correctlyAnswered = false;
+				isPaused = true;
+			}
 		}
 	}
 	
@@ -256,15 +245,14 @@ public class CardProgress implements Progress{
 	    		correctlyAnswered = true;
 	    	}
 	    	cardFinished();
-	    	return;
-	    }
-	    
-	    Step step = steps.get(currentIndex);
-	    process(step);
+	    } else {
+	        Step step = steps.get(currentIndex);
+	        process(step);
 
-	    if (!requiresUserInput(step)) {
-	        currentIndex++;
-	        runSteps(); // rekursiv weitermachen
+	        if (!requiresUserInput(step)) {
+	            currentIndex++;
+	            runSteps(); // rekursiv weitermachen
+	        }
 	    }
 	}
 	

@@ -100,21 +100,20 @@ public class ClickSessionProgress implements SessionProgress{
 	public void elementClicked(String id) {
 		if (isPaused) {
 			endPause();
-			return;
-		}
-
-		if (easy && !sessionRegions.contains(id))
-			return;
-
-		lastClickedId = id;
-		if (quizElements.get(currentIndex).getShapeId().equals(id)) {
-			presenter.handleClickResult(id, true, null);
-			sessionRegions.remove(id);
-			nextStep();
 		} else {
-			notFound.add(quizElements.get(currentIndex).getShapeId());
-			isPaused = true; 
-			presenter.handleClickResult(id, false, quizElements.get(currentIndex).getShapeId());
+			if (easy && !sessionRegions.contains(id))
+				return;
+
+			lastClickedId = id;
+			if (quizElements.get(currentIndex).getShapeId().equals(id)) {
+				presenter.handleClickResult(id, true, null);
+				sessionRegions.remove(id);
+				nextStep();
+			} else {
+				notFound.add(quizElements.get(currentIndex).getShapeId());
+				isPaused = true;
+				presenter.handleClickResult(id, false, quizElements.get(currentIndex).getShapeId());
+			}
 		}
 	}
 
@@ -136,22 +135,16 @@ public class ClickSessionProgress implements SessionProgress{
 	private void nextStep() {
 		currentIndex++;
 		if (currentIndex >= quizElements.size()) {
-			if (spec.isPlaySession()) {
-				if (notFound.isEmpty()) 	// Freies Spiel ohne Fehler. Super!
-					session.end(true, null, "Super gemacht!", false);
-				else { 							// Freies Spiel mit Fehlern. Die listen wir auf
-					String result = "Folgende Elemente wurden nicht erkannt: \n\n";
-					for (String wrongId : notFound) {
-						result = result + getNameForId(wrongId) + "\n";
-					}
-					session.end(false, "", result, false);
+			if (notFound.isEmpty()) {           // alles gefunden — im Lernmodus der einzige Weg hierher
+				session.end(true, null, null, false);
+			} else if (spec.isPlaySession()) {  // freies Spiel mit Fehlern: die listen wir auf
+				String result = "Folgende Elemente wurden nicht erkannt: \n\n";
+				for (String wrongId : notFound) {
+					result = result + getNameForId(wrongId) + "\n";
 				}
+				session.end(false, "", result, false);
 			} else {
-				if (notFound.isEmpty()) 	// Lernsession korrekt beantwortet
-					session.end(true, null, null, false);
-				else {
-					throw new RuntimeException("Moment. Entweder wird ein falscher Klick zurückgenommen oder es wird ohne nextStep beendet. Hierhin dürfte der Code nie kommen. Untersuchen!");
-				}
+				throw new RuntimeException("Moment. Entweder wird ein falscher Klick zurückgenommen oder es wird ohne nextStep beendet. Hierhin dürfte der Code nie kommen. Untersuchen!");
 			}
 		}
 		else {

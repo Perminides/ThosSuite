@@ -68,12 +68,8 @@ public class EliminationSessionProgress implements SessionProgress {
 	    presenter.handleCorrectAnswers(getIds(matches));
 	    hasProgressed = true;
 	    
-	    if (sessionRegions.isEmpty()) {
-	    	if (spec.isPlaySession())
-	    		session.end(true, null, "Super gemacht!", true);
-	    	else
-	    		session.end(true, null, null, true);
-	    }
+	    if (sessionRegions.isEmpty())
+	    	session.end(true, null, null, true);
 	}
 
 	@Override

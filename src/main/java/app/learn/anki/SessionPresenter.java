@@ -24,7 +24,7 @@ import app.shared.ui.McLearnView;
 public class SessionPresenter {
 
     private final AnkiLearnView view;
-    private SessionProgress sessionProgress;
+    private final SessionProgress sessionProgress;
 
     SessionPresenter(Deck type, SessionProgress sessionProgress) {
     	this.sessionProgress = sessionProgress;
@@ -62,10 +62,6 @@ public class SessionPresenter {
         };
     }
 
-    void end() {
-        sessionProgress = null;
-    }
-	
 	// ========================================
 	// STEP EXECUTION (from Progress)
 	// ========================================

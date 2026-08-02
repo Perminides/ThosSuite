@@ -140,16 +140,14 @@ public class SessionPresenter {
 	public void undoWrongClick(WrongClickResolution resolution) {
 	    if (hard) {
 	        view.moveAllToActive();
-	        wrongClickSnapshot = null;
-	        return;
+	    } else {
+	        ShapeMapState base = wrongClickSnapshot.beforeMap();
+	        if (resolution == WrongClickResolution.COMMIT_MISS_AND_CONTINUE) {
+	        	base.incorrectShapes().add(wrongClickSnapshot.expectedId());
+	        	base.activeShapes().remove(wrongClickSnapshot.expectedId());
+	        }
+	        view.setState(base);
 	    }
-
-	    ShapeMapState base = wrongClickSnapshot.beforeMap();
-	    if (resolution == WrongClickResolution.COMMIT_MISS_AND_CONTINUE) {
-	    	base.incorrectShapes().add(wrongClickSnapshot.expectedId());
-	    	base.activeShapes().remove(wrongClickSnapshot.expectedId());
-	    }
-	    view.setState(base);
 	    wrongClickSnapshot = null;
 	}
 	

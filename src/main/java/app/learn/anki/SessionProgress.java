@@ -41,7 +41,6 @@ class SessionProgress {
 	private Map<Integer, CardProgress> cardProgressById;
 	private List<Card> cards;
 	private int currentIndex = -1;
-	private boolean active = true; // !Architektur: Das muss natürlich prozessual ausgeschlossen werden, dass inaktive Sessions wiederbelebt werden und dann kann das hier auch ganz weg.
 
 	public SessionProgress(List<Card> cards, AnkiDeckService service, Deck type, CardSortOrder sortOrder, Runnable onLastCardDone) {
 		Log.info(this, "=== PROGRESS CONSTRUCTOR === Progress@" + System.identityHashCode(this));
@@ -66,8 +65,6 @@ class SessionProgress {
 
 	public void start() {
 		Log.info(this, "=== PROGRESS START === Progress@" + System.identityHashCode(this));
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		// Neue Karten immer zuerst
 		List<Card> newCards = new ArrayList<>();
 		Iterator<Card> iter = cards.listIterator();
@@ -90,8 +87,6 @@ class SessionProgress {
 	}
 
 	public void sort(CardSortOrder order) {
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		int index = currentIndex + 1;
 		while (index < cards.size() && cards.get(index).isNew()) {
 			index++;
@@ -104,8 +99,6 @@ class SessionProgress {
 	}
 
 	public void cardFinished(boolean correct) {
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		currentIndex++;
 		if (currentIndex < cards.size()) {
 			presenter.cardFinished(correct);
@@ -122,44 +115,30 @@ class SessionProgress {
 	// ========================================
 
 	public void textInputChanged(String text) {
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		getCurrentProgress().checkTextInput(text);
 	}
 
 	public void elementClicked(String id) {
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		getCurrentProgress().elementClicked(id);
 	}
 
 	public void mcClicked(int index) {
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		getCurrentProgress().mcClicked(index);
 	}
 
 	public void reactOnPauseClick() {
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		getCurrentProgress().endPause();
 	}
 
 	public void escClicked() {
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		getCurrentProgress().cancel();
 	}
 
 	public boolean isPaused() {
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		return getCurrentProgress().isPaused();
 	}
 
 	public void goBack() {
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		if (currentIndex > 0) {
 			presenter.cardFinished(null);
 			Card cur = cards.get(currentIndex);
@@ -182,8 +161,6 @@ class SessionProgress {
 	 */
 	public void refresh() {
 		Log.info(this, "=== REFRESH === Progress@" + System.identityHashCode(this) + ", currentIndex=" + currentIndex);
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
 		presenter.cardFinished(null);
 		presenter.refresh();
 		Card cur = cards.get(currentIndex);
@@ -196,24 +173,6 @@ class SessionProgress {
 	// ========================================
 	// Lifecycle (from shell)
 	// ========================================
-
-	/**
-	 * Deaktiviert den Progress. Idempotenz-Schutz: ein zweiter Aufruf fliegt - so bleibt der
-	 * Doppel-Close-Schutz der alten Session erhalten.
-	 */
-	public void deactivate() {
-		if (!active)
-			throw new RuntimeException("Alter! Die Session ist tot, was willst Du mit dem Leichnam?");
-		active = false;
-		Log.info(this, "=== DEACTIVATE === Progress@" + System.identityHashCode(this));
-	}
-
-	/**
-	 * Nur Presenter-Cleanup ohne Speichern (FreePlay). Im Nicht-FreePlay-Fall macht save() das mit.
-	 */
-	public void end() {
-		presenter.end();
-	}
 
 	public boolean hasProgressed() {
 		return currentIndex > 0;
@@ -255,7 +214,6 @@ class SessionProgress {
 		}
 		service.savePlayedCards(type, rows);
 		Log.info(this, "=== SAVE END === " + rows.size() + " Karten gespeichert");
-		presenter.end();
 	}
 
 	// ========================================

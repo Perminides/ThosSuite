@@ -38,7 +38,7 @@ public class WriteSessionProgress implements SessionProgress {
 	private SessionPresenter presenter;
 	private Mode mode;
 	private int currentIndex = -1;
-	private boolean isEndPause = false;
+	private boolean paused = false;
 
 	public WriteSessionProgress(Set<MapShape> regions, SessionSpec spec, RegionSession regionSession) {
 		this.sessionRegions = regions;
@@ -63,13 +63,12 @@ public class WriteSessionProgress implements SessionProgress {
 
 	@Override
 	public void cancel() {
-		if (isEndPause) {
+		if (paused) {
 			endPause();
-			return;
+		} else {
+			presenter.setCorrectText(nameOf(toLearnRegions.get(currentIndex)));
+			paused = true;
 		}
-
-		presenter.setCorrectText(nameOf(toLearnRegions.get(currentIndex)));
-		isEndPause = true;
 	}
 
 	@Override
@@ -92,20 +91,19 @@ public class WriteSessionProgress implements SessionProgress {
 
 	@Override
 	public void endPause() {
-		if (!isEndPause)
+		if (!paused)
 			return;
 
 		MapShape currentRegion = toLearnRegions.get(currentIndex);
 
 		if (!spec.isPlaySession()) {
 			session.end(false, currentRegion.id(), "Folgendes Element nicht erkannt: \n\n" + nameOf(currentRegion), false);
-			return;
+		} else {
+			notFound.add(currentRegion);
+			presenter.handleMissedWrite(currentRegion.id());
+			paused = false;
+			nextStep();
 		}
-
-		notFound.add(currentRegion);
-		presenter.handleMissedWrite(currentRegion.id());
-		isEndPause = false;
-		nextStep();
 	}
 
 	@Override
@@ -118,23 +116,16 @@ public class WriteSessionProgress implements SessionProgress {
 		currentIndex++;
 		if (currentIndex < toLearnRegions.size()) {
 			presenter.weWaitForWriteText(toLearnRegions.get(currentIndex).id());
-			return;
-		}
-
-		if (!spec.isPlaySession()) {
+		} else if (notFound.isEmpty()) {    // alles erkannt — im Lernmodus der einzige Weg hierher
 			session.end(true, null, null, false);
-			return;
+		} else if (spec.isPlaySession()) {  // freies Spiel mit Fehlern: die listen wir auf
+			String result = "Folgende Elemente wurden nicht erkannt: \n\n";
+			for (MapShape miss : notFound)
+				result += nameOf(miss) + "\n";
+			session.end(false, "", result, false);
+		} else {
+			throw new RuntimeException("Im Lernmodus endet die Session beim ersten Fehler — notFound kann hier gar nicht gefüllt sein. Untersuchen!");
 		}
-
-		if (notFound.isEmpty()) {
-			session.end(true, null, "Super gemacht!", false);
-			return;
-		}
-
-		String result = "Folgende Elemente wurden nicht erkannt: \n\n";
-		for (MapShape miss : notFound)
-			result += nameOf(miss) + "\n";
-		session.end(false, "", result, false);
 	}
 
 	/** Der gesuchte Text zu einem Element — je nach Modus Region, Hauptstadt oder beides. */
