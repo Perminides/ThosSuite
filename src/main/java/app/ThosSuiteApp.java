@@ -59,6 +59,10 @@ public class ThosSuiteApp extends Application {
         setupGlobalExceptionHandler();
     }
 
+    // !Später: Die vier rohen Alerts in dieser Klasse (Zeitzone, zweite Instanz, Init-Fehler, globaler
+    // Handler) bleiben ungestylt — ohne Owner erben sie das Stylesheet der Hauptscene nicht. Bei den
+    // ersten beiden ist das unvermeidbar, da gibt es noch keine Scene. Bei den letzten zwei läuft die
+    // Suite meist schon; ob die auf Alerts.show(…) umgestellt werden, ist offen.
     @Override
     public void start(Stage primaryStage) {
     	// 0. Zeitzone überprüfen

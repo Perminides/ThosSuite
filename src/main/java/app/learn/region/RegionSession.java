@@ -59,6 +59,7 @@ public class RegionSession implements Screen {
         this.onSessionEnded = onSessionEnded;
 	}
 	
+	@Override
     public void start() {
     	Log.info(this, "Starte RegionsSession " + spec.getDeckType().getDisplayName() + " (play = " + spec.isPlaySession() + ")");
         progress.start();
@@ -162,10 +163,12 @@ public class RegionSession implements Screen {
 		presenter.refresh();
 	}
 	
+	@Override
 	public ScreenView getView() {
 		return presenter.getView();
 	}
 	
+	@Override
 	public void closeSilent(boolean save) {
 		if (save)
 			throw new RuntimeException("Damit habe ich nun so gar nicht gerechnet. Wieso sollte ich eine unfertige Regionssession speichern?");
