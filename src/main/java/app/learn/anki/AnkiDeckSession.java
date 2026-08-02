@@ -20,8 +20,14 @@ import app.shared.ui.Alerts;
  *  2) Ansprechpartner für den Controller (Screen),
  *  3) Lebenszyklus: orchestriert Speicher-Trigger und Zusammenfassungs-Alert.
  *
- * Die Schale hält den Progress und den Presenter; die View kommt kovariant über presenter.getRoot()
- * (ein ScreenFrame) — deshalb kein javafx mehr hier.
+ * Die Schale hält den Progress und den Presenter; die View kommt über presenter.getView()
+ * (ein ScreenView) — deshalb kein javafx mehr hier.
+ *
+ * !Später: Das Zusammenspiel View ↔ Presenter ↔ Progress ist nirgends im Ganzen beschrieben, weder
+ * hier noch für Region — und die beiden Zweige sind unterschiedlich geschnitten (siehe die
+ * Auswertungs-Asymmetrie im Javadoc von RegionSession). Gehört einmal zusammenhängend aufgeschrieben,
+ * für beide Zweige nebeneinander. Diese Notiz ist der Sammelpunkt dafür; bitte nicht auf mehrere
+ * Klassen verteilen.
  */
 public class AnkiDeckSession implements Screen {
 
@@ -35,7 +41,7 @@ public class AnkiDeckSession implements Screen {
 		this.onSessionEnded = onSessionEnded;
 		this.isFreePlay = isFreePlay;
 		CardSortOrder sortOrder = isFreePlay ? CardSortOrder.RANDOM : CardSortOrder.valueOf(Config.get("pref.sortOrder"));
-		this.progress = new SessionProgress(cards, service, type, sortOrder, this::saveChosen);
+		this.progress = new SessionProgress(cards, service, type, sortOrder, this::closeLoud);
 		this.presenter = new SessionPresenter(type, progress); // registriert sich selbst am Progress via setPresenter(this)
 	}
 
@@ -64,22 +70,23 @@ public class AnkiDeckSession implements Screen {
 	@Override
 	public void closeSilent(boolean save) {
 		Log.info(this, "=== CLOSE === Session@" + System.identityHashCode(this) + ", save=" + save);
-		progress.deactivate();
 		if (save)
 			progress.save();
 	}
 
 	/**
 	 * Beende die Session, aber gern sauber schön mit Zusammenfassung und so :)
+	 *
+	 * <p><b>Die Zusammenfassung steht bewusst vor dem Speichern und Melden.</b> Ein Alert öffnet
+	 * einen verschachtelten Event-Loop; stünde er dahinter, liefe er auf einer Session, die schon
+	 * fertig ist, deren Ansicht aber noch im Fenster hängt. So bleibt die Session bis zur letzten
+	 * Zeile lebendig und ist danach unerreichbar, weil der Controller sie ersetzt.</p>
 	 */
 	@Override
-	public void saveChosen() {
-		progress.deactivate();
+	public void closeLoud() {
 		Alerts.show("Zusammenfassung", createSummary(), ButtonEnum.OK);
-		if (isFreePlay)
-			progress.end();  // Kein Speichern im freien Spiel, nur Presenter-Cleanup.
-		else
-			progress.save(); // save() ruft intern presenter.end().
+		if (!isFreePlay)     // im freien Spiel wird nichts fortgeschrieben
+			progress.save();
 		onSessionEnded.run();
 	}
 

@@ -321,7 +321,7 @@ public class Controller{
 	}
 	
 	public void saveMenuItemSelected() {
-		currentScreen.saveChosen();
+		currentScreen.closeLoud();
 	}
 	
 	public void escPressed() {

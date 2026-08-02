@@ -51,7 +51,7 @@ public class DB {
 				// Aktuell darf nicht von ganz oben aus shared in den Skin gegriffen werden. Das ist
 				// ja aber für Alerts ein bisschen unglücklich, oder? Wobei es hier gerade das einzige
 				// Mal wirklich stört. Ich habe aber auch keine bessere Idee.
-				// TODO: Dieser Alert bleibt ungestylt, weil er keinen Owner setzt und damit die
+				// !Architektur: Dieser Alert bleibt ungestylt, weil er keinen Owner setzt und damit die
 				// Hauptscene (und deren Stylesheet) nicht erbt. Gilt genauso für die vier rohen
 				// Alerts in ThosSuiteApp. Beim Start ist das teils unvermeidbar — da existiert die
 				// Hauptscene noch nicht. Hier läuft die Suite aber schon; ob man die späteren Fälle
