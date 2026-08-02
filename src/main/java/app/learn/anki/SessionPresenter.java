@@ -9,7 +9,7 @@ import app.learn.model.GeoMap;
 import app.learn.model.LearnStat;
 import app.learn.model.SessionProgressCounter;
 import app.shared.model.ScreenView;
-import app.shared.model.LearnCallbacks;
+import app.shared.model.AnkiCallbacks;
 import app.shared.ui.AnkiLearnView;
 import app.shared.ui.ShapeMapLearnView;
 import app.shared.ui.ImageMapLearnView;
@@ -50,7 +50,7 @@ public class SessionPresenter {
         String mapName = type.getMapName();
         String kategorie = type.getCategory().toString();
 
-        LearnCallbacks callbacks = new LearnCallbacks(
+        AnkiCallbacks callbacks = new AnkiCallbacks(
                 this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack);
 
         return switch(type) {

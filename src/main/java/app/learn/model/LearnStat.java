@@ -59,4 +59,26 @@ public class LearnStat {
 	public void setLastPlayed(LocalDate date) {
 		this.lastPlayed = date;
 	}
+
+	/**
+	 * Das neue Level nach einer Antwort — die Spaced-Repetition-Formel der Suite.
+	 *
+	 * <p>Sie rechnet aus dem <b>Abstand</b> zum letzten Spielen, nicht aus dem bisherigen Level:
+	 * Wer eine Karte nach 30 Tagen noch kann, bekommt sie später wieder als jemand, der sie nach
+	 * 3 Tagen konnte. Das bisherige Level geht nur in die Fälligkeit ein (siehe getDueDate).
+	 * Ein bisschen Zufall (±10 %) verteilt die Fälligkeiten, damit nicht alles am selben Tag
+	 * zusammenkommt.</p>
+	 *
+	 * @param correct         wurde richtig geantwortet
+	 * @param playAgainToday  soll die Karte bei einem Fehler heute nochmal drankommen (Anki: ja,
+	 *                        Region: nein — dort ist die Session nach einem Fehler vorbei)
+	 */
+	public int calculateNewLevel(boolean correct, boolean playAgainToday) {
+		if (!correct)
+			return playAgainToday ? 0 : 1;
+
+		double rand = 0.1 - random.nextDouble() / 5;
+		long gap = ChronoUnit.DAYS.between(lastPlayed, AppClock.TODAY);
+		return (int) Math.max(1, Math.round(2 * gap + (2 * gap) * rand));
+	}
 }

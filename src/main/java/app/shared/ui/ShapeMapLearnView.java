@@ -2,7 +2,7 @@ package app.shared.ui;
 
 import java.util.List;
 
-import app.shared.model.LearnCallbacks;
+import app.shared.model.AnkiCallbacks;
 import app.shared.model.ShapeGeometry;
 import app.shared.skin.LearnComponent;
 import app.shared.skin.SkinService;
@@ -15,7 +15,7 @@ public class ShapeMapLearnView extends AnkiLearnView {
 	private final List<ShapeGeometry> geometrien;
 
 	public ShapeMapLearnView(String deckId, String mapName, String kategorie,
-			List<ShapeGeometry> geometrien, LearnCallbacks callbacks) {
+			List<ShapeGeometry> geometrien, AnkiCallbacks callbacks) {
 		super(deckId, mapName, kategorie, callbacks);
 		this.geometrien = geometrien;
 		rebuild(); // muss die letzte Zeile sein, siehe AnkiLearnView

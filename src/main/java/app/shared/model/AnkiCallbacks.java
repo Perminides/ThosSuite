@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  * @param textTyped         im Eingabefeld wurde getippt (aktueller Text)
  * @param backClicked       der Zurück-Knopf wurde gedrückt
  */
-public record LearnCallbacks(
+public record AnkiCallbacks(
 		Consumer<String> mapElementClicked,
 		Consumer<Integer> mcAnswerClicked,
 		Consumer<String> textTyped,

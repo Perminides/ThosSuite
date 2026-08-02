@@ -6,23 +6,15 @@ import java.util.Set;
 import app.learn.model.MapShape;
 import app.learn.region.model.SessionSpec;
 
-public class EliminationSessionProgress implements SessionProgress {
+public class EliminationSessionProgress extends SessionProgress {
 
-	private final RegionSession session;
 	private final Set<MapShape> sessionRegions;
-	private SessionPresenter presenter;
-	private SessionSpec spec;
 	private boolean hasProgressed = false;
 
-	public EliminationSessionProgress(Set<MapShape> regions, SessionSpec spec, RegionSession regionSession) {
+	public EliminationSessionProgress(Set<MapShape> regions, SessionSpec spec, RegionDeckService service,
+			Runnable onFinished) {
+		super(spec, service, onFinished);
 		this.sessionRegions = regions;
-		this.session = regionSession;
-		this.spec = spec;
-	}
-
-	@Override
-	public void setPresenter(SessionPresenter regionSessionPresenter) {
-		this.presenter = regionSessionPresenter;
 	}
 
 	@Override
@@ -41,7 +33,7 @@ public class EliminationSessionProgress implements SessionProgress {
             	default -> throw new RuntimeException("Das kommt jetzt einigermaßen unerwartet :)");
 			};
 		}
-		session.end(false, null, result, false);
+		finishIncorrect(result, false, null);
 	}
 
 	@Override
@@ -69,7 +61,7 @@ public class EliminationSessionProgress implements SessionProgress {
 	    hasProgressed = true;
 	    
 	    if (sessionRegions.isEmpty())
-	    	session.end(true, null, null, true);
+	    	finishCorrect();
 	}
 
 	@Override

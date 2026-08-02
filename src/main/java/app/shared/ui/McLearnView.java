@@ -1,6 +1,6 @@
 package app.shared.ui;
 
-import app.shared.model.LearnCallbacks;
+import app.shared.model.AnkiCallbacks;
 import app.shared.ui.components.map.EmptyLearnMap;
 import app.shared.ui.components.map.LearnMap;
 
@@ -13,7 +13,7 @@ import app.shared.ui.components.map.LearnMap;
  **/
 public class McLearnView extends AnkiLearnView {
 
-	public McLearnView(String deckId, String mapName, String kategorie, LearnCallbacks callbacks) {
+	public McLearnView(String deckId, String mapName, String kategorie, AnkiCallbacks callbacks) {
 		super(deckId, mapName, kategorie, callbacks);
 		rebuild(); // muss die letzte Zeile sein, siehe AnkiLearnView
 	}

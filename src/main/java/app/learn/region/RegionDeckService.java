@@ -87,7 +87,7 @@ public class RegionDeckService {
 		return statCache.get(spec.getDeckType()).get(spec.getMode());
 	}
 	
-	public void savePlayedCards(SessionSpec spec, LearnStat stats, boolean correct, String incorrectId) {
+	public void savePlayedSession(SessionSpec spec, LearnStat stats, boolean correct, String incorrectId) {
 		// Die Learnstats sind bereits aktualisiert.
 		repo.saveRegionSession(spec, stats, correct, incorrectId);
 		statCache.get(spec.getDeckType()).put(spec.getMode(), stats);
