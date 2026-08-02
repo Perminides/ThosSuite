@@ -25,33 +25,25 @@ import app.learn.region.model.SessionSpec;
  * <p>Dieselbe Zweiteilung wie im Klick-Modus ({@link ClickSessionProgress}): dort wird ein
  * Fehlgriff im freien Spiel ebenfalls festgeschrieben, statt die Session abzubrechen.</p>
  */
-public class WriteSessionProgress implements SessionProgress {
+public class WriteSessionProgress extends SessionProgress {
 
-	private final RegionSession session;
-	private final SessionSpec spec;
 	private final Set<MapShape> sessionRegions;
 	private final List<MapShape> toLearnRegions;
 
 	/** Nur im freien Spiel gefüllt: was per ESC aufgegeben wurde, in der Reihenfolge des Fragens. */
 	private final List<MapShape> notFound = new ArrayList<>();
 
-	private SessionPresenter presenter;
 	private Mode mode;
 	private int currentIndex = -1;
 	private boolean paused = false;
 
-	public WriteSessionProgress(Set<MapShape> regions, SessionSpec spec, RegionSession regionSession) {
+	public WriteSessionProgress(Set<MapShape> regions, SessionSpec spec, RegionDeckService service,
+			Runnable onFinished) {
+		super(spec, service, onFinished);
 		this.sessionRegions = regions;
-		this.session = regionSession;
-		this.spec = spec;
 		this.mode = spec.getMode();
 		toLearnRegions = new ArrayList<>(sessionRegions);
 		Collections.shuffle(toLearnRegions);
-	}
-
-	@Override
-	public void setPresenter(SessionPresenter regionSessionPresenter) {
-		this.presenter = regionSessionPresenter;
 	}
 
 	@Override
@@ -97,7 +89,7 @@ public class WriteSessionProgress implements SessionProgress {
 		MapShape currentRegion = toLearnRegions.get(currentIndex);
 
 		if (!spec.isPlaySession()) {
-			session.end(false, currentRegion.id(), "Folgendes Element nicht erkannt: \n\n" + nameOf(currentRegion), false);
+			finishIncorrect("Folgendes Element nicht erkannt: \n\n" + nameOf(currentRegion), false, currentRegion.id());
 		} else {
 			notFound.add(currentRegion);
 			presenter.handleMissedWrite(currentRegion.id());
@@ -117,12 +109,12 @@ public class WriteSessionProgress implements SessionProgress {
 		if (currentIndex < toLearnRegions.size()) {
 			presenter.weWaitForWriteText(toLearnRegions.get(currentIndex).id());
 		} else if (notFound.isEmpty()) {    // alles erkannt — im Lernmodus der einzige Weg hierher
-			session.end(true, null, null, false);
+			finishCorrect();
 		} else if (spec.isPlaySession()) {  // freies Spiel mit Fehlern: die listen wir auf
 			String result = "Folgende Elemente wurden nicht erkannt: \n\n";
 			for (MapShape miss : notFound)
 				result += nameOf(miss) + "\n";
-			session.end(false, "", result, false);
+			finishIncorrect(result, false, null);
 		} else {
 			throw new RuntimeException("Im Lernmodus endet die Session beim ersten Fehler — notFound kann hier gar nicht gefüllt sein. Untersuchen!");
 		}

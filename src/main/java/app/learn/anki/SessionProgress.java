@@ -202,7 +202,7 @@ class SessionProgress {
 			} else {
 				if (!learnStat.isDueToday())
 					throw new RuntimeException("Sicherheitsnetz eingebaut. Diese Karte war gar nicht dran. Und ich soll den Fortschritt überschreiben? Mache ich ungern!");
-				learnStat.setLevel(cp.calculateNewLevel(learnStat.getLastPlayed(), cp.isCorrectlyAnswered(), true));
+				learnStat.setLevel(learnStat.calculateNewLevel(cp.isCorrectlyAnswered(), true));
 				learnStat.setLastPlayed(AppClock.TODAY);
 				if (!cp.isCorrectlyAnswered())
 					learnStat.incrementWrongCount();

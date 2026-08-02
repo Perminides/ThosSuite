@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-import app.shared.model.LearnCallbacks;
+import app.shared.model.AnkiCallbacks;
 import app.shared.model.ShapeGeometry;
 import app.shared.skin.LearnComponent;
 import app.shared.skin.Skin;
@@ -18,7 +18,7 @@ public class ImageMapLearnView extends AnkiLearnView {
 	private final Function<Set<String>, List<ShapeGeometry>> geometrieFuer;
 
 	public ImageMapLearnView(String deckId, String mapName, String kategorie,
-			Function<Set<String>, List<ShapeGeometry>> geometrieFuer, LearnCallbacks callbacks) {
+			Function<Set<String>, List<ShapeGeometry>> geometrieFuer, AnkiCallbacks callbacks) {
 		super(deckId, mapName, kategorie, callbacks);
 		this.geometrieFuer = geometrieFuer;
 		rebuild(); // muss die letzte Zeile sein, siehe AnkiLearnView

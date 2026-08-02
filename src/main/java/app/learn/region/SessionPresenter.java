@@ -4,6 +4,7 @@ import java.util.Set;
 
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
+import app.shared.model.RegionCallbacks;
 import app.shared.model.ScreenView;
 import app.learn.MapService;
 import app.shared.model.ShapeMapState;
@@ -37,8 +38,7 @@ public class SessionPresenter {
 				spec.getDeckType().getCategory().toString(),
 				MapService.getInstance().getMap(spec.getDeckType()).getShapeGeometries(),
 				spec.getMode().getSubCategory() == Mode.SubCategory.CLICK,
-				this::clickedMapElement,
-				this::typedText);
+				new RegionCallbacks(this::clickedMapElement, this::typedText));
 		this.progress = progress;
 		this.spec = spec;
 		this.hard = spec.getMode().getEasyHard() == Mode.EasyHard.HARD;

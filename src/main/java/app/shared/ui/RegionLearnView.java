@@ -2,8 +2,8 @@ package app.shared.ui;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
+import app.shared.model.RegionCallbacks;
 import app.shared.model.ScreenView;
 import app.shared.model.ShapeGeometry;
 import app.shared.model.ShapeMapState;
@@ -34,8 +34,7 @@ public class RegionLearnView {
 	private final String mapName;
 	private final String kategorie;
 	private final List<ShapeGeometry> geometrien;
-	private final Consumer<String> onMapElementClicked;
-	private final Consumer<String> onTextTyped;
+	private final RegionCallbacks callbacks;
 
 	private final ComponentHost host = new ComponentHost();
 
@@ -45,13 +44,11 @@ public class RegionLearnView {
 
 	public RegionLearnView(String mapName, String kategorie, List<ShapeGeometry> geometrien,
 			boolean mitFragefeld,
-			Consumer<String> onMapElementClicked,
-			Consumer<String> onTextTyped) {
+			RegionCallbacks callbacks) {
 		this.mapName = mapName;
 		this.kategorie = kategorie;
 		this.geometrien = geometrien;
-		this.onMapElementClicked = onMapElementClicked;
-		this.onTextTyped = onTextTyped;
+		this.callbacks = callbacks;
 		rebuild(mitFragefeld);
 	}
 
@@ -61,7 +58,7 @@ public class RegionLearnView {
 		host.setWallpaper(skin.wallpaperPath(mapName, kategorie));
 
 		karte = new ShapeMapPane(geometrien, skin.learnComponentBounds(mapName, kategorie, LearnComponent.MAP));
-		karte.setClickListener(onMapElementClicked);
+		karte.setClickListener(callbacks.mapElementClicked());
 
 		if (mitFragefeld) {
 			questionArea = new SuiteInfoLabel("",
@@ -73,7 +70,7 @@ public class RegionLearnView {
 			host.setComponents(karte, questionArea);
 		} else {
 			inputField = new SuiteTextField(skin.learnComponentBounds(mapName, kategorie, LearnComponent.TEXT_INPUT));
-			inputField.onType(onTextTyped);
+			inputField.onType(callbacks.textTyped());
 			questionArea = null;
 			host.setComponents(karte, inputField);
 		}

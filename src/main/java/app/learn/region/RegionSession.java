@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import app.learn.model.LearnStat;
 import app.learn.model.MapShape;
 import app.learn.region.model.Mode;
+import app.learn.region.model.SessionResult;
 import app.learn.region.model.SessionSpec;
 import app.shared.AppClock;
 import app.shared.Log;
@@ -23,36 +23,34 @@ import app.shared.ui.Alerts;
 // !Idee: Es wäre schon nice bei Finde uf der Karte (schwer) zu wissen, wie viel noch kommen. Also doch einen Fortschritt bitte.
 /**
  * Schale der Regions-Lernsession und Ansprechpartner für den Controller (Screen). Hält den
- * SessionProgress (je nach Modus Click/Elimination/Write) und den Presenter; wertet über end(...)
- * das Sessionergebnis aus (Alert, LearnStat, Speichern).
+ * SessionProgress (je nach Modus Click/Elimination/Write) und den Presenter; wertet in closeLoud()
+ * das Sessionergebnis aus (Alert, Speichern, Abmelden).
  *
- * !Architektur: Auswertungs-Asymmetrie zu Anki — hier STEUERT der Progress die Auswertung, indem er
- * end(correct, wrongId, incorrectText, allowResume) ruft; bei Anki wertet die Session selbst aus und
- * der Progress liefert nur Daten. Ist die Verantwortungsverteilung gewollt oder soll sie angeglichen
- * werden?
+ * <p>Der Progress meldet sein Ende über {@code closeLoud()} und hält dabei ein {@link SessionResult}
+ * bereit, das diese Klasse sich abholt. Genauso läuft es auf der Anki-Seite — dort ruft der Progress
+ * ebenfalls {@code closeLoud()}, und die Schale besorgt sich die Zahlen für die Zusammenfassung
+ * selbst.</p>
  */
 public class RegionSession implements Screen {
 	
 	private final SessionPresenter presenter;
-	private final RegionDeckService service;
 	Runnable onSessionEnded;
     private final SessionSpec spec;
     private final SessionProgress progress;
 
 	public RegionSession(SessionSpec spec, Set<MapShape> regions, Runnable onSessionEnded, RegionDeckService regionService) {
 		this.spec = spec;
-    	this.service = regionService;
     	switch (spec.getMode().getSubCategory()) {
     		case Mode.SubCategory.CLICK: {
-    			this.progress = new ClickSessionProgress(regions, spec, this);
+    			this.progress = new ClickSessionProgress(regions, spec, regionService, this::closeLoud);
     			break;
     		}
     		case Mode.SubCategory.ELIMINATION: {
-    			this.progress = new EliminationSessionProgress(regions, spec, this);
+    			this.progress = new EliminationSessionProgress(regions, spec, regionService, this::closeLoud);
     			break;
     		}
     		case Mode.SubCategory.WRITE: {
-    			this.progress = new WriteSessionProgress(regions, spec, this);
+    			this.progress = new WriteSessionProgress(regions, spec, regionService, this::closeLoud);
     			break;
     		}
     		default: throw new RuntimeException("Das ist leider noch nicht implementiert :-)");
@@ -101,29 +99,21 @@ public class RegionSession implements Screen {
 	 * <p>Es kommt also immer mindestens ein Dialog. Im Lernmodus wird bei Erfolg bewusst nicht
 	 * gelobt: gleich danach steht ohnehin der Ausblick, und zwei Dialoge hintereinander nerven.
 	 * Im freien Spiel wird nichts gespeichert, dort muss das Lob den Abschluss machen.</p>
-	 *
-	 * @param correct       war die Session erfolgreich
-	 * @param wrongId       die falsch beantwortete Form; nur fürs Speichern
-	 * @param incorrectText was im Fehlerdialog steht; bei {@code correct} unbenutzt
-	 * @param allowResume   darf der Nutzer im Fehlerdialog fortsetzen
 	 */
-	public void end(boolean correct, String wrongId, String incorrectText, boolean allowResume) {
-		if (correct && incorrectText != null && !incorrectText.isBlank())
-			throw new RuntimeException("War doch alles richtig — was soll ich mit einem Fehlertext? "
-					+ "Um die Anzeige bei Erfolg kümmere ich mich selbst: " + incorrectText);
-		if (!correct && (incorrectText == null || incorrectText.isBlank()))
-			throw new RuntimeException("Hase, Du solltest schon eine Rückmeldung geben, was falsch war, oder?");
+	@Override
+	public void closeLoud() {
+		SessionResult result = progress.getResult();
 
-		if (correct) {
+		if (result.correct()) {
 			// Gelobt wird nur im freien Spiel — im Lernmodus folgt gleich der Ausblick.
 			if (spec.isPlaySession())
 				Alerts.show("Korrekt", "Super gemacht!", ButtonEnum.OK);
-			saveAndEndSession(correct, wrongId);
+			saveAndEndSession();
 		} else {
-			switch (showMistakeAlert(incorrectText, allowResume)) {
-				case OK     -> saveAndEndSession(correct, wrongId);   // auswerten, dann Schluss
-				case CANCEL -> endSession();                          // Abbruch: nichts speichern
-				case RESUME -> progress.resume();                     // weiterspielen: kein Ende
+			switch (showMistakeAlert(result)) {
+				case OK     -> saveAndEndSession();   // auswerten, dann Schluss
+				case CANCEL -> endSession();          // Abbruch: nichts speichern
+				case RESUME -> progress.resume();     // weiterspielen: kein Ende
 				default     -> throw new RuntimeException("Diesen Knopf kenne ich hier nicht. "
 						+ "Neu dazugebaut und den switch vergessen?");
 			}
@@ -140,42 +130,25 @@ public class RegionSession implements Screen {
 	 * <p>Der {@code CANCEL}-Zweig beim Aufrufer bleibt trotzdem nötig: Wer das Fenster über das X
 	 * schließt, bekommt von {@link Alerts} ebenfalls {@code CANCEL} zurück.</p>
 	 */
-	private ButtonEnum showMistakeAlert(String incorrectText, boolean allowResume) {
+	private ButtonEnum showMistakeAlert(SessionResult result) {
 		Log.info(this, "Alert wird erstellt. correct=false");
 
 		List<ButtonEnum> knoepfe = new ArrayList<>();
 		knoepfe.add(ButtonEnum.OK);
 		if (!spec.isPlaySession())
 			knoepfe.add(ButtonEnum.CANCEL);
-		if (allowResume)
+		if (result.allowResume())
 			knoepfe.add(ButtonEnum.RESUME);
 
-		return Alerts.show("Nicht korrekt", incorrectText, new AlertOptions().noEsc(),
+		return Alerts.show("Nicht korrekt", result.incorrectText(), new AlertOptions().noEsc(),
 				knoepfe.toArray(new ButtonEnum[0]));
 	}
 
 	/** Im Lernmodus fortschreiben und zeigen, wann das Deck wieder dran ist. Danach ist Schluss. */
-	private void saveAndEndSession(boolean correct, String wrongId) {
-		if (!spec.isPlaySession()) {
-			LearnStat stats = fortschrittSpeichern(correct, wrongId);
-			Alerts.show("Ausblick", getUntilString(stats.getDueDate()), ButtonEnum.OK);
-		}
+	private void saveAndEndSession() {
+		if (!spec.isPlaySession())
+			Alerts.show("Ausblick", getUntilString(progress.save()), ButtonEnum.OK);
 		endSession();
-	}
-
-	/** Bewertet das Ergebnis und schreibt es fort. Liefert den neuen Stand für den Ausblick. */
-	private LearnStat fortschrittSpeichern(boolean correct, String wrongId) {
-		LearnStat stats = service.getLearnStat(spec);
-
-		if (!stats.isDueToday())
-			throw new RuntimeException("Sicherheitsnetz eingebaut. Diese Region war gar nicht dran. Und ich soll den Fortschritt überschreiben? Mache ich ungern!");
-
-		stats.setLevel(progress.calculateNewLevel(stats.getLastPlayed(), correct, false));
-		stats.setLastPlayed(AppClock.TODAY);
-		if (!correct)
-			stats.incrementWrongCount();
-		service.savePlayedCards(spec, stats, correct, wrongId);
-		return stats;
 	}
 
 	/** Beim Controller abmelden — der ersetzt die Session, danach ist sie unerreichbar. */

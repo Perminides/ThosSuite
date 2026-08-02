@@ -87,25 +87,66 @@ Zwei Sorten Karte, unterschieden über `MapType`:
 
 ### Session-Aufbau
 
-Eine Lern-Session besteht aus vier Klassen. Am Beispiel Anki:
+Eine Lern-Session besteht aus vier Klassen — bei Anki wie bei Region, mit denselben Begriffen:
 
 ```
-   AnkiDeckSession
+   AnkiDeckSession (RegionSession)
         │
         ▼
-   SessionProgress  ◄────►  SessionPresenter  ◄────►  SessionPane
-   (Karten-Ablauf)          (Scharnier)                (GUI)
+   SessionProgress  ◄────►  SessionPresenter  ◄────►  LearnView
+      (Ablauf)              (Scharnier)                (GUI)
 ```
 
-- Die **Schale** (`AnkiDeckSession`) sitzt oben und kennt nur den Ablauf (`SessionProgress`) — und
-  den nur in eine Richtung. Der Rückweg „letzte Karte fertig" läuft als Callback
-  (`onLastCardDone`), nicht als gehaltene Session-Referenz.
-- Darunter die Dreierkette **GUI ↔ Presenter ↔ Ablauf.** Beide Kanten sind echt gegenseitig; der
-  Presenter ist das Scharnier zwischen Oberfläche und Ablauf.
+- Die **Schale** (`AnkiDeckSession` / `RegionSession`) sitzt oben, ist der Ansprechpartner des
+  Controllers (`Screen`) und kennt nur den Progress — und den nur in eine Richtung. Der Rückweg
+  „ich bin fertig" läuft in beiden Zweigen als `Runnable`, nicht als gehaltene Referenz: Der
+  Progress kennt seine Schale nicht.
+- Darunter die Dreierkette **GUI ↔ Presenter ↔ Progress.** Beide Kanten sind echt gegenseitig; der
+  Presenter ist das Scharnier zwischen Oberfläche und Progress. Er baut die View und meldet sich
+  beim Progress an.
 
-**region** folgt derselben Vierer-Struktur und denselben Begriffen, weicht in der Umsetzung aber
-ab — unter anderem sitzt dort die Auswertung an anderer Stelle. Ob region dem Anki-Muster folgen
-soll, ist offen (`!Diagnose`-Block im Javadoc von `RegionSession`).
+Zwei Unterschiede im Bau, beide fachlich begründet:
+
+- **Anki hat drei Views, Region eine.** `AnkiLearnView` ist abstrakt, darunter hängen
+  `ShapeMapLearnView`, `ImageMapLearnView` und `McLearnView` — sie unterscheiden sich in der
+  Kartenart und darin, ob es ein Eingabefeld gibt. `RegionLearnView` kennt nur eine Variante und
+  regelt sie über einen Schalter.
+- **Anki hat eine Progress-Klasse, Region drei.** `SessionProgress` ist dort abstrakt, darunter
+  `ClickSessionProgress`, `EliminationSessionProgress` und `WriteSessionProgress`. Was sie teilen —
+  Spec, Presenter, Fortschreiben des Lernstands —, steht in der Basisklasse.
+
+**Ankis Progress hält zusätzlich eine Map**: zu jeder Karte ein `CardProgress`, das den Stand
+*dieser einen Karte* führt (welche Schritte erledigt sind, ob schon falsch geantwortet wurde).
+Region braucht das nicht — dort gibt es kein Gegenstück zur einzelnen Karte.
+
+#### Wie eine Session endet
+
+In beiden Zweigen derselbe Dreisprung, ausgelöst vom Progress und ausgeführt von der Schale:
+
+```
+1. Ergebnis anzeigen
+2. im Lernmodus: Fortschritt speichern (der Progress tut es, er hat die Daten)
+3. beim Controller abmelden — der ersetzt die Session
+```
+
+Zwischen Schritt 1 und 3 darf nichts stehen, das die Kontrolle an die Event-Schleife zurückgibt;
+die Begründung steht im Regel-Dokument unter „Ein Screen beendet sich nicht selbst".
+
+**Bei Region ist Schritt 1 aufwendiger** — nicht weil es anders gebaut wäre, sondern weil die
+Fachlichkeit mehr hergibt:
+
+- Eine Regions-Session ist am Ende **geschafft oder nicht**. Es gibt ein Gesamtergebnis.
+- Im Lernmodus **beendet der erste Fehler die Session**. Der Fehler *ist* also das Ende, und das
+  Ende muss erklären, was falsch war.
+- Deshalb gibt es dort ein **Fortsetzen**: Wer das erzwungene Ende nicht hinnehmen will, spielt
+  weiter — die Session endet dann gar nicht.
+- Im **freien Spiel** wird nicht abgebrochen, sondern gesammelt. Fehlgriffe werden festgeschrieben
+  und am Ende aufgelistet: ein zweiter Ergebnistext, den es im Lernmodus nicht gibt.
+- Es gibt einen **Ausblick**, weil die Fälligkeit am Deck als Ganzem hängt und ein Datum zu nennen
+  ist.
+
+Was daraus im Einzelnen folgt — welcher Dialog in welcher Konstellation erscheint —, steht als
+Tabelle im Javadoc von `RegionSession.closeLoud()`, wo es beim Lesen des Codes gebraucht wird.
 
 ## 💪 Fitbit-Integration (`fitbit`)
 

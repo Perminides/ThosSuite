@@ -12,7 +12,7 @@ import app.learn.region.SessionPresenter.WrongClickResolution;
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
 
-public class ClickSessionProgress implements SessionProgress{
+public class ClickSessionProgress extends SessionProgress {
 	
 	public record QuizElement(String toFind, String shapeId) {
 		String getToFind() {
@@ -24,21 +24,17 @@ public class ClickSessionProgress implements SessionProgress{
 		}
 	};
 	
-	private final RegionSession session;
 	private final Set<String> sessionRegions;
 	private final List<QuizElement> quizElements;
 	private final Set<String> notFound = new TreeSet<>();
-	private final SessionSpec spec;
 	private final boolean easy;
 	private boolean isPaused = false;
 	private int currentIndex = -1;
 	private String lastClickedId = null;
-	
-	private SessionPresenter presenter;
 
-	public ClickSessionProgress(Set<MapShape> regions, SessionSpec spec, RegionSession regionSession) {
-		this.session = regionSession;
-		this.spec = spec;
+	public ClickSessionProgress(Set<MapShape> regions, SessionSpec spec, RegionDeckService service,
+			Runnable onFinished) {
+		super(spec, service, onFinished);
 		this.easy = spec.getMode().getEasyHard() == Mode.EasyHard.EASY;
 		this.sessionRegions = new HashSet<>();
 		for (MapShape region : regions) {
@@ -123,26 +119,22 @@ public class ClickSessionProgress implements SessionProgress{
 			isPaused = false;
 			resume();
 		} else if (isPaused) {
-			session.end(false, quizElements.get(currentIndex).shapeId(), "Statt " + quizElements.get(currentIndex).toFind() + " wurde " + getNameForId(lastClickedId) + " geklickt.", true);
+			finishIncorrect("Statt " + quizElements.get(currentIndex).toFind() + " wurde " + getNameForId(lastClickedId) + " geklickt.",
+					true, quizElements.get(currentIndex).shapeId());
 		}
-	}
-	
-	@Override
-	public void setPresenter(SessionPresenter presenter) {
-		this.presenter = presenter;
 	}
 	
 	private void nextStep() {
 		currentIndex++;
 		if (currentIndex >= quizElements.size()) {
 			if (notFound.isEmpty()) {           // alles gefunden — im Lernmodus der einzige Weg hierher
-				session.end(true, null, null, false);
+				finishCorrect();
 			} else if (spec.isPlaySession()) {  // freies Spiel mit Fehlern: die listen wir auf
 				String result = "Folgende Elemente wurden nicht erkannt: \n\n";
 				for (String wrongId : notFound) {
 					result = result + getNameForId(wrongId) + "\n";
 				}
-				session.end(false, "", result, false);
+				finishIncorrect(result, false, null);
 			} else {
 				throw new RuntimeException("Moment. Entweder wird ein falscher Klick zurückgenommen oder es wird ohne nextStep beendet. Hierhin dürfte der Code nie kommen. Untersuchen!");
 			}

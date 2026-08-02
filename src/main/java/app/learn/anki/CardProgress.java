@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import app.learn.Progress;
+
 import app.learn.anki.model.Card;
 import app.learn.anki.model.MultipleChoiceAnswers;
 import app.learn.anki.model.Card.AnswerOption;
@@ -28,7 +28,7 @@ import app.shared.Log;
  * Aber wir haben uns der Einfachheit darauf verständigt, weil Events würden das nur aufblähen und das
  * Konstrukt Panel - Presenter - SessionProgress - Progress ist halt auch ein enges...
  */
-public class CardProgress implements Progress{
+public class CardProgress {
 	
 	private final SessionPresenter presenter;
 	private final Card card;

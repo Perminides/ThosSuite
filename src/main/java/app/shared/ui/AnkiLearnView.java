@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import app.shared.model.ScreenView;
-import app.shared.model.LearnCallbacks;
+import app.shared.model.AnkiCallbacks;
 import app.shared.skin.LearnComponent;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
@@ -51,7 +51,7 @@ public abstract class AnkiLearnView {
 	private final String deckId;
 	private final String mapName;
 	private final String kategorie;
-	private final LearnCallbacks callbacks;
+	private final AnkiCallbacks callbacks;
 
 	private final ComponentHost canvas = new ComponentHost();
 
@@ -64,7 +64,7 @@ public abstract class AnkiLearnView {
 	private SuiteIconButton backButton;
 	private SuiteTextField inputField;
 
-	protected AnkiLearnView(String deckId, String mapName, String kategorie, LearnCallbacks callbacks) {
+	protected AnkiLearnView(String deckId, String mapName, String kategorie, AnkiCallbacks callbacks) {
 		this.deckId = deckId;
 		this.mapName = mapName;
 		this.kategorie = kategorie;
@@ -83,7 +83,7 @@ public abstract class AnkiLearnView {
 	protected String deckId()              { return deckId; }
 	protected String mapName()             { return mapName; }
 	protected String kategorie()           { return kategorie; }
-	protected LearnCallbacks callbacks() { return callbacks; }
+	protected AnkiCallbacks callbacks() { return callbacks; }
 
 	// ===== Aufbau =====
 
