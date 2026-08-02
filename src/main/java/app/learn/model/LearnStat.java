@@ -7,6 +7,7 @@ import app.shared.AppClock;
 
 /**
  * Wrapper um die card_learn_stat Tabelle. Ergibt nur Sinn, wenn sie von einer Lernkarte referenziert wird.
+ * !Sofort: Der Kommentar oben ist Quatsch! Learnstat wird auch von region genutzt und das ist ja auch richtig so.
  */
 public class LearnStat {
 	private final static Random random = new Random();

@@ -290,6 +290,22 @@ Feature-Klasse hält ein `ScreenView`-Objekt und reicht es weiter; sie ruft nie
 dasselbe Objekt; `Screen.refresh()` tauscht nur seine Kinder. Kein Controller-Reshow, kein
 Swap-Container.
 
+**Ein Screen beendet sich nicht selbst — er meldet sein Ende und wird ersetzt.** Zwischen „fertig"
+und „ersetzt" darf nichts stehen, das die Kontrolle an die Event-Schleife zurückgibt: kein
+`showAndWait`, kein `Platform.runLater`, kein Thread, kein `Task`. Alles, was der Nutzer noch sehen
+soll — Zusammenfassung, Ausblick, Rückfrage —, passiert **davor**, solange der Screen noch lebt.
+
+Rechnen, Speichern und Loggen sind dabei unbedenklich: Solange der FX-Thread in unserem Code steht,
+kommt von außen kein Klick dazwischen; die Ereignisse stauen sich in der Queue und werden erst
+abgearbeitet, wenn der Controller den Screen längst ersetzt hat. Ein `showAndWait` dagegen startet
+eine verschachtelte Event-Schleife und pumpt genau diese Queue weiter.
+
+Daraus folgt die eigentliche Zusage: **Es gibt keinen toten Screen.** Ein Screen ist entweder
+lebendig und erreichbar, oder er ist ersetzt und damit unerreichbar — dazwischen liegt kein
+Zustand. Deshalb braucht es auch keine Wächter, die einen solchen Zustand abfangen; die frühere
+Variante mit `active`-Flag und einem Wurf in jeder Methode ist genau daran gescheitert, dass sie
+zwanzigmal dastand und nie ausgelöst hat.
+
 Die Kopplung sieht von außen bei allen gleich aus:
 
 ```java
