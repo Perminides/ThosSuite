@@ -30,7 +30,23 @@ public class AnkiDeckSession implements Screen {
 	private final Runnable onSessionEnded;
 	private final boolean isFreePlay;
 
-	public AnkiDeckSession(List<Card> cards, Runnable onSessionEnded, AnkiDeckService service, Deck type, boolean isFreePlay) {
+	/**
+	 * Eine Lern-Session: Karten in der eingestellten Sortierung, der Fortschritt wird am Ende
+	 * gespeichert.
+	 */
+	public static AnkiDeckSession forLearning(List<Card> cards, Runnable onSessionEnded, AnkiDeckService service, Deck type) {
+		return new AnkiDeckSession(cards, onSessionEnded, service, type, false);
+	}
+
+	/**
+	 * Eine Session außer der Reihe: Karten gemischt, Sortier-Wechsel wirkungslos, und am Ende wird
+	 * nichts gespeichert.
+	 */
+	public static AnkiDeckSession forFreePlay(List<Card> cards, Runnable onSessionEnded, AnkiDeckService service, Deck type) {
+		return new AnkiDeckSession(cards, onSessionEnded, service, type, true);
+	}
+
+	private AnkiDeckSession(List<Card> cards, Runnable onSessionEnded, AnkiDeckService service, Deck type, boolean isFreePlay) {
 		Log.info(this, "=== SESSION CONSTRUCTOR === Session@" + System.identityHashCode(this));
 		this.onSessionEnded = onSessionEnded;
 		this.isFreePlay = isFreePlay;

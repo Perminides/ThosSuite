@@ -58,6 +58,16 @@ Gebrauch auf" —, trägt hier nämlich **nicht**: ein Strukturverstoß fällt n
 6. **Null-Layout:** keine LayoutManager, feste Positionen (Desktop-App mit fester Auflösung;
   präzise Kontrolle wichtiger als Flexibilität). Die Rechtecke stehen im Skin, gesetzt werden sie
   von der Oberfläche in `shared.ui` — der Skin fasst keine Komponente an.
+7. **Kommentare und Javadoc beschreiben, was ist — nie, was war.** Kein „heißt nicht mehr",
+  „tut nicht mehr", „lag früher woanders", „ist jetzt umgekehrt". Wer eine Klasse aufschlägt,
+  will wissen, was sie tut; der Weg dahin beantwortet ihm keine Frage und verwirrt nach Monaten
+  nur noch. Was war, steht in der Git-Historie. Das gilt auch für Marker: ein Marker beschreibt
+  ein offenes Problem, nie eine erledigte Änderung.
+
+  *Abgrenzung:* Eine **verworfene Alternative mit Begründung** ist kein Rückblick, sondern eine
+  Eigenschaft der heutigen Lösung — sie verhindert, dass jemand denselben Weg noch einmal geht
+  („Button-Text togglen scheiterte an den festen ButtonBar-Breiten"). Erlaubt, solange sie sagt
+  *warum es so ist*, und nicht *dass es mal anders war*.
 
 <!-- TODO: Regel 4 braucht noch ein gutes Beispiel aus der Domäne (Schnitt/Benennung/Abhängigkeit),
      keins aus dem Prozess. Bleibt offen, bis eine echte Stutzer-Stelle auftaucht. -->
@@ -541,4 +551,5 @@ Geprüft wird Bytecode, nicht Quelltext.
 Wächter 10 ist **schärfer als die feste Regel 5**: die erlaubt Streams „wenn unbedingt nötig", der
 Wächter verbietet sie ganz.
 
-Ungeprüft bleiben die feste Regel 6 (Null-Layout) und der Javadoc-Vermerk bei `null`-Rückgaben.
+Ungeprüft bleiben die feste Regel 6 (Null-Layout), die feste Regel 7 (Kommentare beschreiben den
+Ist-Zustand) und der Javadoc-Vermerk bei `null`-Rückgaben.
