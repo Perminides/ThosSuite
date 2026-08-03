@@ -1,14 +1,14 @@
 package app.controller;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import app.alc.AlcStatisticsScreen;
 import app.alc.StartupService;
-import app.controller.model.PlayMenuItem;
+import app.controller.model.AnkiPlayItem;
 import app.controller.model.PlayMenuNode;
+import app.controller.model.RegionPlayItem;
 import app.diary.DiaryEditorPresenter;
 import app.diary.DiaryScreen;
 import app.fitbit.DataFetcher;
@@ -17,8 +17,7 @@ import app.fitbit.FitbitStatisticsScreen;
 import app.learn.ImageScaler;
 import app.learn.anki.AnkiDeckService;
 import app.learn.anki.AnkiDeckSession;
-import app.learn.anki.AnkiPlayConfigForm;
-import app.learn.anki.AnkiPlayConfigForm.AnkiPlayConfig;
+import app.learn.anki.AnkiPlaySetup;
 import app.learn.anki.model.AnkiLearnSessionInfo;
 import app.learn.anki.model.Card;
 import app.learn.model.Deck;
@@ -26,12 +25,10 @@ import app.learn.model.DeckCategory;
 import app.learn.model.LearnSessionInfo;
 import app.learn.model.MapShape;
 import app.learn.region.RegionDeckService;
-import app.learn.region.RegionPlayConfigForm;
-import app.learn.region.RegionPlayConfigForm.RegionPlayConfig;
+import app.learn.region.RegionPlaySetup;
 import app.learn.region.RegionSession;
-import app.learn.region.model.Mode;
 import app.learn.region.model.RegionLearnSessionInfo;
-import app.learn.region.model.SessionSpec;
+import app.learn.region.model.RegionPlaySelection;
 import app.mattress.MattressTurnDialog;
 import app.messaging.signal.SignalIncrementalImport;
 import app.messaging.whatsapp.WhatsAppIncrementalImport;
@@ -229,8 +226,8 @@ public class Controller{
 	public void onLearnMenuItemSelected(LearnSessionInfo info) {
 	    requestSessionSwitch(() -> {
 	    	if (info instanceof AnkiLearnSessionInfo anki) {
-				List<Card> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // !Später: Wenn Session schon den Service bekommt, um die Session zu speichern, warum holt sie sich nicht auch die Karten zum Spielen. Beantwortung muss erfolgen, wenn freies Spiel implementiert wird!
-				currentScreen = new AnkiDeckSession(dueCards, this::sessionEnded, ankiDeckService, anki.getDeckType(), false);
+				List<Card> dueCards = ankiDeckService.getDueCards(anki.getDeckType()); // Analog dem freien Spiel liegt das Holen der Karten hier noch im Controller. Könnte man diskutieren, aber warum?
+				currentScreen = AnkiDeckSession.forLearning(dueCards, this::sessionEnded, ankiDeckService, anki.getDeckType());
 		    } else if (info instanceof RegionLearnSessionInfo region) {
 		    	Set<MapShape> regions = regionDeckService.getRegions(region.getSpec());
 		        currentScreen = new RegionSession(region.getSpec(), regions, this::sessionEnded, regionDeckService);
@@ -240,72 +237,34 @@ public class Controller{
 	    });
 	}
 	
-	public void onPlayMenuItemSelected(PlayMenuItem item) {
-	    Object payload = item.payload();
-	    
-	    if (payload instanceof Deck deckType) {
-	        Set<String> availableLabels = ankiDeckService.getAvailableLabels(deckType);
-	        
-	        AnkiPlayConfig config = AnkiPlayConfigForm.show(deckType, availableLabels);
-	        if (config == null) return;
+	public void onPlayMenuItemSelected(PlayMenuNode item) {
+	    switch (item) {
+	    case AnkiPlayItem ankiItem -> {
+	        Deck deckType = ankiItem.deck();
+	        List<Card> cards = AnkiPlaySetup.show(deckType, ankiDeckService); // Läuft im Menü-Kontext, bevor eine Session existiert — ob überhaupt gespielt wird, entscheidet sich hier.
+	        if (cards == null) return;
 
-	        List<Card> cards = ankiDeckService.getCardsForPlay(
-	            deckType,
-	            config.minIndex(),
-	            config.maxIndex(),
-	            config.maxCards(),
-	            config.selectedLabels()
-	        );
-	        
-	        if (cards.isEmpty()) {
-	        	Alerts.show(null, "Keine Karten gefunden", ButtonEnum.OK);
-	            return;
-	        }
-	        
-	        requestSessionSwitch(() -> {
-	            // Session starten (ohne Sortierung, gemischt)
-	            currentScreen = new AnkiDeckSession(cards, this::sessionEnded, ankiDeckService, deckType, true);
-	            mainWindow.showScreenView(currentScreen.getView());
-	            currentScreen.start();
-	        });
-	        
-	    } else if (payload == DeckCategory.REGION_DECK) {	        
-	        RegionPlayConfig config = RegionPlayConfigForm.show();
-	        if (config == null) return;
-
-	        Set<Deck> selectedDecks = config.selectedDecks();
-	        Mode mode = config.mode();
-	        
-	        // Erstes Deck als primäres, Rest als additional
-	        Deck primaryDeck = selectedDecks.iterator().next();
-	        Set<Deck> additionalDecks = new HashSet<>(selectedDecks);
-	        additionalDecks.remove(primaryDeck);
-	        
-	        // Spec erstellen
-	        SessionSpec spec = new SessionSpec(
-	            primaryDeck,
-	            mode,
-	            additionalDecks.isEmpty() ? null : additionalDecks,
-	            true  // isPlaySession
-	        );
-	        
-	        // Regionen holen VOR dem Switch
-	        Set<MapShape> regions = regionDeckService.getRegions(spec);
-	        
-	        if (regions.isEmpty()) {
-	        	Alerts.show(null, "Keine Regionen gefunden", ButtonEnum.OK);
-	            return;
-	        }
-	        
 	        requestSessionSwitch(() -> {
 	            // Session starten
-	            currentScreen = new RegionSession(spec, regions, this::sessionEnded, regionDeckService);
+	            currentScreen = AnkiDeckSession.forFreePlay(cards, this::sessionEnded, ankiDeckService, deckType);
 	            mainWindow.showScreenView(currentScreen.getView());
 	            currentScreen.start();
 	        });
 	    }
+	    case RegionPlayItem _ -> {
+	        RegionPlaySelection selection = RegionPlaySetup.show(regionDeckService); // Läuft im Menü-Kontext, bevor eine Session existiert — ob überhaupt gespielt wird, entscheidet sich hier.
+	        if (selection == null) return;
+
+	        requestSessionSwitch(() -> {
+	            // Session starten
+	            currentScreen = new RegionSession(selection.spec(), selection.regions(), this::sessionEnded, regionDeckService);
+	            mainWindow.showScreenView(currentScreen.getView());
+	            currentScreen.start();
+	        });
+	    }
+	    }
 	}
-	
+
 	public void onStatisticsMenuItemSelected(String item) {
 	    requestSessionSwitch(() -> {
 	        if ("Dashboard".equals(item)) {
@@ -406,12 +365,12 @@ public class Controller{
 	    // Anki-Decks aus Enum holen
 	    for (Deck type : Deck.values()) {
 	        if (type.getCategory() == DeckCategory.ANKI_DECK) {
-	            items.add(new PlayMenuItem(type.getDisplayName(), type));
+	            items.add(new AnkiPlayItem(type.getDisplayName(), type));
 	        }
 	    }
-	    
+
 	    // Region-Config-Eintrag hinzufügen
-	    items.add(new PlayMenuItem("Regionen", DeckCategory.REGION_DECK));
+	    items.add(new RegionPlayItem("Regionen"));
 	    
 	    mainWindow.setPlayItems(items);
 	}

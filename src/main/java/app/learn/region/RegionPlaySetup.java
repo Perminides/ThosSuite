@@ -11,29 +11,69 @@ import java.util.Set;
 import app.learn.model.Deck;
 import app.learn.model.DeckCategory;
 import app.learn.model.MapMetadata;
+import app.learn.model.MapShape;
 import app.learn.region.model.Mode;
+import app.learn.region.model.RegionPlaySelection;
+import app.learn.region.model.SessionSpec;
+import app.shared.model.ButtonEnum;
 import app.shared.model.RegionDialogState;
 import app.shared.model.RegionDialogState.Choice;
 import app.shared.model.RegionDialogState.Toggle;
+import app.shared.ui.Alerts;
 import app.shared.ui.RegionConfigDialog;
 
-public final class RegionPlayConfigForm {
+/**
+ * Richtet ein freies Regions-Spiel ein: fragt den Nutzer, was gespielt werden soll, und liefert
+ * Spec und Regionen dazu.
+ */
+public final class RegionPlaySetup {
 
 	/**
-	 * Was gespielt werden soll.
+	 * Was gespielt werden soll. Nur der Weg von der Dialog-Antwort zur Spec — verlässt diese
+	 * Klasse nicht.
 	 */
-    public record RegionPlayConfig(Set<Deck> selectedDecks, Mode mode) {}
+    private record RegionPlayConfig(Set<Deck> selectedDecks, Mode mode) {}
 
     // Konstruktor verstecken
-    private RegionPlayConfigForm() {}
+    private RegionPlaySetup() {}
 
     // Start
-    /** Was gespielt werden soll, oder {@code null} wenn der Nutzer abbricht. */
-    public static RegionPlayConfig show() {
+    /**
+     * Zeigt die Spiel-Konfiguration und holt die passenden Regionen.
+     *
+     * @return Spec und Regionen fürs freie Spiel, oder {@code null} wenn der Nutzer abbricht oder
+     *         keine Regionen passen. Im zweiten Fall wurde der Nutzer bereits benachrichtigt — der
+     *         Aufrufer muss beide Fälle nicht unterscheiden, beide heißen „nichts tun".
+     */
+    public static RegionPlaySelection show(RegionDeckService service) {
         RegionDialogState initial = getInitialState(); // Im initialen Zustand ist alles anklickbar, deswegen brauchen wir kein reduce aufzurufen hier.
         RegionDialogState result =
-                new RegionConfigDialog(initial, RegionPlayConfigForm::reduce).showAndWait();
-        return result == null ? null : toConfig(result);
+                new RegionConfigDialog(initial, RegionPlaySetup::reduce).showAndWait();
+        if (result == null) return null;
+
+        SessionSpec spec = toSpec(toConfig(result));
+        Set<MapShape> regions = service.getRegions(spec);
+
+        if (regions.isEmpty()) {
+            Alerts.show(null, "Keine Regionen gefunden", ButtonEnum.OK);
+            return null;
+        }
+        return new RegionPlaySelection(spec, regions);
+    }
+
+    /** Erstes Deck als primäres, der Rest als additional. */
+    private static SessionSpec toSpec(RegionPlayConfig config) {
+        Set<Deck> selectedDecks = config.selectedDecks();
+        Deck primaryDeck = selectedDecks.iterator().next();
+        Set<Deck> additionalDecks = new HashSet<>(selectedDecks);
+        additionalDecks.remove(primaryDeck);
+
+        return new SessionSpec(
+            primaryDeck,
+            config.mode(),
+            additionalDecks.isEmpty() ? null : additionalDecks,
+            true  // isPlaySession
+        );
     }
 
     /**

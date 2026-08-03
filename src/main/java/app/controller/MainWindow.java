@@ -3,7 +3,6 @@ package app.controller;
 import java.util.List;
 import java.util.function.Consumer;
 
-import app.controller.model.PlayMenuItem;
 import app.controller.model.PlayMenuNode;
 import app.learn.anki.model.CardSortOrder;
 import app.learn.model.LearnSessionInfo;
@@ -58,7 +57,7 @@ public class MainWindow {
     private Runnable onQuitSelected = null;
     private Runnable onEscPressed = null;
     private Runnable onPausePressed = null;
-    private Consumer<PlayMenuItem> onPlayItemSelected = null;
+    private Consumer<PlayMenuNode> onPlayItemSelected = null;
     private Runnable onReloadSkin = null;
     private Consumer<String> onStatisticsSelected = null;
     
@@ -266,9 +265,8 @@ public class MainWindow {
         
         menuPlay.getItems().clear();
         for (PlayMenuNode node : playMenuNodes) {
-            PlayMenuItem item = (PlayMenuItem) node; // Cast ist sicher dank sealed interface
-            MenuItem menuItem = new MenuItem(item.label());
-            menuItem.setOnAction(_ -> onPlayItemSelected.accept(item));
+            MenuItem menuItem = new MenuItem(node.label());
+            menuItem.setOnAction(_ -> onPlayItemSelected.accept(node));
             menuPlay.getItems().add(menuItem);
         }
     }
@@ -329,7 +327,7 @@ public class MainWindow {
     }
     
 
-    public void setPlayItemConsumer(Consumer<PlayMenuItem> consumer) {
+    public void setPlayItemConsumer(Consumer<PlayMenuNode> consumer) {
         this.onPlayItemSelected = consumer;
     }
     

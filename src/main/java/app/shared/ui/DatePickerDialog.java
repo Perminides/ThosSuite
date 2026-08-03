@@ -14,10 +14,6 @@ import app.shared.ui.components.SuiteDatePicker;
  *
  * <p>Parametrisierter Standarddialog: Text rein, Datum oder {@code null} raus. Kein
  * feature-seitiges Objekt, kein Ergebnis-Record — bei einem einzelnen Wert wäre das Zeremonie.</p>
- *
- * <p>Vorher lag dieser Dialog inline im {@code SuiteExporter} und damit im {@code controller}, der
- * dafür {@code SuiteDialog} aus {@code shared.ui.components} importieren musste — ein Verstoß gegen
- * die Regel, dass nur {@code shared.ui} die Bausteine kennt.</p>
  */
 public class DatePickerDialog {
 
