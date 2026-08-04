@@ -95,7 +95,7 @@ public class AnkiDeckService {
 				continue;
 			
 			// Preload der Karten-Shapes: bewusst für *alle* Anki-Decks mit Karte, nicht nur die heute
-			// fälligen — ein Fälligkeitsfilter lohnt bei vier Decks nicht. !Später toggle im config berücksichtigen
+			// fälligen — ein Fälligkeitsfilter lohnt bei vier Decks nicht.
 			if (type.getMapMetadata() != null) {
 				MapService.getInstance().preloadShapes(type);
 				if (type.getMapMetadata().getMapType() == MapType.IMAGE)
@@ -105,26 +105,26 @@ public class AnkiDeckService {
 			dueCards.put(type, new HashMap<>());
 			allCards.put(type, repo.getAllHints(type));
 			initialDueCounts.put(type, repo.getInitialDue(type));
-			int newCounter = Integer.parseInt(Config.get(type.getConfigValueNewCards()));
+			// Das Tagesbudget für neue Karten, abzüglich dessen, was heute schon verbraucht ist.
+			// Dadurch rutschen neue Karten auch dann noch nach, wenn der heutige Stapel längst
+			// begonnen oder abgearbeitet ist — und trotzdem nie mehr als die Config erlaubt.
+			int neueUebrig = Integer.parseInt(Config.get(type.getConfigValueNewCards()))
+					- repo.getNewLearnedToday(type);
 			List<Card> newCards = new ArrayList<Card>();
 			for (Card card : allCards.get(type)) {
 				if (card.isDueToday())
 					dueCards.get(type).put(card.getId(), card);
-				else if (card.isNew() && newCounter > 0) {
+				else if (card.isNew() && neueUebrig > 0) {
 					newCards.add(card);
-					newCounter--;
+					neueUebrig--;
 				}
 				allLabels.computeIfAbsent(type, _ -> new HashSet<>())
 					.addAll(card.getLabels());
 			}
 			
-			// !Später vielleicht etwas mehr sophisticated auch den Fall berücksichtigen, dass ich 2 neue Karten gelernt habe
-			// und noch 3 neue übrig sind. Was ehrlich gesagt ein eher theoretischer Fall ist...
-			if (dueCards.get(type).size() == initialDueCounts.get(type)) {
-				for (Card card : newCards)
-					dueCards.get(type).put(card.getId(), card);
-				initialDueCounts.put(type, initialDueCounts.get(type) + newCards.size());
-			}			
+			for (Card card : newCards)
+				dueCards.get(type).put(card.getId(), card);
+			initialDueCounts.put(type, initialDueCounts.get(type) + newCards.size());
 		}
 		// Ach, was solls? Wir wollen den Schatten freigeben!
 		System.gc();

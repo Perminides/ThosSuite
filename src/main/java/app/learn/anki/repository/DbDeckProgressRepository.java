@@ -81,6 +81,28 @@ class DbDeckProgressRepository {
 		    }
 		}
 		
+		/**
+		 * Wie viele Karten dieses Decks heute zum ersten Mal gespielt wurden — also wie viel vom
+		 * Tagesbudget für neue Karten schon verbraucht ist.
+		 *
+		 * <p>{@code first_played} trägt den Tag des allerersten Spielens: Beim Speichern steht es
+		 * nur im INSERT-Zweig, das {@code ON CONFLICT DO UPDATE} fasst es nicht an.</p>
+		 */
+		int getNewLearnedToday(Deck type) {
+		    Connection conn = DB.getConnection();
+		    String sql = "select count(*) "
+		            + "from card_learn_stat "
+		            + "where deck = '" + type.getDisplayName() + "'"
+		            + "and date(first_played) = '" + AppClock.TODAY + "'";
+		    try (Statement statement = conn.createStatement();
+		         ResultSet rs = statement.executeQuery(sql)) {
+		        rs.next();
+		        return rs.getInt(1);
+		    } catch (Exception e) {
+		        throw new RuntimeException("Problem beim Zählen der heute neu gelernten Karten...");
+		    }
+		}
+
 		int getInitialDue(Deck type) {
 		    Connection conn = DB.getConnection();
 		    String sql = "select count(*) "
