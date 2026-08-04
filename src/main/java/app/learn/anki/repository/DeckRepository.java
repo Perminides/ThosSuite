@@ -40,4 +40,8 @@ public class DeckRepository {
 	public int getInitialDue(Deck type) {
 		return db.getInitialDue(type);
 	}
+
+	public int getNewLearnedToday(Deck type) {
+		return db.getNewLearnedToday(type);
+	}
 }
