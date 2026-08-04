@@ -5,50 +5,61 @@ import app.shared.model.ButtonEnum;
 import javafx.animation.AnimationTimer;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
+import javafx.geometry.Point2D;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
+import javafx.scene.robot.Robot;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
 
 /**
- * !tmp: Startdiagnose für das Phänomen „Fenster nimmt Klicks an, zeigt aber nichts".
+ * !tmp: Startdiagnose für das Phänomen „Fenster ist da und sieht richtig aus, reagiert aber nicht".
  *
- * <p>Beobachtet: Nach dem Start bleibt das Bild stehen, Klicks kommen aber an (ein weggeklickter
- * Tagebuch-Dialog war weg, sobald die Maus das Fenster einmal verlassen und wieder betreten hatte).
- * Tritt sporadisch auf — mal dreimal hintereinander, mal zehnmal nicht.</p>
+ * <p>Beobachtet: Nach dem Start ist das Hauptfenster vollständig und korrekt gezeichnet, ein Klick
+ * auf ein Menü öffnet es aber nicht. Sobald die Maus das Fenster einmal verlassen hat und wieder
+ * hineinkommt, geht alles. Tritt sporadisch auf — mal dreimal hintereinander, mal zehnmal nicht.</p>
  *
- * <p><b>Wozu das hier reicht.</b> Dass Klicks ankommen, schließt einen hängenden FX-Thread aus;
- * es ist ein Präsentationsproblem. Dafür bleiben zwei Erklärungen, und diese Diagnose trennt sie:</p>
+ * <h2>Die offene Frage</h2>
+ * Zwei Erklärungen sind übrig, und sie sagen das Gegenteil voneinander:
  * <ol>
- *   <li><b>Die Deckkraft steht noch auf 0.</b> Der Start zeigt das Fenster mit {@code opacity=0}
- *       gegen den White-Flash und holt das erst hinter einer {@code PauseTransition} und zwei
- *       geschachtelten {@code runLater} zurück. Ein Fenster mit Deckkraft 0 ist unter Windows
- *       weiterhin klickbar — das passt auf die Beobachtung. Dann wäre es unser Fehler.</li>
- *   <li><b>Windows setzt das Fenster nicht neu zusammen.</b> Deckkraft ist 1, das Bild kommt
- *       trotzdem erst beim nächsten Anlass — und „Maus raus und wieder rein" ist genau so einer.
- *       Dann liegt es nicht an uns.</li>
+ *   <li><b>Die Darstellung hängt.</b> Klicks kommen an, der Zustand ändert sich, nur das Bild
+ *       kommt nicht nach. Auf dem Schirm steht dann ein veralteter, aber in sich stimmiger Stand.</li>
+ *   <li><b>Die Eingabe fehlt.</b> Die Klicks erreichen die Anwendung gar nicht. Dann ist das Bild
+ *       völlig korrekt — es hat sich ja nichts geändert.</li>
  * </ol>
  *
- * <p>Die Unterscheidung hängt an <b>einer</b> Zahl: der Deckkraft im Moment des Stillstands. Die
- * Pulse-Zahl steht daneben, weil eine Zeile ohne Pulse-Fortschritt beide Erklärungen widerlegen
- * würde — dann stünde doch der FX-Thread.</p>
+ * <h2>Was hier misst, und was es entscheidet</h2>
+ * <ul>
+ *   <li><b>Die tickende Zahl</b> links im Fenster zählt im Sekundentakt und schreibt denselben Wert
+ *       ins Log. Steht sie auf dem Schirm still, während das Log weiterzählt, hängt die Darstellung
+ *       (Fall 1). Läuft sie mit, ist die Darstellung in Ordnung und es bleibt Fall 2. Diese Messung
+ *       braucht <b>keine</b> Bedienung — sie funktioniert, während die Maus still liegt.</li>
+ *   <li><b>Das Eingabeprotokoll</b> hängt als Filter an der Scene und sieht jeden Klick, jede Taste
+ *       und jeden Maus-Ein-/Austritt, bevor irgendein Knoten sie behandelt. Steht dort ein
+ *       PRESSED, während sichtbar nichts passiert, ist es Fall 1. Steht dort nichts, ist es Fall 2.
+ *       Der ENTERED-Eintrag markiert außerdem den Moment der Heilung.</li>
+ *   <li><b>Das Probe-Menü</b> öffnet sich von selbst und ist ein <i>eigenes</i> Fenster. Erscheint
+ *       es, während die Zahl steht, klemmt nur die Fläche des Hauptfensters.</li>
+ *   <li><b>Die Cursor-Position</b> im Moment des Deckkraftwechsels, gemessen über den {@link Robot}.
+ *       Prüft über mehrere Starts, ob das Phänomen damit zusammenfällt, dass der Zeiger beim
+ *       Umschalten schon über dem Fenster stand.</li>
+ *   <li><b>Deckkraft, Pulse, Fensterzahl, Szenenmaße</b> je Sekunde wie bisher. Die Pulse-Zahl kann
+ *       nur einen einzigen Zustand aufdecken — komplett stehender FX-Thread.</li>
+ * </ul>
  *
- * <p><b>Die Fensterzahl ist für den Dialog-Fall da.</b> Als das Phänomen zuletzt auftrat, hing ein
- * Startup-Dialog: weggeklickt, aber weiter zu sehen. Für diesen Fall sagt die Deckkraft der
- * Hauptbühne nichts — die steht dann ohnehin auf 0. Sinkt die Fensterzahl in dem Moment, in dem der
- * Dialog auf dem Bildschirm stehen bleibt, ist bewiesen, dass er längst zu ist und nur das Bild
- * nicht nachkommt.</p>
- *
- * <p><b>Und die Nachfrage am Ende gibt dem Block sein Etikett.</b> Ohne sie stehen im Log zwanzig
- * Diagnose-Blöcke, von denen drei interessant sind, und man sieht ihnen nicht an, welche. Die App
- * kann das nicht selbst entscheiden: dass Windows das Bild nicht zeigt, ist von innen unsichtbar —
- * Pulse und Deckkraft sehen dann völlig normal aus. Deshalb fragen wir den Einzigen, der es sieht.
- * Der Dialog ist absichtlich lästig und verschwindet mit dieser Klasse.</p>
- *
- * <p>Warum die Nachfrage erst nach {@value #NACHFRAGE_SEKUNDEN} Sekunden kommt und trotzdem
- * verlässlich sichtbar ist: das Symptom löst sich empirisch nach wenigen Sekunden von selbst auf,
- * sobald die Maus das Fenster einmal verlässt. Bliebe der Dialog wider Erwarten unsichtbar, wäre
- * genau das der interessanteste Befund.</p>
+ * <p><b>Die Nachfrage am Ende gibt dem Block sein Etikett.</b> Ob der Start gut war, kann die
+ * Anwendung nicht selbst entscheiden: In beiden Fällen sehen ihre eigenen Messwerte normal aus.
+ * Deshalb fragen wir den Einzigen, der es sieht. Der Dialog ist absichtlich lästig und verschwindet
+ * mit dieser Klasse.</p>
  *
  * <p>Diese Klasse wohnt in {@code shared.ui} und nicht bei {@code Log} und {@code DB} in der
  * {@code shared}-Wurzel, weil sie {@link Alerts} braucht — und die Wurzel darf nicht nach
@@ -59,12 +70,15 @@ public final class StartupDiagnostics {
 	private static final long INTERVALL_NS = 1_000_000_000L;
 
 	/** Nachlauf, nachdem die Deckkraft zurückgedreht wurde. Reicht bis über die Nachfrage hinaus. */
-	private static final long NACHLAUF_NS = 25_000_000_000L;
+	private static final long NACHLAUF_NS = 35_000_000_000L;
 
 	/** Notbremse, falls die Deckkraft nie zurückkommt: dann ist genau das der Befund. */
 	private static final long HARTES_ENDE_NS = 180_000_000_000L;
 
-	private static final int NACHFRAGE_SEKUNDEN = 20;
+	/** Sekunden nach dem Deckkraftwechsel, gerechnet ab dem sichtbaren Fenster. */
+	private static final int PROBE_MENUE_SEKUNDEN = 6;
+	private static final int PROBE_MENUE_DAUER = 3;
+	private static final int NACHFRAGE_SEKUNDEN = 30;
 
 	private StartupDiagnostics() {}
 
@@ -80,12 +94,16 @@ public final class StartupDiagnostics {
 	 */
 	public static void watch(Stage stage) {
 		logUmgebung();
+		Runnable protokollAbhaengen = eingabeProtokollAnhaengen(stage.getScene());
+		Label zaehler = zaehlerAnbauen(stage.getScene());
 
 		new AnimationTimer() {
 			private long start;
 			private long letzteAusgabe;
 			private long deckkraftDa;
 			private int pulses;
+			private int sekunde;
+			private boolean probeGelaufen;
 
 			@Override
 			public void handle(long now) {
@@ -99,14 +117,24 @@ public final class StartupDiagnostics {
 				if (now - letzteAusgabe < INTERVALL_NS)
 					return;
 
-				// Der Moment, in dem das Fenster sichtbar wird — ab hier zählt die Nachfrage.
+				sekunde = (int) ((now - start) / INTERVALL_NS);
+
+				// Der Moment, in dem das Fenster sichtbar wird — ab hier zählen Probe und Nachfrage.
 				if (deckkraftDa == 0 && stage.getOpacity() == 1) {
 					deckkraftDa = now;
+					cursorLageLoggen(stage);
 					nachfrageStarten();
 				}
 
+				// Die Zahl auf dem Schirm und die Zahl im Log stammen aus derselben Zuweisung.
+				// Weichen sie voneinander ab, ist genau das der Befund.
+				if (zaehler != null) {
+					zaehler.setText(String.valueOf(sekunde));
+					zaehler.autosize(); // unmanaged: die Größe setzt niemand außer uns
+				}
+
 				Log.info(StartupDiagnostics.class, "Startdiagnose"
-						+ " t=" + (now - start) / INTERVALL_NS + "s"
+						+ " t=" + sekunde + "s"
 						+ " pulses=" + pulses
 						+ " opacity=" + stage.getOpacity()
 						+ " focused=" + stage.isFocused()
@@ -117,14 +145,153 @@ public final class StartupDiagnostics {
 				pulses = 0;
 				letzteAusgabe = now;
 
+				if (!probeGelaufen && deckkraftDa != 0
+						&& now - deckkraftDa >= PROBE_MENUE_SEKUNDEN * INTERVALL_NS) {
+					probeGelaufen = true;
+					probeMenueZeigen(stage);
+				}
+
 				boolean nachlaufVorbei = deckkraftDa != 0 && now - deckkraftDa >= NACHLAUF_NS;
 				if (nachlaufVorbei || now - start >= HARTES_ENDE_NS) {
+					// Weg mit der Zahl, sobald sie nichts mehr misst: eine stehengebliebene Zahl
+					// sieht aus wie das Symptom, das wir gerade suchen.
+					zaehlerEntfernen(zaehler);
+					protokollAbhaengen.run();
 					Log.info(StartupDiagnostics.class, "Startdiagnose Mitschrift beendet");
 					stop();
 				}
 			}
 		}.start();
 	}
+
+	// ========================================================================
+	// Die Messungen
+	// ========================================================================
+
+	/**
+	 * Klicks, Tasten und Maus-Ein-/Austritte, mitgeschrieben als <b>Filter</b> auf der Scene: So
+	 * steht die Zeile im Log, bevor irgendein Knoten das Ereignis behandeln oder verbrauchen kann.
+	 * Bewegungen werden auf eine Zeile je Sekunde gedrosselt, sonst ersäuft das Log.
+	 *
+	 * @return die Routine, die alle Filter wieder abhängt — aufzurufen, wenn die Mitschrift endet.
+	 *         Sonst protokolliert die Diagnose bis zum Programmende jede Mausbewegung mit.
+	 */
+	private static Runnable eingabeProtokollAnhaengen(Scene scene) {
+		if (scene == null) {
+			Log.warn(StartupDiagnostics.class, "Startdiagnose Eingabeprotokoll nicht moeglich: keine Scene");
+			return () -> {};
+		}
+
+		EventHandler<MouseEvent> klick = e -> Log.info(StartupDiagnostics.class,
+				"Startdiagnose EINGABE klick x=" + (int) e.getSceneX() + " y=" + (int) e.getSceneY()
+						+ " ziel=" + zielName(e.getTarget()));
+
+		EventHandler<KeyEvent> taste = e -> Log.info(StartupDiagnostics.class,
+				"Startdiagnose EINGABE taste " + e.getCode());
+
+		EventHandler<MouseEvent> betritt = _ -> Log.info(StartupDiagnostics.class,
+				"Startdiagnose EINGABE maus betritt fenster");
+
+		EventHandler<MouseEvent> verlaesst = _ -> Log.info(StartupDiagnostics.class,
+				"Startdiagnose EINGABE maus verlaesst fenster");
+
+		long[] letzteBewegung = {0};
+		EventHandler<MouseEvent> bewegung = e -> {
+			long jetzt = System.nanoTime();
+			if (jetzt - letzteBewegung[0] < INTERVALL_NS)
+				return;
+			letzteBewegung[0] = jetzt;
+			Log.info(StartupDiagnostics.class, "Startdiagnose EINGABE bewegung x="
+					+ (int) e.getSceneX() + " y=" + (int) e.getSceneY());
+		};
+
+		scene.addEventFilter(MouseEvent.MOUSE_PRESSED, klick);
+		scene.addEventFilter(KeyEvent.KEY_PRESSED, taste);
+		scene.addEventFilter(MouseEvent.MOUSE_ENTERED, betritt);
+		scene.addEventFilter(MouseEvent.MOUSE_EXITED, verlaesst);
+		scene.addEventFilter(MouseEvent.MOUSE_MOVED, bewegung);
+
+		return () -> {
+			scene.removeEventFilter(MouseEvent.MOUSE_PRESSED, klick);
+			scene.removeEventFilter(KeyEvent.KEY_PRESSED, taste);
+			scene.removeEventFilter(MouseEvent.MOUSE_ENTERED, betritt);
+			scene.removeEventFilter(MouseEvent.MOUSE_EXITED, verlaesst);
+			scene.removeEventFilter(MouseEvent.MOUSE_MOVED, bewegung);
+		};
+	}
+
+	/**
+	 * Die sichtbare Sekundenzahl. Unmanaged und absolut gesetzt, damit sie sich in kein Layout
+	 * einmischt; auffällig gefärbt, damit man sie nicht suchen muss.
+	 *
+	 * <p>Ein unmanaged Knoten wird von seinem Elternteil weder positioniert <b>noch in der Größe
+	 * gesetzt</b>. Ein {@code Label} ist resizable und bliebe damit 0×0 — deshalb steht hinter jedem
+	 * {@code setText} ein {@code autosize()}.</p>
+	 *
+	 * @return das Label, oder {@code null} wenn die Wurzel keine Pane ist (dann fehlt nur diese
+	 *         eine Messung, der Rest läuft weiter)
+	 */
+	private static Label zaehlerAnbauen(Scene scene) {
+		if (scene == null || !(scene.getRoot() instanceof Pane wurzel)) {
+			Log.warn(StartupDiagnostics.class, "Startdiagnose Zaehler nicht moeglich: Wurzel ist keine Pane");
+			return null;
+		}
+
+		Label zaehler = new Label("0");
+		zaehler.setManaged(false);
+		zaehler.relocate(20, 120);
+		zaehler.setStyle("-fx-background-color: #cc0000; -fx-text-fill: white; "
+				+ "-fx-font-size: 32px; -fx-padding: 2 14 2 14;");
+		wurzel.getChildren().add(zaehler);
+		zaehler.autosize();
+		return zaehler;
+	}
+
+	private static void zaehlerEntfernen(Label zaehler) {
+		if (zaehler != null && zaehler.getParent() instanceof Pane wurzel)
+			wurzel.getChildren().remove(zaehler);
+	}
+
+	/**
+	 * Ein Menü, das sich ohne Zutun öffnet. Es ist ein eigenes Fenster — erscheint es auf dem Schirm,
+	 * während die Zahl im Hauptfenster steht, betrifft der Stillstand nur das Hauptfenster.
+	 */
+	private static void probeMenueZeigen(Stage stage) {
+		ContextMenu probe = new ContextMenu(new MenuItem("Startdiagnose — siehst Du mich?"));
+		probe.show(stage, stage.getX() + 200, stage.getY() + 200);
+		Log.info(StartupDiagnostics.class, "Startdiagnose PROBE menue geoeffnet"
+				+ " isShowing=" + probe.isShowing()
+				+ " fenster=" + Window.getWindows().size());
+
+		PauseTransition offen = new PauseTransition(Duration.seconds(PROBE_MENUE_DAUER));
+		offen.setOnFinished(_ -> {
+			probe.hide();
+			Log.info(StartupDiagnostics.class, "Startdiagnose PROBE menue geschlossen"
+					+ " fenster=" + Window.getWindows().size());
+		});
+		offen.play();
+	}
+
+	/**
+	 * Stand der Zeiger im Moment des Deckkraftwechsels schon über dem Fenster? Ein Fenster mit
+	 * Deckkraft 0 ist für die Maus durchlässig; ob der Übergang nach 1 ohne Mausbewegung etwas
+	 * hinterlässt, entscheidet erst die Häufung über mehrere Starts.
+	 */
+	private static void cursorLageLoggen(Stage stage) {
+		Point2D zeiger = new Robot().getMousePosition();
+		boolean drueber = zeiger.getX() >= stage.getX()
+				&& zeiger.getX() <= stage.getX() + stage.getWidth()
+				&& zeiger.getY() >= stage.getY()
+				&& zeiger.getY() <= stage.getY() + stage.getHeight();
+
+		Log.info(StartupDiagnostics.class, "Startdiagnose CURSOR beim Deckkraftwechsel"
+				+ " x=" + (int) zeiger.getX() + " y=" + (int) zeiger.getY()
+				+ " ueberFenster=" + drueber);
+	}
+
+	// ========================================================================
+	// Nachfrage und Rahmen
+	// ========================================================================
 
 	/**
 	 * Die Nachfrage läuft über eine {@code PauseTransition} auf dem FX-Thread — kein eigener Thread,
@@ -143,9 +310,9 @@ public final class StartupDiagnostics {
 
 	private static void nachfrageZeigen() {
 		ButtonEnum antwort = Alerts.show("Startdiagnose",
-				"War der Start eben normal — Fenster sofort da und alles gleich bedienbar?\n\n"
-				+ "„Nein\" heißt: das Bild hing, bis Du die Maus einmal aus dem Fenster heraus und "
-				+ "wieder hinein bewegt hast. Klicks kamen dabei durchaus an, man sah nur nichts.\n\n"
+				"War der Start eben normal — alles sofort bedienbar?\n\n"
+				+ "„Nein\" heißt: Das Fenster sah richtig aus, hat aber auf Klicks nicht reagiert, "
+				+ "bis Du die Maus einmal aus dem Fenster heraus und wieder hinein bewegt hast.\n\n"
 				+ "Die Antwort landet im Log und etikettiert die Messwerte darüber. Diese Frage "
 				+ "verschwindet wieder, sobald die Ursache gefunden ist.",
 				ButtonEnum.YES, ButtonEnum.NO);
@@ -180,5 +347,12 @@ public final class StartupDiagnostics {
 		if (stage.getScene() == null)
 			return "keine";
 		return (int) stage.getScene().getWidth() + "x" + (int) stage.getScene().getHeight();
+	}
+
+	/** Ziel eines Ereignisses als lesbarer Name — das Ziel ist oft die Scene selbst, nicht ein Knoten. */
+	private static String zielName(Object ziel) {
+		if (ziel instanceof Node knoten)
+			return knoten.getClass().getSimpleName();
+		return ziel == null ? "null" : ziel.getClass().getSimpleName();
 	}
 }

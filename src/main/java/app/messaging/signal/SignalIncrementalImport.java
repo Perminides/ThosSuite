@@ -70,12 +70,18 @@ import app.shared.ui.Alerts;
  * 
  * <h2>ToDos</h2>
  * <ul>
- * 	<li>@TODO: Bei neuem Kontakt muss ich bestehenden auswählen können, also einen von Whatsapp z. B. Momentan legt der immer stillschweigend einen neuen an...</li>
- *  <li>Wir brauchen noch einen monatlichen Importcheck, der den letzten Monat überprüft, ob alle Nachrichten drin sind.</li>
- *  <li>Sollten Chats nicht auch nur zeitweise stummgeschaltet werden dürfen? Also z. B. der Betriebssport-Chat in den Zeiten, wo ich nicht angemeldet bin?</li>
+ *  <li>!Sofort: Bei einem unbekannten Kontakt legt {@code ensureContact} stillschweigend einen
+ *      neuen an. Der Kontakt-Dialog aus dem WhatsApp-Zweig muss von beiden Quellen genutzt werden,
+ *      damit ein Signal-Kontakt einem bestehenden (etwa dem WhatsApp-Eintrag derselben Person)
+ *      zugeordnet werden kann. Dafür sind zwei Dinge nötig: der Quellenfilter in
+ *      {@code loadKnownContactsByDisplayName} muss raus, sonst bietet der Dialog nur Kontakte
+ *      derselben Quelle an — und der Dialog gehört umbenannt, weil er dann keiner der beiden
+ *      Quellen mehr gehört.</li>
+ *  <li>!Idee: Ein monatlicher Importcheck, der den letzten Monat daraufhin prüft, ob alle
+ *      Nachrichten drin sind.</li>
+ *  <li>!Idee: Chats zeitweise stummschalten, etwa den Betriebssport-Chat in den Zeiten, wo ich
+ *      nicht angemeldet bin.</li>
  * </ul>
- * 
- * @TODO: Diverses Signalimport
  */
 public class SignalIncrementalImport {
 
@@ -121,6 +127,12 @@ public class SignalIncrementalImport {
     // -------------------------------------------------------------------------
 
     public void run() {
+    	// Schritt 0: Ist hier signal auf diesem Rechner überhaupt aktiv?
+    	if (Config.get("signal.externalPath", null) == null) {
+    		Log.info(this.getClass(), "Signal nicht konfiguriert.");
+    		return;
+    	}
+    	
         // Schritt 1: Caches laden
         blacklistedChats.addAll(repo.loadBlacklistedChatIds(signalId));
         chatByConversationId.putAll(repo.loadKnownChats(signalId));
