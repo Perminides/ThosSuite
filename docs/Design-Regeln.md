@@ -266,6 +266,9 @@ Am Suffix ist die Datenquelle ablesbar:
   (`TmdbMovieRepository`, `diary.Repository`).
 - **`…Source`** — die Daten stammen aus einer Datei (`ConfigFileSource`, `CsvDeckCardSource`).
 
+Setzt eine Klasse mehrere Quellen zusammen, heißt sie als Tür nach außen `…Repository`; die genaue
+Herkunft steht in den Namen dahinter (`DeckRepository` über `CsvDeckCardSource` + `DbDeckProgressRepository`).
+
 ### Bildschirm-Kontrakt: `Screen` und `ScreenView`
 
 Eine Oberfläche wird über zwei Rollen gebaut, jede ein eigenes Interface. Der Grund

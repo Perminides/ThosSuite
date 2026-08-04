@@ -79,12 +79,12 @@ public class WhatsAppIncrementalImport {
     private final WhatsAppSourceRepository waRepo    = new WhatsAppSourceRepository();
 
     // Config
-    private final Path   whatsAppExternalDir; 
-    private final Path   crypt15Path;
-    private final Path   attachmentDir;
-    private final String hexKey;
-    private final int    dayStartHour;
-    private final int    warningAfterDays;
+    private Path   whatsAppExternalDir; 
+    private Path   crypt15Path;
+    private Path   attachmentDir;
+    private String hexKey;
+    private int    dayStartHour;
+    private int    warningAfterDays;
 
     // Laufzeit-State
     private final Map<String, Integer>       knownChats    = new LinkedHashMap<>();
@@ -103,6 +103,8 @@ public class WhatsAppIncrementalImport {
     private int importedAttachments = 0;
 
     public WhatsAppIncrementalImport() {
+    	if (Config.get("whatsapp.externalPath", null) == null)
+    		return;
     	this.whatsAppExternalDir      = Config.getPath("whatsapp.externalPath");
         this.crypt15Path      = Config.getPath("whatsapp.externalPath").resolve("Databases").resolve(CRYPT15_FILENAME);
         this.attachmentDir    = Config.getPath("attachments.folder").resolve("whatsapp");
@@ -122,6 +124,11 @@ public class WhatsAppIncrementalImport {
     public void run() throws Exception {
         if (!isCheckDue()) {
         	Log.info(this.getClass(), "Kein WhatsApp-Import fällig.");
+        	return;
+        }
+        
+        if (whatsAppExternalDir == null) {
+        	Log.info(this.getClass(), "WhatsApp nicht konfiguriert.");
         	return;
         }
         

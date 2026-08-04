@@ -218,7 +218,6 @@ public class Controller{
     
     public void sessionEnded() {
     	//!Idee: Endbedingungen integrieren...
-    	//!Architektur Gehört das PopUp hierhin? Oder in die Session wie aktuell?
     	setLearnMenuItemLabels();
     	showStartScreen();
     }
