@@ -35,6 +35,17 @@ import java.util.Set;
  * UPDATE msg_contact_mapping SET contact_id = 2 WHERE contact_id = 33;
  * DELETE FROM msg_contacts WHERE contact_id = 33;
  *
+ * PRAGMA foreign_keys = ON;
+BEGIN;
+DELETE FROM msg_chat_members
+ WHERE contact_id = 33
+   AND chat_id IN (SELECT chat_id FROM msg_chat_members WHERE contact_id = 2);
+UPDATE msg_messages        SET from_contact = 2 WHERE from_contact = 33;
+UPDATE msg_chat_members    SET contact_id   = 2 WHERE contact_id   = 33;
+UPDATE msg_contact_mapping SET contact_id   = 2 WHERE contact_id   = 33;
+DELETE FROM msg_contacts WHERE contact_id = 33;
+COMMIT;
+ *
  * Todos:
  * - Im Daily Import muss abgefragt werden, ob der Kontakt bereits existiert.
  * - Attachments dürfen im Filename niemals nicht ein "," enthalten, das bringt unser SQL durcheinander. Die müssen konsequent durch "_" ersetzt werden
