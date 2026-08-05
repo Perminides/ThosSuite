@@ -24,6 +24,12 @@ public class MessageRepository {
 	private static final DateTimeFormatter DB_FORMAT =
 		    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
+	/**
+	 * Der Anzeigename für alle Kontakte, deren Person nicht bekannt ist. Er steht an vielen
+	 * Kontakten gleichzeitig und identifiziert deshalb niemanden.
+	 */
+	public static final String PLATZHALTER_NAME = "Unbekannt";
+
     // -------------------------------------------------------------------------
     // Lesen
     // -------------------------------------------------------------------------
@@ -287,6 +293,13 @@ public class MessageRepository {
      * Gibt alle bekannten Kontakte der angegebenen Quelle zurück
      * als Map von display_name → contact_id.
      * Wird für die Autocomplete-Vorschlagsliste im Kontakt-Dialog genutzt.
+     *
+     * <p><b>{@link #PLATZHALTER_NAME} bleibt draußen.</b> Der Name steht an vielen Kontakten
+     * gleichzeitig; in einer Map {@code display_name → contact_id} gewönne davon einer nach
+     * Zeilenreihenfolge. Stünde er in der Vorschlagsliste, würde ein getipptes „Unbekannt" per
+     * Enter oder Tab als Auswahl gelten und die neue Kennung stillschweigend an einen beliebigen
+     * alten Unbekannten hängen. Ohne ihn bleibt das Popup leer und es entsteht ein neuer Kontakt —
+     * genau das ist bei einer unbekannten Person gewollt.</p>
      */
     public Map<String, Integer> loadKnownContactsByDisplayName(String source) {
         String sql = """
@@ -294,10 +307,12 @@ public class MessageRepository {
                 FROM msg_contacts c
                 JOIN msg_contact_mapping cm ON cm.contact_id = c.contact_id
                 WHERE cm.source = ?
+                  AND c.display_name <> ?
                 """;
         Connection con = DB.getConnection();
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, source);
+            ps.setString(2, PLATZHALTER_NAME);
             try (ResultSet rs = ps.executeQuery()) {
                 Map<String, Integer> result = new LinkedHashMap<>();
                 while (rs.next())
