@@ -33,6 +33,7 @@ import app.shared.Log;
 import app.shared.model.ButtonEnum;
 import app.shared.model.ThrowingConsumer;
 import app.shared.ui.Alerts;
+import app.shared.ui.MessageContactDialog;
 
 /**
  * Importiert neue Signal-Nachrichten seit dem letzten erfolgreichen Import-Run in die ThosSuite-DB.
@@ -68,15 +69,13 @@ import app.shared.ui.Alerts;
  * isErased, bereits importiert, Blacklist, kein Body und keine Attachments). Änderungen
  * an der Filterlogik müssen nur hier vorgenommen werden.
  * 
+ * <h2>Neuer Kontakt</h2>
+ * Blockierender Dialog im FX-Thread, gemeinsam mit dem WhatsApp-Import ({@code MessageContactDialog}).
+ * Der aus der Signal-DB abgeleitete Name ist nur ein Vorschlag — der Nutzer kann stattdessen einen
+ * bestehenden Kontakt wählen, auch einen aus einer anderen Quelle.
+ *
  * <h2>ToDos</h2>
  * <ul>
- *  <li>!Sofort: Bei einem unbekannten Kontakt legt {@code ensureContact} stillschweigend einen
- *      neuen an. Der Kontakt-Dialog aus dem WhatsApp-Zweig muss von beiden Quellen genutzt werden,
- *      damit ein Signal-Kontakt einem bestehenden (etwa dem WhatsApp-Eintrag derselben Person)
- *      zugeordnet werden kann. Dafür sind zwei Dinge nötig: der Quellenfilter in
- *      {@code loadKnownContactsByDisplayName} muss raus, sonst bietet der Dialog nur Kontakte
- *      derselben Quelle an — und der Dialog gehört umbenannt, weil er dann keiner der beiden
- *      Quellen mehr gehört.</li>
  *  <li>!Idee: Ein monatlicher Importcheck, der den letzten Monat daraufhin prüft, ob alle
  *      Nachrichten drin sind.</li>
  *  <li>!Idee: Chats zeitweise stummschalten, etwa den Betriebssport-Chat in den Zeiten, wo ich
@@ -301,17 +300,39 @@ public class SignalIncrementalImport {
     }
 
     // -------------------------------------------------------------------------
-    // Kontakt lazy anlegen
+    // Kontakt lazy auflösen
     // -------------------------------------------------------------------------
 
+    /**
+     * Löst eine unbekannte serviceId zu einem Kontakt auf — über die Rückfrage beim Nutzer, damit
+     * dieselbe Person nicht ein zweites Mal entsteht, nur weil sie bisher nur aus WhatsApp bekannt
+     * war. Der aus der Signal-DB abgeleitete Name geht als Vorschlag in den Dialog; angelegt wird
+     * er erst, wenn der Nutzer keinen bestehenden Kontakt wählt.
+     */
     private void ensureContact(Connection signalConnection, Connection suiteConnection, String serviceId) throws SQLException {
         ContactInfo contact = source.loadContact(signalConnection, serviceId);
-        String displayName = resolveDisplayName(contact.name(), contact.profileName(),
+        String vorschlag = resolveDisplayName(contact.name(), contact.profileName(),
             contact.profileFamilyName(), contact.profileFullName(), serviceId);
-        int cid = repo.insertContact(suiteConnection, displayName);
+
+        MessageContactDialog.Result result = MessageContactDialog.show(
+            "Signal", serviceId, vorschlag, repo.loadAllContactsByDisplayName());
+
+        if (result == null)
+            throw new IllegalStateException(
+                    "[FAILFAST] Signal-Import abgebrochen: Kein Name im Kontakt-Dialog eingegeben. "
+                    + "serviceId=" + serviceId);
+
+        int cid;
+        if (result.existingContactId() != null) {
+            cid = result.existingContactId();
+            Log.info(this, "[signal] Kontakt zugeordnet: contactId=" + cid);
+        } else {
+            cid = repo.insertContact(suiteConnection, result.newDisplayName());
+            Log.info(this, "[signal] Kontakt angelegt: '" + result.newDisplayName() + "'");
+        }
+
         repo.insertContactMapping(suiteConnection, signalId, serviceId, cid);
         contactByServiceId.put(serviceId, cid);
-        Log.info(this, "[signal] Kontakt angelegt: '" + displayName + "'");
     }
 
     // -------------------------------------------------------------------------

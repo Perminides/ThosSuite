@@ -14,12 +14,19 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 /**
- * Modaler Dialog zur Auflösung eines unbekannten WhatsApp-Kontakts.
+ * Modaler Dialog zur Auflösung eines unbekannten Kontakts, gemeinsam genutzt von allen
+ * Nachrichten-Quellen.
  *
- * <p>Wird aufgerufen wenn der Inkrementalimport auf einen Kontakt trifft,
+ * <p>Wird aufgerufen wenn ein Inkrementalimport auf einen Kontakt trifft,
  * der noch nicht in der Suite-DB bekannt ist. Der Nutzer kann entweder
  * einen bestehenden Kontakt auswählen (per Autocomplete-Vorschlagsliste)
- * oder einen neuen Namen eingeben.</p>
+ * oder einen neuen Namen eingeben. Die Vorschläge kommen quellenübergreifend, damit eine
+ * Signal-Kennung dem bestehenden WhatsApp-Kontakt derselben Person zugeordnet werden kann.</p>
+
+ * <p>Die Quelle steht in der Infozeile, beim Kontakt selbst spielt sie keine Rolle: Ein Kontakt ist
+ * eine Person und kann über mehrere Quellen erreichbar sein. Genannt wird sie, weil die Kennung
+ * allein oft nichts sagt — eine WhatsApp-JID trägt immerhin die Rufnummer, eine Signal-serviceId
+ * ist eine nackte UUID.</p>
  *
  * <p>Die Vorschlagsmechanik selbst steckt im {@link SuiteSuggestionTextField}. Hier bleibt nur, was
  * sie für diesen Dialog bedeutet: eine Auswahl aus der Liste liefert eine contact_id und wechselt
@@ -50,10 +57,10 @@ import javafx.stage.Stage;
  * Button-Text togglen ("OK" / "Übernehmen"): ButtonBar setzt feste Button-Breiten,
  * die sich nach einem setText() nicht neu berechnen — der Button blieb immer gleich breit.
  */
-public class WhatsAppContactDialog {
+public class MessageContactDialog {
 
-    private static final String TITLE_NEW      = "Neuer WhatsApp-Kontakt";
-    private static final String TITLE_SELECTED = "Ausgewählter WhatsApp-Kontakt";
+    private static final String TITLE_NEW      = "Neuer Kontakt";
+    private static final String TITLE_SELECTED = "Ausgewählter Kontakt";
 
     /**
      * Ergebnis des Dialogs. Genau eines der beiden Felder ist non-null.
@@ -66,12 +73,16 @@ public class WhatsAppContactDialog {
     /**
      * Zeigt den Dialog und wartet auf Eingabe des Nutzers.
      *
-     * @param rawIdentifier    JID des Kontakts (z.B. "491234567890@s.whatsapp.net")
+     * @param quelle           Anzeigename der Quelle für die Infozeile ("WhatsApp", "Signal")
+     * @param rawIdentifier    Kennung des Kontakts in der Quelle (WhatsApp-JID, Signal-serviceId)
+     * @param vorschlag        Vorbelegung des Namensfelds, oder {@code null} wenn die Quelle keinen
+     *                         Namen kennt. Ein Vorschlag heißt „so anlegen" — er zählt erst dann als
+     *                         bestehender Kontakt, wenn er aus der Vorschlagsliste gewählt wird.
      * @param knownContacts    Map von Anzeigename → contact_id der bekannten Kontakte
-     * @return Entscheidung des Nutzers
-     * @throws IllegalStateException [FAILFAST] wenn der Dialog ohne Entscheidung geschlossen wird
+     * @return Entscheidung des Nutzers, oder {@code null} bei Abbruch
      */
-    public static Result show(String rawIdentifier, Map<String, Integer> knownContacts) {
+    public static Result show(String quelle, String rawIdentifier, String vorschlag,
+            Map<String, Integer> knownContacts) {
     	SuiteDialog<Void> dialog = new SuiteDialog<>(TITLE_NEW);
 
         // Ergebnis-State. Array, weil die Lambdas unten aus einer statischen Methode heraus zugreifen.
@@ -84,10 +95,16 @@ public class WhatsAppContactDialog {
         // Content
         VBox content = dialog.contentBox();
 
-        Label infoLabel = new Label("Unbekannter Kontakt: " + rawIdentifier);
+        Label infoLabel = new Label("Unbekannte Kennung aus " + quelle + ": " + rawIdentifier);
         Label nameLabel = new Label("Name (bestehenden auswählen oder neuen eingeben):");
         SuiteSuggestionTextField nameField = new SuiteSuggestionTextField("Name...");
         nameField.setAllItems(new ArrayList<>(knownContacts.keySet()));
+
+        // Kennt die Quelle einen Namen, steht er als Vorschlag im Feld. Das löst den Listener unten
+        // aus und lässt den Dialog damit im Zustand „neuer Kontakt" — genau richtig, denn ein
+        // Vorschlag ist noch keine Auswahl aus der Liste.
+        if (vorschlag != null && !vorschlag.isBlank())
+            nameField.setText(vorschlag);
 
         content.getChildren().addAll(infoLabel, nameLabel, nameField);
         dialog.getDialogPane().setContent(content);

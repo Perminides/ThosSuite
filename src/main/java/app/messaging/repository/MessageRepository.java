@@ -290,9 +290,13 @@ public class MessageRepository {
     }
     
     /**
-     * Gibt alle bekannten Kontakte der angegebenen Quelle zurück
-     * als Map von display_name → contact_id.
+     * Gibt alle Kontakte als Map von display_name → contact_id zurück, quellenübergreifend.
      * Wird für die Autocomplete-Vorschlagsliste im Kontakt-Dialog genutzt.
+     *
+     * <p><b>Quellenübergreifend.</b> Ein Kontakt ist eine Person, keine Kennung — dieselbe Person
+     * kann über Signal und über WhatsApp erreichbar sein und hat trotzdem genau einen Eintrag.
+     * Deshalb sieht der Dialog alle Kontakte, egal aus welcher Quelle sie stammen. Die Zuordnung
+     * Kennung → Kontakt liefert {@link #loadKnownContacts(String)}, und die ist quellen-skopiert.</p>
      *
      * <p><b>{@link #PLATZHALTER_NAME} bleibt draußen.</b> Der Name steht an vielen Kontakten
      * gleichzeitig; in einer Map {@code display_name → contact_id} gewönne davon einer nach
@@ -301,18 +305,11 @@ public class MessageRepository {
      * alten Unbekannten hängen. Ohne ihn bleibt das Popup leer und es entsteht ein neuer Kontakt —
      * genau das ist bei einer unbekannten Person gewollt.</p>
      */
-    public Map<String, Integer> loadKnownContactsByDisplayName(String source) {
-        String sql = """
-                SELECT c.display_name, cm.contact_id
-                FROM msg_contacts c
-                JOIN msg_contact_mapping cm ON cm.contact_id = c.contact_id
-                WHERE cm.source = ?
-                  AND c.display_name <> ?
-                """;
+    public Map<String, Integer> loadAllContactsByDisplayName() {
+        String sql = "SELECT display_name, contact_id FROM msg_contacts WHERE display_name <> ?";
         Connection con = DB.getConnection();
         try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, source);
-            ps.setString(2, PLATZHALTER_NAME);
+            ps.setString(1, PLATZHALTER_NAME);
             try (ResultSet rs = ps.executeQuery()) {
                 Map<String, Integer> result = new LinkedHashMap<>();
                 while (rs.next())
@@ -320,7 +317,7 @@ public class MessageRepository {
                 return result;
             }
         } catch (Exception e) {
-            throw new RuntimeException("Fehler beim Laden der Kontakte nach Anzeigename für source='" + source + "'", e);
+            throw new RuntimeException("Fehler beim Laden der Kontakte nach Anzeigename", e);
         }
     }
 }

@@ -30,7 +30,7 @@ import app.shared.Log;
 import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
 import app.shared.ui.WhatsAppChatDialog;
-import app.shared.ui.WhatsAppContactDialog;
+import app.shared.ui.MessageContactDialog;
 
 /**
  * 
@@ -434,9 +434,11 @@ public class WhatsAppIncrementalImport {
         if (knownContacts.containsKey(rawIdentifier))
             return knownContacts.get(rawIdentifier);
 
-        WhatsAppContactDialog.Result result = WhatsAppContactDialog.show(
+        MessageContactDialog.Result result = MessageContactDialog.show(
+            "WhatsApp",
             rawIdentifier,
-            msgRepo.loadKnownContactsByDisplayName(SOURCE)
+            null,                                   // WhatsApp kennt keinen Namen zur JID
+            msgRepo.loadAllContactsByDisplayName()
         );
         
         if (result == null) {
