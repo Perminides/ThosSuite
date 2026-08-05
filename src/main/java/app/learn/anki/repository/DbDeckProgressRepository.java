@@ -19,11 +19,11 @@ import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
 
 /**
- * !Architektur: Der Deck-<b>Anzeigename</b> ist der Schlüssel. In {@code card_learn_stat} und
- * {@code card_log} steht in der Spalte {@code deck} das Ergebnis von {@code Deck.getDisplayName()}.
- * Benennst Du den Anzeigetext eines Decks je um („Welt" → „Weltkarte"), verwaisen sämtliche
- * historischen Zeilen — stillschweigend, es fällt nur als plötzlich leere Statistik auf. Der
- * stabile Schlüssel wäre {@code Deck.getId()}; die Umstellung kostet eine Datenmigration.
+ * Zugriff auf den Anki-Lernfortschritt in {@code card_learn_stat} und {@code card_log}.
+ *
+ * <p><b>Schlüssel ist die Deck-Id.</b> In der Spalte {@code deck} steht {@code Deck.getId()} — ein
+ * Wert, den nur eine Code-Änderung ändert. Der Anzeigename bleibt damit frei: „Welt" darf jederzeit
+ * „Weltkarte" werden, ohne dass die Historie verwaist. Der Region-Zweig schlüsselt genauso.</p>
  */
 class DbDeckProgressRepository {
 
@@ -32,7 +32,7 @@ class DbDeckProgressRepository {
 
 		Map<String, LearnStat> loadAll(Deck type) {
 			Connection conn = DB.getConnection();
-	        String sql = "SELECT * FROM card_learn_stat where deck = '" + type.getDisplayName() + "'";
+	        String sql = "SELECT * FROM card_learn_stat where deck = '" + type.getId() + "'";
 	        Map<String, LearnStat> result = new HashMap<>();
 	        try (PreparedStatement ps = conn.prepareStatement(sql);
 	             ResultSet rs = ps.executeQuery()) {
@@ -61,7 +61,7 @@ class DbDeckProgressRepository {
 		         PreparedStatement psLog = conn.prepareStatement(logSQL);
 		         PreparedStatement psLearn = conn.prepareStatement(learnStatSQL)) {
 		        for (PlayedCardData row : rows) {
-		            psLearn.setString(1, type.getDisplayName());
+		            psLearn.setString(1, type.getId());
 		            psLearn.setInt(2, row.cardId());
 		            psLearn.setString(3, AppClock.TODAY.toString()); // Wird nur im Insert-Fall genutzt
 		            psLearn.setString(4, AppClock.TODAY.toString());
@@ -69,7 +69,7 @@ class DbDeckProgressRepository {
 		            psLearn.setInt(6, row.wrongCount());
 		            psLearn.execute();
 
-		            psLog.setString(1, type.getDisplayName());
+		            psLog.setString(1, type.getId());
 		            psLog.setInt(2, row.cardId());
 		            psLog.setString(3, row.playedTimestamp().truncatedTo(ChronoUnit.SECONDS).toString());
 		            psLog.setBoolean(4, row.correctFlag());
@@ -92,7 +92,7 @@ class DbDeckProgressRepository {
 		    Connection conn = DB.getConnection();
 		    String sql = "select count(*) "
 		            + "from card_learn_stat "
-		            + "where deck = '" + type.getDisplayName() + "'"
+		            + "where deck = '" + type.getId() + "'"
 		            + "and date(first_played) = '" + AppClock.TODAY + "'";
 		    try (Statement statement = conn.createStatement();
 		         ResultSet rs = statement.executeQuery(sql)) {
@@ -107,7 +107,7 @@ class DbDeckProgressRepository {
 		    Connection conn = DB.getConnection();
 		    String sql = "select count(*) "
 		            + "from card_learn_stat "
-		            + "where deck = '" + type.getDisplayName() + "'"
+		            + "where deck = '" + type.getId() + "'"
 		            + "and (date(last_played, '+' || level || ' days') <= '" + AppClock.TODAY + "' "
 		            + "or date(last_played) = '" + AppClock.TODAY + "')";
 		    try (Statement statement = conn.createStatement();
