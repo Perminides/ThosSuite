@@ -350,12 +350,7 @@ public class ThosSuiteApp extends Application {
 
     private void setupGlobalExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, ex) -> {
-            boolean julConfigured = false;
-            try {
-                julConfigured = java.util.logging.LogManager.getLogManager().getLogger("").getHandlers().length > 0;
-            } catch (Exception e) { /* ignore */ }
-            
-            if (julConfigured) {
+            if (Log.isInitialized()) {
                 Log.error(ThosSuiteApp.class, "Uncaught exception in thread " + thread.getName(), ex);
             } else {
                 System.err.println("Uncaught exception in thread " + thread.getName());

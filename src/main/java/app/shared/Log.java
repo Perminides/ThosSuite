@@ -10,6 +10,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
@@ -254,7 +255,23 @@ public class Log {
     // =========================================================================
     // PUBLIC API - Logging-Methoden
     // =========================================================================
-    
+
+    /**
+     * Ob {@link #initLog} schon gelaufen ist — erkennbar daran, dass der Root-Logger Handler hat.
+     *
+     * <p>Für die Stellen, die sehr früh laufen können: Der globale Exception-Handler wird in
+     * {@code ThosSuiteApp.init()} gesetzt und kann feuern, bevor das Logging steht. Dann muss die
+     * Meldung auf die Konsole statt ins Leere.</p>
+     */
+    public static boolean isInitialized() {
+        try {
+            return LogManager.getLogManager().getLogger("").getHandlers().length > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+
     /**
      * Loggt eine DEBUG-Message (Level.FINE).
      * 

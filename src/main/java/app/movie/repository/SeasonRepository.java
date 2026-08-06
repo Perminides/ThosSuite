@@ -3,13 +3,13 @@ package app.movie.repository;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.logging.Logger;
 
 import app.movie.model.json.CastJSON;
 import app.movie.model.json.CrewJSON;
 import app.movie.model.json.RoleJSON;
 import app.movie.model.json.SeasonJSON;
 import app.shared.DB;
+import app.shared.Log;
 
 /**
 * <p>Zum regular-Flag (markRegularCast/markRegularCrew) und der zugrunde
@@ -18,14 +18,13 @@ import app.shared.DB;
  */
 public class SeasonRepository {
 
-    private static final Logger log = Logger.getLogger(SeasonRepository.class.getName());
 
     // -------------------------------------------------------------------------
     // Insert
     // -------------------------------------------------------------------------
 
     public void insertSeason(SeasonJSON season, Connection conn) {
-        log.fine("insertSeason, seasonId " + season.id);
+        Log.debug(SeasonRepository.class, "insertSeason, seasonId " + season.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO season (id, tv_show_id, season_number, number_of_episodes, " +
                 "release_date, last_air_date, name, german_name, overview, poster_path) " +
@@ -48,7 +47,7 @@ public class SeasonRepository {
 
     public void insertSeasonImage(SeasonJSON season, int width, int height,
             String filename, Connection conn) {
-        log.fine("insertSeasonImage, seasonId " + season.id);
+        Log.debug(SeasonRepository.class, "insertSeasonImage, seasonId " + season.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR IGNORE INTO season_image (season_id, type, width, language, " +
                 "height, original_name, filename) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
@@ -69,7 +68,7 @@ public class SeasonRepository {
      * Kopiert das Show-Image als Season-Image, wenn die Staffel kein eigenes Poster hat.
      */
     public void copyShowImageToSeason(SeasonJSON season, Connection conn) {
-        log.fine("copyShowImageToSeason, seasonId " + season.id + ", tvShowId " + season.tvShowID);
+        Log.debug(SeasonRepository.class, "copyShowImageToSeason, seasonId " + season.id + ", tvShowId " + season.tvShowID);
         try (PreparedStatement psRead = DB.getTmdbConnection().prepareStatement(
                 "SELECT type, width, height, original_name, filename FROM tv_show_image " +
                 "WHERE tv_show_id = ? AND width = 154")) {
@@ -100,7 +99,7 @@ public class SeasonRepository {
      * Aggregierte Credits: Ein Cast-Eintrag kann mehrere Rollen haben.
      */
     public void insertSeasonCast(CastJSON cast, SeasonJSON season, Connection conn) {
-        log.fine("insertSeasonCast, seasonId " + season.id + ", personId " + cast.id);
+        Log.debug(SeasonRepository.class, "insertSeasonCast, seasonId " + season.id + ", personId " + cast.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR IGNORE INTO season_to_person (season_id, person_id, credit_id, " +
                 "tv_show_id, season_number, character, \"order\", department, job, episode_count) " +
@@ -128,7 +127,7 @@ public class SeasonRepository {
      */
     public void insertSeasonCrew(CrewJSON crew, SeasonJSON season, String job,
             String creditId, int episodeCount, Connection conn) {
-        log.fine("insertSeasonCrew, seasonId " + season.id + ", personId " + crew.id + ", job " + job);
+        Log.debug(SeasonRepository.class, "insertSeasonCrew, seasonId " + season.id + ", personId " + crew.id + ", job " + job);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR IGNORE INTO season_to_person (season_id, person_id, credit_id, " +
                 "tv_show_id, season_number, character, \"order\", department, job, episode_count) " +

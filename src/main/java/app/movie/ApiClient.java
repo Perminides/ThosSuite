@@ -5,7 +5,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +20,7 @@ import app.movie.model.json.SeasonJSON;
 import app.movie.model.json.TvShowJSON;
 import app.movie.model.json.TvShowRatingsPageJSON;
 import app.shared.Config;
+import app.shared.Log;
 
 /**
  * Kapselt die gesamte HTTP-Kommunikation mit der TMDB-API.
@@ -39,7 +39,6 @@ import app.shared.Config;
  */
 public class ApiClient {
 
-    private static final Logger log = Logger.getLogger(ApiClient.class.getName());
 
     private static final String BASE_URL_V3 = "https://api.themoviedb.org/3/";
     private static final String BASE_URL_V4 = "https://api.themoviedb.org/4/";
@@ -62,11 +61,11 @@ public class ApiClient {
      * @return      Die gemappte Seite mit Bewertungen und Paginierungsinformationen
      */
     public MovieRatingsPageJSON getRatedMovies(int page) {
-        log.info("TMDB getRatedMovies, page " + page);
+        Log.info(ApiClient.class, "TMDB getRatedMovies, page " + page);
         String path = "account/" + Config.get("tmdb.v4.accountId") + "/movie/rated";
         Map<String, String> params = Map.of("sort_by", "created_at.desc", "page", String.valueOf(page));
         String json = getV4(path, params);
-        log.fine("TMDB getRatedMovies response: " + json);
+        Log.debug(ApiClient.class, "TMDB getRatedMovies response: " + json);
         try {
             return mapper.readValue(json, MovieRatingsPageJSON.class);
         } catch (Exception e) {
@@ -82,11 +81,11 @@ public class ApiClient {
      * @return      Die gemappte Seite mit Bewertungen und Paginierungsinformationen
      */
     public TvShowRatingsPageJSON getRatedTvShows(int page) {
-        log.info("TMDB getRatedTvShows, page " + page);
+        Log.info(ApiClient.class, "TMDB getRatedTvShows, page " + page);
         String path = "account/" + Config.get("tmdb.v4.accountId") + "/tv/rated";
         Map<String, String> params = Map.of("sort_by", "created_at.desc", "page", String.valueOf(page));
         String json = getV4(path, params);
-        log.fine("TMDB getRatedTvShows response: " + json);
+        Log.debug(ApiClient.class, "TMDB getRatedTvShows response: " + json);
         try {
             return mapper.readValue(json, TvShowRatingsPageJSON.class);
         } catch (Exception e) {
@@ -103,11 +102,11 @@ public class ApiClient {
      * @return      Die gemappte Seite mit Bewertungen und Paginierungsinformationen
      */
     public EpisodeRatingsPageJSON getRatedEpisodes(int page) {
-        log.info("TMDB getRatedEpisodes, page " + page);
+        Log.info(ApiClient.class, "TMDB getRatedEpisodes, page " + page);
         String path = "account/" + Config.get("tmdb.v3.accountId") + "/rated/tv/episodes";
         Map<String, String> params = Map.of("sort_by", "created_at.desc", "page", String.valueOf(page));
         String json = getV3(path, params);
-        log.fine("TMDB getRatedEpisodes response: " + json);
+        Log.debug(ApiClient.class, "TMDB getRatedEpisodes response: " + json);
         try {
             return mapper.readValue(json, EpisodeRatingsPageJSON.class);
         } catch (Exception e) {
@@ -124,14 +123,14 @@ public class ApiClient {
      * @return          Vollständiges MovieJSON mit german_title befüllt
      */
     public MovieJSON getMovieDetails(int movieId) {
-        log.info("TMDB getMovieDetails, movieId " + movieId);
+        Log.info(ApiClient.class, "TMDB getMovieDetails, movieId " + movieId);
         String path = "movie/" + movieId;
         String jsonEn = getV3(path, Map.of("language", LANG_EN));
-        log.fine("TMDB getMovieDetails EN response: " + jsonEn);
+        Log.debug(ApiClient.class, "TMDB getMovieDetails EN response: " + jsonEn);
         try {
             MovieJSON movieEN = mapper.readValue(jsonEn, MovieJSON.class);
             String jsonDe = getV3(path, Map.of("language", LANG_DE));
-            log.fine("TMDB getMovieDetails DE response: " + jsonDe);
+            Log.debug(ApiClient.class, "TMDB getMovieDetails DE response: " + jsonDe);
             MovieJSON movieDE = mapper.readValue(jsonDe, MovieJSON.class);
             movieEN.german_title = movieDE.title;
             return movieEN;
@@ -149,14 +148,14 @@ public class ApiClient {
      * @return          Vollständiges TvShowJSON mit german_name befüllt
      */
     public TvShowJSON getTvShowDetails(int tvShowId) {
-        log.info("TMDB getTvShowDetails, tvShowId " + tvShowId);
+        Log.info(ApiClient.class, "TMDB getTvShowDetails, tvShowId " + tvShowId);
         String path = "tv/" + tvShowId;
         String jsonEn = getV3(path, Map.of("language", LANG_EN));
-        log.fine("TMDB getTvShowDetails EN response: " + jsonEn);
+        Log.debug(ApiClient.class, "TMDB getTvShowDetails EN response: " + jsonEn);
         try {
             TvShowJSON tvShowEN = mapper.readValue(jsonEn, TvShowJSON.class);
             String jsonDe = getV3(path, Map.of("language", LANG_DE));
-            log.fine("TMDB getTvShowDetails DE response: " + jsonDe);
+            Log.debug(ApiClient.class, "TMDB getTvShowDetails DE response: " + jsonDe);
             TvShowJSON tvShowDE = mapper.readValue(jsonDe, TvShowJSON.class);
             tvShowEN.german_name = tvShowDE.name;
             return tvShowEN;
@@ -178,10 +177,10 @@ public class ApiClient {
      * @return              Vollständiges SeasonJSON mit german_name und last_air_date befüllt
      */
     public SeasonJSON getSeasonDetails(int tvShowId, int seasonNumber) {
-        log.info("TMDB getSeasonDetails, tvShowId " + tvShowId + ", seasonNumber " + seasonNumber);
+        Log.info(ApiClient.class, "TMDB getSeasonDetails, tvShowId " + tvShowId + ", seasonNumber " + seasonNumber);
         String path = "tv/" + tvShowId + "/season/" + seasonNumber;
         String jsonEn = getV3(path, Map.of("language", LANG_EN));
-        log.fine("TMDB getSeasonDetails EN response: " + jsonEn);
+        Log.debug(ApiClient.class, "TMDB getSeasonDetails EN response: " + jsonEn);
         try {
             SeasonJSON seasonEN = mapper.readValue(jsonEn, SeasonJSON.class);
             seasonEN.tvShowID = tvShowId;
@@ -194,7 +193,7 @@ public class ApiClient {
                         seasonEN.last_air_date = episode.air_date;
             }
             String jsonDe = getV3(path, Map.of("language", LANG_DE));
-            log.fine("TMDB getSeasonDetails DE response: " + jsonDe);
+            Log.debug(ApiClient.class, "TMDB getSeasonDetails DE response: " + jsonDe);
             SeasonJSON seasonDE = mapper.readValue(jsonDe, SeasonJSON.class);
             seasonEN.germanName = seasonDE.name;
             return seasonEN;
@@ -214,15 +213,15 @@ public class ApiClient {
      * @return              Vollständiges EpisodeJSON mit german_name befüllt
      */
     public EpisodeJSON getEpisodeDetails(int tvShowId, int seasonNumber, int episodeNumber) {
-        log.info("TMDB getEpisodeDetails, tvShowId " + tvShowId + ", seasonNumber " + seasonNumber + ", episodeNumber " + episodeNumber);
+        Log.info(ApiClient.class, "TMDB getEpisodeDetails, tvShowId " + tvShowId + ", seasonNumber " + seasonNumber + ", episodeNumber " + episodeNumber);
         String path = "tv/" + tvShowId + "/season/" + seasonNumber + "/episode/" + episodeNumber;
         String jsonEn = getV3(path, Map.of("language", LANG_EN));
-        log.fine("TMDB getEpisodeDetails EN response: " + jsonEn);
+        Log.debug(ApiClient.class, "TMDB getEpisodeDetails EN response: " + jsonEn);
         try {
             EpisodeJSON episodeEN = mapper.readValue(jsonEn, EpisodeJSON.class);
             episodeEN.show_id = tvShowId;
             String jsonDe = getV3(path, Map.of("language", LANG_DE));
-            log.fine("TMDB getEpisodeDetails DE response: " + jsonDe);
+            Log.debug(ApiClient.class, "TMDB getEpisodeDetails DE response: " + jsonDe);
             EpisodeJSON episodeDE = mapper.readValue(jsonDe, EpisodeJSON.class);
             episodeEN.german_name = episodeDE.name;
             return episodeEN;
@@ -238,10 +237,10 @@ public class ApiClient {
      * @return          CreditListJSON mit Cast und Crew
      */
     public CreditListJSON getMovieCredits(int movieId) {
-        log.info("TMDB getMovieCredits, movieId " + movieId);
+        Log.info(ApiClient.class, "TMDB getMovieCredits, movieId " + movieId);
         String path = "movie/" + movieId + "/credits";
         String json = getV3(path, Map.of("language", LANG_EN));
-        log.fine("TMDB getMovieCredits response: " + json);
+        Log.debug(ApiClient.class, "TMDB getMovieCredits response: " + json);
         try {
             return mapper.readValue(json, CreditListJSON.class);
         } catch (Exception e) {
@@ -258,10 +257,10 @@ public class ApiClient {
      * @return          CreditListJSON mit aggregiertem Cast und Crew
      */
     public CreditListJSON getAggregatedTvShowCredits(int tvShowId) {
-        log.info("TMDB getAggregatedTvShowCredits, tvShowId " + tvShowId);
+        Log.info(ApiClient.class, "TMDB getAggregatedTvShowCredits, tvShowId " + tvShowId);
         String path = "tv/" + tvShowId + "/aggregate_credits";
         String json = getV3(path, Map.of("language", LANG_EN));
-        log.fine("TMDB getAggregatedTvShowCredits response: " + json);
+        Log.debug(ApiClient.class, "TMDB getAggregatedTvShowCredits response: " + json);
         try {
             return mapper.readValue(json, CreditListJSON.class);
         } catch (Exception e) {
@@ -277,10 +276,10 @@ public class ApiClient {
      * @return              CreditListJSON mit aggregiertem Cast und Crew
      */
     public CreditListJSON getRegularSeasonCredits(int tvShowId, int seasonNumber) {
-        log.info("TMDB getRegularSeasonCredits, tvShowId " + tvShowId + ", seasonNumber " + seasonNumber);
+        Log.info(ApiClient.class, "TMDB getRegularSeasonCredits, tvShowId " + tvShowId + ", seasonNumber " + seasonNumber);
         String path = "tv/" + tvShowId + "/season/" + seasonNumber + "/credits";
         String json = getV3(path, Map.of("language", LANG_EN));
-        log.fine("TMDB getRegularSeasonCredits response: " + json);
+        Log.debug(ApiClient.class, "TMDB getRegularSeasonCredits response: " + json);
         try {
             return mapper.readValue(json, CreditListJSON.class);
         } catch (Exception e) {
@@ -298,10 +297,10 @@ public class ApiClient {
      * @return              CreditListJSON mit aggregiertem Cast und Crew
      */
     public CreditListJSON getAggregatedSeasonCredits(int tvShowId, int seasonNumber) {
-        log.info("TMDB getAggregatedSeasonCredits, tvShowId " + tvShowId + ", seasonNumber " + seasonNumber);
+        Log.info(ApiClient.class, "TMDB getAggregatedSeasonCredits, tvShowId " + tvShowId + ", seasonNumber " + seasonNumber);
         String path = "tv/" + tvShowId + "/season/" + seasonNumber + "/aggregate_credits";
         String json = getV3(path, Map.of("language", LANG_EN));
-        log.fine("TMDB getAggregatedSeasonCredits response: " + json);
+        Log.debug(ApiClient.class, "TMDB getAggregatedSeasonCredits response: " + json);
         try {
             return mapper.readValue(json, CreditListJSON.class);
         } catch (Exception e) {
@@ -316,9 +315,9 @@ public class ApiClient {
      * @return          PersonJSON mit allen Detaildaten
      */
     public PersonJSON getPerson(int personId) {
-        log.info("TMDB getPerson, personId " + personId);
+        Log.info(ApiClient.class, "TMDB getPerson, personId " + personId);
         String json = getV3("person/" + personId, Map.of("language", LANG_EN));
-        log.fine("TMDB getPerson response: " + json);
+        Log.debug(ApiClient.class, "TMDB getPerson response: " + json);
         try {
             return mapper.readValue(json, PersonJSON.class);
         } catch (Exception e) {
@@ -335,7 +334,7 @@ public class ApiClient {
      */
     public byte[] getImage(String path, String width) {
         String urlString = "https://image.tmdb.org/t/p/" + width + path;
-        log.info("TMDB getImage, url " + urlString);
+        Log.info(ApiClient.class, "TMDB getImage, url " + urlString);
         try {
             HttpURLConnection con = (HttpURLConnection) new URL(urlString).openConnection();
             con.setRequestMethod("GET");

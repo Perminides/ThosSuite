@@ -201,6 +201,82 @@ public class ArchitekturRegelnTest {
 			.should().dependOnClassesThat().resideInAnyPackage("javafx..")
 			.because("Feature-Code bleibt ohne UI-Framework-Kenntnisse lesbar und änderbar");
 
+	/**
+	 * Die Gegenrichtung zu Wächter 3 — Bausteine greifen nicht zurück in die Wurzel.
+	 *
+	 * <p>„Die Wurzel benutzt {@code components}, nie umgekehrt." Wächter 3 bewacht, wer von außen an
+	 * die Bausteine darf; hier geht es darum, dass ein Baustein nichts Fertiges einbaut. Täte er es,
+	 * wäre er selbst eine Oberfläche und läge im falschen Paket.</p>
+	 */
+	@ArchTest
+	static final ArchRule bausteineGreifenNichtZurueck = noClasses()
+			.that().resideInAPackage("app.shared.ui.components..")
+			.should().dependOnClassesThat().resideInAPackage("app.shared.ui")
+			.because("ein Baustein wird eingebaut — was er selbst einbaut, sind wieder nur Bausteine");
+
+	/**
+	 * Alles läuft auf dem JavaFX Application Thread.
+	 *
+	 * <p>Nebenläufigkeit ist in dieser Suite kein Werkzeug, sondern eine Ausnahme mit Namen. Wer
+	 * einen Thread aufmacht, muss jede Anzeige-Änderung über {@code Platform.runLater} schicken —
+	 * vergisst er es, entstehen Fehler, die sporadisch auftreten und schwer zu finden sind.</p>
+	 *
+	 * <p>Die drei Ausnahmen stehen so im Architekturdokument: die Startup-Initialisierung in
+	 * {@code ThosSuiteApp}, der Shutdown-Hook im {@code SingleInstanceGuard} (die JVM verlangt dort
+	 * ein {@code Thread}-Objekt) und der Scheduler im {@code ActivityTableDialog} — der „unschöne
+	 * Hack" bei der Fitbit-Tabelle.</p>
+	 *
+	 * <p>Zeitgesteuertes gehört <b>nicht</b> hierher: Ein Zeitlimit oder ein Countdown baut sich mit
+	 * {@code Timeline} oder {@code PauseTransition} auf dem FX-Thread, ohne eigenen Thread.</p>
+	 */
+	@ArchTest
+	static final ArchRule keineEigenenThreads = noClasses()
+			.that().doNotHaveFullyQualifiedName("app.ThosSuiteApp")
+			.and().doNotHaveFullyQualifiedName("app.shared.SingleInstanceGuard")
+			.and().doNotHaveFullyQualifiedName("app.shared.ui.ActivityTableDialog")
+			.should().dependOnClassesThat(name("java.lang.Thread")
+					.or(resideInAPackage("java.util.concurrent.."))
+					.or(resideInAPackage("javafx.concurrent..")))
+			.because("alles läuft auf dem FX-Thread; Zeitgesteuertes über Timeline statt über Threads");
+
+	/**
+	 * SQL steht in Repositories, sonst nirgends.
+	 *
+	 * <p>Geprüft wird die Abhängigkeit auf {@code Statement}/{@code PreparedStatement} — das ist die
+	 * Stelle, an der SQL entsteht. {@code Connection} und {@code ResultSet} bleiben erlaubt: Die
+	 * Importer besitzen ihre Transaktion und reichen die Verbindung an die Repositories weiter, und
+	 * ein {@code ResultSet} darf zum Auswerten herauskommen.</p>
+	 *
+	 * <p>Erkannt wird ein Repository am Paket <i>oder</i> am Namen — {@code KeyValueRepository} liegt
+	 * in der {@code shared}-Wurzel und ist trotzdem eines. Ausgenommen ist {@code DB} selbst, das die
+	 * Verbindungen aufbaut und dabei ein PRAGMA absetzt.</p>
+	 */
+	@ArchTest
+	static final ArchRule sqlNurInRepositories = noClasses()
+			.that().resideOutsideOfPackage("..repository..")
+			.and().haveSimpleNameNotEndingWith("Repository")
+			.and().doNotHaveFullyQualifiedName("app.shared.DB")
+			.should().dependOnClassesThat(name("java.sql.Statement")
+					.or(name("java.sql.PreparedStatement")))
+			.because("wo SQL steht, ist der Datenzugriff — und der wohnt im Repository");
+
+	/**
+	 * Geloggt wird über {@code Log}, nicht direkt über JUL.
+	 *
+	 * <p>Die Fassade setzt Stufen, Format und Ziel; ein eigener {@code Logger} umgeht das und fällt
+	 * erst auf, wenn eine Meldung im falschen Format oder gar nicht in der Datei landet. Ausgenommen
+	 * ist {@code Log} selbst — es <i>ist</i> die Fassade.</p>
+	 *
+	 * <p>Die Ausnahme steht als Namensmuster da und nicht als voll qualifizierter Name: {@code Log}
+	 * baut Formatter und Handler als anonyme Klassen, und die heißen im Bytecode {@code Log$1},
+	 * {@code Log$2}, {@code Log$3}. Sie sind dieselbe Fassade, nur eine Ebene tiefer.</p>
+	 */
+	@ArchTest
+	static final ArchRule loggingNurUeberDieFassade = noClasses()
+			.that().haveNameNotMatching("app\\.shared\\.Log(\\$.*)?")
+			.should().dependOnClassesThat().resideInAPackage("java.util.logging..")
+			.because("Stufen, Format und Ziel entscheidet die Fassade, nicht die Aufrufstelle");
+
 	// Ungeprüft bleibt bewusst Regel 6 (Null-Layout): „keine LayoutManager" hieße ein Verbot von
 	// VBox/HBox, und die kommen legitim vor (DiaryCard extends VBox). Da ist keine Regel drin, die
 	// nicht mehr Fehlalarme als Nutzen brächte.

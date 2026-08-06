@@ -220,7 +220,7 @@ public class WhatsAppIncrementalImport {
              Connection thos = DB.getNewConnection()) {
 
             thos.setAutoCommit(false);
-            loadState(thos);
+            loadState();
 
             try {
                 processMessages(wa, thos);
@@ -243,7 +243,7 @@ public class WhatsAppIncrementalImport {
     // State laden
     // -------------------------------------------------------------------------
 
-    private void loadState(Connection thos) throws SQLException {
+    private void loadState() {
         for (Map.Entry<String, Integer> e : msgRepo.loadKnownChats(SOURCE).entrySet()) {
             knownChats.put(e.getKey(), e.getValue());
             blacklisted.put(e.getKey(), false);
@@ -253,15 +253,7 @@ public class WhatsAppIncrementalImport {
             blacklisted.put(id, true);
         }
         knownContacts.putAll(msgRepo.loadKnownContacts(SOURCE));
-
-        try (var ps = thos.prepareStatement("SELECT chat_id, contact_id FROM msg_chat_members");
-             var rs = ps.executeQuery()) {
-            while (rs.next()) {
-                chatMembers
-                    .computeIfAbsent(rs.getInt("chat_id"), _ -> new HashSet<>())
-                    .add(rs.getInt("contact_id"));
-            }
-        }
+        chatMembers.putAll(msgRepo.loadChatMembers());
     }
 
     // -------------------------------------------------------------------------
@@ -274,7 +266,7 @@ public class WhatsAppIncrementalImport {
 		LocalDateTime lastSentAt = lastSourceId != null ? msgRepo.getSentAtForSourceId(SOURCE, lastSourceId) : null;
 		long lastTs = lastSentAt != null ? lastSentAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() : 0L;
 
-        Map<Integer, Boolean> messageTypeToIgnore = loadMessageTypes(thos);
+        Map<Integer, Boolean> messageTypeToIgnore = msgRepo.loadMessageTypes(SOURCE);
 
         waRepo.forEachMessage(wa, lastId, lastTs,
             rs -> processRow(rs, wa, thos, messageTypeToIgnore, lastId, lastTs));
@@ -545,18 +537,6 @@ public class WhatsAppIncrementalImport {
     // Hilfsmethoden
     // -------------------------------------------------------------------------
 
-    private Map<Integer, Boolean> loadMessageTypes(Connection thos) throws SQLException {
-        Map<Integer, Boolean> result = new LinkedHashMap<>();
-        try (var ps = thos.prepareStatement(
-                "SELECT type_id, ignore FROM msg_message_types WHERE source = ?")) {
-            ps.setString(1, SOURCE);
-            try (var rs = ps.executeQuery()) {
-                while (rs.next())
-                    result.put(rs.getInt("type_id"), rs.getInt("ignore") == 1);
-            }
-        }
-        return result;
-    }
 
     private String computeHash(Path file) {
         try {

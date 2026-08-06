@@ -7,7 +7,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import app.movie.model.NullCommentEntry;
 import app.movie.model.json.CastJSON;
@@ -19,6 +18,7 @@ import app.movie.model.json.PersonJSON;
 import app.movie.model.json.ProductionCountryJSON;
 import app.movie.model.json.SpokenLanguageJSON;
 import app.shared.DB;
+import app.shared.Log;
 
 /**
  * Repository für alle Datenbankoperationen rund um Filme in der TMDB-Datenbank.
@@ -26,7 +26,6 @@ import app.shared.DB;
  */
 public class MovieRepository {
 
-    private static final Logger log = Logger.getLogger(MovieRepository.class.getName());
 
     /**
      * Fügt einen neuen Film in die DB ein. Wirft Exception wenn der Film bereits existiert.
@@ -35,7 +34,7 @@ public class MovieRepository {
      * @param conn      Transaktions-Connection
      */
     public void insertMovie(MovieJSON movie, Connection conn) {
-        log.fine("insertMovie, movieId " + movie.id);
+        Log.debug(MovieRepository.class, "insertMovie, movieId " + movie.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO movie (id, title, original_title, german_title, release_date, " +
                 "tagline, overview, backdrop_path, collection_name, budget, homepage, imdb_id, " +
@@ -75,7 +74,7 @@ public class MovieRepository {
      * @param conn      Transaktions-Connection
      */
     public void insertMovieRating(MovieRatingJSON rating, String comment, Connection conn) {
-        log.fine("insertMovieRating, movieId " + rating.id);
+        Log.debug(MovieRepository.class, "insertMovieRating, movieId " + rating.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO movie_rating (movie_id, ar_value, comment, first_rated_at) " +
                 "VALUES (?, ?, ?, ?)")) {
@@ -99,7 +98,7 @@ public class MovieRepository {
      * @param conn      Transaktions-Connection
      */
     public void insertMovieImage(MovieJSON movie, int width, int height, String filename, Connection conn) {
-        log.fine("insertMovieImage, movieId " + movie.id);
+        Log.debug(MovieRepository.class, "insertMovieImage, movieId " + movie.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO movie_image (movie_id, type, width, height, language, original_name, filename) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
@@ -123,7 +122,7 @@ public class MovieRepository {
      * @param conn      Transaktions-Connection
      */
     public void insertPersonIfNotExists(PersonJSON person, Connection conn) {
-        log.fine("insertPersonIfNotExists, personId " + person.id);
+        Log.debug(MovieRepository.class, "insertPersonIfNotExists, personId " + person.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR IGNORE INTO person (id, gender, name, known_for_department, birthday, " +
                 "deathday, biography, homepage, imdb_id, place_of_birth, popularity, profile_path) " +
@@ -154,7 +153,7 @@ public class MovieRepository {
      * @param conn      Transaktions-Connection
      */
     public void insertMovieCast(CastJSON cast, int movieId, Connection conn) {
-        log.fine("insertMovieCast, movieId " + movieId + ", personId " + cast.id);
+        Log.debug(MovieRepository.class, "insertMovieCast, movieId " + movieId + ", personId " + cast.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO movie_to_person (movie_id, person_id, credit_id, character, " +
                 "\"order\", department, job) VALUES (?, ?, ?, ?, ?, NULL, NULL)")) {
@@ -179,7 +178,7 @@ public class MovieRepository {
      * @param conn      Transaktions-Connection
      */
     public void insertMovieCrew(CrewJSON crew, int movieId, Connection conn) {
-        log.fine("insertMovieCrew, movieId " + movieId + ", personId " + crew.id + ", job " + crew.getJob());
+        Log.debug(MovieRepository.class, "insertMovieCrew, movieId " + movieId + ", personId " + crew.id + ", job " + crew.getJob());
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO movie_to_person (movie_id, person_id, credit_id, character, " +
                 "\"order\", department, job) VALUES (?, ?, ?, NULL, NULL, ?, ?)")) {
@@ -201,7 +200,7 @@ public class MovieRepository {
      * @param conn      Transaktions-Connection
      */
     public void insertMovieGenres(MovieJSON movie, Connection conn) {
-        log.fine("insertMovieGenres, movieId " + movie.id);
+        Log.debug(MovieRepository.class, "insertMovieGenres, movieId " + movie.id);
         try (PreparedStatement psGenre = conn.prepareStatement(
                     "INSERT OR IGNORE INTO genre (id, name) VALUES (?, ?)");
              PreparedStatement psMovieGenre = conn.prepareStatement(
@@ -226,7 +225,7 @@ public class MovieRepository {
      * @param conn      Transaktions-Connection
      */
     public void insertMovieCountries(MovieJSON movie, Connection conn) {
-        log.fine("insertMovieCountries, movieId " + movie.id);
+        Log.debug(MovieRepository.class, "insertMovieCountries, movieId " + movie.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO movie_to_country (movie_id, iso_3166_1) VALUES (?, ?)")) {
             for (ProductionCountryJSON country : movie.production_countries) {
@@ -246,7 +245,7 @@ public class MovieRepository {
      * @param conn      Transaktions-Connection
      */
     public void insertMovieLanguages(MovieJSON movie, Connection conn) {
-        log.fine("insertMovieLanguages, movieId " + movie.id);
+        Log.debug(MovieRepository.class, "insertMovieLanguages, movieId " + movie.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO movie_to_language (movie_id, iso_639_1) VALUES (?, ?)")) {
             for (SpokenLanguageJSON language : movie.spoken_languages) {
@@ -266,7 +265,7 @@ public class MovieRepository {
      * @param comment   Kommentar. Der alte wird hiermit ersetzt!
      */
     public void updateMovieRating(MovieRatingJSON rating, String comment) {
-        log.fine("updateMovieRating, movieId " + rating.id);
+        Log.debug(MovieRepository.class, "updateMovieRating, movieId " + rating.id);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "UPDATE movie_rating SET ar_value = ?, comment = ?, last_updated_at = ? WHERE movie_id = ?")) {
             ps.setInt(1, rating.account_rating.value);
@@ -287,7 +286,7 @@ public class MovieRepository {
      * @return          Aktueller Kommentar, oder null
      */
     public String getMovieComment(int movieId) {
-        log.fine("getMovieComment, movieId " + movieId);
+        Log.debug(MovieRepository.class, "getMovieComment, movieId " + movieId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "SELECT comment FROM movie_rating WHERE movie_id = ?")) {
             ps.setInt(1, movieId);
@@ -309,7 +308,7 @@ public class MovieRepository {
      * @return          Aktuelle Bewertung als Integer, oder null
      */
     public Integer getMovieRating(int movieId) {
-        log.fine("getMovieRating, movieId " + movieId);
+        Log.debug(MovieRepository.class, "getMovieRating, movieId " + movieId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "SELECT ar_value FROM movie_rating WHERE movie_id = ?")) {
             ps.setInt(1, movieId);

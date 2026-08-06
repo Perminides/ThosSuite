@@ -146,6 +146,48 @@ public class MessageRepository {
     }
 
     /**
+     * Gibt für jeden Chat die Menge seiner bereits eingetragenen Mitglieder zurück
+     * ({@code chat_id → contact_ids}).
+     *
+     * <p>Ohne Quellen-Parameter, weil {@code msg_chat_members} keine Quelle kennt: Die
+     * {@code chat_id} ist bereits die Id der Suite und damit quellenübergreifend eindeutig.</p>
+     */
+    public Map<Integer, Set<Integer>> loadChatMembers() {
+        String sql = "SELECT chat_id, contact_id FROM msg_chat_members";
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            Map<Integer, Set<Integer>> result = new LinkedHashMap<>();
+            while (rs.next())
+                result.computeIfAbsent(rs.getInt("chat_id"), _ -> new HashSet<>())
+                      .add(rs.getInt("contact_id"));
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException("Fehler beim Laden der Chat-Mitglieder", e);
+        }
+    }
+
+    /**
+     * Gibt die bekannten Nachrichtentypen der angegebenen Quelle zurück
+     * als Map von {@code type_id → ignorieren?}.
+     */
+    public Map<Integer, Boolean> loadMessageTypes(String source) {
+        String sql = "SELECT type_id, ignore FROM msg_message_types WHERE source = ?";
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, source);
+            try (ResultSet rs = ps.executeQuery()) {
+                Map<Integer, Boolean> result = new LinkedHashMap<>();
+                while (rs.next())
+                    result.put(rs.getInt("type_id"), rs.getInt("ignore") == 1);
+                return result;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Fehler beim Laden der Nachrichtentypen für source='" + source + "'", e);
+        }
+    }
+
+    /**
      * Prüft ob eine Nachricht der angegebenen Quelle bereits in der Suite-DB vorhanden ist.
      * Wird in der Filterkette genutzt, um Duplikate im Überlappungsbereich zu überspringen.
      */
