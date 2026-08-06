@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import app.movie.model.TvShowComparisonData;
 import app.movie.model.json.CastJSON;
@@ -17,6 +16,7 @@ import app.movie.model.json.SpokenLanguageJSON;
 import app.movie.model.json.TvShowJSON;
 import app.movie.model.json.TvShowRatingJSON;
 import app.shared.DB;
+import app.shared.Log;
 
 /**
  * Repository für alle Datenbankoperationen rund um Serien in der TMDB-Datenbank.
@@ -24,7 +24,6 @@ import app.shared.DB;
  */
 public class TvShowRepository {
 
-    private static final Logger log = Logger.getLogger(TvShowRepository.class.getName());
 
         
 
@@ -33,7 +32,7 @@ public class TvShowRepository {
     // -------------------------------------------------------------------------
 
     public void insertTvShow(TvShowJSON show, Connection conn) {
-        log.fine("insertTvShow, tvShowId " + show.id);
+        Log.debug(TvShowRepository.class, "insertTvShow, tvShowId " + show.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO tv_show (id, name, original_name, german_name, first_air_date, " +
                 "last_air_date, overview, backdrop_path, original_language, poster_path, " +
@@ -64,7 +63,7 @@ public class TvShowRepository {
     }
 
     public void insertTvShowRating(TvShowRatingJSON rating, String comment, Connection conn) {
-        log.fine("insertTvShowRating, tvShowId " + rating.id);
+        Log.debug(TvShowRepository.class, "insertTvShowRating, tvShowId " + rating.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO tv_show_rating (tv_show_id, ar_value, comment, first_rated_at) " +
                 "VALUES (?, ?, ?, ?)")) {
@@ -80,7 +79,7 @@ public class TvShowRepository {
 
     public void insertTvShowImage(TvShowJSON show, int width, int height,
             String filename, Connection conn) {
-        log.fine("insertTvShowImage, tvShowId " + show.id);
+        Log.debug(TvShowRepository.class, "insertTvShowImage, tvShowId " + show.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO tv_show_image (tv_show_id, type, width, height, language, " +
                 "original_name, filename) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
@@ -102,7 +101,7 @@ public class TvShowRepository {
      * Aggregierte Credits: Ein Cast-Eintrag kann mehrere Rollen haben.
      */
     public void insertTvShowCast(CastJSON cast, int tvShowId, Connection conn) {
-        log.fine("insertTvShowCast, tvShowId " + tvShowId + ", personId " + cast.id);
+        Log.debug(TvShowRepository.class, "insertTvShowCast, tvShowId " + tvShowId + ", personId " + cast.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR IGNORE INTO tv_show_to_person (tv_show_id, person_id, credit_id, " +
                 "character, \"order\", department, job, episode_count) " +
@@ -129,7 +128,7 @@ public class TvShowRepository {
      */
     public void insertTvShowCrew(CrewJSON crew, int tvShowId, String job,
             String creditId, int episodeCount, Connection conn) {
-        log.fine("insertTvShowCrew, tvShowId " + tvShowId + ", personId " + crew.id + ", job " + job);
+        Log.debug(TvShowRepository.class, "insertTvShowCrew, tvShowId " + tvShowId + ", personId " + crew.id + ", job " + job);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR IGNORE INTO tv_show_to_person (tv_show_id, person_id, credit_id, " +
                 "character, \"order\", department, job, episode_count) " +
@@ -148,7 +147,7 @@ public class TvShowRepository {
     }
 
     public void insertTvShowGenres(TvShowJSON show, Connection conn) {
-        log.fine("insertTvShowGenres, tvShowId " + show.id);
+        Log.debug(TvShowRepository.class, "insertTvShowGenres, tvShowId " + show.id);
         try (PreparedStatement psGenre = conn.prepareStatement(
                     "INSERT OR IGNORE INTO genre (id, name) VALUES (?, ?)");
              PreparedStatement psLink = conn.prepareStatement(
@@ -167,7 +166,7 @@ public class TvShowRepository {
     }
 
     public void insertTvShowCountries(TvShowJSON show, Connection conn) {
-        log.fine("insertTvShowCountries, tvShowId " + show.id);
+        Log.debug(TvShowRepository.class, "insertTvShowCountries, tvShowId " + show.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR IGNORE INTO tv_show_to_country (tv_show_id, iso_3166_1) VALUES (?, ?)")) {
             for (ProductionCountryJSON country : show.production_countries) {
@@ -181,7 +180,7 @@ public class TvShowRepository {
     }
 
     public void insertTvShowLanguages(TvShowJSON show, Connection conn) {
-        log.fine("insertTvShowLanguages, tvShowId " + show.id);
+        Log.debug(TvShowRepository.class, "insertTvShowLanguages, tvShowId " + show.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR IGNORE INTO tv_show_to_language (tv_show_id, iso_639_1) VALUES (?, ?)")) {
             for (SpokenLanguageJSON language : show.spoken_languages) {
@@ -199,7 +198,7 @@ public class TvShowRepository {
     // -------------------------------------------------------------------------
 
     public Integer getTvShowRating(int tvShowId) {
-        log.fine("getTvShowRating, tvShowId " + tvShowId);
+        Log.debug(TvShowRepository.class, "getTvShowRating, tvShowId " + tvShowId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "SELECT ar_value FROM tv_show_rating WHERE tv_show_id = ?")) {
             ps.setInt(1, tvShowId);
@@ -214,7 +213,7 @@ public class TvShowRepository {
     }
 
     public String getTvShowComment(int tvShowId) {
-        log.fine("getTvShowComment, tvShowId " + tvShowId);
+        Log.debug(TvShowRepository.class, "getTvShowComment, tvShowId " + tvShowId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "SELECT comment FROM tv_show_rating WHERE tv_show_id = ?")) {
             ps.setInt(1, tvShowId);
@@ -317,7 +316,7 @@ public class TvShowRepository {
     // -------------------------------------------------------------------------
 
     public void updateTvShowRating(TvShowRatingJSON rating, String comment) {
-        log.fine("updateTvShowRating, tvShowId " + rating.id);
+        Log.debug(TvShowRepository.class, "updateTvShowRating, tvShowId " + rating.id);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "UPDATE tv_show_rating SET ar_value = ?, comment = ?, last_updated_at = ? " +
                 "WHERE tv_show_id = ?")) {
@@ -335,7 +334,7 @@ public class TvShowRepository {
      * Aktualisiert die sich ändernden Felder einer Serie.
      */
     public void updateTvShowData(TvShowJSON show) {
-        log.info("updateTvShowData, tvShowId " + show.id);
+        Log.info(TvShowRepository.class, "updateTvShowData, tvShowId " + show.id);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "UPDATE tv_show SET number_of_seasons = ?, number_of_episodes = ?, " +
                 "last_air_date = ?, status = ? WHERE id = ?")) {

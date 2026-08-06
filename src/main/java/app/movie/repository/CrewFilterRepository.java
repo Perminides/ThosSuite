@@ -3,9 +3,9 @@ package app.movie.repository;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.logging.Logger;
 
 import app.shared.DB;
+import app.shared.Log;
 
 /**
  * Repository für Whitelist und Blacklist der TMDB-Crew-Jobs.
@@ -16,7 +16,6 @@ import app.shared.DB;
  */
 public class CrewFilterRepository {
 
-    private static final Logger log = Logger.getLogger(CrewFilterRepository.class.getName());
 
     private final java.util.Set<String> whitelist = new java.util.HashSet<>();
     private final java.util.Set<String> blacklist = new java.util.HashSet<>();
@@ -28,7 +27,7 @@ public class CrewFilterRepository {
     public void load() {
         whitelist.clear();
         blacklist.clear();
-        log.info("Lade CrewFilter aus DB");
+        Log.info(CrewFilterRepository.class, "Lade CrewFilter aus DB");
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "SELECT job FROM crew_whitelist");
              ResultSet rs = ps.executeQuery()) {
@@ -45,7 +44,7 @@ public class CrewFilterRepository {
         } catch (Exception e) {
             throw new RuntimeException("CrewFilter Blacklist laden fehlgeschlagen", e);
         }
-        log.info("CrewFilter geladen: " + whitelist.size() + " Whitelist, " + blacklist.size() + " Blacklist");
+        Log.info(CrewFilterRepository.class, "CrewFilter geladen: " + whitelist.size() + " Whitelist, " + blacklist.size() + " Blacklist");
     }
 
     public boolean isWhitelisted(String job) {
@@ -60,7 +59,7 @@ public class CrewFilterRepository {
      * Fügt einen Job zur Whitelist hinzu — in DB und lokal.
      */
     public void addToWhitelist(String job, Connection con) {
-        log.info("Job zur Whitelist hinzugefügt: " + job);
+        Log.info(CrewFilterRepository.class, "Job zur Whitelist hinzugefügt: " + job);
         try (PreparedStatement ps = con.prepareStatement(
                 "INSERT INTO crew_whitelist (job) VALUES (?)")) {
             ps.setString(1, job);
@@ -82,7 +81,7 @@ public class CrewFilterRepository {
      * Fügt einen Job zur Blacklist hinzu — in DB und lokal.
      */
     public void addToBlacklist(String job, Connection con) {
-        log.info("Job zur Blacklist hinzugefügt: " + job);
+        Log.info(CrewFilterRepository.class, "Job zur Blacklist hinzugefügt: " + job);
         try (PreparedStatement ps = con.prepareStatement(
                 "INSERT INTO crew_blacklist (job) VALUES (?)")) {
             ps.setString(1, job);

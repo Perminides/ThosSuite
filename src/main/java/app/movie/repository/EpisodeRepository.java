@@ -5,13 +5,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import app.movie.model.EpisodeForApi;
 import app.movie.model.json.CastJSON;
 import app.movie.model.json.CrewJSON;
 import app.movie.model.json.EpisodeJSON;
 import app.shared.DB;
+import app.shared.Log;
 
 /**
  * Repository für alle Datenbankoperationen rund um Episoden in der TMDB-Datenbank.
@@ -19,14 +19,13 @@ import app.shared.DB;
  */
 public class EpisodeRepository {
 
-    private static final Logger log = Logger.getLogger(EpisodeRepository.class.getName());
 
     // -------------------------------------------------------------------------
     // Insert
     // -------------------------------------------------------------------------
 
     public void insertEpisode(EpisodeJSON episode, Connection conn) {
-        log.fine("insertEpisode, episodeId " + episode.id);
+        Log.debug(EpisodeRepository.class, "insertEpisode, episodeId " + episode.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO episode (id, tv_show_id, episode_number, season_number, " +
                 "release_date, name, german_name, original_name, overview, runtime) " +
@@ -59,7 +58,7 @@ public class EpisodeRepository {
      */
     public void insertEpisodeRating(int episodeId, int rating, String comment,
             String firstRatedAt, Boolean ratedSeason, Connection conn) {
-        log.fine("insertEpisodeRating, episodeId " + episodeId);
+        Log.debug(EpisodeRepository.class, "insertEpisodeRating, episodeId " + episodeId);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO episode_rating (episode_id, ar_value, comment, first_rated_at, " +
                 "rated_season) VALUES (?, ?, ?, ?, ?)")) {
@@ -79,7 +78,7 @@ public class EpisodeRepository {
      * Fügt Guest-Stars (Cast) in episode_to_person ein.
      */
     public void insertEpisodeCast(CastJSON cast, int episodeId, Connection conn) {
-        log.fine("insertEpisodeCast, episodeId " + episodeId + ", personId " + cast.id);
+        Log.debug(EpisodeRepository.class, "insertEpisodeCast, episodeId " + episodeId + ", personId " + cast.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR IGNORE INTO episode_to_person (episode_id, person_id, credit_id, " +
                 "character, \"order\", department, job) " +
@@ -101,7 +100,7 @@ public class EpisodeRepository {
      * Die Filterentscheidung liegt beim Aufrufer (Importer).
      */
     public void insertEpisodeCrew(CrewJSON crew, int episodeId, Connection conn) {
-        log.fine("insertEpisodeCrew, episodeId " + episodeId + ", personId " + crew.id + ", job " + crew.getJob());
+        Log.debug(EpisodeRepository.class, "insertEpisodeCrew, episodeId " + episodeId + ", personId " + crew.id + ", job " + crew.getJob());
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR IGNORE INTO episode_to_person (episode_id, person_id, credit_id, " +
                 "character, \"order\", department, job) " +
@@ -123,7 +122,7 @@ public class EpisodeRepository {
     // -------------------------------------------------------------------------
 
     public Integer getEpisodeRating(int episodeId) {
-        log.fine("getEpisodeRating, episodeId " + episodeId);
+        Log.debug(EpisodeRepository.class, "getEpisodeRating, episodeId " + episodeId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "SELECT ar_value FROM episode_rating WHERE episode_id = ?")) {
             ps.setInt(1, episodeId);
@@ -138,7 +137,7 @@ public class EpisodeRepository {
     }
 
     public String getEpisodeComment(int episodeId) {
-        log.fine("getEpisodeComment, episodeId " + episodeId);
+        Log.debug(EpisodeRepository.class, "getEpisodeComment, episodeId " + episodeId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "SELECT comment FROM episode_rating WHERE episode_id = ?")) {
             ps.setInt(1, episodeId);
@@ -189,7 +188,7 @@ public class EpisodeRepository {
     // -------------------------------------------------------------------------
     
     public void updateEpisodeRating(int episodeId, int rating, String comment) {
-        log.fine("updateEpisodeRating, episodeId " + episodeId);
+        Log.debug(EpisodeRepository.class, "updateEpisodeRating, episodeId " + episodeId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "UPDATE episode_rating SET ar_value = ?, comment = ?, last_updated_at = ? " +
                 "WHERE episode_id = ?")) {
@@ -207,7 +206,7 @@ public class EpisodeRepository {
      * Aktualisiert das rated_season-Flag einer Episodenbewertung.
      */
     public void updateEpisodeFlags(int episodeId, Boolean ratedSeason) {
-        log.fine("updateEpisodeFlags, episodeId " + episodeId);
+        Log.debug(EpisodeRepository.class, "updateEpisodeFlags, episodeId " + episodeId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "UPDATE episode_rating SET rated_season = ? WHERE episode_id = ?")) {
             if (ratedSeason == null) ps.setNull(1, java.sql.Types.INTEGER);
@@ -224,7 +223,7 @@ public class EpisodeRepository {
      */
     public void updateEpisodeFlags(int episodeId, Boolean ratedSeason,
             Boolean actorsFromShow, Boolean directorsFromShow) {
-        log.fine("updateEpisodeFlags, episodeId " + episodeId);
+        Log.debug(EpisodeRepository.class, "updateEpisodeFlags, episodeId " + episodeId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "UPDATE episode_rating SET rated_season = ?, actors_from_show = ?, " +
                 "directors_from_show = ? WHERE episode_id = ?")) {

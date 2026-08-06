@@ -7,7 +7,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import app.movie.model.json.CastJSON;
 import app.movie.model.json.CreditListJSON;
@@ -21,6 +20,7 @@ import app.movie.repository.PendingRepository;
 import app.shared.Config;
 import app.shared.DB;
 import app.shared.ImageUtils;
+import app.shared.Log;
 import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
 
@@ -43,7 +43,6 @@ import app.shared.ui.Alerts;
  */
 public class MovieImporter {
 
-    private static final Logger log = Logger.getLogger(MovieImporter.class.getName());
 
     private final ApiClient api;
     private final MovieRepository movieRepo;
@@ -58,9 +57,9 @@ public class MovieImporter {
     }
 
     public void run() {
-        log.info("TmdbImporter gestartet");
+        Log.info(MovieImporter.class, "TmdbImporter gestartet");
         importMovies();
-        log.info("TmdbImporter abgeschlossen");
+        Log.info(MovieImporter.class, "TmdbImporter abgeschlossen");
     }
 
     /**
@@ -71,10 +70,10 @@ public class MovieImporter {
     private void importMovies() {
         LocalDateTime lastImport = Config.getTime("tmdb.lastMovieImport");
         if (lastImport.toLocalDate().equals(LocalDate.now())) {
-            log.info("TMDB Filmimport heute bereits durchgeführt, überspringe.");
+            Log.info(MovieImporter.class, "TMDB Filmimport heute bereits durchgeführt, überspringe.");
             return;
         }
-        log.info("Letzter Filmimport: " + lastImport + ". Wir starten einen neuen Import-Lauf.");
+        Log.info(MovieImporter.class, "Letzter Filmimport: " + lastImport + ". Wir starten einen neuen Import-Lauf.");
 
         crewFilterRepo.load();
 
@@ -82,14 +81,14 @@ public class MovieImporter {
         MovieRatingsPageJSON firstPage = api.getRatedMovies(1);
         int totalPages = firstPage.total_pages;
         int newMoviesImported = processNewMovies(firstPage);
-        log.info("Neue Filme importiert: " + newMoviesImported);
+        Log.info(MovieImporter.class, "Neue Filme importiert: " + newMoviesImported);
 
         // Schritt 3: Rolling-Check für Umbewertungen
         int lastCheckedPage = Config.getInt("tmdb.lastCheckedMoviePage");
         int nextPageToCheck = lastCheckedPage + 1;
         if (nextPageToCheck > totalPages)
             nextPageToCheck = 1;
-        log.info("Rolling-Check auf Seite " + nextPageToCheck + " von " + totalPages);
+        Log.info(MovieImporter.class, "Rolling-Check auf Seite " + nextPageToCheck + " von " + totalPages);
         MovieRatingsPageJSON rollingPage = nextPageToCheck == 1
                 ? firstPage
                 : api.getRatedMovies(nextPageToCheck);
@@ -98,7 +97,7 @@ public class MovieImporter {
         // Schritt 4: Timestamps aktualisieren
         Config.setTime("tmdb.lastMovieImport", LocalDateTime.now());
         Config.setInt("tmdb.lastCheckedMoviePage", nextPageToCheck);
-        log.info("Timestamps aktualisiert");
+        Log.info(MovieImporter.class, "Timestamps aktualisiert");
     }
 
     /**
@@ -137,7 +136,7 @@ public class MovieImporter {
             if (dbRating == null)
                 throw new RuntimeException("Film auf der Umbewertungs-Prüfseite nicht in DB gefunden. movieId: " + rating.id + " (" + rating.title + ")");
             if (!dbRating.equals(rating.account_rating.value)) {
-                log.info("Umbewertung erkannt für Film " + rating.id + " (" + rating.title + ")");
+                Log.info(MovieImporter.class, "Umbewertung erkannt für Film " + rating.id + " (" + rating.title + ")");
                 String existingComment = movieRepo.getMovieComment(rating.id);
                 movieRepo.updateMovieRating(rating, existingComment);
             }
@@ -149,7 +148,7 @@ public class MovieImporter {
      * Movie, Credits, Personen, Bilder, Rating — alles in einer Transaktion.
      */
     private void importNewMovie(MovieRatingJSON rating) {
-        log.info("Importiere neuen Film: " + rating.title + " (id=" + rating.id + ")");
+        Log.info(MovieImporter.class, "Importiere neuen Film: " + rating.title + " (id=" + rating.id + ")");
         MovieJSON movie = api.getMovieDetails(rating.id);
         CreditListJSON credits = api.getMovieCredits(rating.id);
         byte[] posterW92 = movie.poster_path != null ? api.getImage(movie.poster_path, "w92") : null;
@@ -189,7 +188,7 @@ public class MovieImporter {
                 movieRepo.insertMovieCountries(movie, conn);
                 movieRepo.insertMovieLanguages(movie, conn);
                 conn.commit();
-                log.info("Film erfolgreich importiert: " + movie.title);
+                Log.info(MovieImporter.class, "Film erfolgreich importiert: " + movie.title);
             } catch (Exception e) {
                 conn.rollback();
                 deletePoster(geschriebenePoster);
@@ -217,12 +216,12 @@ public class MovieImporter {
         for (CrewJSON crew : credits.crew) {
             String job = crew.getJob();
             if (crewFilterRepo.isBlacklisted(job)) {
-                log.fine("Crew blacklisted, überspringe. personId=" + crew.id + ", job=" + job);
+                Log.debug(MovieImporter.class, "Crew blacklisted, überspringe. personId=" + crew.id + ", job=" + job);
             } else if (crewFilterRepo.isWhitelisted(job)) {
                 movieRepo.insertPersonIfNotExists(api.getPerson(crew.id), conn);
                 movieRepo.insertMovieCrew(crew, movie.id, conn);
             } else {
-                log.info("Crew-Job unbekannt, in pending. personId=" + crew.id + ", job=" + job + ", film=" + movie.title);
+                Log.info(MovieImporter.class, "Crew-Job unbekannt, in pending. personId=" + crew.id + ", job=" + job + ", film=" + movie.title);
                 pendingRepo.insertPersonPending(api.getPerson(crew.id), conn);
                 pendingRepo.insertCrewPending(movie.id, crew.id, crew.name, job, crew.department, crew.getCredit_id(), conn);
             }
@@ -243,9 +242,9 @@ public class MovieImporter {
             try {
                 java.nio.file.Files.deleteIfExists(
                         Config.getPath("imageFolder").resolve("tmdb").resolve(filename));
-                log.info("Poster nach Rollback entfernt: " + filename);
+                Log.info(MovieImporter.class, "Poster nach Rollback entfernt: " + filename);
             } catch (Exception e) {
-                log.warning("Poster konnte nach Rollback nicht entfernt werden: " + filename + " (" + e + ")");
+                Log.warn(MovieImporter.class, "Poster konnte nach Rollback nicht entfernt werden: " + filename + " (" + e + ")");
             }
         }
     }
@@ -257,7 +256,7 @@ public class MovieImporter {
         try {
             file.getParentFile().mkdirs();
             java.nio.file.Files.write(file.toPath(), image);
-            log.fine("Bild gespeichert: " + filename);
+            Log.debug(MovieImporter.class, "Bild gespeichert: " + filename);
         } catch (Exception e) {
             throw new RuntimeException("saveImageToFileSystem fehlgeschlagen. filename: " + filename, e);
         }

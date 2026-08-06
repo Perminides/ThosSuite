@@ -1,7 +1,6 @@
 package app.movie;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import app.movie.model.CrewPendingEntry;
 import app.movie.model.NullCommentEntry;
@@ -10,6 +9,7 @@ import app.movie.repository.EpisodeRepository;
 import app.movie.repository.MovieRepository;
 import app.movie.repository.PendingRepository;
 import app.movie.repository.TvShowRepository;
+import app.shared.Log;
 import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
 import app.shared.ui.TextPromptDialog;
@@ -28,7 +28,6 @@ import app.shared.ui.TextPromptDialog;
  */
 public class MovieCleanup {
 
-    private static final Logger log = Logger.getLogger(MovieCleanup.class.getName());
 
     private final CrewFilterRepository crewFilterRepo;
     private final PendingRepository pendingRepo;
@@ -45,12 +44,12 @@ public class MovieCleanup {
     }
 
     public void run() {
-        log.info("TmdbImportReview gestartet");
+        Log.info(MovieCleanup.class, "TmdbImportReview gestartet");
         crewFilterRepo.load();
         processPendingCrew();
         processNullComments();
         showDotCommentSummary();
-        log.info("TmdbImportReview abgeschlossen");
+        Log.info(MovieCleanup.class, "TmdbImportReview abgeschlossen");
     }
 
     /**
@@ -61,17 +60,17 @@ public class MovieCleanup {
     private void processPendingCrew() {
         List<CrewPendingEntry> entries = pendingRepo.loadCrewPendingEntries();
         if (entries.isEmpty()) {
-            log.info("Keine offenen Crew-Pending-Einträge.");
+            Log.info(MovieCleanup.class, "Keine offenen Crew-Pending-Einträge.");
             return;
         }
-        log.info("Offene Crew-Pending-Einträge: " + entries.size());
+        Log.info(MovieCleanup.class, "Offene Crew-Pending-Einträge: " + entries.size());
 
         for (CrewPendingEntry entry : entries) {
             if (crewFilterRepo.isWhitelisted(entry.job)) {
-                log.info("Job mittlerweile whitelisted, verarbeite direkt: " + entry.job);
+                Log.info(MovieCleanup.class, "Job mittlerweile whitelisted, verarbeite direkt: " + entry.job);
                 transferAndInsert(entry);
             } else if (crewFilterRepo.isBlacklisted(entry.job)) {
-                log.info("Job mittlerweile blacklisted, überspringe: " + entry.job);
+                Log.info(MovieCleanup.class, "Job mittlerweile blacklisted, überspringe: " + entry.job);
                 cleanupPending(entry);
             } else {
                 boolean whitelist = askWhitelistOrBlacklist(entry);
@@ -91,7 +90,7 @@ public class MovieCleanup {
      * und schreibt den movie_to_person-Eintrag.
      */
     private void transferAndInsert(CrewPendingEntry entry) {
-        log.info("transferAndInsert, personId=" + entry.personId + ", job=" + entry.job + ", movieId=" + entry.movieId);
+        Log.info(MovieCleanup.class, "transferAndInsert, personId=" + entry.personId + ", job=" + entry.job + ", movieId=" + entry.movieId);
         pendingRepo.transferPersonToMain(entry.personId);
         movieRepo.insertMovieCrew(entry.movieId, entry.personId, entry.creditId, entry.department, entry.job);
         pendingRepo.deleteCrewPending(entry.movieId, entry.personId, entry.job);
@@ -101,7 +100,7 @@ public class MovieCleanup {
      * Räumt pending-Einträge auf ohne etwas zu übertragen (blacklist-Fall).
      */
     private void cleanupPending(CrewPendingEntry entry) {
-        log.info("cleanupPending, personId=" + entry.personId + ", job=" + entry.job);
+        Log.info(MovieCleanup.class, "cleanupPending, personId=" + entry.personId + ", job=" + entry.job);
         pendingRepo.deleteCrewPending(entry.movieId, entry.personId, entry.job);
         if (!pendingRepo.hasMoreCrewPendingForPerson(entry.personId))
             pendingRepo.deletePersonPending(entry.personId);
@@ -132,10 +131,10 @@ public class MovieCleanup {
     private void processNullComments() {
         List<NullCommentEntry> entries = movieRepo.loadNullCommentEntries();
         if (entries.isEmpty()) {
-            log.info("Keine Filme mit null-Kommentar in den letzten 100 Tagen.");
+            Log.info(MovieCleanup.class, "Keine Filme mit null-Kommentar in den letzten 100 Tagen.");
             return;
         }
-        log.info("Filme mit null-Kommentar: " + entries.size());
+        Log.info(MovieCleanup.class, "Filme mit null-Kommentar: " + entries.size());
 
         for (NullCommentEntry entry : entries) {
             String comment = askForComment(entry);
@@ -165,7 +164,7 @@ public class MovieCleanup {
         List<String> episodeTitles = episodeRepo.loadDotCommentTitles();
 
         if (movieTitles.isEmpty() && showTitles.isEmpty() && episodeTitles.isEmpty()) {
-            log.info("Keine Einträge mit Punkt-Kommentar.");
+            Log.info(MovieCleanup.class, "Keine Einträge mit Punkt-Kommentar.");
             return;
         }
 

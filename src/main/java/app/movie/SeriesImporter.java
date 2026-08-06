@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.logging.Logger;
 
 import app.movie.model.EpisodeForApi;
 import app.movie.model.TvShowComparisonData;
@@ -29,6 +28,7 @@ import app.movie.repository.TvShowRepository;
 import app.shared.Config;
 import app.shared.DB;
 import app.shared.ImageUtils;
+import app.shared.Log;
 import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
 import app.shared.ui.TextPromptDialog;
@@ -120,7 +120,6 @@ import app.shared.ui.TextPromptDialog;
  */
 public class SeriesImporter {
 
-    private static final Logger log = Logger.getLogger(SeriesImporter.class.getName());
 
     private final ApiClient api;
     private final TvShowRepository tvShowRepo;
@@ -148,7 +147,7 @@ public class SeriesImporter {
     }
 
     public void run() {
-        log.info("TmdbSeriesImporter gestartet");
+        Log.info(SeriesImporter.class, "TmdbSeriesImporter gestartet");
         crewFilterRepo.load();
         newShows = 0; reRatedShows = 0; updatedShowData = 0;
         newEpisodes = 0; reRatedEpisodes = 0;
@@ -169,7 +168,7 @@ public class SeriesImporter {
         // Abschluss
         Config.setTime("tmdb.lastAdditionalImportRun", LocalDateTime.now());
         showSummary();
-        log.info("TmdbSeriesImporter abgeschlossen");
+        Log.info(SeriesImporter.class, "TmdbSeriesImporter abgeschlossen");
     }
 
     // =========================================================================
@@ -191,7 +190,7 @@ public class SeriesImporter {
                     newShows++;
                 } else if (!dbRating.equals(rating.account_rating.value)) {
                     // Umbewertung
-                    log.info("Serien-Umbewertung erkannt: " + rating.name + " (id=" + rating.id + ")");
+                    Log.info(SeriesImporter.class, "Serien-Umbewertung erkannt: " + rating.name + " (id=" + rating.id + ")");
                     String existingComment = tvShowRepo.getTvShowComment(rating.id);
                     String newComment = askForComment(
                             "Serien-Umbewertung: " + rating.name,
@@ -210,7 +209,7 @@ public class SeriesImporter {
     }
 
     private void importNewTvShow(TvShowRatingJSON rating) {
-        log.info("Importiere neue Serie: " + rating.name + " (id=" + rating.id + ")");
+        Log.info(SeriesImporter.class, "Importiere neue Serie: " + rating.name + " (id=" + rating.id + ")");
         TvShowJSON show = api.getTvShowDetails(rating.id);
         CreditListJSON credits = api.getAggregatedTvShowCredits(rating.id);
 
@@ -245,7 +244,7 @@ public class SeriesImporter {
                 tvShowRepo.insertTvShowCountries(show, conn);
                 tvShowRepo.insertTvShowLanguages(show, conn);
                 conn.commit();
-                log.info("Serie erfolgreich importiert: " + show.name);
+                Log.info(SeriesImporter.class, "Serie erfolgreich importiert: " + show.name);
             } catch (Exception e) {
                 conn.rollback();
                 throw new RuntimeException("Import fehlgeschlagen für Serie: " + rating.name
@@ -262,7 +261,7 @@ public class SeriesImporter {
             return;
         TvShowJSON webData = api.getTvShowDetails(tvShowId);
         if (dbData.differs(webData)) {
-            log.info("Seriendaten haben sich geändert: " + showName);
+            Log.info(SeriesImporter.class, "Seriendaten haben sich geändert: " + showName);
             ButtonEnum result = Alerts.show(
                     "Seriendaten geändert",
                     "Die Daten der Serie \"" + showName + "\" haben sich geändert.\n\n"
@@ -300,7 +299,7 @@ public class SeriesImporter {
                     newEpisodes++;
                 } else if (!dbRating.equals(rating.rating)) {
                     // Umbewertung
-                    log.info("Episoden-Umbewertung erkannt: " + rating.name + " (id=" + rating.id + ")");
+                    Log.info(SeriesImporter.class, "Episoden-Umbewertung erkannt: " + rating.name + " (id=" + rating.id + ")");
                     String existingComment = episodeRepo.getEpisodeComment(rating.id);
                     String newComment = askForComment(
                             "Episoden-Umbewertung: " + rating.name,
@@ -322,7 +321,7 @@ public class SeriesImporter {
     private void ensureShowExists(int tvShowId) {
         if (tvShowRepo.tvShowExists(tvShowId))
             return;
-        log.info("Show noch nicht in DB, importiere ohne Rating: tvShowId=" + tvShowId);
+        Log.info(SeriesImporter.class, "Show noch nicht in DB, importiere ohne Rating: tvShowId=" + tvShowId);
         TvShowJSON show = api.getTvShowDetails(tvShowId);
         CreditListJSON credits = api.getAggregatedTvShowCredits(tvShowId);
         byte[] posterW92 = show.poster_path != null ? api.getImage(show.poster_path, "w92") : null;
@@ -348,7 +347,7 @@ public class SeriesImporter {
                 tvShowRepo.insertTvShowCountries(show, conn);
                 tvShowRepo.insertTvShowLanguages(show, conn);
                 conn.commit();
-                log.info("Show ohne Rating importiert: " + show.name);
+                Log.info(SeriesImporter.class, "Show ohne Rating importiert: " + show.name);
             } catch (Exception e) {
                 conn.rollback();
                 throw new RuntimeException("Show-Import fehlgeschlagen: " + show.name
@@ -365,7 +364,7 @@ public class SeriesImporter {
     private void ensureSeasonExists(int tvShowId, int seasonNumber) {
         if (seasonRepo.seasonExists(tvShowId, seasonNumber))
             return;
-        log.info("Season noch nicht in DB, importiere: tvShowId=" + tvShowId
+        Log.info(SeriesImporter.class, "Season noch nicht in DB, importiere: tvShowId=" + tvShowId
                 + ", seasonNumber=" + seasonNumber);
         SeasonJSON season = api.getSeasonDetails(tvShowId, seasonNumber);
         CreditListJSON credits = api.getAggregatedSeasonCredits(tvShowId, seasonNumber);
@@ -408,7 +407,7 @@ public class SeriesImporter {
                 for (CrewJSON crew : regularCredits.crew)
                     seasonRepo.markRegularCrew(crew, season.id, conn);
                 conn.commit();
-                log.info("Season importiert: " + season.name);
+                Log.info(SeriesImporter.class, "Season importiert: " + season.name);
             } catch (Exception e) {
                 conn.rollback();
                 throw new RuntimeException("Season-Import fehlgeschlagen: tvShowId=" + tvShowId
@@ -420,7 +419,7 @@ public class SeriesImporter {
     }
 
     private void importNewEpisode(EpisodeRatingJSON rating) {
-        log.info("Importiere neue Episode: " + rating.name + " (id=" + rating.id + ")");
+        Log.info(SeriesImporter.class, "Importiere neue Episode: " + rating.name + " (id=" + rating.id + ")");
         EpisodeJSON episode = api.getEpisodeDetails(rating.show_id,
                 rating.season_number, rating.episode_number);
 
@@ -439,7 +438,7 @@ public class SeriesImporter {
                                 : LocalDate.now().toString(),
                         null, conn);
                 conn.commit();
-                log.info("Episode importiert: " + episode.name);
+                Log.info(SeriesImporter.class, "Episode importiert: " + episode.name);
             } catch (Exception e) {
                 conn.rollback();
                 throw new RuntimeException("Episode-Import fehlgeschlagen: " + rating.name
@@ -470,7 +469,7 @@ public class SeriesImporter {
             for (CrewJSON crew : episode.crew) {
                 String job = crew.getJob();
                 if (crewFilterRepo.isBlacklisted(job)) {
-                    log.fine("Crew blacklisted: " + crew.name + ", job=" + job);
+                    Log.debug(SeriesImporter.class, "Crew blacklisted: " + crew.name + ", job=" + job);
                 } else if (crewFilterRepo.isWhitelisted(job)) {
                     movieRepo.insertPersonIfNotExists(api.getPerson(crew.id), conn);
                     episodeRepo.insertEpisodeCrew(crew, episode.id, conn);
@@ -514,10 +513,10 @@ public class SeriesImporter {
                 if (movieDetails.overview != null && !movieDetails.overview.isEmpty()) {
                     movieRepo.updateMovieOverview(id, movieDetails.overview);
                     overviewsFound++;
-                    log.info("Overview nachgeholt für Film id=" + id);
+                    Log.info(SeriesImporter.class, "Overview nachgeholt für Film id=" + id);
                 }
             } catch (Exception e) {
-                log.warning("Overview-Check fehlgeschlagen für Film id=" + id + ": " + e.getMessage());
+                Log.warn(SeriesImporter.class, "Overview-Check fehlgeschlagen für Film id=" + id + ": " + e.getMessage());
             }
         }
     }
@@ -546,10 +545,10 @@ public class SeriesImporter {
                     }
                     postersFound++;
                     movieRepo.updateMoviePosterPath(id, movieDetails.poster_path);
-                    log.info("Poster nachgeholt für Film id=" + id);
+                    Log.info(SeriesImporter.class, "Poster nachgeholt für Film id=" + id);
                 }
             } catch (Exception e) {
-                log.warning("Poster-Check fehlgeschlagen für Film id=" + id + ": " + e.getMessage());
+                Log.warn(SeriesImporter.class, "Poster-Check fehlgeschlagen für Film id=" + id + ": " + e.getMessage());
             }
         }
     }
@@ -562,10 +561,10 @@ public class SeriesImporter {
                 if (showDetails.overview != null && !showDetails.overview.isEmpty()) {
                     tvShowRepo.updateOverview(id, showDetails.overview);
                     overviewsFound++;
-                    log.info("Overview nachgeholt für Serie id=" + id);
+                    Log.info(SeriesImporter.class, "Overview nachgeholt für Serie id=" + id);
                 }
             } catch (Exception e) {
-                log.warning("Overview-Check fehlgeschlagen für Serie id=" + id + ": " + e.getMessage());
+                Log.warn(SeriesImporter.class, "Overview-Check fehlgeschlagen für Serie id=" + id + ": " + e.getMessage());
             }
         }
     }
@@ -592,10 +591,10 @@ public class SeriesImporter {
                     }
                     postersFound++;
                     tvShowRepo.updatePosterPath(id, showDetails.poster_path);
-                    log.info("Poster nachgeholt für Serie id=" + id);
+                    Log.info(SeriesImporter.class, "Poster nachgeholt für Serie id=" + id);
                 }
             } catch (Exception e) {
-                log.warning("Poster-Check fehlgeschlagen für Serie id=" + id + ": " + e.getMessage());
+                Log.warn(SeriesImporter.class, "Poster-Check fehlgeschlagen für Serie id=" + id + ": " + e.getMessage());
             }
         }
     }
@@ -608,11 +607,11 @@ public class SeriesImporter {
                 if (episodeDetails.overview != null && !episodeDetails.overview.isEmpty()) {
                     episodeRepo.updateOverview(episodeDetails.id, episodeDetails.overview);
                     overviewsFound++;
-                    log.info("Overview nachgeholt für Episode showId=" + ep.tvShowId()
+                    Log.info(SeriesImporter.class, "Overview nachgeholt für Episode showId=" + ep.tvShowId()
                             + " S" + ep.seasonNumber() + "E" + ep.episodeNumber());
                 }
             } catch (Exception e) {
-                log.warning("Overview-Check fehlgeschlagen für Episode showId=" + ep.tvShowId()
+                Log.warn(SeriesImporter.class, "Overview-Check fehlgeschlagen für Episode showId=" + ep.tvShowId()
                         + " S" + ep.seasonNumber() + "E" + ep.episodeNumber() + ": " + e.getMessage());
             }
         }
@@ -648,7 +647,7 @@ public class SeriesImporter {
             for (JobJSON jobEntry : crew.jobs) {
                 String job = jobEntry.job;
                 if (crewFilterRepo.isBlacklisted(job)) {
-                    log.fine("Crew blacklisted: " + crew.name + ", job=" + job);
+                    Log.debug(SeriesImporter.class, "Crew blacklisted: " + crew.name + ", job=" + job);
                 } else if (crewFilterRepo.isWhitelisted(job)) {
                     movieRepo.insertPersonIfNotExists(api.getPerson(crew.id), conn);
                     crewInsert.insert(crew, job, jobEntry.credit_id, jobEntry.episode_count, conn);
@@ -712,7 +711,7 @@ public class SeriesImporter {
                 + postersFound + overviewsFound == 0)
             sb.append("Nichts Neues gefunden.");
 
-        log.info("Zusammenfassung: " + sb.toString());
+        Log.info(SeriesImporter.class, "Zusammenfassung: " + sb.toString());
         Alerts.show("TMDB Import — Zusammenfassung",
                 sb.toString().trim(),
                 ButtonEnum.OK);
@@ -778,7 +777,7 @@ public class SeriesImporter {
         try {
             file.getParentFile().mkdirs();
             java.nio.file.Files.write(file.toPath(), image);
-            log.fine("Bild gespeichert: " + filename);
+            Log.debug(SeriesImporter.class, "Bild gespeichert: " + filename);
         } catch (Exception e) {
             throw new RuntimeException("saveImageToFileSystem fehlgeschlagen. filename: " + filename, e);
         }

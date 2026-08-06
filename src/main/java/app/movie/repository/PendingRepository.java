@@ -5,11 +5,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import app.movie.model.CrewPendingEntry;
 import app.movie.model.json.PersonJSON;
 import app.shared.DB;
+import app.shared.Log;
 
 /**
  * Repository für die Pending-Tabellen person_pending und crew_pending.
@@ -21,7 +21,6 @@ import app.shared.DB;
  */
 public class PendingRepository {
 
-    private static final Logger log = Logger.getLogger(PendingRepository.class.getName());
 
     /**
      * Schreibt eine Person in person_pending.
@@ -32,7 +31,7 @@ public class PendingRepository {
      * @param conn      Transaktions-Connection
      */
     public void insertPersonPending(PersonJSON person, Connection conn) {
-        log.fine("insertPersonPending, personId " + person.id);
+        Log.debug(PendingRepository.class, "insertPersonPending, personId " + person.id);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR IGNORE INTO person_pending (id, gender, name, known_for_department, " +
                 "birthday, deathday, biography, homepage, imdb_id, place_of_birth, popularity, profile_path) " +
@@ -68,7 +67,7 @@ public class PendingRepository {
      */
     public void insertCrewPending(int movieId, int personId, String personName, String job,
             String department, String creditId, Connection conn) {
-        log.fine("insertCrewPending, personId " + personId + ", job " + job);
+        Log.debug(PendingRepository.class, "insertCrewPending, personId " + personId + ", job " + job);
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO crew_pending (movie_id, person_id, person_name, job, department, credit_id) " +
                 "VALUES (?, ?, ?, ?, ?, ?)")) {
@@ -93,7 +92,7 @@ public class PendingRepository {
      * @param personId  TMDB-ID der Person
      */
     public void transferPersonToMain(int personId) {
-        log.info("transferPersonToMain, personId " + personId);
+        Log.info(PendingRepository.class, "transferPersonToMain, personId " + personId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "INSERT INTO person SELECT * FROM person_pending WHERE id = ?")) {
             ps.setInt(1, personId);
@@ -110,7 +109,7 @@ public class PendingRepository {
      * @param personId  TMDB-ID der Person
      */
     public void deletePersonPending(int personId) {
-        log.fine("deletePersonPending, personId " + personId);
+        Log.debug(PendingRepository.class, "deletePersonPending, personId " + personId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "DELETE FROM person_pending WHERE id = ?")) {
             ps.setInt(1, personId);
@@ -128,7 +127,7 @@ public class PendingRepository {
      * @param job       Job
      */
     public void deleteCrewPending(int movieId, int personId, String job) {
-        log.fine("deleteCrewPending, personId " + personId + ", job " + job);
+        Log.debug(PendingRepository.class, "deleteCrewPending, personId " + personId + ", job " + job);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
                 "DELETE FROM crew_pending WHERE movie_id = ? AND person_id = ? AND job = ?")) {
             ps.setInt(1, movieId);
