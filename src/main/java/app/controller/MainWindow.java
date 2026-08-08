@@ -20,6 +20,8 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.StackPane;
@@ -291,6 +293,13 @@ public class MainWindow {
     }
     
     private void initKeyBindings() {
+        // Filter, weil Pause keinem Bedienelement gehört: so kommt sie auch an, wenn ein Eingabefeld sie schluckt.
+        stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.PAUSE && onPausePressed != null)
+                onPausePressed.run();
+        });
+
+        // Handler, weil ESC ein Bedienelement legitim für sich beanspruchen darf (Vorschlags-Popup schließen).
     	stage.getScene().setOnKeyPressed(event -> {
             switch (event.getCode()) {
                 case ESCAPE: {
@@ -305,9 +314,6 @@ public class MainWindow {
                     if (onEscPressed != null) onEscPressed.run();
                     break;
                 }
-                case PAUSE:
-                    if (onPausePressed != null) onPausePressed.run();
-                    break;
                 default:
                     break;
             }

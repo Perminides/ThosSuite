@@ -79,13 +79,16 @@ public abstract class SkinProperties {
 	protected Color displayTextQuestionBgColor; // displayTextBgColor
 	protected Color displayTextProgressBgColor; // displayTextBgColor
 	protected Color displayTextHistoryBgColor; // displayTextBgColor
+	protected Color displayTextClockBgColor; // displayTextBgColor
+	protected Color clockPausedTextColor; // default = textColor halb zu displayTextClockBgColor verblasst
+	protected Color answerSlotWaitingBgColor; // default = activeComponentBgColor Richtung playFieldBackground beruhigt
 	protected Color disabledButtonBgColor;
 	protected Color imageLabelBgColor = new Color(0, 0, 0, 0); // In der Regel soll das ImagePanel transparent sein..,
 
 	protected Color menuBarBackground;
 	protected Color playFieldBackground; // default = menuBarBackground;
-	protected Color menuBarHoverBackground; // default = adjustBrightness(menuBarBackground, 20);
-	protected Color menuDisabledForeground; // default = adjustBrightness(textColor, 90);
+	protected Color menuBarHoverBackground; // default = contrastingShade(menuBarBackground, 20);
+	protected Color menuDisabledForeground; // default = textColor halb zu menuBarBackground verblasst
 	protected String menuButtonPadding; // default = font.getSize() * 0.3 + "px " + font.getSize() * 0.4 + "px";
 	protected String menuItemPadding; // default = font.getSize() * 0.1 + "px " + font.getSize() * 0.5 + "px";
 	
@@ -101,6 +104,7 @@ public abstract class SkinProperties {
 
 	protected Font font;
 	protected Font smallFont;
+	protected Font clockFont; // die große Zahl der herunterzählenden Uhr
 
 	protected BorderParams borderSmallComponent; // MC Buttons, InputField
 	protected BorderParams borderMediumComponent; // QuestionLabel
@@ -151,7 +155,16 @@ public abstract class SkinProperties {
 	protected String auWallpaperName;
 	protected String brWallpaperName;
 	protected String hrWallpaperName;
+	protected String fwWallpaperName;
 
+	protected Rectangle2D fwSessionQuestionPanel;
+	protected Rectangle2D fwSessionImagePanel;
+	protected Rectangle2D fwSessionTextInputPanel;
+	protected Rectangle2D fwSessionAnswerSlotsPanel;
+	protected Rectangle2D fwSessionClockPanel;
+	protected Rectangle2D fwSessionProgressPanel;
+	protected Rectangle2D fwSessionHistoryPanel;
+	protected Rectangle2D fwSessionBackButton;
 	protected Rectangle2D mcSessionQuestionPanel;
 	protected Rectangle2D mcSessionImagePanel;
 	protected Rectangle2D mcSessionMcPanel;
@@ -311,7 +324,7 @@ public abstract class SkinProperties {
 	};
 
 	public enum TextLabelType {
-		QUESTION("Question"), PROGRESS("Progress"), CARD_HISTORY("History");
+		QUESTION("Question"), PROGRESS("Progress"), CARD_HISTORY("History"), CLOCK("Clock");
 
 		private final String text;
 

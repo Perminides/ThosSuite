@@ -8,9 +8,11 @@ import java.util.Set;
 
 
 import app.learn.anki.model.Card;
+import app.learn.anki.model.FastAnswers;
 import app.learn.anki.model.MultipleChoiceAnswers;
 import app.learn.anki.model.Card.AnswerOption;
 import app.learn.anki.model.Card.ClickMapElements;
+import app.learn.anki.model.Card.Fast;
 import app.learn.anki.model.Card.Image;
 import app.learn.anki.model.Card.Input;
 import app.learn.anki.model.Card.MC;
@@ -29,7 +31,10 @@ import app.shared.Log;
  * Konstrukt Panel - Presenter - SessionProgress - Progress ist halt auch ein enges...
  */
 public class CardProgress {
-	
+
+	/** Zuschlag auf die erste Antwort eines Fast-Steps — Zeit, die Frage überhaupt zu lesen. */
+	private static final int READ_BONUS_SECONDS = 3;
+
 	private final SessionPresenter presenter;
 	private final Card card;
 	private final List<Card.Step> steps;
@@ -45,6 +50,7 @@ public class CardProgress {
 	
 	private List<String> lastMcOrder = null;
 	private MultipleChoiceAnswers activeSessionMC = null;
+	private FastAnswers activeFast = null;
 	
 	public CardProgress(Card hint, SessionPresenter presenter, SessionProgress sessionProgress) {
 		this.card = hint;
@@ -74,9 +80,14 @@ public class CardProgress {
 	public void checkTextInput(String text) {
 	    if (isPaused)
 	    	return;
-	    
+
 	    Step step = steps.get(currentIndex);
-	    
+
+	    if (step instanceof Fast) {
+	        checkFastInput(text);
+	        return;
+	    }
+
 	    if (!(step instanceof Input input)) {
 	        return; // Ignorieren
 	    }
@@ -99,6 +110,37 @@ public class CardProgress {
 	    runSteps();
 	}
 	
+	// ========================================
+	// Fast
+	// ========================================
+
+	/**
+	 * Eine erkannte Antwort rastet in ihr Feld ein und zieht die Uhr wieder voll auf. Was nicht passt
+	 * läuft ins Leere, die Uhr tickt weiter.
+	 */
+	private void checkFastInput(String text) {
+		FastAnswers.Hit hit = activeFast.accept(text);
+		if (hit == null)
+			return;
+
+		presenter.fastAnswerCorrect(hit.slot(), hit.text(), activeFast.expectedSlot());
+		if (activeFast.isComplete()) {
+			presenter.stopClock();
+			currentIndex++;
+			runSteps();
+		} else {
+			presenter.restartClock();
+		}
+	}
+
+	/** Die Uhr ist abgelaufen: aufdecken, Karte ist falsch, und es geht in die Pause. */
+	public void timeUp() {
+		playedTimestamp = LocalDateTime.now();
+		correctlyAnswered = false;
+		presenter.fastTimeUp(activeFast.revealRest());
+		isPaused = true;
+	}
+
 	// ========================================
 	// Map
 	// ========================================
@@ -183,9 +225,17 @@ public class CardProgress {
 	// Other
 	// ========================================
 	
-	public void endPause() {
-		if (!isPaused)
+	/**
+	 * Die Pause-Taste. Steht die Karte in einer echten Pause, beendet sie diese. Läuft dagegen gerade
+	 * ein Fast-Step, friert sie nur die Uhr ein beziehungsweise taut sie wieder auf — die
+	 * Texterkennung läuft dabei weiter, damit sich ein Vertipper in Ruhe korrigieren lässt.
+	 */
+	public void pauseKeyPressed() {
+		if (!isPaused) {
+			if (currentIndex < steps.size() && steps.get(currentIndex) instanceof Fast)
+				presenter.toggleClock();
 			return;
+		}
 
 		isPaused = false;
 
@@ -200,7 +250,7 @@ public class CardProgress {
 	public void cancel() {
 		if (isPaused) {
 			// ESC beendet auch eine Pause. Convenience...
-			endPause();
+			pauseKeyPressed();
 		} else {
 			// ESC während des Wartens auf Input beendet die Karte
 			Step step = steps.get(currentIndex);
@@ -297,13 +347,20 @@ public class CardProgress {
 			}
 			
 			case MarkMapElements left -> presenter.markMapElements(left.left());
+
+			case Fast fast -> {
+				activeFast = new FastAnswers(fast);
+				presenter.showFastStep(activeFast.slotHints(), activeFast.expectedSlot(),
+						fast.seconds() + READ_BONUS_SECONDS, fast.seconds());
+			}
 		}
 	}
-	
+
 	private boolean requiresUserInput(Step step) {
 	    return step instanceof Card.Input
 	        || step instanceof Card.MC
 	        || step instanceof Card.ClickMapElements
-	        || step instanceof Card.Pause;
+	        || step instanceof Card.Pause
+	        || step instanceof Card.Fast;
 	}
 }

@@ -42,6 +42,11 @@ import app.shared.ui.components.map.LearnMap;
  * es, bevor die Felder der Unterklasse gesetzt sind. Jede Unterklasse ruft {@code rebuild()} als
  * <b>letzte</b> Zeile ihres Konstruktors.</p>
  *
+ * <p><b>Eigene Bestandteile</b> hängt eine Unterklasse an, indem sie {@code rebuild()} überschreibt,
+ * darin <b>zuerst</b> {@code super.rebuild()} ruft und danach {@link #addComponents(Node...)}. Die
+ * Reihenfolge ist Pflicht: {@code super.rebuild()} räumt den Host leer, würde also alles wegwischen,
+ * was vorher angehängt wurde.</p>
+ *
  * <p><b>Übergangszustand:</b> nur noch die Antwortauswahl kommt über eine Bau-Methode des Skins
  * ({@code createMultipleChoicePane}). Alle übrigen Bestandteile bekommen ihr Feld als
  * {@code Rectangle2D} übergeben und holen sich beim Skin nur, was ohne Schlüssel auskommt.</p>
@@ -78,12 +83,18 @@ public abstract class AnkiLearnView {
 
 	protected abstract boolean hasInputField();
 
+	/** Ob diese Lernform überhaupt eine Antwortauswahl kennt. */
+	protected boolean hasMcPane() { return true; }
+
 	// ===== Für die Unterklassen =====
 
 	protected String deckId()              { return deckId; }
 	protected String mapName()             { return mapName; }
 	protected String kategorie()           { return kategorie; }
 	protected AnkiCallbacks callbacks() { return callbacks; }
+
+	/** Für Unterklassen mit eigenen Bestandteilen — siehe „Achtung beim Erweitern" oben. */
+	protected void addComponents(Node... teile) { canvas.addComponents(teile); }
 
 	// ===== Aufbau =====
 
@@ -101,8 +112,14 @@ public abstract class AnkiLearnView {
 
 		imageComponent = new SuiteImage(skin.learnComponentBounds(deckId, kategorie, LearnComponent.IMAGE));
 
-		mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, kategorie, LearnComponent.MC));
-		mcPane.addListener(callbacks.mcAnswerClicked());
+		// !Sofort: Bild, Auswahl und Knopf staffeln über deckId, Eingabefeld und Textfelder über
+		// mapName. Bei allen Decks sind beide gleich, deshalb fällt es nicht auf — ein Deck mit
+		// abweichendem mapName läse seine Maße aus zwei verschiedenen Properties.
+		mcPane = null;
+		if (hasMcPane()) {
+			mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, kategorie, LearnComponent.MC));
+			mcPane.addListener(callbacks.mcAnswerClicked());
+		}
 
 		backButton = new SuiteIconButton(Skin.IconButtonType.BACK,
 				skin.learnComponentBounds(deckId, kategorie, LearnComponent.BACK_BUTTON));
@@ -114,7 +131,8 @@ public abstract class AnkiLearnView {
 			inputField.onType(callbacks.textTyped());
 		}
 
-		canvas.setComponents(bestandteile());
+		canvas.clear();
+		canvas.addComponents(bestandteile());
 	}
 
 	/** Der Modifikator entscheidet nur über den abweichenden Hintergrund — der Rest steht in {@code .my-info-label}. */
@@ -131,7 +149,8 @@ public abstract class AnkiLearnView {
 		if (inputField != null)
 			parts.add(inputField);
 		parts.add(imageComponent);
-		parts.add(mcPane);
+		if (mcPane != null)
+			parts.add(mcPane);
 		parts.add(progressArea);
 		parts.add(cardHistoryArea);
 		parts.add(backButton);

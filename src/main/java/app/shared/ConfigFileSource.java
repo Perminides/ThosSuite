@@ -59,6 +59,7 @@ class ConfigFileSource {
         props.put("geoJsonFolder",    folderPath + "data/maps/geojson");
         props.put("mapImagesFolder",  folderPath + "data/maps/png");
         props.put("wallpaperFolder",  folderPath + "data/wallpapers");
+        props.put("soundFolder",      folderPath + "data/sound");
         props.put("dbFolder",         folderPath + "data");
         props.put("configFolder",     folderPath + "config");
         props.put("fitbitFolder",     folderPath + "fitbit");

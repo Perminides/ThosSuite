@@ -99,27 +99,40 @@ public class UiUtils {
 	}
 	
 	/**
-	 * 
+	 * Ein Ton derselben Farbe, der sich sichtbar von ihr abhebt — für Flächen, die eine Variante ihrer
+	 * selbst brauchen: Hover, Pressed, ein abgesetzter Track.
+	 *
+	 * <p><b>Die Richtung wählt die Methode, nicht der Aufrufer:</b> aufgehellt wird immer, außer das
+	 * schösse über 1.0 hinaus — dann wird stattdessen abgedunkelt. Genau das macht sie skin-tauglich:
+	 * auf heller Fläche wird der Hover dunkler, auf dunkler heller, ohne dass es jemand pro Skin
+	 * entscheiden muss.</p>
+	 *
+	 * <p>Farbton und Sättigung bleiben unangetastet, es ändert sich allein die Helligkeit. Oberhalb
+	 * von 50 kann der Abdunkel-Zweig auf 0 klemmen; das Ergebnis ist dann schlicht Schwarz.</p>
+	 *
+	 * <p><b>Nicht zum Dämpfen von Text geeignet.</b> Zurücktreten heißt sich dem Hintergrund annähern,
+	 * und den kennt diese Methode nicht. Dafür {@code textColor.interpolate(hintergrund, 0.5)}.</p>
+	 *
 	 * @param c
-	 * @param intensity:
+	 * @param percent
 	 *            an int value between 0 (no change) and 100 (maximal change will lead to white or black...)
 	 * @return
 	 */
-	public static Color adjustBrightness(Color c, int intensity) {	    
-	    if (intensity < 0 || intensity > 100) {
-	        throw new RuntimeException("Das soll ein Prozentwert sein für die adjustBrightness, du Witzbold :)");
+	public static Color contrastingShade(Color c, int percent) {
+	    if (percent < 0 || percent > 100) {
+	        throw new RuntimeException("Das soll ein Prozentwert sein für die contrastingShade, du Witzbold :)");
 	    }
 
-	    double intensityF = intensity / 100.0;
-	    double threshold = 1.0 - intensityF;
+	    double percentF = percent / 100.0;
+	    double threshold = 1.0 - percentF;
 
 	    double brightness = c.getBrightness();
 	    double newBrightness;
 
 	    if (brightness > threshold) {
-	        newBrightness = Math.max(0.0, brightness - intensityF); // abdunkeln
+	        newBrightness = Math.max(0.0, brightness - percentF); // abdunkeln
 	    } else {
-	        newBrightness = Math.min(1.0, brightness + intensityF); // aufhellen
+	        newBrightness = Math.min(1.0, brightness + percentF); // aufhellen
 	    }
 
 	    // Neue Farbe erstellen via HSB-Factory
