@@ -22,10 +22,7 @@ import app.learn.anki.model.Card.Fast;
  */
 public class FastAnswers {
 
-	/**
-	 * Ein Treffer: in welches Feld er gehört und was dort stehen soll — die getroffene Schreibweise,
-	 * nicht die kanonische. Wer „wolkenatlas" tippt, soll nicht „Cloud Atlas" lesen.
-	 */
+	/** Ein Treffer: in welches Feld er gehört und was dort stehen soll. */
 	public record Hit(int slot, String text) {}
 
 	private final Fast step;
@@ -72,7 +69,7 @@ public class FastAnswers {
 		filledSlots++;
 		if (step.ordered())
 			nextOrdered++;
-		return new Hit(slot, variantOf(answerIndex, typed));
+		return new Hit(slot, textOf(answerIndex));
 	}
 
 	public boolean isComplete() {
@@ -148,14 +145,6 @@ public class FastAnswers {
 		return step.answers().get(answerIndex).variants().get(0);
 	}
 
-	/** Die getroffene Schreibvariante, so wie sie in der csv steht — nicht wie sie getippt wurde. */
-	private String variantOf(int answerIndex, String typed) {
-		String gesucht = typed.trim();
-		for (String variant : step.answers().get(answerIndex).variants())
-			if (variant.equalsIgnoreCase(gesucht))
-				return variant;
-		throw new RuntimeException("Treffer ohne passende Variante: " + typed);
-	}
 
 	private static boolean hasHints(Fast step) {
 		for (Answer answer : step.answers())
