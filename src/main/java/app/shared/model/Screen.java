@@ -11,11 +11,11 @@ package app.shared.model;
  * Nicht-Zuständigkeit – kein FailFast.
  * <p>
  * <b>Warum nicht in Sub-Interfaces aufgeteilt:</b> Methoden wie
- * {@link #sortOrderChanged()} und {@link #reactOnPauseClick()} sehen lern- bzw.
+ * {@link #sortOrderChanged()} und {@link #reactOnPausePressed()} sehen lern- bzw.
  * anki-spezifisch aus und könnten theoretisch in eine {@code LearnScreen}/
  * {@code AnkiScreen}-Hierarchie wandern. Das scheitert aber daran, dass der
  * Controller sie über eine {@code Screen}-Referenz aufruft
- * ({@code currentScreen.sort(...)}, {@code currentScreen.reactOnPauseClick()}) –
+ * ({@code currentScreen.sort(...)}, {@code currentScreen.reactOnPausePressed()}) –
  * der konkrete Typ ist dort bewusst vergessen. Solange der Aufruf über {@code Screen}
  * läuft, müssen die Methoden hier liegen. Eine Trennung würde erst möglich, wenn der
  * Controller vor dem Aufruf die Screen-Art prüfte; dieser Umbau lohnt den Gewinn
@@ -61,7 +61,27 @@ public interface Screen {
 	/**
 	 * Der User hat auf Pause geklickt.
 	 */
-	default void reactOnPauseClick() {};
+	default void reactOnPausePressed() {};
+
+	/**
+	 * Ein modaler Dialog liegt jetzt über dieser Session — sie ist unterbrochen, bis
+	 * {@link #resume()} kommt oder sie geschlossen wird.
+	 * <p>
+	 * <b>Aktuell genau eine Verwendung:</b> Der Controller legt beim Session-Wechsel seinen
+	 * Speichern-/Verwerfen-Dialog über die laufende Session. Dessen {@code showAndWait} startet eine
+	 * verschachtelte Event-Schleife, in der die Session weiterläuft, obwohl der Nutzer gar nicht mehr
+	 * bei ihr ist.
+	 * <p>
+	 * Was das für einen Screen bedeutet, entscheidet er selbst — die Anki-Session hält ihre Uhr an,
+	 * alle anderen tun nichts.
+	 */
+	default void suspend() {};
+
+	/**
+	 * Der Dialog ist weg, ohne dass die Session ersetzt wurde — der Nutzer hat abgebrochen.
+	 * Gegenstück zu {@link #suspend()}.
+	 */
+	default void resume() {};
 	
 	/**
 	 * Der User hat die Sortierreihenfolge geändert.

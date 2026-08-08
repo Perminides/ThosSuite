@@ -60,6 +60,7 @@ public class RegionLearnView {
 		karte = new ShapeMapPane(geometrien, skin.learnComponentBounds(mapName, kategorie, LearnComponent.MAP));
 		karte.setClickListener(callbacks.mapElementClicked());
 
+		host.clear();
 		if (mitFragefeld) {
 			questionArea = new SuiteInfoLabel("",
 					skin.learnTextLabelBounds(mapName, kategorie, Skin.TextLabelType.QUESTION));
@@ -67,12 +68,12 @@ public class RegionLearnView {
 			// Einzeiliger Streifen mit einem einzelnen Namen darin — linksbündig sähe verloren aus.
 			questionArea.centerText();
 			inputField = null;
-			host.setComponents(karte, questionArea);
+			host.addComponents(karte, questionArea);
 		} else {
 			inputField = new SuiteTextField(skin.learnComponentBounds(mapName, kategorie, LearnComponent.TEXT_INPUT));
 			inputField.onType(callbacks.textTyped());
 			questionArea = null;
-			host.setComponents(karte, inputField);
+			host.addComponents(karte, inputField);
 		}
 	}
 

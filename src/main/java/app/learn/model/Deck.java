@@ -6,7 +6,8 @@ public enum Deck {
     GERMANY_CARDS("germany", "Deutschland", "germany", DeckCategory.ANKI_DECK, "germanDeckJavaFX.csv", MapMetadata.GERMANY, "newGermanCardsPerDay", false),
     MC_CARDS("mc", "Multiple Choice", "mc", DeckCategory.ANKI_DECK, "mcDeckJavaFX.csv", null, "newMCCardsPerDay", false),
     WORLD_CARDS("world", "Welt", "world", DeckCategory.ANKI_DECK, "weltDeckJavaFX.csv", MapMetadata.WORLD, "newWorldCardsPerDay", false),
-    
+    FAST_WRITE_CARDS("fw", "Fast Write", "fw", DeckCategory.ANKI_DECK, "fastWriteDeck.csv", null, "newFastWriteCardsPerDay", false),
+
     // Bundesländer
     BUNDESLAND_SH("lk_sh", "Schleswig-Holstein", "lk", DeckCategory.REGION_DECK, null, MapMetadata.GERMANY, null, true),
     BUNDESLAND_BW("lk_bw", "Baden-Württemberg", "lk", DeckCategory.REGION_DECK, null, MapMetadata.GERMANY, null, true),
@@ -44,7 +45,7 @@ public enum Deck {
 
     private final String id; 
     private final String displayName; 
-    private final String mapName; // Needed for skin most and for all...
+    private final String mapName; // <> id für landkreise und berlin!
     private final DeckCategory category;
     private final String deckFileName; // Only needed for Anki
     private final MapMetadata mapDef; 

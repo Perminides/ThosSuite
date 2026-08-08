@@ -8,6 +8,7 @@ import app.shared.model.BorderParams;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 
 /**
  * Ja, das ist hier heftige Reflection, es tut mir leid. Aber was ich wollte ist: - Skins, die voneinander erben können - Jedes Skin hat seine eigene
@@ -70,8 +71,9 @@ import javafx.scene.paint.Color;
 public abstract class Skin extends SkinProperties {
 	
 	public void styleScene(Scene scene) {
-		menuBarHoverBackground = menuBarHoverBackground == null ? UiUtils.adjustBrightness(menuBarBackground, 20) : menuBarHoverBackground;
-		menuDisabledForeground = menuDisabledForeground == null ? UiUtils.adjustBrightness(textColor, 90) : menuDisabledForeground;
+		menuBarHoverBackground = menuBarHoverBackground == null ? UiUtils.contrastingShade(menuBarBackground, 20) : menuBarHoverBackground;
+		// Gedämpfter Text heißt: halb zum eigenen Hintergrund verblasst. Helligkeit allein kennt den nicht.
+		menuDisabledForeground = menuDisabledForeground == null ? textColor.interpolate(menuBarBackground, 0.5) : menuDisabledForeground;
 		menuButtonPadding = menuButtonPadding == null ? font.getSize() * 0.3 + "px " + font.getSize() * 0.4 + "px" : menuButtonPadding;
 		menuItemPadding = menuItemPadding == null ? font.getSize() * 0.1 + "px " + font.getSize() * 0.5 + "px" : menuItemPadding;
 		playFieldBackground = playFieldBackground == null ? menuBarBackground : playFieldBackground;
@@ -85,6 +87,11 @@ public abstract class Skin extends SkinProperties {
 		displayTextHistoryBgColor = displayTextHistoryBgColor == null ? displayTextBgColor : displayTextHistoryBgColor;
 		displayTextProgressBgColor = displayTextProgressBgColor == null ? displayTextBgColor : displayTextProgressBgColor;
 		displayTextQuestionBgColor = displayTextQuestionBgColor == null ? displayTextBgColor : displayTextQuestionBgColor;
+		displayTextClockBgColor = displayTextClockBgColor == null ? displayTextBgColor : displayTextClockBgColor;
+		clockFont = clockFont == null ? Font.font(font.getFamily(), font.getSize() * 3) : clockFont;
+		clockPausedTextColor = clockPausedTextColor == null ? textColor.interpolate(displayTextClockBgColor, 0.5) : clockPausedTextColor;
+		// Die Aktiv-Farbe, Richtung Spielfeld zurückgenommen: gleiche Familie, ohne die Klick-Andeutung.
+		answerSlotWaitingBgColor = answerSlotWaitingBgColor == null ? activeComponentBgColor.interpolate(playFieldBackground, 0.1) : answerSlotWaitingBgColor;
 		hannoverSessionMapPanel = hannoverSessionMapPanel == null ? worldSessionMapPanel : hannoverSessionMapPanel;
 		hannoverSessionQuestionPanel = hannoverSessionQuestionPanel == null ? worldSessionQuestionPanel : hannoverSessionQuestionPanel;
 		hannoverSessionTextInputPanel = hannoverSessionTextInputPanel == null ? worldSessionTextInputPanel : hannoverSessionTextInputPanel;
@@ -141,6 +148,7 @@ public abstract class Skin extends SkinProperties {
 	    addImageMapStyles(css);
 	    addImagePaneStyles(css);
 	    addMultipleChoiceStyles(css);
+	    addAnswerSlotStyles(css); // muss nach den MC-Regeln stehen, siehe dort
 	    addShapeMapStyles(css);
 	    addMyTableStyles(css);
 	    addDashboardStyles(css);
@@ -176,7 +184,7 @@ public abstract class Skin extends SkinProperties {
 	    
 	    builder.rule(".button .text, .date-picker .arrow-button .text", "-fx-fill", textActiveComponentColor);
 	    builder.rule(".button:hover, .date-picker .arrow-button:hover", "-fx-background-color", activeComponentHoverColor);
-	    builder.rule(".button:pressed, .date-picker .arrow-button:pressed", "-fx-background-color", UiUtils.adjustBrightness(activeComponentHoverColor, 8));
+	    builder.rule(".button:pressed, .date-picker .arrow-button:pressed", "-fx-background-color", UiUtils.contrastingShade(activeComponentHoverColor, 8));
 	    // Alternative Effekte (für andere Skins):
 	    //css.rule(".my-mc-button:active:pressed", "-fx-translate-y", "1px");
 	    //css.rule(".my-mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
@@ -197,12 +205,12 @@ public abstract class Skin extends SkinProperties {
 		
 	    builder.rule(".box .text", "-fx-fill", textActiveComponentColor);
 	    builder.rule(".box:hover", "-fx-background-color", activeComponentHoverColor);
-	    builder.rule(".box:pressed", "-fx-background-color", UiUtils.adjustBrightness(activeComponentHoverColor, 8));
+	    builder.rule(".box:pressed", "-fx-background-color", UiUtils.contrastingShade(activeComponentHoverColor, 8));
 	    builder.rule(".check-box:selected .mark", "-fx-background-color", textActiveComponentColor); // Die Farbe des Hakens in der Checkbox :-)
 	}
 	
 	private void addScrollbarStyles(CssBuilder builder) {
-		builder.rule(".scroll-bar .track", "-fx-background-color", UiUtils.adjustBrightness(playFieldBackground,10));
+		builder.rule(".scroll-bar .track", "-fx-background-color", UiUtils.contrastingShade(playFieldBackground,10));
 		builder.rule(".scroll-bar .thumb", "-fx-background-color", activeComponentBgColor);
 		builder.rule(".scroll-bar .thumb:hover", "-fx-background-color", activeComponentHoverColor);
 		builder.rule(".scroll-bar .increment-button, .scroll-bar .decrement-button", "-fx-background-color", menuBarBackground);
@@ -375,8 +383,8 @@ public abstract class Skin extends SkinProperties {
 	
 	/**
 	 * Grundlage und Abweichung: {@code .my-info-label} trägt alles, was für jedes Info-Label gilt,
-	 * die drei Modifikatoren ({@code .question}, {@code .progress}, {@code .history}) setzen nur noch
-	 * den abweichenden Hintergrund.
+	 * die Modifikatoren ({@code .question}, {@code .progress}, {@code .history}, {@code .clock})
+	 * setzen nur noch den abweichenden Hintergrund — die Uhr zusätzlich ihre eigene Schriftgröße.
 	 *
 	 * <p>Damit sieht ein {@code SuiteInfoLabel} auch außerhalb einer Session richtig aus — vorher
 	 * kam sein ganzes Aussehen aus den drei Kennungen, es war also ohne Session nackt.</p>
@@ -407,6 +415,13 @@ public abstract class Skin extends SkinProperties {
 	        Color bg = (Color) getFieldValue("displayText" + type + "BgColor");
 	        builder.rule(".my-info-label." + type.styleClass(), "-fx-background-color", bg);
 	    }
+
+	    // Die Uhr ist dieselbe Fläche, nur mit einer großen Zahl darin — und blass, solange sie steht.
+	    builder.start(".my-info-label.clock Text")
+	    		.add("-fx-font-family", "'" + clockFont.getFamily() + "'")
+	    		.add("-fx-font-size", clockFont.getSize() + "px")
+	    		.end();
+	    builder.rule(".my-info-label.clock:paused Text", "-fx-fill", clockPausedTextColor);
 	}
 	
 	private void addIconButtonStyles(CssBuilder builder) {
@@ -563,7 +578,7 @@ public abstract class Skin extends SkinProperties {
 	    builder.rule(".my-mc-button", "-fx-padding", paddingCss);
 	    builder.rule(".my-mc-button:active", "-fx-background-color", activeComponentBgColor);
 	    builder.rule(".my-mc-button:active:hover", "-fx-background-color", activeComponentHoverColor);
-	    builder.rule(".my-mc-button:active:pressed", "-fx-background-color", UiUtils.adjustBrightness(activeComponentHoverColor, 8));
+	    builder.rule(".my-mc-button:active:pressed", "-fx-background-color", UiUtils.contrastingShade(activeComponentHoverColor, 8));
 	    // Alternative Effekte (für andere Skins):
 	    //css.rule(".my-mc-button:active:pressed", "-fx-translate-y", "1px");
 	    //css.rule(".my-mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
@@ -575,6 +590,7 @@ public abstract class Skin extends SkinProperties {
 	    builder.rule(".my-mc-button:incorrect", "-fx-background-color", incorrectColor);
 	    if (mcIncorrectTextColor != null)
 	        builder.rule(".my-mc-button:incorrect .text", "-fx-fill", mcIncorrectTextColor);
+
 	    
 	    // --- MC Button Layout Varianten (Pseudo-Klassen) ---
 	    
@@ -597,11 +613,31 @@ public abstract class Skin extends SkinProperties {
 	    builder.start(".my-mc-button:tiny")
 	       .add("-fx-wrap-text", "true")
 	       .add("-fx-padding", squeezedPadding)
-	       .add("-fx-line-spacing", lineSpacingTiny + "px") 
+	       .add("-fx-line-spacing", lineSpacingTiny + "px")
 	       .add("-fx-font-size", smallFont.getSize() + "px")
 	       .end();
 	}
-	
+
+	/**
+	 * Die Antwortfelder von Fast Write. Sie tragen zusätzlich {@code .my-mc-button} und erben von dort
+	 * Maße, Layout-Stufen und die Farben für richtig und aufgedeckt; hier steht nur die Abweichung.
+	 *
+	 * <p>Ein wartendes Feld ist im Spiel, nimmt aber keine Klicks entgegen — die Aktiv-Farbe der
+	 * Bedienelemente verspricht dort also zu viel. Es trägt deshalb dieselbe Farbe, zum Spielfeld hin
+	 * zurückgenommen: nah genug an der Familie des Skins, um nicht zu beißen, ruhig genug, um nicht
+	 * nach Knopf auszusehen.</p>
+	 *
+	 * <p>Das erwartete Feld ({@code :expected}) bleibt ohne eigene Regel — das oberste nicht-grüne ist
+	 * ohnehin das gesuchte.</p>
+	 *
+	 * <p><b>Muss nach {@code addMultipleChoiceStyles} laufen:</b> die Regel hat dieselbe Spezifität
+	 * wie ihr MC-Pendant, es entscheidet also die Reihenfolge im Stylesheet.</p>
+	 */
+	private void addAnswerSlotStyles(CssBuilder builder) {
+	    builder.rule(".my-answer-slot:active", "-fx-background-color", answerSlotWaitingBgColor);
+	}
+
+
 	/**
 	 * Uses textColor as borderColor (e. g. because of skins without border)
 	 * 
@@ -618,7 +654,7 @@ public abstract class Skin extends SkinProperties {
 	    	.end();
 	    
 	    builder.start(".my-table-view .table-row-cell")
-	       .add("-fx-background-color", UiUtils.toHex(textColor) + ", " + UiUtils.toHex(UiUtils.adjustBrightness(playFieldBackground, 5)))
+	       .add("-fx-background-color", UiUtils.toHex(textColor) + ", " + UiUtils.toHex(UiUtils.contrastingShade(playFieldBackground, 5)))
 	       .end();
 	    
 	    builder.start(".my-table-view .table-row-cell:selected")
@@ -872,10 +908,10 @@ public abstract class Skin extends SkinProperties {
 	    	.add("-fx-fill", textColor)
 	    .end();
 	    builder.start(".date-picker-popup .day-cell.previous-month, .date-picker-popup .day-cell.next-month")
-	       .add("-fx-background-color", UiUtils.adjustBrightness(playFieldBackground, 20))
+	       .add("-fx-background-color", UiUtils.contrastingShade(playFieldBackground, 20))
 	    .end();
 	    
-	    builder.rule(".date-picker-popup .day-cell:hover", "-fx-background-color", UiUtils.adjustBrightness(playFieldBackground, 40));
+	    builder.rule(".date-picker-popup .day-cell:hover", "-fx-background-color", UiUtils.contrastingShade(playFieldBackground, 40));
 	    
 	    /**
 	    // === Heutiges Datum ===

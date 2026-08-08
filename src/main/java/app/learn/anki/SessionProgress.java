@@ -126,8 +126,12 @@ class SessionProgress {
 		getCurrentProgress().mcClicked(index);
 	}
 
-	public void reactOnPauseClick() {
-		getCurrentProgress().endPause();
+	public void reactOnPausePressed() {
+		getCurrentProgress().pauseKeyPressed();
+	}
+
+	public void timeUp() {
+		getCurrentProgress().timeUp();
 	}
 
 	public void escClicked() {

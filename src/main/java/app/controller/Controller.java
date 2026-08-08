@@ -287,7 +287,7 @@ public class Controller{
 	}
 	
 	public void pausePressed() {
-		currentScreen.reactOnPauseClick();
+		currentScreen.reactOnPausePressed();
 	}
 
 	public void sortOrderChanged() {   
@@ -393,6 +393,7 @@ public class Controller{
 
 	        case OFFER_SAVE:
 	            // Der komplexe Dialog: Speichern / Verwerfen / Abbrechen
+	            currentScreen.suspend();
 	            var decision = showSaveDiscardCancelDialog();
 	            if (decision == SessionSwitchAction.SAVE_AND_SWITCH) {
 	                currentScreen.closeSilent(true);
@@ -401,16 +402,20 @@ public class Controller{
 	            } else if (decision == SessionSwitchAction.DISCARD_AND_SWITCH) {
 	                currentScreen.closeSilent(false);
 	                startNewSessionRoutine.run();
+	            } else {
+	                currentScreen.resume(); // CANCEL — die Session lebt weiter
 	            }
-	            // bei CANCEL passiert nichts
 	            break;
 
 	        case CONFIRM_DISCARD:
 	            // Der simple Dialog: "Achtung, Fortschritt geht verloren! OK / Abbrechen"
+	            currentScreen.suspend();
 	            boolean reallyQuit = showConfirmDiscardDialog();
 	            if (reallyQuit) {
 	                currentScreen.closeSilent(false); // Nicht speichern, nur schließen
 	                startNewSessionRoutine.run();
+	            } else {
+	                currentScreen.resume();
 	            }
 	            break;
 	    }

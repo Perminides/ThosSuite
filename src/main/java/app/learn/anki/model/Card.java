@@ -14,9 +14,12 @@ import app.shared.AppClock;
  * Aktueller Ansatz: Jede Karte gibt es genau 1x im Speicher!
  */
 public class Card {
-    public sealed interface Step permits Image, ClickMapElements, Output, Input, MC, MarkMapElements, Pause {}
-    
-    public record AnswerOption(String text, boolean correct) {}
+    public sealed interface Step permits Image, ClickMapElements, Output, Input, MC, MarkMapElements, Pause, Fast {}
+
+    /** So viele Antwortfelder passen höchstens auf den Schirm — gilt für jeden Skin gleich. */
+    public static final int MAX_FAST_SLOTS = 10;
+
+    // Die unterschiedlichen Steps
     public record Image(String file) implements Step {}
     public record ClickMapElements(Set<String> mandatory, Set<String> optional) implements Step {}
     public record Output(String text) implements Step {}
@@ -24,6 +27,10 @@ public class Card {
     public record MC(Set<AnswerOption> options) implements Step {}
     public record MarkMapElements(Set<String> left, Set<String> right) implements Step {} // Momentan ist right immer leer. Vielleicht will ich später aber auch mal die optionalen Shapes berücksichtigen...
     public record Pause() implements Step {}
+    public record Fast(int seconds, boolean ordered, int slots, List<Answer> answers) implements Step {}
+    
+    public record AnswerOption(String text, boolean correct) {}
+    public record Answer(String hint, List<String> variants) {} // Eine gesuchte Antwort: ihre Schreibvarianten und ein Hinweis, der bis zum Treffer im Feld steht.  
 
     private final List<Step> steps;
 	private final int id;
@@ -122,9 +129,10 @@ public class Card {
 			throw new RuntimeException("Karte erwartet keinen Input\n" + String.join("\n", csvTokens));
 	}
 
-	/** Die drei Schritte, bei denen die Karte etwas von mir will. Alles andere zeigt nur an. */
+	/** Die Schritte, bei denen die Karte etwas von mir will. Alles andere zeigt nur an. */
 	private static boolean expectsInput(Step step) {
-		return step instanceof MC || step instanceof Input || step instanceof ClickMapElements;
+		return step instanceof MC || step instanceof Input || step instanceof ClickMapElements
+				|| step instanceof Fast;
 	}
 
 	/** Ob in dieser Folge überhaupt irgendwo nach Input gefragt wird. */
@@ -149,8 +157,90 @@ public class Card {
             case "Click" -> parseClickOrMark(body, true);
             case "Mark"  -> parseClickOrMark(body, false);
             case "Pause" -> new Pause();
+            case "Fast"  -> parseFast(body);
             default      -> throw new RuntimeException("Unbekannter Step: " + kind);
         };
+    }
+
+    // --- Fast ---
+
+    /**
+     * {@code <sekunden>:<ordered|any|anyN>:<antwort>|<antwort>|…}
+     *
+     * <p>Vor den Antworten stehen immer genau zwei Pflichtfelder. Nur deshalb darf der Antwortblock
+     * selbst Doppelpunkte tragen ("Blade Runner: 2049") — das Limit trennt sauber ab.</p>
+     */
+    private static Step parseFast(String body) {
+        String[] teile = body.split(":", 3);
+        if (teile.length < 3)
+            throw new RuntimeException("Fast braucht Sekunden, Modus und Antworten: " + body);
+
+        int seconds = Integer.parseInt(teile[0].trim());
+        if (seconds < 1)
+            throw new RuntimeException("Fast braucht eine Zeit größer null: " + body);
+
+        String modus = teile[1].trim();
+        List<Answer> answers = parseFastAnswers(teile[2]);
+        boolean ordered = modus.equals("ordered");
+        int slots = answers.size();
+
+        if (!ordered && !modus.equals("any")) {
+            if (!modus.startsWith("any"))
+                throw new RuntimeException("Unbekannter Fast-Modus: " + modus);
+            slots = Integer.parseInt(modus.substring(3));
+            if (slots < 1 || slots > answers.size())
+                throw new RuntimeException("anyN braucht 1 bis " + answers.size() + " Felder, nicht " + slots);
+            if (hasHints(answers))
+                throw new RuntimeException("anyN und Hinweise gehen nicht zusammen: ohne Bindung gibt es kein Feld für den Hinweis");
+        }
+
+        if (slots > MAX_FAST_SLOTS)
+            throw new RuntimeException(slots + " Antwortfelder, erlaubt sind " + MAX_FAST_SLOTS);
+        if (!ordered)
+            checkNoDuplicates(answers);
+
+        return new Fast(seconds, ordered, slots, answers);
+    }
+
+    private static List<Answer> parseFastAnswers(String block) {
+        List<Answer> answers = new ArrayList<>();
+        for (String raw : block.split("\\|")) {
+            String s = raw.trim();
+            String hint = null;
+            if (s.startsWith("<")) {
+                int zu = s.indexOf('>');
+                if (zu < 0)
+                    throw new RuntimeException("Hinweis ohne schließendes >: " + raw);
+                hint = s.substring(1, zu).trim();
+                s = s.substring(zu + 1);
+            }
+            List<String> variants = new ArrayList<>();
+            for (String variant : s.split(","))
+                if (!variant.trim().isEmpty())
+                    variants.add(variant.trim());
+            if (variants.isEmpty())
+                throw new RuntimeException("Antwort ohne Text: " + raw);
+            answers.add(new Answer(hint, List.copyOf(variants)));
+        }
+        if (answers.isEmpty())
+            throw new RuntimeException("Fast ohne Antworten: " + block);
+        return List.copyOf(answers);
+    }
+
+    private static boolean hasHints(List<Answer> answers) {
+        for (Answer answer : answers)
+            if (answer.hint() != null)
+                return true;
+        return false;
+    }
+
+    /** Ohne Reihenfolge wäre bei einer doppelten Variante nicht entscheidbar, welches Feld gemeint ist. */
+    private static void checkNoDuplicates(List<Answer> answers) {
+        Set<String> gesehen = new HashSet<>();
+        for (Answer answer : answers)
+            for (String variant : answer.variants())
+                if (!gesehen.add(variant.toLowerCase()))
+                    throw new RuntimeException("Antwort '" + variant + "' kommt mehrfach vor — nur bei ordered erlaubt");
     }
 
     /**

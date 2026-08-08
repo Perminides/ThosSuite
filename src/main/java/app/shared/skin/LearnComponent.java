@@ -15,6 +15,7 @@ public enum LearnComponent {
 	TEXT_INPUT("SessionTextInputPanel"),
 	IMAGE("SessionImagePanel"),
 	MC("SessionMcPanel"),
+	ANSWER_SLOTS("SessionAnswerSlotsPanel"),
 	BACK_BUTTON("SessionBackButton");
 
 	private final String suffix;

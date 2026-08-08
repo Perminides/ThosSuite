@@ -63,6 +63,8 @@ Gebrauch auf" —, trägt hier nämlich **nicht**: ein Strukturverstoß fällt n
   will wissen, was sie tut; der Weg dahin beantwortet ihm keine Frage und verwirrt nach Monaten
   nur noch. Was war, steht in der Git-Historie. Das gilt auch für Marker: ein Marker beschreibt
   ein offenes Problem, nie eine erledigte Änderung.
+8. **Inline Kommentare**  halten sich kurz. Ausnahmen wo absolut gerechtfertigt, aber an sich gehen
+  diese nicht über eine Zeiel hinaus, das stört sonst den Lesefluss.
 
   *Abgrenzung:* Eine **verworfene Alternative mit Begründung** ist kein Rückblick, sondern eine
   Eigenschaft der heutigen Lösung — sie verhindert, dass jemand denselben Weg noch einmal geht

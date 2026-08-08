@@ -79,7 +79,7 @@ public class RegionSession implements Screen {
 	}
 	
 	@Override
-	public void reactOnPauseClick() {
+	public void reactOnPausePressed() {
 		progress.endPause();
 	}
 	

@@ -1,6 +1,6 @@
 # ThosSuite — Architektur (allgemein)
 
-**Stand:** 29.07.2026 — Abschnitt „UI-Architektur“ nach dem Skin-Refactoring neu gefasst
+**Stand:** 07.08.2026 — Fast Write hinzugefügt
 
 **Charakter:** Das *immer mitzugebende* Fundament — was bei jeder Aufgabe gilt, egal welches
 Feature: Überblick, technische Basis, Paketstruktur, Orchestrierungs-Mechanik, Fundament.
@@ -16,7 +16,7 @@ Perminides ist einziger Nutzer und einziger Entwickler.
 **Lernen:**
 - **Anki-Decks** — karten-basiertes Lernen, bei dem *jede Karte einzeln* ihren
   Spaced-Repetition-Stand trägt (zuletzt beantwortet, Tage bis zur nächsten Fälligkeit).
-  Decks: Deutschland, Welt, Multiple Choice, Hannover.
+  Decks: Deutschland, Welt, Multiple Choice, Hannover, Fast Write.
 - **Region-Decks** — hier trägt das *Deck als Ganzes* den Lernfortschritt, nicht die
   einzelne Frage. Decks: Autonome Regionen Spaniens, Stadtteile Hannovers, Städte der
   Region Hannover, Bezirke Bayerns, Bundesländer Österreichs, Länder Ozeaniens, Kantone
@@ -262,6 +262,12 @@ läuft die Routine sofort, erst nach einem Speichern-Dialog oder erst nach einer
 Übergeben wird bewusst die *Aufbau-Routine*, nicht die fertig aufgebaute neue Session. Würde man
 die neue Session schon vorab erzeugen, um sie dann zu übergeben, wäre dieser Aufbau umsonst, sobald
 der User im Dialog abbricht. So wird erst gebaut, wenn die Entscheidung für den Wechsel steht.
+
+**Solange ein solcher Dialog offen ist, ist der aktuelle Screen suspendiert** (`suspend()`, bei
+Abbruch `resume()`). Der Grund: `showAndWait` startet eine verschachtelte Event-Schleife, in der die
+Session weiterläuft, obwohl der Nutzer gar nicht mehr bei ihr ist — eine laufende Uhr etwa würde
+ablaufen und die offene Karte als falsch werten. Was das Suspendieren bedeutet, entscheidet jeder
+Screen selbst; die meisten haben nichts zu tun.
 
 #### Rückmeldung ans Ende
 Feature-Klassen und Lern-Sessions kennen den Controller **nicht**. Beim Erzeugen gibt der

@@ -12,7 +12,6 @@ import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 
 /**
@@ -21,9 +20,9 @@ import javafx.scene.text.TextAlignment;
  * 		- 2 lines normal font with reduced padding for longer text (squeezed)
  * 		- up to 3 lines in small font for very long text (tiny)
  *
- * <p>MC misst selbst, welche Stufe ein Antworttext braucht, und togglet die passende Pseudo-Klasse. Die dafür
- * nötigen Maße holt es sich als {@link McMetrics} beim Skin — sie hängen an der Schrift und den Rändern, nicht
- * am Aufrufer. Übergeben wird nur die Breite beziehungsweise das Feld.</p>
+ * <p>Welche Stufe ein Antworttext braucht, misst {@link ButtonTextFit}. Die dafür nötigen Maße holt sich MC als
+ * {@link McMetrics} beim Skin — sie hängen an der Schrift und den Rändern, nicht am Aufrufer. Übergeben wird nur
+ * die Breite beziehungsweise das Feld.</p>
  *
  * CSS-classes
  * 		Button	= "my-mc-button"
@@ -35,12 +34,6 @@ public class MultipleChoicePane extends Pane {
     private static final PseudoClass STATE_ACTIVE = PseudoClass.getPseudoClass("active");
     private static final PseudoClass STATE_CORRECT = PseudoClass.getPseudoClass("correct");
     private static final PseudoClass STATE_INCORRECT = PseudoClass.getPseudoClass("incorrect");
-
-    // --- Layout-Zustände (Additiv zu Logik-Zuständen) ---
-    // squeezed: Text umbrechen, Padding reduzieren
-    private static final PseudoClass STATE_SQUEEZED = PseudoClass.getPseudoClass("squeezed");
-    // tiny: Text umbrechen, Padding reduzieren UND Schrift verkleinern
-    private static final PseudoClass STATE_TINY = PseudoClass.getPseudoClass("tiny");
 
     private final List<Button> buttons = new ArrayList<>();
     private final McMetrics metrics;
@@ -102,44 +95,11 @@ public class MultipleChoicePane extends Pane {
     public void initiateMultipleChoice(List<String> answers) {
         for (int i = 0; i < 8; i++) {
             Button btn = buttons.get(i);
+            String text = i < answers.size() ? answers.get(i) : "";
 
-            // Reset aller Layout-States
-            btn.pseudoClassStateChanged(STATE_SQUEEZED, false);
-            btn.pseudoClassStateChanged(STATE_TINY, false);
-
-            if (i < answers.size()) {
-                String text = answers.get(i);
-                btn.setText(text);
-
-                double availableTextWidth = btn.getPrefWidth() - metrics.horizontalOverhead();
-
-                Text measure = new Text(text);
-                measure.setFont(metrics.font());
-
-                // SCHRITT 1: Passt es einzeilig?
-                if (measure.getLayoutBounds().getWidth() > availableTextWidth) {
-
-                    // Nein. Passt es "gequetscht" zweizeilig?
-                    measure.setWrappingWidth(availableTextWidth);
-                    measure.setLineSpacing(metrics.lineSpacingSqueezed());
-
-                    // Limit: ButtonHöhe - (Rahmen Oben + Rahmen Unten). Kein Padding!
-                    double absoluteMaxHeight = btn.getPrefHeight() - (metrics.borderWidth() * 2);
-
-                    if (measure.getLayoutBounds().getHeight() <= absoluteMaxHeight) {
-                        // JA! Es passt mit Quetschen.
-                        btn.pseudoClassStateChanged(STATE_SQUEEZED, true);
-                    } else {
-                        // NEIN! Selbst Quetschen reicht nicht -> Tiny Mode.
-                        btn.pseudoClassStateChanged(STATE_TINY, true);
-                    }
-                }
-
-                setButtonLogicState(btn, STATE_ACTIVE);
-            } else {
-                btn.setText("");
-                setButtonLogicState(btn, STATE_INACTIVE);
-            }
+            btn.setText(text);
+            ButtonTextFit.apply(btn, text, metrics);
+            setButtonLogicState(btn, text.isEmpty() ? STATE_INACTIVE : STATE_ACTIVE);
         }
     }
 

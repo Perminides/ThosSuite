@@ -1,6 +1,6 @@
 # ThosSuite — Feature-Details
 
-**Stand:** 01.07.2026 · Struktur steht, Inhalte in Prüfung.
+**Stand:** 07.08.2026 · Fast Write Absatz hinzugefügt
 
 **Charakter:** Das *Nachschlagewerk* — pro Feature (der Lern-Kern als größtes eingeschlossen),
 wie es konkret gebaut ist. Deskriptiv wie das Architektur-Dokument, aber feature-tief statt
@@ -40,6 +40,13 @@ gezeichnete Umrisse auf dem Bild statt vorgestanzter Formen.
 **Multiple Choice.** Rund 6000 reine Auswahlfragen, ohne Geografie und ohne Karte — hier zählt
 allein, aus den vorgegebenen Antworten die richtige zu erkennen. Wie bei Deutschland trägt jede
 Frage ihren eigenen Lernstand.
+
+**Fast Write.** Ein von Hand gepflegtes Deck, bei dem ausschließlich getippt wird — keine Landkarte,
+keine Auswahl, dafür Zeitdruck. Jede gesuchte Antwort hat ihr eigenes Limit; eine Uhr zählt herunter
+und beginnt mit jedem Treffer von vorn. Untereinander stehen die Antwortfelder, leer oder mit einem
+Hinweis darin, und decken sich nach und nach auf. Läuft die Zeit ab, erscheint das Fehlende, und die
+Karte gilt als falsch. Je nach Aufgabe zählt die Reihenfolge, oder es genügt eine bestimmte Zahl von
+Treffern aus einem größeren Vorrat.
 
 **Regionen.** Mehrere Karten aus anklickbaren Formen (analog der Deutschlandkarte oben) — Schweizer
 Kantone, US-Bundesstaaten, deutsche Bundesländer und etliche mehr. Gelernt werden die Regionen
@@ -107,10 +114,11 @@ Eine Lern-Session besteht aus vier Klassen — bei Anki wie bei Region, mit dens
 
 Zwei Unterschiede im Bau, beide fachlich begründet:
 
-- **Anki hat drei Views, Region eine.** `AnkiLearnView` ist abstrakt, darunter hängen
-  `ShapeMapLearnView`, `ImageMapLearnView` und `McLearnView` — sie unterscheiden sich in der
-  Kartenart und darin, ob es ein Eingabefeld gibt. `RegionLearnView` kennt nur eine Variante und
-  regelt sie über einen Schalter.
+- **Anki hat vier Views, Region eine.** `AnkiLearnView` ist abstrakt, darunter hängen
+  `ShapeMapLearnView`, `ImageMapLearnView`, `McLearnView` und `FastWriteLearnView` — sie
+  unterscheiden sich in der Kartenart und darin, welche Bedienelemente dazukommen: Eingabefeld,
+  Antwortauswahl, Antwortfelder mit Uhr. `RegionLearnView` kennt nur eine Variante und regelt sie
+  über einen Schalter.
 - **Anki hat eine Progress-Klasse, Region drei.** `SessionProgress` ist dort abstrakt, darunter
   `ClickSessionProgress`, `EliminationSessionProgress` und `WriteSessionProgress`. Was sie teilen —
   Spec, Presenter, Fortschreiben des Lernstands —, steht in der Basisklasse.
@@ -458,8 +466,7 @@ bestehendem Code steht als Marker im Code selbst, nicht hier. Was hier steht, ha
 Codestelle, an der ein Marker sitzen könnte.
 
 **Lernen:** automatische Endbedingungen für Anki-Sessions · graphische Fortschrittsanzeige
-innerhalb einer Session · Fast Hints (Tippen mit Zeitlimit) · weitere Region-Decks (z. B.
-Frankreich).
+innerhalb einer Session · weitere Region-Decks (z. B. Frankreich).
 
 **Statistiken:** schwerste Regionen und Performance-Trends · Dashboard als Startbildschirm statt
 des leeren Hintergrunds.

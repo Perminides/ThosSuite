@@ -1,9 +1,11 @@
 package app.learn.anki;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import app.learn.MapService;
+import app.learn.anki.model.Card;
 import app.learn.model.Deck;
 import app.learn.model.GeoMap;
 import app.learn.model.LearnStat;
@@ -11,6 +13,7 @@ import app.learn.model.SessionProgressCounter;
 import app.shared.model.ScreenView;
 import app.shared.model.AnkiCallbacks;
 import app.shared.ui.AnkiLearnView;
+import app.shared.ui.FastWriteLearnView;
 import app.shared.ui.ShapeMapLearnView;
 import app.shared.ui.ImageMapLearnView;
 import app.shared.ui.McLearnView;
@@ -24,6 +27,7 @@ import app.shared.ui.McLearnView;
 public class SessionPresenter {
 
     private final AnkiLearnView view;
+    private FastWriteLearnView fastView; // Gleiches Objekt wie die view, aber mit mehr Methoden sichtbar. Nur bei Fast Write gesetzt
     private final SessionProgress sessionProgress;
 
     SessionPresenter(Deck type, SessionProgress sessionProgress) {
@@ -51,13 +55,18 @@ public class SessionPresenter {
         String kategorie = type.getCategory().toString();
 
         AnkiCallbacks callbacks = new AnkiCallbacks(
-                this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack);
+                this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack,
+                this::timeExpired);
 
         return switch(type) {
             case GERMANY_CARDS -> new ShapeMapLearnView(id, mapName, kategorie, map.getShapeGeometries(), callbacks);
             case MC_CARDS      -> new McLearnView(id, mapName, kategorie, callbacks);
             case WORLD_CARDS,
                  HANNOVER_CARDS-> new ImageMapLearnView(id, mapName, kategorie, map::geometryFor, callbacks);
+            case FAST_WRITE_CARDS -> {
+                fastView = new FastWriteLearnView(id, mapName, kategorie, Card.MAX_FAST_SLOTS, callbacks);
+                yield fastView;
+            }
             default -> null; // oder throw new IllegalArgumentException?
         };
     }
@@ -92,6 +101,50 @@ public class SessionPresenter {
 		view.setTextFieldActive(true);
 		view.setMapActive(false);
 		view.disableMcPanel();
+	}
+
+	// ========================================
+	// FAST WRITE (from Progress)
+	// ========================================
+
+	void showFastStep(List<String> slotHints, Integer expectedSlot, int firstSeconds, int nextSeconds) {
+		waitForText();
+		fastView.showFastStep(slotHints, expectedSlot, firstSeconds, nextSeconds);
+	}
+
+	void fastAnswerCorrect(int slot, String text, Integer expectedSlot) {
+		fastView.revealSlot(slot, text, expectedSlot);
+		fastView.playCorrectSound();
+		view.setTextInTextField("");
+	}
+
+	void fastTimeUp(Map<Integer, String> missing) {
+		fastView.revealMissing(missing);
+		view.setTextFieldActive(false);
+	}
+
+	void restartClock() {
+		fastView.restartClock();
+	}
+
+	void toggleClock() {
+		fastView.toggleClock();
+	}
+
+	/** Läuft beim Verlassen jeder Session — nur Fast Write hat überhaupt eine Uhr. */
+	void stopClock() {
+		if (fastView != null)
+			fastView.stopClock();
+	}
+
+	void suspendClock() {
+		if (fastView != null)
+			fastView.suspendClock();
+	}
+
+	void resumeClock() {
+		if (fastView != null)
+			fastView.resumeClock();
 	}
 		
 	// ========================================
@@ -150,13 +203,9 @@ public class SessionPresenter {
 
 	void clickedMapElement(String id) {
 		if (sessionProgress.isPaused())
-			sessionProgress.reactOnPauseClick();
+			sessionProgress.reactOnPausePressed();
 		else
 			sessionProgress.elementClicked(id);
-	}
-	
-	void clickedPlay() {
-		sessionProgress.reactOnPauseClick();
 	}
 	
 	void clickedBack() {
@@ -165,9 +214,13 @@ public class SessionPresenter {
 	
 	void clickedMCAnswer(int index) {
 		if (sessionProgress.isPaused())
-			sessionProgress.reactOnPauseClick();
+			sessionProgress.reactOnPausePressed();
 		else
-			sessionProgress.mcClicked(index);		
+			sessionProgress.mcClicked(index);
+	}
+
+	void timeExpired() {
+		sessionProgress.timeUp();
 	}
 	
 	// ========================================
@@ -200,6 +253,10 @@ public class SessionPresenter {
 		view.setImage(null);
 		view.setTextInTextField("");
 		view.setQuestion("");
+		if (fastView != null) {
+			fastView.stopClock(); // auch beim Zurückspringen, sonst tickt sie in die nächste Karte
+			fastView.clearSlots();
+		}
 	}
 	
 	void pause() { // Von außen wegen Pause: im csv...

@@ -18,8 +18,13 @@ public class ComponentHost implements ScreenView {
 
 	private Pane pane = new Pane();
 	
-	public void setComponents(Node... components) {
-		pane.getChildren().setAll(components);
+	public void clear() {
+		pane.getChildren().clear();
+	}
+
+	/** Hängt an, was schon da ist — wer neu bestücken will, räumt vorher mit {@link #clear()} auf. */
+	public void addComponents(Node... components) {
+		pane.getChildren().addAll(components);
 	}
 	
 	public void setWallpaper(Path wallpaper) {

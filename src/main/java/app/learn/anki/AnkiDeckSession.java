@@ -80,6 +80,7 @@ public class AnkiDeckSession implements Screen {
 	@Override
 	public void closeSilent(boolean save) {
 		Log.info(this, "=== CLOSE === Session@" + System.identityHashCode(this) + ", save=" + save);
+		presenter.stopClock();
 		if (save)
 			progress.save();
 	}
@@ -94,6 +95,7 @@ public class AnkiDeckSession implements Screen {
 	 */
 	@Override
 	public void closeLoud() {
+		presenter.stopClock();
 		Alerts.show("Zusammenfassung", createSummary(), ButtonEnum.OK);
 		if (!isFreePlay)     // im freien Spiel wird nichts fortgeschrieben
 			progress.save();
@@ -101,8 +103,18 @@ public class AnkiDeckSession implements Screen {
 	}
 
 	@Override
-	public void reactOnPauseClick() {
-		progress.reactOnPauseClick();
+	public void reactOnPausePressed() {
+		progress.reactOnPausePressed();
+	}
+
+	@Override
+	public void suspend() {
+		presenter.suspendClock();
+	}
+
+	@Override
+	public void resume() {
+		presenter.resumeClock();
 	}
 
 	@Override
