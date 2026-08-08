@@ -39,16 +39,16 @@ public class MainWindowHeaderBar extends HeaderBar {
 		HeaderBar.setDragType(titleLabel, HeaderDragType.DRAGGABLE_SUBTREE);
 		setCenter(titleLabel);
 
-		HBox leading = new HBox(0);
-		leading.getStyleClass().add("my-header-leading");
-		leading.setAlignment(Pos.CENTER_LEFT);
+		HBox links = new HBox(0);
+		links.getStyleClass().add("my-header-leading");
+		links.setAlignment(Pos.CENTER_LEFT);
 
 		ImageView icon = buildResponsiveIcon(stage);
 		if (icon != null)
-			leading.getChildren().add(icon);
-		leading.getChildren().add(menuBar);
+			links.getChildren().add(icon);
+		links.getChildren().add(menuBar);
 
-		setLeading(leading);
+		setLeft(links);
 	}
 
 	/**
