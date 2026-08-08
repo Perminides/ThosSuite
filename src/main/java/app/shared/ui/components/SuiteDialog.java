@@ -35,7 +35,8 @@ public class SuiteDialog<R> extends Dialog<R> {
 
 		headerBar = new SuiteHeaderBar(title);
 		DialogPane pane = getDialogPane();
-		pane.setHeader(headerBar);
+		// setHeaderBar, nicht setHeader: das ist die Fenster-Titelleiste, nicht der Inhalts-Kopf.
+		pane.setHeaderBar(headerBar);
 
 		// Minimize- und Close-Button sollen die volle Höhe der Titelleiste nutzen.
 		// Einigermaßen heikel, weil aus der Dialog-Doku: "this essentially means that the

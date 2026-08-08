@@ -77,7 +77,8 @@ public class Alerts {
 		alert.initStyle(StageStyle.EXTENDED);
 
 		SuiteHeaderBar headerBar = new SuiteHeaderBar(title);
-		alert.getDialogPane().setHeader(headerBar);
+		// setHeaderBar, nicht setHeader: das ist die Fenster-Titelleiste, nicht der Inhalts-Kopf.
+		alert.getDialogPane().setHeaderBar(headerBar);
 
 		alert.getDialogPane().setContent(buildContent(message, options.image(), options.isCentered(), style));
 		alert.setGraphic(null);
@@ -122,7 +123,17 @@ public class Alerts {
 	private static Node buildContent(String message, Path image, boolean centered, DialogStyle style) {
 		Node textNode = null;
 		if (message != null && !message.isBlank()) {
-			Label label = new Label(message);
+			// JavaFX 26 rundet die Wunschbreite der ScrollPane ab statt sie aufzurunden (JDK-8370652).
+			// Fällt dabei ein Bruchteil weg, passt die längste Zeile nicht mehr, bricht um, und der
+			// Text wird höher als das Sichtfenster — die Bildlaufleiste erscheint. Eine ganzzahlige
+			// Labelbreite nimmt dem Runden die Angriffsfläche. Gemeldet an openjfx-dev, Messwerte und
+			// Reproducer liegen in docs/ScrollPane-Bug-JavaFX26/.
+			Label label = new Label(message) {
+				@Override
+				protected double computePrefWidth(double height) {
+					return snapSizeX(super.computePrefWidth(height));
+				}
+			};
 			label.setWrapText(true);
 			label.setMaxWidth(Double.MAX_VALUE);
 			if (centered) {
