@@ -9,12 +9,8 @@ import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
 import javafx.scene.robot.Robot;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -28,33 +24,33 @@ import javafx.util.Duration;
  * auf ein Menü öffnet es aber nicht. Sobald die Maus das Fenster einmal verlassen hat und wieder
  * hineinkommt, geht alles. Tritt sporadisch auf — mal dreimal hintereinander, mal zehnmal nicht.</p>
  *
- * <h2>Die offene Frage</h2>
- * Zwei Erklärungen sind übrig, und sie sagen das Gegenteil voneinander:
- * <ol>
- *   <li><b>Die Darstellung hängt.</b> Klicks kommen an, der Zustand ändert sich, nur das Bild
- *       kommt nicht nach. Auf dem Schirm steht dann ein veralteter, aber in sich stimmiger Stand.</li>
- *   <li><b>Die Eingabe fehlt.</b> Die Klicks erreichen die Anwendung gar nicht. Dann ist das Bild
- *       völlig korrekt — es hat sich ja nichts geändert.</li>
- * </ol>
+ * <h2>Was bereits feststeht</h2>
+ * Die beiden naheliegenden Erklärungen sind widerlegt. Die Eingabe kommt an — im Protokoll steht der
+ * Klick, und die Session startete —, und die Darstellung hängt nicht komplett: Eine mitzählende Zahl
+ * lief sichtbar weiter, während der Rest der Fläche einen veralteten Stand zeigte. Übrig bleibt ein
+ * <b>partielles</b> Darstellungsproblem. Der ganze Stand steht in
+ * {@code docs/Startproblem-Diagnose.md}.
  *
- * <h2>Was hier misst, und was es entscheidet</h2>
+ * <h2>Was hier misst</h2>
  * <ul>
- *   <li><b>Die tickende Zahl</b> links im Fenster zählt im Sekundentakt und schreibt denselben Wert
- *       ins Log. Steht sie auf dem Schirm still, während das Log weiterzählt, hängt die Darstellung
- *       (Fall 1). Läuft sie mit, ist die Darstellung in Ordnung und es bleibt Fall 2. Diese Messung
- *       braucht <b>keine</b> Bedienung — sie funktioniert, während die Maus still liegt.</li>
  *   <li><b>Das Eingabeprotokoll</b> hängt als Filter an der Scene und sieht jeden Klick, jede Taste
- *       und jeden Maus-Ein-/Austritt, bevor irgendein Knoten sie behandelt. Steht dort ein
- *       PRESSED, während sichtbar nichts passiert, ist es Fall 1. Steht dort nichts, ist es Fall 2.
- *       Der ENTERED-Eintrag markiert außerdem den Moment der Heilung.</li>
- *   <li><b>Das Probe-Menü</b> öffnet sich von selbst und ist ein <i>eigenes</i> Fenster. Erscheint
- *       es, während die Zahl steht, klemmt nur die Fläche des Hauptfensters.</li>
+ *       und jeden Maus-Ein-/Austritt, bevor irgendein Knoten sie behandelt. Der ENTERED-Eintrag
+ *       markiert außerdem den Moment der Heilung. <b>Achtung:</b> Klicks in Menü-Popups sieht dieser
+ *       Filter <i>nicht</i> — die sind eigene Fenster mit eigener Scene. Ein leeres Protokoll
+ *       beweist also nicht, dass nicht geklickt wurde.</li>
  *   <li><b>Die Cursor-Position</b> im Moment des Deckkraftwechsels, gemessen über den {@link Robot}.
  *       Prüft über mehrere Starts, ob das Phänomen damit zusammenfällt, dass der Zeiger beim
  *       Umschalten schon über dem Fenster stand.</li>
- *   <li><b>Deckkraft, Pulse, Fensterzahl, Szenenmaße</b> je Sekunde wie bisher. Die Pulse-Zahl kann
- *       nur einen einzigen Zustand aufdecken — komplett stehender FX-Thread.</li>
+ *   <li><b>Rechner, Deckkraft, Pulse, Fensterzahl, Szenenmaße.</b> Der Rechnername trennt beim
+ *       Auswerten zwei Populationen; die Pulse-Zahl kann nur einen einzigen Zustand aufdecken —
+ *       komplett stehender FX-Thread.</li>
+ *   <li><b>Die Konsolenausgabe</b> landet über {@code KonsolenMitschrift} im Log. Erst dadurch ist
+ *       zu erfahren, welche Grafik-Pipeline Prism gewählt hat ({@code -Dprism.verbose=true}).</li>
  * </ul>
+ *
+ * <p>Entfernt, weil ihre Frage beantwortet ist: die sichtbare Sekundenzahl (sie hat den Befund
+ * geliefert) und ein Probe-Menü, das sich selbst öffnete — letzteres griff ins Geschehen ein, weil
+ * ein Klick des Nutzers es schloss.</p>
  *
  * <p><b>Die Nachfrage am Ende gibt dem Block sein Etikett.</b> Ob der Start gut war, kann die
  * Anwendung nicht selbst entscheiden: In beiden Fällen sehen ihre eigenen Messwerte normal aus.
@@ -76,8 +72,6 @@ public final class StartupDiagnostics {
 	private static final long HARTES_ENDE_NS = 180_000_000_000L;
 
 	/** Sekunden nach dem Deckkraftwechsel, gerechnet ab dem sichtbaren Fenster. */
-	private static final int PROBE_MENUE_SEKUNDEN = 6;
-	private static final int PROBE_MENUE_DAUER = 3;
 	private static final int NACHFRAGE_SEKUNDEN = 30;
 
 	private StartupDiagnostics() {}
@@ -95,7 +89,6 @@ public final class StartupDiagnostics {
 	public static void watch(Stage stage) {
 		logUmgebung();
 		Runnable protokollAbhaengen = eingabeProtokollAnhaengen(stage.getScene());
-		Label zaehler = zaehlerAnbauen(stage.getScene());
 
 		new AnimationTimer() {
 			private long start;
@@ -103,7 +96,6 @@ public final class StartupDiagnostics {
 			private long deckkraftDa;
 			private int pulses;
 			private int sekunde;
-			private boolean probeGelaufen;
 
 			@Override
 			public void handle(long now) {
@@ -119,18 +111,11 @@ public final class StartupDiagnostics {
 
 				sekunde = (int) ((now - start) / INTERVALL_NS);
 
-				// Der Moment, in dem das Fenster sichtbar wird — ab hier zählen Probe und Nachfrage.
+				// Der Moment, in dem das Fenster sichtbar wird — ab hier zählt die Nachfrage.
 				if (deckkraftDa == 0 && stage.getOpacity() == 1) {
 					deckkraftDa = now;
 					cursorLageLoggen(stage);
 					nachfrageStarten();
-				}
-
-				// Die Zahl auf dem Schirm und die Zahl im Log stammen aus derselben Zuweisung.
-				// Weichen sie voneinander ab, ist genau das der Befund.
-				if (zaehler != null) {
-					zaehler.setText(String.valueOf(sekunde));
-					zaehler.autosize(); // unmanaged: die Größe setzt niemand außer uns
 				}
 
 				Log.info(StartupDiagnostics.class, "Startdiagnose"
@@ -145,17 +130,8 @@ public final class StartupDiagnostics {
 				pulses = 0;
 				letzteAusgabe = now;
 
-				if (!probeGelaufen && deckkraftDa != 0
-						&& now - deckkraftDa >= PROBE_MENUE_SEKUNDEN * INTERVALL_NS) {
-					probeGelaufen = true;
-					probeMenueZeigen(stage);
-				}
-
 				boolean nachlaufVorbei = deckkraftDa != 0 && now - deckkraftDa >= NACHLAUF_NS;
 				if (nachlaufVorbei || now - start >= HARTES_ENDE_NS) {
-					// Weg mit der Zahl, sobald sie nichts mehr misst: eine stehengebliebene Zahl
-					// sieht aus wie das Symptom, das wir gerade suchen.
-					zaehlerEntfernen(zaehler);
 					protokollAbhaengen.run();
 					Log.info(StartupDiagnostics.class, "Startdiagnose Mitschrift beendet");
 					stop();
@@ -221,58 +197,6 @@ public final class StartupDiagnostics {
 	}
 
 	/**
-	 * Die sichtbare Sekundenzahl. Unmanaged und absolut gesetzt, damit sie sich in kein Layout
-	 * einmischt; auffällig gefärbt, damit man sie nicht suchen muss.
-	 *
-	 * <p>Ein unmanaged Knoten wird von seinem Elternteil weder positioniert <b>noch in der Größe
-	 * gesetzt</b>. Ein {@code Label} ist resizable und bliebe damit 0×0 — deshalb steht hinter jedem
-	 * {@code setText} ein {@code autosize()}.</p>
-	 *
-	 * @return das Label, oder {@code null} wenn die Wurzel keine Pane ist (dann fehlt nur diese
-	 *         eine Messung, der Rest läuft weiter)
-	 */
-	private static Label zaehlerAnbauen(Scene scene) {
-		if (scene == null || !(scene.getRoot() instanceof Pane wurzel)) {
-			Log.warn(StartupDiagnostics.class, "Startdiagnose Zaehler nicht moeglich: Wurzel ist keine Pane");
-			return null;
-		}
-
-		Label zaehler = new Label("0");
-		zaehler.setManaged(false);
-		zaehler.relocate(20, 120);
-		zaehler.setStyle("-fx-background-color: #cc0000; -fx-text-fill: white; "
-				+ "-fx-font-size: 32px; -fx-padding: 2 14 2 14;");
-		wurzel.getChildren().add(zaehler);
-		zaehler.autosize();
-		return zaehler;
-	}
-
-	private static void zaehlerEntfernen(Label zaehler) {
-		if (zaehler != null && zaehler.getParent() instanceof Pane wurzel)
-			wurzel.getChildren().remove(zaehler);
-	}
-
-	/**
-	 * Ein Menü, das sich ohne Zutun öffnet. Es ist ein eigenes Fenster — erscheint es auf dem Schirm,
-	 * während die Zahl im Hauptfenster steht, betrifft der Stillstand nur das Hauptfenster.
-	 */
-	private static void probeMenueZeigen(Stage stage) {
-		ContextMenu probe = new ContextMenu(new MenuItem("Startdiagnose — siehst Du mich?"));
-		probe.show(stage, stage.getX() + 200, stage.getY() + 200);
-		Log.info(StartupDiagnostics.class, "Startdiagnose PROBE menue geoeffnet"
-				+ " isShowing=" + probe.isShowing()
-				+ " fenster=" + Window.getWindows().size());
-
-		PauseTransition offen = new PauseTransition(Duration.seconds(PROBE_MENUE_DAUER));
-		offen.setOnFinished(_ -> {
-			probe.hide();
-			Log.info(StartupDiagnostics.class, "Startdiagnose PROBE menue geschlossen"
-					+ " fenster=" + Window.getWindows().size());
-		});
-		offen.play();
-	}
-
-	/**
 	 * Stand der Zeiger im Moment des Deckkraftwechsels schon über dem Fenster? Ein Fenster mit
 	 * Deckkraft 0 ist für die Maus durchlässig; ob der Übergang nach 1 ohne Mausbewegung etwas
 	 * hinterlässt, entscheidet erst die Häufung über mehrere Starts.
@@ -333,6 +257,7 @@ public final class StartupDiagnostics {
 	private static void logUmgebung() {
 		Screen primaer = Screen.getPrimary();
 		Log.info(StartupDiagnostics.class, "Startdiagnose Umgebung"
+				+ " rechner=" + rechnerName()
 				+ " prism.order=" + System.getProperty("prism.order")
 				+ " prism.allowhidpi=" + System.getProperty("prism.allowhidpi")
 				+ " prism.lcdtext=" + System.getProperty("prism.lcdtext")
@@ -340,6 +265,15 @@ public final class StartupDiagnostics {
 				+ " sun.java2d.uiScale=" + System.getProperty("sun.java2d.uiScale")
 				+ " outputScale=" + primaer.getOutputScaleX() + "x" + primaer.getOutputScaleY()
 				+ " bounds=" + primaer.getBounds());
+	}
+
+	/**
+	 * Auf welchem Rechner das hier lief. Trennt beim Auswerten zwei Populationen, die sonst in einer
+	 * Statistik verschwimmen — das Phänomen tritt auf verschiedenen Geräten verschieden oft auf.
+	 */
+	private static String rechnerName() {
+		String name = System.getenv("COMPUTERNAME");
+		return name == null ? "unbekannt" : name;
 	}
 
 	/** Die Scene fehlt nur, wenn etwas sehr schiefgegangen ist — dann steht das hier statt eines NPE. */

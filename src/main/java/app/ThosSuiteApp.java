@@ -17,6 +17,7 @@ import app.shared.AppClock;
 import app.shared.Config;
 import app.shared.DB;
 import app.shared.FilenIgnoreSource;
+import app.shared.KonsolenMitschrift;
 import app.shared.Log;
 import app.shared.SingleInstanceGuard;
 import app.shared.ui.StartupDiagnostics;
@@ -48,7 +49,10 @@ public class ThosSuiteApp extends Application {
     public static void main(String[] args) {
     	// JavaFX DatePicker nutzt Locale.getDefault(Category.FORMAT) für Monatsnamen.
     	// Windows-Regionsformat kann abweichen von der Sprache → explizit auf Deutsch setzen.
-    	Locale.setDefault(Locale.GERMANY);    	
+    	Locale.setDefault(Locale.GERMANY);
+    	// !tmp: Muss vor launch() stehen — Prism meldet seine Pipeline, sobald der Splash erscheint,
+    	// und das ist lange vor Log.initLog. Bis dahin wird gepuffert.
+    	KonsolenMitschrift.starten();
         launch(args); // JavaFX Application.launch() startet die App und den JavaFX Application Thread
         Log.info(ThosSuiteApp.class, "End Suite");
     }
@@ -140,7 +144,7 @@ public class ThosSuiteApp extends Application {
                 Config.init(finalDataFolder);
                 Log.initLog(finalDataFolder, getParameters());
                 Log.info(ThosSuiteApp.class, "Start Suite (Async Init via Splash)");
-                Log.info(ThosSuiteApp.class, "prism.allowhidpi: " + System.getProperty("prism.allowhidpi"));
+                KonsolenMitschrift.ausschuetten(); // !tmp: das vor der Log-Initialisierung Gesammelte
                 
                 FilenIgnoreSource.addToIgnore();
 
