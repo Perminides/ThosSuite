@@ -54,7 +54,6 @@ public abstract class SkinProperties {
 	// leer (1,,10,20,10,20,10), wird sie eingesetzt — steht dort eine Farbe, gewinnt die. Ein Skin
 	// mit unterschiedlich gefärbten Rändern bleibt damit möglich. Eingesetzt wird im
 	// Defaults-Durchlauf von styleScene, nicht beim Parsen (siehe BorderParams.withFallbackColor).
-	// !Idee: Mal aktuelleres Design ausprobieren: Button mit runden Ecken, ohne Border und mit box-shadow. Sicher sehr interessant, aber ich fürchte das wird ein Refactoring-Alptraum, weil Du immer den Platz für den Schatten brauchst überall...
 	// !Idee: Einfacher als box-shadow wäre ein Design mit transparenten Hintergründen der Buttons und TextFields und so und ohne Border. Hehe...
 	
 	public abstract String getDisplayName();
@@ -70,6 +69,7 @@ public abstract class SkinProperties {
 	protected Color markedColor; // Für die Karten
 	protected Color shapeMapColor0; // Für die Karten
 	protected Color shapeMapColor1; // Für die Karten
+	protected Color toEliminateColor; // Elimination Region (Soll nicht so auffällig sein, deswegen Fallback disabledComponentBgColor
 
 	protected Color activeComponentBgColor; // Default für aktive MCButton, Karte, BackButton
 	protected Color activeComponentHoverColor; // Default für MCButton, Karten, BackButton
@@ -114,6 +114,55 @@ public abstract class SkinProperties {
 	protected Color thinBorderColor; // Um contentPane und unten die MenuBar
 	protected Integer thinBorderWidth = 1; // default = 1
 	protected Color stageBorderColor = Color.WHITE;
+
+	/**
+	 * Der Rahmen um das eine Bedienelement, von dem die Suite gerade etwas will — das Eingabefeld im
+	 * Fokus, die antwortbaren Auswahlknöpfe. Nicht „aktiv" im Sinne von bedienbar, sondern im Sinne
+	 * von „jetzt bist du dran".
+	 *
+	 * <p>Bleibt die Farbe {@code null}, entstehen die Regeln gar nicht erst und der Skin sieht aus wie
+	 * zuvor — ein Skin, der seine Zustände über Flächenfarben erzählt, braucht sie nicht.</p>
+	 */
+	protected Color activeBorderColor;
+	protected Integer activeBorderWidth = 2;
+
+	/**
+	 * Breite des Rings um einen beantworteten Antwortknopf. {@code 0} heißt: kein Ring — stattdessen
+	 * färbt sich die ganze Fläche in der Signalfarbe.
+	 *
+	 * <p>Beides trägt dieselbe Aussage in derselben Farbe, nur in anderer Dosis. Eine kleine Form
+	 * unter vierhundert auf der Landkarte braucht die volle Füllung, um gefunden zu werden; ein
+	 * breiter Knopf direkt vor dem Nutzer wird davon laut. Die Signalfarben selbst bleiben deshalb
+	 * suiteweit dieselben.</p>
+	 */
+	protected Integer mcResultBorderWidth = 0;
+
+	/**
+	 * Wie stark sich die Fläche eines beantworteten Knopfs zur Signalfarbe hin einfärbt, in Prozent.
+	 *
+	 * <p>Wirkt nur zusammen mit {@code mcResultBorderWidth} — ohne Ring trägt ohnehin die volle Fläche
+	 * die Signalfarbe. Gemischt wird aus der gewöhnlichen Knopffläche und der Signalfarbe, es kommt
+	 * also weiterhin nur <em>ein</em> Grün und <em>ein</em> Rot im Skin vor. {@code 0} heißt: nur der
+	 * Ring, die Fläche bleibt unverändert.</p>
+	 *
+	 * <p>Entscheidend ist nicht, ob die Signalfarbe heller oder dunkler ist als die Fläche, sondern
+	 * wie weit die beiden auseinanderliegen: Die Mischung verschiebt die Fläche in Richtung der
+	 * Signalfarbe. Zu nah beieinander, und man sieht nichts.</p>
+	 */
+	protected Integer mcResultTintPercent = 12;
+
+	/**
+	 * Der Schatten, den die Bausteine werfen — als fertiger CSS-Effekt, etwa
+	 * {@code dropshadow(gaussian, rgba(0,0,0,0.16), 14, 0, 0, 4)}.
+	 *
+	 * <p>Roher CSS-Text wie {@code chartRootPadding}, kein zerlegter Wert: der Schatten wird nirgends
+	 * gerechnet, nur durchgereicht. Ein zerlegtes Format brächte hier nichts und würde die Farbe
+	 * durch {@code parseColor} zwingen, der halbdurchsichtige Werte nicht kann.</p>
+	 *
+	 * <p>Bleibt das Feld {@code null}, entsteht überhaupt keine {@code -fx-effect}-Zeile — ein Skin
+	 * ohne diesen Schlüssel bekommt dasselbe Stylesheet wie zuvor.</p>
+	 */
+	protected String componentShadow;
 	
 	protected Integer dashBoardTileWidth = 250;
 	protected Integer dashBoardTileTopHeight = 250;
@@ -388,17 +437,33 @@ public abstract class SkinProperties {
 	/** Die Maße einer Multiple-Choice-Auswahl. Ohne Schlüssel — die Auswahl holt sie sich selbst. */
 	public McMetrics mcMetrics() {
 	    Insets insets = borderSmallComponent.insets();
-	    double borderWidth = borderSmallComponent.width();
+	    double borderWidth = mcBorderWidth();
 	    double horizontalOverhead = insets.getLeft() + insets.getRight() + (borderWidth * 2);
 
 	    return new McMetrics(font, horizontalOverhead, borderWidth, mcLineSpacingSqueezed(),
 	            computeMcButtonHeight(), verticalGapMC);
 	}
 
+	/**
+	 * Der dickste Rahmen, den ein Antwortknopf tragen kann — gewöhnlicher Rahmen, Aktivring oder
+	 * Ergebnisring.
+	 *
+	 * <p>Seine Maße stehen fest, bevor er einen Zustand hat, gelten also für alle. Gerechnet wird
+	 * deshalb mit dem breitesten Rahmen — sonst fehlt dem geringten Knopf genau der Platz, den sein
+	 * Ring einnimmt: In JavaFX zählt die Rahmenbreite einer Region zu ihren Insets und verkleinert
+	 * den Inhaltsbereich.</p>
+	 */
+	private double mcBorderWidth() {
+	    double breite = borderSmallComponent.width();
+	    if (activeBorderColor != null)
+	        breite = Math.max(breite, activeBorderWidth);
+	    return Math.max(breite, mcResultBorderWidth);
+	}
+
 	private double computeMcButtonHeight() {
 	    Insets insets = borderSmallComponent.insets();
 	    double verticalPadding = insets.getTop() + insets.getBottom();
-	    double borderWidth = borderSmallComponent.width();
+	    double borderWidth = mcBorderWidth();
 
 	    Text dummyText = new Text("Q");
 	    dummyText.setFont(font);
