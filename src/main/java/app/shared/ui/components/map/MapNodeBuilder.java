@@ -59,7 +59,19 @@ final class MapNodeBuilder {
 		}
 	}
 
-	// Shape-Karte (Deutschland): ein Path, "my-map-shape" + Layer-Klasse.
+	/**
+	 * Shape-Karte (Deutschland): ein {@code Path} mit {@code .my-map-shape} und seiner Layer-Klasse.
+	 *
+	 * <p><b>Die Füllung bleibt bewusst ungesetzt.</b> JavaFX teilt seine Formen in zwei Familien:
+	 * Flächen ({@code Polygon}, {@code Circle}) starten schwarz gefüllt und ohne Strich, Linien
+	 * ({@code Path}, {@code Line}) genau umgekehrt — ohne Füllung, mit schwarzem Strich. Ein frisch
+	 * gebauter Path hat also keine Füllung, und dabei bleibt es, solange keine CSS-Regel greift.
+	 * Wäre hier ein {@code Polygon} gebaut, stünde die halbe Karte schwarz da.</p>
+	 *
+	 * <p>Keine Füllung heißt <b>unsichtbar und im Inneren unanklickbar</b>. Beides zusammen ist der
+	 * namenlose Zustand einer Form, den {@link ShapeMapPane} beschreibt. Wer hier eine Vorgabefarbe
+	 * setzt, macht jede fremde Form der Karte sichtbar und klickbar.</p>
+	 */
 	private static Node buildShapePath(ShapeGeometry geometry, String layerStyleClass, boolean interactive) {
 		String id = geometry.id();
 		Path path = new Path(buildElements(geometry, true));
