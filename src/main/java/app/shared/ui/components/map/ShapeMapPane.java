@@ -43,6 +43,18 @@ import app.shared.model.ShapeMapState;
  * <p>CSS (vom Skin gesetzt):
  * Karte = {@code .my-shape-map-pane}, {@code :paused};
  * Shape = {@code .my-map-shape}, {@code :correct/:incorrect/:marked/:active/:inactive}.</p>
+ *
+ * <p><b>Zu den fünf Zuständen kommt einer, der keinen Namen hat: gar keiner.</b> Der Konstruktor
+ * räumt mit {@code resetAllStates()} alle Pseudoklassen ab, und eine Sitzung vergibt sie nur an die
+ * Formen ihres eigenen Decks. Eine Karte trägt aber alle Formen ihrer Datei — die Deutschland-Karte
+ * 399 Landkreise aus vierzehn Decks. Wer Niedersachsen spielt, lässt 352 davon ohne jede
+ * Pseudoklasse zurück.</p>
+ *
+ * <p>Für die greift dann nur {@code .my-map-shape}, und das setzt ausschließlich den Strich. Ihre
+ * Füllung bleibt auf der Voreinstellung eines {@code Path}: keine. Sie zeigen damit den
+ * Spielfeldhintergrund und nehmen im Inneren keine Klicks an — man trifft nur ihre Umrisslinie.
+ * Genau so ist es gemeint: „gehört zur Karte, aber nicht zu diesem Spiel" wird durch das
+ * <em>Fehlen</em> einer Füllung ausgedrückt, nicht durch eine Farbe.</p>
  */
 public class ShapeMapPane extends StackPane implements LearnMap {
 
@@ -95,7 +107,7 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 			contentGroup.getChildren().add(node);
 		}
 
-		resetAllStates();
+		resetAllStates(); // Ab hier trägt keine Form eine Pseudoklasse — wer nie eine bekommt, bleibt ungefüllt und im Inneren unklickbar (siehe Klassen-Javadoc).
 
 		getChildren().add(contentGroup); // StackPane zentriert.
 		getStyleClass().add("my-shape-map-pane");
