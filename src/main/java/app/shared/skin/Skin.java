@@ -100,6 +100,7 @@ public abstract class Skin extends SkinProperties {
 		hannoverSessionProgressPanel = hannoverSessionProgressPanel == null ? worldSessionProgressPanel : hannoverSessionProgressPanel;
 		hannoverSessionHistoryPanel = hannoverSessionHistoryPanel == null ? worldSessionHistoryPanel : hannoverSessionHistoryPanel;
 		hannoverSessionBackButton = hannoverSessionBackButton == null ? worldSessionBackButton : hannoverSessionBackButton;
+		toEliminateColor = toEliminateColor == null ? disabledComponentBgColor : toEliminateColor; 
 		
 		/**
 		// Dieser Code ist natürlich Quatsch. Aber ich bin so angepisst über diese -1 dass ich mir das jetzt gebaut habe.
@@ -180,8 +181,9 @@ public abstract class Skin extends SkinProperties {
 	       .add("-fx-border-width", borderSmallComponent.width() + "px")
 	       .add("-fx-border-color", borderSmallComponent.color())
 	       .add("-fx-background-color", activeComponentBgColor)
+	       .effect(componentShadow)
 	       .end();
-	    
+
 	    builder.rule(".button .text, .date-picker .arrow-button .text", "-fx-fill", textActiveComponentColor);
 	    builder.rule(".button:hover, .date-picker .arrow-button:hover", "-fx-background-color", activeComponentHoverColor);
 	    builder.rule(".button:pressed, .date-picker .arrow-button:pressed", "-fx-background-color", UiUtils.contrastingShade(activeComponentHoverColor, 8));
@@ -201,6 +203,7 @@ public abstract class Skin extends SkinProperties {
 	       .add("-fx-border-color", borderSmallComponent.color())
 	       .add("-fx-background-color", activeComponentBgColor)
 	       //.add("-fx-text-fill", UIUtils.toHex(textActiveComponentColor))
+	       .effect(componentShadow)
 	    .end();
 		
 	    builder.rule(".box .text", "-fx-fill", textActiveComponentColor);
@@ -225,8 +228,9 @@ public abstract class Skin extends SkinProperties {
 	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .add("-fx-border-width", borderSmallComponent.width() + "px")
 	       .add("-fx-border-color", borderSmallComponent.color())
+	       .effect(componentShadow)
 	       .end();
-	    
+
 	    builder.rule(".combo-box-base .text", "-fx-fill", textActiveComponentColor);
 	    builder.rule(".combo-box-base .arrow", "-fx-background-color", textActiveComponentColor);
 	    
@@ -252,7 +256,6 @@ public abstract class Skin extends SkinProperties {
 	      // .add("-fx-border-color", stageBorderColor) // analog der Stage
 	      // .add("-fx-border-width", 1 + "px") // analog der Stage
 	       .add("-fx-background-color", playFieldBackground) // Für den Bereich mit den Buttons.
-	       .add("-fx-effect", "dropshadow(gaussian, rgba(255,0,0,1.0), 50, 0, 20, 20)")
 	       .end();
 	    
 	    // Der Titel in der Dialog-Titelleiste. Nur vertikales Padding — sonst erbt er alles vom Label.
@@ -304,8 +307,15 @@ public abstract class Skin extends SkinProperties {
 	       .add("-fx-border-width", borderSmallComponent.width() + "px")
 	       .add("-fx-border-radius", borderSmallComponent.arc() + "px")
 	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
+	       .effect(componentShadow)
 	       .end();
-	    
+
+	    // „Jetzt bist du dran": SuiteTextField.setActive holt den Fokus, der Zustand ist also schon da.
+	    if (activeBorderColor != null)
+	        builder.start(".text-field:focused")
+	           .ring(activeBorderColor, activeBorderWidth)
+	           .end();
+
 	    builder.start(".text-field:disabled")
 	       .add("-fx-opacity", "1.0")
 	       .add("-fx-background-color", disabledComponentBgColor)
@@ -328,8 +338,9 @@ public abstract class Skin extends SkinProperties {
 	       .add("-fx-border-width", borderSmallComponent.width() + "px")
 	       .add("-fx-border-radius", borderSmallComponent.arc() + "px")
 	       .add("-fx-background-insets", borderSmallComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
+	       .effect(componentShadow)
 	       .end();
-	    
+
 	    builder.start(".text-area .content")
 	       .add("-fx-background-color", activeComponentBgColor)
 	       .add("-fx-background-radius", borderSmallComponent.arc() + "px")
@@ -402,6 +413,7 @@ public abstract class Skin extends SkinProperties {
 	    		.add("-fx-background-insets", border.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	    		.add("-fx-background-radius", border.arc() + "px")
 	    		.add("-fx-padding", padding)
+	    		.effect(componentShadow)
 	    		.end();
 
 	    // Ein StackPane vererbt die Textfarbe NICHT automatisch an Text-Nodes. Wir müssen "Jeden
@@ -444,6 +456,13 @@ public abstract class Skin extends SkinProperties {
 	}
 	
 	private void addImageMapStyles(CssBuilder builder) {
+		// Der Schatten sitzt auf der Karte selbst, nicht auf ihrem Rahmen: #borderOverlay hat bei
+		// Rahmenbreite 0 keine Pixel und könnte nichts werfen. Die Pane trägt die Silhouette ihrer
+		// Kinder, also den runden Viewport. Nur bei einem Skin mit Schatten — sonst stünde hier ein
+		// leerer Block.
+		if (componentShadow != null)
+			builder.rule(".my-image-map-pane", "-fx-effect", componentShadow);
+
 		// Border Overlay
 	    builder.start(".my-image-map-pane #borderOverlay")
 	       .add("-fx-border-color", borderBigComponent.color())
@@ -509,8 +528,15 @@ public abstract class Skin extends SkinProperties {
 	}
 	
 	private void addImagePaneStyles(CssBuilder builder) {
-	    builder.rule(".my-image-background-layer", "-fx-fill", imageLabelBgColor);
-	    
+	    // Der Schatten sitzt auf der gefüllten Hintergrund-Ebene. Die Rahmen-Ebene darüber hat bei
+	    // Rahmenbreite 0 weder Füllung noch Strich — sie wäre unsichtbar und würde nichts werfen.
+	    // Ein Skin mit Schatten braucht deshalb eine deckende imageLabelBgColor.
+	    builder.start(".my-image-background-layer")
+	       .add("-fx-fill", imageLabelBgColor)
+	       .effect(componentShadow)
+	       .end();
+
+
 	    builder.start(".my-image-border-layer")
 	       .add("-fx-stroke", borderBigComponent.color())
 	       .add("-fx-stroke-width", borderBigComponent.width() + "px")
@@ -519,6 +545,21 @@ public abstract class Skin extends SkinProperties {
 	}
 	
 
+	/**
+	 * Die Formen der Shape-Karten.
+	 *
+	 * <p><b>Jede Zustandsregel hier muss {@code -fx-fill} setzen — die Füllung ist die Klickfläche.</b>
+	 * JavaFX entscheidet das nicht nach Sichtbarkeit, sondern danach, ob überhaupt eine Füllung
+	 * gesetzt ist: {@code transparent} nimmt Klicks entgegen, ein fehlender Wert nicht. Wer eine
+	 * dieser Regeln <em>entfernt</em>, macht die Form also nicht bloß unsichtbar, sondern
+	 * unbedienbar; wer sie auf {@code transparent} setzt, macht sie unsichtbar und lässt sie
+	 * bedienbar. Die Bild-Karte lebt genau davon — siehe {@code addImageMapStyles}: durchsichtige
+	 * Formen über dem Kartenbild, die trotzdem Klicks annehmen.</p>
+	 *
+	 * <p>Umgekehrt hat {@code .layer-region} — die Klasse, die alle interaktiven Formen tragen —
+	 * bewusst <b>keine</b> Regel. Nur so bleiben die Formen fremder Decks auf derselben Karte ohne
+	 * Füllung und damit außen vor.</p>
+	 */
 	private void addShapeMapStyles(CssBuilder builder) {
 	    // Basis-Styling für alle Shapes (Border wird gezeichnet)
 	    builder.start(".my-map-shape")
@@ -544,7 +585,7 @@ public abstract class Skin extends SkinProperties {
 	    builder.rule(".my-map-shape:correct", "-fx-fill", correctColor);
 	    builder.rule(".my-map-shape:incorrect", "-fx-fill", incorrectColor);
 	    builder.rule(".my-map-shape:marked", "-fx-fill", markedColor);
-	    builder.rule(".my-map-shape:inactive", "-fx-fill", disabledComponentBgColor);
+	    builder.rule(".my-map-shape:inactive", "-fx-fill", toEliminateColor);
 
 	    // Wenn Spiel pausiert ist (.game-paused auf dem Parent) bekommen aktive die disabledComponentBgColor und keinen Hover-Effekt
 	    builder.rule(".my-shape-map-pane:paused .my-map-shape:active", "-fx-fill", disabledComponentBgColor);
@@ -574,20 +615,43 @@ public abstract class Skin extends SkinProperties {
 	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", 
 	    		(int)mcInsets.getTop(), (int)mcInsets.getRight(), (int)mcInsets.getBottom(), (int)mcInsets.getLeft());
 	    
-	    // MC Buttons
+	    // MC Buttons — Schatten und Ecken kommen von .button, das sind welche.
 	    builder.rule(".my-mc-button", "-fx-padding", paddingCss);
-	    builder.rule(".my-mc-button:active", "-fx-background-color", activeComponentBgColor);
+	    // Ein antwortbarer Knopf ist die zweite Stelle, an der die Suite etwas will — er trägt deshalb
+	    // denselben Rahmen wie das Eingabefeld im Fokus.
+	    builder.start(".my-mc-button:active")
+	       .add("-fx-background-color", activeComponentBgColor)
+	       .ring(activeBorderColor, activeBorderWidth)
+	       .end();
+
 	    builder.rule(".my-mc-button:active:hover", "-fx-background-color", activeComponentHoverColor);
 	    builder.rule(".my-mc-button:active:pressed", "-fx-background-color", UiUtils.contrastingShade(activeComponentHoverColor, 8));
 	    // Alternative Effekte (für andere Skins):
 	    //css.rule(".my-mc-button:active:pressed", "-fx-translate-y", "1px");
 	    //css.rule(".my-mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
 	    builder.rule(".my-mc-button:inactive", "-fx-background-color", disabledComponentBgColor);
-	    builder.rule(".my-mc-button:correct", "-fx-background-color", correctColor);
+
+	    // Ergebnis in zwei Dosierungen: ohne mcResultBorderWidth färbt sich die ganze Fläche in der
+	    // Signalfarbe, mit ihm trägt ein Ring sie und die Fläche wird nur zu mcResultTintPercent
+	    // dorthin gemischt. Beide Male dieselbe Farbe, nur in anderer Menge.
+	    double tint = mcResultTintPercent / 100.0;
+	    Color correctFlaeche = mcResultBorderWidth > 0
+	            ? activeComponentBgColor.interpolate(correctColor, tint) : correctColor;
+	    Color incorrectFlaeche = mcResultBorderWidth > 0
+	            ? activeComponentBgColor.interpolate(incorrectColor, tint) : incorrectColor;
+
+	    builder.start(".my-mc-button:correct")
+	       .add("-fx-background-color", correctFlaeche)
+	       .ring(mcResultBorderWidth > 0 ? correctColor : null, mcResultBorderWidth)
+	       .end();
+
+	    builder.start(".my-mc-button:incorrect")
+	       .add("-fx-background-color", incorrectFlaeche)
+	       .ring(mcResultBorderWidth > 0 ? incorrectColor : null, mcResultBorderWidth)
+	       .end();
+
 	    if (mcCorrectTextColor != null)
-	        builder.rule(".my-mc-button:correct .text", "-fx-fill", mcCorrectTextColor); 
-	        
-	    builder.rule(".my-mc-button:incorrect", "-fx-background-color", incorrectColor);
+	        builder.rule(".my-mc-button:correct .text", "-fx-fill", mcCorrectTextColor);
 	    if (mcIncorrectTextColor != null)
 	        builder.rule(".my-mc-button:incorrect .text", "-fx-fill", mcIncorrectTextColor);
 
@@ -634,7 +698,10 @@ public abstract class Skin extends SkinProperties {
 	 * wie ihr MC-Pendant, es entscheidet also die Reihenfolge im Stylesheet.</p>
 	 */
 	private void addAnswerSlotStyles(CssBuilder builder) {
-	    builder.rule(".my-answer-slot:active", "-fx-background-color", answerSlotWaitingBgColor);
+	    builder.start(".my-answer-slot:active")
+	       .add("-fx-background-color", answerSlotWaitingBgColor)
+	       .resetRing(activeBorderColor, borderSmallComponent)
+	       .end();
 	}
 
 
@@ -686,8 +753,9 @@ public abstract class Skin extends SkinProperties {
 	    .add("-fx-faint-focus-color", "transparent")
 	    .add("-fx-background-insets", "0")
 	    .add("-fx-padding", "0")
+	    .effect(componentShadow)
 	    .end();
-	    
+
 	    builder.start(".my-table-view:focused")
 	    .add("-fx-background-color", "-fx-control-inner-background")
 	    .add("-fx-background-insets", "0")
@@ -703,8 +771,9 @@ public abstract class Skin extends SkinProperties {
 	       .add("-fx-border-radius",  borderBigComponent.arc() + "px")
 	       .add("-fx-background-insets", borderBigComponent.width() + "px") // Der Hintergrund wird sonst bis zum Border gezeichnet und lugt dann an runden Ecken hervor, was man zuvorderst bei dunklen Hintergründen sieht, also in der Regel gar nicht, aber sicher ist sicher.
 	       .add("-fx-background-radius", borderBigComponent.arc() + "px")
+	       .effect(componentShadow)
 	       .end();
-	    
+
 	    // === Oberer Bereich (große Zahl) ===
 	    builder.start(".dashboard-tile-top")
 	       .add("-fx-background-color", displayTextProgressBgColor)
@@ -989,6 +1058,7 @@ public abstract class Skin extends SkinProperties {
 	        .add("-fx-background-insets", borderBigComponent.width() + "px")
 	        .add("-fx-padding", font.getSize() + "px")
 	        .add("-fx-cursor", "hand")
+	        .effect(componentShadow)
 	        .end();
 
 	    css.rule(".diary-card:hover", "-fx-background-color", displayTextQuestionBgColor);
@@ -1160,6 +1230,50 @@ public abstract class Skin extends SkinProperties {
 	    
 	    public CssBuilder add(String property, Color color) {
 	        return add(property, UiUtils.toHex(color));
+	    }
+
+	    /**
+	     * Der Schatten des Skins — und nichts, wenn er keinen hat.
+	     *
+	     * <p>Eigene Methode statt {@code add}, weil {@code add} bei {@code null} knallt. Hier ist
+	     * {@code null} aber kein Fehler, sondern die Aussage „dieser Skin wirft keine Schatten": die
+	     * Zeile entfällt und das Stylesheet sieht aus wie vor der Einführung des Schattens.</p>
+	     */
+	    public CssBuilder effect(String shadow) {
+	        if (shadow == null)
+	            return this;
+	        return add("-fx-effect", shadow);
+	    }
+
+	    /**
+	     * Ein Ring, der einen Zustand trägt — „jetzt bist du dran" oder „so war die Antwort". Ohne
+	     * Farbe entsteht keine Zeile, ein Skin ohne Ringe bleibt also unverändert.
+	     *
+	     * <p>Die Insets ziehen mit der Breite mit: sonst zeichnet der Hintergrund bis unter den Ring
+	     * und lugt an den runden Ecken hervor. Aus demselben Grund stehen sie überall sonst auf der
+	     * jeweiligen Rahmenbreite.</p>
+	     */
+	    public CssBuilder ring(Color color, int width) {
+	        if (color == null)
+	            return this;
+	        return add("-fx-border-color", color)
+	              .add("-fx-border-width", width + "px")
+	              .add("-fx-background-insets", width + "px");
+	    }
+
+	    /**
+	     * Nimmt einen Zustands-Ring wieder zurück auf den gewöhnlichen Rahmen — für Elemente, die
+	     * einen Zustandsnamen mit einem Bedienelement teilen, ohne selbst eines zu sein.
+	     *
+	     * <p>Schreibt nichts, wenn der Skin gar keine Ringe kennt: dann gibt es auch nichts
+	     * zurückzunehmen, und sein Stylesheet bleibt unverändert.</p>
+	     */
+	    public CssBuilder resetRing(Color activeColor, BorderParams gewoehnlich) {
+	        if (activeColor == null)
+	            return this;
+	        return add("-fx-border-color", gewoehnlich.color())
+	              .add("-fx-border-width", gewoehnlich.width() + "px")
+	              .add("-fx-background-insets", gewoehnlich.width() + "px");
 	    }
 
 	    /**

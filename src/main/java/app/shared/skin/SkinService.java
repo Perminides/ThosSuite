@@ -14,7 +14,8 @@ public final class SkinService {
             new FlatWebSkin(),
             new FlowerSkin(),
             new SpicySkin(),
-            new DarkMode()
+            new DarkMode(),
+            new TileSkin()
     ));
     private static Skin current;
 
