@@ -116,6 +116,13 @@ public class MainWindow {
         );
         
         root.setTop(headerBar);
+
+        // E. Fenster nachmessen. Die Höhe der Titelleiste hängt an der Schrift des Skins — ohne das
+        // hier bliebe das Fenster auf dem Maß des vorigen Skins, und die BorderPane zeigte den
+        // Überschuss als Streifen über und unter der starren contentPane. applyCss davor, damit die
+        // neue Schriftgröße schon in den Maßen steckt und nicht erst beim nächsten Puls.
+        root.applyCss();
+        stage.sizeToScene();
     }
     
 	/** Welche Menüs es gibt, ist Navigation — das entscheidet das Fenster, nicht der Skin. */
