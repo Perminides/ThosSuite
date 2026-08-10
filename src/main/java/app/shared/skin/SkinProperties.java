@@ -169,6 +169,7 @@ public abstract class SkinProperties {
 	protected Integer dashBoardTileBottomHeight = 100;
 	protected Integer dashBoardTileTopFontSize; // font * 4
 	protected Integer dashBoardTileBottomFontSize; // font * 2
+	protected Color dashBoardTileBottomColor; // menuBarBackground
 	
 	protected Integer diaryViewerContentWidth = 1200; // Hartcodiert. Für andere Auflösungen dann überschreiben.
 	protected Integer popupMonitorMargin = 20; // Abstand eines Popups zum Bildschirmrand (Tagebuch wie Film)
