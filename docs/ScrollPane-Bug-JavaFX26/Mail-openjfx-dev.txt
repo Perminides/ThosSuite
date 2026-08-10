@@ -1,0 +1,250 @@
+An:      openjfx-dev@openjdk.org
+Betreff: JavaFX 26 regression: ScrollPaneSkin returns a preferred size smaller than its content (JDK-8370652)
+
+--- ab hier ist der Mailtext, reiner Text, nichts formatieren ---
+
+Hi,
+
+I think the fix for JDK-8370652 ("Control and ScrollPaneSkin should snap
+computed width/height values to prevent scrollbars appearing due to rounding
+errors", fixed in jfx26) introduced a regression. I could not find an existing
+report for it - JDK-8370652 has no linked issues, and there is no other open
+ScrollPane issue in the javafx component. Apologies if I missed it.
+
+
+Summary
+-------
+
+The four compute methods of ScrollPaneSkin now snap their result:
+
+    // JavaFX 25
+    else if (sp.getContent() != null) {
+        return (sp.getContent().prefWidth(height) + minWidth);
+    }
+
+    // JavaFX 26
+    else if (sp.getContent() != null) {
+        return snapSpaceX(sp.getContent().prefWidth(height) + minWidth);
+    }
+
+snapSpace rounds (Math.round), snapSize ceils (Math.ceil). Rounding is right
+for spacing and for differences, but not for a preferred size: whenever the
+fractional part of the computed size is below 0.5, the ScrollPane now reports
+a preferred width that is smaller than the preferred width its own content
+asked for. The content is then laid out narrower than it requested.
+
+Before JDK-8370652 the raw, unsnapped value was passed up to the parent, which
+applied its own snapSize (ceil) - DialogPane.computePrefWidth, for instance,
+ends in snapSizeX(...). The pane therefore always ended up at least as wide as
+its content required.
+
+For content whose height depends on its width - any wrapped text - the
+consequence is not cosmetic. Losing a fraction of a pixel adds a whole line,
+the content no longer fits the viewport, and an AS_NEEDED scroll bar appears:
+the very symptom JDK-8370652 set out to prevent. The scroll bar then takes
+further width, which can add yet another line.
+
+
+Test case
+---------
+
+The content below is a Region standing in for a wrapped Label: it reports a
+natural width with a fractional part and needs "one more line" as soon as it
+gets less. No fonts are involved, so the result does not depend on platform
+text metrics. It runs as a single-file source program:
+
+    java --module-path <javafx-lib> --add-modules javafx.controls ScrollPaneSnapTest.java
+
+------------------------------------------------------------------------
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.Region;
+import javafx.stage.Stage;
+
+public class ScrollPaneSnapTest extends Application {
+
+    /** Natural width of the content, with a fractional part below .5. */
+    private static final double NATURAL_WIDTH = 300.2;
+
+    private static final double PADDING = 10;
+
+    /** Stands in for a wrapped Label: one pixel too little and it needs an extra line. */
+    private static final class Content extends Region {
+        @Override
+        public Orientation getContentBias() {
+            return Orientation.HORIZONTAL;
+        }
+
+        @Override
+        protected double computePrefWidth(double height) {
+            return NATURAL_WIDTH;
+        }
+
+        @Override
+        protected double computePrefHeight(double width) {
+            // Same contract as a wrapped Label: unconstrained means "at natural width" = one line.
+            return width < 0 || width >= NATURAL_WIDTH ? 100 : 200;
+        }
+    }
+
+    @Override
+    public void start(Stage stage) {
+        Content content = new Content();
+
+        ScrollPane scrollPane = new ScrollPane(content);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPadding(new Insets(PADDING));
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        // An auto-sized window: its size comes from the preferred size of the root.
+        stage.setScene(new Scene(scrollPane));
+        stage.sizeToScene();
+        stage.show();
+
+        Platform.runLater(() -> {
+            report(stage, scrollPane, content);
+            stage.close();
+            Platform.exit();
+        });
+    }
+
+    private void report(Stage stage, ScrollPane scrollPane, Content content) {
+        Node vbar = scrollPane.lookup(".scroll-bar:vertical");
+        Node viewport = scrollPane.lookup(".viewport");
+        boolean barShown = vbar != null && vbar.isVisible();
+
+        double insets = scrollPane.getInsets().getLeft() + scrollPane.getInsets().getRight();
+        double needed = NATURAL_WIDTH + insets;
+        double reported = scrollPane.prefWidth(-1);
+
+        System.out.println("javafx.runtime.version   = " + System.getProperty("javafx.runtime.version"));
+        System.out.println("render scale             = " + stage.getRenderScaleX());
+        System.out.println();
+        System.out.println("PART A - preferred width must cover the content");
+        System.out.println("  content natural width  = " + NATURAL_WIDTH);
+        System.out.println("  ScrollPane insets      = " + insets);
+        System.out.println("  needed (content+insets)= " + needed);
+        System.out.println("  ScrollPane.prefWidth   = " + reported);
+        System.out.println("  " + (reported < needed
+                ? "FAIL: preferred width is " + Math.round((needed - reported) * 1000) / 1000.0
+                        + " px smaller than the content needs"
+                : "ok: preferred width covers the content"));
+        System.out.println();
+        System.out.println("PART B - visible consequence");
+        System.out.println("  ScrollPane width       = " + scrollPane.getWidth());
+        System.out.println("  viewport width         = "
+                + (viewport != null ? viewport.getLayoutBounds().getWidth() : "?"));
+        System.out.println("  viewport height        = "
+                + (viewport != null ? viewport.getLayoutBounds().getHeight() : "?"));
+        System.out.println("  content height         = " + content.getHeight());
+        System.out.println("  vertical scroll bar    = " + (barShown ? "SHOWN" : "not shown"));
+        System.out.println("  " + (barShown ? "FAIL (unwanted scroll bar)" : "PASS"));
+    }
+
+    public static void main(String[] args) {
+        // Keep the numbers readable and the result independent of display scaling.
+        // The regression is not caused by scaling; it only changes the exact values.
+        System.setProperty("glass.win.uiScale", "1");
+        System.setProperty("glass.gtk.uiScale", "1");
+        System.setProperty("prism.allowhidpi", "false");
+        launch(args);
+    }
+}
+------------------------------------------------------------------------
+
+
+Output
+------
+
+JavaFX 25 (25+29), JDK 25.0.2, Windows 11:
+
+    PART A - preferred width must cover the content
+      content natural width  = 300.2
+      ScrollPane insets      = 20.0
+      needed (content+insets)= 320.2
+      ScrollPane.prefWidth   = 320.2
+      ok: preferred width covers the content
+
+    PART B - visible consequence
+      ScrollPane width       = 320.2
+      viewport width         = 301.0
+      viewport height        = 100.0
+      content height         = 100.0
+      vertical scroll bar    = not shown
+      PASS
+
+JavaFX 26 (26+27), same JDK, same machine:
+
+    PART A - preferred width must cover the content
+      content natural width  = 300.2
+      ScrollPane insets      = 20.0
+      needed (content+insets)= 320.2
+      ScrollPane.prefWidth   = 320.0
+      FAIL: preferred width is 0.2 px smaller than the content needs
+
+    PART B - visible consequence
+      ScrollPane width       = 320.0
+      viewport width         = 287.0
+      viewport height        = 100.0
+      content height         = 200.0
+      vertical scroll bar    = SHOWN
+      FAIL (unwanted scroll bar)
+
+
+Where I ran into this
+---------------------
+
+An application whose message dialogs put the message into a ScrollPane holding
+a Label with wrapText, letting the dialog size itself. Same code, same text,
+same machine:
+
+                                       JavaFX 25    JavaFX 26
+    natural width of longest line       1356.152     1356.152
+    DialogPane width                        1391         1390
+    viewport width                          1357         1334
+    label height                     120 (5 lines) 144 (6 lines)
+    vertical scroll bar                 not shown        shown
+
+Widening the dialog by exactly one pixel under JavaFX 26 restores every
+measured JavaFX 25 value.
+
+Whether a given dialog is affected looks random, because it depends on the
+fractional part of the text width: for the same message at font sizes
+16/18/20/22/24, sizes 20 and 24 show the scroll bar and 16/18/22 do not -
+exactly those whose fractional part is below 0.5.
+
+StageStyle.EXTENDED and HeaderBar are not involved; I verified this with a
+plain decorated dialog without a HeaderBar.
+
+
+Suggested fix
+-------------
+
+Use snapSizeX/snapSizeY (ceil) instead of snapSpaceX/snapSpaceY (round) in
+computePrefWidth, computePrefHeight, computeMinWidth and computeMinHeight of
+ScrollPaneSkin. A size returned by these methods must never be smaller than
+the size the content asked for. A preferred size that is up to one pixel too
+large cannot cause a spurious scroll bar, whereas one that is a fraction of a
+pixel too small demonstrably can.
+
+The concern raised in the review of JDK-8370652 - that ceil amplifies errors
+which are one ulp above the desired value - applies to the subtraction in
+Control.layoutChildren, which can keep snapSpace. If amplification is a
+concern here as well, ceiling with a small tolerance would satisfy both goals.
+
+Workaround for applications: make the content's preferred width integral, for
+example label.setPrefWidth(Math.ceil(label.prefWidth(-1))) once CSS has been
+applied. Note that overriding ScrollPane.computePrefWidth and ceiling the
+result of super does not help - the value has already been rounded down inside
+the skin.
+
+I am happy to file this in JBS or to provide further measurements.
+
+Regards,
+NAME HIER EINSETZEN
