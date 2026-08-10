@@ -761,6 +761,36 @@ public abstract class Skin extends SkinProperties {
 	    .add("-fx-background-insets", "0")
 	    .add("-fx-padding", "0")
 	    .end();
+
+	    /* Das Textfeld im Editiermodus einer Zelle.
+	     *
+	     * Es bekommt bewusst nichts Eigenes: Ohne Polsterung, Rahmen und Insets sitzt sein Text
+	     * genau dort, wo vorher der Anzeigetext saß — die Zelle bringt ihre Polsterung ja schon mit.
+	     * Nichts springt beim Umschalten, und der Editor bleibt so hoch wie eine Zeile. Mit den
+	     * Werten aus borderSmallComponent (rund 10 px oben und unten) wäre er rund 12 px zu hoch für
+	     * die Zeile und würde abgeschnitten.
+	     *
+	     * Die zweite Regel nimmt den Zustands-Ring von .text-field:focused zurück — während des
+	     * Editierens ist das Feld immer fokussiert, und der Ring machte den Editor wieder zu hoch.
+	     * Sie muss ausgeschrieben sein: .my-table-view .text-field und .text-field:focused wiegen
+	     * beide zwei Selektoren, es entschiede sonst die Reihenfolge der Aufrufe in styleScene.
+	     *
+	     * Zurückgenommen wird nur, was es heute gibt. Bekommt .text-field später eine weitere
+	     * geometrische Eigenschaft (etwa eine Mindesthöhe), gehört sie hier ebenfalls hin.
+	     *
+	     * ActivityTableDialog verlässt sich darauf: Dort steht die Zeilenhöhe fest, die Zeile kann
+	     * für den Editor also nicht mehr wachsen. Nachmessen mit scripts.ui.ActivityTableSizeProbe.
+	     */
+	    builder.start(".my-table-view .text-field")
+	    .add("-fx-padding", "0")
+	    .add("-fx-border-width", "0")
+	    .add("-fx-background-insets", "0")
+	    .end();
+
+	    builder.start(".my-table-view .text-field:focused")
+	    .add("-fx-border-width", "0")
+	    .add("-fx-background-insets", "0")
+	    .end();
 	}
 	
 	private void addDashboardStyles(CssBuilder builder) {
