@@ -17,10 +17,8 @@ import app.shared.AppClock;
 import app.shared.Config;
 import app.shared.DB;
 import app.shared.FilenIgnoreSource;
-import app.shared.KonsolenMitschrift;
 import app.shared.Log;
 import app.shared.SingleInstanceGuard;
-import app.shared.ui.StartupDiagnostics;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
@@ -45,14 +43,10 @@ public class ThosSuiteApp extends Application {
     private MainWindow mainWindow;
     private Controller controller;
 
-    // !Sofort: Warum muss ich manchmal nach dem Start erst mit der Maus das Fenster verlassen, damit es responsiv wird und manchmal nicht?
     public static void main(String[] args) {
     	// JavaFX DatePicker nutzt Locale.getDefault(Category.FORMAT) für Monatsnamen.
     	// Windows-Regionsformat kann abweichen von der Sprache → explizit auf Deutsch setzen.
     	Locale.setDefault(Locale.GERMANY);
-    	// !tmp: Muss vor launch() stehen — Prism meldet seine Pipeline, sobald der Splash erscheint,
-    	// und das ist lange vor Log.initLog. Bis dahin wird gepuffert.
-    	KonsolenMitschrift.starten();
         launch(args); // JavaFX Application.launch() startet die App und den JavaFX Application Thread
         Log.info(ThosSuiteApp.class, "End Suite");
     }
@@ -144,8 +138,7 @@ public class ThosSuiteApp extends Application {
                 Config.init(finalDataFolder);
                 Log.initLog(finalDataFolder, getParameters());
                 Log.info(ThosSuiteApp.class, "Start Suite (Async Init via Splash)");
-                KonsolenMitschrift.ausschuetten(); // !tmp: das vor der Log-Initialisierung Gesammelte
-                
+
                 FilenIgnoreSource.addToIgnore();
 
                 // B) Fonts laden
@@ -174,10 +167,6 @@ public class ThosSuiteApp extends Application {
 						mainWindow.show();
 						mainWindow.centerOnScreen();
 
-						// !tmp: Startdiagnose. Muss hier stehen — vor der PauseTransition und vor dem
-						// Zurückdrehen der Deckkraft, damit der Übergang mitgeschrieben wird.
-						StartupDiagnostics.watch(primaryStage);
-
 						// 500ms warten, damit CSS vollständig angewendet wird
 						javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(500));
 						pause.setOnFinished(_ -> {
@@ -190,9 +179,6 @@ public class ThosSuiteApp extends Application {
 							Platform.runLater(() -> {
 								controller.runPostTasks(); // Zeigt Startup-Dialoge (Fitbit, Alkohol)
 								primaryStage.setOpacity(1); // MainWindow wird NACH den Dialogen sichtbar
-								// !tmp: Der Ist-Wert direkt danach — die eine Zahl, an der die Diagnose hängt.
-								Log.info(ThosSuiteApp.class, "Startdiagnose opacity zurueckgedreht, ist jetzt "
-										+ primaryStage.getOpacity());
 								// Nochmal runLater für toFront - kommt dann garantiert nach allem
 							    Platform.runLater(() -> {
 							        primaryStage.toFront();

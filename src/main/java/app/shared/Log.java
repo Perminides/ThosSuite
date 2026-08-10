@@ -170,11 +170,6 @@ public class Log {
         // === FORMATTER ===
         // Gemeinsamer Formatter für File UND Console
         // Format: "YYYY-MM-DD HH:MM:SS.mmm [LEVEL] logger.name - message"
-        //
-        // !tmp: Die Millisekunden (.%1$tL) sind für die Startdiagnose dazugekommen. Deckkraftwechsel,
-        // Pulse und Eingabe-Ereignisse liegen dort regelmäßig in derselben Sekunde — ohne die
-        // Nachkommastellen ist nicht zu erkennen, was zuerst kam. Mit dem Ende der Startdiagnose
-        // kann das wieder auf %1$tT zurück.
         Formatter commonFormatter = new Formatter() {
             @Override
             public String format(LogRecord record) {
@@ -217,10 +212,7 @@ public class Log {
 			// StreamHandler statt ConsoleHandler weil:
 			// 1. Wir wollen System.out statt stderr
 			// 2. Wir wollen auto-flush nach jedem Log
-			// !tmp: Bewusst der Originalstrom, nicht System.out — das ist inzwischen der Abgriff der
-			// KonsolenMitschrift, und jede Log-Zeile käme über ihn ein zweites Mal herein. Beim
-			// Rückbau der Startdiagnose wieder System.out einsetzen.
-			StreamHandler consoleHandler = new StreamHandler(KonsolenMitschrift.originalOut(), commonFormatter) {
+			StreamHandler consoleHandler = new StreamHandler(System.out, commonFormatter) {
 				@Override
 				public synchronized void publish(LogRecord record) {
 					super.publish(record);

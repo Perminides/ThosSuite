@@ -17,10 +17,10 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<jackson.version>2.20.0</jackson.version>
-		<!-- 26 wegen JDK-8367557: Ein Fenster mit StageStyle.EXTENDED konnte nach dem Sichtbarwerden
-		     keine Eingabe mehr annehmen, bis die Maus es einmal verlassen hatte. Genau das
-		     Startproblem, siehe docs/Startproblem-Diagnose.md. JavaFX 26 ist gegen Java 24
-		     übersetzt und läuft damit auf JDK 25 — der jpackage-Grund weiter unten bleibt unberührt. -->
+		<!-- NICHT unter 26 zurückdrehen. Bis 25 konnte ein Fenster mit StageStyle.EXTENDED nach dem
+		     Sichtbarwerden keine Eingabe mehr annehmen, bis die Maus es einmal verlassen und wieder
+		     betreten hatte (JDK-8367557, in 26 behoben). JavaFX 26 ist gegen Java 24 übersetzt und
+		     läuft damit auf JDK 25 — der jpackage-Grund weiter unten bleibt unberührt. -->
 		<javafx.version>26</javafx.version>
 		<!-- Mindestens 1.4.1 — davor kennt der Bytecode-Leser Klassendateiversion 69 (Java 25)
 		     nicht und überspringt sie STILL. Die Regeln melden dann "failed to check any classes",
