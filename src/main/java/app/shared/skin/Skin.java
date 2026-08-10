@@ -100,7 +100,8 @@ public abstract class Skin extends SkinProperties {
 		hannoverSessionProgressPanel = hannoverSessionProgressPanel == null ? worldSessionProgressPanel : hannoverSessionProgressPanel;
 		hannoverSessionHistoryPanel = hannoverSessionHistoryPanel == null ? worldSessionHistoryPanel : hannoverSessionHistoryPanel;
 		hannoverSessionBackButton = hannoverSessionBackButton == null ? worldSessionBackButton : hannoverSessionBackButton;
-		toEliminateColor = toEliminateColor == null ? disabledComponentBgColor : toEliminateColor; 
+		toEliminateColor = toEliminateColor == null ? disabledComponentBgColor : toEliminateColor;
+		dashBoardTileBottomColor = dashBoardTileBottomColor == null ? menuBarBackground : dashBoardTileBottomColor;
 		
 		/**
 		// Dieser Code ist natürlich Quatsch. Aber ich bin so angepisst über diese -1 dass ich mir das jetzt gebaut habe.
@@ -142,7 +143,8 @@ public abstract class Skin extends SkinProperties {
 	    addDatePickerStyles(css);
 	    addSpinnerStyles(css);
 	    addScrollbarStyles(css);
-	    
+	    addTooltipStyles(css);
+
 	    // Komponenten mit meiner eigenen Logik:-)
 	    addSessionInfoLabelStyles(css);
 	    addIconButtonStyles(css);
@@ -219,7 +221,30 @@ public abstract class Skin extends SkinProperties {
 		builder.rule(".scroll-bar .increment-button, .scroll-bar .decrement-button", "-fx-background-color", menuBarBackground);
 		builder.rule(".scroll-bar .increment-arrow, .scroll-bar .decrement-arrow", "-fx-background-color", textColor);
 	}
-	
+
+	/**
+	 * Dieselbe Fläche wie das Kommentar-Popup der Filmkacheln ({@code .movie-comment-popup}) — beide
+	 * ziehen ihre Werte aus denselben Feldern, damit eine schwebende Info überall gleich aussieht.
+	 *
+	 * <p>Die Schriftfarbe steht hier bewusst nicht: Die globale {@code .text}-Regel färbt auch den
+	 * Text im Popup-Fenster, denn ein Popup erbt das Stylesheet seiner Szene. Ohne Hintergrund von
+	 * hier stünde diese Farbe auf JavaFX' eingebautem Grau — in jedem Skin eine andere, nie
+	 * abgestimmte Paarung.</p>
+	 */
+	private void addTooltipStyles(CssBuilder builder) {
+		BorderParams border = borderMediumComponent;
+		builder.start(".tooltip")
+		   .add("-fx-border-color", border.color())
+		   .add("-fx-border-width", border.width() + "px")
+		   .add("-fx-border-radius", border.arc() + "px")
+		   .add("-fx-background-insets", border.width() + "px") // sonst lugt der Hintergrund an den runden Ecken hervor
+		   .add("-fx-background-radius", border.arc() + "px")
+		   .add("-fx-background-color", disabledComponentBgColor)
+		   .add("-fx-padding", font.getSize() * 0.5 + "px")
+		   .add("-fx-font-size", font.getSize() + "px")
+		.end();
+	}
+
 	private void addComboBoxStyles(CssBuilder builder) {
 	    builder.start(".combo-box-base")
 	       .add("-fx-background-color", activeComponentBgColor)
@@ -813,7 +838,7 @@ public abstract class Skin extends SkinProperties {
 	    
 	    // === Unterer Bereich (Beschreibung) ===
 	    builder.start(".dashboard-tile-bottom")
-	       .add("-fx-background-color", menuBarBackground) // bewusst ohne Default: jeder Skin setzt die Menüfarbe selbst
+	       .add("-fx-background-color", dashBoardTileBottomColor)
 	       .add("-fx-pref-height", dashBoardTileBottomHeight + "px")
 	       .add("-fx-border-color", borderBigComponent.color())
 	       .add("-fx-border-width", borderBigComponent.width() + "px 0 0 0") // Trennstrich oben
@@ -835,7 +860,7 @@ public abstract class Skin extends SkinProperties {
 	       .end();
 	}
 	
-	// !Später: Naja, so richtig überprüft habe ich nicht, ob die alle nötig sind. Und außerdem hier auch noch tooltip zu verstecken, hm...
+	// !Später: Naja, so richtig überprüft habe ich nicht, ob die alle nötig sind.
 	private void addChartStyles(CssBuilder builder) {
 		
 		// Chart an sich
@@ -919,16 +944,6 @@ public abstract class Skin extends SkinProperties {
 	       .add("-fx-spacing", spacing + "px") // Abstand zwischen den Kindern (z. B. Label "Von", "Bis" und dem Datepicker daneben)
 	       .add("-fx-alignment", "center-left") // center damit die Labels mittig platziert sind. "Left" macht gerade nix
 	    .end();
-	    
-	    // Der Tooltip ist bisher noch nicht weiter gestylet bezüglich der Ecken und Border und so. Ist mir gerade nicht so wichtig... Default ist ohne Border und abgerundet anscheinend.
-	    
-	   /** builder.start(".tooltip")
-	    	.add("-fx-background-color", UIUtils.toHex(activeComponentBgColor))
-	    .end();
-	    
-	    builder.start(".tooltip .text")
-	    	.add("-fx-fill", textActiveComponentColor)
-	    .end();**/
 	}
 	
 	private void addDatePickerStyles(CssBuilder builder) {
