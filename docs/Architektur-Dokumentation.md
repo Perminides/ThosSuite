@@ -294,7 +294,8 @@ UI **nicht kennt** — und diese Regel ist per Build prüfbar, die alte war es n
 SkinProperties     Über 100 Felder · lädt sie aus der .properties-Datei · gibt sie über eine
                    bewusst geschnittene Fläche heraus
 Skin               extends SkinProperties · erzeugt das CSS
-                   genau eine öffentliche Methode: styleScene(Scene)
+                   buildCss() liefert das Stylesheet als Text
+                   styleScene(Scene) hängt es an die Scene — der Aufrufpunkt der Anwendung
 ```
 
 Dazu die sechs konkreten Skins (`DarkMode`, `FlatWebSkin` und die vier
@@ -314,8 +315,10 @@ Regel-Dokument: braucht der Zugang ein Argument vom Aufrufer, löst der Aufrufer
 scene.getStylesheets().add("data:text/css," + encodedCss);
 ```
 
-`styleScene` baut den Stylesheet-String aus diversen `addXxxStyles`-Methoden über einen `CssBuilder` und
-hängt ihn als Data-URL an die Scene. Bei einem Skinwechsel wird die Scene neu gestylt und alle
+`buildCss` baut den Stylesheet-String aus diversen `addXxxStyles`-Methoden über einen `CssBuilder`,
+`styleScene` hängt ihn als Data-URL an die Scene. Getrennt sind die beiden, weil eine `Scene` ein
+laufendes Fenster voraussetzt — wer das Stylesheet nur lesen will (`scripts.ui.SkinCssDump`, das die
+Stylesheets nach `docs/skin/css` schreibt), käme sonst nicht daran. Bei einem Skinwechsel wird die Scene neu gestylt und alle
 Oberflächen bauen sich neu auf (`Screen.refresh()` → `view.rebuild()`).
 
 #### Reflection-basiertes Property-Laden

@@ -70,7 +70,37 @@ import javafx.scene.text.Font;
  */
 public abstract class Skin extends SkinProperties {
 	
+	/**
+	 * Hängt das Stylesheet an die Scene — der einzige Aufrufpunkt der Anwendung, unverändert.
+	 *
+	 * <p>Das Erzeugen des CSS steckt in {@link #buildCss()}. Grund ist die {@code Scene}: Die gibt es
+	 * nur mit laufendem Fenster, und damit käme niemand an das Stylesheet heran, der es bloß
+	 * <em>lesen</em> will — etwa der Vergleichslauf, der prüft, ob ein Umbau die Darstellung
+	 * unangetastet gelassen hat.</p>
+	 */
 	public void styleScene(Scene scene) {
+		String rawCss = buildCss();
+
+		// The color scheme of the default header buttons is automatically adjusted to remain easily recognizable by inspecting the Scene.fill property to gauge the brightness of the user interface. Applications should set the scene fill to a color that matches the user interface of the header bar area, even if the scene fill is not visible because it is obscured by other controls.
+	    scene.setFill(menuBarBackground);
+
+	    // Für URL maskieren (Transport)
+	    String encodedCss = rawCss.replace("%", "%25").replace("#", "%23");
+
+	    scene.getStylesheets().clear();
+	    scene.getStylesheets().add("data:text/css," + encodedCss);
+
+	    //Log.debug(this, rawCss);
+	}
+
+	/**
+	 * Das fertige Stylesheet als Text — ohne Scene, ohne Wirkung auf die Oberfläche.
+	 *
+	 * <p>Beginnt mit dem Vorgaben-Durchlauf: Felder, die die properties-Datei offengelassen hat,
+	 * bekommen hier ihren abgeleiteten Wert. Der Durchlauf füllt nur, was {@code null} ist, und ist
+	 * deshalb wiederholbar — zweimal aufgerufen kommt zweimal dasselbe heraus.</p>
+	 */
+	public String buildCss() {
 		menuBarHoverBackground = menuBarHoverBackground == null ? UiUtils.contrastingShade(menuBarBackground, 20) : menuBarHoverBackground;
 		// Gedämpfter Text heißt: halb zum eigenen Hintergrund verblasst. Helligkeit allein kennt den nicht.
 		menuDisabledForeground = menuDisabledForeground == null ? textColor.interpolate(menuBarBackground, 0.5) : menuDisabledForeground;
@@ -102,25 +132,7 @@ public abstract class Skin extends SkinProperties {
 		hannoverSessionBackButton = hannoverSessionBackButton == null ? worldSessionBackButton : hannoverSessionBackButton;
 		toEliminateColor = toEliminateColor == null ? disabledComponentBgColor : toEliminateColor;
 		dashBoardTileBottomColor = dashBoardTileBottomColor == null ? menuBarBackground : dashBoardTileBottomColor;
-		
-		/**
-		// Dieser Code ist natürlich Quatsch. Aber ich bin so angepisst über diese -1 dass ich mir das jetzt gebaut habe.
-		// Siehe auch den Kommentar in der Methode, die die Buttons stylet!
-		Button button = new Button("Test Button");
-        // 1. Der Button braucht eine Scene, um Zugriff auf die User-Agent-Styles (Modena) zu haben
-        Scene dummyScene = new Scene(new StackPane(button));
-        // 2. Jetzt CSS anwenden - JavaFX schaut nun in die Modena-Stylesheets
-        button.applyCss();
-        Background background = button.getBackground();
-			// Wir nehmen den ersten BackgroundFill (wie in ScenicView zu sehen)
-		    BackgroundFill firstFill = background.getFills().get(0);
-		    javafx.geometry.Insets insets = firstFill.getInsets();
-		    if (insets.getBottom() != -1)
-		    	throw new RuntimeException("Alter jetzt ist der bottomInset für den Background plötzlich nicht mehr -1?");**/
-	    
-		// The color scheme of the default header buttons is automatically adjusted to remain easily recognizable by inspecting the Scene.fill property to gauge the brightness of the user interface. Applications should set the scene fill to a color that matches the user interface of the header bar area, even if the scene fill is not visible because it is obscured by other controls.
-	    scene.setFill(menuBarBackground);
-		
+
 		CssBuilder css = new CssBuilder();
 	    
 	    // === GLOBAL: FONT ===
@@ -160,17 +172,7 @@ public abstract class Skin extends SkinProperties {
 	    addDiaryViewerStyles(css);
 	    addMovieViewerStyles(css);
 	    
-	    String rawCss = css.build(); // Hier kommt sauberes CSS raus: ".rule { color: #fff; }"
-
-	    // 2. Für URL maskieren (Transport)
-	    // Das ist der Schritt, den du meinst:
-	    String encodedCss = rawCss.replace("%", "%25").replace("#", "%23");
-
-	    // 3. Setzen
-	    scene.getStylesheets().clear();
-	    scene.getStylesheets().add("data:text/css," + encodedCss);
-	    
-	    //Log.debug(this, rawCss);
+	    return css.build(); // Hier kommt sauberes CSS raus: ".rule { color: #fff; }"
 	}
 	
 	private void addButtonStyles(CssBuilder builder) {

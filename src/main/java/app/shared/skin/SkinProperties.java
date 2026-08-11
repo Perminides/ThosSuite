@@ -53,7 +53,7 @@ public abstract class SkinProperties {
 	// borderColor ist der Ersatzwert, nicht der Zwang: bleibt der Farb-Slot in einem borderParams
 	// leer (1,,10,20,10,20,10), wird sie eingesetzt — steht dort eine Farbe, gewinnt die. Ein Skin
 	// mit unterschiedlich gefärbten Rändern bleibt damit möglich. Eingesetzt wird im
-	// Defaults-Durchlauf von styleScene, nicht beim Parsen (siehe BorderParams.withFallbackColor).
+	// Vorgaben-Durchlauf von buildCss, nicht beim Parsen (siehe BorderParams.withFallbackColor).
 	// !Idee: Einfacher als box-shadow wäre ein Design mit transparenten Hintergründen der Buttons und TextFields und so und ohne Border. Hehe...
 	
 	public abstract String getDisplayName();
@@ -156,8 +156,8 @@ public abstract class SkinProperties {
 	 * {@code dropshadow(gaussian, rgba(0,0,0,0.16), 14, 0, 0, 4)}.
 	 *
 	 * <p>Roher CSS-Text wie {@code chartRootPadding}, kein zerlegter Wert: der Schatten wird nirgends
-	 * gerechnet, nur durchgereicht. Ein zerlegtes Format brächte hier nichts und würde die Farbe
-	 * durch {@code parseColor} zwingen, der halbdurchsichtige Werte nicht kann.</p>
+	 * gerechnet, nur durchgereicht. Ein zerlegtes Format brächte hier nichts — ein Schatten ist keine
+	 * Farbe, sondern ein Effekt aus Farbe, Radius, Streuung und Versatz.</p>
 	 *
 	 * <p>Bleibt das Feld {@code null}, entsteht überhaupt keine {@code -fx-effect}-Zeile — ein Skin
 	 * ohne diesen Schlüssel bekommt dasselbe Stylesheet wie zuvor.</p>
@@ -645,18 +645,24 @@ public abstract class SkinProperties {
 	                    + " stillschweigend ignorieren tun wir ihn jedenfalls nicht mehr.");
 	}
 
+	/**
+	 * Farben stehen als {@code #RRGGBB} oder {@code #RRGGBBAA} in den properties-Dateien.
+	 *
+	 * <p>Beides kann {@link Color#web(String)} selbst — samt Alpha, samt Auffüllen auf undurchsichtig,
+	 * wenn keins dasteht, und samt Ausnahme bei Unsinn. Hier ist deshalb nichts mehr zu rechnen; es
+	 * bleibt die Fehlermeldung, weil die von {@code Color.web} den unbrauchbaren Wert nicht nennt.</p>
+	 *
+	 * <p>Das frühere Komma-Format {@code r,g,b,a} ist entfallen. Es konnte nur Schwarz — der
+	 * {@code Color}-Konstruktor will 0..1, dort kamen 0..255 an — und es war die Falle in
+	 * {@link #parseBorderParams}, weil seine Kommas dort die Positionen verschoben. Beides ist mit
+	 * kommafreien Farben konstruktionsbedingt erledigt.</p>
+	 */
 	protected Color parseColor(String value) {
-		String[] values = value.split(",");
-		if (values.length == 1 && value.length() == 7)
+		try {
 			return Color.web(value);
-		else if (values.length == 1 && value.length() == 9) {
-			Color result = Color.web(value.substring(0, 7));
-			int alpha = Integer.parseInt(value.substring(7), 16);
-			return new Color(result.getRed(), result.getGreen(), result.getBlue(), alpha);
-		} else if (values.length == 4)
-			return new Color(Integer.parseInt(values[0]), Integer.parseInt(values[1]), Integer.parseInt(values[2]), (Float.parseFloat(values[3]) / 255));
-		else
-			throw new RuntimeException("Das Color-Format kenne ich nicht: " + value);
+		} catch (IllegalArgumentException | NullPointerException e) {
+			throw new RuntimeException("Das Color-Format kenne ich nicht: " + value, e);
+		}
 	}
 
 	protected Font parseFont(String value) {
@@ -685,11 +691,8 @@ public abstract class SkinProperties {
 	 */
 	/**
 	 * Der Farb-Slot darf leer bleiben ({@code 1,,10,20,10,20,10}) — dann steht die Farbe auf
-	 * {@code null} und der Defaults-Durchlauf in {@code styleScene} setzt die globale
+	 * {@code null} und der Vorgaben-Durchlauf in {@code buildCss} setzt die globale
 	 * {@code borderColor} ein. Die Position ist fest, der leere Slot deshalb eindeutig.
-	 *
-	 * <p>Achtung: {@code parseColor} kann auch {@code r,g,b,a} mit Kommas. Innerhalb von
-	 * BorderParams zerschösse das die Positionen — dort sind Farben faktisch nur als Hex erlaubt.</p>
 	 */
 	protected BorderParams parseBorderParams(String value) {
 		String[] values = value.split(",");

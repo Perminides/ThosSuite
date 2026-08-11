@@ -1,6 +1,6 @@
 """Erzeugt Skin-Matrix.xlsx aus Skin.java.
 
-Liest jede CSS-Regel, die Skin.styleScene erzeugt, und schreibt sie als eine Zeile je
+Liest jede CSS-Regel, die Skin.buildCss erzeugt, und schreibt sie als eine Zeile je
 (Selektor · Property · Feld) in die Tabelle. Selbst ergaenzte Spalten ab Spalte I bleiben erhalten.
 
     python docs/skin/matrix-erzeugen.py
@@ -22,7 +22,7 @@ KOPF = ["Komponente", "Bereich", "Zustand", "Selektor", "Property", "Feld", "Vor
 
 # --------------------------------------------------------------------------- Vorgaben
 # Woher ein Feld seinen Wert bekommt, wenn die properties-Datei schweigt. Handgepflegt:
-# die Ableitungen stehen im Vorgaben-Durchlauf am Anfang von Skin.styleScene.
+# die Ableitungen stehen im Vorgaben-Durchlauf am Anfang von Skin.buildCss.
 VORGABE = {
     "textColor": "Pflicht", "incorrectTextColor": "Pflicht", "correctColor": "Pflicht",
     "incorrectColor": "Pflicht", "markedColor": "Pflicht", "activeComponentBgColor": "Pflicht",
