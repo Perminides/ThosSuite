@@ -93,8 +93,6 @@ public class MovieViewerScreenView implements ScreenView {
         view.getChildren().clear();
         view.setBackground(SuiteBackground.of(SkinService.get().emptyWallpaperPath()));
 
-        MovieStyle style = SkinService.get().movieStyle();
-
         // SWYT-Felder
         directorField = new SuiteSuggestionTextField("Choose Director...");
         actorField = new SuiteSuggestionTextField("Choose Actor...");
@@ -106,19 +104,15 @@ public class MovieViewerScreenView implements ScreenView {
         Label titLabel = new Label("Title:");
 
         // SWYT-Felder mit Labels in einer VBox
-        double swytWidth = style.contentWidth() * 0.2;
-        VBox swytPane = new VBox(style.font().getSize() * 0.8);
+        VBox swytPane = new VBox();
         swytPane.getStyleClass().add("movie-viewer-swyt");
-        swytPane.setPrefWidth(swytWidth);
-        swytPane.setMinWidth(swytWidth);
-        swytPane.setMaxWidth(swytWidth);
         swytPane.getChildren().addAll(
                 dirLabel, directorField,
                 actLabel, actorField,
                 titLabel, titleField);
 
         // Ergebnisbereich
-        resultBox = new VBox(style.font().getSize() * 0.5);
+        resultBox = new VBox();
         resultBox.getStyleClass().add("movie-viewer-results");
 
         // ScrollPane für Ergebnisse
@@ -128,8 +122,8 @@ public class MovieViewerScreenView implements ScreenView {
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.getStyleClass().add("movie-viewer-scroll");
 
-        // Hauptlayout: SWYT links (20%), Kacheln rechts (70%), je 5% Rand
-        HBox contentBox = new HBox(style.font().getSize());
+        // Hauptlayout: SWYT-Spalte links, Kacheln rechts — Breiten und Abstände kommen aus dem Skin.
+        HBox contentBox = new HBox();
         contentBox.getStyleClass().add("movie-viewer-content");
         HBox.setHgrow(scrollPane, Priority.ALWAYS);
         contentBox.getChildren().addAll(swytPane, scrollPane);

@@ -12,7 +12,6 @@ import app.shared.ui.components.DiaryCard;
 import app.shared.ui.components.SuiteDatePicker;
 import javafx.application.Platform;
 import javafx.css.PseudoClass;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -62,8 +61,6 @@ public class DiaryScreenView implements ScreenView {
         view.getChildren().clear();
         view.setBackground(SuiteBackground.of(SkinService.get().emptyWallpaperPath()));
 
-        double contentWidth = SkinService.get().diaryStyle().viewerContentWidth();
-
         // Filterleiste
         fromPicker = new SuiteDatePicker(LocalDate.now().minusMonths(1));
         toPicker = new SuiteDatePicker(LocalDate.now());
@@ -71,7 +68,7 @@ public class DiaryScreenView implements ScreenView {
         queryField = new TextField();
         queryField.setPromptText("(x or y) and tag:z");
 
-        HBox filterBar = new HBox(12);
+        HBox filterBar = new HBox();
         filterBar.setAlignment(Pos.CENTER_LEFT);
         filterBar.getStyleClass().add("diary-viewer-filter-bar");
         filterBar.getChildren().addAll(
@@ -80,27 +77,18 @@ public class DiaryScreenView implements ScreenView {
                 queryField);
 
         // Ergebnisbereich
-        resultBox = new VBox(12);
-        resultBox.setPadding(new Insets(12, 0, 12, 0));
-
-        // Content-VBox (Karten)
-        VBox content = new VBox(12);
-        content.getStyleClass().add("diary-viewer-content");
-        content.setMaxWidth(contentWidth);
-        //content.setMinWidth(contentWidth);
-        content.getChildren().add(resultBox);
+        resultBox = new VBox();
+        resultBox.getStyleClass().add("diary-viewer-results");
 
         // ScrollPane
-        ScrollPane scrollPane = new ScrollPane(content);
+        ScrollPane scrollPane = new ScrollPane(resultBox);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(false);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.getStyleClass().add("diary-viewer-scroll");
-        scrollPane.setMaxWidth(contentWidth);
-        scrollPane.setMinWidth(contentWidth);
 
         // Äußerer Wrapper — zentriert alles
-        VBox root = new VBox(12);
+        VBox root = new VBox();
         root.setAlignment(Pos.TOP_CENTER);
         root.getStyleClass().add("diary-viewer-root");
         root.getChildren().addAll(filterBar, scrollPane);

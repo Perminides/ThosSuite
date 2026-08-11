@@ -14,7 +14,6 @@ import app.shared.model.BigComponentStyle;
 import app.shared.model.BorderParams;
 import app.shared.model.DashboardTileStyle;
 import app.shared.model.DialogStyle;
-import app.shared.model.DiaryStyle;
 import app.shared.model.MapImages;
 import app.shared.model.McMetrics;
 import app.shared.model.MovieStyle;
@@ -171,7 +170,19 @@ public abstract class SkinProperties {
 	protected Integer dashBoardTileBottomFontSize; // font * 2
 	protected Color dashBoardTileBottomColor; // menuBarBackground
 	
-	protected Integer diaryViewerContentWidth = 1200; // Hartcodiert. Für andere Auflösungen dann überschreiben.
+	/**
+	 * Breite der Kartenspalte im Tagebuch, in Prozent der {@code contentSize}.
+	 *
+	 * <p>Eine Obergrenze, kein Zwang: Die Spalte nimmt sich, was das Fenster hergibt, höchstens aber
+	 * diesen Anteil. Die Grenze ist typografisch gemeint — Tagebucheinträge sind Fließtext, und über
+	 * ein paar tausend Pixel Zeilenlänge liest sie niemand mehr.</p>
+	 */
+	protected Integer diaryViewerContentPercent = 63;
+
+	/** Breite der SWYT-Spalte im Film, in Prozent der {@code contentSize}. Anders als im Tagebuch
+	 * festgenagelt — die Spalte steht neben etwas anderem und trägt keinen Fließtext. */
+	protected Integer movieViewerSwytPercent = 20;
+
 	protected Integer popupMonitorMargin = 20; // Abstand eines Popups zum Bildschirmrand (Tagebuch wie Film)
 	
 	protected Integer moviePosterWidth = 154;
@@ -315,11 +326,6 @@ public abstract class SkinProperties {
 		return new DialogStyle(textColor);
 	}
 
-	/** Die Werte, die die Tagebuch-Oberfläche braucht. */
-	public DiaryStyle diaryStyle() {
-		return new DiaryStyle(diaryViewerContentWidth);
-	}
-
 	/**
 	 * Wie viel Abstand ein Popup zum Bildschirmrand hält. Ohne Schlüssel — der Wert ist für jede
 	 * Verwendung derselbe, der Baustein holt ihn sich also selbst (siehe {@code SuiteThumbnail}).
@@ -330,8 +336,9 @@ public abstract class SkinProperties {
 
 	/** Die Werte, die die Film-Oberfläche braucht. */
 	public MovieStyle movieStyle() {
-		return new MovieStyle(moviePosterWidth, font, contentSize.getWidth(), popupMonitorMargin);
+		return new MovieStyle(moviePosterWidth, font, popupMonitorMargin);
 	}
+
 
 	/** Die Maße einer Dashboard-Kachel. Höhe = oberer + unterer Teil. */
 	public DashboardTileStyle dashboardTileStyle() {

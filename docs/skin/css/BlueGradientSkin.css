@@ -162,17 +162,18 @@
 .diary-card-tags { -fx-fill: #000000; -fx-font-style: italic; }
 .diary-card-text { -fx-fill: #000000; }
 .diary-viewer-hint { -fx-fill: #8B0000; -fx-font-style: italic; }
-.diary-viewer-content { -fx-spacing: 20.0px; }
-.diary-viewer-scroll { -fx-padding: 0 10.0px 0 0; -fx-background-color: transparent; -fx-background: transparent; }
+.diary-viewer-results { -fx-spacing: 20.0px; -fx-padding: 20.0px 0px; }
+.diary-viewer-scroll { -fx-padding: 10.0px; -fx-background-color: transparent; -fx-background: transparent; -fx-max-width: 1203px; }
 .diary-viewer-scroll .viewport { -fx-background-color: transparent; }
-.diary-viewer-filter-bar { -fx-max-width: 1200px; -fx-min-width: 1200px; }
-.diary-viewer-root { -fx-padding: 20.0px 0px; }
+.diary-viewer-filter-bar { -fx-max-width: 1203px; -fx-spacing: 10.0px; }
+.diary-viewer-root { -fx-padding: 20.0px 0px; -fx-spacing: 10.0px; }
 .movie-viewer-root { -fx-padding: 20.0px; }
 .movie-viewer-content { -fx-spacing: 20.0px; }
-.movie-viewer-swyt { -fx-padding: 0; }
+.movie-viewer-swyt { -fx-padding: 0; -fx-spacing: 16.0px; -fx-min-width: 382px; -fx-pref-width: 382px; -fx-max-width: 382px; }
 .movie-viewer-swyt .label { -fx-fill: #000000; }
-.movie-viewer-scroll { -fx-background-color: transparent; -fx-background: transparent; }
+.movie-viewer-scroll { -fx-padding: 10.0px; -fx-background-color: transparent; -fx-background: transparent; }
 .movie-viewer-scroll .viewport { -fx-background-color: transparent; }
+.movie-viewer-results { -fx-spacing: 10.0px; }
 .movie-card-rating { -fx-font-weight: bold; -fx-alignment: center; -fx-font-size: 77px; -fx-padding: 0; }
 .movie-card-rating .text { -fx-fill: #000000; }
 .movie-card-header .text { -fx-fill: #000000; -fx-font-weight: bold; }
