@@ -57,7 +57,10 @@ VORGABE = {
     "mcResultTintPercent": "12",
     "shapeMapFederalStateBorderWidth": "2.8 — aus der Datei nicht setzbar",
     "dashBoardTileTopHeight": "250",
-    "dashBoardTileBottomHeight": "100", "diaryViewerContentWidth": "1200",
+    "dashBoardTileBottomHeight": "100",
+    "diaryViewerContentPercent": "63 — Prozent der contentSize, nur Obergrenze",
+    "movieViewerSwytPercent": "20 — Prozent der contentSize",
+    "contentSize": "1910 × 1000 — aus der Datei nicht setzbar",
     "moviePosterWidth": "154", "imageLabelBgColor": "vollständig durchsichtig",
     "chartRootPadding": '"50px 50px 50px 50px"',
 }

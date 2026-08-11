@@ -1096,6 +1096,8 @@ public abstract class Skin extends SkinProperties {
 	}
 	
 	private void addDiaryViewerStyles(CssBuilder css) {
+	    int spaltenBreite = (int) (contentSize.getWidth() * diaryViewerContentPercent / 100);
+
 	    css.start(".diary-card")
 	        .add("-fx-background-color", displayTextQuestionBgColor)
 	        .add("-fx-border-color", borderBigComponent.color())
@@ -1129,34 +1131,41 @@ public abstract class Skin extends SkinProperties {
 	        .add("-fx-font-style", "italic")
 	        .end();
 
-	    css.start(".diary-viewer-content")
+	    css.start(".diary-viewer-results")
 	    	.add("-fx-spacing", font.getSize() + "px")
+	    	.add("-fx-padding", font.getSize() + "px 0px")
 	    .end();
-	    
+
+	    // Rundum Luft: hält die Scrollbar von der Spaltenkante weg und die Karten von beiden Rändern
+	    // gleich weit. Dem Schatten hilft es nicht — der Innenabstand liegt außerhalb des Viewport-Clips.
 	    css.start(".diary-viewer-scroll")
-	    	.add("-fx-padding", "0 " + font.getSize() * 0.5 + "px 0 0")
+	    	.add("-fx-padding", font.getSize() * 0.5 + "px")
 	    	.add("-fx-background-color", "transparent")
 	    	.add("-fx-background", "transparent")
+	    	.add("-fx-max-width", spaltenBreite + "px")
 	    .end();
 
 	    css.start(".diary-viewer-scroll .viewport")
 	    	.add("-fx-background-color", "transparent")
 	    	.end();
-	    
+
+	    // Obergrenze ohne Untergrenze: Im schmalen Fenster schrumpft die Spalte mit, statt hinauszuragen.
 	    css.start(".diary-viewer-filter-bar")
-	    .add("-fx-max-width", diaryViewerContentWidth + "px")
-	    .add("-fx-min-width", diaryViewerContentWidth + "px")
+	    .add("-fx-max-width", spaltenBreite + "px")
+	    .add("-fx-spacing", font.getSize() * 0.5 + "px")
 	    .end();
 
-	css.start(".diary-viewer-root")
+	    css.start(".diary-viewer-root")
 	    .add("-fx-padding", font.getSize() + "px 0px")
+	    .add("-fx-spacing", font.getSize() * 0.5 + "px")
 	    .end();
 	}
 	
 	private void addMovieViewerStyles(CssBuilder css) {
-		 
+
 	    // === Gesamtlayout ===
 	    double padding = font.getSize();
+	    int swytBreite = (int) (contentSize.getWidth() * movieViewerSwytPercent / 100);
 	    css.start(".movie-viewer-root")
 	        .add("-fx-padding", padding + "px")
 	        .end();
@@ -1166,11 +1175,13 @@ public abstract class Skin extends SkinProperties {
 	        .end();
 	 
 	    // === SWYT-Bereich (links) ===
-	    // Die Breite wird prozentual über prefWidth/maxWidth in MovieViewerScreenView gesetzt?
-	    // Nein — wir nutzen CSS min/max-width nicht, weil die prozentuale Berechnung
-	    // zur Laufzeit in MovieViewerScreenView stattfindet. Hier nur Spacing und Padding.
+	    // Festgenagelt, anders als die Kartenspalte: eine Seitenspalte neben etwas anderem.
 	    css.start(".movie-viewer-swyt")
 	        .add("-fx-padding", "0")
+	        .add("-fx-spacing", padding * 0.8 + "px")
+	        .add("-fx-min-width", swytBreite + "px")
+	        .add("-fx-pref-width", swytBreite + "px")
+	        .add("-fx-max-width", swytBreite + "px")
 	        .end();
 	 
 	    css.start(".movie-viewer-swyt .label")
@@ -1179,6 +1190,7 @@ public abstract class Skin extends SkinProperties {
 	 
 	    // === ScrollPane ===
 	    css.start(".movie-viewer-scroll")
+	        .add("-fx-padding", padding * 0.5 + "px")
 	        .add("-fx-background-color", "transparent")
 	        .add("-fx-background", "transparent")
 	        .end();
@@ -1186,7 +1198,11 @@ public abstract class Skin extends SkinProperties {
 	    css.start(".movie-viewer-scroll .viewport")
 	        .add("-fx-background-color", "transparent")
 	        .end();
-	 
+
+	    css.start(".movie-viewer-results")
+	        .add("-fx-spacing", font.getSize() * 0.5 + "px")
+	        .end();
+
 	    // === Rating-Zahl ===
 	    // Schriftgröße wird dynamisch im createCard gesetzt (50% der Posterbreite).
 	    // min-width sorgt dafür, dass einstellige und zweistellige Zahlen gleich breit sind.
