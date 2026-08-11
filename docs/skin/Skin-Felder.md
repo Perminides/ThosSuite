@@ -42,7 +42,7 @@ färbt**, schlägt nicht hier nach, sondern in der Tabelle daneben.
 - **Pflicht** — kein Vorgabewert. Fehlt das Feld, knallt es beim Erzeugen des Stylesheets
   (`CssBuilder.add` wirft bei `null`).
 - **ein Wert** (z. B. `2`) — der Java-Vorgabewert am Feld selbst.
-- **← Formel** — wird im Vorgaben-Durchlauf am Anfang von `styleScene` aus anderen Feldern
+- **← Formel** — wird im Vorgaben-Durchlauf am Anfang von `buildCss` aus anderen Feldern
   abgeleitet, aber nur wenn das Feld `null` ist. Steht ein Wert in der Datei, gewinnt der.
 - **entfällt** — bleibt das Feld leer, wird die betreffende CSS-Regel gar nicht erst geschrieben.
   Genau das hält bestehende Skins unberührt, wenn ein neues Feld dazukommt (so kamen
@@ -68,12 +68,10 @@ Normalfall.
 
 ## 2. Die Formate in der properties-Datei
 
-**Farbe** — sechsstelliges Hex mit Doppelkreuz (`#c9cfd6`).
-
-Es gibt zwei weitere Schreibweisen, die man besser meidet: achtstelliges Hex mit Alpha und
-`r,g,b,alpha`. Beide funktionieren heute **nur für Schwarz**, weil der Parser die Wertebereiche
-verwechselt; bei jeder anderen halbdurchsichtigen Farbe fliegt eine Exception. Wer Transparenz
-braucht, schreibt sie in einen Feldtyp, der roher CSS-Text ist (siehe `componentShadow`).
+**Farbe** — Hex mit Doppelkreuz: sechsstellig (`#c9cfd6`) oder achtstellig mit Alpha (`#0000000F`).
+Andere Schreibweisen gibt es nicht. Geparst wird über `Color.web`, das beide kennt und bei allem
+anderen eine Ausnahme wirft. Das frühere `r,g,b,alpha` ist entfallen — es konnte nur Schwarz, weil
+der Parser dort die Wertebereiche verwechselte.
 
 **Schrift** — `Familie,Stil,Größe`, Stil nach Swing-Logik: `0` normal, `1` fett, `2` kursiv,
 `3` beides.
@@ -187,7 +185,7 @@ die zweite Stufe für alle Anki-Decks systematisch ins Leere — dort muss jedes
 eigenen Namen stehen.
 
 **Hannover ist der Sonderfall:** seine acht Rechtecke fallen auf die der Welt-Karte zurück, und zwar
-nicht über die Staffelung, sondern über den Vorgaben-Durchlauf in `styleScene`.
+nicht über die Staffelung, sondern über den Vorgaben-Durchlauf in `buildCss`.
 
 **Wallpaper — drei Stufen:** `<mapName>`, dann `<kategorie>`, dann `emptyWallpaperName`.
 

@@ -437,8 +437,8 @@ zwei Karten samt Innenleben.
 
 - **`SkinProperties`** hält die Felder, lädt sie aus der properties-Datei und gibt sie über
   eine bewusst geschnittene Fläche heraus.
-- **`Skin extends SkinProperties`** erzeugt das Stylesheet. Genau **eine** öffentliche Methode:
-  `styleScene(Scene)`.
+- **`Skin extends SkinProperties`** erzeugt das Stylesheet. Nach außen zwei Methoden:
+  `styleScene(Scene)` für die Anwendung, `buildCss()` für alles, was das Stylesheet nur lesen will.
 
 **Nach außen (in shared) gehen zweckgeschnittene Records, nie Property-Namen.** `dialogStyle()`, `mcMetrics()`,
 `BigComponentStyle`, `MapImages` — niemand außerhalb von `shared.skin` fragt je nach

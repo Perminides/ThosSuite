@@ -39,8 +39,8 @@ public record BorderParams (
 	  * auch wenn sie von der globalen abweicht: ein Skin mit unterschiedlich gefärbten Rändern bleibt
 	  * damit möglich.</p>
 	  *
-	  * <p>Aufgelöst wird das <b>nicht</b> beim Parsen, sondern erst im Defaults-Durchlauf von
-	  * {@code styleScene}. Der Loader läuft die Felder in Deklarationsreihenfolge ab und
+	  * <p>Aufgelöst wird das <b>nicht</b> beim Parsen, sondern erst im Vorgaben-Durchlauf von
+	  * {@code buildCss}. Der Loader läuft die Felder in Deklarationsreihenfolge ab und
 	  * {@code borderColor} steht dort <em>nach</em> den BorderParams; bei einem abgeleiteten Skin
 	  * kommt sie womöglich sogar erst aus der Eltern-Datei. Beim Parsen wäre sie also noch nicht da.</p>
 	  */
