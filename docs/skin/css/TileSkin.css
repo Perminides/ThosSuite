@@ -2,20 +2,20 @@
 .text { -fx-fill: #1C2430; }
 .button, .date-picker .arrow-button, .spinner .increment-arrow-button, .spinner .decrement-arrow-button { -fx-border-radius: 14px; -fx-background-radius: 14px; -fx-background-insets: 0px; -fx-border-width: 0px; -fx-border-color: #00000000; -fx-background-color: #FFFFFF; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.22), 16, 0, 0, 6); }
 .button .text, .date-picker .arrow-button .text { -fx-fill: #1C2430; }
-.button:hover, .date-picker .arrow-button:hover { -fx-background-color: #ECEEF1; }
-.button:pressed, .date-picker .arrow-button:pressed { -fx-background-color: #D8DADD; }
+.button:hover, .date-picker .arrow-button:hover { -fx-background-color: #FCD69F; }
+.button:pressed, .date-picker .arrow-button:pressed { -fx-background-color: #E8C592; }
 .box { -fx-background-radius: 14px; -fx-background-insets: 0; -fx-border-radius: 14px; -fx-background-insets: 0px; -fx-border-width: 0px; -fx-border-color: #00000000; -fx-background-color: #FFFFFF; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.22), 16, 0, 0, 6); }
 .box .text { -fx-fill: #1C2430; }
-.box:hover { -fx-background-color: #ECEEF1; }
-.box:pressed { -fx-background-color: #D8DADD; }
+.box:hover { -fx-background-color: #FCD69F; }
+.box:pressed { -fx-background-color: #E8C592; }
 .check-box:selected .mark { -fx-background-color: #1C2430; }
 .combo-box-base { -fx-background-color: #FFFFFF; -fx-background-radius: 14px; -fx-border-radius: 14px; -fx-background-insets: 0px; -fx-border-width: 0px; -fx-border-color: #00000000; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.22), 16, 0, 0, 6); }
 .combo-box-base .text { -fx-fill: #1C2430; }
 .combo-box-base .arrow { -fx-background-color: #1C2430; }
 .combo-box-popup .list-view { -fx-background-color: #FFFFFF; }
 .combo-box-popup .list-view .list-cell { -fx-background-color: 'transparent'; }
-.combo-box-popup .list-view .list-cell:hover { -fx-background-color: #ECEEF1; }
-.combo-box-popup .list-view .list-cell:filled:selected { -fx-background-color: #ECEEF1; }
+.combo-box-popup .list-view .list-cell:hover { -fx-background-color: #FCD69F; }
+.combo-box-popup .list-view .list-cell:filled:selected { -fx-background-color: #FCD69F; }
 .dialog-pane { -fx-background-color: #F2F3F5; }
 .my-dialog-title { -fx-padding: 6.8999999999999995px 0 6.8999999999999995px 0; }
 .dialog-pane .header-bar { -fx-border-color: #00000000; -fx-border-width: 0 0 0 0; -fx-background-color: #FFFFFF; }
@@ -45,13 +45,13 @@
 .my-header-leading { -fx-padding: 0 0 0 11.5px; }
 .date-picker { -fx-background-color: transparent; -fx-border-color: transparent; -fx-background-insets: 0; -fx-padding: 0; }
 .date-picker .arrow-button { -fx-background-color: #FFFFFF; }
-.date-picker .arrow-button:hover { -fx-background-color: #ECEEF1; }
+.date-picker .arrow-button:hover { -fx-background-color: #FCD69F; }
 .date-picker .arrow-button .arrow { -fx-background-color: #1C2430; }
 .date-picker-popup { -fx-background-color: #F2F3F5; -fx-border-color: #00000000; -fx-border-width: 0px; }
 .date-picker-popup .month-year-pane { -fx-background-color: #FFFFFF; }
 .date-picker-popup .month-year-pane .label .text { -fx-fill: #1C2430; -fx-font-weight: bold; }
 .date-picker-popup .spinner .button { -fx-background-color: #FFFFFF; }
-.date-picker-popup .spinner .button:hover { -fx-background-color: #ECEEF1; }
+.date-picker-popup .spinner .button:hover { -fx-background-color: #FCD69F; }
 .date-picker-popup .spinner .button .left-arrow { -fx-background-color: #1C2430; }
 .date-picker-popup .spinner .button .right-arrow { -fx-background-color: #1C2430; }
 .date-picker-popup .day-name-cell { -fx-background-color: #F2F3F5; }
@@ -66,7 +66,7 @@
 .spinner .text-field:focused { -fx-background-insets: 0; }
 .scroll-bar .track { -fx-background-color: #D9DADB; }
 .scroll-bar .thumb { -fx-background-color: #FFFFFF; }
-.scroll-bar .thumb:hover { -fx-background-color: #ECEEF1; }
+.scroll-bar .thumb:hover { -fx-background-color: #FCD69F; }
 .scroll-bar .increment-button, .scroll-bar .decrement-button { -fx-background-color: #FFFFFF; }
 .scroll-bar .increment-arrow, .scroll-bar .decrement-arrow { -fx-background-color: #1C2430; }
 .tooltip { -fx-border-color: #00000000; -fx-border-width: 0px; -fx-border-radius: 14px; -fx-background-insets: 0px; -fx-background-radius: 14px; -fx-background-color: #E7E9EC; -fx-padding: 11.5px; -fx-font-size: 23.0px; }
@@ -79,7 +79,7 @@
 .my-info-label.clock Text { -fx-font-family: 'Aptos'; -fx-font-size: 60.0px; }
 .my-info-label.clock:paused Text { -fx-fill: #8D9197; }
 .my-icon-button { -fx-padding: 0; -fx-background-color: #FFFFFF; -fx-border-color: #00000000; -fx-border-width: 0px; -fx-border-radius: 14px; -fx-background-insets: 0px; -fx-background-radius: 14px; }
-.my-icon-button:hover { -fx-background-color: #ECEEF1; }
+.my-icon-button:hover { -fx-background-color: #FCD69F; }
 .my-icon-button:disabled { -fx-opacity: 1.0; -fx-background-color: #E7E9EC; }
 .my-image-map-pane { -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.22), 16, 0, 0, 6); }
 .my-image-map-pane #borderOverlay { -fx-border-color: #00000000; -fx-border-width: 0px; -fx-border-radius: 14px; -fx-background-insets: 0px; }
@@ -98,8 +98,8 @@
 .my-image-border-layer { -fx-stroke: #00000000; -fx-stroke-width: 0px; -fx-stroke-type: inside; }
 .my-mc-button { -fx-padding: 11px 20px 11px 20px; }
 .my-mc-button:active { -fx-background-color: #FFFFFF; -fx-border-color: #F2951F; -fx-border-width: 2px; -fx-background-insets: 2px; }
-.my-mc-button:active:hover { -fx-background-color: #ECEEF1; }
-.my-mc-button:active:pressed { -fx-background-color: #D8DADD; }
+.my-mc-button:active:hover { -fx-background-color: #FCD69F; }
+.my-mc-button:active:pressed { -fx-background-color: #E8C592; }
 .my-mc-button:inactive { -fx-background-color: #E7E9EC; }
 .my-mc-button:correct { -fx-background-color: #F1F6ED; -fx-border-color: #87B865; -fx-border-width: 2px; -fx-background-insets: 2px; }
 .my-mc-button:incorrect { -fx-background-color: #FBEBEC; -fx-border-color: #E05A5E; -fx-border-width: 2px; -fx-background-insets: 2px; }
@@ -108,7 +108,7 @@
 .my-answer-slot:active { -fx-background-color: #FEFEFE; -fx-border-color: #00000000; -fx-border-width: 0px; -fx-background-insets: 0px; }
 .my-map-shape { -fx-stroke: #333333; -fx-stroke-width: 1.8px; }
 .my-map-shape:active { -fx-fill: #FFFFFF; }
-.my-map-shape:active:hover { -fx-fill: #ECEEF1; -fx-effect: innershadow(gaussian, rgba(0,0,0,0.5), 15, 0, 0, 0); }
+.my-map-shape:active:hover { -fx-fill: #FCD69F; -fx-effect: innershadow(gaussian, rgba(0,0,0,0.5), 15, 0, 0, 0); }
 .my-map-shape:correct { -fx-fill: #87B865; }
 .my-map-shape:incorrect { -fx-fill: #E05A5E; }
 .my-map-shape:marked { -fx-fill: #F5B95C; }
@@ -158,24 +158,21 @@
 .suggestion-box :highlighted { -fx-background-color: #ECEEF1; }
 .tag-chip-remove { -fx-border-width: 0px; -fx-border-color: #00000000; -fx-background-color: #F2F3F5; -fx-padding: 0 0; }
 .tag-chip-remove .text { -fx-fill: #1C2430; }
+.suite-card-list { -fx-padding: 11.5px; -fx-background-color: transparent; -fx-background: transparent; }
+.suite-card-list .viewport { -fx-background-color: transparent; }
+.suite-card-list .cards { -fx-spacing: 23.0px; -fx-padding: 23.0px 16px; }
 .diary-card { -fx-background-color: #FFFFFF; -fx-border-color: #00000000; -fx-border-width: 0px; -fx-border-radius: 14px; -fx-background-radius: 14px; -fx-background-insets: 0px; -fx-padding: 23.0px; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.22), 16, 0, 0, 6); }
 .diary-card:hover { -fx-background-color: #FFFFFF; }
 .diary-card-date { -fx-font-weight: bold; -fx-fill: #1C2430; }
 .diary-card-tags { -fx-fill: #1C2430; -fx-font-style: italic; }
 .diary-card-text { -fx-fill: #1C2430; }
-.diary-viewer-hint { -fx-fill: #B3453A; -fx-font-style: italic; }
-.diary-viewer-results { -fx-spacing: 23.0px; -fx-padding: 23.0px 16px; }
-.diary-viewer-scroll { -fx-padding: 11.5px; -fx-background-color: transparent; -fx-background: transparent; -fx-max-width: 1203px; }
-.diary-viewer-scroll .viewport { -fx-background-color: transparent; }
-.diary-viewer-filter-bar { -fx-max-width: 1203px; -fx-spacing: 11.5px; -fx-padding: 0px 0px 0px 27.5px; }
+.diary-viewer-hint { -fx-fill: #B3453A; -fx-font-style: italic; -fx-padding: 0px 0px 0px 27.5px; }
+.diary-viewer-filter-bar { -fx-spacing: 11.5px; -fx-padding: 0px 0px 0px 27.5px; }
 .diary-viewer-root { -fx-padding: 23.0px 0px; -fx-spacing: 11.5px; }
 .movie-viewer-root { -fx-padding: 23.0px; }
 .movie-viewer-content { -fx-spacing: 23.0px; }
-.movie-viewer-swyt { -fx-padding: 0; -fx-spacing: 18.400000000000002px; -fx-min-width: 382px; -fx-pref-width: 382px; -fx-max-width: 382px; }
+.movie-viewer-swyt { -fx-padding: 0; -fx-spacing: 18.400000000000002px; }
 .movie-viewer-swyt .label { -fx-fill: #1C2430; }
-.movie-viewer-scroll { -fx-padding: 11.5px; -fx-background-color: transparent; -fx-background: transparent; }
-.movie-viewer-scroll .viewport { -fx-background-color: transparent; }
-.movie-viewer-results { -fx-spacing: 22.0px; -fx-padding: 10.0px 16px 22.0px 16px; }
 .movie-card-rating { -fx-font-weight: bold; -fx-alignment: center; -fx-font-size: 77px; -fx-padding: 0; }
 .movie-card-rating .text { -fx-fill: #1C2430; }
 .movie-card-header .text { -fx-fill: #1C2430; -fx-font-weight: bold; }

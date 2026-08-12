@@ -1,22 +1,25 @@
 package app.shared.ui;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import app.shared.model.CardData;
 import app.shared.model.MovieStyle;
 import app.shared.model.ScreenView;
 import app.shared.skin.SkinService;
-import app.shared.ui.components.SuiteBackground;
 import app.shared.ui.components.MovieCard;
+import app.shared.ui.components.SuiteBackground;
+import app.shared.ui.components.SuiteCardList;
 import app.shared.ui.components.SuiteSuggestionTextField;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class MovieViewerScreenView implements ScreenView {
+
+    private static final double SWYT_ANTEIL = 0.20; // Breite der Suchspalte, Anteil an der Contentbreite. Der Screen entscheidet seine Aufteilung selbst; ein Skin-Feld daraus wird erst, wenn ein Skin einen anderen Wert braucht.
 
     public interface SelectionListener {
         void onDirectorSelected(String name);
@@ -38,7 +41,7 @@ public class MovieViewerScreenView implements ScreenView {
     private SuiteSuggestionTextField directorField;
     private SuiteSuggestionTextField actorField;
     private SuiteSuggestionTextField titleField;
-    private VBox resultBox;
+    private SuiteCardList kartenListe;
 
     /** Was gerade in den Kacheln steht — gemerkt, damit ein Neuaufbau die Anzeige wiederherstellen kann. */
     private List<CardData> shownCards = List.of();
@@ -55,6 +58,7 @@ public class MovieViewerScreenView implements ScreenView {
     public Pane getPane() {
         if (view == null) {
             view = new VBox();
+            view.getStyleClass().add("movie-viewer-root"); // Hier und nicht in build(): das läuft bei jedem Skinwechsel erneut
             VBox.setVgrow(view, Priority.ALWAYS);
             build();
         }
@@ -104,35 +108,25 @@ public class MovieViewerScreenView implements ScreenView {
         Label titLabel = new Label("Title:");
 
         // SWYT-Felder mit Labels in einer VBox
+        double swytBreite = SkinService.get().getContentSize().getWidth() * SWYT_ANTEIL;
         VBox swytPane = new VBox();
         swytPane.getStyleClass().add("movie-viewer-swyt");
+        swytPane.setMinWidth(swytBreite);
+        swytPane.setPrefWidth(swytBreite);
+        swytPane.setMaxWidth(swytBreite);
         swytPane.getChildren().addAll(
                 dirLabel, directorField,
                 actLabel, actorField,
                 titLabel, titleField);
 
-        // Ergebnisbereich
-        resultBox = new VBox();
-        resultBox.getStyleClass().add("movie-viewer-results");
-
-        // ScrollPane für Ergebnisse
-        ScrollPane scrollPane = new ScrollPane(resultBox);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(false);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.getStyleClass().add("movie-viewer-scroll");
+        // Ergebnisbereich — ohne Deckelung, er nimmt den Platz neben der Suchspalte
+        kartenListe = new SuiteCardList();
 
         // Hauptlayout: SWYT-Spalte links, Kacheln rechts — Breiten und Abstände kommen aus dem Skin.
         HBox contentBox = new HBox();
         contentBox.getStyleClass().add("movie-viewer-content");
-        HBox.setHgrow(scrollPane, Priority.ALWAYS);
-        contentBox.getChildren().addAll(swytPane, scrollPane);
-
-        // Äußerer Wrapper mit Padding
-        VBox root = new VBox();
-        root.getStyleClass().add("movie-viewer-root");
-        root.getChildren().add(contentBox);
-        VBox.setVgrow(contentBox, Priority.ALWAYS);
+        HBox.setHgrow(kartenListe, Priority.ALWAYS);
+        contentBox.getChildren().addAll(swytPane, kartenListe);
 
         directorField.setAllItems(directorNames);
         actorField.setAllItems(actorNames);
@@ -154,17 +148,17 @@ public class MovieViewerScreenView implements ScreenView {
             selectionListener.onTitleSelected(name);
         });
 
-        VBox.setVgrow(root, Priority.ALWAYS);
-        view.getChildren().add(root);
+        view.getChildren().add(contentBox);
+        VBox.setVgrow(contentBox, Priority.ALWAYS);
     }
 
     public void showCards(List<CardData> cards) {
         shownCards = cards;
-        resultBox.getChildren().clear();
         MovieStyle style = SkinService.get().movieStyle();
+        List<MovieCard> inhalt = new ArrayList<>();
         for (CardData card : cards)
-            resultBox.getChildren().add(
-                    new MovieCard(card, style, this::onDirectorClicked, this::onActorClicked));
+            inhalt.add(new MovieCard(card, style, this::onDirectorClicked, this::onActorClicked));
+        kartenListe.setCards(inhalt);
     }
 
     private void onDirectorClicked(String directorName) {

@@ -140,8 +140,6 @@ public abstract class SkinProperties {
 	 */
 	protected String componentShadow;
 	
-	protected Integer diaryViewerContentPercent = 63; // Breite der Kartenspalte im Tagebuch, in Prozent der contentSize. Obergrenze, kein Zwang: Die Spalte nimmt sich, was das Fenster hergibt, höchstens aber diesen Anteil. Typografisch gemeint, Tagebucheinträge sind Fließtext.
-	protected Integer movieViewerSwytPercent = 20; // Breite der SWYT-Spalte im Film, in Prozent der contentSize. Anders als im Tagebuch festgenagelt: steht neben etwas anderem und trägt keinen Fließtext.
 
 	protected Integer popupMonitorMargin = 20; // Abstand eines Popups zum Bildschirmrand (Tagebuch wie Film)
 	

@@ -156,24 +156,21 @@
 .suggestion-box :highlighted { -fx-background-color: #EE6C5A; }
 .tag-chip-remove { -fx-border-width: 0px; -fx-border-color: #00000000; -fx-background-color: #2E3A4A; -fx-padding: 0 0; }
 .tag-chip-remove .text { -fx-fill: #C8D5E5; }
+.suite-card-list { -fx-padding: 10.0px; -fx-background-color: transparent; -fx-background: transparent; }
+.suite-card-list .viewport { -fx-background-color: transparent; }
+.suite-card-list .cards { -fx-spacing: 20.0px; -fx-padding: 20.0px 0px; }
 .diary-card { -fx-background-color: #BB5547; -fx-border-color: #00000000; -fx-border-width: 0px; -fx-border-radius: 0px; -fx-background-radius: 0px; -fx-background-insets: 0px; -fx-padding: 20.0px; -fx-cursor: hand; }
 .diary-card:hover { -fx-background-color: #BB5547; }
 .diary-card-date { -fx-font-weight: bold; -fx-fill: #C8D5E5; }
 .diary-card-tags { -fx-fill: #C8D5E5; -fx-font-style: italic; }
 .diary-card-text { -fx-fill: #C8D5E5; }
-.diary-viewer-hint { -fx-fill: #D69991; -fx-font-style: italic; }
-.diary-viewer-results { -fx-spacing: 20.0px; -fx-padding: 20.0px 0px; }
-.diary-viewer-scroll { -fx-padding: 10.0px; -fx-background-color: transparent; -fx-background: transparent; -fx-max-width: 1203px; }
-.diary-viewer-scroll .viewport { -fx-background-color: transparent; }
-.diary-viewer-filter-bar { -fx-max-width: 1203px; -fx-spacing: 10.0px; -fx-padding: 0px 0px 0px 10.0px; }
+.diary-viewer-hint { -fx-fill: #D69991; -fx-font-style: italic; -fx-padding: 0px 0px 0px 10.0px; }
+.diary-viewer-filter-bar { -fx-spacing: 10.0px; -fx-padding: 0px 0px 0px 10.0px; }
 .diary-viewer-root { -fx-padding: 20.0px 0px; -fx-spacing: 10.0px; }
 .movie-viewer-root { -fx-padding: 20.0px; }
 .movie-viewer-content { -fx-spacing: 20.0px; }
-.movie-viewer-swyt { -fx-padding: 0; -fx-spacing: 16.0px; -fx-min-width: 382px; -fx-pref-width: 382px; -fx-max-width: 382px; }
+.movie-viewer-swyt { -fx-padding: 0; -fx-spacing: 16.0px; }
 .movie-viewer-swyt .label { -fx-fill: #C8D5E5; }
-.movie-viewer-scroll { -fx-padding: 10.0px; -fx-background-color: transparent; -fx-background: transparent; }
-.movie-viewer-scroll .viewport { -fx-background-color: transparent; }
-.movie-viewer-results { -fx-spacing: 10.0px; }
 .movie-card-rating { -fx-font-weight: bold; -fx-alignment: center; -fx-font-size: 77px; -fx-padding: 0; }
 .movie-card-rating .text { -fx-fill: #C8D5E5; }
 .movie-card-header .text { -fx-fill: #C8D5E5; -fx-font-weight: bold; }
