@@ -1095,6 +1095,12 @@ public abstract class Skin extends SkinProperties {
 	    
 	}
 	
+	private String innenabstand(double oben, int rechts, double unten, int links) { // Kurzform wo möglich: ohne Schatten steht dort dasselbe wie zuvor, der Vergleich bleibt aussagekräftig.
+		if (oben == unten && rechts == links)
+			return oben + "px " + rechts + "px";
+		return oben + "px " + rechts + "px " + unten + "px " + links + "px";
+	}
+
 	private void addDiaryViewerStyles(CssBuilder css) {
 	    int spaltenBreite = (int) (contentSize.getWidth() * diaryViewerContentPercent / 100);
 
@@ -1131,15 +1137,18 @@ public abstract class Skin extends SkinProperties {
 	        .add("-fx-font-style", "italic")
 	        .end();
 
+	    ShadowSpace schatten = ShadowSpace.of(componentShadow); // Der Schatten der Karten wird vom Viewport der ScrollPane abgeschnitten, wenn ihm hier kein Platz eingeräumt wird. Untergrenze, kein gesetzter Wert: der größere von beiden gewinnt.
 	    css.start(".diary-viewer-results")
-	    	.add("-fx-spacing", font.getSize() + "px")
-	    	.add("-fx-padding", font.getSize() + "px 0px")
+	    	.add("-fx-spacing", Math.max(font.getSize(), schatten.bottom()) + "px")
+	    	.add("-fx-padding", innenabstand(Math.max(font.getSize(), schatten.top()),
+	    			schatten.right(), Math.max(font.getSize(), schatten.bottom()), schatten.left()))
 	    .end();
 
 	    // Rundum Luft: hält die Scrollbar von der Spaltenkante weg und die Karten von beiden Rändern
 	    // gleich weit. Dem Schatten hilft es nicht — der Innenabstand liegt außerhalb des Viewport-Clips.
+	    double scrollPolster = font.getSize() * 0.5;
 	    css.start(".diary-viewer-scroll")
-	    	.add("-fx-padding", font.getSize() * 0.5 + "px")
+	    	.add("-fx-padding", scrollPolster + "px")
 	    	.add("-fx-background-color", "transparent")
 	    	.add("-fx-background", "transparent")
 	    	.add("-fx-max-width", spaltenBreite + "px")
@@ -1152,7 +1161,8 @@ public abstract class Skin extends SkinProperties {
 	    // Obergrenze ohne Untergrenze: Im schmalen Fenster schrumpft die Spalte mit, statt hinauszuragen.
 	    css.start(".diary-viewer-filter-bar")
 	    .add("-fx-max-width", spaltenBreite + "px")
-	    .add("-fx-spacing", font.getSize() * 0.5 + "px")
+	    .add("-fx-spacing", scrollPolster + "px")
+	    .add("-fx-padding", "0px 0px 0px " + (scrollPolster + schatten.left()) + "px") // Links auf die Kartenkante: Polster der ScrollPane plus Schattenplatz, gerechnet statt geschrieben. Rechts null, weil die Scrollbar am äußeren Spaltenrand sitzt und das Polster der ScrollPane sie nicht einrückt.
 	    .end();
 
 	    css.start(".diary-viewer-root")
@@ -1199,8 +1209,13 @@ public abstract class Skin extends SkinProperties {
 	        .add("-fx-background-color", "transparent")
 	        .end();
 
+	    ShadowSpace schatten = ShadowSpace.of(componentShadow); // Siehe addDiaryViewerStyles — dieselbe Lage, dieselbe Untergrenze.
+	    String schattenPolster = schatten.vorhanden() // Ohne Schatten entsteht die Zeile gar nicht erst, damit ein Skin ohne ihn dasselbe Stylesheet bekommt wie zuvor.
+	    		? innenabstand(schatten.top(), schatten.right(), schatten.bottom(), schatten.left())
+	    		: null;
 	    css.start(".movie-viewer-results")
-	        .add("-fx-spacing", font.getSize() * 0.5 + "px")
+	        .add("-fx-spacing", Math.max(padding * 0.5, schatten.bottom()) + "px")
+	        .addIfSet("-fx-padding", schattenPolster)
 	        .end();
 
 	    // === Rating-Zahl ===
@@ -1303,9 +1318,20 @@ public abstract class Skin extends SkinProperties {
 	     * Zeile entfällt und das Stylesheet sieht aus wie vor der Einführung des Schattens.</p>
 	     */
 	    public CssBuilder effect(String shadow) {
-	        if (shadow == null)
+	        return addIfSet("-fx-effect", shadow);
+	    }
+
+	    /**
+	     * Wie {@code add}, nur dass {@code null} die Zeile entfallen lässt statt zu knallen.
+	     *
+	     * <p>Für Properties, deren Fehlen eine Aussage ist und kein Versehen — ein Skin ohne Schatten
+	     * braucht auch keinen Platz für einen. {@code add} bleibt streng, damit ein vergessenes
+	     * Pflichtfeld weiterhin auffliegt.</p>
+	     */
+	    public CssBuilder addIfSet(String property, String value) {
+	        if (value == null)
 	            return this;
-	        return add("-fx-effect", shadow);
+	        return add(property, value);
 	    }
 
 	    /**

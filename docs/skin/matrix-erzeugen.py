@@ -159,7 +159,7 @@ def regeln_lesen(zeilen):
     """Jede erzeugte CSS-Regel als (Methode, Selektor, Property, Java-Ausdruck)."""
     methode_re = re.compile(r"private\s+void\s+(add\w+Styles)\s*\(")
     start_re = re.compile(r"\.start\(\s*(.+?)\s*\)\s*$")
-    add_re = re.compile(r'\.add\(\s*"(-fx-[\w-]+)"\s*,\s*(.+?)\s*\)\s*$')
+    add_re = re.compile(r'\.add(?:IfSet)?\(\s*"(-fx-[\w-]+)"\s*,\s*(.+?)\s*\)\s*$')
     effect_re = re.compile(r"\.effect\(\s*(.+?)\s*\)\s*$")
     aktiv_re = re.compile(r"\.ring\(\s*(.+?)\s*\)\s*$")
     inaktiv_re = re.compile(r"\.resetRing\(\s*(.+?)\s*\)\s*$")
