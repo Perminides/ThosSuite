@@ -169,6 +169,7 @@ public abstract class Skin extends SkinProperties {
 	    addDashboardStyles(css);
 	    addChartStyles(css);
 	    addSuggestionBoxStyles(css);
+	    addCardListStyles(css);
 	    addDiaryViewerStyles(css);
 	    addMovieViewerStyles(css);
 	    
@@ -1102,7 +1103,6 @@ public abstract class Skin extends SkinProperties {
 	}
 
 	private void addDiaryViewerStyles(CssBuilder css) {
-	    int spaltenBreite = (int) (contentSize.getWidth() * diaryViewerContentPercent / 100);
 
 	    css.start(".diary-card")
 	        .add("-fx-background-color", displayTextQuestionBgColor)
@@ -1132,37 +1132,19 @@ public abstract class Skin extends SkinProperties {
 	        .add("-fx-fill", textColor)
 	        .end();
 
+	    ShadowSpace schatten = ShadowSpace.of(componentShadow);
+	    double scrollPolster = font.getSize() * 0.5; // Muss dem Polster von .suite-card-list entsprechen, sonst stehen Filterleiste und Hinweis nicht mehr über der Kartenkante
+	    String spaltenEinzug = "0px 0px 0px " + (scrollPolster + schatten.left()) + "px"; // Links auf die Kartenkante: Polster der Liste plus Schattenplatz. Rechts null, weil die Scrollbar am äußeren Spaltenrand sitzt und das Polster sie nicht einrückt.
+
 	    css.start(".diary-viewer-hint")
 	        .add("-fx-fill", incorrectTextColor)
 	        .add("-fx-font-style", "italic")
+	        .add("-fx-padding", spaltenEinzug)
 	        .end();
 
-	    ShadowSpace schatten = ShadowSpace.of(componentShadow); // Der Schatten der Karten wird vom Viewport der ScrollPane abgeschnitten, wenn ihm hier kein Platz eingeräumt wird. Untergrenze, kein gesetzter Wert: der größere von beiden gewinnt.
-	    css.start(".diary-viewer-results")
-	    	.add("-fx-spacing", Math.max(font.getSize(), schatten.bottom()) + "px")
-	    	.add("-fx-padding", innenabstand(Math.max(font.getSize(), schatten.top()),
-	    			schatten.right(), Math.max(font.getSize(), schatten.bottom()), schatten.left()))
-	    .end();
-
-	    // Rundum Luft: hält die Scrollbar von der Spaltenkante weg und die Karten von beiden Rändern
-	    // gleich weit. Dem Schatten hilft es nicht — der Innenabstand liegt außerhalb des Viewport-Clips.
-	    double scrollPolster = font.getSize() * 0.5;
-	    css.start(".diary-viewer-scroll")
-	    	.add("-fx-padding", scrollPolster + "px")
-	    	.add("-fx-background-color", "transparent")
-	    	.add("-fx-background", "transparent")
-	    	.add("-fx-max-width", spaltenBreite + "px")
-	    .end();
-
-	    css.start(".diary-viewer-scroll .viewport")
-	    	.add("-fx-background-color", "transparent")
-	    	.end();
-
-	    // Obergrenze ohne Untergrenze: Im schmalen Fenster schrumpft die Spalte mit, statt hinauszuragen.
 	    css.start(".diary-viewer-filter-bar")
-	    .add("-fx-max-width", spaltenBreite + "px")
 	    .add("-fx-spacing", scrollPolster + "px")
-	    .add("-fx-padding", "0px 0px 0px " + (scrollPolster + schatten.left()) + "px") // Links auf die Kartenkante: Polster der ScrollPane plus Schattenplatz, gerechnet statt geschrieben. Rechts null, weil die Scrollbar am äußeren Spaltenrand sitzt und das Polster der ScrollPane sie nicht einrückt.
+	    .add("-fx-padding", spaltenEinzug)
 	    .end();
 
 	    css.start(".diary-viewer-root")
@@ -1171,11 +1153,37 @@ public abstract class Skin extends SkinProperties {
 	    .end();
 	}
 	
+	/**
+	 * Die Trefferliste, wie Tagebuch und Film sie gemeinsam benutzen ({@code SuiteCardList}).
+	 *
+	 * <p>Der Innenabstand der Karten ist keine Kosmetik: Der Viewport einer ScrollPane clippt hart,
+	 * und ohne diesen Platz schneidet er den Schatten der Karten an den Seiten ab. Gerechnet wird er
+	 * als <em>Untergrenze</em> — hat der Skin keinen Schatten, bleibt es beim gewöhnlichen Abstand.</p>
+	 */
+	private void addCardListStyles(CssBuilder css) {
+	    ShadowSpace schatten = ShadowSpace.of(componentShadow);
+
+	    css.start(".suite-card-list")
+	        .add("-fx-padding", font.getSize() * 0.5 + "px")
+	        .add("-fx-background-color", "transparent")
+	        .add("-fx-background", "transparent")
+	        .end();
+
+	    css.start(".suite-card-list .viewport")
+	        .add("-fx-background-color", "transparent")
+	        .end();
+
+	    css.start(".suite-card-list .cards")
+	        .add("-fx-spacing", Math.max(font.getSize(), schatten.bottom()) + "px")
+	        .add("-fx-padding", innenabstand(Math.max(font.getSize(), schatten.top()),
+	        		schatten.right(), Math.max(font.getSize(), schatten.bottom()), schatten.left()))
+	        .end();
+	}
+
 	private void addMovieViewerStyles(CssBuilder css) {
 
 	    // === Gesamtlayout ===
 	    double padding = font.getSize();
-	    int swytBreite = (int) (contentSize.getWidth() * movieViewerSwytPercent / 100);
 	    css.start(".movie-viewer-root")
 	        .add("-fx-padding", padding + "px")
 	        .end();
@@ -1189,35 +1197,12 @@ public abstract class Skin extends SkinProperties {
 	    css.start(".movie-viewer-swyt")
 	        .add("-fx-padding", "0")
 	        .add("-fx-spacing", padding * 0.8 + "px")
-	        .add("-fx-min-width", swytBreite + "px")
-	        .add("-fx-pref-width", swytBreite + "px")
-	        .add("-fx-max-width", swytBreite + "px")
 	        .end();
 	 
 	    css.start(".movie-viewer-swyt .label")
 	        .add("-fx-fill", textColor)
 	        .end();
 	 
-	    // === ScrollPane ===
-	    css.start(".movie-viewer-scroll")
-	        .add("-fx-padding", padding * 0.5 + "px")
-	        .add("-fx-background-color", "transparent")
-	        .add("-fx-background", "transparent")
-	        .end();
-	 
-	    css.start(".movie-viewer-scroll .viewport")
-	        .add("-fx-background-color", "transparent")
-	        .end();
-
-	    ShadowSpace schatten = ShadowSpace.of(componentShadow); // Siehe addDiaryViewerStyles — dieselbe Lage, dieselbe Untergrenze.
-	    String schattenPolster = schatten.vorhanden() // Ohne Schatten entsteht die Zeile gar nicht erst, damit ein Skin ohne ihn dasselbe Stylesheet bekommt wie zuvor.
-	    		? innenabstand(schatten.top(), schatten.right(), schatten.bottom(), schatten.left())
-	    		: null;
-	    css.start(".movie-viewer-results")
-	        .add("-fx-spacing", Math.max(padding * 0.5, schatten.bottom()) + "px")
-	        .addIfSet("-fx-padding", schattenPolster)
-	        .end();
-
 	    // === Rating-Zahl ===
 	    // Schriftgröße wird dynamisch im createCard gesetzt (50% der Posterbreite).
 	    // min-width sorgt dafür, dass einstellige und zweistellige Zahlen gleich breit sind.

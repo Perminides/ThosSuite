@@ -16,7 +16,7 @@ import javafx.scene.layout.VBox;
  *
  * <p>Passiver Baustein — bekommt Daten und Maße herein, holt sich nichts.</p>
  */
-public class DiaryCard extends VBox {
+public class DiaryCard extends VBox implements Card {
 
 	public DiaryCard(DiaryCardData data) {
 		Label dateLabel = new Label(data.entryDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
@@ -41,7 +41,6 @@ public class DiaryCard extends VBox {
 
 		getChildren().add(textLabel);
 		getStyleClass().add("diary-card");
-		setMaxWidth(Double.MAX_VALUE);
 	}
 
 	/** Nur noch das Anordnen — das Bild samt Vergrößerung kann {@link SuiteThumbnail}. */

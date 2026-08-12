@@ -30,7 +30,7 @@ import javafx.stage.Screen;
  *
  * <p>Passiver Baustein — bekommt Daten, Maße und die beiden Klick-Callbacks herein.</p>
  */
-public class MovieCard extends HBox {
+public class MovieCard extends HBox implements Card {
 
 	private final MovieStyle style;
 
@@ -64,7 +64,6 @@ public class MovieCard extends HBox {
 		// wie die Tagebuch-Karte. Unverändert übernommen.
 		setSpacing(style.font().getSize() * 0.5);
 		getStyleClass().add("diary-card");
-		setMaxWidth(Double.MAX_VALUE);
 		if (posterPane != null)
 			getChildren().add(posterPane);
 		getChildren().addAll(ratingLabel, infoBox);

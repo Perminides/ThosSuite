@@ -58,9 +58,6 @@ VORGABE = {
     "shapeMapFederalStateBorderWidth": "2.8 — aus der Datei nicht setzbar",
     "dashBoardTileTopHeight": "250",
     "dashBoardTileBottomHeight": "100",
-    "diaryViewerContentPercent": "63 — Prozent der contentSize, nur Obergrenze",
-    "movieViewerSwytPercent": "20 — Prozent der contentSize",
-    "contentSize": "1910 × 1000 — aus der Datei nicht setzbar",
     "moviePosterWidth": "154", "imageLabelBgColor": "vollständig durchsichtig",
     "chartRootPadding": '"50px 50px 50px 50px"',
 }
@@ -84,6 +81,7 @@ MAP = [
     (r"^\.my-info-label", "Info-Feld (Frage/Fortschritt/Verlauf/Uhr)", "Lernen"),
     (r"^\.my-icon-button", "Icon-Knopf (Zurück)", "Lernen"),
     (r"^\.dashboard-tile", "Dashboard-Kachel", "Dashboard"),
+    (r"^\.suite-card-list", "Kartenliste", "Tagebuch + Film"),
     (r"^\.diary-card", "Tagebuchkarte", "Tagebuch"),
     (r"^\.diary-viewer", "Tagebuch — Layout", "Tagebuch"),
     (r"^\.tag-chip-remove", "Schlagwort — Löschknopf", "Tagebuch"),
