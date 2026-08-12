@@ -63,7 +63,8 @@ public abstract class SkinProperties {
 	protected Color mcIncorrectTextColor;
 	protected Color mcCorrectTextColor;
 
-	/** Für MC, Deutschlandkarte, Welt **/ protected Color incorrectColor;  
+	/** Für MC, Deutschlandkarte, Welt **/ 
+	protected Color incorrectColor;  
 	protected Color correctColor; // Für MC, Deutschlandkarte
 	protected Color markedColor; // Für die Karten
 	protected Color shapeMapColor0; // Für die Karten
@@ -114,42 +115,18 @@ public abstract class SkinProperties {
 	protected Integer thinBorderWidth = 1; // default = 1
 	protected Color stageBorderColor = Color.WHITE;
 
-	/**
-	 * Der Rahmen um das eine Bedienelement, von dem die Suite gerade etwas will — das Eingabefeld im
-	 * Fokus, die antwortbaren Auswahlknöpfe. Nicht „aktiv" im Sinne von bedienbar, sondern im Sinne
-	 * von „jetzt bist du dran".
-	 *
-	 * <p>Bleibt die Farbe {@code null}, entstehen die Regeln gar nicht erst und der Skin sieht aus wie
-	 * zuvor — ein Skin, der seine Zustände über Flächenfarben erzählt, braucht sie nicht.</p>
-	 */
-	protected Color activeBorderColor;
+	protected Color activeBorderColor; // Der Rahmen um das eine Bedienelement, von dem die Suite gerade etwas will. Bei null entstehen die Regeln gar nicht. Ein Skin, der seine Zustände über Flächenfarben erzählt, braucht sie nicht.
 	protected Integer activeBorderWidth = 2;
+	protected Integer mcResultBorderWidth = 0; //Breite des Rings um einen beantworteten Antwortknopf. {@code 0} heißt: kein Ring
+	protected Integer mcResultTintPercent = 12; // Wie stark sich die Fläche eines beantworteten Knopfs zur Signalfarbe hin einfärbt, in Prozent. Wirkt nur zusammen mit {@code mcResultBorderWidth} — ohne Ring trägt ohnehin die volle Fläche die Signalfarbe.
 
-	/**
-	 * Breite des Rings um einen beantworteten Antwortknopf. {@code 0} heißt: kein Ring — stattdessen
-	 * färbt sich die ganze Fläche in der Signalfarbe.
-	 *
-	 * <p>Beides trägt dieselbe Aussage in derselben Farbe, nur in anderer Dosis. Eine kleine Form
-	 * unter vierhundert auf der Landkarte braucht die volle Füllung, um gefunden zu werden; ein
-	 * breiter Knopf direkt vor dem Nutzer wird davon laut. Die Signalfarben selbst bleiben deshalb
-	 * suiteweit dieselben.</p>
-	 */
-	protected Integer mcResultBorderWidth = 0;
-
-	/**
-	 * Wie stark sich die Fläche eines beantworteten Knopfs zur Signalfarbe hin einfärbt, in Prozent.
-	 *
-	 * <p>Wirkt nur zusammen mit {@code mcResultBorderWidth} — ohne Ring trägt ohnehin die volle Fläche
-	 * die Signalfarbe. Gemischt wird aus der gewöhnlichen Knopffläche und der Signalfarbe, es kommt
-	 * also weiterhin nur <em>ein</em> Grün und <em>ein</em> Rot im Skin vor. {@code 0} heißt: nur der
-	 * Ring, die Fläche bleibt unverändert.</p>
-	 *
-	 * <p>Entscheidend ist nicht, ob die Signalfarbe heller oder dunkler ist als die Fläche, sondern
-	 * wie weit die beiden auseinanderliegen: Die Mischung verschiebt die Fläche in Richtung der
-	 * Signalfarbe. Zu nah beieinander, und man sieht nichts.</p>
-	 */
-	protected Integer mcResultTintPercent = 12;
-
+	protected Integer dashBoardTileWidth = 250;
+	protected Integer dashBoardTileTopHeight = 250;
+	protected Integer dashBoardTileBottomHeight = 100;
+	protected Integer dashBoardTileTopFontSize; // font * 4
+	protected Integer dashBoardTileBottomFontSize; // font * 2
+	protected Color dashBoardTileBottomColor; // menuBarBackground
+	
 	/**
 	 * Der Schatten, den die Bausteine werfen — als fertiger CSS-Effekt, etwa
 	 * {@code dropshadow(gaussian, rgba(0,0,0,0.16), 14, 0, 0, 4)}.
@@ -163,25 +140,8 @@ public abstract class SkinProperties {
 	 */
 	protected String componentShadow;
 	
-	protected Integer dashBoardTileWidth = 250;
-	protected Integer dashBoardTileTopHeight = 250;
-	protected Integer dashBoardTileBottomHeight = 100;
-	protected Integer dashBoardTileTopFontSize; // font * 4
-	protected Integer dashBoardTileBottomFontSize; // font * 2
-	protected Color dashBoardTileBottomColor; // menuBarBackground
-	
-	/**
-	 * Breite der Kartenspalte im Tagebuch, in Prozent der {@code contentSize}.
-	 *
-	 * <p>Eine Obergrenze, kein Zwang: Die Spalte nimmt sich, was das Fenster hergibt, höchstens aber
-	 * diesen Anteil. Die Grenze ist typografisch gemeint — Tagebucheinträge sind Fließtext, und über
-	 * ein paar tausend Pixel Zeilenlänge liest sie niemand mehr.</p>
-	 */
-	protected Integer diaryViewerContentPercent = 63;
-
-	/** Breite der SWYT-Spalte im Film, in Prozent der {@code contentSize}. Anders als im Tagebuch
-	 * festgenagelt — die Spalte steht neben etwas anderem und trägt keinen Fließtext. */
-	protected Integer movieViewerSwytPercent = 20;
+	protected Integer diaryViewerContentPercent = 63; // Breite der Kartenspalte im Tagebuch, in Prozent der contentSize. Obergrenze, kein Zwang: Die Spalte nimmt sich, was das Fenster hergibt, höchstens aber diesen Anteil. Typografisch gemeint, Tagebucheinträge sind Fließtext.
+	protected Integer movieViewerSwytPercent = 20; // Breite der SWYT-Spalte im Film, in Prozent der contentSize. Anders als im Tagebuch festgenagelt: steht neben etwas anderem und trägt keinen Fließtext.
 
 	protected Integer popupMonitorMargin = 20; // Abstand eines Popups zum Bildschirmrand (Tagebuch wie Film)
 	

@@ -7,9 +7,10 @@ import java.util.function.Consumer;
 import app.shared.model.DiaryCardData;
 import app.shared.model.ScreenView;
 import app.shared.skin.SkinService;
-import app.shared.ui.components.SuiteBackground;
 import app.shared.ui.components.DiaryCard;
+import app.shared.ui.components.SuiteBackground;
 import app.shared.ui.components.SuiteDatePicker;
+import app.shared.ui.components.SuiteTextField;
 import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
@@ -65,8 +66,9 @@ public class DiaryScreenView implements ScreenView {
         fromPicker = new SuiteDatePicker(LocalDate.now().minusMonths(1));
         toPicker = new SuiteDatePicker(LocalDate.now());
 
-        queryField = new TextField();
+        queryField = new SuiteTextField();
         queryField.setPromptText("(x or y) and tag:z");
+        queryField.setMaxWidth(Double.MAX_VALUE); // Nimmt den Platz, den die Datumsfelder übrig lassen, damit die Zeile an der Scrollbar endet
 
         HBox filterBar = new HBox();
         filterBar.setAlignment(Pos.CENTER_LEFT);
@@ -75,6 +77,7 @@ public class DiaryScreenView implements ScreenView {
                 new Label("Von:"), fromPicker,
                 new Label("Bis:"), toPicker,
                 queryField);
+        HBox.setHgrow(queryField, Priority.ALWAYS);
 
         // Ergebnisbereich
         resultBox = new VBox();
@@ -85,6 +88,7 @@ public class DiaryScreenView implements ScreenView {
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(false);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Immer sichtbar, damit die Kartenbreite nicht springt, sobald ein Treffer mehr dazukommt — und damit die rechte Kante der Filterleiste immer auf der Scrollbar liegt
         scrollPane.getStyleClass().add("diary-viewer-scroll");
 
         // Äußerer Wrapper — zentriert alles

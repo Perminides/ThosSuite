@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Set;
 
 import app.shared.model.AnkiDialogState;
+import app.shared.ui.components.SuiteDialog;
+import app.shared.ui.components.SuiteTextField;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -13,11 +15,9 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import app.shared.ui.components.SuiteDialog;
 
 public class AnkiConfigDialog {
 
@@ -27,9 +27,9 @@ public class AnkiConfigDialog {
     private final String minDefault, maxDefault, maxCardsDefault;
     private final List<List<String>> labelColumns;
 
-    private final TextField minField = new TextField();
-    private final TextField maxField = new TextField();
-    private final TextField maxCardsField = new TextField();
+    private final SuiteTextField minField = new SuiteTextField();
+    private final SuiteTextField maxField = new SuiteTextField();
+    private final SuiteTextField maxCardsField = new SuiteTextField();
     private final List<CheckBox> labelBoxes = new ArrayList<>(); // userData = volles Label (= id)
     private Button okButton;
 
