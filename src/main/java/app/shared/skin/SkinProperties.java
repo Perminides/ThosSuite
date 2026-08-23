@@ -304,16 +304,15 @@ public abstract class SkinProperties {
 	}
 
 	/**
-	 * Das Feld, in dem ein Bestandteil einer Session sitzt. Erst der spezifische Name, sonst die
-	 * Kategorie.
+	 * Das Feld, in dem ein Bestandteil einer Session sitzt — siehe {@link #gestaffelt}.
 	 */
-	public Rectangle2D learnComponentBounds(String mapName, String kategorie, LearnComponent teil) {
-		return staffelung(mapName, kategorie, teil.suffix());
+	public Rectangle2D learnComponentBounds(String deckId, String mapName, String kategorie, LearnComponent teil) {
+		return (Rectangle2D) gestaffelt(deckId, mapName, kategorie, teil.suffix());
 	}
 
 	/** Dasselbe für die drei Textfelder, die über {@link Skin.TextLabelType} unterschieden werden. */
-	public Rectangle2D learnTextLabelBounds(String mapName, String kategorie, Skin.TextLabelType typ) {
-		return staffelung(mapName, kategorie, "Session" + typ + "Panel");
+	public Rectangle2D learnTextLabelBounds(String deckId, String mapName, String kategorie, Skin.TextLabelType typ) {
+		return (Rectangle2D) gestaffelt(deckId, mapName, kategorie, "Session" + typ + "Panel");
 	}
 
 	/**
@@ -326,12 +325,24 @@ public abstract class SkinProperties {
 		return new BigComponentStyle(borderBigComponent.arc(), borderBigComponent.width());
 	}
 
-	// Erst spezifisch, dann Kategorie. Der Property-Name entsteht nur hier.
-	private Rectangle2D staffelung(String mapName, String kategorie, String suffix) {
-		Rectangle2D bounds = (Rectangle2D) getFieldValue(mapName + suffix);
-		if (bounds == null)
-			bounds = (Rectangle2D) getFieldValue(kategorie + suffix);
-		return bounds;
+	/**
+	 * Der erste gesetzte Wert in der Kette Deck → Karte → Kategorie. Der Property-Name entsteht nur hier.
+	 *
+	 * <p>Die Kette läuft von speziell nach allgemein, und ein Deck legt nur fest, was bei ihm anders
+	 * sein soll. Der mittlere Schritt ist der, mit dem sich mehrere Decks ein Layout teilen: Die vier
+	 * Berlin-Decks tragen denselben {@code mapName} und damit dieselben Maße, die vierzehn
+	 * Landkreis-Decks lassen auch den offen und landen bei ihrer Kategorie.</p>
+	 *
+	 * @return null, wenn keiner der drei Schlüssel gesetzt ist
+	 */
+	private Object gestaffelt(String deckId, String mapName, String kategorie, String suffix) {
+		String[] praefixe = { deckId, mapName, kategorie };
+		for (String praefix : praefixe) {
+			Object wert = getFieldValue(praefix + suffix);
+			if (wert != null)
+				return wert;
+		}
+		return null;
 	}
 
 	public enum IconButtonType {
@@ -363,10 +374,11 @@ public abstract class SkinProperties {
 	}
 
 	/**
-	 * Das Wallpaper einer Lern-Session: erst das der Karte, dann das ihrer Kategorie, sonst das leere.
+	 * Das Wallpaper einer Lern-Session — dieselbe Kette wie die Maße (siehe {@link #gestaffelt}),
+	 * sonst das leere.
 	 */
-	public Path wallpaperPath(String mapName, String kategorie) {
-		return wallpaperFolder().resolve(getBackgroundImageName(mapName, kategorie));
+	public Path wallpaperPath(String deckId, String mapName, String kategorie) {
+		return wallpaperFolder().resolve(getBackgroundImageName(deckId, mapName, kategorie));
 	}
 
 	/**
@@ -390,11 +402,8 @@ public abstract class SkinProperties {
 		return Config.getPath("wallpaperFolder");
 	}
 
-	private String getBackgroundImageName (String mapName, String categoryName) {
-		String bgName = (String) getFieldValue(mapName + "WallpaperName");
-		if (bgName != null)
-			return bgName;
-		bgName = (String) getFieldValue(categoryName + "WallpaperName");
+	private String getBackgroundImageName (String deckId, String mapName, String kategorie) {
+		String bgName = (String) gestaffelt(deckId, mapName, kategorie, "WallpaperName");
 		if (bgName != null)
 			return bgName;
 		return emptyWallpaperName;

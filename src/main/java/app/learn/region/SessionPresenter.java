@@ -34,6 +34,7 @@ public class SessionPresenter {
 	public SessionPresenter(SessionProgress progress, SessionSpec spec) {
 		progress.setPresenter(this);
 		view = new RegionLearnView(
+				spec.getDeckType().getId(),
 				spec.getDeckType().getMapName(),
 				spec.getDeckType().getCategory().toString(),
 				MapService.getInstance().getMap(spec.getDeckType()).getShapeGeometries(),

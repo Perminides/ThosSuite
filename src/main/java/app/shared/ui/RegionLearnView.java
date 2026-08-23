@@ -22,8 +22,8 @@ import app.shared.ui.components.map.ShapeMapPane;
  * Fragefeld". Der Presenter im Feature sagt nur, <em>was</em> passieren soll — er kennt weder die
  * Bestandteile noch ihre Maße.</p>
  *
- * <p>Bekommt alles im Konstruktor: Kartenname, Kategorie, Geometrien und die zwei Rückmeldungen.
- * Sie kennt weder {@code Deck} noch {@code MapService}; das bleibt im Feature.</p>
+ * <p>Bekommt alles im Konstruktor: Deck- und Kartenname, Kategorie, Geometrien und die zwei
+ * Rückmeldungen. Sie kennt weder {@code Deck} noch {@code MapService}; das bleibt im Feature.</p>
  *
  * <p>Die Bestandteile bekommen ihr Feld als {@code Rectangle2D} übergeben — diese View weiß, welche
  * Karte gerade läuft, die Bausteine nicht. Beim Skin holen sie sich nur, was ohne Schlüssel
@@ -31,6 +31,7 @@ import app.shared.ui.components.map.ShapeMapPane;
  */
 public class RegionLearnView {
 
+	private final String deckId;
 	private final String mapName;
 	private final String kategorie;
 	private final List<ShapeGeometry> geometrien;
@@ -42,9 +43,10 @@ public class RegionLearnView {
 	private SuiteInfoLabel questionArea;
 	private SuiteTextField inputField;
 
-	public RegionLearnView(String mapName, String kategorie, List<ShapeGeometry> geometrien,
+	public RegionLearnView(String deckId, String mapName, String kategorie, List<ShapeGeometry> geometrien,
 			boolean mitFragefeld,
 			RegionCallbacks callbacks) {
+		this.deckId = deckId;
 		this.mapName = mapName;
 		this.kategorie = kategorie;
 		this.geometrien = geometrien;
@@ -55,22 +57,22 @@ public class RegionLearnView {
 	/** Neu aufbauen — nötig nach einem Skinwechsel, weil sich alle Maße geändert haben können. */
 	public void rebuild(boolean mitFragefeld) {
 		Skin skin = SkinService.get();
-		host.setWallpaper(skin.wallpaperPath(mapName, kategorie));
+		host.setWallpaper(skin.wallpaperPath(deckId, mapName, kategorie));
 
-		karte = new ShapeMapPane(geometrien, skin.learnComponentBounds(mapName, kategorie, LearnComponent.MAP));
+		karte = new ShapeMapPane(geometrien, skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.MAP));
 		karte.setClickListener(callbacks.mapElementClicked());
 
 		host.clear();
 		if (mitFragefeld) {
 			questionArea = new SuiteInfoLabel("",
-					skin.learnTextLabelBounds(mapName, kategorie, Skin.TextLabelType.QUESTION));
+					skin.learnTextLabelBounds(deckId, mapName, kategorie, Skin.TextLabelType.QUESTION));
 			questionArea.getStyleClass().add(Skin.TextLabelType.QUESTION.styleClass());
 			// Einzeiliger Streifen mit einem einzelnen Namen darin — linksbündig sähe verloren aus.
 			questionArea.centerText();
 			inputField = null;
 			host.addComponents(karte, questionArea);
 		} else {
-			inputField = new SuiteTextField(skin.learnComponentBounds(mapName, kategorie, LearnComponent.TEXT_INPUT));
+			inputField = new SuiteTextField(skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.TEXT_INPUT));
 			inputField.onType(callbacks.textTyped());
 			questionArea = null;
 			host.addComponents(karte, inputField);

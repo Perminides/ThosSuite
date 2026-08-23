@@ -102,7 +102,7 @@ public abstract class AnkiLearnView {
 	public void rebuild() {
 		Skin skin = SkinService.get();
 
-		canvas.setWallpaper(skin.wallpaperPath(mapName, kategorie));
+		canvas.setWallpaper(skin.wallpaperPath(deckId, mapName, kategorie));
 
 		karte = createMap();
 
@@ -110,24 +110,21 @@ public abstract class AnkiLearnView {
 		progressArea    = infoLabel(skin, Skin.TextLabelType.PROGRESS);
 		cardHistoryArea = infoLabel(skin, Skin.TextLabelType.CARD_HISTORY);
 
-		imageComponent = new SuiteImage(skin.learnComponentBounds(deckId, kategorie, LearnComponent.IMAGE));
+		imageComponent = new SuiteImage(skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.IMAGE));
 
-		// !Sofort: Bild, Auswahl und Knopf staffeln über deckId, Eingabefeld und Textfelder über
-		// mapName. Bei allen Decks sind beide gleich, deshalb fällt es nicht auf — ein Deck mit
-		// abweichendem mapName läse seine Maße aus zwei verschiedenen Properties.
 		mcPane = null;
 		if (hasMcPane()) {
-			mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, kategorie, LearnComponent.MC));
+			mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.MC));
 			mcPane.addListener(callbacks.mcAnswerClicked());
 		}
 
 		backButton = new SuiteIconButton(Skin.IconButtonType.BACK,
-				skin.learnComponentBounds(deckId, kategorie, LearnComponent.BACK_BUTTON));
+				skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.BACK_BUTTON));
 		backButton.onClick(callbacks.backClicked());
 
 		inputField = null;
 		if (hasInputField()) {
-			inputField = new SuiteTextField(skin.learnComponentBounds(mapName, kategorie, LearnComponent.TEXT_INPUT));
+			inputField = new SuiteTextField(skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.TEXT_INPUT));
 			inputField.onType(callbacks.textTyped());
 		}
 
@@ -137,7 +134,7 @@ public abstract class AnkiLearnView {
 
 	/** Der Modifikator entscheidet nur über den abweichenden Hintergrund — der Rest steht in {@code .my-info-label}. */
 	private SuiteInfoLabel infoLabel(Skin skin, Skin.TextLabelType typ) {
-		SuiteInfoLabel label = new SuiteInfoLabel("", skin.learnTextLabelBounds(mapName, kategorie, typ));
+		SuiteInfoLabel label = new SuiteInfoLabel("", skin.learnTextLabelBounds(deckId, mapName, kategorie, typ));
 		label.getStyleClass().add(typ.styleClass());
 		return label;
 	}
