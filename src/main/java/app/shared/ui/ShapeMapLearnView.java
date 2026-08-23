@@ -24,7 +24,7 @@ public class ShapeMapLearnView extends AnkiLearnView {
 	@Override
 	protected LearnMap createMap() {
 		ShapeMapPane karte = new ShapeMapPane(geometrien,
-				SkinService.get().learnComponentBounds(mapName(), kategorie(), LearnComponent.MAP));
+				SkinService.get().learnComponentBounds(deckId(), mapName(), kategorie(), LearnComponent.MAP));
 		karte.setClickListener(callbacks().mapElementClicked());
 		karte.reset();
 		return karte;

@@ -35,7 +35,7 @@ public class MainWindowHeaderBar extends HeaderBar {
 	public MainWindowHeaderBar(Stage stage, MenuBar menuBar) {
 		getStyleClass().add("my-header-bar");
 
-		Label titleLabel = new Label("Thos Suite (FX)");
+		Label titleLabel = new Label("Thos Suite");
 		HeaderBar.setDragType(titleLabel, HeaderDragType.DRAGGABLE_SUBTREE);
 		setCenter(titleLabel);
 

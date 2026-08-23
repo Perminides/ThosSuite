@@ -51,9 +51,9 @@ public class FastWriteLearnView extends AnkiLearnView {
 
 		Skin skin = SkinService.get();
 		slotPane = new AnswerSlotPane(
-				skin.learnComponentBounds(deckId(), kategorie(), LearnComponent.ANSWER_SLOTS), slotCount);
+				skin.learnComponentBounds(deckId(), mapName(), kategorie(), LearnComponent.ANSWER_SLOTS), slotCount);
 		clock = new SuiteCountdownLabel(
-				skin.learnTextLabelBounds(mapName(), kategorie(), Skin.TextLabelType.CLOCK));
+				skin.learnTextLabelBounds(deckId(), mapName(), kategorie(), Skin.TextLabelType.CLOCK));
 		clock.getStyleClass().add(Skin.TextLabelType.CLOCK.styleClass());
 		clock.onExpired(callbacks().timeExpired());
 
