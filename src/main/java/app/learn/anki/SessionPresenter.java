@@ -57,20 +57,20 @@ public class SessionPresenter {
         GeoMap map = type.getMapMetadata() != null ? MapService.getInstance().getMap(type) : null;
         String id = type.getId();
         String mapName = type.getMapName();
-        String kategorie = type.getCategory().toString();
+        String category = type.getCategory().toString();
 
         AnkiCallbacks callbacks = new AnkiCallbacks(
                 this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack,
                 this::timeExpired);
 
         return switch(type) {
-            case GERMANY_CARDS -> new ShapeMapLearnView(id, mapName, kategorie, map.getShapeGeometries(), callbacks);
-            case MC_CARDS      -> new McLearnView(id, mapName, kategorie, callbacks);
+            case GERMANY_CARDS -> new ShapeMapLearnView(id, mapName, category, map.getShapeGeometries(), callbacks);
+            case MC_CARDS      -> new McLearnView(id, mapName, category, callbacks);
             case WORLD_CARDS,
                  FLAG_CARDS,
-                 HANNOVER_CARDS-> new ImageMapLearnView(id, mapName, kategorie, map::geometryFor, callbacks);
+                 HANNOVER_CARDS-> new ImageMapLearnView(id, mapName, category, map::geometryFor, callbacks);
             case FAST_WRITE_CARDS -> {
-                fastView = new FastWriteLearnView(id, mapName, kategorie, Card.MAX_FAST_SLOTS, callbacks);
+                fastView = new FastWriteLearnView(id, mapName, category, Card.MAX_FAST_SLOTS, callbacks);
                 yield fastView;
             }
             default -> null; // oder throw new IllegalArgumentException?

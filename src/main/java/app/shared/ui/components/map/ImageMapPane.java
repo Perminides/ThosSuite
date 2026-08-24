@@ -78,7 +78,7 @@ public class ImageMapPane extends StackPane implements LearnMap {
 	private final int overlayContentInset;
 
 	// Ids → Geometrien. Wohnt im Feature (GeoMap), kommt als Funktion herein.
-	private final Function<Set<String>, List<ShapeGeometry>> geometrieFuer;
+	private final Function<Set<String>, List<ShapeGeometry>> geometryFor;
 
 	// UI Nodes
 	private final Pane viewport;
@@ -102,23 +102,23 @@ public class ImageMapPane extends StackPane implements LearnMap {
 	private static final int MINI_MAP_INSET = 10;
 
 	/**
-	 * @param bilder              Hintergrund und Overlay, je aktiv und abgeschaltet.
+	 * @param mapImages              Hintergrund und Overlay, je aktiv und abgeschaltet.
 	 * @param overlayContentInset Wie breit der Rahmen im Minikarten-Bild ringsum ist — hängt am Bild
 	 *                            und damit an der Karte, löst deshalb der Aufrufer auf. <b>Wo</b> der
 	 *                            Inhalt sitzt, rechnet diese Klasse daraus selbst: sie hat das Bild.
 	 * @param bounds              Das Feld, in dem die Karte sitzt. Löst der Aufrufer auf.
-	 * @param geometrieFuer       Übersetzt Ids in Geometrien — wohnt im Feature, diese Klasse kennt
+	 * @param geometryFor       Übersetzt Ids in Geometrien — wohnt im Feature, diese Klasse kennt
 	 *                            weder Karte noch Deck.
 	 */
-	public ImageMapPane(MapImages bilder, int overlayContentInset, Rectangle2D bounds,
-			Function<Set<String>, List<ShapeGeometry>> geometrieFuer) {
+	public ImageMapPane(MapImages mapImages, int overlayContentInset, Rectangle2D bounds,
+			Function<Set<String>, List<ShapeGeometry>> geometryFor) {
 		SkinImageCache images = SkinImageCache.getInstance();
-		this.background = images.get(bilder.background());
-		this.overlay = images.get(bilder.overlay());
-		this.inactiveBackground = images.get(bilder.inactiveBackground());
-		this.inactiveOverlay = images.get(bilder.inactiveOverlay());
+		this.background = images.get(mapImages.background());
+		this.overlay = images.get(mapImages.overlay());
+		this.inactiveBackground = images.get(mapImages.inactiveBackground());
+		this.inactiveOverlay = images.get(mapImages.inactiveOverlay());
 		this.overlayContentInset = overlayContentInset;
-		this.geometrieFuer = geometrieFuer;
+		this.geometryFor = geometryFor;
 
 		// 1. Main Content aufbauen
 		mainImageView = new ImageView();
@@ -163,14 +163,14 @@ public class ImageMapPane extends StackPane implements LearnMap {
 		setLayoutY(bounds.getMinY());
 		getStyleClass().add("my-image-map-pane");
 
-		BigComponentStyle rahmen = SkinService.get().bigComponentStyle();
-		double bw = rahmen.borderWidth();
+		BigComponentStyle frame = SkinService.get().bigComponentStyle();
+		double bw = frame.borderWidth();
 
 		Rectangle clip = new Rectangle(bw, bw, bounds.getWidth() - 2 * bw, bounds.getHeight() - 2 * bw);
 		// Durchmesser, nicht Radius — Rectangle rechnet anders als das CSS.
-		double eckDurchmesser = rahmen.cornerRadius() * 2;
-		clip.setArcWidth(eckDurchmesser);
-		clip.setArcHeight(eckDurchmesser);
+		double cornerDiameter = frame.cornerRadius() * 2;
+		clip.setArcWidth(cornerDiameter);
+		clip.setArcHeight(cornerDiameter);
 		viewport.setClip(clip);
 	}
 
@@ -308,9 +308,9 @@ public class ImageMapPane extends StackPane implements LearnMap {
 	// ========================================
 
 	@Override public void reset()                         { resetMarkers(); }
-	@Override public void markCorrect(Set<String> ids)    { addToCorrect(geometrieFuer.apply(ids)); }
-	@Override public void mark(Set<String> ids)           { setMarked(geometrieFuer.apply(ids)); }
-	@Override public void setClickTargets(Set<String> ids) { setClickTargets(geometrieFuer.apply(ids)); }
+	@Override public void markCorrect(Set<String> ids)    { addToCorrect(geometryFor.apply(ids)); }
+	@Override public void mark(Set<String> ids)           { setMarked(geometryFor.apply(ids)); }
+	@Override public void setClickTargets(Set<String> ids) { setClickTargets(geometryFor.apply(ids)); }
 
 	/**
 	 * Die Bild-Karte kennt die falsche Form nicht per id — sie merkt sich den letzten Klick selbst.

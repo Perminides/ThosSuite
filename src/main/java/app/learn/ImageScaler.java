@@ -31,8 +31,8 @@ import app.shared.ui.ImageComparisonDialog;
  */
 public class ImageScaler {
 
-	private static final int ZIEL_BREITE = 500;
-	private static final int ZIEL_HOEHE = 500;
+	private static final int TARGET_WIDTH = 500;
+	private static final int TARGET_HEIGHT = 500;
 
 	public static void processImages() {
 		Path targetDir = Config.getPath("learnImageFolder");
@@ -43,7 +43,7 @@ public class ImageScaler {
 			return;
 
 		try {
-			for (Path imgPath : dateienIn(sourceDir)) {
+			for (Path imgPath : filesIn(sourceDir)) {
 				String name = imgPath.getFileName().toString().toLowerCase();
 				if (!(name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png")))
 					continue;
@@ -56,20 +56,20 @@ public class ImageScaler {
 				}
 
 				BufferedImage original = ImageIO.read(imgPath.toFile());
-				BufferedImage links = ImageUtils.scaleSmooth(original, ZIEL_BREITE, ZIEL_HOEHE,
+				BufferedImage left = ImageUtils.scaleSmooth(original, TARGET_WIDTH, TARGET_HEIGHT,
 						Scalr.Method.ULTRA_QUALITY, Scalr.OP_ANTIALIAS);
-				BufferedImage rechts = ImageUtils.scaleStepwise(original, ZIEL_BREITE, ZIEL_HOEHE);
+				BufferedImage right = ImageUtils.scaleStepwise(original, TARGET_WIDTH, TARGET_HEIGHT);
 
-				SelectionEnum wahl = ImageComparisonDialog.show(links, rechts);
-				if (wahl == null)
+				SelectionEnum choice = ImageComparisonDialog.show(left, right);
+				if (choice == null)
 					return;
 
-				BufferedImage gewaehlt = wahl == SelectionEnum.ZERO ? links : rechts;
+				BufferedImage chosen = choice == SelectionEnum.ZERO ? left : right;
 				if (name.endsWith(".jpg") || name.endsWith(".jpeg"))
-					gewaehlt = ImageUtils.toRgb(gewaehlt);
+					chosen = ImageUtils.toRgb(chosen);
 
 				Log.info(ImageScaler.class, "Verkleinern + Original sichern: " + imgPath.getFileName());
-				ImageIO.write(gewaehlt, name.endsWith(".png") ? "png" : "jpg", target.toFile());
+				ImageIO.write(chosen, name.endsWith(".png") ? "png" : "jpg", target.toFile());
 				Files.move(imgPath, backupDir.resolve(imgPath.getFileName()));
 			}
 		} catch (Exception e) {
@@ -78,12 +78,12 @@ public class ImageScaler {
 	}
 
 	/** Erst den Ordner einlesen, dann verarbeiten: die Schleife verschiebt die Bilder weg. */
-	private static List<Path> dateienIn(Path ordner) throws Exception {
-		List<Path> dateien = new ArrayList<>();
-		try (DirectoryStream<Path> inhalt = Files.newDirectoryStream(ordner)) {
-			for (Path eintrag : inhalt)
-				dateien.add(eintrag);
+	private static List<Path> filesIn(Path ordner) throws Exception {
+		List<Path> files = new ArrayList<>();
+		try (DirectoryStream<Path> content = Files.newDirectoryStream(ordner)) {
+			for (Path eintrag : content)
+				files.add(eintrag);
 		}
-		return dateien;
+		return files;
 	}
 }

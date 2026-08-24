@@ -87,15 +87,15 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 	public ShapeMapPane(List<ShapeGeometry> geometries, Rectangle2D bounds) {
 		Group contentGroup = new Group();
 
-		double faktor = scaleFactor(geometries, bounds);
+		double factor = scaleFactor(geometries, bounds);
 
 		// Nach zIndex sortiert einhängen — die Reihenfolge in der Group ist die Zeichenreihenfolge.
-		List<ShapeGeometry> nachEbene = new ArrayList<>(geometries);
-		nachEbene.sort(Comparator.comparingInt(g -> ShapeLayer.fromJsonId(g.type()).zIndex()));
+		List<ShapeGeometry> byLayer = new ArrayList<>(geometries);
+		byLayer.sort(Comparator.comparingInt(g -> ShapeLayer.fromJsonId(g.type()).zIndex()));
 
-		for (ShapeGeometry geometry : nachEbene) {
+		for (ShapeGeometry geometry : byLayer) {
 			boolean interactive = ShapeLayer.fromJsonId(geometry.type()).interactive();
-			Node node = MapNodeBuilder.buildShapeMapNode(geometry.scaled(faktor));
+			Node node = MapNodeBuilder.buildShapeMapNode(geometry.scaled(factor));
 			shapes.put(geometry.id(), new ShapeNode(node, interactive));
 
 			if (interactive)
@@ -140,11 +140,11 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 					maxY = Math.max(maxY, p.y());
 				}
 
-		double geometrieHoehe = maxY - minY;
-		if (geometrieHoehe <= 0)
+		double geometryHeight = maxY - minY;
+		if (geometryHeight <= 0)
 			throw new IllegalStateException("Shape-Karte ohne Ausdehnung — keine Punkte in den Geometrien?");
 
-		return (bounds.getHeight() - SkinService.get().shapeMapStrokeReserve()) / geometrieHoehe;
+		return (bounds.getHeight() - SkinService.get().shapeMapStrokeReserve()) / geometryHeight;
 	}
 
 	/** Die Karte ist selbst der Node — siehe {@link LearnMap#getView()}. */

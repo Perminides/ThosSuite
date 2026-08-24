@@ -57,12 +57,12 @@ public abstract class AnkiLearnView {
 
 	private final String deckId;
 	private final String mapName;
-	private final String kategorie;
+	private final String category;
 	private final AnkiCallbacks callbacks;
 
 	private final ComponentHost canvas = new ComponentHost();
 
-	private LearnMap karte;
+	private LearnMap map;
 	private SuiteInfoLabel questionArea;
 	private SuiteInfoLabel progressArea;
 	private SuiteInfoLabel cardHistoryArea;
@@ -71,10 +71,10 @@ public abstract class AnkiLearnView {
 	private SuiteIconButton backButton;
 	private SuiteTextField inputField;
 
-	protected AnkiLearnView(String deckId, String mapName, String kategorie, AnkiCallbacks callbacks) {
+	protected AnkiLearnView(String deckId, String mapName, String category, AnkiCallbacks callbacks) {
 		this.deckId = deckId;
 		this.mapName = mapName;
-		this.kategorie = kategorie;
+		this.category = category;
 		this.callbacks = callbacks;
 	}
 
@@ -92,11 +92,11 @@ public abstract class AnkiLearnView {
 
 	protected String deckId()              { return deckId; }
 	protected String mapName()             { return mapName; }
-	protected String kategorie()           { return kategorie; }
+	protected String category()           { return category; }
 	protected AnkiCallbacks callbacks() { return callbacks; }
 
 	/** Für Unterklassen mit eigenen Bestandteilen — siehe „Achtung beim Erweitern" oben. */
-	protected void addComponents(Node... teile) { canvas.addComponents(teile); }
+	protected void addComponents(Node... parts) { canvas.addComponents(parts); }
 
 	// ===== Aufbau =====
 
@@ -104,46 +104,46 @@ public abstract class AnkiLearnView {
 	public void rebuild() {
 		Skin skin = SkinService.get();
 
-		canvas.setWallpaper(skin.wallpaperPath(deckId, mapName, kategorie));
+		canvas.setWallpaper(skin.wallpaperPath(deckId, mapName, category));
 
-		karte = createMap();
+		map = createMap();
 
 		questionArea    = infoLabel(skin, Skin.TextLabelType.QUESTION);
 		progressArea    = infoLabel(skin, Skin.TextLabelType.PROGRESS);
 		cardHistoryArea = infoLabel(skin, Skin.TextLabelType.CARD_HISTORY);
 
-		imageComponent = new SuiteImage(skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.IMAGE));
+		imageComponent = new SuiteImage(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.IMAGE));
 
 		mcPane = null;
 		if (hasMcPane()) {
-			mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.MC));
+			mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.MC));
 			mcPane.addListener(callbacks.mcAnswerClicked());
 		}
 
 		backButton = new SuiteIconButton(Skin.IconButtonType.BACK,
-				skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.BACK_BUTTON));
+				skin.learnComponentBounds(deckId, mapName, category, LearnComponent.BACK_BUTTON));
 		backButton.onClick(callbacks.backClicked());
 
 		inputField = null;
 		if (hasInputField()) {
-			inputField = new SuiteTextField(skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.TEXT_INPUT));
+			inputField = new SuiteTextField(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.TEXT_INPUT));
 			inputField.onType(callbacks.textTyped());
 		}
 
 		canvas.clear();
-		canvas.addComponents(bestandteile());
+		canvas.addComponents(components());
 	}
 
 	/** Der Modifikator entscheidet nur über den abweichenden Hintergrund — der Rest steht in {@code .my-info-label}. */
 	private SuiteInfoLabel infoLabel(Skin skin, Skin.TextLabelType typ) {
-		SuiteInfoLabel label = new SuiteInfoLabel("", skin.learnTextLabelBounds(deckId, mapName, kategorie, typ));
+		SuiteInfoLabel label = new SuiteInfoLabel("", skin.learnTextLabelBounds(deckId, mapName, category, typ));
 		label.getStyleClass().add(typ.styleClass());
 		return label;
 	}
 
-	private Node[] bestandteile() {
+	private Node[] components() {
 		List<Node> parts = new ArrayList<>();
-		parts.add(karte.getView()); // die Karte ist ein Interface — der eine Schritt zum Node bleibt
+		parts.add(map.getView()); // die Karte ist ein Interface — der eine Schritt zum Node bleibt
 		parts.add(questionArea);
 		if (inputField != null)
 			parts.add(inputField);
@@ -191,10 +191,10 @@ public abstract class AnkiLearnView {
 
 	// ===== Karte =====
 
-	public void resetMarkers()                    { karte.reset(); }
-	public void setMapActive(boolean active)      { karte.setActive(active); }
-	public void addIdsToCorrect(Set<String> ids)  { karte.markCorrect(ids); }
-	public void setIdToIncorrect(String id)       { karte.markIncorrect(id); }
-	public void setMarkedIds(Set<String> ids)     { karte.mark(ids); }
-	public void setClickTargets(Set<String> ids)  { karte.setClickTargets(ids); }
+	public void resetMarkers()                    { map.reset(); }
+	public void setMapActive(boolean active)      { map.setActive(active); }
+	public void addIdsToCorrect(Set<String> ids)  { map.markCorrect(ids); }
+	public void setIdToIncorrect(String id)       { map.markIncorrect(id); }
+	public void setMarkedIds(Set<String> ids)     { map.mark(ids); }
+	public void setClickTargets(Set<String> ids)  { map.setClickTargets(ids); }
 }

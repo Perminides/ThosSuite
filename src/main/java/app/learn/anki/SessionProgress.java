@@ -76,9 +76,9 @@ class SessionProgress {
 			}
 		}
 		CardSortService.getSorter(sortOrder).accept(cards);
-		List<Card> zusammen = new ArrayList<>(newCards);
-		zusammen.addAll(cards);
-		cards = zusammen;
+		List<Card> combined = new ArrayList<>(newCards);
+		combined.addAll(cards);
+		cards = combined;
 		currentIndex = 0;
 		presenter.sessionProgressChanged(createSessionProgress());
 		presenter.newCardIncoming(cards.get(currentIndex).getLearnStat());

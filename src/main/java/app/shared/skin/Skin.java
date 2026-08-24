@@ -596,14 +596,14 @@ public abstract class Skin extends SkinProperties {
 
 	    builder.rule(".my-sketch-area:marked", "-fx-fill", sketchMarkedColor);
 
-	    addSketchColorRule(builder, SketchColor.ROT, sketchRot);
-	    addSketchColorRule(builder, SketchColor.BLAU, sketchBlau);
-	    addSketchColorRule(builder, SketchColor.HELLBLAU, sketchHellblau);
-	    addSketchColorRule(builder, SketchColor.GRUEN, sketchGruen);
-	    addSketchColorRule(builder, SketchColor.GELB, sketchGelb);
+	    addSketchColorRule(builder, SketchColor.RED, sketchRed);
+	    addSketchColorRule(builder, SketchColor.BLUE, sketchBlue);
+	    addSketchColorRule(builder, SketchColor.LIGHT_BLUE, sketchLightBlue);
+	    addSketchColorRule(builder, SketchColor.GREEN, sketchGreen);
+	    addSketchColorRule(builder, SketchColor.YELLOW, sketchYellow);
 	    addSketchColorRule(builder, SketchColor.ORANGE, sketchOrange);
-	    addSketchColorRule(builder, SketchColor.WEISS, sketchWeiss);
-	    addSketchColorRule(builder, SketchColor.SCHWARZ, sketchSchwarz);
+	    addSketchColorRule(builder, SketchColor.WHITE, sketchWhite);
+	    addSketchColorRule(builder, SketchColor.BLACK, sketchBlack);
 	}
 
 	/** Eine gefüllte Fläche trägt ihre Farbe und keinen Strich mehr — siehe {@link #addSketchStyles}. */
@@ -704,18 +704,18 @@ public abstract class Skin extends SkinProperties {
 	    // Signalfarbe, mit ihm trägt ein Ring sie und die Fläche wird nur zu mcResultTintPercent
 	    // dorthin gemischt. Beide Male dieselbe Farbe, nur in anderer Menge.
 	    double tint = mcResultTintPercent / 100.0;
-	    Color correctFlaeche = mcResultBorderWidth > 0
+	    Color correctFill = mcResultBorderWidth > 0
 	            ? activeComponentBgColor.interpolate(correctColor, tint) : correctColor;
-	    Color incorrectFlaeche = mcResultBorderWidth > 0
+	    Color incorrectFill = mcResultBorderWidth > 0
 	            ? activeComponentBgColor.interpolate(incorrectColor, tint) : incorrectColor;
 
 	    builder.start(".my-mc-button:correct")
-	       .add("-fx-background-color", correctFlaeche)
+	       .add("-fx-background-color", correctFill)
 	       .ring(mcResultBorderWidth > 0 ? correctColor : null, mcResultBorderWidth)
 	       .end();
 
 	    builder.start(".my-mc-button:incorrect")
-	       .add("-fx-background-color", incorrectFlaeche)
+	       .add("-fx-background-color", incorrectFill)
 	       .ring(mcResultBorderWidth > 0 ? incorrectColor : null, mcResultBorderWidth)
 	       .end();
 
@@ -1137,10 +1137,10 @@ public abstract class Skin extends SkinProperties {
 	    
 	}
 	
-	private String innenabstand(double oben, int rechts, double unten, int links) { // Kurzform wo möglich: ohne Schatten steht dort dasselbe wie zuvor, der Vergleich bleibt aussagekräftig.
-		if (oben == unten && rechts == links)
-			return oben + "px " + rechts + "px";
-		return oben + "px " + rechts + "px " + unten + "px " + links + "px";
+	private String padding(double oben, int right, double unten, int left) { // Kurzform wo möglich: ohne Schatten steht dort dasselbe wie zuvor, der Vergleich bleibt aussagekräftig.
+		if (oben == unten && right == left)
+			return oben + "px " + right + "px";
+		return oben + "px " + right + "px " + unten + "px " + left + "px";
 	}
 
 	private void addDiaryViewerStyles(CssBuilder css) {
@@ -1173,19 +1173,19 @@ public abstract class Skin extends SkinProperties {
 	        .add("-fx-fill", textColor)
 	        .end();
 
-	    ShadowSpace schatten = ShadowSpace.of(componentShadow);
-	    double scrollPolster = font.getSize() * 0.5; // Muss dem Polster von .suite-card-list entsprechen, sonst stehen Filterleiste und Hinweis nicht mehr über der Kartenkante
-	    String spaltenEinzug = "0px 0px 0px " + (scrollPolster + schatten.left()) + "px"; // Links auf die Kartenkante: Polster der Liste plus Schattenplatz. Rechts null, weil die Scrollbar am äußeren Spaltenrand sitzt und das Polster sie nicht einrückt.
+	    ShadowSpace shadow = ShadowSpace.of(componentShadow);
+	    double scrollPadding = font.getSize() * 0.5; // Muss dem Polster von .suite-card-list entsprechen, sonst stehen Filterleiste und Hinweis nicht mehr über der Kartenkante
+	    String columnPadding = "0px 0px 0px " + (scrollPadding + shadow.left()) + "px"; // Links auf die Kartenkante: Polster der Liste plus Schattenplatz. Rechts null, weil die Scrollbar am äußeren Spaltenrand sitzt und das Polster sie nicht einrückt.
 
 	    css.start(".diary-viewer-hint")
 	        .add("-fx-fill", incorrectTextColor)
 	        .add("-fx-font-style", "italic")
-	        .add("-fx-padding", spaltenEinzug)
+	        .add("-fx-padding", columnPadding)
 	        .end();
 
 	    css.start(".diary-viewer-filter-bar")
-	    .add("-fx-spacing", scrollPolster + "px")
-	    .add("-fx-padding", spaltenEinzug)
+	    .add("-fx-spacing", scrollPadding + "px")
+	    .add("-fx-padding", columnPadding)
 	    .end();
 
 	    css.start(".diary-viewer-root")
@@ -1202,7 +1202,7 @@ public abstract class Skin extends SkinProperties {
 	 * als <em>Untergrenze</em> — hat der Skin keinen Schatten, bleibt es beim gewöhnlichen Abstand.</p>
 	 */
 	private void addCardListStyles(CssBuilder css) {
-	    ShadowSpace schatten = ShadowSpace.of(componentShadow);
+	    ShadowSpace shadow = ShadowSpace.of(componentShadow);
 
 	    css.start(".suite-card-list")
 	        .add("-fx-padding", font.getSize() * 0.5 + "px")
@@ -1215,9 +1215,9 @@ public abstract class Skin extends SkinProperties {
 	        .end();
 
 	    css.start(".suite-card-list .cards")
-	        .add("-fx-spacing", Math.max(font.getSize(), schatten.bottom()) + "px")
-	        .add("-fx-padding", innenabstand(Math.max(font.getSize(), schatten.top()),
-	        		schatten.right(), Math.max(font.getSize(), schatten.bottom()), schatten.left()))
+	        .add("-fx-spacing", Math.max(font.getSize(), shadow.bottom()) + "px")
+	        .add("-fx-padding", padding(Math.max(font.getSize(), shadow.top()),
+	        		shadow.right(), Math.max(font.getSize(), shadow.bottom()), shadow.left()))
 	        .end();
 	}
 

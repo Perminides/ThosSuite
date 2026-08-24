@@ -54,9 +54,9 @@ public class SuiteThumbnail extends ImageView {
 		Rectangle2D screen = Screen.getPrimary().getVisualBounds();
 
 		// Bild einmal laden
-		Image bild = new Image(original.toUri().toString());
-		double naturalW = bild.getWidth();
-		double naturalH = bild.getHeight();
+		Image image = new Image(original.toUri().toString());
+		double naturalW = image.getWidth();
+		double naturalH = image.getHeight();
 		double aspectRatio = naturalW / naturalH;
 
 		// Schritt 1: Gewinner links/rechts
@@ -113,15 +113,15 @@ public class SuiteThumbnail extends ImageView {
 		}
 
 		// ImageView mit Originalbild, bei Bedarf via setFitWidth/setFitHeight skaliert
-		ImageView grossesBild = new ImageView(bild);
+		ImageView largeImage = new ImageView(image);
 		if (naturalW > imgW || naturalH > imgH) {
-			grossesBild.setFitWidth(imgW);
-			grossesBild.setFitHeight(imgH);
-			grossesBild.setPreserveRatio(true);
-			grossesBild.setSmooth(true);
+			largeImage.setFitWidth(imgW);
+			largeImage.setFitHeight(imgH);
+			largeImage.setPreserveRatio(true);
+			largeImage.setSmooth(true);
 		}
 
-		popup.setGraphic(grossesBild);
+		popup.setGraphic(largeImage);
 		popup.show(this, popupX, popupY);
 	}
 }

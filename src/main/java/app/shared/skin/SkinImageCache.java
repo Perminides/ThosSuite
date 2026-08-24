@@ -80,11 +80,11 @@ public class SkinImageCache {
 	 * ist erlaubt und wird still übersprungen.</p>
 	 */
 	public void warmMapImages(String mapName) {
-		MapImages bilder = SkinService.get().mapImages(mapName);
-		warm(bilder.background());
-		warm(bilder.overlay());
-		warm(bilder.inactiveBackground());
-		warm(bilder.inactiveOverlay());
+		MapImages mapImages = SkinService.get().mapImages(mapName);
+		warm(mapImages.background());
+		warm(mapImages.overlay());
+		warm(mapImages.inactiveBackground());
+		warm(mapImages.inactiveOverlay());
 	}
 
 	private void invalidateIfSkinChanged() {

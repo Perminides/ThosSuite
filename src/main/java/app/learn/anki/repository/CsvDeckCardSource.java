@@ -39,9 +39,9 @@ class CsvDeckCardSource {
 	        // try-with-resources schließt den Reader automatisch am Ende
 	        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(deckFile), Charset.forName("UTF-8")))) {
 	            br.readLine(); // Kopfzeile ueberspringen
-	            String zeile;
-	            while ((zeile = br.readLine()) != null) {
-	                String[] tokens = zeile.split(";");
+	            String line;
+	            while ((line = br.readLine()) != null) {
+	                String[] tokens = line.split(";");
 	                
 	                // 1. Wir bauen erst das Karten-Objekt (dabei wird die ID geparst)
 	                Card card = new Card(Arrays.asList(tokens));

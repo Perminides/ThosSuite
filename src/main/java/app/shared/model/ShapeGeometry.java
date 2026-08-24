@@ -87,7 +87,7 @@ public final class ShapeGeometry {
 	}
 
 	/**
-	 * Dieselbe Form in einem anderen Maßstab — alle Punkte, Mittelpunkte und Radien mit {@code faktor}
+	 * Dieselbe Form in einem anderen Maßstab — alle Punkte, Mittelpunkte und Radien mit {@code factor}
 	 * multipliziert. Gibt eine <b>neue</b> Instanz zurück; das Original bleibt unangetastet, denn die
 	 * Geometrien liegen gecacht im {@code MapService} und werden zwischen Skins geteilt.
 	 *
@@ -97,15 +97,15 @@ public final class ShapeGeometry {
 	 * Koordinaten treffen nur die Form, und 15 px Schatten bleiben 15 px, egal wie stark die Karte
 	 * gestaucht wird.</p>
 	 */
-	public ShapeGeometry scaled(double faktor) {
-		List<List<Point>> skaliert = new ArrayList<>(paths.size());
+	public ShapeGeometry scaled(double factor) {
+		List<List<Point>> scaled = new ArrayList<>(paths.size());
 		for (List<Point> ring : paths) {
 			List<Point> neu = new ArrayList<>(ring.size());
 			for (Point p : ring)
-				neu.add(new Point(p.x() * faktor, p.y() * faktor));
-			skaliert.add(neu);
+				neu.add(new Point(p.x() * factor, p.y() * factor));
+			scaled.add(neu);
 		}
-		return new ShapeGeometry(id, kind, skaliert, centerX * faktor, centerY * faktor, radius * faktor, type);
+		return new ShapeGeometry(id, kind, scaled, centerX * factor, centerY * factor, radius * factor, type);
 	}
 
 	public String id() { return id; }

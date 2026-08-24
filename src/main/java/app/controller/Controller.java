@@ -168,16 +168,16 @@ public class Controller{
 
         // Die Fehler der drei Start-Importe in EINER Meldung. An einem Tag ohne Netz wären es sonst
         // drei Alerts hintereinander, die alle dasselbe sagen.
-        List<String> fehlgeschlagen = new ArrayList<>();
+        List<String> failed = new ArrayList<>();
         if (fitbitError != null)
-            fehlgeschlagen.add("Fitbit: " + fitbitError.getMessage());
+            failed.add("Fitbit: " + fitbitError.getMessage());
         if (movieImportError != null)
-            fehlgeschlagen.add("TMDB: " + movieImportError.getMessage());
+            failed.add("TMDB: " + movieImportError.getMessage());
         if (comparisonError != null)
-            fehlgeschlagen.add("Health-Vergleich: " + comparisonError.getMessage());
+            failed.add("Health-Vergleich: " + comparisonError.getMessage());
 
-        if (!fehlgeschlagen.isEmpty())
-            Alerts.show("Importe fehlgeschlagen", String.join("\n\n", fehlgeschlagen), ButtonEnum.OK);
+        if (!failed.isEmpty())
+            Alerts.show("Importe fehlgeschlagen", String.join("\n\n", failed), ButtonEnum.OK);
 
         // Jeder Folgeschritt hängt daran, ob SEIN Import geklappt hat.
         if (fitbitError == null && fitbitDataFetcher.hasData())

@@ -72,9 +72,9 @@ public class SuiteImage extends StackPane {
      * die Verdopplung passiert deshalb hier, direkt an der API, die es so will.</p>
      */
     public SuiteImage(double width, double height) {
-        BigComponentStyle rahmen = SkinService.get().bigComponentStyle();
-        double bw = rahmen.borderWidth();
-        double arcDiameter = rahmen.cornerRadius() * 2;
+        BigComponentStyle frame = SkinService.get().bigComponentStyle();
+        double bw = frame.borderWidth();
+        double arcDiameter = frame.cornerRadius() * 2;
 
         // Die beiden Inhaltsebenen enden an der INNENkante des Rahmens, nicht an seiner Außenkante.
         // Das ist die Entsprechung zu -fx-background-insets, das es hier nicht gibt: die Eigenschaft
@@ -91,7 +91,7 @@ public class SuiteImage extends StackPane {
         // Ende ist die Umrechnung Radius → Durchmesser, die setArcWidth verlangt.
         innerWidth = width - 2 * bw;
         innerHeight = height - 2 * bw;
-        double innerArcDiameter = Math.max(0, rahmen.cornerRadius() - bw) * 2;
+        double innerArcDiameter = Math.max(0, frame.cornerRadius() - bw) * 2;
 
         // 1. Container-Größe fixieren
         setPrefSize(width, height);
