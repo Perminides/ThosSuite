@@ -5,6 +5,7 @@ import java.util.Set;
 
 import app.shared.UiUtils;
 import app.shared.model.BorderParams;
+import app.shared.model.SketchColor;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
@@ -130,6 +131,8 @@ public abstract class Skin extends SkinProperties {
 		hannoverSessionProgressPanel = hannoverSessionProgressPanel == null ? worldSessionProgressPanel : hannoverSessionProgressPanel;
 		hannoverSessionHistoryPanel = hannoverSessionHistoryPanel == null ? worldSessionHistoryPanel : hannoverSessionHistoryPanel;
 		hannoverSessionBackButton = hannoverSessionBackButton == null ? worldSessionBackButton : hannoverSessionBackButton;
+		sketchStrokeColor = sketchStrokeColor == null ? borderShapeColor : sketchStrokeColor;
+		sketchMarkedColor = sketchMarkedColor == null ? markedColor : sketchMarkedColor;
 		toEliminateColor = toEliminateColor == null ? disabledComponentBgColor : toEliminateColor;
 		dashBoardTileBottomColor = dashBoardTileBottomColor == null ? menuBarBackground : dashBoardTileBottomColor;
 
@@ -162,6 +165,7 @@ public abstract class Skin extends SkinProperties {
 	    addIconButtonStyles(css);
 	    addImageMapStyles(css);
 	    addImagePaneStyles(css);
+	    addSketchStyles(css);
 	    addMultipleChoiceStyles(css);
 	    addAnswerSlotStyles(css); // muss nach den MC-Regeln stehen, siehe dort
 	    addShapeMapStyles(css);
@@ -572,6 +576,43 @@ public abstract class Skin extends SkinProperties {
 	       .end();
 	}
 	
+
+	/**
+	 * Die Flächen einer Skizze.
+	 *
+	 * <p>Drei Zustände, und sie bauen aufeinander auf. Die Grundregel setzt nur den Strich — die
+	 * Füllung bleibt auf der Voreinstellung eines {@code Path}, nämlich keine. Das ist der Zustand
+	 * „noch nicht beantwortet": ein sichtbares Skelett, durch das der Bilderrahmen scheint.</p>
+	 *
+	 * <p>{@code :marked} legt eine Füllung darauf. Die Farbklassen füllen endgültig und nehmen den
+	 * Strich <b>weg</b>: Zwei benachbarte Flächen derselben Farbe sollen am Ende verschmelzen, denn
+	 * die Naht zwischen ihnen ist eine Erfindung der Strukturdatei und steht nicht auf dem Original.</p>
+	 */
+	private void addSketchStyles(CssBuilder builder) {
+	    builder.start(".my-sketch-area")
+	       .add("-fx-stroke", sketchStrokeColor)
+	       .add("-fx-stroke-width", sketchStrokeWidth + "px")
+	       .end();
+
+	    builder.rule(".my-sketch-area:marked", "-fx-fill", sketchMarkedColor);
+
+	    addSketchColorRule(builder, SketchColor.ROT, sketchRot);
+	    addSketchColorRule(builder, SketchColor.BLAU, sketchBlau);
+	    addSketchColorRule(builder, SketchColor.HELLBLAU, sketchHellblau);
+	    addSketchColorRule(builder, SketchColor.GRUEN, sketchGruen);
+	    addSketchColorRule(builder, SketchColor.GELB, sketchGelb);
+	    addSketchColorRule(builder, SketchColor.ORANGE, sketchOrange);
+	    addSketchColorRule(builder, SketchColor.WEISS, sketchWeiss);
+	    addSketchColorRule(builder, SketchColor.SCHWARZ, sketchSchwarz);
+	}
+
+	/** Eine gefüllte Fläche trägt ihre Farbe und keinen Strich mehr — siehe {@link #addSketchStyles}. */
+	private void addSketchColorRule(CssBuilder builder, SketchColor color, Color value) {
+	    builder.start(".my-sketch-area." + color.styleClass())
+	       .add("-fx-fill", value)
+	       .add("-fx-stroke", "transparent")
+	       .end();
+	}
 
 	/**
 	 * Die Formen der Shape-Karten.

@@ -10,7 +10,9 @@ import app.learn.model.Deck;
 import app.learn.model.GeoMap;
 import app.learn.model.LearnStat;
 import app.learn.model.SessionProgressCounter;
+import app.learn.repository.SketchFileSource;
 import app.shared.model.ScreenView;
+import app.shared.model.SketchColor;
 import app.shared.model.AnkiCallbacks;
 import app.shared.ui.AnkiLearnView;
 import app.shared.ui.FastWriteLearnView;
@@ -29,6 +31,9 @@ public class SessionPresenter {
     private final AnkiLearnView view;
     private FastWriteLearnView fastView; // Gleiches Objekt wie die view, aber mit mehr Methoden sichtbar. Nur bei Fast Write gesetzt
     private final SessionProgress sessionProgress;
+    // Strukturdateien sind winzig und werden je Karte einmal gebraucht — gelesen wie ein Bild,
+    // ohne Vorrat.
+    private final SketchFileSource sketchSource = new SketchFileSource();
 
     SessionPresenter(Deck type, SessionProgress sessionProgress) {
     	this.sessionProgress = sessionProgress;
@@ -62,6 +67,7 @@ public class SessionPresenter {
             case GERMANY_CARDS -> new ShapeMapLearnView(id, mapName, kategorie, map.getShapeGeometries(), callbacks);
             case MC_CARDS      -> new McLearnView(id, mapName, kategorie, callbacks);
             case WORLD_CARDS,
+                 FLAG_CARDS,
                  HANNOVER_CARDS-> new ImageMapLearnView(id, mapName, kategorie, map::geometryFor, callbacks);
             case FAST_WRITE_CARDS -> {
                 fastView = new FastWriteLearnView(id, mapName, kategorie, Card.MAX_FAST_SLOTS, callbacks);
@@ -77,6 +83,19 @@ public class SessionPresenter {
 	
 	void showImage(String imageName) {
 		view.setImage(imageName);
+	}
+
+	/** Lädt die Struktur und zeigt sie leer — eine zuvor gezeigte Skizze ist damit weg. */
+	void showSketch(String structure) {
+		view.setSketch(sketchSource.load(structure));
+	}
+
+	void markSketchArea(int area) {
+		view.markSketchArea(area);
+	}
+
+	void fillSketchArea(int area, SketchColor color) {
+		view.fillSketchArea(area, color);
 	}
 
 	void showQuestion(String text) {

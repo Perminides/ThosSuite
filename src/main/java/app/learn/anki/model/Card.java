@@ -8,13 +8,15 @@ import java.util.List;
 import java.util.Set;
 
 import app.learn.model.LearnStat;
+import app.shared.model.SketchColor;
 import app.shared.AppClock;
 
 /**
  * Aktueller Ansatz: Jede Karte gibt es genau 1x im Speicher!
  */
 public class Card {
-    public sealed interface Step permits Image, ClickMapElements, Output, Input, MC, MarkMapElements, Pause, Fast {}
+    public sealed interface Step permits Image, ClickMapElements, Output, Input, MC, MarkMapElements, Pause, Fast,
+            SketchImage, SketchImageMark, SketchImageFill {}
 
     /** So viele Antwortfelder passen höchstens auf den Schirm — gilt für jeden Skin gleich. */
     public static final int MAX_FAST_SLOTS = 10;
@@ -28,6 +30,18 @@ public class Card {
     public record MarkMapElements(Set<String> left, Set<String> right) implements Step {} // Momentan ist right immer leer. Vielleicht will ich später aber auch mal die optionalen Shapes berücksichtigen...
     public record Pause() implements Step {}
     public record Fast(int seconds, boolean ordered, int slots, List<Answer> answers) implements Step {}
+
+    /**
+     * Die drei Schritte einer Skizze: laden, eine Fläche hervorheben, eine Fläche färben.
+     *
+     * <p>Sie zeigen nur an und fragen nichts — gefragt wird daneben per MC. Getrennt, damit der
+     * Ablauf vollständig in der Zeile steht und keiner der Schritte etwas über seine Nachbarn
+     * wissen muss. {@code SketchImage} ist zugleich das Zurücksetzen: eine neu geladene Struktur
+     * ist wieder leer.</p>
+     */
+    public record SketchImage(String structure) implements Step {}
+    public record SketchImageMark(int area) implements Step {}
+    public record SketchImageFill(int area, SketchColor color) implements Step {}
     
     public record AnswerOption(String text, boolean correct) {}
     public record Answer(String hint, List<String> variants) {} // Eine gesuchte Antwort: ihre Schreibvarianten und ein Hinweis, der bis zum Treffer im Feld steht.  
@@ -158,8 +172,19 @@ public class Card {
             case "Mark"  -> parseClickOrMark(body, false);
             case "Pause" -> new Pause();
             case "Fast"  -> parseFast(body);
+            case "SketchImage"     -> new SketchImage(body.trim());
+            case "SketchImageMark" -> new SketchImageMark(Integer.parseInt(body.trim()));
+            case "SketchImageFill" -> parseSketchFill(body);
             default      -> throw new RuntimeException("Unbekannter Step: " + kind);
         };
+    }
+
+    /** {@code <fläche>,<farbname>} — ein unbekannter Farbname fliegt beim Einlesen des Decks. */
+    private static Step parseSketchFill(String body) {
+        String[] parts = body.split(",", 2);
+        if (parts.length < 2)
+            throw new RuntimeException("SketchImageFill braucht Fläche und Farbe: " + body);
+        return new SketchImageFill(Integer.parseInt(parts[0].trim()), SketchColor.fromLabel(parts[1].trim()));
     }
 
     // --- Fast ---

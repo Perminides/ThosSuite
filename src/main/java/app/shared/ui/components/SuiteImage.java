@@ -2,9 +2,12 @@ package app.shared.ui.components;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.util.List;
 
 import app.shared.Config;
 import app.shared.model.BigComponentStyle;
+import app.shared.model.ShapeGeometry;
+import app.shared.model.SketchColor;
 import app.shared.skin.SkinService;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.image.Image;
@@ -15,15 +18,19 @@ import javafx.scene.shape.Rectangle;
 
 
 /**
- * Used to show an image. Consists of three Rectangles:
+ * Used to show an image. Consists of three Rectangles and one content layer:
  * 		- backgroundRect	-> Used when no image is shown.
  * 		- imageRect			-> The image to display
+ * 		- contentPane		-> Die Skizze statt eines Bildes (siehe {@link #setSketch})
  * 		- borderRect		-> Optional border
  * 
  * CSS-classes:
  * 		backgroundRect	= "my-image-background-layer"
  * 		borderRect		= "my-image-border-layer"
  * 
+ * <p>Bild und Skizze schließen einander aus: Wer das eine setzt, leert das andere. Rahmen, Ecken
+ * und Hintergrund gelten für beide gleich — sie gehören dem Bilderrahmen, nicht seinem Inhalt.
+ * Die {@link SketchPane} ist Innenleben und wird nicht herausgereicht.</p>
  */
 public class SuiteImage extends StackPane {
 
@@ -31,8 +38,17 @@ public class SuiteImage extends StackPane {
     private final Rectangle backgroundRect;
     // Layer 2: Das eigentliche Bild
     private final Rectangle imageRect;
+    // Layer 2b: Die Skizze anstelle eines Bildes
+    private final StackPane contentPane;
     // Layer 3: Der Rahmen (liegt ganz oben)
     private final Rectangle borderRect;
+
+    // Die Maße innerhalb des Rahmens — das Bildrechteck wird auf das Seitenverhältnis seines
+    // Bildes zurückgeschnitten und braucht sie bei jedem Wechsel neu.
+    private final double innerWidth;
+    private final double innerHeight;
+
+    private SketchPane sketch;
 
     /**
      * Mit fester Lage — für absolut positionierende Hosts.
@@ -73,8 +89,8 @@ public class SuiteImage extends StackPane {
         // Zwei Zweien mit verschiedenen Gründen: die Maße schrumpfen um 2*bw (links und rechts, oben
         // und unten), der Eckradius nur um bw (der wird vom Eckmittelpunkt gemessen) — und das *2 am
         // Ende ist die Umrechnung Radius → Durchmesser, die setArcWidth verlangt.
-        double innerWidth = width - 2 * bw;
-        double innerHeight = height - 2 * bw;
+        innerWidth = width - 2 * bw;
+        innerHeight = height - 2 * bw;
         double innerArcDiameter = Math.max(0, rahmen.cornerRadius() - bw) * 2;
 
         // 1. Container-Größe fixieren
@@ -100,6 +116,20 @@ public class SuiteImage extends StackPane {
         imageRect.setFill(Color.TRANSPARENT);
 
         // ---------------------------------------------------------
+        // Layer 2b: Inhalt (Mitte) — eingerückt wie das Bild
+        // ---------------------------------------------------------
+        // Der Clip ist derselbe Gedanke wie die Einrückung der beiden Rechtecke: Ein Inhalt, der bis
+        // in die Ecken reicht, lügte sonst unter der Rundung des Rahmens hervor.
+        contentPane = new StackPane();
+        contentPane.setPrefSize(innerWidth, innerHeight);
+        contentPane.setMinSize(innerWidth, innerHeight);
+        contentPane.setMaxSize(innerWidth, innerHeight);
+        Rectangle contentClip = new Rectangle(innerWidth, innerHeight);
+        contentClip.setArcWidth(innerArcDiameter);
+        contentClip.setArcHeight(innerArcDiameter);
+        contentPane.setClip(contentClip);
+
+        // ---------------------------------------------------------
         // Layer 3: Rahmen (Oben) — volle Größe, die StackPane zentriert die kleineren Ebenen darin
         // ---------------------------------------------------------
         borderRect = new Rectangle(width, height);
@@ -112,9 +142,9 @@ public class SuiteImage extends StackPane {
         borderRect.getStyleClass().add("my-image-border-layer");
 
         // ---------------------------------------------------------
-        // Stapeln: Hintergrund -> Bild -> Rahmen
+        // Stapeln: Hintergrund -> Bild -> Inhalt -> Rahmen
         // ---------------------------------------------------------
-        getChildren().addAll(backgroundRect, imageRect, borderRect);
+        getChildren().addAll(backgroundRect, imageRect, contentPane, borderRect);
     }
     
 
@@ -127,9 +157,10 @@ public class SuiteImage extends StackPane {
      * @param imageName
      */
     public void setImage(String imageName) {
+        sketch = null;
+        contentPane.getChildren().clear();
         if (imageName == null || imageName.isEmpty()) {
-            imageRect.setStyle("");
-            imageRect.setFill(Color.TRANSPARENT);
+            clearImageLayer();
             return;
         }
 
@@ -145,12 +176,63 @@ public class SuiteImage extends StackPane {
                 throw new RuntimeException("Fehler beim Laden des Bildes: " + imageName, img.getException());
             }
             imageRect.setStyle(""); // CSS weg, falls vorher gesetzt
+            fitToImage(img);
             imageRect.setFill(new ImagePattern(img));
         } catch (MalformedURLException e) {
             throw new RuntimeException("Ungültige Bild-URL: " + imageName, e);
         }
     }
     
+    /**
+     * Das Bildrechteck bekommt das Seitenverhältnis seines Bildes, die StackPane zentriert es darin.
+     *
+     * <p>Sonst würde gestreckt: Eine {@code ImagePattern}-Füllung bildet das Bild auf die Fläche des
+     * Rechtecks ab, ohne nach dem Verhältnis zu fragen. Das Muster über einen kleineren Ausschnitt zu
+     * verankern hilft nicht — dann kachelt es. Also schrumpft das Rechteck selbst.</p>
+     */
+    private void fitToImage(Image img) {
+        double factor = Math.min(innerWidth / img.getWidth(), innerHeight / img.getHeight());
+        imageRect.setWidth(img.getWidth() * factor);
+        imageRect.setHeight(img.getHeight() * factor);
+    }
+
+    /** Kein Bild: durchsichtig, und wieder in voller Größe für das nächste. */
+    private void clearImageLayer() {
+        imageRect.setStyle("");
+        imageRect.setFill(Color.TRANSPARENT);
+        imageRect.setWidth(innerWidth);
+        imageRect.setHeight(innerHeight);
+    }
+
+    /**
+     * Zeigt eine neue, noch leere Skizze aus den gegebenen Teilflächen — ein zuvor gesetztes Bild
+     * verschwindet dabei, wie umgekehrt auch.
+     *
+     * <p>Die Skizze wird an den Ecken beschnitten wie das Bild. Sie fällt dabei eine Spur größer aus
+     * als die Ebene, damit ihre äußere Kontur ganz im Clip verschwindet; siehe {@link SketchPane}.</p>
+     */
+    public void setSketch(List<ShapeGeometry> areas) {
+        clearImageLayer();
+        sketch = new SketchPane(areas, contentPane.getPrefWidth(), contentPane.getPrefHeight());
+        contentPane.getChildren().setAll(sketch);
+    }
+
+    /** Hebt eine Fläche der Skizze hervor. */
+    public void markSketchArea(int area) {
+    	activeSketch().mark(area);
+    }
+
+    /** Färbt eine Fläche der Skizze. */
+    public void fillSketchArea(int area, SketchColor color) {
+    	activeSketch().fill(area, color);
+    }
+
+    private SketchPane activeSketch() {
+        if (sketch == null)
+            throw new IllegalStateException("Im Bilderrahmen liegt keine Skizze — fehlt ein SketchImage-Schritt?");
+        return sketch;
+    }
+
     // Getter: Falls jemand Zugriff auf den Hintergrund braucht
     public Rectangle getBackgroundRect() { return backgroundRect; }
     

@@ -19,6 +19,9 @@ import app.learn.anki.model.Card.MC;
 import app.learn.anki.model.Card.MarkMapElements;
 import app.learn.anki.model.Card.Output;
 import app.learn.anki.model.Card.Pause;
+import app.learn.anki.model.Card.SketchImage;
+import app.learn.anki.model.Card.SketchImageFill;
+import app.learn.anki.model.Card.SketchImageMark;
 import app.learn.anki.model.Card.Step;
 import app.shared.Log;
 
@@ -318,6 +321,9 @@ public class CardProgress {
 			    presenter.waitForClick(allShapes);
 			}
 			case Image image -> presenter.showImage(image.file());
+			case SketchImage sketch -> presenter.showSketch(sketch.structure());
+			case SketchImageMark mark -> presenter.markSketchArea(mark.area());
+			case SketchImageFill fill -> presenter.fillSketchArea(fill.area(), fill.color());
 			case Input _ -> presenter.waitForText();
 			case Pause _ -> {	presenter.pause();
 								isPaused = true;}
