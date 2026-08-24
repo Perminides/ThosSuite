@@ -31,6 +31,13 @@ import javafx.scene.shape.Rectangle;
  * <p>Bild und Skizze schließen einander aus: Wer das eine setzt, leert das andere. Rahmen, Ecken
  * und Hintergrund gelten für beide gleich — sie gehören dem Bilderrahmen, nicht seinem Inhalt.
  * Die {@link SketchPane} ist Innenleben und wird nicht herausgereicht.</p>
+ * 
+ * !Sofort: Mach dir bitte Gedanken, ob Du nicht a) auf das zwangsweise in ein Quadrat pressen von Bildern verzichten willst
+ * (Ja willst Du). Die Suite kann auch ein rechteckiges soweit verkleinern das reinpasst und dann mittig anzeigen. Diese
+ * transparenten Teile da reinzumalen, ist Quatch. Und b) wieso verkleinerst Du die immer noch? JavaFX Sklaierung ist echt super
+ * Das kann die selber verkleinern! Ok. Natürlich würdest Du mit den Originalen den Bilderordner aufblähen. Das ist schon richtig
+ * Aber probiere es zumindest mal aus bitte. Nicht auszuschließen, dass die JavaFX Skalierung am Ende eh besser aussieht als deine
+ * verkleinerten Dateien. Dann bliebe nur noch das Filesize Argument. Aber diskutiere es mal mit Claude!
  */
 public class SuiteImage extends StackPane {
 

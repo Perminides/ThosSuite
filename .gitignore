@@ -32,3 +32,5 @@ desktop.ini
 
 # Office-Sperrdateien einer geoeffneten Datei. Enthalten den Windows-Benutzernamen.
 ~$*
+# Chatprotokolle. Gespraeche gehoeren nicht ins Repo; sie liegen daneben.
+docs/flaggen/Chats/

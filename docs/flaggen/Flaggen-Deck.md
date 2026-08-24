@@ -1,7 +1,12 @@
 # ThosSuite — Flaggen-Deck (Planung)
 
-**Stand:** 21.08.2026 — Eröffnungsstaffel, Waagerecht-Zweig, Gösch und Dreieck ausformuliert; alle
-206 Flaggen sind attributiert. Es existiert noch **kein Code**.
+**Stand:** 24.08.2026 — **Die Struktur-Fragenstaffel steht und alle 206 Flaggen sind danach
+attributiert.** Fünfzehn Spalten, geprüft durch `pruefe-attribute.py`, null Widersprüche. Der
+**Durchstich läuft**: Deutschland und Dänemark sind echte Karten in der Suite, mit aufbauender Skizze.
+
+Was der Tabelle für vollständige Karten noch fehlt: die **Farbliste** je Flagge (Dateneingabe, kein
+Entwurf) und die **Zusatzelemente** (Vokabular bewusst vertagt, siehe §8). Als Nächstes kommt der
+**Generator**.
 
 **Charakter dieses Dokuments:** Übergabe an das Ich, das die Sache irgendwann anfasst. Festgehalten
 ist, was entschieden ist, was noch offen ist und was bewusst verworfen wurde. Deskriptiv für den
@@ -48,13 +53,12 @@ die Antwort.
 
 **Die Attribute sind für die Fragen gebaut, aber nicht 1:1 deren Antworten.** Sie beschreiben die
 fertige Flagge, die Fragenstaffel ist ein Weg dorthin — dieselbe Information, andere Richtung.
-Dazwischen liegt eine **View auf die Attributtabelle**, die Attribute auf Fragefelder abbildet: Ein
-Teil der Fragen liest ein Attribut direkt, andere entstehen aus einem `CASE` (der Rahmen aus
-≥2 waagerecht *und* ≥2 senkrecht *und* kein Kreuz, das Dreieck-ja/nein aus der Dreiecksform, der
-Hintergrund daraus, welches Attribut gesetzt ist). Damit liegt die Ableitungslogik an einer
-deklarativen, einsehbaren Stelle statt in Java, und die Schritt-Tabelle zeigt immer auf die View —
-sie muss nicht wissen, ob dahinter eine Spalte oder ein Ausdruck steckt. Es wird
-ausdrücklich *nicht* versucht, alle Flaggen wasserdicht zu attributisieren; das gelingt ohnehin nicht.
+Dazwischen liegt eine **Ableitung**: Ein Teil der Fragen liest ein Attribut direkt, andere entstehen
+aus einer Regel (der Rahmen aus ≥2 waagerecht *und* ≥2 senkrecht *und* kein Kreuz, das
+Dreieck-ja/nein aus der Dreiecksform, der Hintergrund daraus, welches Attribut gesetzt ist). Diese
+Ableitung wohnt im Generator — und weil ein Skript nicht so gut lesbar ist wie ein kurzer Ausdruck,
+gehören ihre Regeln in dieses Dokument. Es wird ausdrücklich *nicht* versucht, alle Flaggen
+wasserdicht zu attributisieren; das gelingt ohnehin nicht.
 Preis: eine nachträglich eingefügte Frage kostet bis zu 200 nachzupflegende Zellen — im Regelfall
 deutlich weniger, weil die meisten Fragen tief im Baum hängen. Wo eine neue Frage aus vorhandenen
 Spalten berechenbar ist (Streifenzahl aus der Farbliste), kostet sie nichts.
@@ -112,36 +116,65 @@ Cookinseln, England, Grönland, Guam, Hongkong, Neukaledonien, Palästina, Puert
 Taiwan, Wales). Nicht drin: Vatikan und Kosovo. Die Reihenfolge ist die der Signatur:
 
 ```
- 1  Spezial ganz zum Schluss fragen      9  Kreuz parallel
- 2  Durchgehende waagerechte Streifen   10  Diagonale Linie steigend
- 3  3W  — Breitenmuster der Dreier      11  Diagonale Linie fallend
- 4  5W  — Streifenstruktur der Fünfer   12  Dreiecksform
- 5  Durchgehende senkrechte Streifen    13  Dreiecksflächen
- 6  Senkrechter Streifen wo?            14  Gösch
- 7  Kreuz senkrecht
- 8  Kreuz diagonal
+ 1  Rechtwinklig?            6  Hintergrundtyp        11  S-Anordnung
+ 2  Rahmen?                  7  W-Streifen            12  Kreuzausrichtung
+ 3  Gösch?                   8  3W                    13  Kreuzarme
+ 4  Dreieck von links?       9  5W                    14  SW Streifen
+ 5  Dreiecksflächen         10  S-Streifen            15  Spezial
 ```
 
-Die Werte entsprechen jeweils den Antwortoptionen ihrer Frage:
+**Die ersten fünf gelten für alle**, die übrigen hängen am `Hintergrundtyp` — er ist die Weiche, und
+jeder seiner Werte zieht seine eigenen Folgespalten nach sich:
+
+| Hintergrundtyp | Flaggen | Folgespalten |
+|---|---|---|
+| 0 waagerechte Streifen | 103 | `W-Streifen`, daraus `3W` (bei 3) und `5W` (bei 5) |
+| 1 senkrechte Streifen | 28 | `S-Streifen`, `S-Anordnung` |
+| 2 Kreuz | 15 | `Kreuzausrichtung`, `Kreuzarme` |
+| 3 diagonal | 12 | — |
+| 4 einfarbig | 35 | — |
+| 5 senkrechtes Band mit waagerechten Streifen | 6 | `SW Streifen` |
+| 7 speziell | 7 | `Spezial` |
+
+Die **6 bleibt bewusst frei** — Platz für einen Fall, der noch kommen kann.
+
+**`x` heißt „diese Frage wird hier nicht gestellt"**, und das ist etwas anderes als eine 0. Die 0 ist
+ein regulärer Antwortwert — „nein", „waagerecht", „alle gleich breit", „uni". Nur die drei
+Zählspalten `W-Streifen`, `S-Streifen` und `SW Streifen` kennen sie nicht: Dort *ist* der Wert die
+Anzahl, und die fängt bei 2 an.
+
+Genau daran hängen die Prüfregeln in `pruefe-attribute.py`: Eine Spalte trägt **genau dann** einen
+Wert statt `x`, wenn die Frage davor hierher geführt hat.
+
+Die Werte entsprechen den Antwortoptionen ihrer Frage, nullbasiert:
 
 ```
-3W  1 alle gleich breit          5W  1 2 und 4 dünn, Mitte nicht breiter
-    2 mittlerer breiter              2 alle gleich
-    3 mittlerer schmaler             3 Mitte breiter, 2 und 4 nicht dünn
-    4 oberster breiter               4 Mitte breiter und 2 und 4 dünn
-    (5 unterster breiter)            5 oberster am breitesten
-                                     (6 unterster am breitesten)
+3W  0 alle gleich breit          5W  0 2 und 4 dünn, Mitte nicht breiter
+    1 mittlerer breiter              1 alle gleich
+    2 mittlerer schmaler             2 Mitte breiter, 2 und 4 nicht dünn
+    3 oberster breiter               3 Mitte breiter und 2 und 4 dünn
+    (4 unterster breiter)            4 oberster am breitesten
+                                     (5 unterster am breitesten)
 
-Dreiecksform  1 einzelnes echtes Dreieck        Dreiecksflächen  1 äußere als Umrandung
-              2 abgeschnittenes Dreieck                          2 zwei verschiedene Tiefen
-              3 waagerecht zum Flugteil verlängert               3 gestaffelt und umrandet
-              4 echtes Dreieck, mehr als eine Farbe
-              5 einzeln, reicht bis zur Flugseite
+S-Anordnung  0 gleichmäßig breit    Kreuzausrichtung  0 senkrecht     Kreuzarme  0 uni
+             1 mittlerer breiter                      1 diagonal                 1 drei parallele Farben
+             2 rechter breiter                        2 beides                   2 fimbriert
+             (3 linker breiter)                                                  3 nicht sichtbar
+
+Dreieck von links  1 einzelnes echtes Dreieck        Dreiecksflächen  1 äußere als Umrandung
+                   2 abgeschnittenes Dreieck                          2 zwei verschiedene Tiefen
+                   3 waagerecht zum Flugteil verlängert               3 gestaffelt und umrandet
+                   4 echtes Dreieck, mehr als eine Farbe
+                   5 einzeln, reicht bis zur Flugseite
 ```
 
-Die eingeklammerten Werte sind reine Distraktoren und kommen bei keiner Flagge vor. Entfallen sind
-„Streifenfimbrierung" (steckt jetzt in 5W) sowie „Komplette Dreiecke von links", „Dreieck durchgehend"
-und „Dreieck speziell?" (ersetzt durch die beiden Dreiecksspalten).
+Die eingeklammerten Werte sind reine Distraktoren und kommen bei keiner Flagge vor.
+
+**`S-Anordnung` deckt alle senkrechten Streifenzahlen ab**, nicht nur die Dreier — sie sagt schlicht,
+welcher Streifen der breiteste ist. Deshalb tragen Pakistan und Portugal (zwei Streifen) genauso einen
+Wert wie Sri Lanka (vier). Die waagerechte Seite ist dort anders geschnitten: `3W` und `5W` sind zwei
+Spalten für zwei Streifenzahlen, weil `3W` mit „mittlerer schmaler" etwas unterscheidet, das eine reine
+„welcher ist der breiteste"-Frage nicht ausdrücken kann. Die Asymmetrie ist gewollt.
 
 **„Rahmen" ist kein Attribut, sondern abgeleitet** — ≥2 waagerechte *und* ≥2 senkrechte Streifen
 *und* kein Kreuz. Trifft Guam, Malediven, Montenegro, Sri Lanka und Grenada; die Kreuz-Bedingung hält
@@ -270,8 +303,47 @@ Bei allen anderen Anzahlen gibt es nur ein oder zwei Flaggen, alle gleichmäßig
 Frage. Nordkoreas breiter Mittelstreifen und Botswanas breite Ränder laufen bewusst auf demselben
 Sketch mit.
 
-Der Zweig umfasst damit **26 Signaturen für 100 Flaggen**. Gösch und Dreieck gehören zum Sketch und
-bilden eigene Signaturen — nur die Zusatzelemente sind Auflagen, die nicht mitgezeichnet werden.
+Der Zweig umfasst **103 Flaggen**, davon 78 mit reinen Streifen — deren Strukturdateien erzeugt das
+Skript. Die übrigen 25 tragen Dreieck, Gösch oder ein Kreuz und bleiben Handarbeit. Gösch und Dreieck
+gehören zum Sketch und bilden eigene Signaturen; nur die Zusatzelemente sind Auflagen, die nicht
+mitgezeichnet werden.
+
+### Der Senkrecht-Zweig
+
+Wer bei Frage 5 „senkrechte Streifen" antwortet, bekommt zwei Fragen:
+
+```
+Wie viele senkrechte Streifen?   S-Streifen     2 (4 Flaggen) · 3 (23) · 4 (1)
+Wie sind sie verteilt?           S-Anordnung    0 gleichmäßig  1 mittlerer breiter
+                                                2 rechter breiter  (3 linker breiter)
+```
+
+Anders als waagerecht wird die Verteilungsfrage **bei jeder Streifenzahl** gestellt, nicht nur bei
+einer bestimmten. Der Grund ist die Verteilung: Bei den senkrechten Zweiern weicht die Hälfte ab
+(Pakistan und Portugal gegen Algerien und Malta), bei den waagerechten Zweiern keine einzige. Die
+Begründung, mit der die Frage dort entfällt, trägt hier also nicht.
+
+### Der Kreuz-Zweig
+
+Wer bei Frage 5 „Kreuz" antwortet, bekommt zwei Fragen:
+
+```
+Welche Form hat das Kreuz?     Kreuzausrichtung   0 senkrecht  1 diagonal  2 beides
+Welche Form haben die Arme?    Kreuzarme          0 uni  1 drei parallele Farben
+                                                  2 fimbriert  3 nicht sichtbar
+```
+
+Fünfzehn Flaggen, und sie zerfallen in sechs Sketches: Dänemark (das auch die Dominikanische Republik
+mitnimmt), Dominica, Island, Jamaika, Panama und das Vereinigte Königreich.
+
+Die zweite bringt den Begriff **Fimbrierung** zurück, den §9 für die Streifen verworfen hat. Das ist
+kein Rückfall: Der Einwand von damals hing an der Population, nicht am Begriff. Bei den Fünfern gab es
+echte Grenzfälle, bei den Kreuzen nicht — die Menge ist klein und **geschlossen**, es kommen keine
+Flaggen mehr dazu. „Alle durchgesehen und eindeutig" ist hier deshalb eine vollständige Prüfung und
+kein Augenmaß.
+
+`nicht sichtbar` ist der Panama-Fall und entspricht der `-1` bei den Bänderzahlen: Die Teilung ist da,
+die Farbe des Kreuzes nicht zu sehen.
 
 ### Farben
 
@@ -331,60 +403,48 @@ Ein Kriterium, das an mehreren Stellen gebraucht wird:
 
 ## 4. Karten und Daten
 
-**Eine Flaggenkarte ist eine ganz normale CSV-Zeile** mit genau einem Step: `Flag:Deutschland`. Damit
-hat sie eine Identität, einen CardProgress, ein Level — alles über bestehende Maschinerie. Der Tag
-`Flagge` erlaubt im Anki-Konfigdialog „gib mir 20 Flaggenkarten".
+**Ein Generator schreibt eine ganz normale Deck-CSV.** Kein Sonderweg in der Suite: Der Parser liest
+Flaggenkarten wie jede andere Zeile — Id in Spalte 0, Tag, dann die Steps. Damit hat jede Karte
+Identität, CardProgress und Level über die bestehende Maschinerie, und der Tag `Flagge` erlaubt im
+Anki-Konfigdialog „gib mir 20 Flaggenkarten".
 
-Der Generator ist damit kein paralleler Kartenerzeuger, sondern ein **Step-Expander**: `Flag:` wird
-beim Einlesen zur vollen Sequenz aufgelöst, deren Länge und Verzweigung von den Attributwerten
-abhängt.
+**Zwei getrennte Dateien:** eine generierte mit einer Zeile pro Land, eine handgeschriebene mit den
+Geschichten-Karten. Die generierte wird nie von Hand angefasst.
 
-Bewusst in Kauf genommen: Die Deck-CSV ist Master dafür, *welche* Karten existieren, aber nicht mehr
-dafür, *was* sie fragen. Und eine Änderung am Fragensatz ändert alle Flaggenkarten still mit, ohne
-dass der Level das merkt.
+Drei Gründe für den Generator statt eines Interpreters in der Suite:
+
+- Die Suite bleibt dumm — kein Step-Expander, keine Ableitungslogik im Anwendungscode.
+- Der Fragensatz wird sichtbar: Was eine Karte fragt, steht in der Datei und nicht im Ablauf.
+- **`git diff` wird zum Prüfwerkzeug.** Fragensatz ändern, Generator laufen lassen, und der Diff
+  zeigt Zeile für Zeile, welche Karten sich wie geändert haben.
+
+Der letzte Punkt war der Ausschlag. Der Interpreter hätte den Fragensatz still über alle Karten
+geändert, ohne dass es irgendwo aufgefallen wäre.
+
+Die **Karten-Id steht explizit in Spalte 0**, nicht im Zeileninhalt. Der Lernfortschritt überlebt
+deshalb jede Regenerierung — das ist die Bedingung, unter der ein Generator überhaupt trägt.
 
 Die **Attribute** liegen in einer eigenen Tabelle, nicht in der Deck-CSV — zwei verschiedene Dinge.
-Geschichten-Karten sind normale handgeschriebene Zeilen in derselben Deck-CSV.
 
-### Drei Tabellen und eine View
+### Was in die Attributtabelle gehört
 
-**`flagge`** — eine Zeile pro Land mit den Attributen (Stand: 15). Sie beschreibt die Flagge, nicht
-die Fragen.
+> **Bleibt das Attribut wahr und sinnvoll, wenn man die Fragenstaffel wegwirft?**
 
-**View auf `flagge`** — bildet Attribute auf **Fragefelder** ab. Die meisten Felder lesen ein Attribut
-direkt durch; drei entstehen aus einem `CASE`: der Rahmen (≥2 waagerecht *und* ≥2 senkrecht *und* kein
-Kreuz), das Dreieck-ja/nein (Dreiecksform gesetzt) und der Hintergrund (welches Attribut gesetzt ist).
-Damit steht die Ableitungslogik deklarativ an einer Stelle statt in Java.
+`Dreiecksform = 2` besteht den Test: Kuwaits Figur ist ein Trapez, egal ob und wie danach gefragt
+wird. Ein Attribut „Antwort auf Frage 5" besteht ihn nicht — es stimmt nur, solange Frage 5 genau so
+geschnitten ist, und wird bei einem Umbau der Staffel still falsch, ohne dass man es an 206 Zeilen
+merkt.
 
-> Aufpassen: Im Hintergrund-`CASE` steckt eine **Priorität** — Dominica hat waagerechte *und*
-> senkrechte Streifen *und* ein Kreuz, die Reihenfolge der `WHEN`-Zweige entscheidet. Das ist Logik,
-> nicht bloß Abbildung, und braucht dieselbe Sorgfalt wie die Ausschließlichkeit einer Antwortliste.
+Die Tabelle beschreibt also die Flagge, die Fragenstaffel ist ein Weg dorthin, und **dazwischen liegt
+eine Ableitung**: der Rahmen aus ≥2 waagerecht *und* ≥2 senkrecht *und* kein Kreuz, das
+Dreieck-ja/nein aus der Dreiecksform, der Hintergrund daraus, welches Attribut gesetzt ist. Diese
+Ableitung wohnt im Generator.
 
-**`schritt`** — die Fragenstaffel, eine Zeile pro Knoten, Reihenfolge = Zeilenreihenfolge:
-
-```
-id          frage                                    art          werte        feld          routing
-form        Ist die Flagge rechteckig?               MC           janein       form          nein>spezial
-rahmen      Hat die Flagge einen Rahmen?             MC           janein       rahmen
-goesch      Hat die Flagge einen Gösch?              MC           janein       goesch
-dreieck     Ragt ein Dreieck … herein?               MC           janein       dreieck       nein>hintergrund
-dform       Was beschreibt die Dreiecksfigur …?      MC           dformen      dreiecksform  4>dflaeche; *>hintergrund
-dflaeche    Wie sind die Flächen angeordnet?         MC           dflaechen    dreiecksflae
-hintergrund Was beschreibt den Hintergrund …?        MC           hgruende     hintergrund   waagerecht>anz_w; …
-anz_w       Wie viele waagerechte Streifen?          MC           zahlen2_9    waagerecht    3>w3; 5>w5; *>skizze
-w3          Wie sind die Streifen verteilt?          MC           w3werte      3W            *>skizze
-w5          Wie sind die Streifen verteilt?          MC           w5werte      5W
-skizze      Welche Farbe hat die markierte Fläche?   farbschleife farben       farbliste
-echt        —                                        bild
-```
-
-Leeres Routing heißt „nächste Zeile", `*` steht für den Rest. Von zehn Knoten routen nur vier
-überhaupt — die Staffel verzweigt viel weniger, als sie sich anfühlt. Der Code wird damit ein kleiner
-Interpreter: Zeile lesen, Feldwert für dieses Land holen, Step erzeugen, Routing auswerten, weiter.
-Kein `if` pro Flagge, eine neue Frage ist eine neue Zeile.
-
-**`werteliste`** — `liste | wert | text | flag`, die Antwortoptionen samt Kennzeichen für „nicht
-falsch". Dieselbe Legende, die im Sheet ohnehin geführt wird.
+> Aufpassen: Im Hintergrund steckt eine **Priorität** — Dominica hat waagerechte *und* senkrechte
+> Streifen *und* ein Kreuz, die Reihenfolge der Regeln entscheidet. Das ist Logik, nicht bloß
+> Abbildung, und braucht dieselbe Sorgfalt wie die Ausschließlichkeit einer Antwortliste. Eine Regel
+> lässt sich über alle 206 laufen und an der Zweigverteilung prüfen; eine Spalte müsste man 206-mal
+> von Hand treffen.
 
 **Distraktoren** brauchen keine eigene Spalte: Es wird zufällig aus der Werteliste gezogen, die
 richtige Antwort immer dabei. Passen alle Werte in die MC-Breite (Farben, Hintergrundkategorien),
@@ -397,9 +457,10 @@ sind damit kein Thema.
 
 ## 5. Renderer und Screen
 
-**Ein GeoJSON pro Struktur, nicht pro Land.** Flächen mit 1…n benannt, die Farben stehen in der
-Attributtabelle in Flächenreihenfolge. `horizontal-3` wird von Deutschland, Österreich und vielen
-anderen gemeinsam benutzt.
+**Ein GeoJSON pro Struktur, nicht pro Land.** Flächen mit 0…n−1 nummeriert, die Farben stehen in der
+Attributtabelle in Flächenreihenfolge. `waagerecht-3` wird von Deutschland, Österreich und vielen
+anderen gemeinsam benutzt. Die Dateien liegen in `data/sketches` — nicht bei den Flaggen, denn weder
+die Komponente noch die Steps wissen etwas von Flaggen.
 
 **Zwei Flaggen können sich nur dann einen Sketch teilen, wenn sie gleich viele Flächen haben.** Die
 Farbliste ist positionsbezogen — n Farben für n Flächen. Optische Ähnlichkeit reicht also nicht:
@@ -417,20 +478,32 @@ die Philippinen und Dschibuti liegen bei gut 43 %, Bahamas, Jordanien und Sudan 
 Drittel. Die Ausreißer haben eigene Formwerte: Eritreas Keil läuft bis zur Flugseite durch, Kuwaits
 Figur ist ein Trapez, Südafrika und Vanuatu tragen ein liegendes Y.
 
-**Die Skizze ist schematisch, nicht formattreu.** Es gibt ein vorgegebenes Standard-Seitenverhältnis;
-vorgeschlagen und bislang unwidersprochen ist **2:3** — häufigstes echtes Flaggenformat und exakt das
-Format des Bildfeldes. Koordinatenraum der Strukturdateien: **180 × 120**, was die häufigen
-Streifenzahlen sauber teilt (2→60, 3→40, 5→24). Der Kontrakt: *In diesem Verhältnis sind Kreise
-Kreise; in ein anderes gerendert wird gestaucht oder gestreckt.*
+**Die Skizze ist schematisch, nicht formattreu.** Das Seitenverhältnis ist fest **3:2** — häufigstes
+echtes Flaggenformat und das Format, für das die Skin-Maße gedacht sind. Die *Größe* ist dagegen
+frei: Gewählt wird die kleinste gerade Höhe ab 120, die durch die Streifenzahl teilbar ist, damit
+alle Koordinaten ganzzahlig bleiben (3 Streifen → 180 × 120, 13 Streifen → 195 × 130). Der Kontrakt:
+*In diesem Verhältnis sind Kreise Kreise; in einem anderen wird eingepasst und mittig gesetzt.*
+
+**Die reinen Streifenstrukturen werden erzeugt, nicht gezeichnet** —
+`docs/flaggen/build-streifen-sketch.py` schreibt `waagerecht-<n>` und `senkrecht-<n>`. Das deckt 78
+der 102 Flaggen im Waagerecht-Zweig ab; Dreieck, Gösch, Kreuz und die Sonderfälle bleiben Handarbeit.
 
 Die echten Flaggen werden hochaufgelöst im wahren Format geladen und wie jedes andere Bild
 verkleinert und mittig platziert.
 
-**Bildbeschaffung:** SVG ist **Quellformat, nicht Laufzeitformat** — herunterladen, einmal groß als
-PNG exportieren (großzügig, etwa 1500 px breit; später neu zu exportieren hieße, 200 Dateien
-anzufassen), und die App lädt PNG wie bisher. Die **SVG-Quellen bleiben liegen**, dann kostet ein
-hochauflösender Skin später nur einen Skriptlauf. Kein SVG-Support in der Suite nötig; falls doch
-einmal, dann eher `fxsvgimage` (baut JavaFX-Knoten) als Batik (rendert über AWT nach Raster).
+**Bildbeschaffung — hier fehlt noch etwas.** Im Bilderordner liegen 200 Flaggen als
+`*-flag-square-small.png`, und die sind **quadratisch gerendert**, also gestaucht. Fürs MC-Deck ist
+das richtig, fürs Flaggen-Deck unbrauchbar: Die Karte zeigt am Ende eine falsche Flagge.
+
+Es braucht also formattreue Bilder. SVG herunterladen, einmal groß als PNG exportieren (großzügig,
+etwa 1500 px breit; später neu zu exportieren hieße, 200 Dateien anzufassen), und die App lädt PNG
+wie bisher. Die **SVG-Quellen bleiben liegen**, dann kostet ein hochauflösender Skin später nur einen
+Skriptlauf. `fxsvgimage` zur Laufzeit ist zugesagt zum Ausprobieren — das offene Risiko dabei ist der
+Textanteil der Commons-SVGs (Brasiliens Spruchband, Saudi-Arabiens Schrift, Belizes Wappen).
+
+`SuiteImage` passt ein Bild inzwischen **mittig ein statt es zu strecken**. Für die bestehenden Decks
+ist das folgenlos — von 3131 Bildern im Lernordner ist genau eines nicht quadratisch, und das um
+einen Pixel.
 
 **Farbeinordnung nach dem Bild, das im Deck liegt** — nicht nach offiziellen Werten. Viele Länder
 legen ihre Farben gar nicht fest (Usbekistan: nur „azurblau"), Pantone hat keine eindeutige
@@ -444,12 +517,43 @@ Farbwechsel-Geschichten sind Stoff für Geschichten-Karten, kein Eingabewert.
 füllen sich Fläche für Fläche → Gösch wird mitgezeichnet → Zusatzelemente werden nur benannt, nicht
 gezeichnet → zum Abschluss die echte Flagge.
 
+Eine falsche Antwort beendet die Karte, wie überall sonst in der Suite. Die Skizze bleibt dann
+halbfertig stehen; sie baut sich also nur bei einem fehlerfreien Durchlauf ganz auf.
+
+### Wie es gebaut ist
+
+Drei Steps, bewusst getrennt, damit der Ablauf vollständig in der CSV-Zeile steht und kein Schritt
+etwas über seine Nachbarn wissen muss:
+
+```
+SketchImage:<struktur>            laden, alle Flächen leer — und zugleich das Zurücksetzen
+SketchImageMark:<n>               Fläche hervorheben
+SketchImageFill:<n>,<Farbname>    Fläche einfärben, läuft nach dem MC
+```
+
+Gezeichnet wird in den Szenengraph, nicht in ein fertiges Bild: `SketchPane` (paketprivat, Innenleben
+von `SuiteImage`) baut je Fläche einen `Path`. Eine Fläche hat drei Zustände — frisch umrandet und
+ungefüllt, markiert, gefüllt. **Gefüllt verliert sie ihren Strich**, damit zwei benachbarte Flächen
+derselben Farbe am Ende nahtlos verschmelzen statt eine erfundene Naht zu zeigen.
+
+Skaliert werden die **Koordinaten**, nicht der fertige Node — eine Transformation würde die Striche
+mitwachsen lassen. Der Faktor gilt für beide Achsen gleich, die Skizze wird also eingepasst und nie
+verzerrt. Sie fällt dabei absichtlich eine Spur zu groß aus, damit der Clip des Bilderrahmens ihre
+äußere Kontur ganz wegschneidet: Sonst stünde ein eckiges Rechteck in einem Rahmen mit runden Ecken.
+Kanten, die nicht anstoßen, bleiben stehen — sie sind die echte Kante der Skizze.
+
+Die acht Farben liegen als Vorgaben an den Feldern in `SkinProperties`; keine Skin-Datei muss sie
+kennen. Strich und Markierung leiten sich dagegen aus den Skin-eigenen Farben ab.
+
 **Kein Klick ins Flaggenbild.** Alles läuft über MC und Input; das Bild bleibt reine Anzeige.
 
-**Screen:** eigener Skin-Präfix `flagSession*`, rein additiv — die sechs Bausteine (MAP, TEXT_INPUT,
-IMAGE, MC, ANSWER_SLOTS, BACK_BUTTON) werden gestaffelt aufgelöst, erst über den Map-Namen, sonst
-über die Kategorie. Die Weltkarte bleibt im Deck, weil die Geschichten-Karten geografische Fragen
-stellen werden. Ein durchgespielter Layoutstand, zum Ausprobieren in `worldSession*` gesetzt:
+**Screen:** eigener Skin-Präfix `flagSession*`. Die Maße werden seit dem Staffelungs-Umbau über drei
+Stufen aufgelöst — `deckId` → `mapName` → Kategorie. Weil das Deck `mapName = "world"` trägt, erbt es
+Kartenbilder, Wallpaper und jedes noch nicht eigens gesetzte Maß vom Weltdeck; eingetragen werden muss
+nur, was anders sein soll. Die Weltkarte bleibt im Deck, weil die Geschichten-Karten geografische
+Fragen stellen werden.
+
+Vorgesehener Layoutstand (noch nicht eingetragen):
 
 ```
 MapPanel      = 790,20,1100,800
@@ -458,50 +562,64 @@ QuestionPanel = 410,547,360,370
 McPanel       = 20,547,370,0
 ```
 
-## 6. Nötige Erweiterungen der Suite
+## 6. Erweiterungen der Suite
 
-1. **Step-Expander `Flag:`** — aus Attributen eine verzweigte Step-Sequenz bauen. Der heutige Parser
-   übernimmt eine CSV-Zeile 1:1; das ist ein neues Stück Logik, kein Nebeneffekt.
-2. **Skizzen-Renderer** — GeoJSON rein, Flächen zeichnen, eine hervorheben, nach und nach einfärben.
-   Einbahnstraße ohne Klickziele. Unabhängig von Flaggendaten und Generator baubar.
-3. **Bild-Step, der zur Laufzeit gezeichnet wird** — `Image:` lädt heute eine Datei.
-4. **SuiteImage: mittig einpassen statt strecken** — No-Op für alle bestehenden Decks, weil dort
-   quadratische Bilder in quadratischen Feldern liegen.
+**Gebaut:**
+
+1. ~~Step-Expander `Flag:`~~ — **entfällt**. Der Generator schreibt die Steps aus, der Parser bleibt,
+   wie er ist.
+2. **Skizzen-Renderer** — `SketchPane` in `shared.ui.components`, paketprivat, Innenleben von
+   `SuiteImage`. Kennt keine Flaggen: Teilflächen rein, markieren, einfärben.
+3. **Drei Skizzen-Steps** — `SketchImage`, `SketchImageMark`, `SketchImageFill`. Reine Anzeige-Steps,
+   gefragt wird daneben per MC.
+4. **SuiteImage: mittig einpassen statt strecken** — erledigt, und wie erwartet ein No-Op für die
+   bestehenden Decks.
+
+Dazu, nicht ursprünglich geplant: eine **dritte Staffelungsebene** für die Skin-Maße
+(`deckId` → `mapName` → Kategorie). Ohne sie hätte das Flaggen-Deck seine Maße aus zwei verschiedenen
+Schlüsseln gelesen — der `!Sofort`-Marker in `AnkiLearnView` hatte genau das vorhergesagt.
+
+**Noch offen:**
+
 5. **Input mit Enter-Bestätigung** — der heutige Input prüft nach jedem Tastendruck und verrät damit
-   die Antwort, sobald der Antwortraum klein und durchprobierbar ist. Nur nötig, falls die
-   Gegenrichtung nicht über den Kartenklick läuft.
+   die Antwort, sobald der Antwortraum klein und durchprobierbar ist. Wird gebraucht, weil der
+   Kartenklick für die Gegenrichtung ausscheidet (siehe §8).
 6. **MC braucht eine „nicht falsch"-Option** — für Grenzfälle wie Lesotho. Der Step bleibt stehen wie
    bei einer falschen Antwort, der Fehlerzähler zählt aber nicht hoch. Damit lernt man die Grenze,
    indem man einmal dagegenstößt, und muss die kanonische Antwort trotzdem selbst produzieren.
-   Braucht ein zweites Markierungszeichen im CSV neben dem `*` für die richtige Antwort.
+   Umsetzung: ein dritter Abschnitt hinter einem zweiten `*`, abwärtskompatibel, weil bestehende
+   Zeilen mit einem `*` unverändert zerfallen. Der Aufwand steckt darin, dass `AnswerOption` drei
+   Zustände statt eines `boolean` braucht und jede lesende Stelle sich zum dritten verhalten muss.
 
 ## 7. Reihenfolge
 
-**Der Bau kommt zuerst.** Kein halbes Jahr Datensammeln auf Verdacht: Eine heute angelegte Karte soll
-morgen drankommen, und ein Modellfehler soll auffallen, solange er billig zu ändern ist. Vor dem
-ersten Land muss deshalb die ganze senkrechte Scheibe stehen — Fragensatz für waagerecht,
-Flaggentabelle, `Flag:`-Expander, Renderer, SuiteImage-Zentrierung, Skin-Layout. Eine billigere
-Teilvariante gibt es nicht.
+**Der Bau kam zuerst.** Kein halbes Jahr Datensammeln auf Verdacht: Eine heute angelegte Karte soll
+morgen drankommen, und ein Modellfehler soll auffallen, solange er billig zu ändern ist. Dafür musste
+vor dem ersten Land die ganze senkrechte Scheibe stehen — Fragensatz für waagerecht, Strukturdatei,
+Steps, Renderer, SuiteImage-Einpassung, Skin-Layout. Eine billigere Teilvariante gab es nicht.
 
-**Der nächste Schritt ist ein Durchstich mit fünf Flaggen.** Nicht den ganzen Waagerecht-Zweig bauen
-und nicht erst alle Fragenstaffeln fertig entwerfen, sondern einmal komplett durch alle Schichten —
-DB-Tabelle, `Flag:`-Expander, Renderer, Skin-Layout, echte Karte in der App — aber nur fünf Länder
-breit. Die Fragen, die alles blockieren, sind Pipeline-Fragen (vor allem die Renderer-Ausgabeform),
-und die beantwortet man mit fünf Flaggen, nicht mit hundert.
+**Der Durchstich ist gemacht — mit einer Flagge statt fünf.** Deutschland läuft als handgeschriebene
+Zeile in der Deck-CSV durch alle Schichten: Strukturdatei, Steps, Renderer, Skin-Layout, echte Karte
+in der App. Eine Flagge reichte, weil die blockierenden Fragen Pipeline-Fragen waren und die sich
+schon am ersten Fall zeigen.
 
-```
-Deutschland  3 Streifen, alle gleich    einfachster Fall
-Belize       3 Streifen, 3W=2           Breitenfrage
-Botswana     5 Streifen, 5W=1           zweite Verteilungsfrage
-Bahamas      3 Streifen + Dreieck       Dreieck im Sketch
-USA          13 Streifen + Gösch        Gösch, lange Farbliste
-```
+Was der Durchstich beantwortet hat: der Renderer zeichnet in den Szenengraph; die Skizze sitzt im
+Bilderrahmen und teilt sich dessen Feld mit dem Bild; die Steps stehen ausgeschrieben in der Zeile.
 
-Danach ist beides billig: der Rest des Waagerecht-Zweigs ist Dateneingabe, und der Senkrecht-Zweig
-ist Fragendesign ohne Bauunbekannte.
+**Die Zweige sind entworfen und attributiert.** Waagerecht, senkrecht, Kreuz, diagonal, einfarbig,
+das senkrechte Band mit waagerechten Streifen und die Spezialfälle — jede der 206 Flaggen kommt bis
+zu ihrem Sketch durch. Das war die Bedingung für den Generator: Er liest die Attributtabelle, und
+solange die noch Spalten dazubekommt, baut man ihn zweimal.
+
+**Als Nächstes also der Generator.** Zwei Dinge fehlen ihm noch aus der Tabelle — die Farbliste und
+die Zusatzelemente (siehe §8) —, aber die Struktur, an der er hängt, steht.
+
+**Pro neuer Sketch-Familie eine handgeschriebene Karte.** So wie Deutschland: eine Zeile, ein Sketch,
+einmal durchspielen. Nicht pro Zweig — allein waagerecht hat drei Familien (nur Streifen, mit
+Dreieck, mit Gösch), und nur die erste ist bisher belegt.
 
 **Der Renderer wird von Anfang an generisch über GeoJSON gebaut**, auch wenn am ersten Tag nur
-`horizontal-3` gebraucht wird. Dann ist eine neue Struktur später eine neue Datei und kein Code —
+`waagerecht-3` gebraucht wird. Dann ist eine neue Struktur später eine neue Datei und kein Code —
 das Mitwachsen läuft über Daten.
 
 **Danach ein Land pro Tag:** Wiki-Artikel zu Flagge und Wappen lesen, Fragen ausdenken, Bilder
@@ -518,8 +636,12 @@ Mikronesien fehlen dort und tragen deshalb eine vollständige URL statt eines `.
 Daneben gibt es eine HTML-Seite, die dieses Sheet beim
 Öffnen live ausliest und die Flaggen nach identischer Attributsignatur gruppiert anzeigt — damit
 lässt sich in Sekunden prüfen, ob ein Cluster wirklich mit *einem* Sketch auskommt. Aktueller Stand:
-**206 Flaggen, 52 Signaturen, 25 Einzelgänger**; daraus rund **58 Sketches**, weil der Spezial-Cluster
-(Antigua, Bahrain, Bosnien, Kiribati, Mazedonien, Nepal, Katar) in sieben einzelne zerfällt.
+**206 Flaggen, 56 Signaturen, 28 Einzelgänger.**
+
+Daneben liegt **`pruefe-attribute.py`**, das findet, was man am Bild nicht sieht: Spalten, die gesetzt
+sein müssten, weil die Frage davor hingeführt hat, und umgekehrt. Es hat unter anderem Burundi und
+Grenada ohne Kreuzantworten gefunden, Nepal mit Werten hinter seinem Ausstieg und eine Signatur-Formel,
+die beim Einfügen einer Spalte nicht mitgewachsen war. Eine neue Frage ist dort eine Zeile in `REGELN`.
 
 Skript und Seite finden die Kopfzeile selbst (die mit „Signatur" in Spalte 7) und leiten die
 Attributzahl aus der Signaturlänge ab. Eingefügte Zeilen und geänderte Attributspalten brechen also
@@ -538,15 +660,25 @@ reine Dateneingabe ohne Entwurfsrisiko.
 - **Eingabefläche für die 200 Zeilen** — die Tabelle wird beim Länder-Tag nebenbei gefüllt, ein
   Datenbank-Werkzeug reicht vermutlich. Ein eigener Dialog ist nicht nötig, aber auch nicht
   ausgeschlossen.
-- **Gegenrichtung** — Kartenklick auf die Weltkarte oder Enter-Input. MC scheidet aus (siehe
-  Verworfen). Der Kartenklick braucht nichts Neues, der Enter-Input braucht Erweiterung 5.
-- **Renderer-Ausgabeform** — fertiges Bild, dann bleibt SuiteImage nutzbar; oder direkt in den
-  Szenengraph, dann Vektoren und freie Skalierung, aber eine eigene Komponente. Muss **vor** dem
-  Renderer entschieden werden.
+- **Gegenrichtung** — bleibt der Enter-Input, also Erweiterung 5. Der Kartenklick scheidet aus:
+  Bermuda, die Kaimaninseln, Guam und die Cookinseln sind auf der Weltkarte genauso wenig treffbar
+  wie die Untereinheiten, die deshalb schon verworfen wurden. MC scheidet ohnehin aus (siehe
+  Verworfen).
+- **Woher der Sketch-Name kommt** — aus der Signatur abgeleitet oder als eigene Spalte. Für die
+  Ableitung müssten die elf Spezialflaggen durchnummeriert werden statt alle `1` zu tragen; dann
+  trägt sie. Entscheidet sich beim Generator.
+- **Wie die Toleranz für „nicht falsch" in der Tabelle steht** — ein neuer Wert je Kombination
+  (`5` = „2, toleriert 1"), ein Komma (`2,1`) oder eine Klammer (`2(1)`). Die Klammer lehnt sich an
+  die Distraktor-Schreibweise dieses Dokuments an; der neue Wert skaliert nicht, weil jede weitere
+  Kombination eine weitere Zahl bräuchte.
 - **Die Kategorie- und Namenslisten der Elementfrage** — welche Kategorien es genau gibt und welche
   Namen darunter hängen, ist noch nicht ausformuliert. Die Struktur steht (zwei Ebenen, Ende bei
   „Wappen"), die Werte nicht.
-- **Die übrigen Zweige** — senkrecht, uni, Kreuz, diagonal, Dreieck-ohne-Streifen und „anderes".
+- **Der diagonale Zweig** hat zwölf Flaggen und bisher keine Folgefrage — als einziger
+  Hintergrundtyp außer „einfarbig", wo das einleuchtet. Ob das Absicht ist oder eine Lücke, steht
+  noch aus.
+- **Die Farbliste** fehlt als Spalte. Ohne sie hört eine generierte Karte nach den Strukturfragen
+  auf. Reine Dateneingabe, aber sie muss passieren, bevor der Generator vollständige Karten schreibt.
   Der senkrechte dürfte schnell gehen, weil er dieselbe Struktur hat, nur gedreht: 22 Dreier,
   4 Zweier, und die Breitenfrage heißt dort „linker/rechter breiter" statt „oberster". Kanada und
   St. Vincent sind dort 1:2:1, Pakistan und Portugal ungleiche Zweier.
@@ -576,5 +708,7 @@ reine Dateneingabe ohne Entwurfsrisiko.
 | Flaggen von Untereinheiten (US-Staaten, Kantone) als Wachstumspfad | Auf der Weltkarte kaum treffbar, und inhaltlich uninteressant. |
 | Normalisierte Varianten der Flaggentabelle — Kindtabelle für Elemente, pfadkodierte Werte, schmale `(land, frage, antwort)`-Tabelle | Alle kaufen Nichtredundanz und zahlen mit Lesbarkeit. Eine Zeile soll eine Flagge vollständig beschreiben und beim Draufschauen verständlich sein; außerdem macht die breite Tabelle den *Fragensatz* inspizierbar (nach einer Spalte sortieren und die Verteilung ansehen), und ein falscher Fragensatz ist das eigentliche Risiko. |
 | Kuratierte Distraktoren | Zufallsauswahl aus der Werteliste tut es, und Verwechslungen sind teils lexikalisch statt visuell — von Hand nicht sinnvoll pflegbar. |
-| Der Begriff „Fimbrierung" | Fachlich richtig, aber er zwingt zu einer Grad-Entscheidung („Strich oder Streifen?") und produzierte laufend Grenzfälle — Suriname, Eswatini, Gambia. Ersetzt durch die vergleichende Formulierung „Streifen 2 und 4 klar am dünnsten", die ohne Fachbegriff und ohne Schwellenwert auskommt. |
+| Der Begriff „Fimbrierung" — **bei den Streifen** | Fachlich richtig, aber er zwingt zu einer Grad-Entscheidung („Strich oder Streifen?") und produzierte laufend Grenzfälle — Suriname, Eswatini, Gambia. Ersetzt durch die vergleichende Formulierung „Streifen 2 und 4 klar am dünnsten", die ohne Fachbegriff und ohne Schwellenwert auskommt. **Bei den Kreuzen bleibt er**: kleine, geschlossene Menge, alle Fälle geprüft und eindeutig (siehe §3). |
 | Bilderauswahl statt Zahlenfrage bei der Streifenzahl | Eine Bilderliste kann nur zeigen, was vorkommt — dann fehlt die Option für die Flagge, die man sich falsch vorstellt. Attrappen-Sketches dagegen sprengen die acht Optionen. |
+| Interpreter in der Suite: `Flag:`-Expander, `schritt`- und `werteliste`-Tabelle, View auf `flagge` | Ein Generator schreibt stattdessen eine normale Deck-CSV. Ausschlaggebend war, dass eine Fragensatzänderung beim Interpreter alle Karten still mitgeändert hätte; beim Generator zeigt der Diff, was passiert ist. Nebenbei bleibt die Suite dumm und der Fragensatz lesbar. Preis: Die Ableitungslogik steckt jetzt in einem Skript statt in einem einsehbaren `CASE` — die Regeln gehören deshalb hier ins Dokument. |
+| Ein Attribut, das Frage 5 beantwortet | Bestünde den Test „bleibt es wahr, wenn man die Fragenstaffel wegwirft" nicht. Es wäre nur so lange richtig, wie Frage 5 genau so geschnitten ist, und würde bei einem Umbau still falsch. |
