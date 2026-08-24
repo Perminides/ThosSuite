@@ -13,14 +13,14 @@ package app.shared.model;
  */
 public enum SketchColor {
 
-	ROT("Rot"),
-	BLAU("Blau"),
-	HELLBLAU("Hellblau"),
-	GRUEN("Grün"),
-	GELB("Gelb"),
+	RED("Rot"),
+	BLUE("Blau"),
+	LIGHT_BLUE("Hellblau"),
+	GREEN("Grün"),
+	YELLOW("Gelb"),
 	ORANGE("Orange"),
-	WEISS("Weiß"),
-	SCHWARZ("Schwarz");
+	WHITE("Weiß"),
+	BLACK("Schwarz");
 
 	private final String label;
 

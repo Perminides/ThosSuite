@@ -94,11 +94,11 @@ public class DiaryTagInputComponent {
 
     /** Was schon als Chip dasteht, gehört nicht mehr in die Vorschläge. */
     private void refreshSuggestionPool() {
-        List<String> uebrig = new ArrayList<>();
+        List<String> remaining = new ArrayList<>();
         for (String tag : allTags)
             if (!selectedTags.contains(tag))
-                uebrig.add(tag);
-        tagInput.setAllItems(uebrig);
+                remaining.add(tag);
+        tagInput.setAllItems(remaining);
     }
 
     private void rebuildChips() {

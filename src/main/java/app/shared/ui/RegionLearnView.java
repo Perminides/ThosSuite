@@ -33,23 +33,23 @@ public class RegionLearnView {
 
 	private final String deckId;
 	private final String mapName;
-	private final String kategorie;
-	private final List<ShapeGeometry> geometrien;
+	private final String category;
+	private final List<ShapeGeometry> geometries;
 	private final RegionCallbacks callbacks;
 
 	private final ComponentHost host = new ComponentHost();
 
-	private ShapeMapPane karte;
+	private ShapeMapPane map;
 	private SuiteInfoLabel questionArea;
 	private SuiteTextField inputField;
 
-	public RegionLearnView(String deckId, String mapName, String kategorie, List<ShapeGeometry> geometrien,
+	public RegionLearnView(String deckId, String mapName, String category, List<ShapeGeometry> geometries,
 			boolean mitFragefeld,
 			RegionCallbacks callbacks) {
 		this.deckId = deckId;
 		this.mapName = mapName;
-		this.kategorie = kategorie;
-		this.geometrien = geometrien;
+		this.category = category;
+		this.geometries = geometries;
 		this.callbacks = callbacks;
 		rebuild(mitFragefeld);
 	}
@@ -57,25 +57,25 @@ public class RegionLearnView {
 	/** Neu aufbauen — nötig nach einem Skinwechsel, weil sich alle Maße geändert haben können. */
 	public void rebuild(boolean mitFragefeld) {
 		Skin skin = SkinService.get();
-		host.setWallpaper(skin.wallpaperPath(deckId, mapName, kategorie));
+		host.setWallpaper(skin.wallpaperPath(deckId, mapName, category));
 
-		karte = new ShapeMapPane(geometrien, skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.MAP));
-		karte.setClickListener(callbacks.mapElementClicked());
+		map = new ShapeMapPane(geometries, skin.learnComponentBounds(deckId, mapName, category, LearnComponent.MAP));
+		map.setClickListener(callbacks.mapElementClicked());
 
 		host.clear();
 		if (mitFragefeld) {
 			questionArea = new SuiteInfoLabel("",
-					skin.learnTextLabelBounds(deckId, mapName, kategorie, Skin.TextLabelType.QUESTION));
+					skin.learnTextLabelBounds(deckId, mapName, category, Skin.TextLabelType.QUESTION));
 			questionArea.getStyleClass().add(Skin.TextLabelType.QUESTION.styleClass());
 			// Einzeiliger Streifen mit einem einzelnen Namen darin — linksbündig sähe verloren aus.
 			questionArea.centerText();
 			inputField = null;
-			host.addComponents(karte, questionArea);
+			host.addComponents(map, questionArea);
 		} else {
-			inputField = new SuiteTextField(skin.learnComponentBounds(deckId, mapName, kategorie, LearnComponent.TEXT_INPUT));
+			inputField = new SuiteTextField(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.TEXT_INPUT));
 			inputField.onType(callbacks.textTyped());
 			questionArea = null;
-			host.addComponents(karte, inputField);
+			host.addComponents(map, inputField);
 		}
 	}
 
@@ -85,17 +85,17 @@ public class RegionLearnView {
 
 	// ----- Karte -----
 
-	public void addIdsToActive(Set<String> ids)       { karte.markActive(ids); }
-	public void addIdsToMarked(Set<String> ids)       { karte.mark(ids); }
-	public void moveAllToActive()                     { karte.reset(); }
-	public void moveResolvedToActive()                { karte.moveResolvedToActive(); }
-	public void addIdsToCorrect(Set<String> elements) { karte.markCorrect(elements); }
-	public void addIdsToInactive(Set<String> elements){ karte.markInactive(elements); }
-	public void setIdToIncorrect(String element)      { karte.markIncorrect(element); }
-	public void setMapActive(boolean active)          { karte.setActive(active); }
+	public void addIdsToActive(Set<String> ids)       { map.markActive(ids); }
+	public void addIdsToMarked(Set<String> ids)       { map.mark(ids); }
+	public void moveAllToActive()                     { map.reset(); }
+	public void moveResolvedToActive()                { map.moveResolvedToActive(); }
+	public void addIdsToCorrect(Set<String> elements) { map.markCorrect(elements); }
+	public void addIdsToInactive(Set<String> elements){ map.markInactive(elements); }
+	public void setIdToIncorrect(String element)      { map.markIncorrect(element); }
+	public void setMapActive(boolean active)          { map.setActive(active); }
 
-	public ShapeMapState getState()                   { return karte.getState(); }
-	public void setState(ShapeMapState state)         { karte.setState(state); }
+	public ShapeMapState getState()                   { return map.getState(); }
+	public void setState(ShapeMapState state)         { map.setState(state); }
 
 	// ----- Text -----
 

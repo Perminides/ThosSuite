@@ -32,7 +32,7 @@ public class ImageComparisonDialog {
 	 * @return {@link SelectionEnum#ZERO} für das linke Bild, {@link SelectionEnum#ONE} für das
 	 *         rechte — oder {@code null}, wenn abgebrochen wurde.
 	 */
-	public static SelectionEnum show(BufferedImage links, BufferedImage rechts) {
+	public static SelectionEnum show(BufferedImage left, BufferedImage right) {
 		SuiteDialog<SelectionEnum> dialog = new SuiteDialog<>("Bild auswählen");
 
 		ButtonType cancelType = new ButtonType("", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -57,8 +57,8 @@ public class ImageComparisonDialog {
 		okLeft.setOnAction(_ -> dialog.setResult(SelectionEnum.ZERO));
 		okRight.setOnAction(_ -> dialog.setResult(SelectionEnum.ONE));
 
-		ImageView viewLeft = new ImageView(SwingFXUtils.toFXImage(links, null));
-		ImageView viewRight = new ImageView(SwingFXUtils.toFXImage(rechts, null));
+		ImageView viewLeft = new ImageView(SwingFXUtils.toFXImage(left, null));
+		ImageView viewRight = new ImageView(SwingFXUtils.toFXImage(right, null));
 		viewLeft.setPreserveRatio(true);
 		viewRight.setPreserveRatio(true);
 

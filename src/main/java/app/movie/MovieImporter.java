@@ -159,7 +159,7 @@ public class MovieImporter {
         // zwar an "Bild existiert bereits". Deshalb merken und im catch mit aufräumen. Die harte
         // Prüfung in saveImageToFileSystem bleibt so erhalten: sie meldet dann echte Namenskollisionen
         // und nicht mehr die Trümmer des eigenen Vorlaufs.
-        List<String> geschriebenePoster = new ArrayList<>();
+        List<String> writtenPosters = new ArrayList<>();
 
         try (var conn = DB.getNewTmdbConnection()) {
             try {
@@ -168,7 +168,7 @@ public class MovieImporter {
                     int[] dimensions = ImageUtils.dimensions(posterW92);
                     String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
                     saveImageToFileSystem(filename, posterW92);
-                    geschriebenePoster.add(filename);
+                    writtenPosters.add(filename);
                     movieRepo.insertMovieImage(movie, 92, dimensions[1], filename, conn);
                 } else {
                 	Alerts.show("92er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, ButtonEnum.OK);
@@ -177,7 +177,7 @@ public class MovieImporter {
                     int[] dimensions = ImageUtils.dimensions(posterW154);
                     String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
                     saveImageToFileSystem(filename, posterW154);
-                    geschriebenePoster.add(filename);
+                    writtenPosters.add(filename);
                     movieRepo.insertMovieImage(movie, 154, dimensions[1], filename, conn);
                 } else {
                 	Alerts.show("154er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, ButtonEnum.OK);
@@ -191,7 +191,7 @@ public class MovieImporter {
                 Log.info(MovieImporter.class, "Film erfolgreich importiert: " + movie.title);
             } catch (Exception e) {
                 conn.rollback();
-                deletePoster(geschriebenePoster);
+                deletePoster(writtenPosters);
                 throw new RuntimeException("Import fehlgeschlagen für Film: " + rating.title + " (id=" + rating.id + ")", e);
             }
         } catch (SQLException e) {

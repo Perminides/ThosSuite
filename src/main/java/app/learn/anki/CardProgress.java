@@ -63,11 +63,11 @@ public class CardProgress {
 	}
 	
 	/** Die Antworttexte in ihrer aktuellen Reihenfolge. */
-	private static List<String> texteVon(MultipleChoiceAnswers mc) {
-		List<String> texte = new ArrayList<>();
+	private static List<String> textsOf(MultipleChoiceAnswers mc) {
+		List<String> texts = new ArrayList<>();
 		for (AnswerOption option : mc.getAnswerOptions())
-			texte.add(option.text());
-		return texte;
+			texts.add(option.text());
+		return texts;
 	}
 
 	public void start() {
@@ -95,10 +95,10 @@ public class CardProgress {
 	        return; // Ignorieren
 	    }
 	    
-	    String eingabe = text.trim().toLowerCase();
+	    String typed = text.trim().toLowerCase();
 	    boolean correct = false;
 	    for (String part : input.parts())
-	        if (part.toLowerCase().equals(eingabe)) {
+	        if (part.toLowerCase().equals(typed)) {
 	            correct = true;
 	            break;
 	        }
@@ -345,11 +345,11 @@ public class CardProgress {
 					sessionMc = new MultipleChoiceAnswers(mcStep.options(), 8); // Konstruktor mit Liste
 					
 					// Merken für den nächsten Step
-					lastMcOrder = texteVon(sessionMc);
+					lastMcOrder = textsOf(sessionMc);
 				}
 				
 				activeSessionMC = sessionMc;
-				presenter.showMultipleChoice(texteVon(sessionMc));
+				presenter.showMultipleChoice(textsOf(sessionMc));
 			}
 			
 			case MarkMapElements left -> presenter.markMapElements(left.left());

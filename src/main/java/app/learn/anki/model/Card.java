@@ -196,23 +196,23 @@ public class Card {
      * selbst Doppelpunkte tragen ("Blade Runner: 2049") — das Limit trennt sauber ab.</p>
      */
     private static Step parseFast(String body) {
-        String[] teile = body.split(":", 3);
-        if (teile.length < 3)
+        String[] parts = body.split(":", 3);
+        if (parts.length < 3)
             throw new RuntimeException("Fast braucht Sekunden, Modus und Antworten: " + body);
 
-        int seconds = Integer.parseInt(teile[0].trim());
+        int seconds = Integer.parseInt(parts[0].trim());
         if (seconds < 1)
             throw new RuntimeException("Fast braucht eine Zeit größer null: " + body);
 
-        String modus = teile[1].trim();
-        List<Answer> answers = parseFastAnswers(teile[2]);
-        boolean ordered = modus.equals("ordered");
+        String mode = parts[1].trim();
+        List<Answer> answers = parseFastAnswers(parts[2]);
+        boolean ordered = mode.equals("ordered");
         int slots = answers.size();
 
-        if (!ordered && !modus.equals("any")) {
-            if (!modus.startsWith("any"))
-                throw new RuntimeException("Unbekannter Fast-Modus: " + modus);
-            slots = Integer.parseInt(modus.substring(3));
+        if (!ordered && !mode.equals("any")) {
+            if (!mode.startsWith("any"))
+                throw new RuntimeException("Unbekannter Fast-Modus: " + mode);
+            slots = Integer.parseInt(mode.substring(3));
             if (slots < 1 || slots > answers.size())
                 throw new RuntimeException("anyN braucht 1 bis " + answers.size() + " Felder, nicht " + slots);
             if (hasHints(answers))
@@ -261,10 +261,10 @@ public class Card {
 
     /** Ohne Reihenfolge wäre bei einer doppelten Variante nicht entscheidbar, welches Feld gemeint ist. */
     private static void checkNoDuplicates(List<Answer> answers) {
-        Set<String> gesehen = new HashSet<>();
+        Set<String> seen = new HashSet<>();
         for (Answer answer : answers)
             for (String variant : answer.variants())
-                if (!gesehen.add(variant.toLowerCase()))
+                if (!seen.add(variant.toLowerCase()))
                     throw new RuntimeException("Antwort '" + variant + "' kommt mehrfach vor — nur bei ordered erlaubt");
     }
 
@@ -272,11 +272,11 @@ public class Card {
      * Zerlegt einen mit {@code |} getrennten Abschnitt und legt jeden nicht-leeren Teil als Antwort
      * der gegebenen Sorte ab.
      */
-    private static void sammleAntworten(String abschnitt, boolean correct, Set<AnswerOption> options) {
+    private static void collectAnswers(String abschnitt, boolean correct, Set<AnswerOption> options) {
         for (String text : abschnitt.split("\\|")) {
-            String getrimmt = text.trim(); // Sicherheitshalber Leerzeichen entfernen
-            if (!getrimmt.isEmpty())
-                options.add(new AnswerOption(getrimmt, correct));
+            String trimmed = text.trim(); // Sicherheitshalber Leerzeichen entfernen
+            if (!trimmed.isEmpty())
+                options.add(new AnswerOption(trimmed, correct));
         }
     }
 
@@ -286,11 +286,11 @@ public class Card {
         String[] split = mcStepString.split("\\*");
         
         // Teil 1: Die korrekten Antworten (vor dem Sternchen)
-        sammleAntworten(split[0], true, options);
+        collectAnswers(split[0], true, options);
 
         // Teil 2: Die falschen Antworten (nach dem Sternchen, falls vorhanden)
         if (split.length > 1)
-            sammleAntworten(split[1], false, options);
+            collectAnswers(split[1], false, options);
 
         return options;
     }

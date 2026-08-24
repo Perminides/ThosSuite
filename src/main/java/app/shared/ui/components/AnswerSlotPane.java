@@ -70,8 +70,8 @@ public class AnswerSlotPane extends Pane {
 	/** Nimmt so viele Felder ins Spiel, wie der Schritt Antworten sucht; der Rest bleibt außen vor. */
 	public void showSlots(List<String> hints) {
 		for (int i = 0; i < slots.size(); i++) {
-			boolean imSpiel = i < hints.size();
-			fill(i, imSpiel ? hints.get(i) : "", imSpiel ? STATE_ACTIVE : STATE_INACTIVE);
+			boolean inPlay = i < hints.size();
+			fill(i, inPlay ? hints.get(i) : "", inPlay ? STATE_ACTIVE : STATE_INACTIVE);
 		}
 	}
 

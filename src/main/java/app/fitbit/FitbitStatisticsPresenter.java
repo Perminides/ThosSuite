@@ -72,14 +72,14 @@ public class FitbitStatisticsPresenter implements BarChartDataProvider {
     }
 
     private int findGoalForDate(LocalDate date, List<GoalHistoryEntry> history) {
-        GoalHistoryEntry letztesGueltiges = null;
+        GoalHistoryEntry lastValid = null;
         for (GoalHistoryEntry entry : history)
             if (!entry.validFrom().isAfter(date))
-                letztesGueltiges = entry; // die Liste ist chronologisch — das letzte Treffer gewinnt
+                lastValid = entry; // die Liste ist chronologisch — das letzte Treffer gewinnt
 
-        if (letztesGueltiges == null)
+        if (lastValid == null)
             throw new RuntimeException("Kein Fitbit-Ziel gefunden für " + date);
-        return letztesGueltiges.weeklyGoal();
+        return lastValid.weeklyGoal();
     }
 
     private LocalDate roundToMonday(LocalDate date) {

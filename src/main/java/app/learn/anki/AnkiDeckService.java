@@ -108,15 +108,15 @@ public class AnkiDeckService {
 			// Das Tagesbudget für neue Karten, abzüglich dessen, was heute schon verbraucht ist.
 			// Dadurch rutschen neue Karten auch dann noch nach, wenn der heutige Stapel längst
 			// begonnen oder abgearbeitet ist — und trotzdem nie mehr als die Config erlaubt.
-			int neueUebrig = Integer.parseInt(Config.get(type.getConfigValueNewCards()))
+			int newRemaining = Integer.parseInt(Config.get(type.getConfigValueNewCards()))
 					- repo.getNewLearnedToday(type);
 			List<Card> newCards = new ArrayList<Card>();
 			for (Card card : allCards.get(type)) {
 				if (card.isDueToday())
 					dueCards.get(type).put(card.getId(), card);
-				else if (card.isNew() && neueUebrig > 0) {
+				else if (card.isNew() && newRemaining > 0) {
 					newCards.add(card);
-					neueUebrig--;
+					newRemaining--;
 				}
 				allLabels.computeIfAbsent(type, _ -> new HashSet<>())
 					.addAll(card.getLabels());

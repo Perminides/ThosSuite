@@ -108,14 +108,14 @@ public abstract class SkinProperties {
 	protected Double sketchStrokeWidth = 1.8;
 	protected Color sketchStrokeColor;  // default = borderShapeColor
 	protected Color sketchMarkedColor;  // default = markedColor
-	protected Color sketchRot = Color.web("#d52b1e");
-	protected Color sketchBlau = Color.web("#003580");
-	protected Color sketchHellblau = Color.web("#6cace4");
-	protected Color sketchGruen = Color.web("#007a3d");
-	protected Color sketchGelb = Color.web("#ffce00");
+	protected Color sketchRed = Color.web("#d52b1e");
+	protected Color sketchBlue = Color.web("#003580");
+	protected Color sketchLightBlue = Color.web("#6cace4");
+	protected Color sketchGreen = Color.web("#007a3d");
+	protected Color sketchYellow = Color.web("#ffce00");
 	protected Color sketchOrange = Color.web("#ff7f00");
-	protected Color sketchWeiss = Color.web("#ffffff");
-	protected Color sketchSchwarz = Color.web("#000000");
+	protected Color sketchWhite = Color.web("#ffffff");
+	protected Color sketchBlack = Color.web("#000000");
 
 	protected Font font;
 	protected Font smallFont;
@@ -321,13 +321,13 @@ public abstract class SkinProperties {
 	/**
 	 * Das Feld, in dem ein Bestandteil einer Session sitzt — siehe {@link #cascadingValue}.
 	 */
-	public Rectangle2D learnComponentBounds(String deckId, String mapName, String kategorie, LearnComponent teil) {
-		return (Rectangle2D) cascadingValue(deckId, mapName, kategorie, teil.suffix());
+	public Rectangle2D learnComponentBounds(String deckId, String mapName, String category, LearnComponent teil) {
+		return (Rectangle2D) cascadingValue(deckId, mapName, category, teil.suffix());
 	}
 
 	/** Dasselbe für die drei Textfelder, die über {@link Skin.TextLabelType} unterschieden werden. */
-	public Rectangle2D learnTextLabelBounds(String deckId, String mapName, String kategorie, Skin.TextLabelType typ) {
-		return (Rectangle2D) cascadingValue(deckId, mapName, kategorie, "Session" + typ + "Panel");
+	public Rectangle2D learnTextLabelBounds(String deckId, String mapName, String category, Skin.TextLabelType typ) {
+		return (Rectangle2D) cascadingValue(deckId, mapName, category, "Session" + typ + "Panel");
 	}
 
 	/**
@@ -350,8 +350,8 @@ public abstract class SkinProperties {
 	 *
 	 * @return null, wenn keiner der drei Schlüssel gesetzt ist
 	 */
-	private Object cascadingValue(String deckId, String mapName, String kategorie, String suffix) {
-		String[] prefixes = { deckId, mapName, kategorie };
+	private Object cascadingValue(String deckId, String mapName, String category, String suffix) {
+		String[] prefixes = { deckId, mapName, category };
 		for (String prefix : prefixes) {
 			Object value = getFieldValue(prefix + suffix);
 			if (value != null)
@@ -392,8 +392,8 @@ public abstract class SkinProperties {
 	 * Das Wallpaper einer Lern-Session — dieselbe Kette wie die Maße (siehe {@link #cascadingValue}),
 	 * sonst das leere.
 	 */
-	public Path wallpaperPath(String deckId, String mapName, String kategorie) {
-		return wallpaperFolder().resolve(getBackgroundImageName(deckId, mapName, kategorie));
+	public Path wallpaperPath(String deckId, String mapName, String category) {
+		return wallpaperFolder().resolve(getBackgroundImageName(deckId, mapName, category));
 	}
 
 	/**
@@ -417,8 +417,8 @@ public abstract class SkinProperties {
 		return Config.getPath("wallpaperFolder");
 	}
 
-	private String getBackgroundImageName (String deckId, String mapName, String kategorie) {
-		String bgName = (String) cascadingValue(deckId, mapName, kategorie, "WallpaperName");
+	private String getBackgroundImageName (String deckId, String mapName, String category) {
+		String bgName = (String) cascadingValue(deckId, mapName, category, "WallpaperName");
 		if (bgName != null)
 			return bgName;
 		return emptyWallpaperName;
@@ -444,10 +444,10 @@ public abstract class SkinProperties {
 	 * den Inhaltsbereich.</p>
 	 */
 	private double mcBorderWidth() {
-	    double breite = borderSmallComponent.width();
+	    double width = borderSmallComponent.width();
 	    if (activeBorderColor != null)
-	        breite = Math.max(breite, activeBorderWidth);
-	    return Math.max(breite, mcResultBorderWidth);
+	        width = Math.max(width, activeBorderWidth);
+	    return Math.max(width, mcResultBorderWidth);
 	}
 
 	private double computeMcButtonHeight() {
@@ -627,13 +627,13 @@ public abstract class SkinProperties {
 	 * eigene, und beide müssen für sich stimmen.</p>
 	 */
 	private void checkKeysHaveFields(Properties props, Path configPath) {
-	    Set<String> felder = new HashSet<>();
+	    Set<String> fields = new HashSet<>();
 	    for (Class<?> cls = this.getClass(); cls != null; cls = cls.getSuperclass())
 	        for (Field field : cls.getDeclaredFields())
-	            felder.add(field.getName());
+	            fields.add(field.getName());
 
 	    for (String key : props.stringPropertyNames())
-	        if (!felder.contains(key))
+	        if (!fields.contains(key))
 	            throw new RuntimeException("Schlüssel ohne Feld in " + configPath.getFileName() + ": '"
 	                    + key + "'. Entweder das Feld fehlt oder der Schlüssel ist ein Tippfehler —"
 	                    + " stillschweigend ignorieren tun wir ihn jedenfalls nicht mehr.");

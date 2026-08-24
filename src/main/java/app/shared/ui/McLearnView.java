@@ -13,8 +13,8 @@ import app.shared.ui.components.map.LearnMap;
  **/
 public class McLearnView extends AnkiLearnView {
 
-	public McLearnView(String deckId, String mapName, String kategorie, AnkiCallbacks callbacks) {
-		super(deckId, mapName, kategorie, callbacks);
+	public McLearnView(String deckId, String mapName, String category, AnkiCallbacks callbacks) {
+		super(deckId, mapName, category, callbacks);
 		rebuild(); // muss die letzte Zeile sein, siehe AnkiLearnView
 	}
 

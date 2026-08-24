@@ -23,12 +23,12 @@ import javafx.scene.layout.VBox;
  */
 public class SuiteCardList extends ScrollPane {
 
-	private final VBox karten = new VBox();
+	private final VBox cards = new VBox();
 
 	public SuiteCardList() {
 		super();
-		karten.getStyleClass().add("cards");
-		setContent(karten);
+		cards.getStyleClass().add("cards");
+		setContent(cards);
 
 		setFitToWidth(true); // Die Karten bekommen die Breite des Viewports, statt ihre Wunschbreite zu behalten
 		setFitToHeight(false);
@@ -38,10 +38,10 @@ public class SuiteCardList extends ScrollPane {
 	}
 
 	/** Ersetzt den Inhalt. Der Schnittmengen-Typ verlangt beides: eine Fläche, die die Liste zeigen und breitziehen kann, und eine {@link Card}. */
-	public <T extends Region & Card> void setCards(List<T> inhalt) {
-		for (Region karte : inhalt)
-			karte.setMaxWidth(Double.MAX_VALUE); // Die Liste sorgt selbst dafür, statt sich darauf zu verlassen, dass jede Karte daran denkt
+	public <T extends Region & Card> void setCards(List<T> content) {
+		for (Region map : content)
+			map.setMaxWidth(Double.MAX_VALUE); // Die Liste sorgt selbst dafür, statt sich darauf zu verlassen, dass jede Karte daran denkt
 
-		karten.getChildren().setAll(inhalt);
+		cards.getChildren().setAll(content);
 	}
 }
