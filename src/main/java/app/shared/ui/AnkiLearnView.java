@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Set;
 
 import app.shared.model.ScreenView;
+import app.shared.model.ShapeGeometry;
+import app.shared.model.SketchColor;
 import app.shared.model.AnkiCallbacks;
 import app.shared.skin.LearnComponent;
 import app.shared.skin.Skin;
@@ -164,6 +166,14 @@ public abstract class AnkiLearnView {
 	public void setImage(String imageName)      { imageComponent.setImage(imageName); }
 	public void setProgress(String text)    { progressArea.setText(text); }
 	public void setCardHistory(String text) { cardHistoryArea.setText(text); }
+
+	// ===== Skizze =====
+	// Sie sitzt im Bilderrahmen und teilt sich dessen Feld mit dem Bild — wer das eine zeigt,
+	// verdrängt das andere.
+
+	public void setSketch(List<ShapeGeometry> areas)        { imageComponent.setSketch(areas); }
+	public void markSketchArea(int area)                    { imageComponent.markSketchArea(area); }
+	public void fillSketchArea(int area, SketchColor color) { imageComponent.fillSketchArea(area, color); }
 
 	// ===== Antwortauswahl =====
 

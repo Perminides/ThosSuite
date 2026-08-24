@@ -102,6 +102,21 @@ public abstract class SkinProperties {
 	protected Double shapeMapStandardBorderWidth = 1.8;
 	protected Double shapeMapFederalStateBorderWidth = 2.8; // für Niedersachsen z. B.
 
+	// Die Skizzen (SketchPane). Die acht Füllfarben tragen Vorgaben, damit kein Skin sie kennen muss —
+	// sie beschreiben eine Flagge und nicht das Aussehen der Suite. Strich und Markierung dagegen
+	// gehören zum Skin und leiten sich in buildCss() aus dessen eigenen Farben ab.
+	protected Double sketchStrokeWidth = 1.8;
+	protected Color sketchStrokeColor;  // default = borderShapeColor
+	protected Color sketchMarkedColor;  // default = markedColor
+	protected Color sketchRot = Color.web("#d52b1e");
+	protected Color sketchBlau = Color.web("#003580");
+	protected Color sketchHellblau = Color.web("#6cace4");
+	protected Color sketchGruen = Color.web("#007a3d");
+	protected Color sketchGelb = Color.web("#ffce00");
+	protected Color sketchOrange = Color.web("#ff7f00");
+	protected Color sketchWeiss = Color.web("#ffffff");
+	protected Color sketchSchwarz = Color.web("#000000");
+
 	protected Font font;
 	protected Font smallFont;
 	protected Font clockFont; // die große Zahl der herunterzählenden Uhr
@@ -304,15 +319,15 @@ public abstract class SkinProperties {
 	}
 
 	/**
-	 * Das Feld, in dem ein Bestandteil einer Session sitzt — siehe {@link #gestaffelt}.
+	 * Das Feld, in dem ein Bestandteil einer Session sitzt — siehe {@link #cascadingValue}.
 	 */
 	public Rectangle2D learnComponentBounds(String deckId, String mapName, String kategorie, LearnComponent teil) {
-		return (Rectangle2D) gestaffelt(deckId, mapName, kategorie, teil.suffix());
+		return (Rectangle2D) cascadingValue(deckId, mapName, kategorie, teil.suffix());
 	}
 
 	/** Dasselbe für die drei Textfelder, die über {@link Skin.TextLabelType} unterschieden werden. */
 	public Rectangle2D learnTextLabelBounds(String deckId, String mapName, String kategorie, Skin.TextLabelType typ) {
-		return (Rectangle2D) gestaffelt(deckId, mapName, kategorie, "Session" + typ + "Panel");
+		return (Rectangle2D) cascadingValue(deckId, mapName, kategorie, "Session" + typ + "Panel");
 	}
 
 	/**
@@ -335,12 +350,12 @@ public abstract class SkinProperties {
 	 *
 	 * @return null, wenn keiner der drei Schlüssel gesetzt ist
 	 */
-	private Object gestaffelt(String deckId, String mapName, String kategorie, String suffix) {
-		String[] praefixe = { deckId, mapName, kategorie };
-		for (String praefix : praefixe) {
-			Object wert = getFieldValue(praefix + suffix);
-			if (wert != null)
-				return wert;
+	private Object cascadingValue(String deckId, String mapName, String kategorie, String suffix) {
+		String[] prefixes = { deckId, mapName, kategorie };
+		for (String prefix : prefixes) {
+			Object value = getFieldValue(prefix + suffix);
+			if (value != null)
+				return value;
 		}
 		return null;
 	}
@@ -374,7 +389,7 @@ public abstract class SkinProperties {
 	}
 
 	/**
-	 * Das Wallpaper einer Lern-Session — dieselbe Kette wie die Maße (siehe {@link #gestaffelt}),
+	 * Das Wallpaper einer Lern-Session — dieselbe Kette wie die Maße (siehe {@link #cascadingValue}),
 	 * sonst das leere.
 	 */
 	public Path wallpaperPath(String deckId, String mapName, String kategorie) {
@@ -403,7 +418,7 @@ public abstract class SkinProperties {
 	}
 
 	private String getBackgroundImageName (String deckId, String mapName, String kategorie) {
-		String bgName = (String) gestaffelt(deckId, mapName, kategorie, "WallpaperName");
+		String bgName = (String) cascadingValue(deckId, mapName, kategorie, "WallpaperName");
 		if (bgName != null)
 			return bgName;
 		return emptyWallpaperName;
@@ -497,6 +512,11 @@ public abstract class SkinProperties {
 	public int imageMapOverlayContentInset(String mapName) {
 	    Integer inset = (Integer) getFieldValue(mapName + "ImageMapOverlayContentInset");
 	    return inset != null ? inset : imageMapOverlayContentInset;
+	}
+
+	/** Wie breit eine Skizze ihre Flächen umrandet. */
+	public double sketchStrokeWidth() {
+		return sketchStrokeWidth;
 	}
 
 	/**
