@@ -1,15 +1,16 @@
 # ThosSuite — Flaggen-Deck (Planung)
 
-**Stand:** 24.08.2026 — **Die Struktur-Fragenstaffel steht und alle 206 Flaggen sind danach
-attributiert.** Fünfzehn Spalten, geprüft durch `pruefe-attribute.py`, null Widersprüche. Der
-**Durchstich läuft**: Deutschland und Dänemark sind echte Karten in der Suite, mit aufbauender Skizze.
+**Stand:** 25.08.2026 — **Beide Fragenstaffeln stehen, alle 206 Flaggen sind danach attributiert.**
+Siebzehn Spalten für den Hintergrund, elf im Zusatzelemente-Blatt, geprüft durch
+`pruefe-attribute.py`, null Widersprüche. Der **Durchstich läuft**: Deutschland und Dänemark sind ein
+Proof of Concept in der Suite, mit aufbauender Skizze.
 
-Was der Tabelle für vollständige Karten noch fehlt: die **Farbliste** je Flagge (Dateneingabe, kein
-Entwurf) und die **Zusatzelemente** (Vokabular bewusst vertagt, siehe §8). Als Nächstes kommt der
-**Generator**.
+Was für vollständige Karten noch fehlt: die **Farblisten**, für den Hintergrund wie für die Elemente.
+Beide hängen an der Flächennummerierung und damit am **Generator**, der als Nächstes kommt. Offen ist
+außerdem die Formation mehrerer Sterne (siehe §8).
 
 **Charakter dieses Dokuments:** Übergabe an das Ich, das die Sache irgendwann anfasst. Festgehalten
-ist, was entschieden ist, was noch offen ist und was bewusst verworfen wurde. Deskriptiv für den
+ist, was entschieden ist, was Idee geblieben ist und was bewusst verworfen wurde. Deskriptiv für den
 Stand der Überlegung, nicht vorschreibend — die Regeln der Suite stehen weiterhin in
 `Design-Regeln.md`, der Ist-Zustand des Lern-Kerns in `Feature-Details.md`.
 
@@ -116,11 +117,12 @@ Cookinseln, England, Grönland, Guam, Hongkong, Neukaledonien, Palästina, Puert
 Taiwan, Wales). Nicht drin: Vatikan und Kosovo. Die Reihenfolge ist die der Signatur:
 
 ```
- 1  Rechtwinklig?            6  Hintergrundtyp        11  S-Anordnung
- 2  Rahmen?                  7  W-Streifen            12  Kreuzausrichtung
- 3  Gösch?                   8  3W                    13  Kreuzarme
- 4  Dreieck von links?       9  5W                    14  SW Streifen
- 5  Dreiecksflächen         10  S-Streifen            15  Spezial
+ 1  Rechtwinklig?            7  W-Streifen           13  Kreuzarme
+ 2  Rahmen?                  8  3W                   14  Diagonal Richtung
+ 3  Gösch?                   9  5W                   15  Diagonal Anzahl Streifen
+ 4  Dreieck von links?      10  S-Streifen           16  SW Streifen
+ 5  Dreiecksflächen         11  S-Anordnung          17  Spezial
+ 6  Hintergrundtyp          12  Kreuzausrichtung
 ```
 
 **Die ersten fünf gelten für alle**, die übrigen hängen am `Hintergrundtyp` — er ist die Weiche, und
@@ -131,7 +133,7 @@ jeder seiner Werte zieht seine eigenen Folgespalten nach sich:
 | 0 waagerechte Streifen | 103 | `W-Streifen`, daraus `3W` (bei 3) und `5W` (bei 5) |
 | 1 senkrechte Streifen | 28 | `S-Streifen`, `S-Anordnung` |
 | 2 Kreuz | 15 | `Kreuzausrichtung`, `Kreuzarme` |
-| 3 diagonal | 12 | — |
+| 3 diagonal | 12 | `Diagonal Richtung`, `Diagonal Anzahl Streifen` |
 | 4 einfarbig | 35 | — |
 | 5 senkrechtes Band mit waagerechten Streifen | 6 | `SW Streifen` |
 | 7 speziell | 7 | `Spezial` |
@@ -139,9 +141,11 @@ jeder seiner Werte zieht seine eigenen Folgespalten nach sich:
 Die **6 bleibt bewusst frei** — Platz für einen Fall, der noch kommen kann.
 
 **`x` heißt „diese Frage wird hier nicht gestellt"**, und das ist etwas anderes als eine 0. Die 0 ist
-ein regulärer Antwortwert — „nein", „waagerecht", „alle gleich breit", „uni". Nur die drei
+ein regulärer Antwortwert — „nein", „waagerecht", „alle gleich breit", „uni", „steigend". Nur die
 Zählspalten `W-Streifen`, `S-Streifen` und `SW Streifen` kennen sie nicht: Dort *ist* der Wert die
-Anzahl, und die fängt bei 2 an.
+Anzahl, und die fängt bei 2 an. `Diagonal Anzahl Streifen` ist die Ausnahme unter den Zählspalten —
+dort bedeutet die 0 „Teilung vorhanden, aber kein eigenes Band", so wie Bhutan und
+Papua-Neuguinea.
 
 Genau daran hängen die Prüfregeln in `pruefe-attribute.py`: Eine Spalte trägt **genau dann** einen
 Wert statt `x`, wenn die Frage davor hierher geführt hat.
@@ -160,6 +164,10 @@ S-Anordnung  0 gleichmäßig breit    Kreuzausrichtung  0 senkrecht     Kreuzarm
              1 mittlerer breiter                      1 diagonal                 1 drei parallele Farben
              2 rechter breiter                        2 beides                   2 fimbriert
              (3 linker breiter)                                                  3 nicht sichtbar
+
+Diagonal Richtung  0 steigend                        Diagonal Anzahl  0 kein Band, Flächen stoßen an
+                   1 fallend                          Streifen         1 · 2 · 3 · 4 Bänder
+                   2 strahlenförmig aus einer Ecke
 
 Dreieck von links  1 einzelnes echtes Dreieck        Dreiecksflächen  1 äußere als Umrandung
                    2 abgeschnittenes Dreieck                          2 zwei verschiedene Tiefen
@@ -186,164 +194,109 @@ Simbabwe die 7, Griechenland und Uruguay 9, Liberia 11, USA 13, Malaysia 14. Die
 (ein Feld läuft in beide Richtungen durch), die **−1 für „Teilung vorhanden, aber unsichtbar"** —
 Panamas Kreuz, Bhutans und Papua-Neuguineas Diagonale.
 
-### Die Fragenstaffel bis Frage 8
+### Die Fragenstaffel
 
-Fragen 1 bis 5 gelten für **alle 204** und tragen die Flagge Schicht für Schicht ab; ab 6 geht es in
-den Waagerecht-Zweig.
+Fünf Fragen gelten für **alle 206** und tragen die Flagge Schicht für Schicht ab. Danach verzweigt es
+sich nach dem Hintergrundtyp.
 
 ```
-1  "Ist die Flagge rechteckig?"
-     Ja                                    → weiter
-     Nein                                  → Spezialzweig (nur Nepal)
-
-2  "Hat die Flagge einen Rahmen?"
-     Ja | Nein
-
-3  "Hat die Flagge einen Gösch?"
-     Ja | Nein
-
-4  "Jetzt entferne den Rahmen und den Gösch gedanklich.
-    Ragt ein oder ragen mehrere Dreieck(e) ganz vom linken Rand herein?"
-     Ja                                    → 4a
-     Nein                                  → 5
-
-4a "Was beschreibt die Dreiecksfigur am besten?"
-     Ein einzelnes echtes Dreieck                       → 5   (14 Flaggen)
-     Abgeschnittenes Dreieck                            → 5   (Kuwait)
-     Dreiecksform, waagerecht zum Flugteil verlängert   → 5   (Südafrika, Vanuatu)
-     Echtes Dreieck, aber mehr als eine Farbe           → 4b
-     Einzelnes Dreieck, das bis zur Flugseite reicht    → 5   (Eritrea)
-
-4b "Wie sind die Flächen des Dreiecks angeordnet?"
-     Zwei Flächen, die äußere als Umrandung             (Simbabwe)
-     Zwei Dreiecke unterschiedlicher Tiefe              (Osttimor)
-     Zwei Dreiecke, gestaffelt und umrandet             (Guyana)
-
-5  "Nun entferne gedanklich auch das Dreieck und eventuelle Zusatzelemente.
-    Was beschreibt den Hintergrund der restlichen Flagge am besten?"
-     Waagerechte Streifen                  → 6
-     Senkrechte Streifen | Kreuz mit vier Quadranten |
-     Diagonale Streifen | Einfarbige Fläche | Anderes
-
-6  "Wie viele waagerechte Streifen sieht man?"
-     2 → 8     3 → 7a    4 → 8     5 → 7b
-     6 → 8     7 → 8     8 → (kommt nicht vor)    9 → 8
-
-7a "Wie sind die Streifen verteilt?"                        (nur bei 3)
-7b "Wie sind die Streifen verteilt?"                        (nur bei 5)
-     — Optionen siehe Tabellen unten
-
-8  [Sketch erscheint, Fläche 1 markiert]
-   je Fläche: "Welche Farbe hat die markierte Fläche?"
-     Rot | Blau | Hellblau | Grün | Gelb | Orange | Weiß | Schwarz
+1  "Ist die Flagge rechteckig?"                    Ja | Nein → Spezialzweig (nur Nepal)
+2  "Hat die Flagge einen Rahmen?"                  Ja | Nein        (abgeleitet, kein Attribut)
+3  "Hat die Flagge einen Gösch?"                   Ja | Nein
+4  "Entferne Rahmen und Gösch gedanklich.
+    Ragt ein Dreieck ganz vom linken Rand herein?" Ja → 4a | Nein → 5
+4a "Was beschreibt die Dreiecksfigur am besten?"   fünf Formen, siehe Attributwerte
+4b "Wie sind die Flächen des Dreiecks angeordnet?" nur bei mehrfarbigem Dreieck
+5  "Entferne auch das Dreieck und die Zusatzelemente.
+    Was beschreibt den Hintergrund am besten?"     die sieben Hintergrundtypen
 ```
-
-**Geprüft ist das bislang für den Waagerecht-Zweig samt Gösch und Dreieck.** Nicht durchgespielt sind
-die Zusatzelemente und das Einblenden der echten Flagge. Die Zusatzelemente kommen ohnehin erst
-**nach** den Farben, weil sie über dem Hintergrund liegen und nicht mitgezeichnet werden.
-
-**Der Gösch braucht keine eigene Frage.** Er ist eine Fläche wie jede andere und wird bei Frage 8
-markiert und eingefärbt — nach der Konvention „Auflagen kommen ans Ende der Farbliste" als Fläche
-n+1. Sein **Inhalt** ist ein Zusatzelement und wird nicht gezeichnet: 50 Sterne bei den USA, ein
-Kreuz bei Griechenland, der Union Jack bei Australien, Neuseeland, Fidschi, den Cookinseln, Tuvalu,
-den Kaimaninseln und Bermuda. Auf der **Sketch**-Seite ist er damit aber nicht erledigt — ob er in
-jede Kombination hineingezeichnet oder programmatisch darübergelegt wird, ist offen.
 
 Zu Frage 1: Sie fängt Nepal ab, bevor es alles Weitere kaputtmacht — jede spätere Formulierung setzt
 Rechteckigkeit voraus (Bänder von Rand zu Rand, Ecken für den Gösch, „vom ganzen linken Rand"). Dass
-203 Flaggen mit „ja" antworten, spricht nicht dagegen.
+205 Flaggen mit „ja" antworten, spricht nicht dagegen.
 
-Die zehn Spezialflaggen verteilen sich so: Nepal fällt bei Frage 1 heraus, Kuwait, Südafrika und
-Vanuatu werden bei Frage 4 auffällig (dort braucht es eine CheatSheet-Regel), die übrigen sechs landen
-bei Frage 5 auf „anderes".
+Zu Frage 4: Kuwait, Südafrika und Vanuatu werden hier auffällig und brauchen eine CheatSheet-Regel.
 
-Bei Frage 6 werden **2 bis 9** angeboten, obwohl nur 2, 3, 4, 5, 6, 7 und 9 vorkommen — eine falsche
-Vorstellung muss ausdrückbar sein. **Offen:** 11, 13 und 14 gibt es nur mit Gösch (Liberia, USA,
-Malaysia). Nach der Regel „dieselbe Frage in allen Zweigen" müsste die Liste überall 2–14 umfassen und
-acht Werte zufällig gezogen werden, sonst verrät die Optionsliste den Zweig.
+### Die Zweige nach Frage 5
 
-Die Zusatzfrage 7 wird nur dort gestellt, wo die Antwort tatsächlich variiert:
+Jede Zeile ist eine Attributspalte, eine Frage und ihre Antwortoptionen. Eingeklammerte Werte sind
+reine Distraktoren und kommen bei keiner Flagge vor.
 
-**Bei 3 Streifen** (57 Flaggen) — *Wie sind die Streifen verteilt?*
+**Waagerechte Streifen** (103 Flaggen)
 
-| Antwort | Flaggen |
-|---|---|
-| Alle gleich breit | ~43 |
-| Mitte breiter | Spanien, Libanon, Libyen, Laos, Kambodscha, Tadschikistan, São Tomé, Belize, Lesotho |
-| Mitte schmaler | Lettland, Nauru |
-| Oberster breiter | Kolumbien, Ecuador, Ruanda |
-| Unterster breiter | kommt nicht vor — reiner Distraktor |
+| Spalte | Frage | Optionen |
+|---|---|---|
+| `W-Streifen` | Wie viele waagerechte Streifen? | 2 · 3 · 4 · 5 · 6 · 7 · 8 · 9, aus einem Bereich gezogen |
+| `3W` | Wie sind die Streifen verteilt? *(nur bei 3)* | alle gleich breit · mittlerer breiter · mittlerer schmaler · oberster breiter · *(unterster breiter)* |
+| `5W` | Wie sind die Streifen verteilt? *(nur bei 5)* | 2 und 4 dünn, Mitte nicht breiter · alle gleich · Mitte breiter, 2 und 4 nicht dünn · Mitte breiter **und** 2 und 4 dünn · oberster am breitesten · *(unterster am breitesten)* |
 
-Lesotho (etwa 3:4:3) ist der Grenzfall: „alle gleich breit" wird dort **nicht als falsch gewertet**.
+Bei den anderen Anzahlen gibt es nur ein oder zwei Flaggen, alle gleichmäßig — dort entfällt die
+Verteilungsfrage. Bei zwei Streifen wäre es eine *andere* Frage („oben oder unten" statt „Mitte oder
+Rand"); der Preis ist bekannt und akzeptiert.
 
-**Bei 5 Streifen** (16 Flaggen) — *Wie sind die Streifen verteilt?*
+Lesotho (etwa 3:4:3) ist der Grenzfall bei `3W`: „alle gleich breit" wird dort **nicht als falsch
+gewertet**. Israel steht bei `5W` in der dritten Zeile, nicht in der vierten — seine Streifen sind
+15 : 25 : 80 : 25 : 15, die **äußeren** sind die dünnsten. Kap Verde greift auf „oberster am
+breitesten", weil seine drei mittleren Bänder gleich breit sind.
 
-| Antwort | Flaggen |
-|---|---|
-| Streifen 2 und 4 klar am dünnsten, mittlerer aber nicht klar am breitesten | Botswana, Kenia, Gambia, Usbekistan, Mosambik, Südsudan |
-| Alle gleich | Kuba, Puerto Rico, Togo |
-| Mittlerer klar am breitesten, 2 und 4 aber nicht klar am dünnsten | Costa Rica, Israel, Thailand |
-| Mittlerer klar am breitesten **und** 2 und 4 klar am dünnsten | Nordkorea, Suriname, Eswatini |
-| Oberster am breitesten | Kap Verde |
-| Unterster am breitesten | kommt nicht vor — Distraktor |
+Die beiden Merkmale „2 und 4 am dünnsten" und „Mitte am breitesten" sind unabhängig und können
+gemeinsam auftreten. Eine erste Fassung nannte pro Option nur *ein* Merkmal und ließ dadurch bei
+Nordkorea, Suriname und Eswatini zwei Optionen zutreffen. Die Auflösung sind die ausdrücklichen
+„aber nicht"-Zusätze — **Teilbeschreibungen überlappen, vollständige nicht.**
 
-Die beiden Merkmale „2 und 4 am dünnsten" und „Mitte am breitesten" sind voneinander unabhängig und
-können gemeinsam auftreten. Eine erste Fassung nannte pro Option nur *ein* Merkmal und ließ dadurch
-bei Nordkorea, Suriname und Eswatini zwei Optionen zutreffen. Die Auflösung sind die
-ausdrücklichen „aber nicht"-Zusätze oben — **Teilbeschreibungen überlappen, vollständige nicht.**
+**Senkrechte Streifen** (28)
 
-Kap Verde greift auf „oberster am breitesten", weil seine drei mittleren Bänder gleich breit sind und
-damit weder 2/4 die dünnsten noch die Mitte die breiteste ist. Botswana greift dort *nicht*, weil
-seine beiden Ränder gleich breit sind.
+| Spalte | Frage | Optionen |
+|---|---|---|
+| `S-Streifen` | Wie viele senkrechte Streifen? | 2 (4 Flaggen) · 3 (23) · 4 (1) |
+| `S-Anordnung` | Wie sind sie verteilt? | gleichmäßig · mittlerer breiter · rechter breiter · *(linker breiter)* |
 
-**Israel** steht in der dritten Zeile, nicht in der vierten: Die Streifen sind 15 : 25 : 80 : 25 : 15,
-die **äußeren** sind also die dünnsten und nicht 2 und 4.
+Anders als waagerecht wird die Verteilungsfrage **bei jeder Streifenzahl** gestellt. Der Grund ist die
+Verteilung: Bei den senkrechten Zweiern weicht die Hälfte ab (Pakistan und Portugal gegen Algerien und
+Malta), bei den waagerechten Zweiern keine einzige.
 
-Bei allen anderen Anzahlen gibt es nur ein oder zwei Flaggen, alle gleichmäßig — dort entfällt die
-Frage. Nordkoreas breiter Mittelstreifen und Botswanas breite Ränder laufen bewusst auf demselben
-Sketch mit.
+**Kreuz** (15)
 
-Der Zweig umfasst **103 Flaggen**, davon 78 mit reinen Streifen — deren Strukturdateien erzeugt das
-Skript. Die übrigen 25 tragen Dreieck, Gösch oder ein Kreuz und bleiben Handarbeit. Gösch und Dreieck
-gehören zum Sketch und bilden eigene Signaturen; nur die Zusatzelemente sind Auflagen, die nicht
-mitgezeichnet werden.
+| Spalte | Frage | Optionen |
+|---|---|---|
+| `Kreuzausrichtung` | Welche Form hat das Kreuz? | senkrecht · diagonal · beides |
+| `Kreuzarme` | Welche Form haben die Arme? | uni · drei parallele Farben · fimbriert · nicht sichtbar |
 
-### Der Senkrecht-Zweig
+Fünfzehn Flaggen, sechs Sketches: Dänemark (das auch die Dominikanische Republik mitnimmt), Dominica,
+Island, Jamaika, Panama und das Vereinigte Königreich.
 
-Wer bei Frage 5 „senkrechte Streifen" antwortet, bekommt zwei Fragen:
-
-```
-Wie viele senkrechte Streifen?   S-Streifen     2 (4 Flaggen) · 3 (23) · 4 (1)
-Wie sind sie verteilt?           S-Anordnung    0 gleichmäßig  1 mittlerer breiter
-                                                2 rechter breiter  (3 linker breiter)
-```
-
-Anders als waagerecht wird die Verteilungsfrage **bei jeder Streifenzahl** gestellt, nicht nur bei
-einer bestimmten. Der Grund ist die Verteilung: Bei den senkrechten Zweiern weicht die Hälfte ab
-(Pakistan und Portugal gegen Algerien und Malta), bei den waagerechten Zweiern keine einzige. Die
-Begründung, mit der die Frage dort entfällt, trägt hier also nicht.
-
-### Der Kreuz-Zweig
-
-Wer bei Frage 5 „Kreuz" antwortet, bekommt zwei Fragen:
-
-```
-Welche Form hat das Kreuz?     Kreuzausrichtung   0 senkrecht  1 diagonal  2 beides
-Welche Form haben die Arme?    Kreuzarme          0 uni  1 drei parallele Farben
-                                                  2 fimbriert  3 nicht sichtbar
-```
-
-Fünfzehn Flaggen, und sie zerfallen in sechs Sketches: Dänemark (das auch die Dominikanische Republik
-mitnimmt), Dominica, Island, Jamaika, Panama und das Vereinigte Königreich.
-
-Die zweite bringt den Begriff **Fimbrierung** zurück, den §9 für die Streifen verworfen hat. Das ist
-kein Rückfall: Der Einwand von damals hing an der Population, nicht am Begriff. Bei den Fünfern gab es
-echte Grenzfälle, bei den Kreuzen nicht — die Menge ist klein und **geschlossen**, es kommen keine
-Flaggen mehr dazu. „Alle durchgesehen und eindeutig" ist hier deshalb eine vollständige Prüfung und
-kein Augenmaß.
+Die zweite Frage bringt den Begriff **Fimbrierung** zurück, den §9 für die Streifen verworfen hat. Das
+ist kein Rückfall: Der Einwand von damals hing an der Population, nicht am Begriff. Bei den Fünfern
+gab es echte Grenzfälle, bei den Kreuzen nicht — die Menge ist klein und **geschlossen**.
 
 `nicht sichtbar` ist der Panama-Fall und entspricht der `-1` bei den Bänderzahlen: Die Teilung ist da,
 die Farbe des Kreuzes nicht zu sehen.
+
+**Diagonal** (12)
+
+| Spalte | Frage | Optionen |
+|---|---|---|
+| `Diagonal Richtung` | Wie läuft die Diagonale? | steigend · fallend · strahlenförmig aus einer Ecke |
+| `Diagonal Anzahl Streifen` | Wie viele diagonale Bänder laufen durch? | kein Band, die Flächen stoßen aneinander · 1 · 2 · 3 · 4 |
+
+Gezählt werden **Bänder**, nicht Flächen — derselbe Begriff wie überall sonst im Dokument. Die
+Flächenzahl folgt daraus: `Bänder + 2`, bei „kein Band" sind es 2. Das rechnet der Generator.
+
+Die beiden Fragen zerlegen den Zweig in acht Sketches. Bhutan und Papua-Neuguinea haben beide zwei
+Flächen ohne Band, sind aber gespiegelt und teilen sich deshalb keinen. Der dritte Richtungswert trägt
+die Seychellen, deren Fächer weder steigt noch fällt — ohne ihn wären sie als „steigend" falsch
+beschrieben.
+
+Dieser Zweig hat lange gefehlt: Alle zwölf trugen dieselbe Signatur, und damit konnte der Generator
+für keine von ihnen einen Sketch-Namen ableiten. Aufgefallen ist es beim Durchspielen von
+Papua-Neuguinea, dessen Karte nach Frage 5 endete.
+
+**Einfarbig** (35) und **speziell** (7) haben keine Folgefrage. Bei `speziell` trägt die gleichnamige
+Spalte eine durchnummerierte Kennung, aus der der Sketch-Name folgt; Antigua und Barbuda etwa bekommt
+einen fertigen Sketch nur zum Einfärben.
+
+**Senkrechtes Band mit waagerechten Streifen** (6) fragt nur `SW Streifen` — wie viele waagerechte
+Streifen neben dem Band liegen.
 
 ### Farben
 
@@ -369,28 +322,73 @@ angewandt. Damit braucht es auch keine Leserichtungs-Konvention.
 **Streifenbreiten werden nicht abgefragt.** Wer Anzahl und Farben weiß, hat das Bild im Kopf und
 bekommt die Breiten mit. Spart eine ganze Fragenebene.
 
-### Elemente
+### Zusatzelemente
 
-Gösch ist ein **Element**, keine Hintergrundkategorie. In Kategorie 1 tritt er bei genau sieben
-Flaggen auf — USA, Liberia, Malaysia, Uruguay, Griechenland, Togo, Chile — und sein Inhalt liegt
-immer **im** Gösch, nie daneben.
+Der zweite Fragenblock, nach den Farben. Er liegt in einem **eigenen Blatt** der Tabelle, eine Zeile
+pro Flagge mit Element — 144 der 206. Wer in der Haupttabelle `Zusatzelemente = 0` tragt, steht dort
+nicht.
 
-**Die Elementfrage endet bei „Wappen".** Wappen werden nicht zerlegt — sonst folgten dreißig
-Folgefragen zu Machete, Zahnrad, Kondor und Vulkan. „Wappen" ist selbst eine gültige Endantwort. Wenn
-ein einzelnes Element wichtig genug ist (Sri Lankas Löwe), wird daraus eine eigene Karte, nicht ein
-weiterer Schritt in der Flaggenkarte.
+Der Aufbau ist derselbe wie beim Hintergrund: eine Weiche, dann zweigeigene Folgefragen.
 
-Darüber liegen **zwei Ebenen**: erst die Kategorie (Lebewesen, Pflanze, Bauwerk, Gegenstand, Schrift,
-geometrische Figur, Himmelskörper, Wappen), dann der Name (Adler, Drache, Kranich, Zeder, Angkor Wat,
-Krone …). Vierzehn der 26 „speziellen" Flaggen aus Kategorie 1 landen bei „Wappen", der Rest verteilt
-sich einzeln.
+```
+Was ist im Gösch?          nur wenn die Flagge einen hat (18 Flaggen)
+Was liegt außerhalb?       die Weiche — sechs Werte
+  Kreis                    → Was liegt im Kreis? → dieselben Werte noch einmal
+  Himmelskörper            → welche → wie viele → Formation
+  einfarbige Figur         → Kategorie (Tier, Pflanze, Gebäude, Gegenstand, abstraktes Symbol)
+  komplexes Emblem         → Endstation
+Wo?                        acht Positionen, für alle außer „Keine"
+Farbe                      Kreis bzw. Element, und getrennt davon der Kreisinhalt
+```
 
-Der Vorteil der Kategorie-Ebene: **Die Distraktoren der Namensfrage kommen aus der beantworteten
-Kategorie** — beim Adler also Drache, Kranich, Löwe statt Angkor Wat und Zeder. Plausible Ablenker
-ohne Kuratierung, und ohne Leak, weil die Kategorie selbst beantwortet wurde.
+**Die Weiche hat sechs Werte** — Nur Himmelskörper (52), Komplexes Emblem (38), Nur eine einfarbige
+Figur (24), Klar farbig abgegrenzter Kreis (14), Keine (10), Mehrere einfarbige Figuren gleicher
+Farbe (6). Sie deckt alle 144 Zeilen ab, ohne Auffangkorb.
 
-Die Position eines Elements wird per MC über ein festes Vokabular gefragt (Mitte, oben links, am
-Mast, verteilt, ganzflächig …), **nicht** per Klick ins Bild.
+**Der Kreis ist ein Behälter, kein Inhalt.** Was in ihm liegt, wird mit *derselben Werteliste*
+gefragt wie das, was außerhalb liegt — eine Fragedefinition, zweimal angewandt, so wie die Farbfrage
+n-mal angewandt wird. Das spart eine zweite Werteliste und deckt auf, was eine eigene Liste verdeckt
+hatte: Burundis drei Sterne, Äthiopiens und Nordkoreas Stern und Tunesiens Mond sind Himmelskörper
+und keine „einfarbigen Figuren". Dazu kommt genau ein Wert, den es außerhalb nicht gibt: **der Kreis
+ist selbst geteilt** (Grönland). Er sagt dem Generator, dass hier zwei Farbflächen kommen statt einer,
+und wird über eine MC-Antwort mit zwei Klicks abgefragt.
+
+Der Preis: Der Kreis-Zweig erbt die Folgefragen, Tunesien und Burundi laufen dadurch ein bis zwei
+Schritte länger. Und Neukaledonien ist der einzige Treffer der Kategorienfrage innerhalb des Kreises —
+ein Schönheitsfehler, aber keiner, der etwas kostet: Die Frage steht ohnehin, sie wird in diesem Zweig
+nur selten erreicht.
+
+**„Komplexes Emblem" ist eine Endstation, kein Auffangkorb.** Es bedeutet „hier liegt etwas zu
+Komplexes, es wird nicht zerlegt" — Kenias Schild mit Speeren, Spaniens Wappen, Belarus mit seinem
+Ornamentband. Solche Flaggen bekommen die Positionsfrage, aber keine Farbfrage. Früher standen daneben
+ein zweiter Wert „Anders" und die Unterscheidung „ist das ein Wappen oder nicht"; beides ist
+zusammengelegt, weil die Grenze zu ziehen war, ohne dass sie etwas eintrug.
+
+**Die einfarbige Figur endet bei einer Kategorie**, nicht bei einem Namen: Tier, Pflanze, Gebäude,
+Gegenstand, abstraktes Symbol. Die zweite Stufe — Adler, Zeder, Angkor Wat — ist vorgesehen, aber
+nicht ausformuliert. Der Vorteil der Kategorie-Ebene bleibt derselbe: **Die Distraktoren der
+Namensfrage kämen aus der beantworteten Kategorie**, also plausible Ablenker ohne Kuratierung und
+ohne Leak.
+
+Wenn ein einzelnes Element wichtig genug ist (Sri Lankas Löwe), wird daraus eine eigene Karte, nicht
+ein weiterer Schritt in der Flaggenkarte. Zeder, Lorbeer und Ahorn sind Stoff für die
+Geschichten-Karten.
+
+**Die Position** wird per MC über acht feste Werte gefragt — Mitte, Links mittig, Links oben, Rechts
+mittig, Links unten, Oben mittig, Rechts oben, Über die ganze Flagge verteilt —, **nicht** per Klick
+ins Bild. Der letzte Wert trägt die Fälle, in denen mehrere Figuren an mehreren Stellen liegen:
+Australien, Georgien, Grenada, Kasachstan, Papua-Neuguinea. Er ersetzt ein früheres „Anders", das
+nichts aussagte.
+
+**Die Anzahl bleibt dort in der Kategorie, wo sie die Folgefrage erübrigt.** `1 Stern` gegen `Sterne`
+ist kein Schönheitsfehler, sondern der zulässige Fall aus §2: Eine Frage entfällt, wenn ihre Antwort
+zwingend folgt. Bei `1 Stern` folgt die Anzahl aus der Kategorie — und dass die Anzahlfrage nach
+`Sterne` erscheint und nach `1 Stern` nicht, ist Verengung durch die eigene richtige Antwort, kein
+Leak.
+
+**Wie lang eine Elementkarte wird:** Der Schwerpunkt liegt bei drei bis vier Fragen einschließlich
+Farbe, das Maximum trägt Australien mit sieben (Gösch, Weiche, welche Himmelskörper, wie viele,
+Formation, wo, Farbe). Sieben ist die Obergrenze, die das Deck sich setzt.
 
 ### Leak oder nicht
 
@@ -466,8 +464,9 @@ die Komponente noch die Steps wissen etwas von Flaggen.
 Farbliste ist positionsbezogen — n Farben für n Flächen. Optische Ähnlichkeit reicht also nicht:
 Simbabwe und Osttimor haben beide ein zweifarbiges Dreieck, aber neun gegen drei Flächen.
 
-**Gösch und Dreieck werden in die Sketches gebacken, nicht zur Laufzeit gezeichnet** — der Generator
-stempelt sie mit hinein, der Renderer bleibt dumm. Auflage an den Generator: **immer dieselbe
+**Wie Gösch und Dreieck in den Sketch kommen, ist offen** (siehe §8); die aktuelle Idee ist, dass ein
+Sketch nur den **Hintergrund** trägt und alles andere zur Laufzeit darübergelegt wird. Wie auch immer
+es ausgeht — diese Auflage gilt: **immer dieselbe
 Gösch-Geometrie, immer dieselbe Dreieckstiefe, keine Anpassung an die Streifenzahl.** Der Grund ist
 derselbe wie beim Leak: Ein Sketch, der Details richtig zeigt, die nie beantwortet wurden — Chiles
 Gösch genau über dem oberen Streifen, Togos genau über dreien von fünf —, verrät sie. Die Skizze soll
@@ -486,7 +485,7 @@ alle Koordinaten ganzzahlig bleiben (3 Streifen → 180 × 120, 13 Streifen → 
 
 **Die reinen Streifenstrukturen werden erzeugt, nicht gezeichnet** —
 `docs/flaggen/build-streifen-sketch.py` schreibt `waagerecht-<n>` und `senkrecht-<n>`. Das deckt 78
-der 102 Flaggen im Waagerecht-Zweig ab; Dreieck, Gösch, Kreuz und die Sonderfälle bleiben Handarbeit.
+der 103 Flaggen im Waagerecht-Zweig ab; Dreieck, Gösch, Kreuz und die Sonderfälle bleiben Handarbeit.
 
 Die echten Flaggen werden hochaufgelöst im wahren Format geladen und wie jedes andere Bild
 verkleinert und mittig platziert.
@@ -514,8 +513,17 @@ Wikimedia Commons oder ein Sammelpaket wie `lipis/flag-icons`. Offizielle Werte 
 Farbwechsel-Geschichten sind Stoff für Geschichten-Karten, kein Eingabewert.
 
 **Ablauf einer Karte:** Struktur (ohne Bild) → Skelett mit hervorgehobener Fläche erscheint → Farben
-füllen sich Fläche für Fläche → Gösch wird mitgezeichnet → Zusatzelemente werden nur benannt, nicht
-gezeichnet → zum Abschluss die echte Flagge.
+füllen sich Fläche für Fläche → Gösch und Dreieck werden mitgezeichnet → die Zusatzelemente werden
+gefragt → zum Abschluss die echte Flagge.
+
+**Ob Zusatzelemente mitgezeichnet werden, ist offen.** Ursprünglich sollten sie nur benannt werden;
+inzwischen spricht einiges dafür, wenigstens die einfachen Formen zu zeichnen — Japans Kreis
+markieren und einfärben zu lassen, wäre dieselbe Mechanik wie bei einer Streifenfläche, und fünf
+Elementfragen ohne jedes sichtbare Feedback wären der einzige Teil der Karte, wo nichts passiert. Die
+Grenze läge dort, wo die Elementfrage sie ohnehin zieht: Was einen Namen trägt, aus dem die Form
+folgt (Kreis, Zackenfigur, Sichel), ist zeichenbar; was „komplexes Emblem" heißt, nicht. Wenn
+gezeichnet wird, gilt für die Skizze dieselbe Auflage wie für den Gösch — immer dieselbe
+Platzhalterform, nie die echte.
 
 Eine falsche Antwort beendet die Karte, wie überall sonst in der Suite. Die Skizze bleibt dann
 halbfertig stehen; sie baut sich also nur bei einem fehlerfreien Durchlauf ganz auf.
@@ -611,8 +619,16 @@ das senkrechte Band mit waagerechten Streifen und die Spezialfälle — jede der
 zu ihrem Sketch durch. Das war die Bedingung für den Generator: Er liest die Attributtabelle, und
 solange die noch Spalten dazubekommt, baut man ihn zweimal.
 
-**Als Nächstes also der Generator.** Zwei Dinge fehlen ihm noch aus der Tabelle — die Farbliste und
-die Zusatzelemente (siehe §8) —, aber die Struktur, an der er hängt, steht.
+**Die Zusatzelemente sind vorgezogen worden.** Ursprünglich sollte direkt nach den Attributen der
+Generator kommen. Stattdessen wurde erst die zweite Fragenstaffel gebaut, und der Grund war der
+richtige: Am Ende kommt alles von den Fragen. Bis zum Sketch war die Kette klar, danach fing sie neu
+an — und ein Generator, dem die Hälfte seiner Eingabe fehlt, wird zweimal gebaut.
+
+Dabei ist nebenbei der diagonale Zweig entstanden, der vorher gar nicht auflöste, und vier Flaggen
+sind aufgefallen, die in keiner Elementzeile standen (Japan, USA, St. Lucia, Schweiz).
+
+**Als Nächstes also der Generator.** Ihm fehlen noch die Farblisten (siehe §8), aber die Struktur, an
+der er hängt, steht jetzt auf beiden Seiten.
 
 **Pro neuer Sketch-Familie eine handgeschriebene Karte.** So wie Deutschland: eine Zeile, ein Sketch,
 einmal durchspielen. Nicht pro Zweig — allein waagerecht hat drei Familien (nur Streifen, mit
@@ -636,12 +652,17 @@ Mikronesien fehlen dort und tragen deshalb eine vollständige URL statt eines `.
 Daneben gibt es eine HTML-Seite, die dieses Sheet beim
 Öffnen live ausliest und die Flaggen nach identischer Attributsignatur gruppiert anzeigt — damit
 lässt sich in Sekunden prüfen, ob ein Cluster wirklich mit *einem* Sketch auskommt. Aktueller Stand:
-**206 Flaggen, 56 Signaturen, 28 Einzelgänger.**
+**206 Flaggen, 63 Signaturen, 34 Einzelgänger.**
 
 Daneben liegt **`pruefe-attribute.py`**, das findet, was man am Bild nicht sieht: Spalten, die gesetzt
 sein müssten, weil die Frage davor hingeführt hat, und umgekehrt. Es hat unter anderem Burundi und
 Grenada ohne Kreuzantworten gefunden, Nepal mit Werten hinter seinem Ausstieg und eine Signatur-Formel,
 die beim Einfügen einer Spalte nicht mitgewachsen war. Eine neue Frage ist dort eine Zeile in `REGELN`.
+
+Daneben stehen **Sondertests** für alles, was sich nicht als Kettenregel schreiben lässt — mehrere
+Bedingungen auf einmal, oder eine Spalte hinter der Signatur. Der erste davon fragt: Eine einfarbige
+Flagge ohne Gösch, ohne Dreieck und ohne Element wäre eine leere Fläche; die gibt es nicht. Er hat
+Japan, St. Lucia und die Schweiz gefunden.
 
 Skript und Seite finden die Kopfzeile selbst (die mit „Signatur" in Spalte 7) und leiten die
 Attributzahl aus der Signaturlänge ab. Eingefügte Zeilen und geänderte Attributspalten brechen also
@@ -671,21 +692,42 @@ reine Dateneingabe ohne Entwurfsrisiko.
   (`5` = „2, toleriert 1"), ein Komma (`2,1`) oder eine Klammer (`2(1)`). Die Klammer lehnt sich an
   die Distraktor-Schreibweise dieses Dokuments an; der neue Wert skaliert nicht, weil jede weitere
   Kombination eine weitere Zahl bräuchte.
-- **Die Kategorie- und Namenslisten der Elementfrage** — welche Kategorien es genau gibt und welche
-  Namen darunter hängen, ist noch nicht ausformuliert. Die Struktur steht (zwei Ebenen, Ende bei
-  „Wappen"), die Werte nicht.
-- **Der diagonale Zweig** hat zwölf Flaggen und bisher keine Folgefrage — als einziger
-  Hintergrundtyp außer „einfarbig", wo das einleuchtet. Ob das Absicht ist oder eine Lücke, steht
-  noch aus.
-- **Die Farbliste** fehlt als Spalte. Ohne sie hört eine generierte Karte nach den Strukturfragen
-  auf. Reine Dateneingabe, aber sie muss passieren, bevor der Generator vollständige Karten schreibt.
-  Der senkrechte dürfte schnell gehen, weil er dieselbe Struktur hat, nur gedreht: 22 Dreier,
-  4 Zweier, und die Breitenfrage heißt dort „linker/rechter breiter" statt „oberster". Kanada und
-  St. Vincent sind dort 1:2:1, Pakistan und Portugal ungleiche Zweier.
-- **Wie Gösch und Dreieck in den Sketch kommen** — in jede Kombination hineingezeichnet (mehr Dateien,
-  Renderer bleibt dumm, Flächennummerierung steht in der Datei) oder zur Laufzeit als weiteres Polygon
-  darübergelegt (weniger Dateien, dafür Nummerierung zur Laufzeit berechnet). Tendenz zur Laufzeit,
-  weil die genaue Ausrichtung zu den Streifen nicht wichtig ist.
+- **Die Namensebene der Elementfrage** — die Kategorien stehen (Tier, Pflanze, Gebäude, Gegenstand,
+  abstraktes Symbol), die Namen darunter nicht. Ende bei „komplexes Emblem" bleibt.
+- **Die Formation mehrerer Sterne.** Sechs von sechzehn Flaggen stehen auf `Anders`, und es sind
+  ausgerechnet die, bei denen die Formation am meisten wert wäre: Australien, Neuseeland, China,
+  Mikronesien, Usbekistan. Drei Wege stehen offen — die Frage streichen (dieselbe Begründung wie bei
+  den Streifenbreiten: wer Anzahl und Position weiß, hat das Bild im Kopf), die sechs ausbenennen
+  („Kreuz des Südens" allein trägt Australien, Neuseeland, Papua-Neuguinea und Samoa), oder eine
+  gezielte Zusatzfrage von Hand. Die Antwortliste mischt heute drei Beschreibungssysteme:
+  Reihenrichtung (diagonal, senkrecht, nebeneinander), Bogenform (Kreis, Halbkreis) und Musterbild
+  (H, Dreieck).
+- **Die Farblisten** fehlen auf beiden Seiten — für die Hintergrundflächen und für die Elemente. Ohne
+  sie hört eine generierte Karte nach den Strukturfragen auf. Reine Dateneingabe, aber sie hängt an
+  der Flächennummerierung: Erst wenn feststeht, wie ein Sketch nummeriert ist, kann die Liste getippt
+  werden, denn sie ist positionsbezogen. Deshalb wandert sie hinter den Generator.
+- **Wie Gösch, Dreieck und Elemente in den Sketch kommen** — in jede Kombination hineingezeichnet
+  (mehr Dateien, Renderer bleibt dumm, Flächennummerierung steht in der Datei) oder zur Laufzeit als
+  weiteres Polygon darübergelegt (weniger Dateien, dafür Nummerierung zur Laufzeit berechnet). Die
+  aktuelle Idee: **Ein Sketch ist der Hintergrund**, alles andere wird zur Laufzeit darübergemalt —
+  Gösch und Dreieck sind dann nur die ersten beiden Auflagen und keine Sonderfälle. Dafür spricht,
+  dass die Fragenstaffel dieselbe Trennung schon macht (beide werden vor Frage 5 „gedanklich
+  entfernt") und dass die Kombinatorik sonst explodiert. Ob es trägt, zeigt sich beim Bauen.
+- **Wie die Auflagen nummeriert werden**, falls zur Laufzeit gezeichnet wird. Die Regel müsste
+  lauten: **Hintergrundflächen `0..n-1` aus der Datei, danach die Auflagen in fester Rangfolge** —
+  Dreieck, Gösch, Element; fehlt eine, rücken die späteren auf. Solange das gilt, kostet ein
+  nachträglich gezeichnetes Element einen Eintrag am Ende und lässt alles davor in Ruhe. Die Regel
+  kostet heute nichts, muss aber stehen, bevor die erste Farbliste getippt wird. Sie betrifft nur die
+  Reihenfolge, in der der Generator die Flächen ausschreibt — in der Tabelle bleiben Hintergrund- und
+  Elementfarben getrennt, sie haben nichts miteinander zu tun.
+- **Ob die Sketch-Dateien bei GeoJSON bleiben.** Das Format trägt Ballast aus der Kartenwelt
+  (`MultiPolygon`, CRS-Block, fünf Punkte für ein Rechteck), und ein Wechsel wäre heute billig, weil
+  außer den generierten Streifendateien noch nichts existiert. Es gibt aber auch keinen Zwang: Kreise
+  lassen sich als `Point` mit einem `radius` in den `properties` ablegen, und `ShapeGeometry` kann
+  Kreise bereits. Was fehlt, ist ein Zweig in `SketchPane`, die heute nur `MoveTo`/`LineTo` kennt —
+  und dort eine Kleinigkeit: Ein JavaFX-`Circle` startet **gefüllt**, ein `Path` nicht. „Noch nicht
+  beantwortet" ist genau dieser ungefüllte Zustand, also müssten beide Formen ihren Startzustand aus
+  derselben CSS-Regel bekommen statt aus dem JavaFX-Standard.
 - **Flaggenvarianten** — Costa Rica, Haiti, Ecuador und San Marino haben eine Bürgerflagge ohne
   Wappen, Paraguay trägt auf Vorder- und Rückseite verschiedene Embleme. Es braucht eine Festlegung,
   welche Fassung gilt.
@@ -711,4 +753,8 @@ reine Dateneingabe ohne Entwurfsrisiko.
 | Der Begriff „Fimbrierung" — **bei den Streifen** | Fachlich richtig, aber er zwingt zu einer Grad-Entscheidung („Strich oder Streifen?") und produzierte laufend Grenzfälle — Suriname, Eswatini, Gambia. Ersetzt durch die vergleichende Formulierung „Streifen 2 und 4 klar am dünnsten", die ohne Fachbegriff und ohne Schwellenwert auskommt. **Bei den Kreuzen bleibt er**: kleine, geschlossene Menge, alle Fälle geprüft und eindeutig (siehe §3). |
 | Bilderauswahl statt Zahlenfrage bei der Streifenzahl | Eine Bilderliste kann nur zeigen, was vorkommt — dann fehlt die Option für die Flagge, die man sich falsch vorstellt. Attrappen-Sketches dagegen sprengen die acht Optionen. |
 | Interpreter in der Suite: `Flag:`-Expander, `schritt`- und `werteliste`-Tabelle, View auf `flagge` | Ein Generator schreibt stattdessen eine normale Deck-CSV. Ausschlaggebend war, dass eine Fragensatzänderung beim Interpreter alle Karten still mitgeändert hätte; beim Generator zeigt der Diff, was passiert ist. Nebenbei bleibt die Suite dumm und der Fragensatz lesbar. Preis: Die Ableitungslogik steckt jetzt in einem Skript statt in einem einsehbaren `CASE` — die Regeln gehören deshalb hier ins Dokument. |
+| Zusatzelemente nach der **Zahl der Figuren** zerlegen — je Figur eine eigene Kategorienfrage | Setzt voraus, dass die Figurenzahl beantwortbar ist, und das ist sie nicht: Simbabwe ist ein Wappen oder ein Vogel plus ein Stern, Brasilien eine Raute plus Kugel oder drei Dinge, Irak und Kasachstan ebenso strittig. Eine Frage, deren Antwort schon beim Entwerfen nicht eindeutig fällt, trägt keinen ganzen Zweig. Stattdessen fängt „komplexes Emblem" diese Fälle als Endstation ab. |
+| **Zacken zählen**, um Sonne von Stern zu unterscheiden | Overhead. Die Zackenzahl ist kein Wissen, das man behalten will — derselbe Fall wie die Streifenbreiten, die man mitbekommt, wenn man Anzahl und Farben weiß. |
+| Sonne und Stern **überhaupt unterscheiden** | Nicht durch Hinsehen entscheidbar, und die Antwort trägt nichts. Eingefaltet wie Türkis in Hellblau: eine Grenze weniger, die man ziehen muss. |
+| Eine eigene Werteliste für den **Kreisinhalt** | Sie war gröber als die allgemeine und verdeckte, dass vier von fünf „einfarbigen Figuren" im Kreis in Wahrheit Himmelskörper sind. Ersetzt durch dieselbe Liste wie außerhalb. Beim **Gösch** gilt das Gegenteil und er behält seine eigene Liste: Dort ist sie feiner, und `Union Jack` ist der informativste Wert im ganzen Blatt. |
 | Ein Attribut, das Frage 5 beantwortet | Bestünde den Test „bleibt es wahr, wenn man die Fragenstaffel wegwirft" nicht. Es wäre nur so lange richtig, wie Frage 5 genau so geschnitten ist, und würde bei einem Umbau still falsch. |

@@ -34,6 +34,8 @@ REGELN = [
     ("Hintergrundtyp", {"1"}, "S-Anordnung"),
     ("Hintergrundtyp", {"2"}, "Kreuzausrichtung"),
     ("Hintergrundtyp", {"2"}, "Kreuzarme"),
+    ("Hintergrundtyp", {"3"}, "Diagonal Richtung"),
+    ("Hintergrundtyp", {"3"}, "Diagonal Anzahl Streifen"),
     ("Hintergrundtyp", {"5"}, "SW Streifen"),
     ("Hintergrundtyp", {"7"}, "Spezial"),
     ("Dreieck von links?", {"1", "2", "3", "4", "5"}, "Dreiecksflächen"),
@@ -47,10 +49,12 @@ N_ATTR = len(rows[HDR + 2][7].split("|"))
 NAME = [rows[HDR][i].strip() for i in range(ATTR_START, ATTR_START + N_ATTR)]
 SPALTE = {n: i for i, n in enumerate(NAME)}
 
+ZEILEN = [r for r in rows[HDR + 1:]
+          if len(r) > ATTR_START + N_ATTR - 1 and r[2].strip()
+          and (r[0].startswith("..") or r[0].startswith("http"))]
+
 FLAGS = [(r[2].strip().replace("_", " "), [r[i].strip() for i in range(ATTR_START, ATTR_START + N_ATTR)])
-         for r in rows[HDR + 1:]
-         if len(r) > ATTR_START + N_ATTR - 1 and r[2].strip()
-         and (r[0].startswith("..") or r[0].startswith("http"))]
+         for r in ZEILEN]
 
 print(f"{len(FLAGS)} Flaggen, {N_ATTR} Attribute")
 print()
@@ -94,3 +98,24 @@ for land, sig in einzeln:
             print(f"     {land:<24} {NAME[i]:<20} {sig[i]:<4} statt {gsig[i]:<4} "
                   f"(Cluster von {len(gm)}, z.B. {gm[0]})")
             break
+
+# ---- 3. Sondertests --------------------------------------------------------
+# Was sich nicht als Kettenregel schreiben laesst: mehrere Bedingungen auf einmal,
+# oder eine Spalte hinter der Signatur (die Elementspalten liegen dort).
+ROH = {c.strip(): i for i, c in enumerate(rows[HDR]) if c.strip()}
+
+
+def roh(zeile, name):
+    i = ROH.get(name)
+    return zeile[i].strip() if i is not None and len(zeile) > i else ""
+
+
+# Eine einfarbige Flaeche ohne Goesch, ohne Dreieck und ohne Element waere leer.
+leer = [z[2].strip().replace("_", " ") for z in ZEILEN
+        if roh(z, "Hintergrundtyp") == "4"
+        and roh(z, "Gösch?") == "0"
+        and roh(z, "Dreieck von links?") == "0"
+        and roh(z, "Zusatzelemente") in ("0", "", "x")]
+
+print()
+print("Einfarbig und voellig ohne Inhalt (gibt es nicht):", ", ".join(leer) if leer else "ok")
