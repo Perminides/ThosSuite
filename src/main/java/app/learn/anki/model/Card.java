@@ -16,7 +16,7 @@ import app.shared.AppClock;
  */
 public class Card {
     public sealed interface Step permits Image, ClickMapElements, Output, Input, MC, MarkMapElements, Pause, Fast,
-            SketchImage, SketchImageMark, SketchImageFill {}
+            SketchImage, SketchImageAdd, SketchImageMove, SketchImageMark, SketchImageFill {}
 
     /** So viele Antwortfelder passen höchstens auf den Schirm — gilt für jeden Skin gleich. */
     public static final int MAX_FAST_SLOTS = 10;
@@ -40,6 +40,8 @@ public class Card {
      * ist wieder leer.</p>
      */
     public record SketchImage(String structure) implements Step {}
+    public record SketchImageAdd(String structure, int cell) implements Step {}
+    public record SketchImageMove(int area, int cell) implements Step {}
     public record SketchImageMark(int area) implements Step {}
     public record SketchImageFill(int area, SketchColor color) implements Step {}
     
@@ -173,10 +175,28 @@ public class Card {
             case "Pause" -> new Pause();
             case "Fast"  -> parseFast(body);
             case "SketchImage"     -> new SketchImage(body.trim());
+            case "SketchImageAdd"  -> parseSketchAdd(body);
+            case "SketchImageMove" -> parseSketchMove(body);
             case "SketchImageMark" -> new SketchImageMark(Integer.parseInt(body.trim()));
             case "SketchImageFill" -> parseSketchFill(body);
             default      -> throw new RuntimeException("Unbekannter Step: " + kind);
         };
+    }
+
+    /** {@code <struktur>,<rasterfeld 0..8>} — haengt an, ohne die bisherigen Fuellungen zu verlieren. */
+    private static Step parseSketchAdd(String body) {
+        String[] parts = body.split(",", 2);
+        if (parts.length < 2)
+            throw new RuntimeException("SketchImageAdd braucht Struktur und Rasterfeld: " + body);
+        return new SketchImageAdd(parts[0].trim(), Integer.parseInt(parts[1].trim()));
+    }
+
+    /** {@code <fläche>,<rasterfeld 0..8>} — setzt eine vorhandene Flaeche um, ohne sie neu zu bauen. */
+    private static Step parseSketchMove(String body) {
+        String[] parts = body.split(",", 2);
+        if (parts.length < 2)
+            throw new RuntimeException("SketchImageMove braucht Fläche und Rasterfeld: " + body);
+        return new SketchImageMove(Integer.parseInt(parts[0].trim()), Integer.parseInt(parts[1].trim()));
     }
 
     /** {@code <fläche>,<farbname>} — ein unbekannter Farbname fliegt beim Einlesen des Decks. */

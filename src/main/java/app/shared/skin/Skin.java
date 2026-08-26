@@ -590,6 +590,11 @@ public abstract class Skin extends SkinProperties {
 	 */
 	private void addSketchStyles(CssBuilder builder) {
 	    builder.start(".my-sketch-area")
+	       // Ausdruecklich, nicht aus dem JavaFX-Standard: Ein Path startet ungefuellt, ein Circle
+	       // schwarz. "Noch nicht beantwortet" ist genau der ungefuellte Zustand, und er muss fuer
+	       // jede Form aus derselben Regel kommen. Die Farbregeln stehen als Zwei-Klassen-Selektoren
+	       // darueber und koennen damit nicht kollidieren.
+	       .add("-fx-fill", "transparent")
 	       .add("-fx-stroke", sketchStrokeColor)
 	       .add("-fx-stroke-width", sketchStrokeWidth + "px")
 	       .end();

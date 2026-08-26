@@ -60,8 +60,10 @@ public class SketchFileSource {
 				areas.add(ShapeGeometry.polygon(number, parseMultiPolygon(geometry)));
 			else if ("Polygon".equals(geometryType))
 				areas.add(ShapeGeometry.polygon(number, parsePolygon(geometry)));
+			else if ("Point".equals(geometryType))
+				areas.add(parseCircle(number, feature, geometry, structure));
 			else
-				throw new RuntimeException("Eine Fläche ist kein Polygon, sondern " + geometryType
+				throw new RuntimeException("Eine Fläche ist weder Polygon noch Punkt, sondern " + geometryType
 						+ " (Struktur " + structure + ")");
 		}
 		return areas;
@@ -77,6 +79,25 @@ public class SketchFileSource {
 			if (!seen.add(number))
 				throw new RuntimeException("Fläche " + number + " kommt doppelt vor (Struktur " + structure + ")");
 		}
+	}
+
+	/**
+	 * Ein Kreis. <b>GeoJSON kennt keinen</b> — der {@code Point} ist echtes GeoJSON, der Radius
+	 * daneben in den {@code properties} ist unsere Konvention. Ein 64-Eck wäre die Alternative
+	 * gewesen und sieht auch als 64-Eck schlecht aus.
+	 *
+	 * <p>Folge fürs Zeichnen der Dateien: QGIS zeigt hier einen Punkt und keinen Kreis. Solche
+	 * Flächen werden getippt oder erzeugt, nicht gezeichnet.</p>
+	 */
+	private ShapeGeometry parseCircle(String number, JsonNode feature, JsonNode geometry, String structure) {
+		JsonNode radius = feature.path("properties").path("radius");
+		if (radius.isMissingNode() || !radius.isNumber())
+			throw new RuntimeException("Ein Punkt ohne Zahl in properties.radius ist kein Kreis"
+					+ " (Fläche " + number + ", Struktur " + structure + ")");
+
+		JsonNode coordinates = geometry.get("coordinates");
+		return ShapeGeometry.circle(number, coordinates.get(0).asDouble(),
+				-coordinates.get(1).asDouble(), radius.asDouble());
 	}
 
 	private List<List<Point>> parsePolygon(JsonNode geometry) {

@@ -90,6 +90,16 @@ public class SessionPresenter {
 		view.setSketch(sketchSource.load(structure));
 	}
 
+	/** Hängt eine weitere Struktur an, ohne die bisherigen Füllungen zu verlieren. */
+	void addSketch(String structure, int cell) {
+		view.addSketch(sketchSource.load(structure), cell);
+	}
+
+	/** Setzt eine Fläche in ein anderes Rasterfeld — Farbe und Markierung bleiben. */
+	void moveSketchArea(int area, int cell) {
+		view.moveSketchArea(area, cell);
+	}
+
 	void markSketchArea(int area) {
 		view.markSketchArea(area);
 	}

@@ -1,13 +1,19 @@
 # ThosSuite — Flaggen-Deck (Planung)
 
-**Stand:** 25.08.2026 — **Beide Fragenstaffeln stehen, alle 206 Flaggen sind danach attributiert.**
-Siebzehn Spalten für den Hintergrund, elf im Zusatzelemente-Blatt, geprüft durch
-`pruefe-attribute.py`, null Widersprüche. Der **Durchstich läuft**: Deutschland und Dänemark sind ein
-Proof of Concept in der Suite, mit aufbauender Skizze.
+**Stand:** 26.08.2026 — **Beide Fragenstaffeln stehen, alle 206 Flaggen sind danach attributiert**,
+und **der Skizzen-Mechanismus ist entschieden.** Siebzehn Spalten für den Hintergrund, elf im
+Zusatzelemente-Blatt, geprüft durch `pruefe-attribute.py`, null Widersprüche. Der **Durchstich
+läuft**: Deutschland und Dänemark sind ein Proof of Concept in der Suite, mit aufbauender Skizze.
 
-Was für vollständige Karten noch fehlt: die **Farblisten**, für den Hintergrund wie für die Elemente.
-Beide hängen an der Flächennummerierung und damit am **Generator**, der als Nächstes kommt. Offen ist
-außerdem die Formation mehrerer Sterne (siehe §8).
+Am 26.08. ist die Frage geklärt worden, die alles Weitere blockiert hat: **was in eine Sketch-Datei
+gehört und was zur Laufzeit dazukommt** (§5). Gösch und Dreieck werden hineingezeichnet, die
+Zusatzelemente über einen vierten Step `SketchImageAdd` angehängt, alles auf einer gemeinsamen
+Leinwand mit einem 3×3-Raster — demselben, das die Positionsfrage ohnehin benutzt. Damit fallen drei
+offene Fragen aus §8 weg, und die Farblisten sind nicht mehr blockiert.
+
+**Als Nächstes:** vier Härtefälle auf Papier durchspielen (Japan, Grönland, Tunesien, Australien),
+dann der **Generator**. Offen bleiben die Formation mehrerer Sterne, die Farbe des Gösch-*Inhalts*
+und die Frage, ob der Union Jack gezeichnet wird (§8).
 
 **Charakter dieses Dokuments:** Übergabe an das Ich, das die Sache irgendwann anfasst. Festgehalten
 ist, was entschieden ist, was Idee geblieben ist und was bewusst verworfen wurde. Deskriptiv für den
@@ -307,9 +313,34 @@ Streifen neben dem Band liegen.
 Die Zahl fällt aus dem Inhalt, nicht aus der MC-Breite. Mehr Farben erzeugen **mehr** Grenzfälle,
 nicht weniger: Bei nur „Blau" liegt nichts dazwischen; erst ein zweiter Blauton macht Kasachstan und
 Usbekistan zu Entscheidungen. Die sechs unstrittigen (Rot, Blau, Grün, Gelb, Weiß, Schwarz) sind im
-Kern die heraldischen Tinkturen; Orange und Hellblau sind ihre Grenze wert, weil sie echte, abgesetzte
-Cluster bilden. Türkis, Karmin, Maroon, Braun, Grau und Lila werden eingefaltet — jede zöge eine neue
-Grenze für ein bis drei Länder Gewinn.
+Kern die heraldischen Tinkturen. Türkis, Karmin, Maroon, Braun, Grau und Lila werden eingefaltet —
+jede zöge eine neue Grenze für ein bis drei Länder Gewinn.
+
+**Zur Grenze Blau / Hellblau — gemessen am 26.08.2026.** Eine frühere Fassung dieses Abschnitts
+behauptete, Hellblau bilde einen „echten, abgesetzten Cluster". **Das stimmt nicht.** Über die 78
+Flaggen mit nennenswertem Blauanteil, sortiert nach Helligkeit:
+
+```
+18.2 … 43.5   64 Flaggen, dichtes Kontinuum, nirgends mehr als 2,5 Punkte Lücke
+      ↓ 6.3
+49.8 … 56.7    7 Flaggen   Gabun, Kongo, Tuvalu, Guatemala, Somalia, Palau, Estland
+      ↓ 6.5
+63.1 … 70.0    7 Flaggen   San Marino, Fidschi, Botswana, Dschibuti, Mikronesien, Argentinien, St. Lucia
+```
+
+Es gibt eine dichte dunkle Masse und danach einen ausgefransten Schwanz. **Und die Helligkeit allein
+bildet die Wahrnehmung nicht ab:** Luxemburg (`#00A1DE`) und Ruanda liegen rechnerisch bei 43.5 und
+damit im dunklen Block, wirken aber hellblau — Farbton 196 statt 210, cyanwärts und voll gesättigt.
+Ein Zahlenkriterium hätte sie falsch einsortiert; als CheatSheet-Regel taugt es ohnehin nicht, weil
+niemand beim Draufschauen Prozente schätzt.
+
+**Die zwei Blaus bleiben trotzdem** — aber mit anderem Argument: Die sieben im Mittelband sind genau
+die Population, für die §6 die **„nicht falsch"-Option** vorgesehen hat. Fünfzehn hellblaue Flaggen
+als „Blau" zu malen sähe an fünfzehn Stellen falsch aus; sieben Grenzfälle zu tolerieren kostet
+nichts. Was diese Entscheidung kippen würde: wenn das Mittelband beim Einsortieren von Hand deutlich
+wächst — sieben Ausnahmen sind ein CheatSheet, zwanzig sind eine kaputte Grenze.
+
+Die Messung bleibt als **Werkzeug zum Füllen der Tabelle** nützlich, nicht als Regel fürs Lernen.
 
 Ins CheatSheet gehören: **Gold = Gelb** und die zwei, drei echten Randfälle (Kasachstans `#00ABC2`
 ist deutlich ins Cyan gezogen, wird aber als Hellblau geführt).
@@ -374,11 +405,25 @@ Wenn ein einzelnes Element wichtig genug ist (Sri Lankas Löwe), wird daraus ein
 ein weiterer Schritt in der Flaggenkarte. Zeder, Lorbeer und Ahorn sind Stoff für die
 Geschichten-Karten.
 
-**Die Position** wird per MC über acht feste Werte gefragt — Mitte, Links mittig, Links oben, Rechts
-mittig, Links unten, Oben mittig, Rechts oben, Über die ganze Flagge verteilt —, **nicht** per Klick
-ins Bild. Der letzte Wert trägt die Fälle, in denen mehrere Figuren an mehreren Stellen liegen:
-Australien, Georgien, Grenada, Kasachstan, Papua-Neuguinea. Er ersetzt ein früheres „Anders", das
-nichts aussagte.
+**Die Position** wird per MC gefragt, **nicht** per Klick ins Bild. Die Werte sind ein **3×3-Raster**
+plus einen Auffangwert:
+
+```
+Links oben     Oben mittig    Rechts oben
+Links mittig   Mitte          Rechts mittig
+Links unten    Unten mittig   Rechts unten
+                                              Über die ganze Flagge verteilt
+```
+
+Der Auffangwert trägt die Fälle, in denen mehrere Figuren an mehreren Stellen liegen: Australien,
+Georgien, Grenada, Kasachstan, Papua-Neuguinea. Er ersetzt ein früheres „Anders", das nichts aussagte.
+
+`Unten mittig` und `Rechts unten` kommen bei keiner Flagge vor und sind **geschenkte Distraktoren** —
+genau die Sorte Wert, die §2 in der Liste haben will, damit eine falsche Vorstellung ausdrückbar
+bleibt. Sie kosten nichts, weil das Raster sie ohnehin bildet.
+
+Das Raster ist nicht bloß eine Antwortliste: Es ist zugleich die **Platzierungskonvention der
+Skizze** (siehe §5). Die Frage und das Bild teilen sich dieselben neun Felder.
 
 **Die Anzahl bleibt dort in der Kategorie, wo sie die Folgefrage erübrigt.** `1 Stern` gegen `Sterne`
 ist kein Schönheitsfehler, sondern der zulässige Fall aus §2: Eine Frage entfällt, wenn ihre Antwort
@@ -464,24 +509,109 @@ die Komponente noch die Steps wissen etwas von Flaggen.
 Farbliste ist positionsbezogen — n Farben für n Flächen. Optische Ähnlichkeit reicht also nicht:
 Simbabwe und Osttimor haben beide ein zweifarbiges Dreieck, aber neun gegen drei Flächen.
 
-**Wie Gösch und Dreieck in den Sketch kommen, ist offen** (siehe §8); die aktuelle Idee ist, dass ein
-Sketch nur den **Hintergrund** trägt und alles andere zur Laufzeit darübergelegt wird. Wie auch immer
-es ausgeht — diese Auflage gilt: **immer dieselbe
-Gösch-Geometrie, immer dieselbe Dreieckstiefe, keine Anpassung an die Streifenzahl.** Der Grund ist
-derselbe wie beim Leak: Ein Sketch, der Details richtig zeigt, die nie beantwortet wurden — Chiles
-Gösch genau über dem oberen Streifen, Togos genau über dreien von fünf —, verrät sie. Die Skizze soll
-die Flächen sauber zum Einfärben zeigen, nicht die Flagge möglichst getreu abbilden.
+### Was in die Datei gehört und was dazukommt
+
+> **Was vor dem Erscheinen der Skizze gefragt wurde, darf in die Datei. Was danach gefragt wird,
+> kommt danach als eigener Schritt dazu.**
+
+Die Skizze erscheint nach Frage 5. Gösch (Frage 3) und Dreieck (Frage 4) sind da beantwortet — sie zu
+zeigen verrät nichts, es zeigt die eigene Antwort zurück. Die Zusatzelemente werden nach den Farben
+gefragt und bleiben deshalb draußen.
+
+**Gösch und Dreieck werden also in die Sketch-Dateien hineingezeichnet, nicht zur Laufzeit
+darübergelegt.** Gemessen kostet das **13 Dateien**: 63 statt 50. Dafür bleibt die Suite dumm — kein
+Dreieck, kein Gösch, keine Geometrie im Anwendungscode —, das Ergebnis ist einsehbar statt im Ablauf
+versteckt, und `git diff` zeigt bei einer Änderung der Dreieckstiefe Datei für Datei, was sich bewegt
+hat. Es ist dieselbe Entscheidung wie Generator statt Interpreter in §4, eine Ebene tiefer: Die
+Geometrie ist in beiden Fällen dieselbe Rechnung, die Frage ist nur, ob sie einmal läuft oder jedes
+Mal.
+
+Verworfen wurde damit auch die Gegenrichtung: *alles* backen, die Elemente eingeschlossen. Weil jede
+Stufe alles Vorherige mitbringen müsste, wären das bis zu **206 × 3** Dateien — und die Karte müsste
+mitten im Durchlauf eine neue Datei laden und die bereits gegebenen Farbantworten wieder ausschreiben.
+Diese nachgeschobenen Füllungen wären keine Antworten mehr, sondern Wiederherstellung, und die Zeile
+läse sich nicht mehr als Protokoll des Dialogs. Genau das wollte §4 mit dem Generator gewinnen.
+
+Für alles, was in die Datei kommt, gilt weiterhin: **immer dieselbe Gösch-Geometrie, immer dieselbe
+Dreieckstiefe, keine Anpassung an die Streifenzahl.** Der Grund ist derselbe wie beim Leak: Ein
+Sketch, der Details richtig zeigt, die nie beantwortet wurden — Chiles Gösch genau über dem oberen
+Streifen, Togos genau über dreien von fünf —, verrät sie. Die Skizze soll die Flächen sauber zum
+Einfärben zeigen, nicht die Flagge möglichst getreu abbilden.
+
+Und für alles, was dazukommt, steht bisher **eine halbe Regel**:
+
+> **Die Skizze darf nie mehr zeigen, als beantwortet wurde.** Ein Stern ist *ein* kanonischer Stern,
+> überall derselbe — „Zacken zählen" ist verworfen (§9), also darf die Zeichnung die Zackenzahl nicht
+> zeigen.
+
+Die Gegenrichtung ist **ausdrücklich noch nicht entschieden.** Weniger zu zeigen als beantwortet ist
+klar in Ordnung — bei sechzehn Sternen einen Haufen zu malen statt sechzehn abzuzählen verrät nichts
+und behauptet nichts; das ist gerade die Schematik. Unklar ist der Fall darunter: Darf die Skizze
+etwas *anderes* zeigen als die Antwort? Eine nach rechts offene Sichel, wo `Nach oben offen`
+beantwortet wurde, ist streng genommen ein Widerspruch — und trotzdem womöglich egal, weil die Skizze
+nie beansprucht hat, die Flagge abzubilden.
+
+**Das wird am laufenden Bild entschieden, nicht auf dem Papier**, und bis dahin gilt hier
+Ambiguitätstoleranz statt eines Gesetzes. Der konkrete Fall: `Formation Mond mit Stern(en)` trägt drei
+Werte — `Nach rechts offen` (8), `Nach oben offen` (1), `Nach rechts oben offen` (1). Drei
+Sichel-Dateien, ein Winkel im Step, oder eine Sichel ohne Richtung: alle drei bleiben offen.
+
+> **Achtung, Quelle:** §9 ist an mehreren Stellen älter als die Zusatzelemente-Staffel vom 25.08. und
+> in Einzelfällen von ihr überholt — „Sonne und Stern nicht unterscheiden" ist das Beispiel. Was das
+> Blatt sagt, sticht.
+
+**Ob der Union Jack gezeichnet wird, entscheidet Australien.** Der Gösch trägt sechs Werte —
+`Union Jack` (7), `Stern` (3), `Kreuz` (2), `Sterne` (2), `Sonne` (2), `Mond + Stern` (1) —, und fünf
+davon sind einfache Formen, die ohnehin gezeichnet werden. Der Union Jack ist der einzige Ausreißer.
+
+Dafür, ihn zu zeichnen, spricht das Kriterium selbst: Aus der Antwort `Union Jack` folgt sein
+Aussehen vollständig, Farben eingeschlossen — ihn zu zeigen verrät nichts, sondern ist §2s „eine
+Frage entfällt, wenn ihre Antwort zwingend folgt". Dagegen spricht nur, dass er das einzige
+realistische und das einzige vorgefüllte Stück der Skizze wäre. Ein **stilisierter** Union Jack —
+die drei Kreuze ohne Fimbrierung und ohne die versetzten Diagonalen — ist der dritte Weg und
+vermutlich der beste.
+
+**Ausgeschlossen ist die dritte Variante:** ein generischer Platzhalter im Gösch. Der zeigte *weniger*
+als die schon gegebene Antwort, und das ist in beide Richtungen falsch. Also der echte oder keiner.
 
 **Die Dreieckstiefe ist einheitlich, etwa 40 % der Breite.** Tschechien reicht mit 50 % am weitesten,
 die Philippinen und Dschibuti liegen bei gut 43 %, Bahamas, Jordanien und Sudan bei etwa einem
 Drittel. Die Ausreißer haben eigene Formwerte: Eritreas Keil läuft bis zur Flugseite durch, Kuwaits
 Figur ist ein Trapez, Südafrika und Vanuatu tragen ein liegendes Y.
 
+### Leinwand und Raster
+
 **Die Skizze ist schematisch, nicht formattreu.** Das Seitenverhältnis ist fest **3:2** — häufigstes
-echtes Flaggenformat und das Format, für das die Skin-Maße gedacht sind. Die *Größe* ist dagegen
-frei: Gewählt wird die kleinste gerade Höhe ab 120, die durch die Streifenzahl teilbar ist, damit
-alle Koordinaten ganzzahlig bleiben (3 Streifen → 180 × 120, 13 Streifen → 195 × 130). Der Kontrakt:
-*In diesem Verhältnis sind Kreise Kreise; in einem anderen wird eingepasst und mittig gesetzt.*
+echtes Flaggenformat und das Format, für das die Skin-Maße gedacht sind. Der Kontrakt: *In diesem
+Verhältnis sind Kreise Kreise; in einem anderen wird eingepasst und mittig gesetzt.* Das
+`SuiteImage` darf jede Größe haben; wer Verzerrung vermeiden will, hält 3:2 ein.
+
+**Alle Sketch-Dateien benutzen dieselbe Leinwand: 180 × 120**, also x ∈ [0, 180] und y ∈ [−120, 0]
+(Y negativ wie in den Kartendateien, beim Laden invertiert). Das ist keine Kosmetik, sondern
+Voraussetzung: `SketchPane` rechnet den Maßstab aus der Bounding Box der geladenen Flächen — bei
+verschieden großen Leinwänden säße eine hinzugefügte Elementdatei falsch. Die Zahl selbst ist frei
+wählbar (`3 × 2` täte es auch); 180 × 120 ist gewählt, weil dann auch die Rasterfelder rund sind.
+
+**Das 3×3-Raster ist die Platzierungskonvention**, Feld 60 × 40, Nummerierung zeilenweise 0…8. Es ist
+dieselbe Einteilung, die die Positionsfrage der Zusatzelemente ohnehin schon benutzt (§3) — Bild und
+Frage teilen sich die neun Felder.
+
+**Der Gösch belegt genau Feld 0.** Damit ist er in jeder Datei buchstäblich dieselben vier Punkte, und
+die Auflage „immer dieselbe Gösch-Geometrie" ist nicht mehr zu befolgen, sondern nicht mehr
+verletzbar. Er wird dadurch kleiner als in Wirklichkeit — echte Göschs sind eher halbe Breite —, und
+das ist die Schematik, die dieser Abschnitt ohnehin will. Der Gewinn ist, dass ein Element *im* Gösch
+ohne Sonderfall auf Feld 0 sitzt.
+
+Die **Dreieckstiefe bleibt bei 40 %** und wird nicht aufs Raster gezogen. Ein Drittel läge am unteren
+Rand des beobachteten Bereichs (33 bis 50 %), und das Dreieck ist gebacken — es braucht das Raster
+für nichts.
+
+**Ganzzahlige Streifengrenzen gehen damit nicht mehr für alle auf.** Das kgV der vorkommenden
+Streifenzahlen ist 180 180; eine Leinwand, auf der alle aufgehen, gibt es praktisch nicht. Bei 120
+bleiben 2 bis 6 rund — fast alle —, Dezimalstellen bekommen Simbabwe, Griechenland, Uruguay, Liberia,
+die USA und Malaysia. Harmlos: `SketchFileSource` liest ohnehin `double`, in diese Dateien sieht
+niemand hinein, und der Generator schreibt für Unterkante *i* und Oberkante *i+1* denselben Wert, es
+kann also keine Lücke entstehen.
 
 **Die reinen Streifenstrukturen werden erzeugt, nicht gezeichnet** —
 `docs/flaggen/build-streifen-sketch.py` schreibt `waagerecht-<n>` und `senkrecht-<n>`. Das deckt 78
@@ -512,37 +642,94 @@ das verwendete Bild. Alle 200 aus **einer** Quelle ziehen, damit Vergleiche bela
 Wikimedia Commons oder ein Sammelpaket wie `lipis/flag-icons`. Offizielle Werte und
 Farbwechsel-Geschichten sind Stoff für Geschichten-Karten, kein Eingabewert.
 
-**Ablauf einer Karte:** Struktur (ohne Bild) → Skelett mit hervorgehobener Fläche erscheint → Farben
-füllen sich Fläche für Fläche → Gösch und Dreieck werden mitgezeichnet → die Zusatzelemente werden
-gefragt → zum Abschluss die echte Flagge.
+**Ablauf einer Karte:** Struktur einschließlich Gösch und Dreieck (ohne Bild) → Skelett mit
+hervorgehobener Fläche erscheint → Farben füllen sich Fläche für Fläche → die Zusatzelemente werden
+gefragt und **einzeln dazugezeichnet** → zum Abschluss die echte Flagge.
 
-**Ob Zusatzelemente mitgezeichnet werden, ist offen.** Ursprünglich sollten sie nur benannt werden;
-inzwischen spricht einiges dafür, wenigstens die einfachen Formen zu zeichnen — Japans Kreis
-markieren und einfärben zu lassen, wäre dieselbe Mechanik wie bei einer Streifenfläche, und fünf
-Elementfragen ohne jedes sichtbare Feedback wären der einzige Teil der Karte, wo nichts passiert. Die
-Grenze läge dort, wo die Elementfrage sie ohnehin zieht: Was einen Namen trägt, aus dem die Form
-folgt (Kreis, Zackenfigur, Sichel), ist zeichenbar; was „komplexes Emblem" heißt, nicht. Wenn
-gezeichnet wird, gilt für die Skizze dieselbe Auflage wie für den Gösch — immer dieselbe
-Platzhalterform, nie die echte.
+**Zusatzelemente werden mitgezeichnet.** Japans Kreis markieren und einfärben zu lassen ist dieselbe
+Mechanik wie bei einer Streifenfläche, und fünf Elementfragen ohne sichtbares Feedback wären der
+einzige Teil der Karte, wo nichts passiert. Die Grenze zieht die Elementfrage selbst: Was einen Namen
+trägt, aus dem die Form folgt (Kreis, Zackenfigur, Sichel), wird gezeichnet; was „komplexes Emblem"
+heißt, nicht — dort sagt die Antwort ausdrücklich, dass nicht zerlegt wird. Es gilt dieselbe Auflage
+wie für den Gösch: immer dieselbe Platzhalterform, nie die echte. Der `Union Jack` ist der eine Fall,
+der zwischen beiden liegt (siehe oben).
+
+Auch **„über die ganze Flagge verteilt" wird gezeichnet**, und zwar als drei Marker in *immer
+denselben* drei Feldern. Die Antwort sagt ja etwas — mehrere Figuren, verstreut —, und das zu zeigen
+berichtet sie, statt sie zu erfinden. Dass die Felder fest sind, hält es davon ab, als Australiens
+echte Anordnung gelesen zu werden.
 
 Eine falsche Antwort beendet die Karte, wie überall sonst in der Suite. Die Skizze bleibt dann
 halbfertig stehen; sie baut sich also nur bei einem fehlerfreien Durchlauf ganz auf.
 
 ### Wie es gebaut ist
 
-Drei Steps, bewusst getrennt, damit der Ablauf vollständig in der CSV-Zeile steht und kein Schritt
+Vier Steps, bewusst getrennt, damit der Ablauf vollständig in der CSV-Zeile steht und kein Schritt
 etwas über seine Nachbarn wissen muss:
 
 ```
 SketchImage:<struktur>            laden, alle Flächen leer — und zugleich das Zurücksetzen
+SketchImageAdd:<struktur>,<feld>  eine weitere Datei anhängen, ohne zurückzusetzen
+SketchImageMove:<n>,<feld>        eine vorhandene Fläche in ein anderes Rasterfeld setzen
 SketchImageMark:<n>               Fläche hervorheben
 SketchImageFill:<n>,<Farbname>    Fläche einfärben, läuft nach dem MC
 ```
 
+**`SketchImageAdd` ist das „Drübermalen"** — und es ist ausdrücklich *keine* Geometrie zur Laufzeit.
+Es lädt eine zweite Datei und hängt ihre Flächen an, verschoben in Rasterfeld `<feld>` (0…8). Jede
+Datei nummeriert für sich ab 0, beim Anhängen wird um die bisherige Flächenzahl verschoben; die
+Elementdatei liegt kanonisch in Feld 0, mit etwas Luft ringsum. Platzieren ist damit eine
+ganzzahlige Verschiebung, keine Skalierung und keine Figur.
+
+Drei Dinge fallen dadurch weg oder werden billig: Aus dem Produkt „63 Hintergründe × Elemente" wird
+eine **Summe** — `kreis`, `stern`, `sichel` werden von allen Hintergründen benutzt, so wie
+`waagerecht-3` von Deutschland und Österreich. Die Reihenfolge der Auflagen **steht in der Zeile**
+statt in einer Rangfolge-Konvention. Und ein neuer Elementtyp ist eine neue kleine Datei.
+
+**Eine Elementdatei kann mehr als eine Fläche tragen.** Grönlands geteilter Kreis sind zwei
+Halbscheiben in einer Datei, und `Add` hängt beide an.
+
+**`Move` gibt es, damit ein Element sofort erscheint und erst danach an seinen Platz rückt.** Sonst
+laufen zwei bis drei Elementfragen ohne jedes sichtbare Feedback ab, und die Figur taucht erst nach
+der Positionsfrage auf. Also: `Add` in die Mitte, sobald die Form bekannt ist, dann die Frage nach
+dem Ort, dann `Move`. Die Lage ist deshalb eine **Verschiebung des Knotens** statt eingebackener
+Koordinaten — Setzen und Umsetzen sind derselbe Vorgang, und eine Translation zieht die Strichbreite
+nicht mit.
+
+> **Der `Move`-Schritt wird immer geschrieben, auch wenn er nichts bewegt.** Stünde er nur bei
+> Elementen, die nicht in der Mitte sitzen, verriete allein sein Vorhandensein, dass die Antwort
+> nicht „Mitte" lautet. Dieselbe Regel wie beim Gösch.
+
+Er kennt Flächen, keine Elemente: Ein zweigeteilter Kreis braucht zwei `Move`-Schritte.
+
+**Dass die Fragen dafür je Zweig anders geordnet sind, ist kein Problem** — das Blatt war nie die
+Fragenreihenfolge. §2 sagt es ausdrücklich: Zwischen Attribut und Frage liegt eine Ableitung, und die
+wohnt im Generator. Er darf `Wo?` im Kreis-Zweig früh und im Figuren-Zweig spät stellen; die Spalte
+bleibt im Blatt da stehen, wo sie sich am besten liest. Weder `pruefe-attribute.py` noch die
+HTML-Seite hängen an der Spaltenreihenfolge.
+
 Gezeichnet wird in den Szenengraph, nicht in ein fertiges Bild: `SketchPane` (paketprivat, Innenleben
-von `SuiteImage`) baut je Fläche einen `Path`. Eine Fläche hat drei Zustände — frisch umrandet und
+von `SuiteImage`) baut je Fläche ein `Shape`. Eine Fläche hat drei Zustände — frisch umrandet und
 ungefüllt, markiert, gefüllt. **Gefüllt verliert sie ihren Strich**, damit zwei benachbarte Flächen
 derselben Farbe am Ende nahtlos verschmelzen statt eine erfundene Naht zu zeigen.
+
+**Kreise sind `Point` plus `radius` in den `properties`.** GeoJSON kennt keinen Kreis — der `Point`
+ist echtes GeoJSON, die Kreisbedeutung ist unsere Konvention (dieselbe, die Leaflet benutzt). Der
+Preis: In QGIS ist ein Kreis nicht zu zeichnen und nicht zu sehen, er wird getippt oder erzeugt.
+Der Gewinn: exakt rund in jedem Maßstab statt eines 64-Ecks. `ShapeGeometry` trägt Mittelpunkt und
+Radius bereits, `scaled()` nimmt beide mit.
+
+Gezeichnet wird ein JavaFX-`Circle`, derselbe Knotentyp, den der `MapNodeBuilder` für Stadtpunkte
+baut. Die Sichel ist **Kreis minus versetzter Kreis** über `Shape.subtract` — echte Bögen, keine
+Näherung, und in der Datei ein `cutout` in den `properties`. Das bleibt im selben Vokabular, weil
+eine Sichel wirklich ein Kreis minus einem Kreis *ist*; ein SVG-Pfad-String wäre eine Kodierung statt
+einer Beschreibung.
+
+**Der Startzustand steht als eine Regel im Skin**, nicht im JavaFX-Standard. Das ist die Bedingung
+dafür, dass Formen unterschiedlicher Art nebeneinander liegen dürfen: Ein `Path` startet ungefüllt,
+ein `Circle` schwarz. Seit `.my-sketch-area` die Füllung ausdrücklich auf transparent setzt, kann
+jede neue Form dazukommen, ohne dass man ihre Vorgabe kennen muss. Die Farbregeln stehen als
+Zwei-Klassen-Selektoren darüber und können mit der Basisregel nicht kollidieren.
 
 Skaliert werden die **Koordinaten**, nicht der fertige Node — eine Transformation würde die Striche
 mitwachsen lassen. Der Faktor gilt für beide Achsen gleich, die Skizze wird also eingepasst und nie
@@ -583,6 +770,14 @@ McPanel       = 20,547,370,0
 4. **SuiteImage: mittig einpassen statt strecken** — erledigt, und wie erwartet ein No-Op für die
    bestehenden Decks.
 
+5. **`SketchImageAdd` und `SketchImageMove`** — anhängen ohne Zurücksetzen und umsetzen ohne
+   Neubauen. `SketchPane` merkt sich den Maßstab vom ersten Laden, statt ihn neu zu rechnen: Sonst
+   schrumpfte eine Elementdatei, die versehentlich über den Rand ragt, nachträglich die ganze Skizze.
+6. **Kreise in der Skizze** — `SketchFileSource` liest `Point` + `properties.radius`, `SketchPane`
+   hält `Map<Integer, Shape>` und baut Polygon oder `Circle`. Der ungefüllte Startzustand steht jetzt
+   ausdrücklich im Skin statt im JavaFX-Standard — die Bedingung dafür, dass zwei Formfamilien
+   nebeneinander liegen dürfen.
+
 Dazu, nicht ursprünglich geplant: eine **dritte Staffelungsebene** für die Skin-Maße
 (`deckId` → `mapName` → Kategorie). Ohne sie hätte das Flaggen-Deck seine Maße aus zwei verschiedenen
 Schlüsseln gelesen — der `!Sofort`-Marker in `AnkiLearnView` hatte genau das vorhergesagt.
@@ -598,6 +793,12 @@ Schlüsseln gelesen — der `!Sofort`-Marker in `AnkiLearnView` hatte genau das 
    Umsetzung: ein dritter Abschnitt hinter einem zweiten `*`, abwärtskompatibel, weil bestehende
    Zeilen mit einem `*` unverändert zerfallen. Der Aufwand steckt darin, dass `AnswerOption` drei
    Zustände statt eines `boolean` braucht und jede lesende Stelle sich zum dritten verhalten muss.
+
+**Vertagt, ausdrücklich nicht für dieses Deck:** Eine falsche Antwort beendet die Karte, und damit
+bleibt das Auflösungsbild ungesehen. Bei den über 10 000 bestehenden Karten hat das nie gestört, bei
+den Flaggen stört es — man will die Flagge sehen, gerade wenn man sie nicht wusste. Das ist eine
+Änderung am Anki-Kartenablauf und betrifft alle Decks; sie wird **nach** den Flaggen angefasst, nicht
+nebenbei für einen Sonderfall.
 
 ## 7. Reihenfolge
 
@@ -627,8 +828,31 @@ an — und ein Generator, dem die Hälfte seiner Eingabe fehlt, wird zweimal geb
 Dabei ist nebenbei der diagonale Zweig entstanden, der vorher gar nicht auflöste, und vier Flaggen
 sind aufgefallen, die in keiner Elementzeile standen (Japan, USA, St. Lucia, Schweiz).
 
-**Als Nächstes also der Generator.** Ihm fehlen noch die Farblisten (siehe §8), aber die Struktur, an
-der er hängt, steht jetzt auf beiden Seiten.
+**Der Skizzen-Mechanismus ist entschieden** (§5): Gösch und Dreieck gebacken, Elemente über
+`SketchImageAdd`, festes 3×3-Raster auf einer gemeinsamen Leinwand. Damit sind auch die Farblisten
+nicht mehr blockiert — die Flächennummerierung steht in der Datei, wie sie es immer tat, und die
+Auflagen hängen sich hinten an.
+
+**Als Nächstes: die vier Härtefälle auf Papier.** Bevor Code entsteht, werden vier Flaggen von Hand
+durchgeschrieben — die GeoJSON-Datei und die CSV-Zeile —, weil sie zusammen alles anfassen, was neu
+ist:
+
+| Fall | Was er prüft |
+|---|---|
+| **Japan** | Der einfache Kreis: `Point` + `radius`, eine Fläche, eine Farbfrage. |
+| **Grönland** | Der geteilte Kreis, zwei Halbscheiben — eine Elementdatei mit mehr als einer Fläche. |
+| **Tunesien** | Sichel *und* Stern *im* Kreis: `Shape.subtract`, dazu der Behälter mit geerbten Folgefragen. |
+| **Australien** | Gösch-Inhalt und „über die ganze Flagge verteilt", dazu die längste Karte des Decks. |
+
+Australien entscheidet dabei die letzte offene Frage des Mechanismus: **ob der Gösch selbst eine
+Farbfrage bekommt** — davon hängt ab, ob er eine füllbare Fläche ist oder nur eine Teilung.
+
+**Danach der Generator.** Er schreibt beides: die Sketch-Dateien und die Deck-CSV. Und er bekommt
+einen **Trockenlauf** — jede erzeugte Zeile wird durchgespielt, der Flächenstand mitgeführt und
+geprüft, dass jeder `Mark`- und `Fill`-Index zu diesem Zeitpunkt existiert. Das ist der Preis dafür,
+dass die gültige Flächennummer mit `Add` eine Summe über alles bisher Geladene ist: Ein Rechenfehler
+fiele sonst nicht beim Parsen auf, sondern mitten in der Lern-Session. Die Prüfung gehört neben
+`pruefe-attribute.py`, nicht in den Bau.
 
 **Pro neuer Sketch-Familie eine handgeschriebene Karte.** So wie Deutschland: eine Zeile, ein Sketch,
 einmal durchspielen. Nicht pro Zweig — allein waagerecht hat drei Familien (nur Streifen, mit
@@ -647,6 +871,11 @@ suchen, Geschichten-Karten schreiben, Flaggentabelle füllen.
 https://docs.google.com/spreadsheets/d/1FX8SgpOr9G_Ss030KkQDAtOUE3AbEHuMPfxpl3PBQdE/edit
 ```
 
+Es hat **drei Tabs**: `Hintergrund` (gid 0), `Zusatzelemente` (gid 1267056858) und `Sheet2`.
+`build-signaturseite.py` holt die ersten beiden als `flaggen.csv` und `zusatzelemente.csv`. **Ohne
+`gid` liefert der Export nur den ersten Tab** — daran hing lange, dass das Elemente-Blatt außerhalb
+des Sheets unsichtbar war und Aussagen darüber aus dem Gedächtnis kamen statt aus den Daten.
+
 Die Flaggenbilder werden per Formel von `sciencekids.co.nz` nachgeladen; die Marshallinseln und
 Mikronesien fehlen dort und tragen deshalb eine vollständige URL statt eines `../images/…`-Pfads.
 Daneben gibt es eine HTML-Seite, die dieses Sheet beim
@@ -658,6 +887,11 @@ Daneben liegt **`pruefe-attribute.py`**, das findet, was man am Bild nicht sieht
 sein müssten, weil die Frage davor hingeführt hat, und umgekehrt. Es hat unter anderem Burundi und
 Grenada ohne Kreuzantworten gefunden, Nepal mit Werten hinter seinem Ausstieg und eine Signatur-Formel,
 die beim Einfügen einer Spalte nicht mitgewachsen war. Eine neue Frage ist dort eine Zeile in `REGELN`.
+
+Seit dem 26.08. prüft es **beide Blätter** und gleicht sie gegeneinander ab (steht im Hauptblatt ein
+Element, muss es eine Elementzeile geben, und umgekehrt; dasselbe für den Gösch). Im Elemente-Blatt
+sind die Bedingungen Ausdrücke statt Wertelisten — der Kreis erbt die Folgefragen des Außenbereichs,
+und das ist kein Paar (Spalte, Werte) mehr.
 
 Daneben stehen **Sondertests** für alles, was sich nicht als Kettenregel schreiben lässt — mehrere
 Bedingungen auf einmal, oder eine Spalte hinter der Signatur. Der erste davon fragt: Eine einfarbige
@@ -703,31 +937,28 @@ reine Dateneingabe ohne Entwurfsrisiko.
   Reihenrichtung (diagonal, senkrecht, nebeneinander), Bogenform (Kreis, Halbkreis) und Musterbild
   (H, Dreieck).
 - **Die Farblisten** fehlen auf beiden Seiten — für die Hintergrundflächen und für die Elemente. Ohne
-  sie hört eine generierte Karte nach den Strukturfragen auf. Reine Dateneingabe, aber sie hängt an
-  der Flächennummerierung: Erst wenn feststeht, wie ein Sketch nummeriert ist, kann die Liste getippt
-  werden, denn sie ist positionsbezogen. Deshalb wandert sie hinter den Generator.
-- **Wie Gösch, Dreieck und Elemente in den Sketch kommen** — in jede Kombination hineingezeichnet
-  (mehr Dateien, Renderer bleibt dumm, Flächennummerierung steht in der Datei) oder zur Laufzeit als
-  weiteres Polygon darübergelegt (weniger Dateien, dafür Nummerierung zur Laufzeit berechnet). Die
-  aktuelle Idee: **Ein Sketch ist der Hintergrund**, alles andere wird zur Laufzeit darübergemalt —
-  Gösch und Dreieck sind dann nur die ersten beiden Auflagen und keine Sonderfälle. Dafür spricht,
-  dass die Fragenstaffel dieselbe Trennung schon macht (beide werden vor Frage 5 „gedanklich
-  entfernt") und dass die Kombinatorik sonst explodiert. Ob es trägt, zeigt sich beim Bauen.
-- **Wie die Auflagen nummeriert werden**, falls zur Laufzeit gezeichnet wird. Die Regel müsste
-  lauten: **Hintergrundflächen `0..n-1` aus der Datei, danach die Auflagen in fester Rangfolge** —
-  Dreieck, Gösch, Element; fehlt eine, rücken die späteren auf. Solange das gilt, kostet ein
-  nachträglich gezeichnetes Element einen Eintrag am Ende und lässt alles davor in Ruhe. Die Regel
-  kostet heute nichts, muss aber stehen, bevor die erste Farbliste getippt wird. Sie betrifft nur die
-  Reihenfolge, in der der Generator die Flächen ausschreibt — in der Tabelle bleiben Hintergrund- und
-  Elementfarben getrennt, sie haben nichts miteinander zu tun.
+  sie hört eine generierte Karte nach den Strukturfragen auf. Reine Dateneingabe. Sie war früher
+  hinter den Generator vertagt, weil die Flächennummerierung noch offen war; seit §5 steht, ist sie
+  es nicht mehr — die Nummern stehen in der Datei, die Auflagen hängen sich hinten an.
+- ~~**Ob es eine Farbspalte für den Gösch-Inhalt gibt.**~~ Gab es nicht, ist am 26.08. als **Spalte Q
+  „Farbe Zusatzelement im Gösch"** angelegt worden. Der Gösch *selbst* brauchte nie eine: Er steckt in
+  der Sketch-Datei, ist damit eine Fläche wie jede andere und steht in der positionsbezogenen
+  Hintergrund-Farbliste. — Alle Farbspalten tragen bis auf Weiteres den Platzhalter `Farbe` statt
+  echter Werte; sie werden gefüllt, wenn sie gebraucht werden.
+- **Wie zwei Farben in einer Zelle stehen.** Grönlands Kreis ist zweigeteilt und braucht zwei Farben,
+  wo die Spalte eine vorsieht. Die Fragenseite ist geklärt (eine MC-Antwort mit zwei Klicks), die
+  Schreibweise in der Tabelle nicht. Klärt der Grönland-Durchgang.
+- **Ob die Skizze der Antwort widersprechen darf** — siehe §5. Weniger zeigen ist erlaubt; ob eine
+  Sichel in der falschen Richtung stört, zeigt sich erst am laufenden Bild.
+- **Grenada trägt Symbole auf dem Rahmen.** Fällt heute unter „mehrere einfarbige Figuren" und
+  „verteilt"; ob das reicht, ist offen. Kein Zwang, es jetzt zu lösen.
+- **Ob der Union Jack gezeichnet wird** — siehe §5. Entscheidet sich am Australien-Durchgang.
 - **Ob die Sketch-Dateien bei GeoJSON bleiben.** Das Format trägt Ballast aus der Kartenwelt
-  (`MultiPolygon`, CRS-Block, fünf Punkte für ein Rechteck), und ein Wechsel wäre heute billig, weil
-  außer den generierten Streifendateien noch nichts existiert. Es gibt aber auch keinen Zwang: Kreise
-  lassen sich als `Point` mit einem `radius` in den `properties` ablegen, und `ShapeGeometry` kann
-  Kreise bereits. Was fehlt, ist ein Zweig in `SketchPane`, die heute nur `MoveTo`/`LineTo` kennt —
-  und dort eine Kleinigkeit: Ein JavaFX-`Circle` startet **gefüllt**, ein `Path` nicht. „Noch nicht
-  beantwortet" ist genau dieser ungefüllte Zustand, also müssten beide Formen ihren Startzustand aus
-  derselben CSS-Regel bekommen statt aus dem JavaFX-Standard.
+  (`MultiPolygon`, CRS-Block, fünf Punkte für ein Rechteck), und ein Wechsel wäre heute noch billig.
+  Der Kreis, der als Erstes dagegen sprach, ist erledigt (§5: `Point` + `radius`); offen ist, ob die
+  komplizierteren Elementformen sich ähnlich sauber unterbringen lassen. Genau dafür laufen die vier
+  Härtefälle. Der Rückfall wäre ein SVG-Pfad-String in den `properties` — kann alles, beschreibt
+  nichts.
 - **Flaggenvarianten** — Costa Rica, Haiti, Ecuador und San Marino haben eine Bürgerflagge ohne
   Wappen, Paraguay trägt auf Vorder- und Rückseite verschiedene Embleme. Es braucht eine Festlegung,
   welche Fassung gilt.
@@ -739,6 +970,10 @@ reine Dateneingabe ohne Entwurfsrisiko.
   auseinanderlaufen, wo die Flaggen es tun.
 
 ## 9. Verworfen
+
+> **Diese Tabelle ist älter als die Zusatzelemente-Staffel** und in Einzelfällen von ihr überholt —
+> siehe die durchgestrichene Zeile zu Sonne und Stern. Wo eine Zeile dem Blatt widerspricht, gilt das
+> Blatt. Beim nächsten Durchgang lohnt es, die Elementzeilen daraufhin durchzusehen.
 
 | Idee | Warum |
 |---|---|
@@ -755,6 +990,12 @@ reine Dateneingabe ohne Entwurfsrisiko.
 | Interpreter in der Suite: `Flag:`-Expander, `schritt`- und `werteliste`-Tabelle, View auf `flagge` | Ein Generator schreibt stattdessen eine normale Deck-CSV. Ausschlaggebend war, dass eine Fragensatzänderung beim Interpreter alle Karten still mitgeändert hätte; beim Generator zeigt der Diff, was passiert ist. Nebenbei bleibt die Suite dumm und der Fragensatz lesbar. Preis: Die Ableitungslogik steckt jetzt in einem Skript statt in einem einsehbaren `CASE` — die Regeln gehören deshalb hier ins Dokument. |
 | Zusatzelemente nach der **Zahl der Figuren** zerlegen — je Figur eine eigene Kategorienfrage | Setzt voraus, dass die Figurenzahl beantwortbar ist, und das ist sie nicht: Simbabwe ist ein Wappen oder ein Vogel plus ein Stern, Brasilien eine Raute plus Kugel oder drei Dinge, Irak und Kasachstan ebenso strittig. Eine Frage, deren Antwort schon beim Entwerfen nicht eindeutig fällt, trägt keinen ganzen Zweig. Stattdessen fängt „komplexes Emblem" diese Fälle als Endstation ab. |
 | **Zacken zählen**, um Sonne von Stern zu unterscheiden | Overhead. Die Zackenzahl ist kein Wissen, das man behalten will — derselbe Fall wie die Streifenbreiten, die man mitbekommt, wenn man Anzahl und Farben weiß. |
-| Sonne und Stern **überhaupt unterscheiden** | Nicht durch Hinsehen entscheidbar, und die Antwort trägt nichts. Eingefaltet wie Türkis in Hellblau: eine Grenze weniger, die man ziehen muss. |
+| ~~Sonne und Stern **überhaupt unterscheiden**~~ — **zurückgenommen** | Stand hier mit der Begründung „nicht durch Hinsehen entscheidbar, die Antwort trägt nichts". Die Zusatzelemente-Staffel vom 25.08. unterscheidet die beiden trotzdem, und das Blatt sticht dieses Dokument. Die Zeile bleibt stehen, weil die Begründung erklärt, warum die Grenze unangenehm ist — nicht, weil sie noch gilt. Folge für die Skizze: zwei Werte brauchen zwei Formen (§5). |
 | Eine eigene Werteliste für den **Kreisinhalt** | Sie war gröber als die allgemeine und verdeckte, dass vier von fünf „einfarbigen Figuren" im Kreis in Wahrheit Himmelskörper sind. Ersetzt durch dieselbe Liste wie außerhalb. Beim **Gösch** gilt das Gegenteil und er behält seine eigene Liste: Dort ist sie feiner, und `Union Jack` ist der informativste Wert im ganzen Blatt. |
 | Ein Attribut, das Frage 5 beantwortet | Bestünde den Test „bleibt es wahr, wenn man die Fragenstaffel wegwirft" nicht. Es wäre nur so lange richtig, wie Frage 5 genau so geschnitten ist, und würde bei einem Umbau still falsch. |
+| **Gösch und Dreieck zur Laufzeit über den Hintergrund legen** | Gemessen spart es 13 Dateien von 63 — und kostet dafür Geometrie im Anwendungscode, eine Rangfolge-Konvention und eine zur Laufzeit gerechnete Flächennummerierung. Dieselbe Rechnung läuft so oder so; die Frage ist nur, ob sie einmal läuft und eine einsehbare Datei hinterlässt oder jedes Mal. Das ist die Entscheidung „Generator statt Interpreter" aus §4, eine Ebene tiefer. |
+| **Auch die Zusatzelemente backen** — pro Stufe eine vollständige Datei nachladen | Bis zu 206 × 3 Dateien, weil jede Stufe alles Vorherige mitbringen muss. Schwerer wiegt: `SketchImage` setzt zurück, die Karte müsste also die schon gegebenen Farbantworten wieder ausschreiben. Diese Füllungen gehörten zu keiner Frage, und die Zeile läse sich nicht mehr als Protokoll des Dialogs — genau das, was §4 mit dem Generator gewinnen wollte. Die Kombinatorik war dagegen **kein** gültiger Einwand: Sie ist beschränkt, nicht explosiv. |
+| **Ein Kriterium „was den Hintergrund zerschneidet, gehört in die Datei"** | Klingt geometrisch sauber, hält aber nicht: Japans Kreis schneidet in das weiße Feld genauso wie ein Dreieck in die Streifen. Es entscheidet das zeitliche Kriterium (§5) — vor der Skizze gefragt oder danach. |
+| **Ein Kreis als Vieleck** | Sieht auch als 64-Eck schlecht aus. Ersetzt durch `Point` + `radius`; die Sichel entsprechend durch `Shape.subtract` statt durch eine Näherung. |
+| **Den Union Jack nachbauen** | Er ist *ein* Antwortwert. Zehn Flächen dafür wären das einzige Stück Realismus in einer schematischen Zeichnung und bräuchten Farben, nach denen keine Frage fragt. Benannt, nicht gezeichnet — wie „komplexes Emblem". |
+| **Elementdateien je Position** (`kreis-mitte`, `stern-links-oben`) | Wieder ein Produkt aus Formen × neun Feldern. Stattdessen eine Datei je Form und das Rasterfeld im Step. |

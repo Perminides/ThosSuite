@@ -20,6 +20,8 @@ import app.learn.anki.model.Card.MarkMapElements;
 import app.learn.anki.model.Card.Output;
 import app.learn.anki.model.Card.Pause;
 import app.learn.anki.model.Card.SketchImage;
+import app.learn.anki.model.Card.SketchImageAdd;
+import app.learn.anki.model.Card.SketchImageMove;
 import app.learn.anki.model.Card.SketchImageFill;
 import app.learn.anki.model.Card.SketchImageMark;
 import app.learn.anki.model.Card.Step;
@@ -322,6 +324,8 @@ public class CardProgress {
 			}
 			case Image image -> presenter.showImage(image.file());
 			case SketchImage sketch -> presenter.showSketch(sketch.structure());
+			case SketchImageAdd add -> presenter.addSketch(add.structure(), add.cell());
+			case SketchImageMove move -> presenter.moveSketchArea(move.area(), move.cell());
 			case SketchImageMark mark -> presenter.markSketchArea(mark.area());
 			case SketchImageFill fill -> presenter.fillSketchArea(fill.area(), fill.color());
 			case Input _ -> presenter.waitForText();
