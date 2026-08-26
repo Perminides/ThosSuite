@@ -14,14 +14,23 @@ import csv, json, io, sys, datetime, collections, urllib.request
 from pathlib import Path
 
 SHEET = "1FX8SgpOr9G_Ss030KkQDAtOUE3AbEHuMPfxpl3PBQdE"
-CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET}/export?format=csv"
+# Ohne gid liefert der Export nur den ersten Tab. Beide Blaetter werden gebraucht.
+TABS = {"flaggen.csv": 0, "zusatzelemente.csv": 1267056858}
 ATTR_START = 9          # erste Attributspalte; wie viele es sind, sagt die Signatur
 HERE = Path(__file__).resolve().parent
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-raw = urllib.request.urlopen(CSV_URL, timeout=60).read().decode("utf-8")
-(HERE / "flaggen.csv").write_text(raw, encoding="utf-8")
+
+def hole(gid):
+    url = f"https://docs.google.com/spreadsheets/d/{SHEET}/export?format=csv&gid={gid}"
+    return urllib.request.urlopen(url, timeout=60).read().decode("utf-8")
+
+
+for datei, gid in TABS.items():
+    (HERE / datei).write_text(hole(gid), encoding="utf-8")
+
+raw = (HERE / "flaggen.csv").read_text(encoding="utf-8")
 rows = list(csv.reader(io.StringIO(raw)))
 
 # Kopfzeile suchen statt annehmen: es ist die, die in Spalte 7 "Signatur" traegt.

@@ -172,6 +172,8 @@ public abstract class AnkiLearnView {
 	// verdrängt das andere.
 
 	public void setSketch(List<ShapeGeometry> areas)        { imageComponent.setSketch(areas); }
+	public void addSketch(List<ShapeGeometry> areas, int cell) { imageComponent.addSketch(areas, cell); }
+	public void moveSketchArea(int area, int cell)          { imageComponent.moveSketchArea(area, cell); }
 	public void markSketchArea(int area)                    { imageComponent.markSketchArea(area); }
 	public void fillSketchArea(int area, SketchColor color) { imageComponent.fillSketchArea(area, color); }
 
