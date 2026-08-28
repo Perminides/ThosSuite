@@ -64,6 +64,11 @@ public interface Screen {
 	default void reactOnPausePressed() {};
 
 	/**
+	 * Der User hat die Eingabetaste gedrückt — dasselbe wie ein Klick auf den Absende-Knopf.
+	 */
+	default void enterPressed() {};
+
+	/**
 	 * Ein modaler Dialog liegt jetzt über dieser Session — sie ist unterbrochen, bis
 	 * {@link #resume()} kommt oder sie geschlossen wird.
 	 * <p>

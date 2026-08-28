@@ -335,7 +335,7 @@ Ein Zahlenkriterium hätte sie falsch einsortiert; als CheatSheet-Regel taugt es
 niemand beim Draufschauen Prozente schätzt.
 
 **Die zwei Blaus bleiben trotzdem** — aber mit anderem Argument: Die sieben im Mittelband sind genau
-die Population, für die §6 die **„nicht falsch"-Option** vorgesehen hat. Fünfzehn hellblaue Flaggen
+die Population, für die §6 Punkt 8 die **„nicht falsch"-Option** vorgesehen hat. Fünfzehn hellblaue Flaggen
 als „Blau" zu malen sähe an fünfzehn Stellen falsch aus; sieben Grenzfälle zu tolerieren kostet
 nichts. Was diese Entscheidung kippen würde: wenn das Mittelband beim Einsortieren von Hand deutlich
 wächst — sieben Ausnahmen sind ein CheatSheet, zwanzig sind eine kaputte Grenze.
@@ -372,9 +372,25 @@ Wo?                        acht Positionen, für alle außer „Keine"
 Farbe                      Kreis bzw. Element, und getrennt davon der Kreisinhalt
 ```
 
-**Die Weiche hat sechs Werte** — Nur Himmelskörper (52), Komplexes Emblem (38), Nur eine einfarbige
-Figur (24), Klar farbig abgegrenzter Kreis (14), Keine (10), Mehrere einfarbige Figuren gleicher
-Farbe (6). Sie deckt alle 144 Zeilen ab, ohne Auffangkorb.
+**Die Weiche hat sechs Werte** — Keine (72), Nur Himmelskörper (52), Komplexes Emblem (38), Nur eine
+einfarbige Figur (24), Klar farbig abgegrenzter Kreis (14), Mehrere einfarbige Figuren gleicher Farbe
+(6). Sie deckt alle **206** Flaggen ab, ohne Auffangkorb.
+
+**Sie wird bei jeder Flagge gestellt, auch bei denen ohne jedes Element.** Das war am 25.08. noch
+anders — dort standen nur die 144 Flaggen mit Element im Blatt, die übrigen 62 trugen `x`. Am 26.08.
+fiel auf, dass genau darin ein **Leak** steckte:
+
+> Die 10 Flaggen, die damals `Keine` trugen, hatten **alle** einen Gösch — sie standen ja nur wegen
+> ihres Gösch-Inhalts im Blatt. Und ob eine Flagge einen Gösch hat, ist zu diesem Zeitpunkt längst
+> beantwortet (Frage 3). Wer dort „kein Gösch" gesagt hatte und trotzdem die Elementfrage sah, konnte
+> `Keine` streichen, ohne die Flagge zu kennen.
+
+Seit die Frage für alle 206 gestellt wird, sagt ihr Auftauchen nichts mehr. Der Preis sind 62 Karten
+mit einer Frage mehr; der Gewinn ist doppelt, denn „hier liegt nichts" aktiv behaupten zu müssen ist
+selbst Lernstoff — Flaggen werden oft mit einem Wappen erinnert, das sie nicht haben.
+
+Damit trägt die Weiche **nirgends mehr `x`**, und `pruefe-attribute.py` wacht darüber: Ein einzelnes
+`x` würde den Leak stillschweigend wieder aufmachen.
 
 **Der Kreis ist ein Behälter, kein Inhalt.** Was in ihm liegt, wird mit *derselben Werteliste*
 gefragt wie das, was außerhalb liegt — eine Fragedefinition, zweimal angewandt, so wie die Farbfrage
@@ -494,6 +510,13 @@ richtige Antwort immer dabei. Passen alle Werte in die MC-Breite (Farben, Hinter
 werden schlicht alle gezeigt — dann fehlt nie etwas und es gibt nichts zu schließen. Wo es mehr sind
 (neun Bänderzahlen), wechseln die gezogenen Ablenker von Durchgang zu Durchgang, was denselben Zweck
 erfüllt. Das ist der Mechanismus, den die bestehenden MC-Decks schon nutzen.
+
+Reines Ziehen hat aber eine Schwäche, die bei einem **großen** Vokabular zuschlägt: Je mehr Werte es
+gibt, desto **leichter** wird die Frage, weil die Nachbarn, an denen man scheitern könnte, meistens
+gar nicht gezogen werden. Wer bei einer Sternfrage Papagei, Wappen und Landkarte danebenstehen sieht,
+muss nichts unterscheiden. Deshalb kann eine Zeile seit der neuen Syntax (§6) festlegen, **wer immer
+danebensteht** — Mond und Sonne — und nur den Rest ziehen lassen. Nachbarschaft garantiert, Variation
+erhalten.
 
 **In den Flaggenkarten gibt es keine Input-Steps**, alles läuft über MC. Akzeptierte Schreibweisen
 sind damit kein Thema.
@@ -784,15 +807,109 @@ Schlüsseln gelesen — der `!Sofort`-Marker in `AnkiLearnView` hatte genau das 
 
 **Noch offen:**
 
-5. **Input mit Enter-Bestätigung** — der heutige Input prüft nach jedem Tastendruck und verrät damit
+7. **Input mit Enter-Bestätigung** — der heutige Input prüft nach jedem Tastendruck und verrät damit
    die Antwort, sobald der Antwortraum klein und durchprobierbar ist. Wird gebraucht, weil der
    Kartenklick für die Gegenrichtung ausscheidet (siehe §8).
-6. **MC braucht eine „nicht falsch"-Option** — für Grenzfälle wie Lesotho. Der Step bleibt stehen wie
-   bei einer falschen Antwort, der Fehlerzähler zählt aber nicht hoch. Damit lernt man die Grenze,
-   indem man einmal dagegenstößt, und muss die kanonische Antwort trotzdem selbst produzieren.
-   Umsetzung: ein dritter Abschnitt hinter einem zweiten `*`, abwärtskompatibel, weil bestehende
-   Zeilen mit einem `*` unverändert zerfallen. Der Aufwand steckt darin, dass `AnswerOption` drei
-   Zustände statt eines `boolean` braucht und jede lesende Stelle sich zum dritten verhalten muss.
+8. **Neue MC-Syntax: eine flache Liste mit Präfixen.** Siehe unten — sie ersetzt die Abschnitte und
+   bringt die „nicht falsch"-Option und den Ablenker-Vorrat gleich mit.
+9. **Echte Mehrfachauswahl** — eine an- und abhakbare Liste, die als Ganzes abgeschickt wird. Siehe
+   unten; sie ist der Grund, warum es das `?`-Präfix überhaupt gibt.
+
+### Die MC-Syntax
+
+Heute trennt ein `*` die richtigen von den falschen Antworten:
+
+```
+MC:Blau|Weiß*Rot|Grün
+```
+
+Das trägt genau **eine** Eigenschaft je Option — richtig oder falsch. Gebraucht werden aber **zwei,
+und sie sind unabhängig voneinander:**
+
+```
+Rolle   richtig · toleriert · falsch
+Rang    immer zeigen · nur ziehen, wenn Platz ist
+```
+
+Abschnitte können das nicht: Jede weitere Eigenschaft wäre ein weiteres Sternchen, leere Abschnitte
+müsste man abzählen, und ihre Reihenfolge müsste man auswendig wissen. Deshalb wandern die
+Eigenschaften **an die Option**, und die Abschnitte entfallen:
+
+```
+(nichts)   falsch, immer zeigen
++          richtig
+~          toleriert — zählt nicht als Fehler, ist aber auch nicht die gesuchte Antwort
+?          falsch, Vorrat — wird gezogen, solange Plätze frei sind
+```
+
+```
+MC:Blau|Weiß*Rot|Grün              →   MC:+Blau|+Weiß|Rot|Grün
+MC:+Ja|Nein
+MC:+Weiß|Rot|Blau|Hellblau|Grün|Gelb|Orange|Schwarz
+MC:+2|~1|3|4|5                         Lesotho: 2 ist gesucht, 1 wird nicht als Fehler gewertet
+MC:+Stern|+Mond|Sonne|Kreuz|?Papagei|?Wappen|?Landkarte|?Hand
+```
+
+**Was die Präfixe können, was Abschnitte nicht konnten:**
+
+- **`~` ist die „nicht falsch"-Option** aus Punkt 8. Sie ist ein *Zustand* einer angezeigten Option,
+  kein eigener Rang — deshalb passte sie nie in einen Abschnitt.
+- **`?` trennt Vorrat von Nachbarschaft.** Ohne Präfix steht eine Option *immer* da. Damit lässt sich
+  garantieren, dass bei einer Sternfrage Mond und Sonne danebenstehen, statt es dem Zufall zu
+  überlassen — und der Rest wechselt trotzdem von Durchgang zu Durchgang, wie §4 es will.
+- Reihenfolge egal, nichts zu zählen, kein leerer Abschnitt. Eine fünfte Eigenschaft wäre irgendwann
+  ein fünftes Zeichen und kein Umbau.
+
+**Die Umstellung ist mechanisch:** `a|b*c|d` wird zu `+a|+b|c|d`. Ein Skript über die Deck-Dateien,
+zwanzig Minuten. Die Trennzeichen `;` und `:` bleiben tabu — das erste zerlegt die CSV-Zeile, das
+zweite trennt Step-Name und Rumpf.
+
+**Bewusst weggelassen:** eine dritte Ablenkerstufe („Reserve", die erst zieht, wenn der Vorrat leer
+ist). Konstruierbar, aber kein Fall in Sicht — wäre später ein weiteres Präfix.
+
+### Echte Mehrfachauswahl
+
+Der heutige MC ist keine Mehrfachauswahl, sondern eine Reihe **unwiderruflicher Einzelklicks**: Jeder
+Klick wird sofort gewertet, ein falscher beendet die Karte. Ein Button tut genau das — das ist kein
+Mangel, sondern seine Natur. Was fehlt, ist etwas anderes: eine **Liste, die man an- und abhakt und
+dann abschickt.**
+
+**Wozu.** Bei „welche Elemente liegen auf der Flagge" muss man aufzählen, was man sieht. Als
+Einzelklicks zerfällt das in sieben Ja/Nein-Fragen, bei denen jede Antwort sofort verraten wird und
+die erste falsche abbricht. Als eine Liste ist es **ein Abruf**, bei dem nichts durchsickert, bevor
+man sich festgelegt hat. Das ist der Unterschied zwischen Wiedererkennen und Erinnern — und damit
+genau der Grund, aus dem der Generator überhaupt gebaut wird.
+
+**Der Platz.** Das Antwortfeld ist beim Flaggen-Deck so voll wie beim Weltdeck, dem vollsten
+überhaupt. Ein zweites Element passt nicht. Also ist es **kein zweites Element, sondern ein Modus des
+vorhandenen**: Die Optionen bekommen ein Häkchenfeld, der Button feuert nicht mehr, sondern hakt an.
+Keine neue Fläche, kein zusätzlicher Platzbedarf.
+
+> **Auflage, die dabei gilt:** Komponenten erscheinen und verschwinden in dieser Suite nicht, sie
+> wechseln nur zwischen aktiv und inaktiv. Das Kästchen gehört zum *Inhalt* eines Buttons — so wie
+> sein Text, der ohnehin bei jeder Frage wechselt —, nicht zum Bestand der Komponente. Das Antwortfeld
+> bleibt, was darin steht, ändert sich.
+
+**Das ist das übliche Muster, nicht ein Sonderweg.** Google Photos öffnet ein Bild — bis eines
+ausgewählt ist, dann selektiert derselbe Klick. Gmail macht dasselbe über den Avatar, Android über
+langes Drücken, der Windows-Explorer über eine Option. Überall dort erscheint der Auswahlmarker beim
+Betreten des Modus; permanent sichtbar wäre er eine Aufforderung zur falschen Interaktion.
+
+**Auswertung: alles oder nichts.** Fehlende und zu viel angehakte Optionen zählen gleichermaßen als
+falsch — `MultipleChoiceAnswers.isFinallyCorrect` macht das heute schon per Mengenvergleich. Beim
+Aufdecken werden die **beiden Fehlerarten getrennt** gezeigt: was gefehlt hat und was zu viel war. Das
+ist der eigentliche Lernmoment und der Punkt, an dem sich der Typ vom Buzzer unterscheidet.
+
+**Die Anzahl wird nie genannt.** „Wähle alle zutreffenden", nicht „wähle zwei" — sonst beantwortet die
+Zahl die halbe Frage.
+
+**Zum Namen.** Der heutige Typ heißt `MC`, ist aber keine Mehrfachauswahl. Sein Kennzeichen ist die
+Unwiderruflichkeit pro Klick — **`Buzzer`** träfe es. Dann wird `MultipleChoice` frei für den, bei dem
+der Name zum ersten Mal stimmt. Preis: `Card.MC`, `MultipleChoiceAnswers`, `mcPane`, die
+Presenter-Methoden — und der Step-Name in jeder bestehenden Deck-Zeile, also Daten und nicht nur Code.
+
+**Offen:** Ob abgeschickt wird per Knopf (immer sichtbar, meist inaktiv) oder per Enter. Enter spart
+Fläche, verlangt aber Wissen — wie das ESC beim heutigen Input, das auch niemand sieht.
 
 **Vertagt, ausdrücklich nicht für dieses Deck:** Eine falsche Antwort beendet die Karte, und damit
 bleibt das Auflösungsbild ungesehen. Bei den über 10 000 bestehenden Karten hat das nie gestört, bei
@@ -843,6 +960,11 @@ ist:
 | **Grönland** | Der geteilte Kreis, zwei Halbscheiben — eine Elementdatei mit mehr als einer Fläche. |
 | **Tunesien** | Sichel *und* Stern *im* Kreis: `Shape.subtract`, dazu der Behälter mit geerbten Folgefragen. |
 | **Australien** | Gösch-Inhalt und „über die ganze Flagge verteilt", dazu die längste Karte des Decks. |
+
+**Die unbequemen Fälle** — beim Generator die Kandidaten, die man zuletzt anfasst. Sie stehen
+nirgends als Liste, sie ergeben sich: `Hintergrundtyp = 7`, dazu `Dreieck von links? ∈ {2, 3}`
+(Kuwaits Trapez, das liegende Y von Südafrika und Vanuatu), `Rechtwinklig? = 0` (Nepal) und Grenada
+mit seinen Symbolen auf dem Rahmen.
 
 Australien entscheidet dabei die letzte offene Frage des Mechanismus: **ob der Gösch selbst eine
 Farbfrage bekommt** — davon hängt ab, ob er eine füllbare Fläche ist oder nur eine Teilung.

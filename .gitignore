@@ -34,3 +34,7 @@ desktop.ini
 ~$*
 # Chatprotokolle. Gespraeche gehoeren nicht ins Repo; sie liegen daneben.
 docs/flaggen/Chats/
+
+# Python-Bytecode der Skripte in docs/
+__pycache__/
+*.pyc

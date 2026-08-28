@@ -69,6 +69,7 @@ public abstract class AnkiLearnView {
 	private SuiteImage imageComponent;
 	private MultipleChoicePane mcPane;
 	private SuiteIconButton backButton;
+	private SuiteIconButton submitButton;
 	private SuiteTextField inputField;
 
 	protected AnkiLearnView(String deckId, String mapName, String category, AnkiCallbacks callbacks) {
@@ -115,9 +116,17 @@ public abstract class AnkiLearnView {
 		imageComponent = new SuiteImage(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.IMAGE));
 
 		mcPane = null;
+		submitButton = null;
 		if (hasMcPane()) {
 			mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.MC));
 			mcPane.addListener(callbacks.mcAnswerClicked());
+
+			submitButton = new SuiteIconButton(Skin.IconButtonType.SUBMIT,
+					skin.learnComponentBounds(deckId, mapName, category, LearnComponent.SUBMIT_BUTTON));
+			submitButton.onClick(callbacks.submitClicked());
+			// Sonst löst die Eingabetaste den zuletzt geklickten Knopf ein zweites Mal aus.
+			submitButton.setFocusTraversable(false);
+			submitButton.setDisable(true);
 		}
 
 		backButton = new SuiteIconButton(Skin.IconButtonType.BACK,
@@ -148,8 +157,10 @@ public abstract class AnkiLearnView {
 		if (inputField != null)
 			parts.add(inputField);
 		parts.add(imageComponent);
-		if (mcPane != null)
+		if (mcPane != null) {
 			parts.add(mcPane);
+			parts.add(submitButton);
+		}
 		parts.add(progressArea);
 		parts.add(cardHistoryArea);
 		parts.add(backButton);
@@ -181,7 +192,14 @@ public abstract class AnkiLearnView {
 
 	public void setMultipleChoice(List<String> answers) { mcPane.initiateMultipleChoice(answers); }
 	public void setMcCorrect(int id, boolean correct)   { mcPane.setCorrect(id, correct); }
+	public void setMcMarked(int id, boolean marked)     { mcPane.setMarked(id, marked); }
 	public void setMcSolution(Set<Integer> correctIds)  { mcPane.setCorrectAndInactive(correctIds); }
+
+	/**
+	 * Der Absende-Knopf steht immer da und ist nur bei einer Frage mit mehreren richtigen Antworten
+	 * ansprechbar — er ist damit der erste Hinweis, dass gesammelt geantwortet wird.
+	 */
+	public void setSubmitActive(boolean active) { if (submitButton != null) submitButton.setDisable(!active); }
 
 	/** Schaltet die Antwortauswahl ab. {@code McLearnView} überschreibt das leer — dort wäre es sinnlos. */
 	public void disableMcPanel() { mcPane.clearAndSetInactive(); }

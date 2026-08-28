@@ -88,6 +88,7 @@ public class Controller{
     	//Claude meinte raus damit, aber ich habe mich mittlerweile so dran gewöhnt *lol*
     	mainWindow.setEscPressedRunnable(this::escPressed);
     	mainWindow.setPausePressedRunnable(this::pausePressed);
+    	mainWindow.setEnterPressedRunnable(this::enterPressed);
     	mainWindow.setCloseRunnable(this::closeSelected);
     	mainWindow.setQuitRunnable(() -> requestSessionSwitch(Platform::exit));
     	mainWindow.setLearnSessionConsumer(this::onLearnMenuItemSelected);
@@ -288,6 +289,10 @@ public class Controller{
 	
 	public void pausePressed() {
 		currentScreen.reactOnPausePressed();
+	}
+
+	public void enterPressed() {
+		currentScreen.enterPressed();
 	}
 
 	public void sortOrderChanged() {   
