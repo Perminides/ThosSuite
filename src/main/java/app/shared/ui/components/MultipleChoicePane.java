@@ -34,6 +34,7 @@ public class MultipleChoicePane extends Pane {
     private static final PseudoClass STATE_ACTIVE = PseudoClass.getPseudoClass("active");
     private static final PseudoClass STATE_CORRECT = PseudoClass.getPseudoClass("correct");
     private static final PseudoClass STATE_INCORRECT = PseudoClass.getPseudoClass("incorrect");
+    private static final PseudoClass STATE_MARKED = PseudoClass.getPseudoClass("marked");
 
     private final List<Button> buttons = new ArrayList<>();
     private final McMetrics metrics;
@@ -127,6 +128,11 @@ public class MultipleChoicePane extends Pane {
         setButtonLogicState(buttons.get(index), correct ? STATE_CORRECT : STATE_INCORRECT);
     }
 
+    /** Die Auswahl des Nutzers, solange sie noch nicht abgeschickt ist. */
+    public void setMarked(int index, boolean marked) {
+        setButtonLogicState(buttons.get(index), marked ? STATE_MARKED : STATE_ACTIVE);
+    }
+
     public void addListener(Consumer<Integer> listener) {
         this.listener = listener;
     }
@@ -137,5 +143,6 @@ public class MultipleChoicePane extends Pane {
         btn.pseudoClassStateChanged(STATE_ACTIVE, state == STATE_ACTIVE);
         btn.pseudoClassStateChanged(STATE_CORRECT, state == STATE_CORRECT);
         btn.pseudoClassStateChanged(STATE_INCORRECT, state == STATE_INCORRECT);
+        btn.pseudoClassStateChanged(STATE_MARKED, state == STATE_MARKED);
     }
 }

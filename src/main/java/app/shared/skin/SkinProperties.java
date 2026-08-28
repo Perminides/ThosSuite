@@ -160,7 +160,8 @@ public abstract class SkinProperties {
 	
 	protected Integer moviePosterWidth = 154;
 
-	protected String backButtonIcon;
+	protected String backButtonIcon = "back icon.png";
+	protected String submitButtonIcon = "submit icon.png";
 	protected String skipButtonIcon;
 	protected String playButtonIcon;
 	protected String cancelButtonIcon;
@@ -205,6 +206,7 @@ public abstract class SkinProperties {
 	protected Rectangle2D mcSessionProgressPanel;
 	protected Rectangle2D mcSessionHistoryPanel;
 	protected Rectangle2D mcSessionBackButton;
+	protected Rectangle2D mcSessionSubmitButton;
 	protected Rectangle2D worldSessionMapPanel;
 	protected Rectangle2D worldSessionQuestionPanel;
 	protected Rectangle2D worldSessionTextInputPanel;
@@ -213,6 +215,7 @@ public abstract class SkinProperties {
 	protected Rectangle2D worldSessionProgressPanel;
 	protected Rectangle2D worldSessionHistoryPanel;
 	protected Rectangle2D worldSessionBackButton;
+	protected Rectangle2D worldSessionSubmitButton;
 	protected Rectangle2D hannoverSessionMapPanel;
 	protected Rectangle2D hannoverSessionQuestionPanel;
 	protected Rectangle2D hannoverSessionTextInputPanel;
@@ -221,6 +224,7 @@ public abstract class SkinProperties {
 	protected Rectangle2D hannoverSessionProgressPanel;
 	protected Rectangle2D hannoverSessionHistoryPanel;
 	protected Rectangle2D hannoverSessionBackButton;
+	protected Rectangle2D hannoverSessionSubmitButton;
 	protected Rectangle2D germanySessionMapPanel;
 	protected Rectangle2D germanySessionQuestionPanel;
 	protected Rectangle2D germanySessionTextInputPanel;
@@ -229,6 +233,7 @@ public abstract class SkinProperties {
 	protected Rectangle2D germanySessionProgressPanel;
 	protected Rectangle2D germanySessionHistoryPanel;
 	protected Rectangle2D germanySessionBackButton;
+	protected Rectangle2D germanySessionSubmitButton;
 	protected Rectangle2D regionSessionQuestionPanel;
 	protected Rectangle2D regionSessionMapPanel;
 	protected Rectangle2D regionSessionTextInputPanel;
@@ -361,7 +366,7 @@ public abstract class SkinProperties {
 	}
 
 	public enum IconButtonType {
-		BACK, SKIP, PLAY, CANCEL
+		BACK, SUBMIT, SKIP, PLAY, CANCEL
 	};
 
 	public enum TextLabelType {
@@ -475,13 +480,14 @@ public abstract class SkinProperties {
 	public Image iconFor(IconButtonType rolle) {
 		String iconName = switch (rolle) {
 			case BACK -> backButtonIcon;
+			case SUBMIT -> submitButtonIcon;
 			case SKIP -> skipButtonIcon;
 			case PLAY -> playButtonIcon;
 			case CANCEL -> cancelButtonIcon;
 		};
 
 		Image image = new Image(Config.getPath("iconFolder").resolve(iconName).toUri().toString());
-		if (rolle == IconButtonType.BACK)
+		if (rolle == IconButtonType.BACK || rolle == IconButtonType.SUBMIT)
 			image = UiUtils.tintImage(image, textActiveComponentColor);
 
 		return image;

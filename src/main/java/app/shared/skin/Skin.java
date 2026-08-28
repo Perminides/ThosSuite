@@ -131,6 +131,7 @@ public abstract class Skin extends SkinProperties {
 		hannoverSessionProgressPanel = hannoverSessionProgressPanel == null ? worldSessionProgressPanel : hannoverSessionProgressPanel;
 		hannoverSessionHistoryPanel = hannoverSessionHistoryPanel == null ? worldSessionHistoryPanel : hannoverSessionHistoryPanel;
 		hannoverSessionBackButton = hannoverSessionBackButton == null ? worldSessionBackButton : hannoverSessionBackButton;
+		hannoverSessionSubmitButton = hannoverSessionSubmitButton == null ? worldSessionSubmitButton : hannoverSessionSubmitButton;
 		sketchStrokeColor = sketchStrokeColor == null ? borderShapeColor : sketchStrokeColor;
 		sketchMarkedColor = sketchMarkedColor == null ? markedColor : sketchMarkedColor;
 		toEliminateColor = toEliminateColor == null ? disabledComponentBgColor : toEliminateColor;
@@ -704,6 +705,14 @@ public abstract class Skin extends SkinProperties {
 	    //css.rule(".my-mc-button:active:pressed", "-fx-translate-y", "1px");
 	    //css.rule(".my-mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
 	    builder.rule(".my-mc-button:inactive", "-fx-background-color", disabledComponentBgColor);
+
+	    // Ausgewählt, aber noch nicht abgeschickt: dieselbe Farbe, mit der die Karte zeigt, was gefragt
+	    // ist. Der Knopf bleibt antwortbar — also behält er den Ring des aktiven Knopfs.
+	    builder.start(".my-mc-button:marked")
+	       .add("-fx-background-color", markedColor)
+	       .ring(activeBorderColor, activeBorderWidth)
+	       .end();
+	    builder.rule(".my-mc-button:marked:hover", "-fx-background-color", UiUtils.contrastingShade(markedColor, 20));
 
 	    // Ergebnis in zwei Dosierungen: ohne mcResultBorderWidth färbt sich die ganze Fläche in der
 	    // Signalfarbe, mit ihm trägt ein Ring sie und die Fläche wird nur zu mcResultTintPercent

@@ -126,14 +126,16 @@ Diese 115 Felder werden nie zu CSS. Sie gehen über zweckgeschnittene Records na
 
 ### 3.2 Symbole
 
-`backButtonIcon`, `skipButtonIcon`, `playButtonIcon`, `cancelButtonIcon` — alle Pflicht.
+`backButtonIcon` (`back icon.png`) und `submitButtonIcon` (`submit icon.png`) tragen ihren
+Dateinamen als Java-Vorgabe am Feld und stehen deshalb in keiner properties-Datei mehr.
+`skipButtonIcon`, `playButtonIcon`, `cancelButtonIcon` sind Pflicht.
 
-Gebaut wird heute nur **`BACK`**. Die drei anderen stehen in jeder properties-Datei, ihre Dateien
-liegen aber nicht mehr im Symbol-Ordner.
+Gebaut werden heute **`BACK`** und **`SUBMIT`**. Die drei anderen stehen in jeder properties-Datei,
+ihre Dateien liegen aber nicht mehr im Symbol-Ordner.
 
-Das Zurück-Symbol **wird eingefärbt**: jeder Pixel bekommt `textActiveComponentColor`, nur die
+Zurück- und Absende-Symbol **werden eingefärbt**: jeder Pixel bekommt `textActiveComponentColor`, nur die
 Deckkraft der Datei bleibt. Die PNG liefert also die Form, der Skin die Farbe — deshalb braucht es
-für helle und dunkle Skins nur eine Datei. Nur diese eine Rolle wird eingefärbt.
+für helle und dunkle Skins nur eine Datei. Nur diese beiden Rollen werden eingefärbt.
 
 **Die Größe kommt allein aus der Datei.** Das Bild wird ohne `fitWidth`/`fitHeight` angezeigt, also
 1:1 (heute 50 × 50). Ein größeres Symbol braucht eine größere Datei.
@@ -208,6 +210,7 @@ Die Matrix zeigt, welche Farbe ein Zustand ergibt. Hier steht, **wann** der Code
 | `:marked` | Karten-Form, beide Arten | Genau die eine Form, deren Namen gerade gefragt ist. |
 | `:correct` / `:incorrect` | Karten-Form, Antwortknopf, Antwortfeld | Richtig bzw. falsch beantwortet. Auf der Bild-Karte ist `:incorrect` ein roter Punkt an der Klickstelle, keine Form. |
 | `:active` | Antwortknopf | Der Knopf trägt eine anklickbare Antwort. |
+| `:marked` | Antwortknopf | Vom Nutzer ausgewählt, aber noch nicht abgeschickt — nur bei Fragen mit mehreren richtigen Antworten. Ein zweiter Klick nimmt die Markierung zurück. |
 | `:inactive` | Antwortknopf | Leer oder nach der Auflösung bedeutungslos. |
 | `:active` | Antwortfeld (Fast Write) | Gehört zum laufenden Schritt, ist aber **nicht anklickbar**. |
 | `:expected` | Antwortfeld | Das bei erzwungener Reihenfolge nächste Feld. **Bewusst ohne Regel** — das oberste nicht-grüne ist ohnehin das gesuchte. |
@@ -219,7 +222,7 @@ Die Matrix zeigt, welche Farbe ein Zustand ergibt. Hier steht, **wann** der Code
 | `:achieved` / `:failed` / `:in-progress` | Diagrammbalken | Ziel erreicht / verfehlt / laufende Woche. |
 | `:highlighted` | Vorschlagsliste | Der per Tastatur angewählte Vorschlag. |
 
-**Drei Stolperstellen in der Benennung:**
+**Vier Stolperstellen in der Benennung:**
 
 1. **`:active` heißt dreierlei.** Auf der Karte „anklickbar", am Antwortknopf „belegt und
    anklickbar", am Antwortfeld „im Spiel, aber unanklickbar".
@@ -229,6 +232,10 @@ Die Matrix zeigt, welche Farbe ein Zustand ergibt. Hier steht, **wann** der Code
 3. **Die Bild-Karte kennt `:active`, `:inactive` und `:paused` gar nicht.** Sie tauscht stattdessen
    ihre Bilder gegen graue. Derselbe Aufruf aus der Session bewirkt bei den zwei Kartenarten also
    grundsätzlich Verschiedenes.
+4. **`:marked` heißt zweierlei.** Auf der Karte zeigt die Suite damit, was sie gerade wissen will;
+   am Antwortknopf zeigt der Nutzer damit, was er gewählt hat. Beide tragen `markedColor`, und beides
+   kann gleichzeitig auf dem Schirm stehen — eine Karte darf Formen hervorheben und daneben eine
+   Sammelfrage stellen. Wer die zwei Bedeutungen trennen will, braucht ein eigenes Feld.
 
 **Zustände sind zugleich Speicher:** Die Shape-Karte liest ihren Sitzungsstand aus den
 Pseudoklassen zurück und spielt ihn wieder ein — deshalb überlebt eine laufende Session einen

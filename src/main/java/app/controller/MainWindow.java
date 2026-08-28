@@ -59,6 +59,7 @@ public class MainWindow {
     private Runnable onQuitSelected = null;
     private Runnable onEscPressed = null;
     private Runnable onPausePressed = null;
+    private Runnable onEnterPressed = null;
     private Consumer<PlayMenuNode> onPlayItemSelected = null;
     private Runnable onReloadSkin = null;
     private Consumer<String> onStatisticsSelected = null;
@@ -321,6 +322,10 @@ public class MainWindow {
                     if (onEscPressed != null) onEscPressed.run();
                     break;
                 }
+                case ENTER: {
+                    if (onEnterPressed != null) onEnterPressed.run();
+                    break;
+                }
                 default:
                     break;
             }
@@ -358,6 +363,10 @@ public class MainWindow {
 
     public void setPausePressedRunnable(Runnable action) {
         this.onPausePressed = action;
+    }
+
+    public void setEnterPressedRunnable(Runnable action) {
+        this.onEnterPressed = action;
     }
     
     public void setReloadSkinRunnable(Runnable action) {

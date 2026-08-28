@@ -190,10 +190,6 @@ public class CardProgress {
 		if (isPaused)
 	        throw new RuntimeException("Aha, das kann also passieren. Na dann hier lieber einfach return machen :-)");
 		
-		// User klickt einfach mehrfach auf den gleichen Button, wenn mehr als eine Antwort gesucht wird...
-		if (clickedMcAnswers.contains(index)) 
-			return;
-		
 	    Step step = steps.get(currentIndex);
 	     // Wir reagieren auf alle Klicks. Wenn wir im Pause-Modus sind, bleiben sie im Presenter hängen.
 	     // Wenn nicht, dann müssen wir sie hier ignorieren.
@@ -204,7 +200,22 @@ public class CardProgress {
 	    // Prüfen gegen das Session-Objekt (das max 8 Antworten hat), nicht gegen das Original im Step!
 	    if (activeSessionMC == null || activeSessionMC.getAnswerOptions().size() <= index)
 	    	return;
-	    
+
+	    if (activeSessionMC.isCollectMode()) {
+	    	// Hier wird nur markiert — geprüft wird erst beim Absenden.
+	    	boolean wasMarked = clickedMcAnswers.contains(index);
+	    	if (wasMarked)
+	    		clickedMcAnswers.remove(index);
+	    	else
+	    		clickedMcAnswers.add(index);
+	    	presenter.mcMarked(index, !wasMarked);
+	    	return;
+	    }
+
+		// User klickt einfach mehrfach auf den gleichen Button, wenn mehr als eine Antwort gesucht wird...
+		if (clickedMcAnswers.contains(index))
+			return;
+
 	    clickedMcAnswers.add(index);
 	    boolean correct = activeSessionMC.isCorrectSoFar(clickedMcAnswers);
 	    presenter.mcClickChecked(index, correct);
@@ -225,7 +236,36 @@ public class CardProgress {
 	    }
 	    // ----- NOCH NICHT VOLLSTÄNDIG ----- : auf die restlichen Pflicht-Klicks warten
 	}
-	
+
+	/**
+	 * Die markierte Auswahl wird als Ganzes geprüft. Falsch ist sie schon dann, wenn eine richtige
+	 * Antwort fehlt — aufgedeckt werden die falsch gewählten rot und alle richtigen grün.
+	 */
+	public void mcSubmitted() {
+		if (isPaused || activeSessionMC == null || !activeSessionMC.isCollectMode())
+			return;
+		if (clickedMcAnswers.isEmpty())
+			return;
+
+		if (activeSessionMC.isFinallyCorrect(clickedMcAnswers)) {
+			// ----- RICHTIG -----
+			clickedMcAnswers.clear();
+			currentIndex++;
+			runSteps();
+		} else {
+			// ----- FALSCH -----
+			Set<Integer> correctIndexes = activeSessionMC.getCorrectIndexes();
+			for (Integer clicked : clickedMcAnswers)
+				if (!correctIndexes.contains(clicked))
+					presenter.mcClickChecked(clicked, false);
+			presenter.setCorrectMc(correctIndexes);
+			playedTimestamp = LocalDateTime.now();
+			correctlyAnswered = false;
+			clickedMcAnswers.clear();
+			isPaused = true;
+		}
+	}
+
 	// ========================================
 	// Other
 	// ========================================
@@ -353,7 +393,8 @@ public class CardProgress {
 				}
 				
 				activeSessionMC = sessionMc;
-				presenter.showMultipleChoice(textsOf(sessionMc));
+				clickedMcAnswers.clear(); // sonst zählt die Auswahl des vorigen Steps weiter mit
+				presenter.showMultipleChoice(textsOf(sessionMc), sessionMc.isCollectMode());
 			}
 			
 			case MarkMapElements left -> presenter.markMapElements(left.left());

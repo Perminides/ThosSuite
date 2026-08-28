@@ -61,7 +61,7 @@ public class SessionPresenter {
 
         AnkiCallbacks callbacks = new AnkiCallbacks(
                 this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack,
-                this::timeExpired);
+                this::clickedSubmit, this::timeExpired);
 
         return switch(type) {
             case GERMANY_CARDS -> new ShapeMapLearnView(id, mapName, category, map.getShapeGeometries(), callbacks);
@@ -112,24 +112,28 @@ public class SessionPresenter {
 		view.setQuestion(text);
 	}
 	
-	void showMultipleChoice (List<String> answers) {
+	/** {@code collect}: mehrere Antworten markieren und gesammelt abschicken statt einzeln klicken. */
+	void showMultipleChoice (List<String> answers, boolean collect) {
 		view.setMapActive(false);
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);
 		view.setMultipleChoice(answers);
+		view.setSubmitActive(collect);
 	}
- 
+
 	void waitForClick(Set<String> idsInQuestion) {
 		view.setClickTargets(idsInQuestion);
 		view.setMapActive(true);
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);
 		view.disableMcPanel();
+		view.setSubmitActive(false);
 	}
 	void waitForText() {
 		view.setTextFieldActive(true);
 		view.setMapActive(false);
 		view.disableMcPanel();
+		view.setSubmitActive(false);
 	}
 
 	// ========================================
@@ -217,9 +221,14 @@ public class SessionPresenter {
 	void mcClickChecked(int id, boolean correct) {
 		view.setMcCorrect(id, correct);
 	}
+
+	void mcMarked(int id, boolean marked) {
+		view.setMcMarked(id, marked);
+	}
 	
 	void setCorrectMc(Set<Integer> correctIds) {
-		view.setMcSolution(correctIds); 
+		view.setMcSolution(correctIds);
+		view.setSubmitActive(false);
 	}
 	
 	// ========================================
@@ -239,6 +248,11 @@ public class SessionPresenter {
 	
 	void clickedBack() {
 		sessionProgress.goBack();
+	}
+
+	void clickedSubmit() {
+		if (!sessionProgress.isPaused())
+			sessionProgress.submitClicked();
 	}
 	
 	void clickedMCAnswer(int index) {
@@ -282,6 +296,7 @@ public class SessionPresenter {
 		view.setImage(null);
 		view.setTextInTextField("");
 		view.setQuestion("");
+		view.setSubmitActive(false);
 		if (fastView != null) {
 			fastView.stopClock(); // auch beim Zurückspringen, sonst tickt sie in die nächste Karte
 			fastView.clearSlots();
@@ -292,6 +307,7 @@ public class SessionPresenter {
 		view.setMapActive(false);
 		view.setTextFieldActive(false);
 		view.disableMcPanel();
+		view.setSubmitActive(false);
 	}
 
 }

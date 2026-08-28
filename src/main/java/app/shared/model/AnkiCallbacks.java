@@ -12,6 +12,7 @@ import java.util.function.Consumer;
  * @param mcAnswerClicked   eine Antwort der Auswahl wurde geklickt (Index)
  * @param textTyped         im Eingabefeld wurde getippt (aktueller Text)
  * @param backClicked       der Zurück-Knopf wurde gedrückt
+ * @param submitClicked     die markierte Auswahl soll geprüft werden
  * @param timeExpired       die Uhr eines Schritts mit Zeitlimit ist abgelaufen
  */
 public record AnkiCallbacks(
@@ -19,4 +20,5 @@ public record AnkiCallbacks(
 		Consumer<Integer> mcAnswerClicked,
 		Consumer<String> textTyped,
 		Runnable backClicked,
+		Runnable submitClicked,
 		Runnable timeExpired) {}

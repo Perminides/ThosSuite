@@ -92,6 +92,11 @@ public class MultipleChoiceAnswers {
         }
     }
 
+    /** Mehr als eine richtige Antwort heißt: erst alle markieren, dann gesammelt absenden. */
+    public boolean isCollectMode() {
+        return getCorrectIndexes().size() > 1;
+    }
+
     public Set<Integer> getCorrectIndexes() {
         Set<Integer> indexes = new HashSet<>();
         for (int i = 0; i < options.size(); i++) {

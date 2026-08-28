@@ -1,49 +1,29 @@
-"""Baut flaggen-signaturen.html aus dem Flaggen-Sheet.
+"""Baut flaggen-signaturen.html aus dem Systematik-Blatt.
 
-Holt die Tabelle als CSV, gruppiert die Flaggen nach identischer Attributsignatur
-und schreibt die Uebersichtsseite daneben. Die Seite liest das Sheet spaeter selbst
-live nach; neu gebaut werden muss sie nur, wenn sich Spaltennamen oder -positionen
-aendern.
+Holt die Tabelle, gruppiert die Flaggen nach identischer Attributsignatur und
+schreibt die Uebersichtsseite daneben. Die Seite liest das Blatt spaeter selbst
+live nach; neu gebaut werden muss sie nur, wenn sich am Aufbau etwas aendert.
 
     python build-signaturseite.py
 
-Spaltenannahmen: 0 = Bildpfad, 2 = Land, 7 = Signatur, 9..24 = die 16 Attribute.
+Spalten werden weder hier noch in der Seite ueber ihre Position gelesen: Die
+Kopfzeile ist die mit "Signatur", und der Attributblock wird gesucht -- es ist die
+Stelle, ab der sich die Signatur aus den folgenden Spalten zusammensetzt. Fest
+bleibt nur, dass Spalte 0 der Bildpfad und Spalte 2 das Land ist.
 """
 
-import csv, json, io, sys, datetime, collections, urllib.request
+import json, sys, datetime, collections
 from pathlib import Path
 
-SHEET = "1FX8SgpOr9G_Ss030KkQDAtOUE3AbEHuMPfxpl3PBQdE"
-# Ohne gid liefert der Export nur den ersten Tab. Beide Blaetter werden gebraucht.
-TABS = {"flaggen.csv": 0, "zusatzelemente.csv": 1267056858}
-ATTR_START = 9          # erste Attributspalte; wie viele es sind, sagt die Signatur
-HERE = Path(__file__).resolve().parent
+from sheet import SHEET, GID, lade
 
+HERE = Path(__file__).resolve().parent
 sys.stdout.reconfigure(encoding="utf-8")
 
-
-def hole(gid):
-    url = f"https://docs.google.com/spreadsheets/d/{SHEET}/export?format=csv&gid={gid}"
-    return urllib.request.urlopen(url, timeout=60).read().decode("utf-8")
-
-
-for datei, gid in TABS.items():
-    (HERE / datei).write_text(hole(gid), encoding="utf-8")
-
-raw = (HERE / "flaggen.csv").read_text(encoding="utf-8")
-rows = list(csv.reader(io.StringIO(raw)))
-
-# Kopfzeile suchen statt annehmen: es ist die, die in Spalte 7 "Signatur" traegt.
-HDR = next(i for i, r in enumerate(rows) if len(r) > 7 and r[7].strip() == "Signatur")
-
-FLAGS = [[r[0], r[2].strip(), r[7].strip()] for r in rows[HDR + 1:]
-         if len(r) > 7 and r[2].strip() and (r[0].startswith("..") or r[0].startswith("http"))]
-
-# Attributzahl aus der haeufigsten Signaturlaenge ableiten, damit Spaltenaenderungen
-# im Sheet hier nichts kaputtmachen.
-laengen = collections.Counter(len(s.split("|")) for _, _, s in FLAGS if "|" in s)
-N_ATTR = laengen.most_common(1)[0][0] if laengen else 0
-ATTR = [h.strip() for h in rows[HDR][ATTR_START:ATTR_START + N_ATTR]]
+blatt = lade()
+FLAGS = [[z[0], blatt.land(z), blatt.signatur(z)] for z in blatt.zeilen]
+N_ATTR = blatt.n_attr
+ATTR = list(blatt.name)
 
 # ---- Bericht ----------------------------------------------------------------
 g = collections.defaultdict(list)
@@ -159,14 +139,23 @@ render(); setStatus(SNAP,false);
 window.flagData=function(res){
   try{
     const rows=res.table.rows.map(r=>r.c.map(c=>(c&&c.v!=null)?String(c.v):""));
-    const hdr=rows.findIndex(r=>(r[7]||"").trim()==="Signatur");
+    const hdr=rows.findIndex(r=>r.some(c=>(c||"").trim()==="Signatur"));
     if(hdr<0) throw new Error("Kopfzeile nicht gefunden");
-    const n=ATTR.length;
-    const attr=rows[hdr].slice(9,9+n).map(s=>s.trim());
-    const flags=rows.slice(hdr+1).filter(r=>r[2]&&r[2].trim()&&r[0]&&
-                     (r[0].indexOf("..")===0||r[0].indexOf("http")===0))
-                     .map(r=>[r[0],r[2].trim(),r[7].trim()]);
-    if(flags.length<100) throw new Error("unplausible Daten");
+    const sig=rows[hdr].findIndex(c=>(c||"").trim()==="Signatur");
+    const data=rows.slice(hdr+1).filter(r=>r[2]&&r[2].trim()&&r[sig]&&r[sig].trim()&&r[0]&&
+                     (r[0].indexOf("..")===0||r[0].indexOf("http")===0));
+    if(data.length<100) throw new Error("unplausible Daten");
+    // Attributblock suchen statt annehmen: ab wo setzt sich die Signatur zusammen?
+    const n=data[0][sig].trim().split("|").length;
+    let start=-1;
+    for(let s=0;s+n<=rows[hdr].length;s++){
+      if(data.slice(0,20).every(function(r){
+           return r[sig].trim()===r.slice(s,s+n).map(function(c){return (c||"").trim();}).join("|");})){
+        start=s; break; }
+    }
+    if(start<0) throw new Error("Attributblock nicht gefunden");
+    const attr=rows[hdr].slice(start,start+n).map(function(s){return (s||"").trim();});
+    const flags=data.map(r=>[r[0],r[2].trim(),r[sig].trim()]);
     if(attr.length===n && attr.every(function(a){return a;})) ATTR=attr;
     FLAGS=flags; render();
     setStatus(new Date().toLocaleString("de-DE"),true);
@@ -174,12 +163,13 @@ window.flagData=function(res){
       'Eingebauter Stand · '+SNAP+' · <span title="'+esc(e.message)+'">Sheet-Abgleich fehlgeschlagen</span>'; }
 };
 const sc=document.createElement("script");
-sc.src="https://docs.google.com/spreadsheets/d/"+SHEET+"/gviz/tq?tqx=out:json;responseHandler:flagData&headers=0&tq="+encodeURIComponent("select *");
+sc.src="https://docs.google.com/spreadsheets/d/"+SHEET+"/gviz/tq?tqx=out:json;responseHandler:flagData&gid=__GID__&headers=0&tq="+encodeURIComponent("select *");
 sc.onerror=function(){ setStatus(SNAP+" · Sheet nicht erreichbar",false); };
 document.head.appendChild(sc);
 </script></body></html>'''
 
 out = (TPL.replace("__SHEET__", SHEET)
+          .replace("__GID__", str(GID))
           .replace("__ATTR__", json.dumps(ATTR, ensure_ascii=False))
           .replace("__FLAGS__", json.dumps(FLAGS, ensure_ascii=False))
           .replace("__SNAP__", datetime.datetime.now().strftime("%d.%m.%Y %H:%M")))
