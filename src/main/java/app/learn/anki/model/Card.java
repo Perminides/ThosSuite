@@ -40,7 +40,8 @@ public class Card {
      * ist wieder leer.</p>
      */
     public record SketchImage(String structure) implements Step {}
-    public record SketchImageAdd(String structure, int cell) implements Step {}
+    public record SketchImageAdd(String structure, int cell, double size, double offsetX,
+            double offsetY) implements Step {}
     public record SketchImageMove(int area, int cell) implements Step {}
     public record SketchImageMark(int area) implements Step {}
     public record SketchImageFill(int area, SketchColor color) implements Step {}
@@ -183,12 +184,23 @@ public class Card {
         };
     }
 
-    /** {@code <struktur>,<rasterfeld 0..8>} — haengt an, ohne die bisherigen Fuellungen zu verlieren. */
+    /**
+     * {@code <struktur>,<rasterfeld 0..8>[,<groesse>[,<dx>,<dy>]]} — haengt an, ohne die bisherigen
+     * Fuellungen zu verlieren.
+     *
+     * <p>Groesse 1,0 heisst „fuellt ein Rasterfeld"; groesser ist erlaubt. Der Versatz zieht
+     * Geschwister im selben Feld auseinander und rechnet in den Koordinaten der Elementdatei.
+     * Beides ist im Generator ausgerechnet — die Karte fuehrt nur aus.</p>
+     */
     private static Step parseSketchAdd(String body) {
-        String[] parts = body.split(",", 2);
-        if (parts.length < 2)
-            throw new RuntimeException("SketchImageAdd braucht Struktur und Rasterfeld: " + body);
-        return new SketchImageAdd(parts[0].trim(), Integer.parseInt(parts[1].trim()));
+        String[] parts = body.split(",");
+        if (parts.length != 2 && parts.length != 3 && parts.length != 5)
+            throw new RuntimeException("SketchImageAdd braucht Struktur und Rasterfeld, dazu"
+                    + " wahlweise die Groesse oder Groesse und Versatz: " + body);
+        double size = parts.length > 2 ? Double.parseDouble(parts[2].trim()) : 1;
+        double dx = parts.length > 4 ? Double.parseDouble(parts[3].trim()) : 0;
+        double dy = parts.length > 4 ? Double.parseDouble(parts[4].trim()) : 0;
+        return new SketchImageAdd(parts[0].trim(), Integer.parseInt(parts[1].trim()), size, dx, dy);
     }
 
     /** {@code <fläche>,<rasterfeld 0..8>} — setzt eine vorhandene Flaeche um, ohne sie neu zu bauen. */

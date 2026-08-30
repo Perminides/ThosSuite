@@ -45,15 +45,27 @@ public final class ShapeGeometry {
 
 	public record Point(double x, double y) {}
 
+	/**
+	 * Ein Kreis, der aus einem anderen Kreis herausgeschnitten wird — so entsteht eine Sichel aus
+	 * echten Bögen statt aus einer Näherung. Nur Skizzen benutzen das; Karten lassen es null.
+	 */
+	public record Cutout(double x, double y, double radius) {}
+
 	private final String id;
 	private final Kind kind;
 	private final List<List<Point>> paths;   // POLYGON: Ringe; LINE: Linienzüge; CIRCLE/CENTER: leer
 	private final double centerX;
 	private final double centerY;
 	private final double radius;
+	private final Cutout cutout;             // nur Skizzen: der herausgeschnittene Kreis, sonst null.
 	private final String type;               // nur Shape-Karten (roher GeoJSON-Schlüssel); Bild-Karten: null. Siehe Klassen-Doc.
 
 	private ShapeGeometry(String id, Kind kind, List<List<Point>> paths, double centerX, double centerY, double radius, String type) {
+		this(id, kind, paths, centerX, centerY, radius, type, null);
+	}
+
+	private ShapeGeometry(String id, Kind kind, List<List<Point>> paths, double centerX, double centerY,
+			double radius, String type, Cutout cutout) {
 		this.id = id;
 		this.kind = kind;
 		this.paths = paths;
@@ -61,6 +73,7 @@ public final class ShapeGeometry {
 		this.centerY = centerY;
 		this.radius = radius;
 		this.type = type;
+		this.cutout = cutout;
 	}
 
 	/** Shape-Karte: Polygon mit Layer-{@code type} (Darstellung + Lernstoff leiten sich daraus ab, s. Klassen-Doc). */
@@ -79,6 +92,11 @@ public final class ShapeGeometry {
 
 	public static ShapeGeometry circle(String id, double centerX, double centerY, double radius) {
 		return new ShapeGeometry(id, Kind.CIRCLE, List.of(), centerX, centerY, radius, null);
+	}
+
+	/** Kreis mit einem herausgeschnittenen zweiten Kreis — die Sichel. */
+	public static ShapeGeometry circle(String id, double centerX, double centerY, double radius, Cutout cutout) {
+		return new ShapeGeometry(id, Kind.CIRCLE, List.of(), centerX, centerY, radius, null, cutout);
 	}
 
 	/** Zentrier-Anker: kein sichtbares Shape. Die Bild-Karte zentriert nur auf x/y, baut keinen Node. */
@@ -105,7 +123,10 @@ public final class ShapeGeometry {
 				neu.add(new Point(p.x() * factor, p.y() * factor));
 			scaled.add(neu);
 		}
-		return new ShapeGeometry(id, kind, scaled, centerX * factor, centerY * factor, radius * factor, type);
+		Cutout skaliert = cutout == null ? null
+				: new Cutout(cutout.x() * factor, cutout.y() * factor, cutout.radius() * factor);
+		return new ShapeGeometry(id, kind, scaled, centerX * factor, centerY * factor, radius * factor, type,
+				skaliert);
 	}
 
 	public String id() { return id; }
@@ -114,6 +135,7 @@ public final class ShapeGeometry {
 	public double centerX() { return centerX; }
 	public double centerY() { return centerY; }
 	public double radius() { return radius; }
+	public Cutout cutout() { return cutout; }
 
 	/** Der rohe Layer-Schlüssel — nur bei Shape-Karten gesetzt, sonst null. Siehe Klassen-Doc. */
 	public String type() { return type; }

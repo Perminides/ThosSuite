@@ -88,6 +88,8 @@ public class SketchFileSource {
 	 *
 	 * <p>Folge fürs Zeichnen der Dateien: QGIS zeigt hier einen Punkt und keinen Kreis. Solche
 	 * Flächen werden getippt oder erzeugt, nicht gezeichnet.</p>
+	 *
+	 * <p>Steht daneben ein {@code cutout}, wird dieser zweite Kreis herausgeschnitten — die Sichel.</p>
 	 */
 	private ShapeGeometry parseCircle(String number, JsonNode feature, JsonNode geometry, String structure) {
 		JsonNode radius = feature.path("properties").path("radius");
@@ -96,8 +98,17 @@ public class SketchFileSource {
 					+ " (Fläche " + number + ", Struktur " + structure + ")");
 
 		JsonNode coordinates = geometry.get("coordinates");
+		JsonNode cutout = feature.path("properties").path("cutout");
+		if (cutout.isMissingNode())
+			return ShapeGeometry.circle(number, coordinates.get(0).asDouble(),
+					-coordinates.get(1).asDouble(), radius.asDouble());
+
+		// Ein zweiter Kreis, der herausgeschnitten wird: aus Kreis minus Kreis wird eine Sichel
+		// aus echten Bögen. Auch hier ist y in der Datei nach oben positiv.
 		return ShapeGeometry.circle(number, coordinates.get(0).asDouble(),
-				-coordinates.get(1).asDouble(), radius.asDouble());
+				-coordinates.get(1).asDouble(), radius.asDouble(),
+				new ShapeGeometry.Cutout(cutout.get("x").asDouble(), -cutout.get("y").asDouble(),
+						cutout.get("radius").asDouble()));
 	}
 
 	private List<List<Point>> parsePolygon(JsonNode geometry) {

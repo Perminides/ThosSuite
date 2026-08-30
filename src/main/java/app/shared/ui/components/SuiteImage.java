@@ -228,8 +228,9 @@ public class SuiteImage extends StackPane {
      * Hängt eine weitere Struktur an die vorhandene Skizze an, in eines der neun Rasterfelder.
      * Anders als {@link #setSketch} setzt das <b>nichts</b> zurück.
      */
-    public void addSketch(List<ShapeGeometry> areas, int cell) {
-        activeSketch().append(areas, cell);
+    public void addSketch(List<ShapeGeometry> areas, int cell, double size, double offsetX,
+            double offsetY) {
+        activeSketch().append(areas, cell, size, offsetX, offsetY);
     }
 
     /** Setzt eine Fläche der Skizze in ein anderes Rasterfeld. */

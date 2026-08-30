@@ -109,3 +109,13 @@ def lade(neu_holen=True):
         (HIER / DATEI).write_text(hole(), encoding="utf-8")
     text = (HIER / DATEI).read_text(encoding="utf-8")
     return Blatt(list(csv.reader(io.StringIO(text))))
+
+
+if __name__ == "__main__":
+    # Direkt aufrufbar, damit man die systematik.csv holen kann, ohne einen Pruefer zu starten:
+    #     python sheet.py
+    blatt = lade()
+    print("%s: %d Flaggen, %d Attribute (Kopfzeile %d, Attributblock ab Spalte %d)"
+          % (DATEI, len(blatt.zeilen), blatt.n_attr, blatt.hdr, blatt.attr_start))
+    if blatt.ohne_signatur:
+        print("  ! ohne Signatur:", ", ".join(blatt.ohne_signatur))

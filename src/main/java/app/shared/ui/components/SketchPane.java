@@ -74,7 +74,7 @@ class SketchPane extends StackPane {
 		cellWidth = (box[2] - box[0]) / 3;
 		cellHeight = (box[3] - box[1]) / 3;
 
-		addAreas(geometries, 0);
+		addAreas(geometries, 0, 1);
 
 		getChildren().add(contentGroup); // StackPane zentriert.
 		getStyleClass().add("my-sketch-pane");
@@ -98,11 +98,12 @@ class SketchPane extends StackPane {
 	 * gültig. Sonst schrumpfte eine Struktur, die versehentlich über den Rand ragt, nachträglich
 	 * alles bereits Gezeichnete.</p>
 	 */
-	public void append(List<ShapeGeometry> geometries, int cell) {
+	public void append(List<ShapeGeometry> geometries, int cell, double size, double offsetX,
+			double offsetY) {
 		int basis = areas.size();
-		addAreas(geometries, basis);
+		addAreas(geometries, basis, size);
 		for (int nummer = basis; nummer < areas.size(); nummer++)
-			place(shapeFor(nummer), cell);
+			place(shapeFor(nummer), cell, offsetX, offsetY);
 	}
 
 	/**
@@ -113,7 +114,7 @@ class SketchPane extends StackPane {
 	 * eigenen Aufruf — der Schritt kennt Flächen, keine Elemente.</p>
 	 */
 	public void move(int area, int cell) {
-		place(shapeFor(area), cell);
+		place(shapeFor(area), cell, 0, 0);
 	}
 
 	/**
@@ -122,16 +123,19 @@ class SketchPane extends StackPane {
 	 * Translation die Strichbreite nicht mit — der Einwand aus {@link ShapeGeometry#scaled} trifft
 	 * hier also nicht zu.
 	 */
-	private void place(Shape shape, int cell) {
+	private void place(Shape shape, int cell, double offsetX, double offsetY) {
 		if (cell < 0 || cell > 8)
 			throw new RuntimeException("Rasterfeld liegt außerhalb von 0..8: " + cell);
-		shape.setTranslateX(cellWidth * factor * (cell % 3));
-		shape.setTranslateY(cellHeight * factor * (cell / 3));
+		// Auf die Feldmitte, nicht auf die Feldecke: Elementdateien sind um ihren Nullpunkt
+		// zentriert, damit sie beim Verkleinern stehen bleiben statt zur Ecke zu wandern.
+		// Der Versatz rechnet in Dateikoordinaten (y nach oben positiv) und skaliert mit.
+		shape.setTranslateX(cellWidth * factor * (cell % 3 + 0.5) + offsetX * factor);
+		shape.setTranslateY(cellHeight * factor * (cell / 3 + 0.5) - offsetY * factor);
 	}
 
-	private void addAreas(List<ShapeGeometry> geometries, int basis) {
+	private void addAreas(List<ShapeGeometry> geometries, int basis, double size) {
 		for (ShapeGeometry geometry : geometries) {
-			Shape area = build(geometry.scaled(factor));
+			Shape area = build(geometry.scaled(factor * size));
 			areas.put(basis + Integer.parseInt(geometry.id()), area);
 			contentGroup.getChildren().add(area);
 		}
@@ -140,11 +144,24 @@ class SketchPane extends StackPane {
 	/** Polygon oder Kreis — beide tragen dieselbe Style-Klasse und kennen dieselben drei Zustände. */
 	private static Shape build(ShapeGeometry geometry) {
 		Shape shape = geometry.kind() == ShapeGeometry.Kind.CIRCLE
-				? new Circle(geometry.centerX(), geometry.centerY(), geometry.radius())
+				? buildCircle(geometry)
 				: buildPath(geometry);
 		shape.getStyleClass().add("my-sketch-area");
 		shape.setMouseTransparent(true); // Die Skizze zeigt nur an, sie nimmt keine Klicks.
 		return shape;
+	}
+
+	/**
+	 * Ein Kreis — oder, wenn ein zweiter herausgeschnitten wird, eine Sichel aus echten Bögen.
+	 * {@code subtract} liefert einen frischen Knoten ohne die Stilklassen der beiden Kreise; die
+	 * setzt {@link #build} ohnehin danach.
+	 */
+	private static Shape buildCircle(ShapeGeometry geometry) {
+		Circle circle = new Circle(geometry.centerX(), geometry.centerY(), geometry.radius());
+		ShapeGeometry.Cutout cutout = geometry.cutout();
+		if (cutout == null)
+			return circle;
+		return Shape.subtract(circle, new Circle(cutout.x(), cutout.y(), cutout.radius()));
 	}
 
 	/** Hebt eine Fläche hervor; eine zuvor hervorgehobene verliert die Markierung. */
