@@ -1,19 +1,20 @@
 # ThosSuite — Flaggen-Deck (Planung)
 
-**Stand:** 26.08.2026 — **Beide Fragenstaffeln stehen, alle 206 Flaggen sind danach attributiert**,
+**Stand:** 28.08.2026 — **Beide Fragenstaffeln stehen, alle 206 Flaggen sind danach attributiert**,
 und **der Skizzen-Mechanismus ist entschieden.** Siebzehn Spalten für den Hintergrund, elf im
 Zusatzelemente-Blatt, geprüft durch `pruefe-attribute.py`, null Widersprüche. Der **Durchstich
 läuft**: Deutschland und Dänemark sind ein Proof of Concept in der Suite, mit aufbauender Skizze.
 
-Am 26.08. ist die Frage geklärt worden, die alles Weitere blockiert hat: **was in eine Sketch-Datei
-gehört und was zur Laufzeit dazukommt** (§5). Gösch und Dreieck werden hineingezeichnet, die
-Zusatzelemente über einen vierten Step `SketchImageAdd` angehängt, alles auf einer gemeinsamen
-Leinwand mit einem 3×3-Raster — demselben, das die Positionsfrage ohnehin benutzt. Damit fallen drei
-offene Fragen aus §8 weg, und die Farblisten sind nicht mehr blockiert.
+Am 26.08. ist geklärt worden, **was in eine Sketch-Datei gehört und was zur Laufzeit dazukommt**
+(§5): Gösch und Dreieck werden hineingezeichnet, die Zusatzelemente über `SketchImageAdd` angehängt,
+alles auf einer gemeinsamen Leinwand mit einem 3×3-Raster.
 
-**Als Nächstes:** vier Härtefälle auf Papier durchspielen (Japan, Grönland, Tunesien, Australien),
-dann der **Generator**. Offen bleiben die Formation mehrerer Sterne, die Farbe des Gösch-*Inhalts*
-und die Frage, ob der Union Jack gezeichnet wird (§8).
+Am 27./28.08. ist die **Elementseite komplett umgebaut** worden — von der Weiche mit sechs Kategorien
+zu einer flachen Mehrfachauswahl, mit Kreis und Gösch als Orten statt als Behältern (§3). Dafür
+wurden die **MC-Syntax** neu gefasst (unten in §6) und die **echte Mehrfachauswahl** entworfen.
+
+**Als Nächstes:** die Farbliste für die Hintergrundflächen — die einzige Lücke, die den Generator noch
+blockiert. Danach der Generator bis zum Sketch.
 
 **Charakter dieses Dokuments:** Übergabe an das Ich, das die Sache irgendwann anfasst. Festgehalten
 ist, was entschieden ist, was Idee geblieben ist und was bewusst verworfen wurde. Deskriptiv für den
@@ -355,101 +356,75 @@ bekommt die Breiten mit. Spart eine ganze Fragenebene.
 
 ### Zusatzelemente
 
-Der zweite Fragenblock, nach den Farben. Er liegt in einem **eigenen Blatt** der Tabelle, eine Zeile
-pro Flagge mit Element — 144 der 206. Wer in der Haupttabelle `Zusatzelemente = 0` tragt, steht dort
-nicht.
+**Am 27./28.08.2026 komplett umgebaut.** Die alte Fassung fragte über eine *Weiche* mit sechs Werten,
+welche **eine** Kategorie die Flagge trägt, und hängte daran Behälter für Kreis und Gösch mit eigenen
+Wertelisten. Daran ist sie gescheitert: Jede Flagge mit zwei verschiedenen Dingen — Kosovos Karte und
+seine Sterne, Grenadas Muskatnuss und seine Sterne, Kiribatis Vogel und seine Sonne — musste in eine
+Schublade gezwungen werden, und fast jede dritte landete im Auffangkorb. Von siebzehn Kreis-Flaggen
+standen sieben falsch da, weil die Regel „Elemente in Kreisen zählen nicht" beim Ausfüllen niemand im
+Kopf behält.
 
-Der Aufbau ist derselbe wie beim Hintergrund: eine Weiche, dann zweigeigene Folgefragen.
+**Jetzt: eine flache Liste, eine Mehrfachauswahl.**
 
-```
-Was ist im Gösch?          nur wenn die Flagge einen hat (18 Flaggen)
-Was liegt außerhalb?       die Weiche — sechs Werte
-  Kreis                    → Was liegt im Kreis? → dieselben Werte noch einmal
-  Himmelskörper            → welche → wie viele → Formation
-  einfarbige Figur         → Kategorie (Tier, Pflanze, Gebäude, Gegenstand, abstraktes Symbol)
-  komplexes Emblem         → Endstation
-Wo?                        acht Positionen, für alle außer „Keine"
-Farbe                      Kreis bzw. Element, und getrennt davon der Kreisinhalt
-```
+> *Welche Zusatzelemente siehst Du?*
 
-**Die Weiche hat sechs Werte** — Keine (72), Nur Himmelskörper (52), Komplexes Emblem (38), Nur eine
-einfarbige Figur (24), Klar farbig abgegrenzter Kreis (14), Mehrere einfarbige Figuren gleicher Farbe
-(6). Sie deckt alle **206** Flaggen ab, ohne Auffangkorb.
-
-**Sie wird bei jeder Flagge gestellt, auch bei denen ohne jedes Element.** Das war am 25.08. noch
-anders — dort standen nur die 144 Flaggen mit Element im Blatt, die übrigen 62 trugen `x`. Am 26.08.
-fiel auf, dass genau darin ein **Leak** steckte:
-
-> Die 10 Flaggen, die damals `Keine` trugen, hatten **alle** einen Gösch — sie standen ja nur wegen
-> ihres Gösch-Inhalts im Blatt. Und ob eine Flagge einen Gösch hat, ist zu diesem Zeitpunkt längst
-> beantwortet (Frage 3). Wer dort „kein Gösch" gesagt hatte und trotzdem die Elementfrage sah, konnte
-> `Keine` streichen, ohne die Flagge zu kennen.
-
-Seit die Frage für alle 206 gestellt wird, sagt ihr Auftauchen nichts mehr. Der Preis sind 62 Karten
-mit einer Frage mehr; der Gewinn ist doppelt, denn „hier liegt nichts" aktiv behaupten zu müssen ist
-selbst Lernstoff — Flaggen werden oft mit einem Wappen erinnert, das sie nicht haben.
-
-Damit trägt die Weiche **nirgends mehr `x`**, und `pruefe-attribute.py` wacht darüber: Ein einzelnes
-`x` würde den Leak stillschweigend wieder aufmachen.
-
-**Der Kreis ist ein Behälter, kein Inhalt.** Was in ihm liegt, wird mit *derselben Werteliste*
-gefragt wie das, was außerhalb liegt — eine Fragedefinition, zweimal angewandt, so wie die Farbfrage
-n-mal angewandt wird. Das spart eine zweite Werteliste und deckt auf, was eine eigene Liste verdeckt
-hatte: Burundis drei Sterne, Äthiopiens und Nordkoreas Stern und Tunesiens Mond sind Himmelskörper
-und keine „einfarbigen Figuren". Dazu kommt genau ein Wert, den es außerhalb nicht gibt: **der Kreis
-ist selbst geteilt** (Grönland). Er sagt dem Generator, dass hier zwei Farbflächen kommen statt einer,
-und wird über eine MC-Antwort mit zwei Klicks abgefragt.
-
-Der Preis: Der Kreis-Zweig erbt die Folgefragen, Tunesien und Burundi laufen dadurch ein bis zwei
-Schritte länger. Und Neukaledonien ist der einzige Treffer der Kategorienfrage innerhalb des Kreises —
-ein Schönheitsfehler, aber keiner, der etwas kostet: Die Frage steht ohnehin, sie wird in diesem Zweig
-nur selten erreicht.
-
-**„Komplexes Emblem" ist eine Endstation, kein Auffangkorb.** Es bedeutet „hier liegt etwas zu
-Komplexes, es wird nicht zerlegt" — Kenias Schild mit Speeren, Spaniens Wappen, Belarus mit seinem
-Ornamentband. Solche Flaggen bekommen die Positionsfrage, aber keine Farbfrage. Früher standen daneben
-ein zweiter Wert „Anders" und die Unterscheidung „ist das ein Wappen oder nicht"; beides ist
-zusammengelegt, weil die Grenze zu ziehen war, ohne dass sie etwas eintrug.
-
-**Die einfarbige Figur endet bei einer Kategorie**, nicht bei einem Namen: Tier, Pflanze, Gebäude,
-Gegenstand, abstraktes Symbol. Die zweite Stufe — Adler, Zeder, Angkor Wat — ist vorgesehen, aber
-nicht ausformuliert. Der Vorteil der Kategorie-Ebene bleibt derselbe: **Die Distraktoren der
-Namensfrage kämen aus der beantworteten Kategorie**, also plausible Ablenker ohne Kuratierung und
-ohne Leak.
-
-Wenn ein einzelnes Element wichtig genug ist (Sri Lankas Löwe), wird daraus eine eigene Karte, nicht
-ein weiterer Schritt in der Flaggenkarte. Zeder, Lorbeer und Ahorn sind Stoff für die
-Geschichten-Karten.
-
-**Die Position** wird per MC gefragt, **nicht** per Klick ins Bild. Die Werte sind ein **3×3-Raster**
-plus einen Auffangwert:
+Man hakt an, was da ist. Keine Kategorie, keine Behälter, keine Ausnahmeregel. 28 Wörter, 152 Flaggen
+mit Element, höchstens vier pro Flagge (Brasilien: Raute, Schrift, Kreis, Stern).
 
 ```
-Links oben     Oben mittig    Rechts oben
-Links mittig   Mitte          Rechts mittig
-Links unten    Unten mittig   Rechts unten
-                                              Über die ganze Flagge verteilt
+75×  Keine          14×  Mond            2×  Drache        1×  Zahnrad, Machete
+60×  Stern          13×  Kreis           2×  Gebäude       1×  Dreizack, Raute
+36×  Wappen/Emblem   9×  Sonne           2×  Blatt, Zweig  1×  Nuss, Blume, Chakra
+                     8×  Vogel           2×  Krone         1×  Baum, Hut, Löwe
+                     4×  Muster          2×  Landumriss    1×  Schwert, Hammer, Sichel
+                     3×  Kreuz, Schrift                    1×  Union Jack …
 ```
 
-Der Auffangwert trägt die Fälle, in denen mehrere Figuren an mehreren Stellen liegen: Australien,
-Georgien, Grenada, Kasachstan, Papua-Neuguinea. Er ersetzt ein früheres „Anders", das nichts aussagte.
+**Kreis und Gösch sind keine Behälter mehr, sondern Orte.** „Im Kreis" und „im Gösch" sind
+Positionswerte wie „links oben" — damit fallen zwei Sonderstrukturen, zwei Wertelisten und die
+Ausnahmeregel ersatzlos weg. Grenadas Sterne stehen einmal in der Liste, egal ob innen oder außen.
 
-`Unten mittig` und `Rechts unten` kommen bei keiner Flagge vor und sind **geschenkte Distraktoren** —
-genau die Sorte Wert, die §2 in der Liste haben will, damit eine falsche Vorstellung ausdrückbar
-bleibt. Sie kosten nichts, weil das Raster sie ohnehin bildet.
+**Je Element vier Angaben**, in vier Spaltengruppen `Element 1` bis `Element 4`:
 
-Das Raster ist nicht bloß eine Antwortliste: Es ist zugleich die **Platzierungskonvention der
-Skizze** (siehe §5). Die Frage und das Bild teilen sich dieselben neun Felder.
+```
+Element, Ort, Farbe, Anzahl
 
-**Die Anzahl bleibt dort in der Kategorie, wo sie die Folgefrage erübrigt.** `1 Stern` gegen `Sterne`
-ist kein Schönheitsfehler, sondern der zulässige Fall aus §2: Eine Frage entfällt, wenn ihre Antwort
-zwingend folgt. Bei `1 Stern` folgt die Anzahl aus der Kategorie — und dass die Anzahlfrage nach
-`Sterne` erscheint und nach `1 Stern` nicht, ist Verengung durch die eigene richtige Antwort, kein
-Leak.
+Abchasien   Hand, Gösch, Weiß        |  Stern, Gösch, Weiß, 7
+Algerien    Mond, Mitte, Rot         |  Stern, Mitte, Rot, 1
+Panama      Stern, Verteilt, Blau, Rot, 2
+```
 
-**Wie lang eine Elementkarte wird:** Der Schwerpunkt liegt bei drei bis vier Fragen einschließlich
-Farbe, das Maximum trägt Australien mit sieben (Gösch, Weiche, welche Himmelskörper, wie viele,
-Formation, wo, Farbe). Sieben ist die Obergrenze, die das Deck sich setzt.
+Die Felder erkennen sich **selbst**: Was in der Farbliste steht, ist eine Farbe; was aus Ziffern
+besteht, ist eine Anzahl. Deshalb darf eine Figur auch mehrere Farben tragen (Panamas blauer und
+roter Stern), ohne dass die Position der Felder etwas bedeutet.
+
+**Leer heißt „wird nicht gefragt".** Bei der Anzahl heißt das zugleich „es ist eines" — bei Sternen
+wird trotzdem die 1 eingetragen, weil dort die Frage *gestellt* werden soll. Bei der Farbe heißt es,
+dass das Element keine eine Farbe hat.
+
+**`bunt` als neunter Farbwert**, aber nur in der Elementfarbfrage. Ohne ihn verrät das Auftauchen der
+Farbfrage, ob das Element einfarbig ist — bei `Vogel` unterscheidet das Albaniens schwarzen Adler von
+Ugandas buntem Kranich, *bevor* man geantwortet hat. Für die Hintergrundflächen gehört `bunt` nicht in
+die Liste: Eine Fläche ist per Konstruktion einfarbig, der Wert wäre kein Irrtum, den jemand hat,
+sondern ein Kategorienfehler — und er nähme einen der acht Plätze weg, auf denen heute alle Farben
+gleichzeitig stehen.
+
+**`Keine` steht immer zur Wahl.** Fehlte die Option, verriete ihr Fehlen, dass etwas da ist —
+derselbe Leak wie beim alten `x` in der Weiche.
+
+**„Im Kreis" nur, wenn es einen Kreis gibt.** Das kostet nichts: Der Generator schreibt die
+Optionsliste, also nimmt er den Wert nur auf, wenn `Kreis` unter den Elementen steht. Und ein Leak ist
+es nicht — dass es einen Kreis gibt, hat man selbst zwei Fragen vorher geantwortet.
+
+**Was bleibt offen:** die *Beziehung* zwischen Elementen. Algeriens Stern sitzt in der Öffnung der
+Mondsichel; beide stehen auf „Mitte", und das sagt es nicht. Dafür gibt es noch `Formation Sterne` und
+`Formation Mond mit Stern(en)` — die einzigen zwei Altspalten, deren Inhalt nirgends sonst steht.
+Ebenso offen: zwei Elemente im selben Rasterfeld.
+
+**Was der Umbau nicht löst:** die 36 Flaggen mit `Wappen / Emblem / Symbol`. Ein Wappen ist in einer
+MC-Frage nicht lernbar, egal wie die Systematik aussieht — dafür sind die Geschichten-Karten da. Der
+Umbau macht die **104 anderen** besser, die vorher mit ihnen in einem Topf lagen.
+
 
 ### Leak oder nicht
 
