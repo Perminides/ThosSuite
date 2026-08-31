@@ -119,6 +119,9 @@ def sichel(aussen=20.0, versatz=7.0, ausschnitt=18.0):
     Die Bounding Box der uebrig bleibenden Sichel ist nicht die des aeusseren Kreises, deshalb
     wird sie ausgerechnet und die ganze Figur so verschoben, dass sie um den Nullpunkt liegt.
     """
+    # Hoehe = 2 * Radius: Der oberste Punkt ist der Scheitel des aeusseren Kreises, nicht die
+    # Hornspitze -- der Bogen woelbt sich ueber sie hinaus, und der Ausschnitt liegt daneben.
+    # Mit Radius 20 ist die Sichel damit genau so hoch wie ein Rasterfeld, wie alle anderen.
     cos = (aussen ** 2 + versatz ** 2 - ausschnitt ** 2) / (2 * aussen * versatz)
     horn = aussen * cos                       # x der beiden Hornspitzen
     dx = (-aussen + horn) / 2                 # Mitte der Bounding Box
@@ -150,7 +153,7 @@ def finger(ansatz_x, ansatz_y, richtung, laenge, halbbreite):
             + [(ansatz_x + qx * halbbreite, ansatz_y + qy * halbbreite)])
 
 
-def hand():
+def hand():   # nicht mehr in ELEMENTE: die Hand kommt aus svg-zu-sketch.py
     """Eine offene Hand als eine Flaeche: Handflaeche, vier Finger, Daumen nach links oben.
 
     Ein Ring, kein Zusammensetzen aus Teilen -- getrennte Teile wuerden beim Fuellen zwar nicht
@@ -170,7 +173,7 @@ def hand():
     return [flaeche(0, zentriere([ring(punkte)]))]
 
 
-ELEMENTE = {"kreis": kreis, "sichel": sichel, "hand": hand, "stern": einzelstern, "raute": raute, "schrift-t": schrift_t,
+ELEMENTE = {"kreis": kreis, "sichel": sichel, "stern": einzelstern, "raute": raute, "schrift-t": schrift_t,
             "stern-haufen": sternhaufen, "stern-zwei": zweisterne}
 
 

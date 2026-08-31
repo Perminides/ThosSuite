@@ -48,6 +48,13 @@ Beschlossen am 29.08.2026, noch nicht in `Flaggen-Deck.md` eingearbeitet.
   und gut sind — an den Flaggen ist zu viel umgeworfen worden, um jetzt die anderen Decks anzufassen.
   Der Parser versteht solange beide Schreibweisen.
 
+## Breitenverhältnisse der übrigen Verteilungswerte
+
+Der Sketch-Name trägt die Verteilung inzwischen, und `build-streifen-sketch.py` kennt eine Tabelle
+dafür. Gefüllt sind erst `3W = 0` (alle gleich) und `5W = 3` (2 : 1 : 4 : 1 : 2). Die übrigen Werte
+von `3W`, `5W` und `S-Anordnung` kommen dazu, wenn die erste Flagge sie braucht — schematisch
+deutlich, nicht maßstabsgetreu.
+
 ## Offen geblieben, ausdrücklich vertagt
 
 - Wie zwei Elemente im selben Segment zueinander positioniert werden.
