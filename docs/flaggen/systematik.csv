@@ -1,215 +1,215 @@
-,,,Generieren,ID,,,Signatur,Clustergröße,Rechtwinklig?,Rahmen?,Gösch?,Dreieck von links?,Die Dreiecksform(en) bestehen aus wie vielen Farben?,Hintergrundtyp,W-Streifen,3W,5W,S-Streifen,S-Anordnung,Kreuzausrichtung,Kreuzarme,Diagonal Richtung,Diagonal Anzahl Streifen,SW Streifen,Spezial,Hintergrundfarben,E1,E1 Position,E1 Farbe,E1 Anzahl,E2,E2 Position,E2 Farbe,E2 Anzahl,E3,E3 Position,E3 Farbe,E3 Anzahl,E4,E4 Position,E4 Farbe,E4 Anzahl
-1,,Abchasien,,Abchasien,,Abkhazia,1|0|1|0|x|0|7|x|x|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,7,x,x,x,x,x,x,x,x,x,x,,Hand,0,Weiß,x,Stern,0,Weiß,7,x,x,x,x,x,x,x,x
-2,,Afghanistan,,Afghanistan,../images/pictures/flags96/Afghanistan.jpg,Afghanistan,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Emblem,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
-3,,Albanien,,Albanien,../images/pictures/flags96/Albania.jpg,Albania,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Vogel,4,Schwarz,x,x,x,x,x,x,x,x,x,x,x,x,x
-4,,Algerien,,Algerien,../images/pictures/flags96/Algeria.jpg,Algeria,1|0|0|0|x|1|x|x|x|2|0|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,2,0,x,x,x,x,x,x,,Mond,4,Rot,x,Stern,4,Rot,1,x,x,x,x,x,x,x,x
-5,,Andorra,,Andorra,../images/pictures/flags96/Andorra.jpg,Andorra,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-6,,Angola,,Angola,../images/pictures/flags96/Angola.jpg,Angola,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Stern,4,Gelb,1,Machete,4,Gelb,x,Zahnrad,4,Gelb,x,x,x,x,x
-7,,Antigua und Barbuda,,Antigua und Barbuda,../images/pictures/flags96/Antigua_and_Barbuda.jpg,Antigua_and_Barbuda,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|0,1,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,0,,Sonne,1,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
-8,,Argentinien,,Argentinien,../images/pictures/flags96/Argentina.jpg,Argentina,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Sonne,4,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
-9,,Armenien,,Armenien,../images/pictures/flags96/Armenia.jpg,Armenia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-10,,Australien,,Australien,../images/pictures/flags96/Australia.jpg,Australia,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,9,Weiß,6,Union Jack,0,x,x,x,x,x,x,x,x,x,x
-11,,Österreich,,Österreich,../images/pictures/flags96/Austria.jpg,Austria,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-12,,Aserbaidschan,,Aserbaidschan,../images/pictures/flags96/Azerbaijan.jpg,Azerbaijan,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Mond,4,Weiß,x,Stern,4,Weiß,1,x,x,x,x,x,x,x,x
-13,,Bahamas,,Bahamas,../images/pictures/flags96/Bahamas.jpg,Bahamas,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-14,,Bahrain,,Bahrain,../images/pictures/flags96/Bahrain.jpg,Bahrain,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|1,2,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,1,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-15,,Bangladesch,1,Bangladesch,../images/pictures/flags96/Bangladesh.jpg,Bangladesh,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,Grün,Kreis,3,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
-16,,Barbados,,Barbados,../images/pictures/flags96/Barbados.jpg,Barbados,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Dreizack,4,Schwarz,x,x,x,x,x,x,x,x,x,x,x,x,x
-17,,Belarus,,Belarus,../images/pictures/flags96/Belarus.jpg,Belarus,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|2|x,4,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,2,x,,Muster,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-18,,Belgien,,Belgien,../images/pictures/flags96/Belgium.jpg,Belgium,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-19,,Belize,,Belize,../images/pictures/flags96/Belize.jpg,Belize,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-20,,Benin,,Benin,../images/pictures/flags96/Benin.jpg,Benin,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|2|x,4,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,2,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-21,,Bermuda,,Bermuda,../images/pictures/flags96/Bermuda.jpg,Bermuda,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Emblem,3,x,x,x,x,x,x,x,x,x,x
-22,,Bhutan,,Bhutan,../images/pictures/flags96/Bhutan.jpg,Bhutan,1|0|0|0|x|3|x|x|x|x|x|x|x|0|0|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,0,0,x,x,,Drache,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
-23,,Bolivien,,Bolivien,../images/pictures/flags96/Bolivia.jpg,Bolivia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-24,,Bosnien und Herzegowina,,Bosnien und Herzegowina,../images/pictures/flags96/Bosnia_and_Herzegovina.jpg,Bosnia_and_Herzegovina,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|2,1,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,2,,Stern,9,Weiß,9,x,x,x,x,x,x,x,x,x,x,x,x
-25,,Botswana,,Botswana,../images/pictures/flags96/Botswana.jpg,Botswana,1|0|0|0|x|0|5|x|0|x|x|x|x|x|x|x|x,4,1,0,0,0,x,0,5,x,0,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-26,,Brasilien,1,Brasilien,../images/pictures/flags96/Brazil.jpg,Brazil,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,Grün,Raute,4,Gelb,x,Kreis,4,Blau,x,Schrift,4,Grün,x,Stern,4,Weiß,27
-27,,Brunei,,Brunei,../images/pictures/flags96/Brunei.jpg,Brunei,1|0|0|0|x|3|x|x|x|x|x|x|x|1|2|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,1,2,x,x,,Emblem,4,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
-28,,Bulgarien,,Bulgarien,../images/pictures/flags96/Bulgaria.jpg,Bulgaria,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-29,,Burkina Faso,,Burkina Faso,../images/pictures/flags96/Burkina_Faso.jpg,Burkina_Faso,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Stern,4,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
-30,,Burundi,,Burundi,../images/pictures/flags96/Burundi.jpg,Burundi,1|0|0|0|x|2|x|x|x|x|x|1|0|x|x|x|x,3,1,0,0,0,x,2,x,x,x,x,x,1,0,x,x,x,x,,Stern,4,Rot,3,x,x,x,x,x,x,x,x,x,x,x,x
-31,,Kambodscha,,Kambodscha,../images/pictures/flags96/Cambodia.jpg,Cambodia,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Gebäude,4,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-32,,Kamerun,,Kamerun,../images/pictures/flags96/Cameroon.jpg,Cameroon,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Stern,4,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
-33,,Kanada,,Kanada,../images/pictures/flags96/Canada.jpg,Canada,1|0|0|0|x|1|x|x|x|3|1|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,3,1,x,x,x,x,x,x,,Blatt,4,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
-34,,Kap Verde,,Kap Verde,../images/pictures/flags96/Cape_Verde.jpg,Cape_Verde,1|0|0|0|x|0|5|x|4|x|x|x|x|x|x|x|x,1,1,0,0,0,x,0,5,x,4,x,x,x,x,x,x,x,x,,Stern,6,Gelb,10,x,x,x,x,x,x,x,x,x,x,x,x
-35,,Zentralafrikanische Republik,,Zentralafrikanische Republik,../images/pictures/flags96/Central_African_Republic.jpg,Central_African_Republic,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|3,1,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,3,,Stern,0,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
-36,,Tschad,,Tschad,../images/pictures/flags96/Chad.jpg,Chad,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-37,,Chile,,Chile,../images/pictures/flags96/Chile.jpg,Chile,1|0|1|0|x|0|2|x|x|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Stern,0,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-38,,China,,China,../images/pictures/flags96/China.jpg,China,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,0,Gelb,5,x,x,x,x,x,x,x,x,x,x,x,x
-39,,Kolumbien,,Kolumbien,../images/pictures/flags96/Colombia.jpg,Colombia,1|0|0|0|x|0|3|3|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,3,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-40,,Komoren,,Komoren,../images/pictures/flags96/Comoros.jpg,Comoros,1|0|0|1|1|0|4|x|x|x|x|x|x|x|x|x|x,1,1,0,0,1,1,0,4,x,x,x,x,x,x,x,x,x,x,,Mond,3,Weiß,x,Stern,3,Weiß,4,x,x,x,x,x,x,x,x
-41,,Cookinseln,,Cookinseln,../images/pictures/flags96/Cook_Islands.jpg,Cook_Islands,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Stern,5,Weiß,15,x,x,x,x,x,x,x,x
-42,,Costa Rica,,Costa Rica,../images/pictures/flags96/Costa_Rica.jpg,Costa_Rica,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-43,,Kroatien,,Kroatien,../images/pictures/flags96/Croatia.jpg,Croatia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-44,,Kuba,,Kuba,../images/pictures/flags96/Cuba.jpg,Cuba,1|0|0|1|1|0|5|x|1|x|x|x|x|x|x|x|x,2,1,0,0,1,1,0,5,x,1,x,x,x,x,x,x,x,x,,Stern,3,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-45,,Zypern,,Zypern,../images/pictures/flags96/Cyprus.jpg,Cyprus,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Zweig,7,Grün,x,Landumriss,1,Gelb,x,x,x,x,x,x,x,x,x
-46,,Tschechien,,Tschechien,../images/pictures/flags96/Czech_Republic.jpg,Czech_Republic,1|0|0|1|1|0|2|x|x|x|x|x|x|x|x|x|x,3,1,0,0,1,1,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-47,,Demokratische Republik Kongo,,Demokratische Republik Kongo,../images/pictures/flags96/Democratic_Republic_of_the_Congo.jpg,Democratic_Republic_of_the_Congo,1|0|0|0|x|3|x|x|x|x|x|x|x|0|3|x|x,4,1,0,0,0,x,3,x,x,x,x,x,x,x,0,3,x,x,,Stern,0,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
-48,,Dänemark,1,Dänemark,../images/pictures/flags96/Denmark.jpg,Denmark,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,Rot|Rot|Rot|Rot|Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-49,,Dschibuti,,Dschibuti,../images/pictures/flags96/Djibouti.jpg,Djibouti,1|0|0|1|1|0|2|x|x|x|x|x|x|x|x|x|x,3,1,0,0,1,1,0,2,x,x,x,x,x,x,x,x,x,x,,Stern,3,Rot,1,x,x,x,x,x,x,x,x,x,x,x,x
-50,,Dominica,,Dominica,../images/pictures/flags96/Dominica.jpg,Dominica,1|0|0|0|x|2|x|x|x|x|x|0|1|x|x|x|x,1,1,0,0,0,x,2,x,x,x,x,x,0,1,x,x,x,x,,Kreis,4,Rot,x,Vogel,4,x,x,Stern,4,Grün,10,x,x,x,x
-51,,Dominikanische Republik,,Dominikanische Republik,../images/pictures/flags96/Dominican_Republic.jpg,Dominican_Republic,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-52,,Osttimor,,Osttimor,../images/pictures/flags96/East_Timor.jpg,East_Timor,1|0|0|5|2|4|x|x|x|x|x|x|x|x|x|x|x,1,1,0,0,5,2,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,3,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-53,,Ecuador,,Ecuador,../images/pictures/flags96/Ecuador.jpg,Ecuador,1|0|0|0|x|0|3|3|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,3,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-54,,Ägypten,,Ägypten,../images/pictures/flags96/Egypt.jpg,Egypt,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Vogel,4,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
-55,,El Salvador,,El Salvador,../images/pictures/flags96/El_Salvador.jpg,El_Salvador,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-56,,England,,England,../images/pictures/flags96/England.jpg,England,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-57,,Äquatorialguinea,,Äquatorialguinea,../images/pictures/flags96/Equatorial_Guinea.jpg,Equatorial_Guinea,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-58,,Eritrea,,Eritrea,../images/pictures/flags96/Eritrea.jpg,Eritrea,1|0|0|3|1|0|2|x|x|x|x|x|x|x|x|x|x,1,1,0,0,3,1,0,2,x,x,x,x,x,x,x,x,x,x,,Zweig,3,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
-59,,Estland,,Estland,../images/pictures/flags96/Estonia.jpg,Estonia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-60,,Äthiopien,,Äthiopien,../images/pictures/flags96/Ethiopia.jpg,Ethiopia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Kreis,4,Blau,x,Stern,4,Gelb,1,x,x,x,x,x,x,x,x
-61,,Fidschi,,Fidschi,../images/pictures/flags96/Fiji.jpg,Fiji,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Emblem,5,x,x,x,x,x,x,x,x,x,x
-62,,Finnland,,Finnland,../images/pictures/flags96/Finland.jpg,Finland,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-63,,Frankreich,,Frankreich,../images/pictures/flags96/France.jpg,France,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-64,,Gabun,,Gabun,../images/pictures/flags96/Gabon.jpg,Gabon,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-65,,Georgien,,Georgien,../images/pictures/flags96/Georgia.jpg,Georgia,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,,Kreuz,9,Rot,4,x,x,x,x,x,x,x,x,x,x,x,x
-66,,Deutschland,1,Deutschland,../images/pictures/flags96/Germany.jpg,Germany,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,Schwarz|Rot|Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-67,,Ghana,,Ghana,../images/pictures/flags96/Ghana.jpg,Ghana,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,4,Schwarz,1,x,x,x,x,x,x,x,x,x,x,x,x
-68,,Griechenland,,Griechenland,../images/pictures/flags96/Greece.jpg,Greece,1|0|1|0|x|0|9|x|x|x|x|x|x|x|x|x|x,2,1,0,1,0,x,0,9,x,x,x,x,x,x,x,x,x,x,,Kreuz,0,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
-69,,Grönland,,Grönland,../images/pictures/flags96/Greenland.jpg,Greenland,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Kreis,4,Weiß|Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
-70,,Grenada,,Grenada,../images/pictures/flags96/Grenada.jpg,Grenada,1|1|0|0|x|2|x|x|x|x|x|1|3|x|x|x|x,1,1,1,0,0,x,2,x,x,x,x,x,1,3,x,x,x,x,,Kreis,4,Rot,x,Stern,4,Gelb,1,Nuss,3,Gelb|Rot,x,x,x,x,x
-71,,Guam,,Guam,../images/pictures/flags96/Guam.jpg,Guam,1|1|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,3,1,1,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-72,,Guatemala,,Guatemala,../images/pictures/flags96/Guatemala.jpg,Guatemala,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-73,,Guinea,,Guinea,../images/pictures/flags96/Guinea.jpg,Guinea,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-74,,Guinea-Bissau,,Guinea-Bissau,../images/pictures/flags96/Guinea-Bissau.jpg,Guinea-Bissau,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|2|x,4,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,2,x,,Stern,3,Schwarz,1,x,x,x,x,x,x,x,x,x,x,x,x
-75,,Guyana,,Guyana,../images/pictures/flags96/Guyana.jpg,Guyana,1|0|0|3|4|4|x|x|x|x|x|x|x|x|x|x|x,1,1,0,0,3,4,4,x,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-76,,Haiti,,Haiti,../images/pictures/flags96/Haiti.jpg,Haiti,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-77,,Honduras,,Honduras,../images/pictures/flags96/Honduras.jpg,Honduras,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,4,Blau,5,x,x,x,x,x,x,x,x,x,x,x,x
-78,,Hongkong,,Hongkong,../images/pictures/flags96/Hong_Kong.jpg,Hong_Kong,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Blume,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
-79,,Ungarn,,Ungarn,../images/pictures/flags96/Hungary.jpg,Hungary,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-80,,Island,,Island,../images/pictures/flags96/Iceland.jpg,Iceland,1|0|0|0|x|2|x|x|x|x|x|0|2|x|x|x|x,2,1,0,0,0,x,2,x,x,x,x,x,0,2,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-81,,Indien,,Indien,../images/pictures/flags96/India.jpg,India,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Chakra,4,Blau,x,x,x,x,x,x,x,x,x,x,x,x,x
-82,,Indonesien,,Indonesien,../images/pictures/flags96/Indonesia.jpg,Indonesia,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-83,,Iran,,Iran,../images/pictures/flags96/Iran.jpg,Iran,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-84,,Irak,,Irak,../images/pictures/flags96/Iraq.jpg,Iraq,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Schrift,4,Grün,x,x,x,x,x,x,x,x,x,x,x,x,x
-85,,Irland,,Irland,../images/pictures/flags96/Ireland.jpg,Ireland,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-86,,Israel,,Israel,../images/pictures/flags96/Israel.jpg,Israel,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,Stern,4,Blau,1,x,x,x,x,x,x,x,x,x,x,x,x
-87,,Italien,,Italien,../images/pictures/flags96/Italy.jpg,Italy,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-88,,Elfenbeinküste,,Elfenbeinküste,../images/pictures/flags96/Ivorycoast.jpg,Ivorycoast,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-89,,Jamaika,,Jamaika,../images/pictures/flags96/Jamaica.jpg,Jamaica,1|0|0|0|x|2|x|x|x|x|x|1|0|x|x|x|x,3,1,0,0,0,x,2,x,x,x,x,x,1,0,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-90,,Japan,1,Japan,,Japan,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,Weiß,Kreis,4,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
-91,,Jordanien,,Jordanien,../images/pictures/flags96/Jordan.jpg,Jordan,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,3,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-92,,Kasachstan,,Kasachstan,../images/pictures/flags96/Kazakhstan.jpg,Kazakhstan,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Sonne,4,Gelb,x,Vogel,4,Gelb,x,Muster,3,Gelb,x,x,x,x,x
-93,,Kenia,,Kenia,../images/pictures/flags96/Kenya.jpg,Kenya,1|0|0|0|x|0|5|x|0|x|x|x|x|x|x|x|x,4,1,0,0,0,x,0,5,x,0,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-94,,Kosovo,,Kosovo,../images/pictures/flags96/Kosovo.jpg,Kosovo,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Landumriss,4,Gelb,x,Stern,1,Weiß,6,x,x,x,x,x,x,x,x
-95,,Kiribati,,Kiribati,../images/pictures/flags96/Kiribati.jpg,Kiribati,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|4,1,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,4,,Sonne,4,Gelb,x,Vogel,1,Gelb,x,x,x,x,x,x,x,x,x
-96,,Kuwait,,Kuwait,../images/pictures/flags96/Kuwait.jpg,Kuwait,1|0|0|2|1|0|3|0|x|x|x|x|x|x|x|x|x,1,1,0,0,2,1,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-97,,Kirgisistan,,Kirgisistan,../images/pictures/flags96/Kyrgyzstan.jpg,Kyrgyzstan,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-98,,Laos,,Laos,../images/pictures/flags96/Laos.jpg,Laos,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Kreis,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
-99,,Lettland,,Lettland,../images/pictures/flags96/Latvia.jpg,Latvia,1|0|0|0|x|0|3|2|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,2,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-100,,Libanon,,Libanon,../images/pictures/flags96/Lebanon.jpg,Lebanon,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Baum,4,Grün,x,x,x,x,x,x,x,x,x,x,x,x,x
-101,,Lesotho,,Lesotho,../images/pictures/flags96/Lesotho.jpg,Lesotho,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Hut,4,Schwarz,x,x,x,x,x,x,x,x,x,x,x,x,x
-102,,Liberia,,Liberia,../images/pictures/flags96/Liberia.jpg,Liberia,1|0|1|0|x|0|11|x|x|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,11,x,x,x,x,x,x,x,x,x,x,,Stern,0,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-103,,Libyen,,Libyen,../images/pictures/flags96/Libya.jpg,Libya,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Mond,4,Weiß,x,Stern,4,Weiß,1,x,x,x,x,x,x,x,x
-104,,Liechtenstein,,Liechtenstein,../images/pictures/flags96/Liechtenstein.jpg,Liechtenstein,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Krone,0,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
-105,,Litauen,,Litauen,../images/pictures/flags96/Lithuania.jpg,Lithuania,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-106,,Luxemburg,,Luxemburg,../images/pictures/flags96/Luxembourg.jpg,Luxembourg,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-107,,Nordmazedonien,,Nordmazedonien,../images/pictures/flags96/Macedonia.jpg,Macedonia,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|5,1,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,5,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-108,,Madagaskar,,Madagaskar,../images/pictures/flags96/Madagascar.jpg,Madagascar,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|2|x,4,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,2,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-109,,Malawi,,Malawi,../images/pictures/flags96/Malawi.jpg,Malawi,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Sonne,1,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
-110,,Malaysia,,Malaysia,../images/pictures/flags96/Malaysia.jpg,Malaysia,1|0|1|0|x|0|14|x|x|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,14,x,x,x,x,x,x,x,x,x,x,,Mond,0,Gelb,x,Stern,0,Gelb,1,x,x,x,x,x,x,x,x
-111,,Malediven,,Malediven,../images/pictures/flags96/Maldives.jpg,Maldives,1|1|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,3,1,1,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Mond,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
-112,,Mali,,Mali,../images/pictures/flags96/Mali.jpg,Mali,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-113,,Malta,,Malta,../images/pictures/flags96/Malta.jpg,Malta,1|0|0|0|x|1|x|x|x|2|0|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,2,0,x,x,x,x,x,x,,Emblem,0,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-114,,Marshallinseln,,Marshallinseln,https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flag_of_the_Marshall_Islands.svg/330px-Flag_of_the_Marshall_Islands.svg.png,Marshall Islands,1|0|0|0|x|3|x|x|x|x|x|x|x|0|2|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,0,2,x,x,,Stern,0,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-115,,Mauretanien,,Mauretanien,../images/pictures/flags96/Mauritania.jpg,Mauritania,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Mond,4,Gelb,x,Stern,1,Gelb,1,x,x,x,x,x,x,x,x
-116,,Mauritius,,Mauritius,../images/pictures/flags96/Mauritius.jpg,Mauritius,1|0|0|0|x|0|4|x|x|x|x|x|x|x|x|x|x,1,1,0,0,0,x,0,4,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-117,,Mexiko,,Mexiko,../images/pictures/flags96/Mexico.jpg,Mexico,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-118,,Mikronesien,,Mikronesien,https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Flag_of_the_Federated_States_of_Micronesia.svg/330px-Flag_of_the_Federated_States_of_Micronesia.svg.png,Micronesia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,9,Weiß,4,x,x,x,x,x,x,x,x,x,x,x,x
-119,,Moldau,,Moldau,../images/pictures/flags96/Moldova.jpg,Moldova,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-120,,Monaco,,Monaco,../images/pictures/flags96/Monaco.jpg,Monaco,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-121,,Mongolei,,Mongolei,../images/pictures/flags96/Mongolia.jpg,Mongolia,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Gebäude,3,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
-122,,Montenegro,,Montenegro,../images/pictures/flags96/Montenegro.jpg,Montenegro,1|1|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,3,1,1,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-123,,Marokko,,Marokko,../images/pictures/flags96/Morocco.jpg,Morocco,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,4,Grün,1,x,x,x,x,x,x,x,x,x,x,x,x
-124,,Mosambik,,Mosambik,../images/pictures/flags96/Mozambique.jpg,Mozambique,1|0|0|1|1|0|5|x|0|x|x|x|x|x|x|x|x,2,1,0,0,1,1,0,5,x,0,x,x,x,x,x,x,x,x,,Stern,3,Gelb,1,Machete,3,Schwarz,x,Hacke,3,Schwarz,x,x,x,x,x
-125,,Myanmar,,Myanmar,../images/pictures/flags96/Myanmar.jpg,Myanmar,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,4,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-126,,Namibia,,Namibia,../images/pictures/flags96/Namibia.jpg,Namibia,1|0|0|0|x|3|x|x|x|x|x|x|x|0|3|x|x,4,1,0,0,0,x,3,x,x,x,x,x,x,x,0,3,x,x,,Sonne,0,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
-127,,Nauru,,Nauru,../images/pictures/flags96/Nauru.jpg,Nauru,1|0|0|0|x|0|3|2|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,2,x,x,x,x,x,x,x,x,x,,Stern,6,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-128,,Nepal,,Nepal,../images/pictures/flags96/Nepal.jpg,Nepal,0|1|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,1,0,1,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Mond,1,Weiß,x,Sonne,7,Weiß,x,x,x,x,x,x,x,x,x
-129,,Niederlande,,Niederlande,../images/pictures/flags96/Netherlands.jpg,Netherlands,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-130,,Neukaledonien,,Neukaledonien,../images/pictures/flags96/New_Caledonia.jpg,New_Caledonia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-131,,Neuseeland,,Neuseeland,../images/pictures/flags96/New_Zealand.jpg,New_Zealand,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Stern,9,Rot,4,x,x,x,x,x,x,x,x
-132,,Nicaragua,,Nicaragua,../images/pictures/flags96/Nicaragua.jpg,Nicaragua,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-133,,Niger,,Niger,../images/pictures/flags96/Niger.jpg,Niger,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Kreis,4,Orange,x,x,x,x,x,x,x,x,x,x,x,x,x
-134,,Nigeria,,Nigeria,../images/pictures/flags96/Nigeria.jpg,Nigeria,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-135,,Niue,,Niue,,Niue,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Stern,0,Gelb,5,x,x,x,x,x,x,x,x
-136,,Nordzypern,,Nordzypern,,Northern Cyprus,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,Stern,4,Rot,1,Mond,3,Rot,x,x,x,x,x,x,x,x,x
-137,,Nordkorea,,Nordkorea,../images/pictures/flags96/North_Korea.jpg,North_Korea,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,Kreis,3,Weiß,x,Stern,3,Rot,1,x,x,x,x,x,x,x,x
-138,,Norwegen,,Norwegen,../images/pictures/flags96/Norway.jpg,Norway,1|0|0|0|x|2|x|x|x|x|x|0|2|x|x|x|x,2,1,0,0,0,x,2,x,x,x,x,x,0,2,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-139,,Oman,,Oman,../images/pictures/flags96/Oman.jpg,Oman,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|3|x,2,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,3,x,,Emblem,0,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-140,,Südossetien,,Südossetien,,Ossetia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-141,,Pakistan,,Pakistan,../images/pictures/flags96/Pakistan.jpg,Pakistan,1|0|0|0|x|1|x|x|x|2|2|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,2,2,x,x,x,x,x,x,,Mond,5,Weiß,x,Stern,5,Weiß,1,x,x,x,x,x,x,x,x
-142,,Palau,,Palau,../images/pictures/flags96/Palau.jpg,Palau,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Kreis,3,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
-143,,Palästina,,Palästina,../images/pictures/flags96/Palestine.jpg,Palestine,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-144,,Panama,,Panama,../images/pictures/flags96/Panama.jpg,Panama,1|0|0|0|x|2|x|x|x|x|x|0|3|x|x|x|x,1,1,0,0,0,x,2,x,x,x,x,x,0,3,x,x,x,x,,Stern,9,Blau|Rot,2,x,x,x,x,x,x,x,x,x,x,x,x
-145,,Papua-Neuguinea,,Papua-Neuguinea,../images/pictures/flags96/Papua_New_Guinea.jpg,Papua_New_Guinea,1|0|0|0|x|3|x|x|x|x|x|x|x|1|0|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,1,0,x,x,,Vogel,2,Gelb,x,Stern,6,Weiß,5,x,x,x,x,x,x,x,x
-146,,Paraguay,,Paraguay,../images/pictures/flags96/Paraguay.jpg,Paraguay,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-147,,Peru,,Peru,../images/pictures/flags96/Peru.jpg,Peru,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-148,,Philippinen,,Philippinen,../images/pictures/flags96/Philippines.jpg,Philippines,1|0|0|1|1|0|2|x|x|x|x|x|x|x|x|x|x,3,1,0,0,1,1,0,2,x,x,x,x,x,x,x,x,x,x,,Stern,3,Gelb,3,Sonne,3,Gelb,x,x,x,x,x,x,x,x,x
-149,,Polen,,Polen,../images/pictures/flags96/Poland.jpg,Poland,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-150,,Portugal,,Portugal,../images/pictures/flags96/Portugal.jpg,Portugal,1|0|0|0|x|1|x|x|x|2|2|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,2,2,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-151,,Puerto Rico,,Puerto Rico,../images/pictures/flags96/Puerto_Rico.jpg,Puerto_Rico,1|0|0|1|1|0|5|x|1|x|x|x|x|x|x|x|x,2,1,0,0,1,1,0,5,x,1,x,x,x,x,x,x,x,x,,Stern,3,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-152,,Katar,,Katar,../images/pictures/flags96/Qatar.jpg,Qatar,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|1,2,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,1,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-153,,Republik Kongo,,Republik Kongo,../images/pictures/flags96/Republic_of_the_Congo.jpg,Republic_of_the_Congo,1|0|0|0|x|3|x|x|x|x|x|x|x|0|1|x|x,2,1,0,0,0,x,3,x,x,x,x,x,x,x,0,1,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-154,,Rumänien,,Rumänien,../images/pictures/flags96/Romania.jpg,Romania,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-155,,Russland,,Russland,../images/pictures/flags96/Russia.jpg,Russia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-156,,Ruanda,,Ruanda,../images/pictures/flags96/Rwanda.jpg,Rwanda,1|0|0|0|x|0|3|3|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,3,x,x,x,x,x,x,x,x,x,,Sonne,0,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
-157,,Westsahara,,Westsahara,,Sahrawi Arab Democratic Republic,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,Mond,4,Rot,x,Stern,4,Rot,1,x,x,x,x,x,x,x,x
-158,,St. Kitts und Nevis,,St. Kitts und Nevis,../images/pictures/flags96/Saint_Kitts_and_Nevis.jpg,Saint_Kitts_and_Nevis,1|0|0|0|x|3|x|x|x|x|x|x|x|0|3|x|x,4,1,0,0,0,x,3,x,x,x,x,x,x,x,0,3,x,x,,Stern,9,Weiß,2,x,x,x,x,x,x,x,x,x,x,x,x
-159,,St. Lucia,,St. Lucia,../images/pictures/flags96/Saint_Lucia.jpg,Saint_Lucia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Emblem,4,Weiß|Schwarz|Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
-160,,St. Vincent und die Grenadinen,,St. Vincent und die Grenadinen,../images/pictures/flags96/Saint_Vincent_and_the_Grenadines.jpg,Saint_Vincent_and_the_Grenadines,1|0|0|0|x|1|x|x|x|3|1|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,3,1,x,x,x,x,x,x,,Emblem,4,Grün,x,x,x,x,x,x,x,x,x,x,x,x,x
-161,,Samoa,,Samoa,../images/pictures/flags96/Samoa.jpg,Samoa,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,0,Weiß,5,x,x,x,x,x,x,x,x,x,x,x,x
-162,,San Marino,,San Marino,../images/pictures/flags96/San_Marino.jpg,San_Marino,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-163,,São Tomé und Príncipe,,São Tomé und Príncipe,../images/pictures/flags96/Sao_Tome_and_Principe.jpg,Sao_Tome_and_Principe,1|0|0|1|1|0|3|1|x|x|x|x|x|x|x|x|x,1,1,0,0,1,1,0,3,1,x,x,x,x,x,x,x,x,x,,Stern,5,Schwarz,2,x,x,x,x,x,x,x,x,x,x,x,x
-164,,Saudi-Arabien,,Saudi-Arabien,../images/pictures/flags96/Saudi_Arabia.jpg,Saudi_Arabia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Schrift,1,Weiß,x,Schwert,1,Weiß,x,x,x,x,x,x,x,x,x
-165,,Schottland,,Schottland,../images/pictures/flags96/Scotland.jpg,Scotland,1|0|0|0|x|2|x|x|x|x|x|1|0|x|x|x|x,3,1,0,0,0,x,2,x,x,x,x,x,1,0,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-166,,Senegal,,Senegal,../images/pictures/flags96/Senegal.jpg,Senegal,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Stern,4,Grün,1,x,x,x,x,x,x,x,x,x,x,x,x
-167,,Serbien,,Serbien,../images/pictures/flags96/Serbia.jpg,Serbia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-168,,Seychellen,,Seychellen,../images/pictures/flags96/Seychelles.jpg,Seychelles,1|0|0|0|x|3|x|x|x|x|x|x|x|2|3|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,2,3,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-169,,Sierra Leone,,Sierra Leone,../images/pictures/flags96/Sierra_Leone.jpg,Sierra_Leone,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-170,,Singapur,1,small|4539|1801,../images/pictures/flags96/Singapore.jpg,Singapore,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,Rot|Weiß,Mond,0,Weiß,x,Stern,0,Weiß,5,x,x,x,x,x,x,x,x
-171,,Slowakei,,Slowakei,../images/pictures/flags96/Slovakia.jpg,Slovakia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-172,,Slowenien,,Slowenien,../images/pictures/flags96/Slovenia.jpg,Slovenia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,0,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-173,,Salomonen,,Salomonen,../images/pictures/flags96/Solomon_Islands.jpg,Solomon_Islands,1|0|0|0|x|3|x|x|x|x|x|x|x|0|1|x|x,2,1,0,0,0,x,3,x,x,x,x,x,x,x,0,1,x,x,,Stern,0,Weiß,5,x,x,x,x,x,x,x,x,x,x,x,x
-174,,Somalia,1,Somalia,../images/pictures/flags96/Somalia.jpg,Somalia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,Hellblau,Stern,4,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-175,,Somaliland,,Somaliland,,Somaliland,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,4,Schwarz,1,Schrift,1,Weiß,x,x,x,x,x,x,x,x,x
-176,,Südafrika,,Südafrika,../images/pictures/flags96/South_Africa.jpg,South_Africa,1|0|0|4|4|0|2|x|x|x|x|x|x|x|x|x|x,1,1,0,0,4,4,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-177,,Südkorea,,Südkorea,../images/pictures/flags96/South_Korea.jpg,South_Korea,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Kreis,4,Rot|Blau,x,Emblem,9,Schwarz,x,x,x,x,x,x,x,x,x
-178,,Südsudan,,Südsudan,../images/pictures/flags96/South_Sudan.jpg,South_Sudan,1|0|0|1|1|0|5|x|0|x|x|x|x|x|x|x|x,2,1,0,0,1,1,0,5,x,0,x,x,x,x,x,x,x,x,,Stern,3,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
-179,,Spanien,,Spanien,../images/pictures/flags96/Spain.jpg,Spain,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-180,,Sri Lanka,,Sri Lanka,../images/pictures/flags96/Sri_Lanka.jpg,Sri_Lanka,1|1|0|0|x|1|x|x|x|4|2|x|x|x|x|x|x,1,1,1,0,0,x,1,x,x,x,4,2,x,x,x,x,x,x,,Löwe,5,Gelb,x,Blatt,9,Gelb,4,x,x,x,x,x,x,x,x
-181,,Sudan,,Sudan,../images/pictures/flags96/Sudan.jpg,Sudan,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-182,,Suriname,,Suriname,../images/pictures/flags96/Suriname.jpg,Suriname,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,Stern,4,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
-183,,Eswatini,,Eswatini,../images/pictures/flags96/Swaziland.jpg,Swaziland,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-184,,Schweden,,Schweden,../images/pictures/flags96/Sweden.jpg,Sweden,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-185,,Schweiz,,Schweiz,../images/pictures/flags96/Switzerland.jpg,Switzerland,2|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,1,2,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Kreuz,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
-186,,Syrien,,Syrien,../images/pictures/flags96/Syria.jpg,Syria,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,9,Grün,2,x,x,x,x,x,x,x,x,x,x,x,x
-187,,Taiwan,,Taiwan,../images/pictures/flags96/Taiwan.jpg,Taiwan,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Sonne,0,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
-188,,Tadschikistan,,Tadschikistan,../images/pictures/flags96/Tajikistan.jpg,Tajikistan,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Krone,4,Gelb,x,Stern,4,Gelb,7,x,x,x,x,x,x,x,x
-189,,Tansania,,Tansania,../images/pictures/flags96/Tanzania.jpg,Tanzania,1|0|0|0|x|3|x|x|x|x|x|x|x|0|3|x|x,4,1,0,0,0,x,3,x,x,x,x,x,x,x,0,3,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-190,,Thailand,,Thailand,../images/pictures/flags96/Thailand.jpg,Thailand,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-191,,Gambia,,Gambia,../images/pictures/flags96/theGambia.jpg,theGambia,1|0|0|0|x|0|5|x|0|x|x|x|x|x|x|x|x,4,1,0,0,0,x,0,5,x,0,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-192,,Togo,,Togo,../images/pictures/flags96/Togo.jpg,Togo,1|0|1|0|x|0|5|x|1|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,5,x,1,x,x,x,x,x,x,x,x,,Stern,0,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
-193,,Tonga,,Tonga,../images/pictures/flags96/Tonga.jpg,Tonga,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Kreuz,0,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
-194,,Transnistrien,,Transnistrien,,Transnistria,1|0|0|0|x|0|3|2|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,2,x,x,x,x,x,x,x,x,x,,Emblem,0,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-195,,Trinidad und Tobago,,Trinidad und Tobago,../images/pictures/flags96/Trinidad_and_Tobago.jpg,Trinidad_and_Tobago,1|0|0|0|x|3|x|x|x|x|x|x|x|1|3|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,1,3,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-196,,Tunesien,,Tunesien,../images/pictures/flags96/Tunisia.jpg,Tunisia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Kreis,4,Weiß,x,Mond,4,Rot,x,Stern,4,Rot,1,x,x,x,x
-197,,Türkei,,Türkei,../images/pictures/flags96/Turkey.jpg,Turkey,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Mond,3,Weiß,x,Stern,4,Weiß,1,x,x,x,x,x,x,x,x
-198,,Turkmenistan,,Turkmenistan,../images/pictures/flags96/Turkmenistan.jpg,Turkmenistan,1|0|0|0|x|1|x|x|x|3|2|x|x|x|x|x|x,1,1,0,0,0,x,1,x,x,x,3,2,x,x,x,x,x,x,,Muster,3,x,x,Mond,1,Weiß,x,Stern,1,Weiß,5,x,x,x,x
-199,,Tuvalu,,Tuvalu,../images/pictures/flags96/Tuvalu.jpg,Tuvalu,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Stern,9,Gelb,9,x,x,x,x,x,x,x,x
-200,,Uganda,,Uganda,../images/pictures/flags96/Uganda.jpg,Uganda,1|0|0|0|x|0|6|x|x|x|x|x|x|x|x|x|x,1,1,0,0,0,x,0,6,x,x,x,x,x,x,x,x,x,x,,Kreis,4,Weiß,x,Vogel,4,x,x,x,x,x,x,x,x,x,x
-201,,Ukraine,,Ukraine,../images/pictures/flags96/Ukraine.jpg,Ukraine,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-202,,Vereinigte Arabische Emirate,,Vereinigte Arabische Emirate,../images/pictures/flags96/United_Arab_Emirates.jpg,United_Arab_Emirates,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|3|x,2,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,3,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-203,,Vereinigtes Königreich,,Vereinigtes Königreich,../images/pictures/flags96/United_Kingdom.jpg,United_Kingdom,1|0|0|0|x|2|x|x|x|x|x|2|2|x|x|x|x,1,1,0,0,0,x,2,x,x,x,x,x,2,2,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-204,,Vereinigte Staaten,,Vereinigte Staaten,../images/pictures/flags96/United_States.jpg,United_States,1|0|1|0|x|0|13|x|x|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,13,x,x,x,x,x,x,x,x,x,x,,Stern,0,Weiß,50,x,x,x,x,x,x,x,x,x,x,x,x
-205,,Uruguay,,Uruguay,../images/pictures/flags96/Uruguay.jpg,Uruguay,1|0|1|0|x|0|9|x|x|x|x|x|x|x|x|x|x,2,1,0,1,0,x,0,9,x,x,x,x,x,x,x,x,x,x,,Sonne,0,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
-206,,Usbekistan,,Usbekistan,../images/pictures/flags96/Uzbekistan.jpg,Uzbekistan,1|0|0|0|x|0|5|x|0|x|x|x|x|x|x|x|x,4,1,0,0,0,x,0,5,x,0,x,x,x,x,x,x,x,x,,Mond,0,Weiß,x,Stern,0,Weiß,12,x,x,x,x,x,x,x,x
-207,,Vanuatu,,Vanuatu,../images/pictures/flags96/Vanuatu.jpg,Vanuatu,1|0|0|4|2|0|2|x|x|x|x|x|x|x|x|x|x,1,1,0,0,4,2,0,2,x,x,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-208,,Vatikanstadt,,Vatikanstadt,,Vatican,2|0|0|0|x|1|x|x|x|2|2|x|x|x|x|x|x,1,2,0,0,0,x,1,x,x,x,2,2,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-209,,Venezuela,,Venezuela,../images/pictures/flags96/Venezuela.jpg,Venezuela,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,4,Weiß,8,x,x,x,x,x,x,x,x,x,x,x,x
-210,,Vietnam,,Vietnam,../images/pictures/flags96/Vietnam.jpg,Vietnam,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,4,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
-211,,Wales,,Wales,../images/pictures/flags96/Wales.jpg,Wales,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Drache,4,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
-212,,Jemen,,Jemen,../images/pictures/flags96/Yemen.jpg,Yemen,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-213,,Sambia,,Sambia,../images/pictures/flags96/Zambia.jpg,Zambia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Vogel,2,Gelb,x,Muster,8,x,x,x,x,x,x,x,x,x,x
+,,Name,Generieren,ID,,,Signatur,Clustergröße,Rechtwinklig?,Rahmen?,Gösch?,Dreieck von links?,Die Dreiecksform(en) bestehen aus wie vielen Farben?,Hintergrundtyp,W-Streifen,3W,5W,S-Streifen,S-Anordnung,Kreuzausrichtung,Kreuzarme,Diagonal Richtung,Diagonal Anzahl Streifen,SW Streifen,Spezial,Hintergrundfarben,E1,E1 Position,E1 Farbe,E1 Anzahl,E2,E2 Position,E2 Farbe,E2 Anzahl,E3,E3 Position,E3 Farbe,E3 Anzahl,E4,E4 Position,E4 Farbe,E4 Anzahl
+1,,Abchasien,1,middle|3434|951,,Abkhazia,1|0|1|0|x|0|7|x|x|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,7,x,x,x,x,x,x,x,x,x,x,Grün|Weiß|Grün|Weiß|Grün|Weiß|Grün|Rot,Hand,0,Weiß,x,Stern,0,Weiß,7,x,x,x,x,x,x,x,x
+2,,Afghanistan,,Afghanistan,../images/pictures/flags96/Afghanistan.jpg,Afghanistan,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Emblem,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
+3,,Albanien,,Albanien,../images/pictures/flags96/Albania.jpg,Albania,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Vogel,4,Schwarz,x,x,x,x,x,x,x,x,x,x,x,x,x
+4,,Algerien,,Algerien,../images/pictures/flags96/Algeria.jpg,Algeria,1|0|0|0|x|1|x|x|x|2|0|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,2,0,x,x,x,x,x,x,,Mond,4,Rot,x,Stern,4,Rot,1,x,x,x,x,x,x,x,x
+5,,Andorra,,Andorra,../images/pictures/flags96/Andorra.jpg,Andorra,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+6,,Angola,1,Angola,../images/pictures/flags96/Angola.jpg,Angola,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,Rot|Schwarz,Machete,4,Gelb,x,Stern,4,Gelb,1,Zahnrad,4,Gelb,x,x,x,x,x
+7,,Antigua und Barbuda,,Antigua und Barbuda,../images/pictures/flags96/Antigua_and_Barbuda.jpg,Antigua_and_Barbuda,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|0,1,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,0,,Sonne,1,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
+8,,Argentinien,,Argentinien,../images/pictures/flags96/Argentina.jpg,Argentina,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Sonne,4,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
+9,,Armenien,,Armenien,../images/pictures/flags96/Armenia.jpg,Armenia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+10,,Australien,,Australien,../images/pictures/flags96/Australia.jpg,Australia,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,9,Weiß,6,Union Jack,0,x,x,x,x,x,x,x,x,x,x
+11,,Österreich,,Österreich,../images/pictures/flags96/Austria.jpg,Austria,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+12,,Aserbaidschan,,Aserbaidschan,../images/pictures/flags96/Azerbaijan.jpg,Azerbaijan,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Mond,4,Weiß,x,Stern,4,Weiß,1,x,x,x,x,x,x,x,x
+13,,Bahamas,,Bahamas,../images/pictures/flags96/Bahamas.jpg,Bahamas,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+14,,Bahrain,,Bahrain,../images/pictures/flags96/Bahrain.jpg,Bahrain,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|1,2,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,1,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+15,,Bangladesch,1,Bangladesch,../images/pictures/flags96/Bangladesh.jpg,Bangladesh,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,Grün,Kreis,3,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
+16,,Barbados,,Barbados,../images/pictures/flags96/Barbados.jpg,Barbados,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Dreizack,4,Schwarz,x,x,x,x,x,x,x,x,x,x,x,x,x
+17,,Belarus,,Belarus,../images/pictures/flags96/Belarus.jpg,Belarus,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|2|x,4,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,2,x,,Muster,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+18,,Belgien,,Belgien,../images/pictures/flags96/Belgium.jpg,Belgium,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+19,,Belize,,Belize,../images/pictures/flags96/Belize.jpg,Belize,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+20,,Benin,,Benin,../images/pictures/flags96/Benin.jpg,Benin,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|2|x,4,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,2,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+21,,Bermuda,,Bermuda,../images/pictures/flags96/Bermuda.jpg,Bermuda,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Emblem,3,x,x,x,x,x,x,x,x,x,x
+22,,Bhutan,,Bhutan,../images/pictures/flags96/Bhutan.jpg,Bhutan,1|0|0|0|x|3|x|x|x|x|x|x|x|0|0|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,0,0,x,x,,Drache,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
+23,,Bolivien,,Bolivien,../images/pictures/flags96/Bolivia.jpg,Bolivia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+24,,Bosnien und Herzegowina,,Bosnien und Herzegowina,../images/pictures/flags96/Bosnia_and_Herzegovina.jpg,Bosnia_and_Herzegovina,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|2,1,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,2,,Stern,9,Weiß,9,x,x,x,x,x,x,x,x,x,x,x,x
+25,,Botswana,,Botswana,../images/pictures/flags96/Botswana.jpg,Botswana,1|0|0|0|x|0|5|x|0|x|x|x|x|x|x|x|x,4,1,0,0,0,x,0,5,x,0,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+26,,Brasilien,1,Brasilien,../images/pictures/flags96/Brazil.jpg,Brazil,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,Grün,Raute,4,Gelb,x,Kreis,4,Blau,x,Schrift,4,Grün,x,Stern,4,Weiß,27
+27,,Brunei,,Brunei,../images/pictures/flags96/Brunei.jpg,Brunei,1|0|0|0|x|3|x|x|x|x|x|x|x|1|2|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,1,2,x,x,,Emblem,4,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
+28,,Bulgarien,,Bulgarien,../images/pictures/flags96/Bulgaria.jpg,Bulgaria,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+29,,Burkina Faso,,Burkina Faso,../images/pictures/flags96/Burkina_Faso.jpg,Burkina_Faso,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Stern,4,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
+30,,Burundi,,Burundi,../images/pictures/flags96/Burundi.jpg,Burundi,1|0|0|0|x|2|x|x|x|x|x|1|0|x|x|x|x,3,1,0,0,0,x,2,x,x,x,x,x,1,0,x,x,x,x,,Stern,4,Rot,3,x,x,x,x,x,x,x,x,x,x,x,x
+31,,Kambodscha,,Kambodscha,../images/pictures/flags96/Cambodia.jpg,Cambodia,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Gebäude,4,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+32,,Kamerun,,Kamerun,../images/pictures/flags96/Cameroon.jpg,Cameroon,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Stern,4,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
+33,,Kanada,,Kanada,../images/pictures/flags96/Canada.jpg,Canada,1|0|0|0|x|1|x|x|x|3|1|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,3,1,x,x,x,x,x,x,,Blatt,4,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
+34,,Kap Verde,,Kap Verde,../images/pictures/flags96/Cape_Verde.jpg,Cape_Verde,1|0|0|0|x|0|5|x|4|x|x|x|x|x|x|x|x,1,1,0,0,0,x,0,5,x,4,x,x,x,x,x,x,x,x,,Stern,6,Gelb,10,x,x,x,x,x,x,x,x,x,x,x,x
+35,,Zentralafrikanische Republik,,Zentralafrikanische Republik,../images/pictures/flags96/Central_African_Republic.jpg,Central_African_Republic,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|3,1,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,3,,Stern,0,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
+36,,Tschad,,Tschad,../images/pictures/flags96/Chad.jpg,Chad,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+37,,Chile,,Chile,../images/pictures/flags96/Chile.jpg,Chile,1|0|1|0|x|0|2|x|x|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Stern,0,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+38,,China,,China,../images/pictures/flags96/China.jpg,China,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,0,Gelb,5,x,x,x,x,x,x,x,x,x,x,x,x
+39,,Kolumbien,,Kolumbien,../images/pictures/flags96/Colombia.jpg,Colombia,1|0|0|0|x|0|3|3|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,3,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+40,,Komoren,,Komoren,../images/pictures/flags96/Comoros.jpg,Comoros,1|0|0|1|1|0|4|x|x|x|x|x|x|x|x|x|x,1,1,0,0,1,1,0,4,x,x,x,x,x,x,x,x,x,x,,Mond,3,Weiß,x,Stern,3,Weiß,4,x,x,x,x,x,x,x,x
+41,,Cookinseln,,Cookinseln,../images/pictures/flags96/Cook_Islands.jpg,Cook_Islands,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Stern,5,Weiß,15,x,x,x,x,x,x,x,x
+42,,Costa Rica,,Costa Rica,../images/pictures/flags96/Costa_Rica.jpg,Costa_Rica,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+43,,Kroatien,,Kroatien,../images/pictures/flags96/Croatia.jpg,Croatia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+44,,Kuba,,Kuba,../images/pictures/flags96/Cuba.jpg,Cuba,1|0|0|1|1|0|5|x|1|x|x|x|x|x|x|x|x,2,1,0,0,1,1,0,5,x,1,x,x,x,x,x,x,x,x,,Stern,3,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+45,,Zypern,,Zypern,../images/pictures/flags96/Cyprus.jpg,Cyprus,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Zweig,7,Grün,x,Landumriss,1,Gelb,x,x,x,x,x,x,x,x,x
+46,,Tschechien,,Tschechien,../images/pictures/flags96/Czech_Republic.jpg,Czech_Republic,1|0|0|1|1|0|2|x|x|x|x|x|x|x|x|x|x,3,1,0,0,1,1,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+47,,Demokratische Republik Kongo,,Demokratische Republik Kongo,../images/pictures/flags96/Democratic_Republic_of_the_Congo.jpg,Democratic_Republic_of_the_Congo,1|0|0|0|x|3|x|x|x|x|x|x|x|0|3|x|x,4,1,0,0,0,x,3,x,x,x,x,x,x,x,0,3,x,x,,Stern,0,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
+48,,Dänemark,1,Dänemark,../images/pictures/flags96/Denmark.jpg,Denmark,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,Rot|Rot|Rot|Rot|Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+49,,Dschibuti,,Dschibuti,../images/pictures/flags96/Djibouti.jpg,Djibouti,1|0|0|1|1|0|2|x|x|x|x|x|x|x|x|x|x,3,1,0,0,1,1,0,2,x,x,x,x,x,x,x,x,x,x,,Stern,3,Rot,1,x,x,x,x,x,x,x,x,x,x,x,x
+50,,Dominica,,Dominica,../images/pictures/flags96/Dominica.jpg,Dominica,1|0|0|0|x|2|x|x|x|x|x|0|1|x|x|x|x,1,1,0,0,0,x,2,x,x,x,x,x,0,1,x,x,x,x,,Kreis,4,Rot,x,Vogel,4,x,x,Stern,4,Grün,10,x,x,x,x
+51,,Dominikanische Republik,,Dominikanische Republik,../images/pictures/flags96/Dominican_Republic.jpg,Dominican_Republic,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+52,,Osttimor,,Osttimor,../images/pictures/flags96/East_Timor.jpg,East_Timor,1|0|0|5|2|4|x|x|x|x|x|x|x|x|x|x|x,1,1,0,0,5,2,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,3,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+53,,Ecuador,,Ecuador,../images/pictures/flags96/Ecuador.jpg,Ecuador,1|0|0|0|x|0|3|3|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,3,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+54,,Ägypten,,Ägypten,../images/pictures/flags96/Egypt.jpg,Egypt,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Vogel,4,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
+55,,El Salvador,,El Salvador,../images/pictures/flags96/El_Salvador.jpg,El_Salvador,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+56,,England,,England,../images/pictures/flags96/England.jpg,England,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+57,,Äquatorialguinea,,Äquatorialguinea,../images/pictures/flags96/Equatorial_Guinea.jpg,Equatorial_Guinea,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+58,,Eritrea,,Eritrea,../images/pictures/flags96/Eritrea.jpg,Eritrea,1|0|0|3|1|0|2|x|x|x|x|x|x|x|x|x|x,1,1,0,0,3,1,0,2,x,x,x,x,x,x,x,x,x,x,,Zweig,3,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
+59,,Estland,,Estland,../images/pictures/flags96/Estonia.jpg,Estonia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+60,,Äthiopien,,Äthiopien,../images/pictures/flags96/Ethiopia.jpg,Ethiopia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Kreis,4,Blau,x,Stern,4,Gelb,1,x,x,x,x,x,x,x,x
+61,,Fidschi,,Fidschi,../images/pictures/flags96/Fiji.jpg,Fiji,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Emblem,5,x,x,x,x,x,x,x,x,x,x
+62,,Finnland,,Finnland,../images/pictures/flags96/Finland.jpg,Finland,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+63,,Frankreich,,Frankreich,../images/pictures/flags96/France.jpg,France,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+64,,Gabun,,Gabun,../images/pictures/flags96/Gabon.jpg,Gabon,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+65,,Georgien,,Georgien,../images/pictures/flags96/Georgia.jpg,Georgia,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,,Kreuz,9,Rot,4,x,x,x,x,x,x,x,x,x,x,x,x
+66,,Deutschland,1,Deutschland,../images/pictures/flags96/Germany.jpg,Germany,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,Schwarz|Rot|Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+67,,Ghana,,Ghana,../images/pictures/flags96/Ghana.jpg,Ghana,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,4,Schwarz,1,x,x,x,x,x,x,x,x,x,x,x,x
+68,,Griechenland,,Griechenland,../images/pictures/flags96/Greece.jpg,Greece,1|0|1|0|x|0|9|x|x|x|x|x|x|x|x|x|x,2,1,0,1,0,x,0,9,x,x,x,x,x,x,x,x,x,x,,Kreuz,0,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
+69,,Grönland,,Grönland,../images/pictures/flags96/Greenland.jpg,Greenland,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Kreis,4,Weiß|Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
+70,,Grenada,,Grenada,../images/pictures/flags96/Grenada.jpg,Grenada,1|1|0|0|x|2|x|x|x|x|x|1|3|x|x|x|x,1,1,1,0,0,x,2,x,x,x,x,x,1,3,x,x,x,x,,Kreis,4,Rot,x,Stern,4,Gelb,1,Nuss,3,Gelb|Rot,x,x,x,x,x
+71,,Guam,,Guam,../images/pictures/flags96/Guam.jpg,Guam,1|1|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,3,1,1,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+72,,Guatemala,,Guatemala,../images/pictures/flags96/Guatemala.jpg,Guatemala,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+73,,Guinea,,Guinea,../images/pictures/flags96/Guinea.jpg,Guinea,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+74,,Guinea-Bissau,,Guinea-Bissau,../images/pictures/flags96/Guinea-Bissau.jpg,Guinea-Bissau,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|2|x,4,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,2,x,,Stern,3,Schwarz,1,x,x,x,x,x,x,x,x,x,x,x,x
+75,,Guyana,,Guyana,../images/pictures/flags96/Guyana.jpg,Guyana,1|0|0|3|4|4|x|x|x|x|x|x|x|x|x|x|x,1,1,0,0,3,4,4,x,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+76,,Haiti,,Haiti,../images/pictures/flags96/Haiti.jpg,Haiti,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+77,,Honduras,,Honduras,../images/pictures/flags96/Honduras.jpg,Honduras,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,4,Blau,5,x,x,x,x,x,x,x,x,x,x,x,x
+78,,Hongkong,,Hongkong,../images/pictures/flags96/Hong_Kong.jpg,Hong_Kong,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Blume,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
+79,,Ungarn,,Ungarn,../images/pictures/flags96/Hungary.jpg,Hungary,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+80,,Island,,Island,../images/pictures/flags96/Iceland.jpg,Iceland,1|0|0|0|x|2|x|x|x|x|x|0|2|x|x|x|x,2,1,0,0,0,x,2,x,x,x,x,x,0,2,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+81,,Indien,,Indien,../images/pictures/flags96/India.jpg,India,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Chakra,4,Blau,x,x,x,x,x,x,x,x,x,x,x,x,x
+82,,Indonesien,,Indonesien,../images/pictures/flags96/Indonesia.jpg,Indonesia,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+83,,Iran,,Iran,../images/pictures/flags96/Iran.jpg,Iran,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+84,,Irak,,Irak,../images/pictures/flags96/Iraq.jpg,Iraq,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Schrift,4,Grün,x,x,x,x,x,x,x,x,x,x,x,x,x
+85,,Irland,,Irland,../images/pictures/flags96/Ireland.jpg,Ireland,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+86,,Israel,,Israel,../images/pictures/flags96/Israel.jpg,Israel,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,Stern,4,Blau,1,x,x,x,x,x,x,x,x,x,x,x,x
+87,,Italien,,Italien,../images/pictures/flags96/Italy.jpg,Italy,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+88,,Elfenbeinküste,,Elfenbeinküste,../images/pictures/flags96/Ivorycoast.jpg,Ivorycoast,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+89,,Jamaika,,Jamaika,../images/pictures/flags96/Jamaica.jpg,Jamaica,1|0|0|0|x|2|x|x|x|x|x|1|0|x|x|x|x,3,1,0,0,0,x,2,x,x,x,x,x,1,0,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+90,,Japan,1,Japan,,Japan,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,Weiß,Kreis,4,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
+91,,Jordanien,,Jordanien,../images/pictures/flags96/Jordan.jpg,Jordan,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,3,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+92,,Kasachstan,,Kasachstan,../images/pictures/flags96/Kazakhstan.jpg,Kazakhstan,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Sonne,4,Gelb,x,Vogel,4,Gelb,x,Muster,3,Gelb,x,x,x,x,x
+93,,Kenia,,Kenia,../images/pictures/flags96/Kenya.jpg,Kenya,1|0|0|0|x|0|5|x|0|x|x|x|x|x|x|x|x,4,1,0,0,0,x,0,5,x,0,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+94,,Kosovo,,Kosovo,../images/pictures/flags96/Kosovo.jpg,Kosovo,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Landumriss,4,Gelb,x,Stern,1,Weiß,6,x,x,x,x,x,x,x,x
+95,,Kiribati,,Kiribati,../images/pictures/flags96/Kiribati.jpg,Kiribati,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|4,1,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,4,,Sonne,4,Gelb,x,Vogel,1,Gelb,x,x,x,x,x,x,x,x,x
+96,,Kuwait,,Kuwait,../images/pictures/flags96/Kuwait.jpg,Kuwait,1|0|0|2|1|0|3|0|x|x|x|x|x|x|x|x|x,1,1,0,0,2,1,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+97,,Kirgisistan,,Kirgisistan,../images/pictures/flags96/Kyrgyzstan.jpg,Kyrgyzstan,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+98,,Laos,,Laos,../images/pictures/flags96/Laos.jpg,Laos,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Kreis,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
+99,,Lettland,,Lettland,../images/pictures/flags96/Latvia.jpg,Latvia,1|0|0|0|x|0|3|2|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,2,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+100,,Libanon,,Libanon,../images/pictures/flags96/Lebanon.jpg,Lebanon,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Baum,4,Grün,x,x,x,x,x,x,x,x,x,x,x,x,x
+101,,Lesotho,,Lesotho,../images/pictures/flags96/Lesotho.jpg,Lesotho,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Hut,4,Schwarz,x,x,x,x,x,x,x,x,x,x,x,x,x
+102,,Liberia,,Liberia,../images/pictures/flags96/Liberia.jpg,Liberia,1|0|1|0|x|0|11|x|x|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,11,x,x,x,x,x,x,x,x,x,x,,Stern,0,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+103,,Libyen,,Libyen,../images/pictures/flags96/Libya.jpg,Libya,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Mond,4,Weiß,x,Stern,4,Weiß,1,x,x,x,x,x,x,x,x
+104,,Liechtenstein,,Liechtenstein,../images/pictures/flags96/Liechtenstein.jpg,Liechtenstein,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Krone,0,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
+105,,Litauen,,Litauen,../images/pictures/flags96/Lithuania.jpg,Lithuania,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+106,,Luxemburg,,Luxemburg,../images/pictures/flags96/Luxembourg.jpg,Luxembourg,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+107,,Nordmazedonien,,Nordmazedonien,../images/pictures/flags96/Macedonia.jpg,Macedonia,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|5,1,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,5,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+108,,Madagaskar,,Madagaskar,../images/pictures/flags96/Madagascar.jpg,Madagascar,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|2|x,4,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,2,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+109,,Malawi,,Malawi,../images/pictures/flags96/Malawi.jpg,Malawi,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Sonne,1,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
+110,,Malaysia,,Malaysia,../images/pictures/flags96/Malaysia.jpg,Malaysia,1|0|1|0|x|0|14|x|x|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,14,x,x,x,x,x,x,x,x,x,x,,Mond,0,Gelb,x,Stern,0,Gelb,1,x,x,x,x,x,x,x,x
+111,,Malediven,,Malediven,../images/pictures/flags96/Maldives.jpg,Maldives,1|1|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,3,1,1,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Mond,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
+112,,Mali,,Mali,../images/pictures/flags96/Mali.jpg,Mali,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+113,,Malta,,Malta,../images/pictures/flags96/Malta.jpg,Malta,1|0|0|0|x|1|x|x|x|2|0|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,2,0,x,x,x,x,x,x,,Emblem,0,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+114,,Marshallinseln,,Marshallinseln,https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flag_of_the_Marshall_Islands.svg/330px-Flag_of_the_Marshall_Islands.svg.png,Marshall Islands,1|0|0|0|x|3|x|x|x|x|x|x|x|0|2|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,0,2,x,x,,Stern,0,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+115,,Mauretanien,,Mauretanien,../images/pictures/flags96/Mauritania.jpg,Mauritania,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Mond,4,Gelb,x,Stern,1,Gelb,1,x,x,x,x,x,x,x,x
+116,,Mauritius,,Mauritius,../images/pictures/flags96/Mauritius.jpg,Mauritius,1|0|0|0|x|0|4|x|x|x|x|x|x|x|x|x|x,1,1,0,0,0,x,0,4,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+117,,Mexiko,,Mexiko,../images/pictures/flags96/Mexico.jpg,Mexico,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+118,,Mikronesien,,Mikronesien,https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Flag_of_the_Federated_States_of_Micronesia.svg/330px-Flag_of_the_Federated_States_of_Micronesia.svg.png,Micronesia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,9,Weiß,4,x,x,x,x,x,x,x,x,x,x,x,x
+119,,Moldau,,Moldau,../images/pictures/flags96/Moldova.jpg,Moldova,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+120,,Monaco,,Monaco,../images/pictures/flags96/Monaco.jpg,Monaco,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+121,,Mongolei,,Mongolei,../images/pictures/flags96/Mongolia.jpg,Mongolia,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Gebäude,3,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
+122,,Montenegro,,Montenegro,../images/pictures/flags96/Montenegro.jpg,Montenegro,1|1|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,3,1,1,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+123,,Marokko,,Marokko,../images/pictures/flags96/Morocco.jpg,Morocco,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,4,Grün,1,x,x,x,x,x,x,x,x,x,x,x,x
+124,,Mosambik,,Mosambik,../images/pictures/flags96/Mozambique.jpg,Mozambique,1|0|0|1|1|0|5|x|0|x|x|x|x|x|x|x|x,2,1,0,0,1,1,0,5,x,0,x,x,x,x,x,x,x,x,,Stern,3,Gelb,1,Machete,3,Schwarz,x,Hacke,3,Schwarz,x,x,x,x,x
+125,,Myanmar,,Myanmar,../images/pictures/flags96/Myanmar.jpg,Myanmar,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,4,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+126,,Namibia,,Namibia,../images/pictures/flags96/Namibia.jpg,Namibia,1|0|0|0|x|3|x|x|x|x|x|x|x|0|3|x|x,4,1,0,0,0,x,3,x,x,x,x,x,x,x,0,3,x,x,,Sonne,0,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
+127,,Nauru,,Nauru,../images/pictures/flags96/Nauru.jpg,Nauru,1|0|0|0|x|0|3|2|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,2,x,x,x,x,x,x,x,x,x,,Stern,6,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+128,,Nepal,,Nepal,../images/pictures/flags96/Nepal.jpg,Nepal,0|1|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,1,0,1,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Mond,1,Weiß,x,Sonne,7,Weiß,x,x,x,x,x,x,x,x,x
+129,,Niederlande,,Niederlande,../images/pictures/flags96/Netherlands.jpg,Netherlands,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+130,,Neukaledonien,,Neukaledonien,../images/pictures/flags96/New_Caledonia.jpg,New_Caledonia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+131,,Neuseeland,,Neuseeland,../images/pictures/flags96/New_Zealand.jpg,New_Zealand,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Stern,9,Rot,4,x,x,x,x,x,x,x,x
+132,,Nicaragua,,Nicaragua,../images/pictures/flags96/Nicaragua.jpg,Nicaragua,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+133,,Niger,,Niger,../images/pictures/flags96/Niger.jpg,Niger,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Kreis,4,Orange,x,x,x,x,x,x,x,x,x,x,x,x,x
+134,,Nigeria,,Nigeria,../images/pictures/flags96/Nigeria.jpg,Nigeria,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+135,,Niue,,Niue,,Niue,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Stern,0,Gelb,5,x,x,x,x,x,x,x,x
+136,,Nordzypern,,Nordzypern,,Northern Cyprus,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,Stern,4,Rot,1,Mond,3,Rot,x,x,x,x,x,x,x,x,x
+137,,Nordkorea,1,Nordkorea,../images/pictures/flags96/North_Korea.jpg,North_Korea,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,Blau|Weiß|Rot|Weiß|Blau,Kreis,3,Weiß,x,Stern,3,Rot,1,x,x,x,x,x,x,x,x
+138,,Norwegen,,Norwegen,../images/pictures/flags96/Norway.jpg,Norway,1|0|0|0|x|2|x|x|x|x|x|0|2|x|x|x|x,2,1,0,0,0,x,2,x,x,x,x,x,0,2,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+139,,Oman,,Oman,../images/pictures/flags96/Oman.jpg,Oman,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|3|x,2,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,3,x,,Emblem,0,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+140,,Südossetien,,Südossetien,,Ossetia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+141,,Pakistan,,Pakistan,../images/pictures/flags96/Pakistan.jpg,Pakistan,1|0|0|0|x|1|x|x|x|2|2|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,2,2,x,x,x,x,x,x,,Mond,5,Weiß,x,Stern,5,Weiß,1,x,x,x,x,x,x,x,x
+142,,Palau,,Palau,../images/pictures/flags96/Palau.jpg,Palau,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Kreis,3,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
+143,,Palästina,,Palästina,../images/pictures/flags96/Palestine.jpg,Palestine,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+144,,Panama,,Panama,../images/pictures/flags96/Panama.jpg,Panama,1|0|0|0|x|2|x|x|x|x|x|0|3|x|x|x|x,1,1,0,0,0,x,2,x,x,x,x,x,0,3,x,x,x,x,,Stern,9,Blau|Rot,2,x,x,x,x,x,x,x,x,x,x,x,x
+145,,Papua-Neuguinea,,Papua-Neuguinea,../images/pictures/flags96/Papua_New_Guinea.jpg,Papua_New_Guinea,1|0|0|0|x|3|x|x|x|x|x|x|x|1|0|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,1,0,x,x,,Vogel,2,Gelb,x,Stern,6,Weiß,5,x,x,x,x,x,x,x,x
+146,,Paraguay,,Paraguay,../images/pictures/flags96/Paraguay.jpg,Paraguay,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+147,,Peru,,Peru,../images/pictures/flags96/Peru.jpg,Peru,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+148,,Philippinen,,Philippinen,../images/pictures/flags96/Philippines.jpg,Philippines,1|0|0|1|1|0|2|x|x|x|x|x|x|x|x|x|x,3,1,0,0,1,1,0,2,x,x,x,x,x,x,x,x,x,x,,Stern,3,Gelb,3,Sonne,3,Gelb,x,x,x,x,x,x,x,x,x
+149,,Polen,,Polen,../images/pictures/flags96/Poland.jpg,Poland,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+150,,Portugal,,Portugal,../images/pictures/flags96/Portugal.jpg,Portugal,1|0|0|0|x|1|x|x|x|2|2|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,2,2,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+151,,Puerto Rico,,Puerto Rico,../images/pictures/flags96/Puerto_Rico.jpg,Puerto_Rico,1|0|0|1|1|0|5|x|1|x|x|x|x|x|x|x|x,2,1,0,0,1,1,0,5,x,1,x,x,x,x,x,x,x,x,,Stern,3,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+152,,Katar,,Katar,../images/pictures/flags96/Qatar.jpg,Qatar,1|0|0|0|x|7|x|x|x|x|x|x|x|x|x|x|1,2,1,0,0,0,x,7,x,x,x,x,x,x,x,x,x,x,1,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+153,,Republik Kongo,,Republik Kongo,../images/pictures/flags96/Republic_of_the_Congo.jpg,Republic_of_the_Congo,1|0|0|0|x|3|x|x|x|x|x|x|x|0|1|x|x,2,1,0,0,0,x,3,x,x,x,x,x,x,x,0,1,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+154,,Rumänien,,Rumänien,../images/pictures/flags96/Romania.jpg,Romania,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+155,,Russland,,Russland,../images/pictures/flags96/Russia.jpg,Russia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+156,,Ruanda,,Ruanda,../images/pictures/flags96/Rwanda.jpg,Rwanda,1|0|0|0|x|0|3|3|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,3,x,x,x,x,x,x,x,x,x,,Sonne,0,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
+157,,Westsahara,,Westsahara,,Sahrawi Arab Democratic Republic,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,Mond,4,Rot,x,Stern,4,Rot,1,x,x,x,x,x,x,x,x
+158,,St. Kitts und Nevis,,St. Kitts und Nevis,../images/pictures/flags96/Saint_Kitts_and_Nevis.jpg,Saint_Kitts_and_Nevis,1|0|0|0|x|3|x|x|x|x|x|x|x|0|3|x|x,4,1,0,0,0,x,3,x,x,x,x,x,x,x,0,3,x,x,,Stern,9,Weiß,2,x,x,x,x,x,x,x,x,x,x,x,x
+159,,St. Lucia,,St. Lucia,../images/pictures/flags96/Saint_Lucia.jpg,Saint_Lucia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Emblem,4,Weiß|Schwarz|Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
+160,,St. Vincent und die Grenadinen,,St. Vincent und die Grenadinen,../images/pictures/flags96/Saint_Vincent_and_the_Grenadines.jpg,Saint_Vincent_and_the_Grenadines,1|0|0|0|x|1|x|x|x|3|1|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,3,1,x,x,x,x,x,x,,Emblem,4,Grün,x,x,x,x,x,x,x,x,x,x,x,x,x
+161,,Samoa,,Samoa,../images/pictures/flags96/Samoa.jpg,Samoa,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,0,Weiß,5,x,x,x,x,x,x,x,x,x,x,x,x
+162,,San Marino,,San Marino,../images/pictures/flags96/San_Marino.jpg,San_Marino,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+163,,São Tomé und Príncipe,,São Tomé und Príncipe,../images/pictures/flags96/Sao_Tome_and_Principe.jpg,Sao_Tome_and_Principe,1|0|0|1|1|0|3|1|x|x|x|x|x|x|x|x|x,1,1,0,0,1,1,0,3,1,x,x,x,x,x,x,x,x,x,,Stern,5,Schwarz,2,x,x,x,x,x,x,x,x,x,x,x,x
+164,,Saudi-Arabien,,Saudi-Arabien,../images/pictures/flags96/Saudi_Arabia.jpg,Saudi_Arabia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Schrift,1,Weiß,x,Schwert,1,Weiß,x,x,x,x,x,x,x,x,x
+165,,Schottland,,Schottland,../images/pictures/flags96/Scotland.jpg,Scotland,1|0|0|0|x|2|x|x|x|x|x|1|0|x|x|x|x,3,1,0,0,0,x,2,x,x,x,x,x,1,0,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+166,,Senegal,,Senegal,../images/pictures/flags96/Senegal.jpg,Senegal,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Stern,4,Grün,1,x,x,x,x,x,x,x,x,x,x,x,x
+167,,Serbien,,Serbien,../images/pictures/flags96/Serbia.jpg,Serbia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+168,,Seychellen,,Seychellen,../images/pictures/flags96/Seychelles.jpg,Seychelles,1|0|0|0|x|3|x|x|x|x|x|x|x|2|3|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,2,3,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+169,,Sierra Leone,,Sierra Leone,../images/pictures/flags96/Sierra_Leone.jpg,Sierra_Leone,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+170,,Singapur,1,small|4539|1801,../images/pictures/flags96/Singapore.jpg,Singapore,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,Rot|Weiß,Mond,0,Weiß,x,Stern,0,Weiß,5,x,x,x,x,x,x,x,x
+171,,Slowakei,,Slowakei,../images/pictures/flags96/Slovakia.jpg,Slovakia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+172,,Slowenien,,Slowenien,../images/pictures/flags96/Slovenia.jpg,Slovenia,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Emblem,0,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+173,,Salomonen,,Salomonen,../images/pictures/flags96/Solomon_Islands.jpg,Solomon_Islands,1|0|0|0|x|3|x|x|x|x|x|x|x|0|1|x|x,2,1,0,0,0,x,3,x,x,x,x,x,x,x,0,1,x,x,,Stern,0,Weiß,5,x,x,x,x,x,x,x,x,x,x,x,x
+174,,Somalia,1,Somalia,../images/pictures/flags96/Somalia.jpg,Somalia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,Hellblau,Stern,4,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+175,,Somaliland,,Somaliland,,Somaliland,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,4,Schwarz,1,Schrift,1,Weiß,x,x,x,x,x,x,x,x,x
+176,,Südafrika,,Südafrika,../images/pictures/flags96/South_Africa.jpg,South_Africa,1|0|0|4|4|0|2|x|x|x|x|x|x|x|x|x|x,1,1,0,0,4,4,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+177,,Südkorea,,Südkorea,../images/pictures/flags96/South_Korea.jpg,South_Korea,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Kreis,4,Rot|Blau,x,Emblem,9,Schwarz,x,x,x,x,x,x,x,x,x
+178,,Südsudan,,Südsudan,../images/pictures/flags96/South_Sudan.jpg,South_Sudan,1|0|0|1|1|0|5|x|0|x|x|x|x|x|x|x|x,2,1,0,0,1,1,0,5,x,0,x,x,x,x,x,x,x,x,,Stern,3,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
+179,,Spanien,,Spanien,../images/pictures/flags96/Spain.jpg,Spain,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+180,,Sri Lanka,,Sri Lanka,../images/pictures/flags96/Sri_Lanka.jpg,Sri_Lanka,1|1|0|0|x|1|x|x|x|4|2|x|x|x|x|x|x,1,1,1,0,0,x,1,x,x,x,4,2,x,x,x,x,x,x,,Löwe,5,Gelb,x,Blatt,9,Gelb,4,x,x,x,x,x,x,x,x
+181,,Sudan,,Sudan,../images/pictures/flags96/Sudan.jpg,Sudan,1|0|0|1|1|0|3|0|x|x|x|x|x|x|x|x|x,6,1,0,0,1,1,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+182,,Suriname,,Suriname,../images/pictures/flags96/Suriname.jpg,Suriname,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,Stern,4,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
+183,,Eswatini,,Eswatini,../images/pictures/flags96/Swaziland.jpg,Swaziland,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+184,,Schweden,,Schweden,../images/pictures/flags96/Sweden.jpg,Sweden,1|0|0|0|x|2|x|x|x|x|x|0|0|x|x|x|x,6,1,0,0,0,x,2,x,x,x,x,x,0,0,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+185,,Schweiz,,Schweiz,../images/pictures/flags96/Switzerland.jpg,Switzerland,2|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,1,2,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Kreuz,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
+186,,Syrien,,Syrien,../images/pictures/flags96/Syria.jpg,Syria,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,9,Grün,2,x,x,x,x,x,x,x,x,x,x,x,x
+187,,Taiwan,,Taiwan,../images/pictures/flags96/Taiwan.jpg,Taiwan,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Sonne,0,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x
+188,,Tadschikistan,,Tadschikistan,../images/pictures/flags96/Tajikistan.jpg,Tajikistan,1|0|0|0|x|0|3|1|x|x|x|x|x|x|x|x|x,8,1,0,0,0,x,0,3,1,x,x,x,x,x,x,x,x,x,,Krone,4,Gelb,x,Stern,4,Gelb,7,x,x,x,x,x,x,x,x
+189,,Tansania,,Tansania,../images/pictures/flags96/Tanzania.jpg,Tanzania,1|0|0|0|x|3|x|x|x|x|x|x|x|0|3|x|x,4,1,0,0,0,x,3,x,x,x,x,x,x,x,0,3,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+190,,Thailand,,Thailand,../images/pictures/flags96/Thailand.jpg,Thailand,1|0|0|0|x|0|5|x|3|x|x|x|x|x|x|x|x,7,1,0,0,0,x,0,5,x,3,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+191,,Gambia,,Gambia,../images/pictures/flags96/theGambia.jpg,theGambia,1|0|0|0|x|0|5|x|0|x|x|x|x|x|x|x|x,4,1,0,0,0,x,0,5,x,0,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+192,,Togo,,Togo,../images/pictures/flags96/Togo.jpg,Togo,1|0|1|0|x|0|5|x|1|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,5,x,1,x,x,x,x,x,x,x,x,,Stern,0,Weiß,1,x,x,x,x,x,x,x,x,x,x,x,x
+193,,Tonga,,Tonga,../images/pictures/flags96/Tonga.jpg,Tonga,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Kreuz,0,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
+194,,Transnistrien,,Transnistrien,,Transnistria,1|0|0|0|x|0|3|2|x|x|x|x|x|x|x|x|x,3,1,0,0,0,x,0,3,2,x,x,x,x,x,x,x,x,x,,Emblem,0,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+195,,Trinidad und Tobago,,Trinidad und Tobago,../images/pictures/flags96/Trinidad_and_Tobago.jpg,Trinidad_and_Tobago,1|0|0|0|x|3|x|x|x|x|x|x|x|1|3|x|x,1,1,0,0,0,x,3,x,x,x,x,x,x,x,1,3,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+196,,Tunesien,1,Tunesien,../images/pictures/flags96/Tunisia.jpg,Tunisia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,Rot,Kreis,4,Weiß,x,Mond,4,Rot,x,Stern,4,Rot,1,x,x,x,x
+197,,Türkei,,Türkei,../images/pictures/flags96/Turkey.jpg,Turkey,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Mond,3,Weiß,x,Stern,4,Weiß,1,x,x,x,x,x,x,x,x
+198,,Turkmenistan,,Turkmenistan,../images/pictures/flags96/Turkmenistan.jpg,Turkmenistan,1|0|0|0|x|1|x|x|x|3|2|x|x|x|x|x|x,1,1,0,0,0,x,1,x,x,x,3,2,x,x,x,x,x,x,,Muster,3,x,x,Mond,1,Weiß,x,Stern,1,Weiß,5,x,x,x,x
+199,,Tuvalu,,Tuvalu,../images/pictures/flags96/Tuvalu.jpg,Tuvalu,1|0|1|0|x|4|x|x|x|x|x|x|x|x|x|x|x,10,1,0,1,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Union Jack,0,x,x,Stern,9,Gelb,9,x,x,x,x,x,x,x,x
+200,,Uganda,,Uganda,../images/pictures/flags96/Uganda.jpg,Uganda,1|0|0|0|x|0|6|x|x|x|x|x|x|x|x|x|x,1,1,0,0,0,x,0,6,x,x,x,x,x,x,x,x,x,x,,Kreis,4,Weiß,x,Vogel,4,x,x,x,x,x,x,x,x,x,x
+201,,Ukraine,,Ukraine,../images/pictures/flags96/Ukraine.jpg,Ukraine,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+202,,Vereinigte Arabische Emirate,,Vereinigte Arabische Emirate,../images/pictures/flags96/United_Arab_Emirates.jpg,United_Arab_Emirates,1|0|0|0|x|5|x|x|x|x|x|x|x|x|x|3|x,2,1,0,0,0,x,5,x,x,x,x,x,x,x,x,x,3,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+203,,Vereinigtes Königreich,,Vereinigtes Königreich,../images/pictures/flags96/United_Kingdom.jpg,United_Kingdom,1|0|0|0|x|2|x|x|x|x|x|2|2|x|x|x|x,1,1,0,0,0,x,2,x,x,x,x,x,2,2,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+204,,Vereinigte Staaten,,Vereinigte Staaten,../images/pictures/flags96/United_States.jpg,United_States,1|0|1|0|x|0|13|x|x|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,13,x,x,x,x,x,x,x,x,x,x,,Stern,0,Weiß,50,x,x,x,x,x,x,x,x,x,x,x,x
+205,,Uruguay,,Uruguay,../images/pictures/flags96/Uruguay.jpg,Uruguay,1|0|1|0|x|0|9|x|x|x|x|x|x|x|x|x|x,2,1,0,1,0,x,0,9,x,x,x,x,x,x,x,x,x,x,,Sonne,0,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x
+206,,Usbekistan,,Usbekistan,../images/pictures/flags96/Uzbekistan.jpg,Uzbekistan,1|0|0|0|x|0|5|x|0|x|x|x|x|x|x|x|x,4,1,0,0,0,x,0,5,x,0,x,x,x,x,x,x,x,x,,Mond,0,Weiß,x,Stern,0,Weiß,12,x,x,x,x,x,x,x,x
+207,,Vanuatu,,Vanuatu,../images/pictures/flags96/Vanuatu.jpg,Vanuatu,1|0|0|4|2|0|2|x|x|x|x|x|x|x|x|x|x,1,1,0,0,4,2,0,2,x,x,x,x,x,x,x,x,x,x,,Emblem,3,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+208,,Vatikanstadt,,Vatikanstadt,,Vatican,2|0|0|0|x|1|x|x|x|2|2|x|x|x|x|x|x,1,2,0,0,0,x,1,x,x,x,2,2,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+209,,Venezuela,,Venezuela,../images/pictures/flags96/Venezuela.jpg,Venezuela,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Stern,4,Weiß,8,x,x,x,x,x,x,x,x,x,x,x,x
+210,,Vietnam,,Vietnam,../images/pictures/flags96/Vietnam.jpg,Vietnam,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Stern,4,Gelb,1,x,x,x,x,x,x,x,x,x,x,x,x
+211,,Wales,,Wales,../images/pictures/flags96/Wales.jpg,Wales,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,,Drache,4,Rot,x,x,x,x,x,x,x,x,x,x,x,x,x
+212,,Jemen,,Jemen,../images/pictures/flags96/Yemen.jpg,Yemen,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+213,,Sambia,,Sambia,../images/pictures/flags96/Zambia.jpg,Zambia,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,22,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Vogel,2,Gelb,x,Muster,8,x,x,x,x,x,x,x,x,x,x
 214,,Simbabwe,,Simbabwe,../images/pictures/flags96/Zimbabwe.jpg,Zimbabwe,1|0|0|1|2|0|7|x|x|x|x|x|x|x|x|x|x,1,1,0,0,1,2,0,7,x,x,x,x,x,x,x,x,x,x,,Stern,3,Rot,1,Vogel,3,Gelb,x,x,x,x,x,x,x,x,x

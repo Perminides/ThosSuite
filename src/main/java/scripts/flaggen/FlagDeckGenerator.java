@@ -113,24 +113,40 @@ public class FlagDeckGenerator {
 	/** Elementname → Datei. Der Stern hängt zusätzlich an der Anzahl, siehe {@link #sketchOf}. */
 	private static final Map<String, String> ELEMENT_FILES = ordered(
 			"Kreis", "kreis", "Raute", "raute", "Schrift", "schrift-t", "Mond", "sichel",
-			"Hand", "hand");
+			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog");
 
 	/**
-	 * Behälter und der Faktor, mit dem alles <b>in</b> ihnen gezeichnet wird. Ein Element ohne
-	 * Behälter füllt sein Rasterfeld (Faktor 1). Die Werte sind am Bild gefunden, nicht hergeleitet:
-	 * Eine Raute läuft an ihren Ecken spitz zu und verträgt deshalb weniger als ein Kreis.
+	 * Behälter und der Faktor, mit dem ihr Inhalt gezeichnet wird — je nach <b>Anzahl der Kinder</b>,
+	 * denn mit jedem weiteren rückt der Inhalt nach außen.
+	 *
+	 * <p>Beim Kreis ist die Grenze ausrechenbar: Ein Element bringt seinen Kasten von 40 × 40 mit,
+	 * und dessen äußere Ecke muss innerhalb des Radius bleiben. Bei einem Kind ist das die halbe
+	 * Diagonale, {@code 40k/√2 ≤ 20}, also {@code k ≤ 0,707}. Bei mehreren kommt der Versatz dazu
+	 * und die Grenzen sinken auf 0,52 · 0,48 · 0,49. Eingetragen ist jeweils etwas darunter.</p>
+	 *
+	 * <p>Die Raute ist nicht gerechnet, sondern am Bild gefunden — ihre Ecken laufen spitz zu, da
+	 * gilt die Kastenregel nicht.</p>
 	 */
-	private static final Map<String, Double> CONTAINERS = orderedFactors("Raute", 0.7, "Kreis", 0.5);
+	private static final Map<String, double[]> CONTAINERS = Map.of(
+			"Raute", new double[] {0.7, 0.7, 0.7, 0.7},
+			"Kreis", new double[] {0.7, 0.5, 0.45, 0.45});
 
-	/** Wie viele Geschwister nebeneinander passen, hängt am Ort: im Behälter enger als im Feld. */
-	private static final double SIBLINGS_IN_CONTAINER = 0.75;
-	private static final double SIBLINGS_IN_CELL = 1.0;
-
-	/** Zwei Geschwister ohne Behälter teilen sich ein Feld — jedes bekommt gut die halbe Breite. */
-	private static final double SIBLING_SIZE = 0.55;
+	/**
+	 * Geschwister im selben Feld: Größe und Mittelpunkte, je nach Anzahl. Keine Messung der
+	 * einzelnen Datei — wir verlassen uns darauf, dass eine Figur in 40 × 40 passt.
+	 *
+	 * <p>Die Größe trägt zweierlei in einer Zahl: den Platz, den sich n Figuren im 60 breiten Feld
+	 * teilen müssen, und die Luft zum Feldrand — eine Figur, die oben genau anstößt, sieht im Gösch
+	 * schlecht aus. Ohne die Luft wären es 1,0 · 1,0 · 0,7 · 0,55. Dass beides in einer Zahl steht,
+	 * heißt auch: Die Luft ist je Anzahl einstellbar.</p>
+	 */
+	private static final Map<Integer, double[]> SIBLINGS = Map.of(
+			1, new double[] {0.8,  0},
+			2, new double[] {0.8,  -10, 10},
+			3, new double[] {0.56, -20, 0, 20},
+			4, new double[] {0.44, -22.5, -7.5, 7.5, 22.5});
 
 	private final FlagSheet sheet;
-	private final Map<String, Double> widths = new LinkedHashMap<>();
 	private final Map<String, Integer> areas = new LinkedHashMap<>();
 	/** {@code <ShuffleEnd>} gehoert an den Schritt NACH dem Block — er selbst liegt ausserhalb. */
 	private String pending = "";
@@ -167,7 +183,7 @@ public class FlagDeckGenerator {
 		List<String> steps = new ArrayList<>(List.of(sheet.number(row), "", "Flagge",
 				"Mark:" + sheet.value(row, "ID")));
 
-		ask(steps, "Ist die Flagge rechteckig?", answer(rectangular(row), "Ja", "Nein", "Quadratisch"));
+		ask(steps, "Welche Form hat die Flagge?", answer(rectangular(row), "Rechteckig", "Weder noch", "Quadratisch"));
 		ask(steps, "Hat die Flagge einen Rahmen?", answer(frame(row) ? "Ja" : "Nein", "Ja", "Nein"));
 		ask(steps, "Hat die Flagge einen Gösch?",
 				answer(sheet.value(row, "Gösch?").equals("1") ? "Ja" : "Nein", "Ja", "Nein"));
@@ -181,12 +197,12 @@ public class FlagDeckGenerator {
 		branchQuestions(steps, row, type);
 
 		add(steps, "SketchImage:" + backgroundSketch(row, type));
-		fillAreas(steps, 0, split(sheet.value(row, "Hintergrundfarben")));
 
 		List<Element> elements = elements(row);
+		List<String> colors = new ArrayList<>(split(sheet.value(row, "Hintergrundfarben")));
 		if (!elements.isEmpty())
-			elementSteps(steps, elements, areasOf(backgroundSketch(row, type)));
-
+			colors.addAll(elementSteps(steps, elements));
+		fillAreas(steps, 0, colors);
 		add(steps, "Image:" + image(row));
 		return steps;
 	}
@@ -253,7 +269,17 @@ public class FlagDeckGenerator {
 	 * dann die Farben. Die Reihenfolge ist Absicht: Wer den Ort noch nicht beantwortet hat, soll das
 	 * Element nicht schon an seinem Platz sehen.
 	 */
-	private void elementSteps(List<String> steps, List<Element> elements, int firstArea) {
+	/**
+	 * Erst alle Elemente anhaken, dann je Element Anzahl und Ort, dann alles auf einmal zeichnen.
+	 * Gefärbt wird nicht hier, sondern am Ende der Karte zusammen mit den Hintergrundflächen.
+	 *
+	 * <p>Die Elementblöcke stehen in einem Shuffle: Sonst verriete ihre Reihenfolge, welches Element
+	 * im Blatt zuerst steht. Anzahl und Ort eines Elements bleiben dabei im selben Segment — sie
+	 * gehören zusammen, und der Ort braucht die Anzahl für den richtigen Numerus.</p>
+	 *
+	 * @return die Farben der Elemente, in der Reihenfolge ihrer Flächen
+	 */
+	private List<String> elementSteps(List<String> steps, List<Element> elements) {
 		List<String> names = new ArrayList<>();
 		for (Element element : elements)
 			if (!names.contains(element.name()))
@@ -263,21 +289,26 @@ public class FlagDeckGenerator {
 		add(steps, "Output:Welche Zusatzelemente siehst Du?");
 		add(steps, "MC:" + String.join("|", names) + "*" + String.join("|", wrong));
 
-		for (Element element : elements)
-			ask(steps, "Wo " + verb(element) + " " + word(element) + "?",
-					answer(POSITIONS.get(Integer.parseInt(untolerated(element.position()))),
-							POSITIONS.toArray(new String[0])));
-		for (Element element : elements)
+		for (int i = 0; i < elements.size(); i++) {
+			Element element = elements.get(i);
+			if (elements.size() > 1)
+				pending = i == 0 ? "<ShuffleStart>" : "<ShuffleBreak>";
 			if (FlagSheet.isSet(element.count()))
 				ask(steps, "Wie viele " + WORDS.get(element.name())[1].substring(4) + "?",
 						answer(element.count(), COUNTS.toArray(new String[0])));
+			ask(steps, "Wo " + verb(element) + " " + word(element) + "?",
+					answer(POSITIONS.get(Integer.parseInt(untolerated(element.position()))),
+							POSITIONS.toArray(new String[0])));
+		}
+		if (elements.size() > 1)
+			pending = "<ShuffleEnd>";
 
 		List<String> colors = new ArrayList<>();
 		for (Layout layout : layout(elements)) {
 			add(steps, "SketchImageAdd:" + layout.step());
 			colors.addAll(split(layout.element().color()));
 		}
-		fillAreas(steps, firstArea, colors);
+		return colors;
 	}
 
 	private record Layout(Element element, String step) {}
@@ -289,57 +320,52 @@ public class FlagDeckGenerator {
 	 */
 	private List<Layout> layout(List<Element> elements) {
 		List<Layout> result = new ArrayList<>();
-		Map<Integer, List<Element>> siblings = new LinkedHashMap<>();
-		Map<Integer, Double> factors = new LinkedHashMap<>();
-		Map<Integer, Boolean> inContainer = new LinkedHashMap<>();
 
-		// Jedes Element hängt am letzten Behälter davor, der im selben Feld liegt.
-		double[] factor = new double[elements.size()];
+		// Jedes Element haengt am letzten Behaelter davor, der im selben Feld liegt.
 		int[] parent = new int[elements.size()];
 		for (int i = 0; i < elements.size(); i++) {
-			Element element = elements.get(i);
 			parent[i] = -1;
-			factor[i] = 1;
 			for (int p = i - 1; p >= 0; p--)
 				if (CONTAINERS.containsKey(elements.get(p).name())
-						&& elements.get(p).position().equals(element.position())) {
+						&& elements.get(p).position().equals(elements.get(i).position())) {
 					parent[i] = p;
-					factor[i] = factor[p] * CONTAINERS.get(elements.get(p).name());
 					break;
 				}
-			siblings.computeIfAbsent(parent[i], key -> new ArrayList<>()).add(element);
-			factors.put(parent[i], factor[i]);
-			inContainer.put(parent[i], parent[i] >= 0);
+		}
+
+		// "Verfuegbar" ist der Faktor des Kastens, den sich die Geschwister teilen: 1 im Rasterfeld,
+		// sonst die Kette der Behaelterfaktoren. Der Faktor eines Behaelters haengt daran, wie viele
+		// Kinder er traegt -- deshalb erst zaehlen, dann rechnen.
+		double[] available = new double[elements.size()];
+		for (int i = 0; i < elements.size(); i++) {
+			if (parent[i] < 0) {
+				available[i] = 1;
+				continue;
+			}
+			int kinder = 0;
+			for (int j = 0; j < elements.size(); j++)
+				if (parent[j] == parent[i])
+					kinder++;
+			available[i] = available[parent[i]]
+					* CONTAINERS.get(elements.get(parent[i]).name())[Math.min(kinder, 4) - 1];
 		}
 
 		for (int i = 0; i < elements.size(); i++) {
 			Element element = elements.get(i);
-			List<Element> group = siblings.get(parent[i]);
-			double size = factor[i] * (group.size() > 1 && parent[i] < 0 ? SIBLING_SIZE : 1);
-			String file = sketchOf(element);
-			String step = file + "," + untolerated(element.position()) + "," + number(size);
-			if (group.size() > 1) {
-				double squeeze = inContainer.get(parent[i]) ? SIBLINGS_IN_CONTAINER : SIBLINGS_IN_CELL;
-				step += "," + number(offset(group, element, size, squeeze)) + ",0";
-			}
+			List<Integer> group = new ArrayList<>();
+			for (int j = 0; j < elements.size(); j++)
+				if (parent[j] == parent[i] && elements.get(j).position().equals(element.position()))
+					group.add(j);
+			double[] regel = SIBLINGS.get(Math.min(group.size(), 4));
+			double size = available[i] * regel[0];
+			double offset = regel[1 + group.indexOf(i)] * available[i];
+
+			String step = sketchOf(element) + "," + untolerated(element.position()) + "," + number(size);
+			if (group.size() > 1)
+				step += "," + number(offset) + ",0";
 			result.add(new Layout(element, step));
 		}
 		return result;
-	}
-
-	/** Geschwister liegen nebeneinander, mittig um den gemeinsamen Anker. */
-	private double offset(List<Element> group, Element element, double size, double squeeze) {
-		double total = 0;
-		for (Element sibling : group)
-			total += widthOf(sketchOf(sibling)) * size;
-		double left = -total / 2;
-		for (Element sibling : group) {
-			double width = widthOf(sketchOf(sibling)) * size;
-			if (sibling == element)
-				return (left + width / 2) * squeeze;
-			left += width;
-		}
-		throw new IllegalStateException("Element nicht in seiner eigenen Gruppe: " + element);
 	}
 
 	/** Sterne haben drei Bilder: einer, zwei, mehr als zwei. Alles andere hat genau eins. */
@@ -357,11 +383,26 @@ public class FlagDeckGenerator {
 
 	// ---- Skizze und Farben ----------------------------------------------------
 
-	/** Der Dateiname folgt aus den Attributen des Zweigs — wie {@code waagerecht-3}, nur mit Wörtern. */
+	/**
+	 * Der Dateiname folgt aus den Attributen des Zweigs — wie {@code waagerecht-3}, nur mit Wörtern.
+	 *
+	 * <p>Gösch und Dreieck werden nach §5 in die Datei <b>hineingezeichnet</b> und nicht zur Laufzeit
+	 * angehängt. Sie gehören deshalb in den Namen: {@code waagerecht-7-goesch} ist eine andere Datei
+	 * als {@code waagerecht-7}, und sie trägt eine Fläche mehr.</p>
+	 */
 	private String backgroundSketch(List<String> row, String type) {
+		return branchSketch(row, type) + (sheet.value(row, "Gösch?").equals("1") ? "-goesch" : "");
+	}
+
+	private String branchSketch(List<String> row, String type) {
 		return switch (type) {
-			case "0" -> "waagerecht-" + sheet.value(row, "W-Streifen");
-			case "1" -> "senkrecht-" + sheet.value(row, "S-Streifen");
+			// Die Verteilung gehoert in den Namen: Sie veraendert die Breiten, und eine Skizze mit
+			// gleichen Streifen widerspraeche der Antwort "Mitte breiter". Gefragt wird sie nur bei
+			// drei und fuenf waagerechten Streifen -- sonst gibt es keinen Wert und keinen Zusatz.
+			case "0" -> "waagerecht-" + sheet.value(row, "W-Streifen")
+					+ (sheet.value(row, "W-Streifen").equals("3") ? "-" + sheet.value(row, "3W") : "")
+					+ (sheet.value(row, "W-Streifen").equals("5") ? "-" + sheet.value(row, "5W") : "");
+			case "1" -> "senkrecht-" + sheet.value(row, "S-Streifen") + "-" + sheet.value(row, "S-Anordnung");
 			case "2" -> "kreuz-" + word(sheet.value(row, "Kreuzausrichtung"), "senkrecht", "diagonal", "beides")
 					+ "-" + word(sheet.value(row, "Kreuzarme"), "uni", "dreifarbig", "fimbriert", "unsichtbar");
 			case "3" -> "diagonal-" + word(sheet.value(row, "Diagonal Richtung"), "steigend", "fallend", "faecher")
@@ -397,9 +438,9 @@ public class FlagDeckGenerator {
 	/** Nepal ist weder das eine noch das andere, die Schweiz und der Vatikan sind quadratisch. */
 	private String rectangular(List<String> row) {
 		return switch (sheet.value(row, "Rechtwinklig?")) {
-			case "1" -> "Ja";
+			case "1" -> "Rechteckig";
 			case "2" -> "Quadratisch";
-			default -> "Nein";
+			default -> "Weder noch";
 		};
 	}
 
@@ -479,19 +520,7 @@ public class FlagDeckGenerator {
 		return areas.computeIfAbsent(sketch, name -> read(name).size());
 	}
 
-	private double widthOf(String sketch) {
-		return widths.computeIfAbsent(sketch, name -> {
-			double min = Double.MAX_VALUE;
-			double max = -Double.MAX_VALUE;
-			for (double[] point : read(name)) {
-				min = Math.min(min, point[0]);
-				max = Math.max(max, point[1]);
-			}
-			return max - min;
-		});
-	}
-
-	/** Je Fläche das Paar (kleinstes x, größtes x) — mehr braucht die Breite nicht. */
+	/** Die Flächen einer Strukturdatei — gezählt wird nur, wie viele es sind. */
 	private static List<double[]> read(String sketch) {
 		try {
 			JsonNode root = new ObjectMapper().readTree(SKETCHES.resolve(sketch + ".geojson").toFile());
@@ -532,10 +561,18 @@ public class FlagDeckGenerator {
 		add(steps, mc);
 	}
 
-	/** Die richtige Antwort vor dem Sternchen, alle anderen dahinter. */
+	/**
+	 * Die richtige Antwort vor dem Sternchen, alle anderen dahinter.
+	 *
+	 * <p>Sie muss <b>buchstabengleich</b> unter den Optionen stehen — sonst bliebe sie in der
+	 * Ablenkerliste stehen und stünde zweimal in der Frage, einmal als richtig und einmal als
+	 * falsch. Das faellt beim Lesen der Zeile nicht auf, deshalb faellt es hier auf.</p>
+	 */
 	private static String answer(String correct, String... options) {
 		List<String> wrong = new ArrayList<>(List.of(options));
-		wrong.remove(correct);
+		if (!wrong.remove(correct))
+			throw new IllegalArgumentException("Die richtige Antwort '" + correct
+					+ "' steht nicht unter ihren Optionen: " + String.join("|", wrong));
 		return "MC:" + correct + "*" + String.join("|", wrong);
 	}
 

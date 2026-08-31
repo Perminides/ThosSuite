@@ -108,6 +108,7 @@ public abstract class SkinProperties {
 	protected Double sketchStrokeWidth = 1.8;
 	protected Color sketchStrokeColor;  // default = borderShapeColor
 	protected Color sketchMarkedColor;  // default = markedColor
+	protected Color sketchUnmarkedColor; // default = disabledComponentBgColor
 	protected Color sketchRed = Color.web("#d52b1e");
 	protected Color sketchBlue = Color.web("#003580");
 	protected Color sketchLightBlue = Color.web("#6cace4");
@@ -216,6 +217,15 @@ public abstract class SkinProperties {
 	protected Rectangle2D worldSessionHistoryPanel;
 	protected Rectangle2D worldSessionBackButton;
 	protected Rectangle2D worldSessionSubmitButton;
+	protected Rectangle2D flagSessionMapPanel;
+	protected Rectangle2D flagSessionQuestionPanel;
+	protected Rectangle2D flagSessionTextInputPanel;
+	protected Rectangle2D flagSessionImagePanel;
+	protected Rectangle2D flagSessionMcPanel;
+	protected Rectangle2D flagSessionProgressPanel;
+	protected Rectangle2D flagSessionHistoryPanel;
+	protected Rectangle2D flagSessionBackButton;
+	protected Rectangle2D flagSessionSubmitButton;
 	protected Rectangle2D hannoverSessionMapPanel;
 	protected Rectangle2D hannoverSessionQuestionPanel;
 	protected Rectangle2D hannoverSessionTextInputPanel;

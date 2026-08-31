@@ -134,6 +134,7 @@ public abstract class Skin extends SkinProperties {
 		hannoverSessionSubmitButton = hannoverSessionSubmitButton == null ? worldSessionSubmitButton : hannoverSessionSubmitButton;
 		sketchStrokeColor = sketchStrokeColor == null ? borderShapeColor : sketchStrokeColor;
 		sketchMarkedColor = sketchMarkedColor == null ? markedColor : sketchMarkedColor;
+		sketchUnmarkedColor = sketchUnmarkedColor == null ? disabledComponentBgColor : sketchUnmarkedColor;
 		toEliminateColor = toEliminateColor == null ? disabledComponentBgColor : toEliminateColor;
 		dashBoardTileBottomColor = dashBoardTileBottomColor == null ? menuBarBackground : dashBoardTileBottomColor;
 
@@ -595,7 +596,7 @@ public abstract class Skin extends SkinProperties {
 	       // schwarz. "Noch nicht beantwortet" ist genau der ungefuellte Zustand, und er muss fuer
 	       // jede Form aus derselben Regel kommen. Die Farbregeln stehen als Zwei-Klassen-Selektoren
 	       // darueber und koennen damit nicht kollidieren.
-	       .add("-fx-fill", "transparent")
+	       .add("-fx-fill", sketchUnmarkedColor)
 	       .add("-fx-stroke", sketchStrokeColor)
 	       .add("-fx-stroke-width", sketchStrokeWidth + "px")
 	       .end();
