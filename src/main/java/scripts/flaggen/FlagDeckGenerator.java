@@ -68,9 +68,12 @@ public class FlagDeckGenerator {
 	private static final List<String> COUNTS =
 			List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "15", "27", "50");
 
-	/** Die Ablenker der Elementfrage, in fester Reihenfolge. {@code Keine} steht immer dabei. */
+	/** Der Ablenkerpool der Elementfrage. {@link #ELEMENT_PINNED} steht davon immer sichtbar dabei. */
 	private static final List<String> ELEMENT_POOL = List.of("Keine", "Stern", "Mond", "Sonne",
 			"Kreis", "Vogel", "Emblem", "Kreuz", "Krone", "Landumriss");
+
+	/** Immer sichtbare Ablenker der Elementfrage — außer sie sind selbst die richtige Antwort. */
+	private static final List<String> ELEMENT_PINNED = List.of("Keine", "Stern");
 
 	// ---- Sprache --------------------------------------------------------------
 
@@ -200,10 +203,10 @@ public class FlagDeckGenerator {
 
 		List<Element> elements = elements(row);
 		List<String> colors = new ArrayList<>(split(sheet.value(row, "Hintergrundfarben")));
-		if (!elements.isEmpty())
-			colors.addAll(elementSteps(steps, elements));
+		colors.addAll(elementSteps(steps, elements));
 		fillAreas(steps, 0, colors);
 		add(steps, "Image:" + image(row));
+		add(steps, "Pause:"); // Zeit, die echte Flagge anzusehen
 		return steps;
 	}
 
@@ -212,7 +215,7 @@ public class FlagDeckGenerator {
 		switch (type) {
 			case "0" -> {
 				ask(steps, "Wie viele waagerechte Streifen?",
-						answer(sheet.value(row, "W-Streifen"), STRIPE_COUNTS.toArray(new String[0])));
+						fixedOrder(sheet.value(row, "W-Streifen"), STRIPE_COUNTS.toArray(new String[0])));
 				if (sheet.value(row, "W-Streifen").equals("3"))
 					ask(steps, "Wie sind die Streifen verteilt?", coded(sheet.value(row, "3W"),
 							"alle gleich breit", "mittlerer breiter", "mittlerer schmaler",
@@ -225,7 +228,7 @@ public class FlagDeckGenerator {
 			}
 			case "1" -> {
 				ask(steps, "Wie viele senkrechte Streifen?",
-						answer(sheet.value(row, "S-Streifen"), "2", "3", "4", "5"));
+						fixedOrder(sheet.value(row, "S-Streifen"), "2", "3", "4", "5"));
 				ask(steps, "Wie sind sie verteilt?", coded(sheet.value(row, "S-Anordnung"),
 						"gleichmäßig breit", "mittlerer breiter", "rechter breiter", "linker breiter"));
 			}
@@ -243,7 +246,7 @@ public class FlagDeckGenerator {
 								"kein Band, die Flächen stoßen aneinander", "1", "2", "3", "4"));
 			}
 			case "5" -> ask(steps, "Wie viele waagerechte Streifen liegen neben dem Band?",
-					answer(sheet.value(row, "SW Streifen"), "2", "3", "4", "5"));
+					fixedOrder(sheet.value(row, "SW Streifen"), "2", "3", "4", "5"));
 			default -> { }
 		}
 	}
@@ -258,7 +261,10 @@ public class FlagDeckGenerator {
 			String name = sheet.value(row, "E" + slot);
 			if (!FlagSheet.isSet(name))
 				continue;
-			result.add(new Element(name, sheet.value(row, "E" + slot + " Position"),
+			String position = sheet.value(row, "E" + slot + " Position");
+			if (position.equals("x"))
+				continue; // Phantom wie Keine: nur Antwort der Elementfrage, kein Ort, kein Sketch
+			result.add(new Element(name, position,
 					sheet.value(row, "E" + slot + " Farbe"), sheet.value(row, "E" + slot + " Anzahl")));
 		}
 		return result;
@@ -284,10 +290,18 @@ public class FlagDeckGenerator {
 		for (Element element : elements)
 			if (!names.contains(element.name()))
 				names.add(element.name());
-		List<String> wrong = new ArrayList<>(ELEMENT_POOL);
-		wrong.removeAll(names);
 		add(steps, "Output:Welche Zusatzelemente siehst Du?");
-		add(steps, "MC:" + String.join("|", names) + "*" + String.join("|", wrong));
+		List<String> correct = names.isEmpty() ? List.of("Keine") : names;
+		List<String> options = new ArrayList<>();
+		for (String name : correct)
+			options.add("+" + name);
+		for (String pinned : ELEMENT_PINNED)
+			if (!correct.contains(pinned))
+				options.add("-" + pinned); // immer sichtbar, außer schon als richtig dabei
+		for (String pool : ELEMENT_POOL)
+			if (!ELEMENT_PINNED.contains(pool) && !correct.contains(pool))
+				options.add(pool);
+		add(steps, "MC+:" + String.join("|", options));
 
 		for (int i = 0; i < elements.size(); i++) {
 			Element element = elements.get(i);
@@ -295,9 +309,9 @@ public class FlagDeckGenerator {
 				pending = i == 0 ? "<ShuffleStart>" : "<ShuffleBreak>";
 			if (FlagSheet.isSet(element.count()))
 				ask(steps, "Wie viele " + WORDS.get(element.name())[1].substring(4) + "?",
-						answer(element.count(), COUNTS.toArray(new String[0])));
+						fixedOrder(element.count(), COUNTS.toArray(new String[0])));
 			ask(steps, "Wo " + verb(element) + " " + word(element) + "?",
-					answer(POSITIONS.get(Integer.parseInt(untolerated(element.position()))),
+					fixedOrder(POSITIONS.get(Integer.parseInt(untolerated(element.position()))),
 							POSITIONS.toArray(new String[0])));
 		}
 		if (elements.size() > 1)
@@ -440,7 +454,7 @@ public class FlagDeckGenerator {
 		return switch (sheet.value(row, "Rechtwinklig?")) {
 			case "1" -> "Rechteckig";
 			case "2" -> "Quadratisch";
-			default -> "Weder noch";
+			default -> "Nicht rechteckig";
 		};
 	}
 
@@ -574,6 +588,26 @@ public class FlagDeckGenerator {
 			throw new IllegalArgumentException("Die richtige Antwort '" + correct
 					+ "' steht nicht unter ihren Optionen: " + String.join("|", wrong));
 		return "MC:" + correct + "*" + String.join("|", wrong);
+	}
+
+	/**
+	 * Wie {@link #answer}, aber in fester Reihenfolge: {@code =} hält die Optionen, wie sie hier
+	 * stehen, die richtige trägt ihr {@code +}. Für Sätze mit natürlicher Ordnung — Richtungen, Zahlen.
+	 */
+	private static String fixedOrder(String correct, String... options) {
+		List<String> parts = new ArrayList<>();
+		boolean found = false;
+		for (String option : options)
+			if (option.equals(correct)) {
+				parts.add("+" + option);
+				found = true;
+			} else {
+				parts.add(option);
+			}
+		if (!found)
+			throw new IllegalArgumentException("Die richtige Antwort '" + correct
+					+ "' steht nicht unter ihren Optionen: " + String.join("|", options));
+		return "MC:=" + String.join("|", parts);
 	}
 
 	/**

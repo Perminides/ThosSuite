@@ -140,5 +140,6 @@ geantwortet wurde. Bei allen anderen Streifenzahlen gibt es keine Verteilungsfra
 - Kein `bunt` als Farbwert.
 - Keine Kategorien-Zwischenebene bei den Elementen.
 - Keine Elemente aus der echten Flagge.
-- Keine feste Antwortreihenfolge im MC — Distraktoren müssen wechseln.
-- Keine verzögerte Auswertung nur für dieses Deck.
+- Keine *willkürliche* feste Reihenfolge im MC; natürlich geordnete Antwortsätze dürfen per `=` fix
+  stehen. Die Distraktor-*Auswahl* variiert weiter.
+- Keine verzögerte Auswertung als Deck-Sonderfall — `MC+` ist ein deklarierter, deck-unabhängiger Step.
