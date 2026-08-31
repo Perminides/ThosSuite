@@ -48,6 +48,28 @@ Beschlossen am 29.08.2026, noch nicht in `Flaggen-Deck.md` eingearbeitet.
   und gut sind — an den Flaggen ist zu viel umgeworfen worden, um jetzt die anderen Decks anzufassen.
   Der Parser versteht solange beide Schreibweisen.
 
+## Reihenfolge bis zum Grundgerüst
+
+Beschlossen am 31.08.2026. „Grundgerüst steht" heißt: Eine neue Flagge braucht keine neue
+Entscheidung mehr — nicht, dass 214 Zeilen gefüllt sind. Farben und Silhouetten entstehen pro
+Flagge an dem Tag, an dem sie drankommt.
+
+1. **Dreieck** — Fragen 4a und 4b im Generator, dazu die Sketches. Als Einziges ändert es den
+   Fragensatz, deshalb zuerst.
+2. **Emblem** — ein gezeichneter Platzhalter (Fragezeichen oder Wappen) statt eines Sonderfalls.
+   Kippt §5s „komplexes Emblem wird nicht gezeichnet"; gehört dann in `Regeln.md`. Nach der Farbe
+   wird ohnehin nur gefragt, wenn im Blatt eine steht.
+3. **Grönland** — geteilter Kreis: eine Fläche, zwei Farben, eigene Datei.
+4. **Eine eigene Session nur für MC** — `MC+` als deklarierter Step, Rückbau von `isCollectMode`,
+   die Präfix-Syntax und die tolerierte Antwort. Gehört zusammen: Der Rückbau allein zerlegt die
+   Elementfrage.
+5. **Deck auf zwei CSVs** — muss stehen, bevor die erste handgeschriebene Zusatzfrage entsteht,
+   sonst überschreibt sie der nächste Generatorlauf.
+6. Danach Deck zurücksetzen, ab Id 1 generieren, Merge nach master, und dann eine Flagge pro Tag.
+
+Kein Showstopper, wird nebenbei erledigt: Nepal (nicht rechtwinkliger Sketch), Schweiz und Vatikan
+(quadratisch), Grenada (Symbole werden schlicht ins Segment gezeichnet).
+
 ## Breitenverhältnisse der übrigen Verteilungswerte
 
 Der Sketch-Name trägt die Verteilung inzwischen, und `build-streifen-sketch.py` kennt eine Tabelle
