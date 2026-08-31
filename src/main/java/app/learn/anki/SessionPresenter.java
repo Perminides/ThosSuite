@@ -112,13 +112,13 @@ public class SessionPresenter {
 		view.setQuestion(text);
 	}
 	
-	/** {@code collect}: mehrere Antworten markieren und gesammelt abschicken statt einzeln klicken. */
-	void showMultipleChoice (List<String> answers, boolean collect) {
+	/** Submit ist auf MC und MC+ gleich sichtbar — seine Anwesenheit darf den Modus nicht verraten. */
+	void showMultipleChoice (List<String> answers) {
 		view.setMapActive(false);
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);
 		view.setMultipleChoice(answers);
-		view.setSubmitActive(collect);
+		view.setSubmitActive(true);
 	}
 
 	void waitForClick(Set<String> idsInQuestion) {
