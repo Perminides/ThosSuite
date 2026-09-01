@@ -28,6 +28,9 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 - Höhe einer Sichel = 2 × Radius. Der oberste Punkt ist der Scheitel des äußeren Kreises, nicht die
   Hornspitze.
 - Sterne haben drei Bilder: eins, zwei, mehr als zwei.
+- Ein Kreis mit **zwei Farben** ist geteilt: eigene Datei `geteilter-kreis`, zwei Halbscheiben (oben,
+  unten). Der volle Kreis bleibt `kreis`. `sketchOf` wählt nach der Farbanzahl — wie der Stern nach der
+  Anzahl. Eine Flagge mit zwei echten Kreisen wäre damit abgedeckt, solange beide dieselbe Farbe haben.
 - Silhouetten kommen aus neutralen Piktogrammen, **nie aus der echten Flagge** — ein `Vogel` steht auf
   neun Flaggen und darf kein bestimmter Vogel sein.
 - Ein zu komplexes **Emblem** wird zu einer generischen, mehrflächigen Platzhalter-Silhouette (das
@@ -113,8 +116,11 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 - Aufbau einer Karte: Form → Rahmen → Gösch → Dreieck → Hintergrund → Zweigfragen → Skizze →
   Zusatzelemente → je Element Anzahl und Ort → zeichnen → **alle Farben** → echte Flagge.
 - Gefärbt wird gesammelt am Ende, Hintergrundflächen und Elemente zusammen.
-- Die Elementblöcke stehen in einem Shuffle. Anzahl und Ort eines Elements bleiben im selben Segment.
+- Zwei Shuffle-Blöcke: erst alle **Attribut-Fragen** (Anzahl, geteilt) gemischt, dann alle **Ortsfragen**
+  gemischt. So steht die Anzahl vor dem Ort, und in keinem Block leakt die Reihenfolge das Blatt.
 - **Anzahl vor Ort** — dann stimmt in der Ortsfrage der Numerus.
+- Bei **jedem Kreis** wird gefragt, ob er geteilt ist — konstant, damit die stille Annahme „ungeteilt"
+  nicht leakt. Richtig ist „Ja" genau bei zwei Farben im Blatt (Grönland).
 - Die **Position** ist die Richtung vom Mittelpunkt, nicht das überdeckte Feld. Werte 0…8 wie das
   Raster, 9 ist verstreut.
 - Mehrere Instanzen, die **symmetrisch um die Mitte** liegen, gelten als zentriert.

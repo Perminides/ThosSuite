@@ -118,7 +118,10 @@ Flagge an dem Tag, an dem sie drankommt.
    Silhouette (Dülmener Wappen) für alle komplexen Embleme; Vorhandensein und Ort werden gefragt, die
    Farbe nicht. Die 4 farbigen Fälle (St. Lucia u. a.) später als handgeschriebene Zusatzfrage. §5
    abgelöst, Regel steht in `Regeln.md`.
-3. **Grönland** — geteilter Kreis: eine Fläche, zwei Farben, eigene Datei.
+3. **Grönland** — **erledigt (01.09.2026).** Der Kreis bleibt *ein* Element „Kreis"; bei jedem Kreis
+   wird konstant „Ist der Kreis geteilt?" gefragt (stoppt die stille Annahme „ungeteilt", leakt nichts).
+   Geteilt = zwei Farben im Blatt; dann zieht `sketchOf` die Datei `geteilter-kreis` (zwei Halbscheiben),
+   die die bestehende Farbfrage Fläche für Fläche füllt. Keine neue Elementkategorie, kein neuer Fragetyp.
 4. **Eine eigene Session nur für MC** — **erledigt (31.08.2026).** `MC+` als deklarierter Step,
    Rückbau von `isCollectMode`, die Präfix-Syntax und die tolerierte Antwort.
 5. **Echte SVG-Flaggen** — statt der `…-flag-square-small.png` die echten Flaggen als SVG anzeigen.

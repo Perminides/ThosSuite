@@ -342,9 +342,10 @@ public class FlagDeckGenerator {
 	 * Erst alle Elemente anhaken, dann je Element Anzahl und Ort, dann alles auf einmal zeichnen.
 	 * Gefärbt wird nicht hier, sondern am Ende der Karte zusammen mit den Hintergrundflächen.
 	 *
-	 * <p>Die Elementblöcke stehen in einem Shuffle: Sonst verriete ihre Reihenfolge, welches Element
-	 * im Blatt zuerst steht. Anzahl und Ort eines Elements bleiben dabei im selben Segment — sie
-	 * gehören zusammen, und der Ort braucht die Anzahl für den richtigen Numerus.</p>
+	 * <p>Die Fragen stehen in zwei Shuffle-Blöcken: erst alle Attribute (Anzahl, geteilt), dann alle
+	 * Orte. Sonst verriete die Reihenfolge, welches Element im Blatt zuerst steht. Getrennt statt je
+	 * Element beisammen, weil die Anzahl vor den Ort gehört (Numerus) — und so ist der ganze erste
+	 * Block garantiert vor dem zweiten.</p>
 	 *
 	 * <p>Hängt die Füll-Paare der Elemente an {@code fills} an: je Elementfläche eines, sofern eine
 	 * Farbe dasteht. Ein Element mit weniger Farben als Flächen (das ungefärbte Emblem) lässt seine
@@ -368,13 +369,36 @@ public class FlagDeckGenerator {
 				options.add(pool);
 		add(steps, "MC+:" + String.join("|", options));
 
-		for (int i = 0; i < elements.size(); i++) {
-			Element element = elements.get(i);
-			if (elements.size() > 1)
+		// Erst alle Attribut-Fragen (Anzahl, geteilt) in einem Shuffle, dann alle Ortsfragen in einem
+		// zweiten. So steht die Anzahl immer vor dem Ort (Numerus), und in keinem der Blöcke verrät die
+		// Reihenfolge, welches Element im Blatt zuerst steht. Ein Element ohne Attributfrage taucht im
+		// ersten Block gar nicht auf — ein leeres Segment würde die Input-Prüfung reißen.
+		List<Element> withAttribute = new ArrayList<>();
+		for (Element element : elements)
+			if (FlagSheet.isSet(element.count()) || element.name().equals("Kreis"))
+				withAttribute.add(element);
+		for (int i = 0; i < withAttribute.size(); i++) {
+			Element element = withAttribute.get(i);
+			if (withAttribute.size() > 1)
 				pending = i == 0 ? "<ShuffleStart>" : "<ShuffleBreak>";
 			if (FlagSheet.isSet(element.count()))
 				ask(steps, "Wie viele " + WORDS.get(element.name())[1].substring(4) + "?",
 						fixedOrder(element.count(), COUNTS.toArray(new String[0])));
+			// Bei jedem Kreis gleich gefragt — die konstante Frage leakt nichts und stoppt die stille
+			// Annahme "ungeteilt". Geteilt ist er genau dann, wenn zwei Farben im Blatt stehen.
+			if (element.name().equals("Kreis"))
+				ask(steps, "Ist der Kreis geteilt?",
+						answer(split(element.color()).size() == 2 ? "Ja" : "Nein", "Ja", "Nein"));
+		}
+		// Eigenständiger Marker: der End- und der folgende Start-Marker können nicht auf demselben
+		// Schritt stehen — der Parser prüft Start, bevor er End abschneidet.
+		if (withAttribute.size() > 1)
+			add(steps, "<ShuffleEnd>");
+
+		for (int i = 0; i < elements.size(); i++) {
+			Element element = elements.get(i);
+			if (elements.size() > 1)
+				pending = i == 0 ? "<ShuffleStart>" : "<ShuffleBreak>";
 			ask(steps, "Wo " + verb(element) + " " + word(element) + "?",
 					fixedOrder(POSITIONS.get(Integer.parseInt(untolerated(element.position()))),
 							POSITIONS.toArray(new String[0])));
@@ -468,6 +492,9 @@ public class FlagDeckGenerator {
 					? 1 : Integer.parseInt(element.count());
 			return count == 1 ? "stern" : count == 2 ? "stern-zwei" : "stern-haufen";
 		}
+		// Zwei Farben heißt: der Kreis ist geteilt — dann die zweiflächige Halbscheiben-Datei.
+		if (element.name().equals("Kreis") && split(element.color()).size() == 2)
+			return "geteilter-kreis";
 		String file = ELEMENT_FILES.get(element.name());
 		if (file == null)
 			throw new RuntimeException("Für '" + element.name() + "' gibt es noch keine Elementdatei");
