@@ -563,10 +563,9 @@ public class FlagDeckGenerator {
 		return sheet.value(row, "Rahmen?").equals("1");
 	}
 
-	/** Der Dateiname folgt aus dem englischen Namen: {@code Brazil} -> {@code brazil-flag-square-small.png}. */
+	/** Die echte Flagge als SVG, benannt nach dem deutschen Namen. Den Ordner kennt der Lader. */
 	private String image(List<String> row) {
-		return sheet.english(row).toLowerCase(java.util.Locale.ROOT).replace(' ', '-')
-				+ "-flag-square-small.png";
+		return sheet.country(row) + ".svg";
 	}
 
 	// ---- Prüfung --------------------------------------------------------------
