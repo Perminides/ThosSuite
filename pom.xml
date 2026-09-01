@@ -90,6 +90,13 @@
 			<version>3.28.2</version>
 		</dependency>
 
+		<!-- SVG-Flaggen zur Laufzeit: jsvg rendert vollständig über Java2D, via SwingFXUtils nach JavaFX. -->
+		<dependency>
+			<groupId>com.github.weisj</groupId>
+			<artifactId>jsvg</artifactId>
+			<version>2.0.0</version>
+		</dependency>
+
 		<!-- Nur für die Architekturprüfung in src/test. Landen nicht in der Auslieferung. -->
 		<dependency>
 			<groupId>com.tngtech.archunit</groupId>
@@ -106,6 +113,7 @@
 		</dependency>
 
 	</dependencies>
+
 	<build>
 		<plugins>
 

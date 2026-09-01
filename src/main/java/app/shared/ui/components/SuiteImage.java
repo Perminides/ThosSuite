@@ -1,14 +1,25 @@
 package app.shared.ui.components;
 
+import java.awt.Component;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.Locale;
+
+import com.github.weisj.jsvg.SVGDocument;
+import com.github.weisj.jsvg.parser.SVGLoader;
+import com.github.weisj.jsvg.view.FloatSize;
+import com.github.weisj.jsvg.view.ViewBox;
 
 import app.shared.Config;
 import app.shared.model.BigComponentStyle;
 import app.shared.model.ShapeGeometry;
 import app.shared.model.SketchColor;
 import app.shared.skin.SkinService;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
@@ -54,6 +65,12 @@ public class SuiteImage extends StackPane {
     // Bildes zurückgeschnitten und braucht sie bei jedem Wechsel neu.
     private final double innerWidth;
     private final double innerHeight;
+    // Eckradius der Bild-Ebene, als Durchmesser. Das Bild selbst ist eckig; geclippt wird auf einen
+    // runden Kasten dieser Größe, damit eine kleinere Flagge eckig bleibt und ein füllendes Bild rundet.
+    private final double imageArc;
+
+    // SVG wird auf das SUPERSAMPLE-fache der Anzeige gerendert und heruntergerechnet — glättet Kanten.
+    private static final double SUPERSAMPLE = 2;
 
     private SketchPane sketch;
 
@@ -99,6 +116,7 @@ public class SuiteImage extends StackPane {
         innerWidth = width - 2 * bw;
         innerHeight = height - 2 * bw;
         double innerArcDiameter = Math.max(0, frame.cornerRadius() - bw) * 2;
+        imageArc = innerArcDiameter;
 
         // 1. Container-Größe fixieren
         setPrefSize(width, height);
@@ -117,9 +135,9 @@ public class SuiteImage extends StackPane {
         // ---------------------------------------------------------
         // Layer 2: Bild (Mitte) — eingerückt
         // ---------------------------------------------------------
+        // Eckig — die Rundung macht der Clip in fitToImage. Sonst bekäme eine kleinere Flagge, die den
+        // Kasten nicht füllt, mitten im Bild runde Ecken.
         imageRect = new Rectangle(innerWidth, innerHeight);
-        imageRect.setArcWidth(innerArcDiameter);
-        imageRect.setArcHeight(innerArcDiameter);
         imageRect.setFill(Color.TRANSPARENT);
 
         // ---------------------------------------------------------
@@ -171,23 +189,70 @@ public class SuiteImage extends StackPane {
             return;
         }
 
-        File imageFile = Config.getPath("learnImageFolder").resolve(imageName).toFile();
+        // SVGs liegen unverkleinert in einem eigenen Unterordner, nicht im 500x500-Ordner der Raster.
+        boolean isSvg = imageName.toLowerCase(Locale.ROOT).endsWith(".svg");
+        File imageFile = (isSvg ? Config.getPath("imageFolder").resolve("svg") : Config.getPath("learnImageFolder"))
+                .resolve(imageName).toFile();
         if (!imageFile.exists()) {
             throw new RuntimeException("Konnte das Bild nicht finden: " + imageFile);
         }
 
-        try {
-            String url = imageFile.toURI().toURL().toExternalForm(); // sauberer als toString()
-            Image img = new Image(url, false); // backgroundLoading=false => lädt synchron
+        Image img;
+        if (isSvg) {
+            img = renderSvg(imageFile, imageName);
+        } else {
+            try {
+                String url = imageFile.toURI().toURL().toExternalForm(); // sauberer als toString()
+                img = new Image(url, false); // backgroundLoading=false => lädt synchron
+            } catch (MalformedURLException e) {
+                throw new RuntimeException("Ungültige Bild-URL: " + imageName, e);
+            }
             if (img.isError()) {
                 throw new RuntimeException("Fehler beim Laden des Bildes: " + imageName, img.getException());
             }
-            imageRect.setStyle(""); // CSS weg, falls vorher gesetzt
-            fitToImage(img);
-            imageRect.setFill(new ImagePattern(img));
+        }
+        imageRect.setStyle(""); // CSS weg, falls vorher gesetzt
+        fitToImage(img);
+        imageRect.setFill(new ImagePattern(img));
+    }
+
+    /**
+     * SVG kennt JavaFX nicht von Haus aus: jsvg rendert es über Java2D in ein Rasterbild, das
+     * {@link SwingFXUtils} nach JavaFX bringt. Das viewBox-Mapping erledigt jsvg selbst.
+     *
+     * <p>Gerendert wird auf das {@link #SUPERSAMPLE}-fache der physischen Anzeigegröße und beim Anzeigen
+     * heruntergerechnet. Das glättet die Kanten — etwa die dünne Bandspitze der Brasilien-Flagge, wo bei
+     * 1:1 der blaue Hintergrund durchscheint — zum Preis eines Hauchs Textschärfe. Faktor 2 war im
+     * direkten Vergleich der beste Kompromiss.</p>
+     */
+    private Image renderSvg(File file, String imageName) {
+        try {
+            SVGDocument doc = new SVGLoader().load(file.toURI().toURL());
+            if (doc == null)
+                throw new RuntimeException("Konnte das SVG nicht laden: " + imageName);
+            FloatSize size = doc.size();
+            double fit = Math.min(innerWidth / size.width, innerHeight / size.height);
+            double render = SUPERSAMPLE * fit * outputScale();
+            int w = Math.max(1, (int) Math.round(size.width * render));
+            int h = Math.max(1, (int) Math.round(size.height * render));
+
+            BufferedImage raster = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = raster.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+            doc.render((Component) null, g, new ViewBox(0, 0, (float) w, (float) h));
+            g.dispose();
+            return SwingFXUtils.toFXImage(raster, null);
         } catch (MalformedURLException e) {
             throw new RuntimeException("Ungültige Bild-URL: " + imageName, e);
         }
+    }
+
+    /** Physische Pixel je logischem Pixel — auf HiDPI größer 1; vor dem Anzeigen fällt sie auf 1 zurück. */
+    private double outputScale() {
+        return getScene() != null && getScene().getWindow() != null
+                ? getScene().getWindow().getOutputScaleX() : 1;
     }
     
     /**
@@ -199,8 +264,18 @@ public class SuiteImage extends StackPane {
      */
     private void fitToImage(Image img) {
         double factor = Math.min(innerWidth / img.getWidth(), innerHeight / img.getHeight());
-        imageRect.setWidth(img.getWidth() * factor);
-        imageRect.setHeight(img.getHeight() * factor);
+        double w = img.getWidth() * factor;
+        double h = img.getHeight() * factor;
+        imageRect.setWidth(w);
+        imageRect.setHeight(h);
+
+        // Runder Clip in KASTENgröße, auf die Bildmitte zentriert (das Rechteck liegt in seinen eigenen
+        // Koordinaten 0..w/0..h): deckt ein kleineres Bild vollständig ab, seine Ecken bleiben eckig,
+        // und gerundet wird nur dort, wo das Bild den Kasten wirklich bis in die Ecke füllt.
+        Rectangle clip = new Rectangle((w - innerWidth) / 2, (h - innerHeight) / 2, innerWidth, innerHeight);
+        clip.setArcWidth(imageArc);
+        clip.setArcHeight(imageArc);
+        imageRect.setClip(clip);
     }
 
     /** Kein Bild: durchsichtig, und wieder in voller Größe für das nächste. */
