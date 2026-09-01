@@ -50,11 +50,29 @@ public class FlagDeckGenerator {
 			"Links vom Zentrum", "Zentriert", "Rechts vom Zentrum",
 			"Links unten vom Zentrum", "Unten vom Zentrum", "Rechts unten vom Zentrum", "Verstreut");
 
+	/** Index = Wert der Spalte „Dreieck von links?". Wert 0 heißt „kein Dreieck". */
+	private static final List<String> DREIECK_FORMEN = List.of(
+			"Nein",
+			"Ja und zwar nur in der linken Hälfte",
+			"Ja, aber es ist eher ein Trapez als ein Dreieck",
+			"Ja und zwar bis zum rechten Rand",
+			"Ja, aber dieses Dreiecksgebilde geht in eine waagerechte Spur bis zum rechten Rand über");
+
+	/** Feste Anzeige-Reihenfolge der Dreiecksfrage: Werte 0, 1, 3, 2, 4. */
+	private static final List<String> DREIECK_ANZEIGE = List.of(
+			DREIECK_FORMEN.get(0), DREIECK_FORMEN.get(1), DREIECK_FORMEN.get(3),
+			DREIECK_FORMEN.get(2), DREIECK_FORMEN.get(4));
+
 	/** Index = Wert der Spalte Hintergrundtyp. Die 6 ist bewusst frei. */
 	private static final Map<String, String> BACKGROUNDS = ordered(
 			"0", "Waagerechte Streifen", "1", "Senkrechte Streifen", "2", "Kreuz mit vier Quadranten",
 			"3", "Diagonale Teilung", "4", "Einfarbige Fläche",
 			"5", "Senkrechtes Band mit waagerechten Streifen", "7", "Anderes");
+
+	/** Die Optionen der Fill-Frage — ohne Kreuz und Diagonale, die vorweg geklärt sind. */
+	private static final List<String> FILL_BACKGROUNDS = List.of(
+			"Waagerechte Streifen", "Senkrechte Streifen", "Einfarbige Fläche",
+			"Senkrechtes Band mit waagerechten Streifen", "Anderes");
 
 	/**
 	 * Der Pool der Streifenzahlen: 2 bis 9 als Bereich — die 8 kommt nie vor und ist ein reiner
@@ -130,6 +148,15 @@ public class FlagDeckGenerator {
 	 * <p>Die Raute ist nicht gerechnet, sondern am Bild gefunden — ihre Ecken laufen spitz zu, da
 	 * gilt die Kastenregel nicht.</p>
 	 */
+	/**
+	 * Grundgröße einzelner Elemente, ohne Eintrag 1,0. Manche Figuren sind von Natur aus groß —
+	 * Brasiliens Raute spannt fast die halbe Flagge, ein Stern tut das nie.
+	 *
+	 * <p>Sie wirkt auf das Element selbst <b>und</b> auf alles, was darin liegt: Wächst die Raute,
+	 * wächst der Kreis darin mit, sonst verschöben sich die Verhältnisse.</p>
+	 */
+	private static final Map<String, Double> ELEMENT_SIZE = Map.of("Raute", 2d);
+
 	private static final Map<String, double[]> CONTAINERS = Map.of(
 			"Raute", new double[] {0.7, 0.7, 0.7, 0.7},
 			"Kreis", new double[] {0.7, 0.5, 0.45, 0.45});
@@ -186,23 +213,47 @@ public class FlagDeckGenerator {
 		List<String> steps = new ArrayList<>(List.of(sheet.number(row), "", "Flagge",
 				"Mark:" + sheet.value(row, "ID")));
 
-		ask(steps, "Welche Form hat die Flagge?", answer(rectangular(row), "Rechteckig", "Weder noch", "Quadratisch"));
+		ask(steps, "Welche Form hat die Flagge?", answer(rectangular(row), "Rechteckig", "Nicht rechteckig", "Quadratisch"));
 		ask(steps, "Hat die Flagge einen Rahmen?", answer(frame(row) ? "Ja" : "Nein", "Ja", "Nein"));
-		ask(steps, "Hat die Flagge einen Gösch?",
-				answer(sheet.value(row, "Gösch?").equals("1") ? "Ja" : "Nein", "Ja", "Nein"));
-		ask(steps, "Entferne Rahmen und Gösch gedanklich. Ragt ein Dreieck ganz vom linken Rand herein?",
-				answer(FlagSheet.isSet(sheet.value(row, "Dreieck von links?"))
-						&& !sheet.value(row, "Dreieck von links?").equals("0") ? "Ja" : "Nein", "Ja", "Nein"));
 
+		// Kreuz und Diagonale vorweg — sonst würde ihr linker Arm mit einem Dreieck von links verwechselt.
 		String type = sheet.value(row, "Hintergrundtyp");
-		ask(steps, "Entferne auch das Dreieck und die Zusatzelemente. Was beschreibt den Hintergrund am besten?",
-				answer(BACKGROUNDS.get(type), BACKGROUNDS.values().toArray(new String[0])));
+		String vorweg = type.equals("2") ? "Kreuz" : type.equals("3") ? "Diagonale" : "Nein";
+		ask(steps, "Teilt ein Kreuz oder eine Diagonale die Flagge, wenn Du Zusatzelemente und Rahmen ignorierst?",
+				answer(vorweg, "Kreuz", "Diagonale", "Nein"));
+		if (vorweg.equals("Nein"))
+			ask(steps, "Entferne gedanklich eine Dreiecksstruktur von links, einen Gösch, alle "
+					+ "Zusatzelemente und einen Rahmen. Was beschreibt nun den Hintergrund am besten?",
+					answer(BACKGROUNDS.get(type), FILL_BACKGROUNDS.toArray(new String[0])));
 		branchQuestions(steps, row, type);
 
-		add(steps, "SketchImage:" + backgroundSketch(row, type));
+		add(steps, "SketchImage:" + branchSketch(row, type));
+
+		// Gösch nach der Göschfrage auflegen (Leinwand-Silhouette, cell = -1).
+		boolean goesch = sheet.value(row, "Gösch?").equals("1");
+		ask(steps, "Hat die Flagge einen Gösch?", answer(goesch ? "Ja" : "Nein", "Ja", "Nein"));
+		if (goesch)
+			add(steps, "SketchImageAdd:goesch,-1");
+
+		// Dreieck nach der Dreieckfrage auflegen.
+		String dreieck = sheet.value(row, "Dreieck von links?");
+		int dreieckForm = FlagSheet.isSet(dreieck) ? Integer.parseInt(dreieck) : 0;
+		ask(steps, "Schiebt sich eine dreiecksähnliche Form von ganz links in die Flagge?",
+				fixedOrder(DREIECK_FORMEN.get(dreieckForm), DREIECK_ANZEIGE.toArray(new String[0])));
+		if (dreieckForm != 0) {
+			ask(steps, "Die Dreiecksform(en) bestehen aus wie vielen Farben?",
+					fixedOrder(sheet.value(row, "Die Dreiecksform(en) bestehen aus wie vielen Farben?"),
+							"1", "2", "3", "4"));
+			add(steps, "SketchImageAdd:dreieck-" + dreieckForm + ",-1");
+		}
 
 		List<Element> elements = elements(row);
+		// Flächen-Reihenfolge = Hintergrund → Gösch → Dreieck → Elemente. Die Farben in derselben Folge.
 		List<String> colors = new ArrayList<>(split(sheet.value(row, "Hintergrundfarben")));
+		if (goesch)
+			colors.add(sheet.value(row, "Gösch Farbe"));
+		if (dreieckForm != 0)
+			colors.add(sheet.value(row, "Dreieck Farbe"));
 		colors.addAll(elementSteps(steps, elements));
 		fillAreas(steps, 0, colors);
 		add(steps, "Image:" + image(row));
@@ -353,7 +404,7 @@ public class FlagDeckGenerator {
 		double[] available = new double[elements.size()];
 		for (int i = 0; i < elements.size(); i++) {
 			if (parent[i] < 0) {
-				available[i] = 1;
+				available[i] = ELEMENT_SIZE.getOrDefault(elements.get(i).name(), 1.0);
 				continue;
 			}
 			int kinder = 0;
@@ -398,16 +449,10 @@ public class FlagDeckGenerator {
 	// ---- Skizze und Farben ----------------------------------------------------
 
 	/**
-	 * Der Dateiname folgt aus den Attributen des Zweigs — wie {@code waagerecht-3}, nur mit Wörtern.
-	 *
-	 * <p>Gösch und Dreieck werden nach §5 in die Datei <b>hineingezeichnet</b> und nicht zur Laufzeit
-	 * angehängt. Sie gehören deshalb in den Namen: {@code waagerecht-7-goesch} ist eine andere Datei
-	 * als {@code waagerecht-7}, und sie trägt eine Fläche mehr.</p>
+	 * Der reine Hintergrund-Dateiname aus den Attributen des Zweigs — wie {@code waagerecht-3}, nur mit
+	 * Wörtern. Gösch und Dreieck stehen <b>nicht</b> im Namen: sie werden als Silhouetten aus
+	 * {@code elements/} zur Laufzeit oben aufgelegt ({@code SketchImageAdd}), nicht eingebacken.
 	 */
-	private String backgroundSketch(List<String> row, String type) {
-		return branchSketch(row, type) + (sheet.value(row, "Gösch?").equals("1") ? "-goesch" : "");
-	}
-
 	private String branchSketch(List<String> row, String type) {
 		return switch (type) {
 			// Die Verteilung gehoert in den Namen: Sie veraendert die Breiten, und eine Skizze mit
@@ -481,9 +526,9 @@ public class FlagDeckGenerator {
 		for (String raw : steps) {
 			String step = raw.substring(raw.lastIndexOf('>') + 1);
 			if (step.startsWith("SketchImage:"))
-				available = areasOf(step.substring("SketchImage:".length()));
+				available = areasOf("backgrounds", step.substring("SketchImage:".length()));
 			else if (step.startsWith("SketchImageAdd:"))
-				available += areasOf(step.substring("SketchImageAdd:".length()).split(",")[0]);
+				available += areasOf("elements", step.substring("SketchImageAdd:".length()).split(",")[0]);
 			else if (step.startsWith("SketchImageMark:") || step.startsWith("SketchImageFill:")) {
 				int area = Integer.parseInt(step.substring(step.indexOf(':') + 1).split(",")[0]);
 				if (area >= available)
@@ -530,14 +575,15 @@ public class FlagDeckGenerator {
 		System.out.println(replaced + " ersetzt, " + generated.size() + " neu — " + DECK);
 	}
 
-	private int areasOf(String sketch) {
-		return areas.computeIfAbsent(sketch, name -> read(name).size());
+	private int areasOf(String subfolder, String sketch) {
+		return areas.computeIfAbsent(subfolder + "/" + sketch, key -> read(subfolder, sketch).size());
 	}
 
 	/** Die Flächen einer Strukturdatei — gezählt wird nur, wie viele es sind. */
-	private static List<double[]> read(String sketch) {
+	private static List<double[]> read(String subfolder, String sketch) {
 		try {
-			JsonNode root = new ObjectMapper().readTree(SKETCHES.resolve(sketch + ".geojson").toFile());
+			JsonNode root = new ObjectMapper().readTree(
+					SKETCHES.resolve(subfolder).resolve(sketch + ".geojson").toFile());
 			List<double[]> result = new ArrayList<>();
 			for (JsonNode feature : root.get("features")) {
 				JsonNode geometry = feature.get("geometry");

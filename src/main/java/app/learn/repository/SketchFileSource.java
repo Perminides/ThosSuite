@@ -32,10 +32,12 @@ import app.shared.model.ShapeGeometry.Point;
 public class SketchFileSource {
 
 	/**
+	 * @param subfolder {@code backgrounds} (Hintergründe, per {@code SketchImage}) oder {@code elements}
+	 *                  (aufgelegte Silhouetten, per {@code SketchImageAdd})
 	 * @param structure der Name der Struktur, ohne Endung (etwa {@code waagerecht-3})
 	 */
-	public List<ShapeGeometry> load(String structure) {
-		Path file = Config.getPath("sketchFolder").resolve(structure + ".geojson");
+	public List<ShapeGeometry> load(String subfolder, String structure) {
+		Path file = Config.getPath("sketchFolder").resolve(subfolder).resolve(structure + ".geojson");
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			JsonNode root = mapper.readTree(file.toFile());

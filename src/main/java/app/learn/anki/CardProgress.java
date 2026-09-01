@@ -318,7 +318,7 @@ public class CardProgress {
 	        }
 	        // ----- NOCH NICHT VOLLSTÄNDIG ----- : auf die restlichen Pflicht-Klicks warten
 	    } else {
-	        // ----- FALSCH ----- (FALSCH oder FUELLER)
+	        // ----- FALSCH ----- (fest sichtbar oder Füller)
 	        presenter.mcClickChecked(index, false);
 	    	playedTimestamp = LocalDateTime.now();
 	    	correctlyAnswered = false;

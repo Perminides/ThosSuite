@@ -102,8 +102,11 @@ class SketchPane extends StackPane {
 			double offsetY) {
 		int basis = areas.size();
 		addAreas(geometries, basis, size);
-		for (int nummer = basis; nummer < areas.size(); nummer++)
-			place(shapeFor(nummer), cell, offsetX, offsetY);
+		// cell < 0: Leinwand-Modus — die Silhouette liegt in ihren eigenen Leinwand-Koordinaten
+		// (Gösch, Dreieck), oben auf, ohne Feld-Zentrierung. Wie der Hintergrund im Konstruktor.
+		if (cell >= 0)
+			for (int nummer = basis; nummer < areas.size(); nummer++)
+				place(shapeFor(nummer), cell, offsetX, offsetY);
 	}
 
 	/**

@@ -109,6 +109,7 @@ public abstract class SkinProperties {
 	protected Color sketchStrokeColor;  // default = borderShapeColor
 	protected Color sketchMarkedColor;  // default = markedColor
 	protected Color sketchUnmarkedColor; // default = disabledComponentBgColor
+	protected Double sketchMarkedHatchWidth = 4.0; // Breite eines Schraffurstreifens, in Pixeln
 	protected Color sketchRed = Color.web("#d52b1e");
 	protected Color sketchBlue = Color.web("#003580");
 	protected Color sketchLightBlue = Color.web("#6cace4");

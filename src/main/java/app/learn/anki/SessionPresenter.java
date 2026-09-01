@@ -87,12 +87,12 @@ public class SessionPresenter {
 
 	/** Lädt die Struktur und zeigt sie leer — eine zuvor gezeigte Skizze ist damit weg. */
 	void showSketch(String structure) {
-		view.setSketch(sketchSource.load(structure));
+		view.setSketch(sketchSource.load("backgrounds", structure));
 	}
 
 	/** Hängt eine weitere Struktur an, ohne die bisherigen Füllungen zu verlieren. */
 	void addSketch(String structure, int cell, double size, double offsetX, double offsetY) {
-		view.addSketch(sketchSource.load(structure), cell, size, offsetX, offsetY);
+		view.addSketch(sketchSource.load("elements", structure), cell, size, offsetX, offsetY);
 	}
 
 	/** Setzt eine Fläche in ein anderes Rasterfeld — Farbe und Markierung bleiben. */
