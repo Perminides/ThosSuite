@@ -30,7 +30,7 @@ suite-weit, nicht nur für die Flaggen — MC ist deck-unabhängige Engine-Logik
 
 - `sealed interface ChoiceStep extends Step { Set<AnswerOption> options(); List<String> orderHint(); }`,
   implementiert von `MC` und `MCPlus`. `Step permits … ChoiceStep …`.
-- `AnswerOption(String text, Role role)`, `enum Role { RICHTIG, FALSCH, TOLERANT, FUELLER }` — die vier
+- `AnswerOption(String text, Role role)`, `enum Role { CORRECT, WRONG_ALWAYS_SHOWN, TOLERATED, DISTRACTOR_OPTIONAL }` — die vier
   Präfixe `+ - ~ ?`.
 
 ### Rollen
@@ -117,12 +117,13 @@ Flagge an dem Tag, an dem sie drankommt.
    Kippt §5s „komplexes Emblem wird nicht gezeichnet"; gehört dann in `Regeln.md`. Nach der Farbe
    wird ohnehin nur gefragt, wenn im Blatt eine steht.
 3. **Grönland** — geteilter Kreis: eine Fläche, zwei Farben, eigene Datei.
-4. **Eine eigene Session nur für MC** — `MC+` als deklarierter Step, Rückbau von `isCollectMode`,
-   die Präfix-Syntax und die tolerierte Antwort. Gehört zusammen: Der Rückbau allein zerlegt die
-   Elementfrage.
-5. **Deck auf zwei CSVs** — muss stehen, bevor die erste handgeschriebene Zusatzfrage entsteht,
+4. **Eine eigene Session nur für MC** — **erledigt (31.08.2026).** `MC+` als deklarierter Step,
+   Rückbau von `isCollectMode`, die Präfix-Syntax und die tolerierte Antwort.
+5. **Echte SVG-Flaggen** — statt der `…-flag-square-small.png` die echten Flaggen als SVG anzeigen.
+   Reine Anzeige, hängt an keinem der anderen Punkte; die Reihenfolge ist hier frei.
+6. **Deck auf zwei CSVs** — muss stehen, bevor die erste handgeschriebene Zusatzfrage entsteht,
    sonst überschreibt sie der nächste Generatorlauf.
-6. Danach Deck zurücksetzen, ab Id 1 generieren, Merge nach master, und dann eine Flagge pro Tag.
+7. Danach Deck zurücksetzen, ab Id 1 generieren, Merge nach master, und dann eine Flagge pro Tag.
 
 Kein Showstopper, wird nebenbei erledigt: Nepal (nicht rechtwinkliger Sketch), Schweiz und Vatikan
 (quadratisch), Grenada (Symbole werden schlicht ins Segment gezeichnet).

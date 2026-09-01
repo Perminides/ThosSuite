@@ -601,7 +601,31 @@ public abstract class Skin extends SkinProperties {
 	       .add("-fx-stroke-width", sketchStrokeWidth + "px")
 	       .end();
 
-	    builder.rule(".my-sketch-area:marked", "-fx-fill", sketchMarkedColor);
+	    // Die gefragte Flaeche wird SCHRAFFIERT statt eingefaerbt. Ein Farbton kaeme immer einer der
+	    // acht Antwortfarben nahe -- sie belegen den ganzen Helligkeitsbereich von Weiss bis Schwarz,
+	    // und derselbe Ton liest sich auf Weiss anders als auf dem Panel. Ein Muster kann sich mit
+	    // keiner Antwort beissen, weil keine Antwort je gemustert ist.
+	    //
+	    // Ganzflaechig und nicht am Rand: Die Kanten der Hintergrundflaechen liegen zum grossen Teil
+	    // ausserhalb des Bilderrahmens, ein dicker Strich oder ein Innenschatten waere dort nur an
+	    // einer Seite zu sehen.
+	    //
+	    // Die Schrittweite steht in Pixeln und braucht keine Anpassung je Flaechengroesse: Skaliert
+	    // werden nach SketchPane die Koordinaten und nicht der Knoten, auf dem liegt nur eine
+	    // Translation. Lokale Pixel sind damit Bildschirmpixel, fuer den Hintergrundstreifen wie
+	    // fuer den Stern im Kreis.
+	    String schritt = sketchMarkedHatchWidth + "px";
+	    String hell = UiUtils.toHex(sketchMarkedColor);
+	    String dunkel = UiUtils.toHex(sketchUnmarkedColor);
+	    // reflect statt repeat, und breite Uebergaenge statt harter Stopps: Ein Verlauf wird nicht
+	    // kantengeglaettet, ein Sprung von 49 auf 51 Prozent waere also eine harte Treppe. Gespiegelt
+	    // gibt es ausserdem an der Nahtstelle keinen Sprung -- bei repeat trifft dort die letzte
+	    // Farbe auf die erste. Die Schrittweite ist damit die Breite EINES Streifens, nicht die des
+	    // Paares.
+	    builder.start(".my-sketch-area:marked")
+	       .add("-fx-fill", "linear-gradient(from 0px 0px to " + schritt + " " + schritt + ", reflect, "
+	               + hell + " 0%, " + hell + " 30%, " + dunkel + " 70%, " + dunkel + " 100%)")
+	       .end();
 
 	    addSketchColorRule(builder, SketchColor.RED, sketchRed);
 	    addSketchColorRule(builder, SketchColor.BLUE, sketchBlue);
