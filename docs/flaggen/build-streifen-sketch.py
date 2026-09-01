@@ -1,7 +1,11 @@
 """Erzeugt Strukturdateien fuer reine Streifen-Skizzen.
 
 Aufruf:
-    python build-streifen-sketch.py <zielordner> waagerecht-3 senkrecht-4 ...
+    python build-streifen-sketch.py <zielordner> waagerecht-3 senkrecht-4 waagerecht-5-3-1-2-1-3 ...
+
+Der Name traegt die Streifenzahl und wahlweise die Verteilung: so viele Zahlen wie Streifen sind das
+Breitenverhaeltnis selbst (waagerecht-5-3-1-2-1-3), eine einzelne Zahl ist ein Index in die
+Fallback-Tabelle VERTEILUNG (3W, senkrecht), keine Zusatzzahl heisst gleich breit.
 
 Konvention (siehe Flaggen-Deck.md):
   * Das Seitenverhaeltnis ist immer 3:2 -- die Skizze wird in ein 3:2-Feld eingepasst,
@@ -27,11 +31,11 @@ NL = chr(10)
 BREITE, HOEHE = 180, 120
 GOESCH = "-goesch"
 
-# Breitenverhaeltnisse je Verteilungswert. Ohne Eintrag sind alle Streifen gleich breit.
-# Schematisch, nicht massstabsgetreu: Nordkoreas duenne Streifen sind in Wirklichkeit halb so
-# dick wie hier -- so duenn wuerden sie in der Skizze zu Strichen.
+# Fallback-Breitenverhaeltnisse fuer Namen mit EINEM Index -- 3W und senkrecht. Ohne Eintrag sind alle
+# Streifen gleich breit. Die fuenf waagerechten Streifen tragen ihre Abfolge inzwischen direkt im Namen
+# (waagerecht-5-3-1-2-1-3) und brauchen die Tabelle nicht. Schematisch, nicht massstabsgetreu: Nordkoreas
+# duenne Streifen sind in Wirklichkeit halb so dick wie hier -- so duenn wuerden sie zu Strichen.
 VERTEILUNG = {
-    ("waagerecht", 5, 3): [2, 1, 4, 1, 2],      # Mitte breiter und 2 und 4 duenn
 }
 
 
@@ -67,11 +71,8 @@ def ohne_goesch(x0, y0, x1, y1, gx, gy):
             [[gx, y0], [x1, y0], [x1, y1], [x0, y1], [x0, gy], [gx, gy], [gx, y0]]]
 
 
-def grenzen(richtung, anzahl, verteilung, laenge):
-    """Die Kanten der Streifen, von 0 bis laenge. Ohne Verhaeltnis gleichmaessig geteilt."""
-    gewichte = VERTEILUNG.get((richtung, anzahl, verteilung), [1] * anzahl)
-    if len(gewichte) != anzahl:
-        raise SystemExit("Das Verhaeltnis passt nicht zur Streifenzahl: %s" % gewichte)
+def grenzen(gewichte, laenge):
+    """Die Kanten der Streifen, von 0 bis laenge, im gegebenen Breitenverhaeltnis."""
     gesamt = sum(gewichte)
     kanten, summe = [0.0], 0
     for g in gewichte:
@@ -80,7 +81,7 @@ def grenzen(richtung, anzahl, verteilung, laenge):
     return kanten
 
 
-def flaechen(richtung, anzahl, goesch, verteilung):
+def flaechen(richtung, anzahl, goesch, gewichte):
     """Die Streifen, und danach -- falls verlangt -- der Goesch als letzte Flaeche.
 
     Der Goesch belegt immer genau Rasterfeld 0 und passt sich der Streifenzahl NICHT an: Ein
@@ -90,7 +91,7 @@ def flaechen(richtung, anzahl, goesch, verteilung):
     """
     breite, hoehe = masse(anzahl)
     gx, gy = breite / 3, -hoehe / 3
-    kanten = grenzen(richtung, anzahl, verteilung, hoehe if richtung == "waagerecht" else breite)
+    kanten = grenzen(gewichte, hoehe if richtung == "waagerecht" else breite)
     for i in range(anzahl):
         if richtung == "waagerecht":
             x0, y0, x1, y1 = 0, -kanten[i], breite, -kanten[i + 1]
@@ -109,10 +110,23 @@ def flaechen(richtung, anzahl, goesch, verteilung):
 def schreibe(zielordner, name):
     goesch = name.endswith(GOESCH)
     teile = (name[:-len(GOESCH)] if goesch else name).split("-")
-    richtung, anzahl = teile[0], teile[1]
-    verteilung = int(teile[2]) if len(teile) > 2 else None
+    richtung = teile[0]
     if richtung not in ("waagerecht", "senkrecht"):
         raise SystemExit("Nur waagerecht-<n>, senkrecht-<n>, wahlweise mit -goesch, nicht: " + name)
+    anzahl = int(teile[1])
+
+    # Die Streifenbreiten: stehen so viele Zahlen im Namen wie es Streifen gibt, sind sie das
+    # Verhaeltnis direkt (waagerecht-5-3-1-2-1-3). Eine einzelne Zahl ist der alte Index in die
+    # Fallback-Tabelle (3W, senkrecht); gar keine Zusatzzahl heisst gleich breit.
+    rest = teile[2:]
+    if len(rest) == anzahl:
+        gewichte = [int(x) for x in rest]
+    elif len(rest) == 1:
+        gewichte = VERTEILUNG.get((richtung, anzahl, int(rest[0])), [1] * anzahl)
+    else:
+        gewichte = [1] * anzahl
+    if len(gewichte) != anzahl:
+        raise SystemExit("Das Verhaeltnis passt nicht zur Streifenzahl: %s" % gewichte)
 
     # Ein Feature je Zeile, wie in den Kartendateien -- so bleibt eine Aenderung im Diff lesbar.
     kopf = ['{',
@@ -121,14 +135,14 @@ def schreibe(zielordner, name):
             '"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },',
             '"xy_coordinate_resolution": 1,',
             '"features": [']
-    features = [json.dumps(f) for f in flaechen(richtung, int(anzahl), goesch, verteilung)]
+    features = [json.dumps(f) for f in flaechen(richtung, anzahl, goesch, gewichte)]
     text = NL.join(kopf) + NL + ("," + NL).join(features) + NL + "]" + NL + "}" + NL
 
     ziel = Path(zielordner) / (name + ".geojson")
     ziel.parent.mkdir(parents=True, exist_ok=True)
     ziel.write_text(text, encoding="utf-8")
-    breite, hoehe = masse(int(anzahl))
-    print("%s  (%d x %d, %d Flaechen)" % (ziel, breite, hoehe, int(anzahl) + (1 if goesch else 0)))
+    breite, hoehe = masse(anzahl)
+    print("%s  (%d x %d, %d Flaechen)" % (ziel, breite, hoehe, anzahl + (1 if goesch else 0)))
 
 
 if __name__ == "__main__":

@@ -5,9 +5,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,6 +84,14 @@ public class FlagDeckGenerator {
 	private static final List<String> STRIPE_COUNTS =
 			List.of("2", "3", "4", "5", "6", "7", "8", "9", "11", "13", "14");
 
+	/**
+	 * Die Breiten-Abfolgen der fünf waagerechten Streifen, von oben nach unten. Der Wert der Spalte
+	 * {@code 5W} steht 1:1 als Antwort und im Sketch-Namen; die Zahlen sind das Verhältnis, schematisch,
+	 * nicht maßstabsgetreu. Der Pool ist eindeutig — gleiche Abfolgen stehen nur einmal.
+	 */
+	private static final List<String> FIVE_WIDTHS = List.of(
+			"3-1-2-1-3", "3-1-1-1-2", "1-1-2-1-1", "1-1-1-1-1", "1-2-3-2-1", "2-1-2-1-2", "2-1-3-1-2");
+
 	/** Vorkommende Anzahlen — der Pool, aus dem die Ablenker der Anzahlfrage gezogen werden. */
 	private static final List<String> COUNTS =
 			List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "15", "27", "50");
@@ -134,7 +144,7 @@ public class FlagDeckGenerator {
 	/** Elementname → Datei. Der Stern hängt zusätzlich an der Anzahl, siehe {@link #sketchOf}. */
 	private static final Map<String, String> ELEMENT_FILES = ordered(
 			"Kreis", "kreis", "Raute", "raute", "Schrift", "schrift-t", "Mond", "sichel",
-			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog");
+			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog", "Emblem", "emblem");
 
 	/**
 	 * Behälter und der Faktor, mit dem ihr Inhalt gezeichnet wird — je nach <b>Anzahl der Kinder</b>,
@@ -248,14 +258,18 @@ public class FlagDeckGenerator {
 		}
 
 		List<Element> elements = elements(row);
-		// Flächen-Reihenfolge = Hintergrund → Gösch → Dreieck → Elemente. Die Farben in derselben Folge.
-		List<String> colors = new ArrayList<>(split(sheet.value(row, "Hintergrundfarben")));
+		// Flächen-Reihenfolge = Hintergrund → Gösch → Dreieck → Elemente. Jede Fläche trägt ihre eigene
+		// Nummer, damit eine ungefärbte Fläche (das Emblem) die folgenden nicht verschiebt.
+		List<Fill> fills = new ArrayList<>();
+		int area = 0;
+		for (String color : split(sheet.value(row, "Hintergrundfarben")))
+			fills.add(new Fill(area++, color));
 		if (goesch)
-			colors.add(sheet.value(row, "Gösch Farbe"));
+			fills.add(new Fill(area++, sheet.value(row, "Gösch Farbe")));
 		if (dreieckForm != 0)
-			colors.add(sheet.value(row, "Dreieck Farbe"));
-		colors.addAll(elementSteps(steps, elements));
-		fillAreas(steps, 0, colors);
+			fills.add(new Fill(area++, sheet.value(row, "Dreieck Farbe")));
+		elementFills(steps, elements, fills, area);
+		fillAreas(steps, fills);
 		add(steps, "Image:" + image(row));
 		add(steps, "Pause:"); // Zeit, die echte Flagge anzusehen
 		return steps;
@@ -272,10 +286,8 @@ public class FlagDeckGenerator {
 							"alle gleich breit", "mittlerer breiter", "mittlerer schmaler",
 							"oberster breiter", "unterster breiter"));
 				if (sheet.value(row, "W-Streifen").equals("5"))
-					ask(steps, "Wie sind die Streifen verteilt?", coded(sheet.value(row, "5W"),
-							"2 und 4 dünn, Mitte nicht breiter", "alle gleich",
-							"Mitte breiter, 2 und 4 nicht dünn", "Mitte breiter und 2 und 4 dünn",
-							"oberster am breitesten", "unterster am breitesten"));
+					ask(steps, "Welche Abfolge beschreibt die Breite der Streifen von oben nach unten am besten?",
+							answer(sheet.value(row, "5W"), FIVE_WIDTHS.toArray(new String[0])));
 			}
 			case "1" -> {
 				ask(steps, "Wie viele senkrechte Streifen?",
@@ -334,9 +346,11 @@ public class FlagDeckGenerator {
 	 * im Blatt zuerst steht. Anzahl und Ort eines Elements bleiben dabei im selben Segment — sie
 	 * gehören zusammen, und der Ort braucht die Anzahl für den richtigen Numerus.</p>
 	 *
-	 * @return die Farben der Elemente, in der Reihenfolge ihrer Flächen
+	 * <p>Hängt die Füll-Paare der Elemente an {@code fills} an: je Elementfläche eines, sofern eine
+	 * Farbe dasteht. Ein Element mit weniger Farben als Flächen (das ungefärbte Emblem) lässt seine
+	 * überzähligen Flächen aus — sie bleiben grau —, rückt die Flächennummer aber trotzdem vor.</p>
 	 */
-	private List<String> elementSteps(List<String> steps, List<Element> elements) {
+	private void elementFills(List<String> steps, List<Element> elements, List<Fill> fills, int firstArea) {
 		List<String> names = new ArrayList<>();
 		for (Element element : elements)
 			if (!names.contains(element.name()))
@@ -368,15 +382,29 @@ public class FlagDeckGenerator {
 		if (elements.size() > 1)
 			pending = "<ShuffleEnd>";
 
-		List<String> colors = new ArrayList<>();
+		int area = firstArea;
 		for (Layout layout : layout(elements)) {
 			add(steps, "SketchImageAdd:" + layout.step());
-			colors.addAll(split(layout.element().color()));
+			// "x" ist wie leer die Unset-Markierung (vgl. sketchOf bei der Anzahl): keine Farbe, die
+			// Fläche bleibt grau — so das Emblem.
+			String cell = layout.element().color();
+			List<String> colors = cell.equals("x") ? List.of() : split(cell);
+			int areas = areasOf("elements", layout.step().split(",")[0]);
+			if (colors.size() > areas)
+				throw new RuntimeException(layout.step().split(",")[0] + ": " + colors.size()
+						+ " Farben, aber nur " + areas + " Flächen");
+			for (int j = 0; j < areas; j++) {
+				if (j < colors.size())
+					fills.add(new Fill(area, colors.get(j)));
+				area++;
+			}
 		}
-		return colors;
 	}
 
 	private record Layout(Element element, String step) {}
+
+	/** Eine zu füllende Fläche: ihre Nummer und die Farbe. Ungefüllte Flächen stehen gar nicht drin. */
+	private record Fill(int area, String color) {}
 
 	/**
 	 * Größe und Versatz je Element. Ein Element ohne Behälter füllt sein Feld; was in einem Behälter
@@ -477,18 +505,19 @@ public class FlagDeckGenerator {
 	 * Je Fläche eine Farbfrage, in zufälliger Reihenfolge. Bei einer einzigen Fläche gibt es nichts
 	 * zu mischen — dann bleibt die Klammer weg.
 	 */
-	private void fillAreas(List<String> steps, int firstArea, List<String> colors) {
-		if (colors.isEmpty())
+	private void fillAreas(List<String> steps, List<Fill> fills) {
+		if (fills.isEmpty())
 			return;
 		add(steps, "Output:Welche Farbe hat die markierte Fläche?");
-		for (int i = 0; i < colors.size(); i++) {
-			if (colors.size() > 1)
+		for (int i = 0; i < fills.size(); i++) {
+			Fill fill = fills.get(i);
+			if (fills.size() > 1)
 				pending = i == 0 ? "<ShuffleStart>" : "<ShuffleBreak>";
-			add(steps, "SketchImageMark:" + (firstArea + i));
-			add(steps, answer(colors.get(i), COLORS.toArray(new String[0])));
-			add(steps, "SketchImageFill:" + (firstArea + i) + "," + colors.get(i));
+			add(steps, "SketchImageMark:" + fill.area());
+			add(steps, answer(fill.color(), COLORS.toArray(new String[0])));
+			add(steps, "SketchImageFill:" + fill.area() + "," + fill.color());
 		}
-		if (colors.size() > 1)
+		if (fills.size() > 1)
 			pending = "<ShuffleEnd>";
 	}
 
@@ -523,6 +552,7 @@ public class FlagDeckGenerator {
 			throw new RuntimeException(country + ": die erzeugte Zeile ist nicht lesbar", e);
 		}
 		int available = 0;
+		Set<Integer> filled = new HashSet<>();
 		for (String raw : steps) {
 			String step = raw.substring(raw.lastIndexOf('>') + 1);
 			if (step.startsWith("SketchImage:"))
@@ -534,6 +564,8 @@ public class FlagDeckGenerator {
 				if (area >= available)
 					throw new RuntimeException(country + ": " + step + ", aber es gibt erst "
 							+ available + " Flächen");
+				if (step.startsWith("SketchImageFill:") && !filled.add(area))
+					throw new RuntimeException(country + ": Fläche " + area + " wird doppelt gefüllt");
 			}
 		}
 	}
