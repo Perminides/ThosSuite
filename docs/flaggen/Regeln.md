@@ -30,6 +30,9 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 - Sterne haben drei Bilder: eins, zwei, mehr als zwei.
 - Silhouetten kommen aus neutralen Piktogrammen, **nie aus der echten Flagge** — ein `Vogel` steht auf
   neun Flaggen und darf kein bestimmter Vogel sein.
+- Ein zu komplexes **Emblem** wird zu einer generischen, mehrflächigen Platzhalter-Silhouette (das
+  Dülmener Wappen). Eine Datei für alle Embleme; ungefärbt, die Flächen geben Struktur über ihre
+  Kontur. Löst `Flaggen-Deck.md` §5 ab („komplexes Emblem wird nicht gezeichnet").
 
 ## Platzieren
 
@@ -71,6 +74,9 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 - Die Farbliste ist **positionsbezogen**: eine Farbe je Fläche, in Flächenreihenfolge, `|`-getrennt.
 - Acht Farben: Rot, Blau, Hellblau, Grün, Gelb, Orange, Weiß, Schwarz. Kein `bunt`.
 - Die Farbfrage wird gestellt, wenn im Blatt eine Farbe steht. Der Leak ist bekannt und gekauft.
+- Eine Fläche **ohne** Farbe im Blatt bleibt grau und wird nicht gefragt — so das ungefärbte Emblem.
+  Farbe und Fläche laufen über die **Flächennummer** zusammen, nicht über die Position in der
+  Farbliste; eine ungefärbte Fläche verschiebt die folgenden nicht.
 - **Flächen sind nie durchsichtig.** Zwei Grautöne je Skin — hell markiert, dunkel noch nicht dran —
   damit ein Element die Linien darunter abdeckt. Keiner der beiden darf einer Antwortfarbe
   nahekommen; die gefährlichen Nachbarn sind Weiß und Schwarz.
@@ -96,9 +102,11 @@ uni                                sw-<n>            spezial-<n>
 
 Wörter statt Ziffern in den Zweignamen. `-goesch` wird angehängt, wenn die Flagge einen hat.
 
-Wo nach der **Verteilung** gefragt wird, steht sie im Namen: `waagerecht-3-<3W>`, `waagerecht-5-<5W>`,
-`senkrecht-<n>-<S-Anordnung>`. Sonst zeigte die Skizze gleiche Streifen, wo „Mitte breiter"
-geantwortet wurde. Bei allen anderen Streifenzahlen gibt es keine Verteilungsfrage und keinen Zusatz.
+Wo nach der **Verteilung** gefragt wird, steht sie im Namen. Bei fünf waagerechten Streifen ist es die
+**ganze Abfolge** der Breiten: `waagerecht-5-3-1-2-1-3` — die Zahlen sind das Verhältnis selbst,
+`build-streifen-sketch.py` liest sie direkt, keine Tabelle. Drei waagerechte (`waagerecht-3-<3W>`) und
+senkrechte (`senkrecht-<n>-<S-Anordnung>`) tragen weiter den **Index**; er schlägt in einer Fallback-
+Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenzahlen kein Zusatz.
 
 ## Fragen
 

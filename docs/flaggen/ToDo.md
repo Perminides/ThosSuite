@@ -19,7 +19,8 @@ Beschlossen am 29.08.2026, noch nicht in `Flaggen-Deck.md` eingearbeitet.
 - Die Farbfrage wird gestellt, wenn in der Tabelle eine Farbe steht — Entscheidung pro Flagge, beim
   Ausfüllen. Der Leak ist bekannt und gekauft.
 - Keine neuen Elementkategorien, um die Frage abzuleiten.
-- Prüfregel dafür: Anzahl der Farben = Anzahl der Flächen im Elementsketch.
+- Prüfregel dafür: Anzahl der Farben = Anzahl der Flächen im Elementsketch — **oder null Farben**; eine
+  ungefärbte Fläche bleibt grau (das Emblem).
 
 ## MC — Syntax, Typen, Mechanik
 
@@ -113,9 +114,10 @@ Flagge an dem Tag, an dem sie drankommt.
 
 1. **Dreieck** — Fragen 4a und 4b im Generator, dazu die Sketches. Als Einziges ändert es den
    Fragensatz, deshalb zuerst.
-2. **Emblem** — ein gezeichneter Platzhalter (Fragezeichen oder Wappen) statt eines Sonderfalls.
-   Kippt §5s „komplexes Emblem wird nicht gezeichnet"; gehört dann in `Regeln.md`. Nach der Farbe
-   wird ohnehin nur gefragt, wenn im Blatt eine steht.
+2. **Emblem** — **erledigt (01.09.2026).** Eine generische, mehrflächige, ungefärbte Platzhalter-
+   Silhouette (Dülmener Wappen) für alle komplexen Embleme; Vorhandensein und Ort werden gefragt, die
+   Farbe nicht. Die 4 farbigen Fälle (St. Lucia u. a.) später als handgeschriebene Zusatzfrage. §5
+   abgelöst, Regel steht in `Regeln.md`.
 3. **Grönland** — geteilter Kreis: eine Fläche, zwei Farben, eigene Datei.
 4. **Eine eigene Session nur für MC** — **erledigt (31.08.2026).** `MC+` als deklarierter Step,
    Rückbau von `isCollectMode`, die Präfix-Syntax und die tolerierte Antwort.
@@ -130,10 +132,12 @@ Kein Showstopper, wird nebenbei erledigt: Nepal (nicht rechtwinkliger Sketch), S
 
 ## Breitenverhältnisse der übrigen Verteilungswerte
 
-Der Sketch-Name trägt die Verteilung inzwischen, und `build-streifen-sketch.py` kennt eine Tabelle
-dafür. Gefüllt sind erst `3W = 0` (alle gleich) und `5W = 3` (2 : 1 : 4 : 1 : 2). Die übrigen Werte
-von `3W`, `5W` und `S-Anordnung` kommen dazu, wenn die erste Flagge sie braucht — schematisch
-deutlich, nicht maßstabsgetreu.
+`5W` ist **erledigt (01.09.2026)**: Der Wert ist die ganze Abfolge (`3-1-2-1-3`), steht 1:1 als Antwort
+und im Sketch-Namen, `build-streifen-sketch.py` liest die Breiten direkt — keine Tabelle mehr.
+
+Offen bleiben `3W` und `S-Anordnung`: die tragen weiter einen Index in die (aktuell leere) Fallback-
+Tabelle, also alle gleich breit. Echte Verhältnisse kommen dazu, wenn die erste Flagge sie braucht —
+schematisch deutlich, nicht maßstabsgetreu. Wer will, stellt sie später auf denselben Abfolge-Stil um.
 
 ## Offen geblieben, ausdrücklich vertagt
 
