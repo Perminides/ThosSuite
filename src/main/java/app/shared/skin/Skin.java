@@ -329,7 +329,7 @@ public abstract class Skin extends SkinProperties {
 	
 	private void addTextFieldStyles(CssBuilder builder) {
 	    Insets i = borderSmallComponent.insets();
-	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", (int)i.getTop(), (int)i.getRight(), (int)i.getBottom(), (int)i.getLeft());
+	    String paddingCss = padding(i, 0);
 	    
 	  builder.start(".text-field")
 	       .add("-fx-text-fill", textActiveComponentColor)
@@ -345,9 +345,14 @@ public abstract class Skin extends SkinProperties {
 	       .end();
 
 	    // „Jetzt bist du dran": SuiteTextField.setActive holt den Fokus, der Zustand ist also schon da.
+	    //
+	    // Der Ring nimmt seine Breite aus der Polsterung, statt sie oben draufzulegen — siehe
+	    // {@link #padding}. Sonst wüchse das Feld beim Fokussieren um 2 x activeBorderWidth, und das
+	    // Layout ringsum ruckt.
 	    if (activeBorderColor != null)
 	        builder.start(".text-field:focused")
 	           .ring(activeBorderColor, activeBorderWidth)
+	           .add("-fx-padding", padding(i, activeBorderWidth))
 	           .end();
 
 	    builder.start(".text-field:disabled")
@@ -363,6 +368,32 @@ public abstract class Skin extends SkinProperties {
 	    .end();
 	}
 	
+	/**
+	 * Die Polsterung als CSS, um die Breite eines Rings verkleinert ({@code ring = 0} liefert sie
+	 * unverändert).
+	 *
+	 * <p>In JavaFX zählt die Rahmenbreite einer Region zu ihren Insets. Ein Ring, der erst in einem
+	 * Zustand auftaucht, macht die Komponente deshalb breiter und höher — im relativen Layout ruckt
+	 * dann alles ringsum. In einem Dialog kommt hinzu, dass das Fenster nicht mitwächst
+	 * (JDK-8087377, offen seit 2014): Die fehlenden Pixel holt sich die Zeile bei den Geschwistern,
+	 * und das Label daneben kürzt seinen Text.</p>
+	 *
+	 * <p>Nimmt der Ring seine Breite stattdessen aus der Polsterung, bleibt das Außenmaß in beiden
+	 * Zuständen gleich und der Inhalt steht weiterhin auf demselben Pixel. Die MC-Knöpfe lösen
+	 * dasselbe Problem anders — sie rechnen ihre Größe von vornherein mit dem breitesten je
+	 * möglichen Rahmen ({@code mcBorderWidth}); dort ist der Platz also reserviert statt geliehen.</p>
+	 */
+	private static String padding(Insets insets, int ring) {
+		int top = (int) insets.getTop() - ring;
+		int right = (int) insets.getRight() - ring;
+		int bottom = (int) insets.getBottom() - ring;
+		int left = (int) insets.getLeft() - ring;
+		if (Math.min(Math.min(top, right), Math.min(bottom, left)) < 0)
+			throw new RuntimeException("Der Ring ist breiter als die Polsterung: " + ring
+					+ "px Ring auf " + insets + " — der Skin braucht mehr Polster oder einen dünneren Ring");
+		return top + "px " + right + "px " + bottom + "px " + left + "px";
+	}
+
 	private void addTextAreaStyles(CssBuilder builder) {
 	    builder.start(".text-area")
 	       .add("-fx-text-fill", textActiveComponentColor)
