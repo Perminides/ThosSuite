@@ -35,20 +35,20 @@ public class MainWindowHeaderBar extends HeaderBar {
 	public MainWindowHeaderBar(Stage stage, MenuBar menuBar) {
 		getStyleClass().add("my-header-bar");
 
-		Label titleLabel = new Label("Thos Suite (FX)");
+		Label titleLabel = new Label("Thos Suite");
 		HeaderBar.setDragType(titleLabel, HeaderDragType.DRAGGABLE_SUBTREE);
 		setCenter(titleLabel);
 
-		HBox links = new HBox(0);
-		links.getStyleClass().add("my-header-leading");
-		links.setAlignment(Pos.CENTER_LEFT);
+		HBox left = new HBox(0);
+		left.getStyleClass().add("my-header-leading");
+		left.setAlignment(Pos.CENTER_LEFT);
 
 		ImageView icon = buildResponsiveIcon(stage);
 		if (icon != null)
-			links.getChildren().add(icon);
-		links.getChildren().add(menuBar);
+			left.getChildren().add(icon);
+		left.getChildren().add(menuBar);
 
-		setLeft(links);
+		setLeft(left);
 	}
 
 	/**
@@ -66,12 +66,12 @@ public class MainWindowHeaderBar extends HeaderBar {
 		view.setPreserveRatio(true);
 		view.setSmooth(true);
 
-		DoubleBinding zielHoehe = heightProperty().multiply(ICON_HEIGHT_RATIO);
-		view.fitHeightProperty().bind(zielHoehe);
+		DoubleBinding targetHeight = heightProperty().multiply(ICON_HEIGHT_RATIO);
+		view.fitHeightProperty().bind(targetHeight);
 
-		ObjectBinding<Image> bestesSymbol = Bindings.createObjectBinding(
-				() -> passendstes(icons, zielHoehe.get()), zielHoehe);
-		view.imageProperty().bind(bestesSymbol);
+		ObjectBinding<Image> bestIcon = Bindings.createObjectBinding(
+				() -> bestFitting(icons, targetHeight.get()), targetHeight);
+		view.imageProperty().bind(bestIcon);
 
 		return view;
 	}
@@ -81,15 +81,15 @@ public class MainWindowHeaderBar extends HeaderBar {
 	 * wenig wie möglich herunterskaliert wird. Ist keines groß genug, das letzte der Liste; die
 	 * Symbole liegen aufsteigend vor.
 	 */
-	private static Image passendstes(ObservableList<Image> icons, double gebrauchteHoehe) {
-		if (gebrauchteHoehe <= 0) // erster Layout-Durchlauf
+	private static Image bestFitting(ObservableList<Image> icons, double neededHeight) {
+		if (neededHeight <= 0) // erster Layout-Durchlauf
 			return icons.get(0);
 
-		Image bestes = null;
+		Image best = null;
 		for (Image kandidat : icons)
-			if (kandidat.getHeight() >= gebrauchteHoehe && (bestes == null || kandidat.getHeight() < bestes.getHeight()))
-				bestes = kandidat;
+			if (kandidat.getHeight() >= neededHeight && (best == null || kandidat.getHeight() < best.getHeight()))
+				best = kandidat;
 
-		return bestes != null ? bestes : icons.get(icons.size() - 1);
+		return best != null ? best : icons.get(icons.size() - 1);
 	}
 }

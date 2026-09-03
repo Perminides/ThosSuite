@@ -30,7 +30,7 @@ public final class SuiteBackground {
 	/** Der fertige Hintergrund zu dieser Bilddatei. */
 	public static Background of(Path wallpaper) {
 		try {
-			BackgroundImage bild = new BackgroundImage(
+			BackgroundImage image = new BackgroundImage(
 					new Image(wallpaper.toUri().toString()),
 					BackgroundRepeat.NO_REPEAT,
 					BackgroundRepeat.NO_REPEAT,
@@ -43,7 +43,7 @@ public final class SuiteBackground {
 							true,  // contain: skaliert zum Reinpassen, ohne die Proportionen zu ändern
 							true   // cover:   füllt alles aus, notfalls gestreckt
 					));
-			return new Background(bild);
+			return new Background(image);
 		} catch (Exception e) {
 			throw new RuntimeException("Konnte Hintergrundbild nicht laden: " + wallpaper, e);
 		}

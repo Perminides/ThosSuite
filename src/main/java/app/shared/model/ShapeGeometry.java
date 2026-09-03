@@ -45,15 +45,27 @@ public final class ShapeGeometry {
 
 	public record Point(double x, double y) {}
 
+	/**
+	 * Ein Kreis, der aus einem anderen Kreis herausgeschnitten wird — so entsteht eine Sichel aus
+	 * echten Bögen statt aus einer Näherung. Nur Skizzen benutzen das; Karten lassen es null.
+	 */
+	public record Cutout(double x, double y, double radius) {}
+
 	private final String id;
 	private final Kind kind;
 	private final List<List<Point>> paths;   // POLYGON: Ringe; LINE: Linienzüge; CIRCLE/CENTER: leer
 	private final double centerX;
 	private final double centerY;
 	private final double radius;
+	private final Cutout cutout;             // nur Skizzen: der herausgeschnittene Kreis, sonst null.
 	private final String type;               // nur Shape-Karten (roher GeoJSON-Schlüssel); Bild-Karten: null. Siehe Klassen-Doc.
 
 	private ShapeGeometry(String id, Kind kind, List<List<Point>> paths, double centerX, double centerY, double radius, String type) {
+		this(id, kind, paths, centerX, centerY, radius, type, null);
+	}
+
+	private ShapeGeometry(String id, Kind kind, List<List<Point>> paths, double centerX, double centerY,
+			double radius, String type, Cutout cutout) {
 		this.id = id;
 		this.kind = kind;
 		this.paths = paths;
@@ -61,6 +73,7 @@ public final class ShapeGeometry {
 		this.centerY = centerY;
 		this.radius = radius;
 		this.type = type;
+		this.cutout = cutout;
 	}
 
 	/** Shape-Karte: Polygon mit Layer-{@code type} (Darstellung + Lernstoff leiten sich daraus ab, s. Klassen-Doc). */
@@ -81,13 +94,18 @@ public final class ShapeGeometry {
 		return new ShapeGeometry(id, Kind.CIRCLE, List.of(), centerX, centerY, radius, null);
 	}
 
+	/** Kreis mit einem herausgeschnittenen zweiten Kreis — die Sichel. */
+	public static ShapeGeometry circle(String id, double centerX, double centerY, double radius, Cutout cutout) {
+		return new ShapeGeometry(id, Kind.CIRCLE, List.of(), centerX, centerY, radius, null, cutout);
+	}
+
 	/** Zentrier-Anker: kein sichtbares Shape. Die Bild-Karte zentriert nur auf x/y, baut keinen Node. */
 	public static ShapeGeometry center(String id, double x, double y) {
 		return new ShapeGeometry(id, Kind.CENTER, List.of(), x, y, 0, null);
 	}
 
 	/**
-	 * Dieselbe Form in einem anderen Maßstab — alle Punkte, Mittelpunkte und Radien mit {@code faktor}
+	 * Dieselbe Form in einem anderen Maßstab — alle Punkte, Mittelpunkte und Radien mit {@code factor}
 	 * multipliziert. Gibt eine <b>neue</b> Instanz zurück; das Original bleibt unangetastet, denn die
 	 * Geometrien liegen gecacht im {@code MapService} und werden zwischen Skins geteilt.
 	 *
@@ -97,15 +115,18 @@ public final class ShapeGeometry {
 	 * Koordinaten treffen nur die Form, und 15 px Schatten bleiben 15 px, egal wie stark die Karte
 	 * gestaucht wird.</p>
 	 */
-	public ShapeGeometry scaled(double faktor) {
-		List<List<Point>> skaliert = new ArrayList<>(paths.size());
+	public ShapeGeometry scaled(double factor) {
+		List<List<Point>> scaled = new ArrayList<>(paths.size());
 		for (List<Point> ring : paths) {
 			List<Point> neu = new ArrayList<>(ring.size());
 			for (Point p : ring)
-				neu.add(new Point(p.x() * faktor, p.y() * faktor));
-			skaliert.add(neu);
+				neu.add(new Point(p.x() * factor, p.y() * factor));
+			scaled.add(neu);
 		}
-		return new ShapeGeometry(id, kind, skaliert, centerX * faktor, centerY * faktor, radius * faktor, type);
+		Cutout skaliert = cutout == null ? null
+				: new Cutout(cutout.x() * factor, cutout.y() * factor, cutout.radius() * factor);
+		return new ShapeGeometry(id, kind, scaled, centerX * factor, centerY * factor, radius * factor, type,
+				skaliert);
 	}
 
 	public String id() { return id; }
@@ -114,6 +135,7 @@ public final class ShapeGeometry {
 	public double centerX() { return centerX; }
 	public double centerY() { return centerY; }
 	public double radius() { return radius; }
+	public Cutout cutout() { return cutout; }
 
 	/** Der rohe Layer-Schlüssel — nur bei Shape-Karten gesetzt, sonst null. Siehe Klassen-Doc. */
 	public String type() { return type; }

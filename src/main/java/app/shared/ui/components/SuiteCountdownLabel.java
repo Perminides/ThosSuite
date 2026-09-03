@@ -28,7 +28,7 @@ public class SuiteCountdownLabel extends SuiteInfoLabel {
 	private Runnable onExpired;
 	private int perAnswerSeconds;
 	private int remaining;
-	private boolean liefVorUnterbrechung;
+	private boolean ranBeforePause;
 
 	public SuiteCountdownLabel(Rectangle2D bounds) {
 		super("", bounds);
@@ -75,17 +75,17 @@ public class SuiteCountdownLabel extends SuiteInfoLabel {
 	 * lief — eine von Hand eingefrorene Uhr soll {@link #resume()} nicht auftauen.
 	 */
 	public void suspend() {
-		liefVorUnterbrechung = timeline.getStatus() == Animation.Status.RUNNING;
-		if (liefVorUnterbrechung) {
+		ranBeforePause = timeline.getStatus() == Animation.Status.RUNNING;
+		if (ranBeforePause) {
 			timeline.pause();
 			pseudoClassStateChanged(STATE_PAUSED, true);
 		}
 	}
 
 	public void resume() {
-		if (!liefVorUnterbrechung)
+		if (!ranBeforePause)
 			return;
-		liefVorUnterbrechung = false;
+		ranBeforePause = false;
 		timeline.play();
 		pseudoClassStateChanged(STATE_PAUSED, false);
 	}

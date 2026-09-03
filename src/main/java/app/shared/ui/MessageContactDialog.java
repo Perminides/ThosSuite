@@ -75,13 +75,13 @@ public class MessageContactDialog {
      *
      * @param quelle           Anzeigename der Quelle für die Infozeile ("WhatsApp", "Signal")
      * @param rawIdentifier    Kennung des Kontakts in der Quelle (WhatsApp-JID, Signal-serviceId)
-     * @param vorschlag        Vorbelegung des Namensfelds, oder {@code null} wenn die Quelle keinen
+     * @param suggestion        Vorbelegung des Namensfelds, oder {@code null} wenn die Quelle keinen
      *                         Namen kennt. Ein Vorschlag heißt „so anlegen" — er zählt erst dann als
      *                         bestehender Kontakt, wenn er aus der Vorschlagsliste gewählt wird.
      * @param knownContacts    Map von Anzeigename → contact_id der bekannten Kontakte
      * @return Entscheidung des Nutzers, oder {@code null} bei Abbruch
      */
-    public static Result show(String quelle, String rawIdentifier, String vorschlag,
+    public static Result show(String quelle, String rawIdentifier, String suggestion,
             Map<String, Integer> knownContacts) {
     	SuiteDialog<Void> dialog = new SuiteDialog<>(TITLE_NEW);
 
@@ -103,8 +103,8 @@ public class MessageContactDialog {
         // Kennt die Quelle einen Namen, steht er als Vorschlag im Feld. Das löst den Listener unten
         // aus und lässt den Dialog damit im Zustand „neuer Kontakt" — genau richtig, denn ein
         // Vorschlag ist noch keine Auswahl aus der Liste.
-        if (vorschlag != null && !vorschlag.isBlank())
-            nameField.setText(vorschlag);
+        if (suggestion != null && !suggestion.isBlank())
+            nameField.setText(suggestion);
 
         content.getChildren().addAll(infoLabel, nameLabel, nameField);
         dialog.getDialogPane().setContent(content);

@@ -35,27 +35,27 @@ record ShadowSpace(int top, int right, int bottom, int left) {
 		if (effect == null || !effect.trim().toLowerCase().startsWith("dropshadow("))
 			return KEINER;
 
-		String innen = effect.trim();
-		innen = innen.substring(innen.indexOf('(') + 1, innen.lastIndexOf(')'));
+		String inner = effect.trim();
+		inner = inner.substring(inner.indexOf('(') + 1, inner.lastIndexOf(')'));
 
-		List<String> teile = trenneAufOberstererEbene(innen);
-		if (teile.size() != 6)
+		List<String> parts = splitOnTopLevel(inner);
+		if (parts.size() != 6)
 			throw new RuntimeException("dropshadow braucht sechs Werte (Weichzeichner, Farbe, Radius,"
-					+ " Streuung, X-Versatz, Y-Versatz), gelesen habe ich " + teile.size() + ": " + effect);
+					+ " Streuung, X-Versatz, Y-Versatz), gelesen habe ich " + parts.size() + ": " + effect);
 
-		double radius = zahl(teile.get(2), effect);
-		double versatzX = zahl(teile.get(4), effect);
-		double versatzY = zahl(teile.get(5), effect);
+		double radius = number(parts.get(2), effect);
+		double offsetX = number(parts.get(4), effect);
+		double offsetY = number(parts.get(5), effect);
 
 		return new ShadowSpace(
-				aufgerundet(radius - versatzY),
-				aufgerundet(radius + versatzX),
-				aufgerundet(radius + versatzY),
-				aufgerundet(radius - versatzX));
+				roundedUp(radius - offsetY),
+				roundedUp(radius + offsetX),
+				roundedUp(radius + offsetY),
+				roundedUp(radius - offsetX));
 	}
 
 	/** Ob überhaupt Platz gebraucht wird — für Regeln, die es ohne Schatten gar nicht geben soll. */
-	boolean vorhanden() {
+	boolean isPresent() {
 		return top > 0 || right > 0 || bottom > 0 || left > 0;
 	}
 
@@ -63,37 +63,37 @@ record ShadowSpace(int top, int right, int bottom, int left) {
 	 * Zerlegt an Kommas, aber nur außerhalb von Klammern: Die Farbe bringt als {@code rgba(0,0,0,0.22)}
 	 * eigene Kommas mit, und ein schlichtes {@code split(",")} zerlegte den Wert an der falschen Stelle.
 	 */
-	private static List<String> trenneAufOberstererEbene(String innen) {
-		List<String> teile = new ArrayList<>();
-		int tiefe = 0;
+	private static List<String> splitOnTopLevel(String inner) {
+		List<String> parts = new ArrayList<>();
+		int depth = 0;
 		int start = 0;
 
-		for (int i = 0; i < innen.length(); i++) {
-			char zeichen = innen.charAt(i);
-			if (zeichen == '(')
-				tiefe++;
-			else if (zeichen == ')')
-				tiefe--;
-			else if (zeichen == ',' && tiefe == 0) {
-				teile.add(innen.substring(start, i));
+		for (int i = 0; i < inner.length(); i++) {
+			char character = inner.charAt(i);
+			if (character == '(')
+				depth++;
+			else if (character == ')')
+				depth--;
+			else if (character == ',' && depth == 0) {
+				parts.add(inner.substring(start, i));
 				start = i + 1;
 			}
 		}
-		teile.add(innen.substring(start));
-		return teile;
+		parts.add(inner.substring(start));
+		return parts;
 	}
 
-	private static double zahl(String wert, String effect) {
+	private static double number(String value, String effect) {
 		try {
-			return Double.parseDouble(wert.trim());
+			return Double.parseDouble(value.trim());
 		} catch (NumberFormatException e) {
-			throw new RuntimeException("Keine Zahl, wo im dropshadow eine stehen muss: '" + wert.trim()
+			throw new RuntimeException("Keine Zahl, wo im dropshadow eine stehen muss: '" + value.trim()
 					+ "' in " + effect, e);
 		}
 	}
 
 	/** Aufgerundet, damit der Platz nie knapp ausfällt; ein Versatz größer als der Radius ergibt null. */
-	private static int aufgerundet(double wert) {
-		return wert <= 0 ? 0 : (int) Math.ceil(wert);
+	private static int roundedUp(double value) {
+		return value <= 0 ? 0 : (int) Math.ceil(value);
 	}
 }

@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Set;
 
 import app.shared.model.ScreenView;
+import app.shared.model.ShapeGeometry;
+import app.shared.model.SketchColor;
 import app.shared.model.AnkiCallbacks;
 import app.shared.skin.LearnComponent;
 import app.shared.skin.Skin;
@@ -55,24 +57,25 @@ public abstract class AnkiLearnView {
 
 	private final String deckId;
 	private final String mapName;
-	private final String kategorie;
+	private final String category;
 	private final AnkiCallbacks callbacks;
 
 	private final ComponentHost canvas = new ComponentHost();
 
-	private LearnMap karte;
+	private LearnMap map;
 	private SuiteInfoLabel questionArea;
 	private SuiteInfoLabel progressArea;
 	private SuiteInfoLabel cardHistoryArea;
 	private SuiteImage imageComponent;
 	private MultipleChoicePane mcPane;
 	private SuiteIconButton backButton;
+	private SuiteIconButton submitButton;
 	private SuiteTextField inputField;
 
-	protected AnkiLearnView(String deckId, String mapName, String kategorie, AnkiCallbacks callbacks) {
+	protected AnkiLearnView(String deckId, String mapName, String category, AnkiCallbacks callbacks) {
 		this.deckId = deckId;
 		this.mapName = mapName;
-		this.kategorie = kategorie;
+		this.category = category;
 		this.callbacks = callbacks;
 	}
 
@@ -90,11 +93,11 @@ public abstract class AnkiLearnView {
 
 	protected String deckId()              { return deckId; }
 	protected String mapName()             { return mapName; }
-	protected String kategorie()           { return kategorie; }
+	protected String category()           { return category; }
 	protected AnkiCallbacks callbacks() { return callbacks; }
 
 	/** Für Unterklassen mit eigenen Bestandteilen — siehe „Achtung beim Erweitern" oben. */
-	protected void addComponents(Node... teile) { canvas.addComponents(teile); }
+	protected void addComponents(Node... parts) { canvas.addComponents(parts); }
 
 	// ===== Aufbau =====
 
@@ -102,55 +105,62 @@ public abstract class AnkiLearnView {
 	public void rebuild() {
 		Skin skin = SkinService.get();
 
-		canvas.setWallpaper(skin.wallpaperPath(mapName, kategorie));
+		canvas.setWallpaper(skin.wallpaperPath(deckId, mapName, category));
 
-		karte = createMap();
+		map = createMap();
 
 		questionArea    = infoLabel(skin, Skin.TextLabelType.QUESTION);
 		progressArea    = infoLabel(skin, Skin.TextLabelType.PROGRESS);
 		cardHistoryArea = infoLabel(skin, Skin.TextLabelType.CARD_HISTORY);
 
-		imageComponent = new SuiteImage(skin.learnComponentBounds(deckId, kategorie, LearnComponent.IMAGE));
+		imageComponent = new SuiteImage(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.IMAGE));
 
-		// !Sofort: Bild, Auswahl und Knopf staffeln über deckId, Eingabefeld und Textfelder über
-		// mapName. Bei allen Decks sind beide gleich, deshalb fällt es nicht auf — ein Deck mit
-		// abweichendem mapName läse seine Maße aus zwei verschiedenen Properties.
 		mcPane = null;
+		submitButton = null;
 		if (hasMcPane()) {
-			mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, kategorie, LearnComponent.MC));
+			mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.MC));
 			mcPane.addListener(callbacks.mcAnswerClicked());
+
+			submitButton = new SuiteIconButton(Skin.IconButtonType.SUBMIT,
+					skin.learnComponentBounds(deckId, mapName, category, LearnComponent.SUBMIT_BUTTON));
+			submitButton.onClick(callbacks.submitClicked());
+			// Sonst löst die Eingabetaste den zuletzt geklickten Knopf ein zweites Mal aus.
+			submitButton.setFocusTraversable(false);
+			submitButton.setDisable(true);
 		}
 
 		backButton = new SuiteIconButton(Skin.IconButtonType.BACK,
-				skin.learnComponentBounds(deckId, kategorie, LearnComponent.BACK_BUTTON));
+				skin.learnComponentBounds(deckId, mapName, category, LearnComponent.BACK_BUTTON));
 		backButton.onClick(callbacks.backClicked());
 
 		inputField = null;
 		if (hasInputField()) {
-			inputField = new SuiteTextField(skin.learnComponentBounds(mapName, kategorie, LearnComponent.TEXT_INPUT));
+			inputField = new SuiteTextField(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.TEXT_INPUT));
 			inputField.onType(callbacks.textTyped());
 		}
 
 		canvas.clear();
-		canvas.addComponents(bestandteile());
+		canvas.addComponents(components());
 	}
 
 	/** Der Modifikator entscheidet nur über den abweichenden Hintergrund — der Rest steht in {@code .my-info-label}. */
 	private SuiteInfoLabel infoLabel(Skin skin, Skin.TextLabelType typ) {
-		SuiteInfoLabel label = new SuiteInfoLabel("", skin.learnTextLabelBounds(mapName, kategorie, typ));
+		SuiteInfoLabel label = new SuiteInfoLabel("", skin.learnTextLabelBounds(deckId, mapName, category, typ));
 		label.getStyleClass().add(typ.styleClass());
 		return label;
 	}
 
-	private Node[] bestandteile() {
+	private Node[] components() {
 		List<Node> parts = new ArrayList<>();
-		parts.add(karte.getView()); // die Karte ist ein Interface — der eine Schritt zum Node bleibt
+		parts.add(map.getView()); // die Karte ist ein Interface — der eine Schritt zum Node bleibt
 		parts.add(questionArea);
 		if (inputField != null)
 			parts.add(inputField);
 		parts.add(imageComponent);
-		if (mcPane != null)
+		if (mcPane != null) {
 			parts.add(mcPane);
+			parts.add(submitButton);
+		}
 		parts.add(progressArea);
 		parts.add(cardHistoryArea);
 		parts.add(backButton);
@@ -168,11 +178,29 @@ public abstract class AnkiLearnView {
 	public void setProgress(String text)    { progressArea.setText(text); }
 	public void setCardHistory(String text) { cardHistoryArea.setText(text); }
 
+	// ===== Skizze =====
+	// Sie sitzt im Bilderrahmen und teilt sich dessen Feld mit dem Bild — wer das eine zeigt,
+	// verdrängt das andere.
+
+	public void setSketch(List<ShapeGeometry> areas)        { imageComponent.setSketch(areas); }
+	public void addSketch(List<ShapeGeometry> areas, int cell, double size, double offsetX,
+			double offsetY) { imageComponent.addSketch(areas, cell, size, offsetX, offsetY); }
+	public void moveSketchArea(int area, int cell)          { imageComponent.moveSketchArea(area, cell); }
+	public void markSketchArea(int area)                    { imageComponent.markSketchArea(area); }
+	public void fillSketchArea(int area, SketchColor color) { imageComponent.fillSketchArea(area, color); }
+
 	// ===== Antwortauswahl =====
 
 	public void setMultipleChoice(List<String> answers) { mcPane.initiateMultipleChoice(answers); }
 	public void setMcCorrect(int id, boolean correct)   { mcPane.setCorrect(id, correct); }
+	public void setMcMarked(int id, boolean marked)     { mcPane.setMarked(id, marked); }
 	public void setMcSolution(Set<Integer> correctIds)  { mcPane.setCorrectAndInactive(correctIds); }
+
+	/**
+	 * Der Absende-Knopf steht immer da und ist nur bei einer Frage mit mehreren richtigen Antworten
+	 * ansprechbar — er ist damit der erste Hinweis, dass gesammelt geantwortet wird.
+	 */
+	public void setSubmitActive(boolean active) { if (submitButton != null) submitButton.setDisable(!active); }
 
 	/** Schaltet die Antwortauswahl ab. {@code McLearnView} überschreibt das leer — dort wäre es sinnlos. */
 	public void disableMcPanel() { mcPane.clearAndSetInactive(); }
@@ -184,10 +212,10 @@ public abstract class AnkiLearnView {
 
 	// ===== Karte =====
 
-	public void resetMarkers()                    { karte.reset(); }
-	public void setMapActive(boolean active)      { karte.setActive(active); }
-	public void addIdsToCorrect(Set<String> ids)  { karte.markCorrect(ids); }
-	public void setIdToIncorrect(String id)       { karte.markIncorrect(id); }
-	public void setMarkedIds(Set<String> ids)     { karte.mark(ids); }
-	public void setClickTargets(Set<String> ids)  { karte.setClickTargets(ids); }
+	public void resetMarkers()                    { map.reset(); }
+	public void setMapActive(boolean active)      { map.setActive(active); }
+	public void addIdsToCorrect(Set<String> ids)  { map.markCorrect(ids); }
+	public void setIdToIncorrect(String id)       { map.markIncorrect(id); }
+	public void setMarkedIds(Set<String> ids)     { map.mark(ids); }
+	public void setClickTargets(Set<String> ids)  { map.setClickTargets(ids); }
 }

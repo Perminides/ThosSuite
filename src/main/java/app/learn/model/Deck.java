@@ -6,6 +6,8 @@ public enum Deck {
     GERMANY_CARDS("germany", "Deutschland", "germany", DeckCategory.ANKI_DECK, "germanDeckJavaFX.csv", MapMetadata.GERMANY, "newGermanCardsPerDay", false),
     MC_CARDS("mc", "Multiple Choice", "mc", DeckCategory.ANKI_DECK, "mcDeckJavaFX.csv", null, "newMCCardsPerDay", false),
     WORLD_CARDS("world", "Welt", "world", DeckCategory.ANKI_DECK, "weltDeckJavaFX.csv", MapMetadata.WORLD, "newWorldCardsPerDay", false),
+    // mapName "world": Kartenbilder und alles noch nicht eigens Gesetzte kommen vom Weltdeck.
+    FLAG_CARDS("flag", "Fun with Flags", "world", DeckCategory.ANKI_DECK, "flaggenDeckJavaFX.csv;flaggenDeck2.csv", MapMetadata.WORLD, "newFlagCardsPerDay", false),
     FAST_WRITE_CARDS("fw", "Fast Write", "fw", DeckCategory.ANKI_DECK, "fastWriteDeck.csv", null, "newFastWriteCardsPerDay", false),
 
     // Bundesländer

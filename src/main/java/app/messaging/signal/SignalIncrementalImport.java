@@ -311,11 +311,11 @@ public class SignalIncrementalImport {
      */
     private void ensureContact(Connection signalConnection, Connection suiteConnection, String serviceId) throws SQLException {
         ContactInfo contact = source.loadContact(signalConnection, serviceId);
-        String vorschlag = resolveDisplayName(contact.name(), contact.profileName(),
+        String suggestion = resolveDisplayName(contact.name(), contact.profileName(),
             contact.profileFamilyName(), contact.profileFullName(), serviceId);
 
         MessageContactDialog.Result result = MessageContactDialog.show(
-            "Signal", serviceId, vorschlag, repo.loadAllContactsByDisplayName());
+            "Signal", serviceId, suggestion, repo.loadAllContactsByDisplayName());
 
         if (result == null)
             throw new IllegalStateException(
@@ -466,11 +466,11 @@ public class SignalIncrementalImport {
         addIfNotBlank(candidates, stripBidiControls(name));
         addIfNotBlank(candidates, buildFullName(profileName, profileFamilyName));
         addIfNotBlank(candidates, stripBidiControls(profileFullName));
-        String laengster = fallback;
+        String longest = fallback;
         for (String candidate : candidates)
-            if (laengster == fallback || candidate.length() > laengster.length())
-                laengster = candidate;
-        return laengster;
+            if (longest == fallback || candidate.length() > longest.length())
+                longest = candidate;
+        return longest;
     }
 
     private String buildFullName(String first, String last) {

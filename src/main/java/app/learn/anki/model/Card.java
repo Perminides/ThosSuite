@@ -4,17 +4,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import app.learn.model.LearnStat;
+import app.shared.model.SketchColor;
 import app.shared.AppClock;
 
 /**
  * Aktueller Ansatz: Jede Karte gibt es genau 1x im Speicher!
  */
 public class Card {
-    public sealed interface Step permits Image, ClickMapElements, Output, Input, MC, MarkMapElements, Pause, Fast {}
+    public sealed interface Step permits Image, ClickMapElements, Output, Input, ChoiceStep, MarkMapElements, Pause, Fast,
+            SketchImage, SketchImageAdd, SketchImageMove, SketchImageMark, SketchImageFill {}
+
+    /** MC und MC+ teilen sich Optionen und Reihenfolge; der Typ trägt das Verhalten. */
+    public sealed interface ChoiceStep extends Step permits MC, MCPlus {
+        Set<AnswerOption> options();
+        List<String> orderHint();
+    }
 
     /** So viele Antwortfelder passen höchstens auf den Schirm — gilt für jeden Skin gleich. */
     public static final int MAX_FAST_SLOTS = 10;
@@ -24,12 +33,29 @@ public class Card {
     public record ClickMapElements(Set<String> mandatory, Set<String> optional) implements Step {}
     public record Output(String text) implements Step {}
     public record Input(List<String> parts) implements Step {}
-    public record MC(Set<AnswerOption> options) implements Step {}
+    public record MC(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
+    public record MCPlus(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
     public record MarkMapElements(Set<String> left, Set<String> right) implements Step {} // Momentan ist right immer leer. Vielleicht will ich später aber auch mal die optionalen Shapes berücksichtigen...
     public record Pause() implements Step {}
     public record Fast(int seconds, boolean ordered, int slots, List<Answer> answers) implements Step {}
+
+    /**
+     * Die drei Schritte einer Skizze: laden, eine Fläche hervorheben, eine Fläche färben.
+     *
+     * <p>Sie zeigen nur an und fragen nichts — gefragt wird daneben per MC. Getrennt, damit der
+     * Ablauf vollständig in der Zeile steht und keiner der Schritte etwas über seine Nachbarn
+     * wissen muss. {@code SketchImage} ist zugleich das Zurücksetzen: eine neu geladene Struktur
+     * ist wieder leer.</p>
+     */
+    public record SketchImage(String structure) implements Step {}
+    public record SketchImageAdd(String structure, int cell, double size, double offsetX,
+            double offsetY) implements Step {}
+    public record SketchImageMove(int area, int cell) implements Step {}
+    public record SketchImageMark(int area) implements Step {}
+    public record SketchImageFill(int area, SketchColor color) implements Step {}
     
-    public record AnswerOption(String text, boolean correct) {}
+    public record AnswerOption(String text, Role role) {}
+    public enum Role { CORRECT, WRONG_ALWAYS_SHOWN, TOLERATED, DISTRACTOR_OPTIONAL }
     public record Answer(String hint, List<String> variants) {} // Eine gesuchte Antwort: ihre Schreibvarianten und ein Hinweis, der bis zum Treffer im Feld steht.  
 
     private final List<Step> steps;
@@ -131,7 +157,7 @@ public class Card {
 
 	/** Die Schritte, bei denen die Karte etwas von mir will. Alles andere zeigt nur an. */
 	private static boolean expectsInput(Step step) {
-		return step instanceof MC || step instanceof Input || step instanceof ClickMapElements
+		return step instanceof ChoiceStep || step instanceof Input || step instanceof ClickMapElements
 				|| step instanceof Fast;
 	}
 
@@ -153,13 +179,54 @@ public class Card {
             case "Image" -> new Image(body);
             case "Output"  -> new Output(body);
             case "Input"  -> new Input(Arrays.asList(body.split("\\|")));
-            case "MC"    -> new MC(parseMcAnswers(body));
+            case "MC"    -> parseMc(body, false);
+            case "MC+"   -> parseMc(body, true);
             case "Click" -> parseClickOrMark(body, true);
             case "Mark"  -> parseClickOrMark(body, false);
             case "Pause" -> new Pause();
             case "Fast"  -> parseFast(body);
+            case "SketchImage"     -> new SketchImage(body.trim());
+            case "SketchImageAdd"  -> parseSketchAdd(body);
+            case "SketchImageMove" -> parseSketchMove(body);
+            case "SketchImageMark" -> new SketchImageMark(Integer.parseInt(body.trim()));
+            case "SketchImageFill" -> parseSketchFill(body);
             default      -> throw new RuntimeException("Unbekannter Step: " + kind);
         };
+    }
+
+    /**
+     * {@code <struktur>,<rasterfeld 0..8>[,<groesse>[,<dx>,<dy>]]} — haengt an, ohne die bisherigen
+     * Fuellungen zu verlieren.
+     *
+     * <p>Groesse 1,0 heisst „fuellt ein Rasterfeld"; groesser ist erlaubt. Der Versatz zieht
+     * Geschwister im selben Feld auseinander und rechnet in den Koordinaten der Elementdatei.
+     * Beides ist im Generator ausgerechnet — die Karte fuehrt nur aus.</p>
+     */
+    private static Step parseSketchAdd(String body) {
+        String[] parts = body.split(",");
+        if (parts.length != 2 && parts.length != 3 && parts.length != 5)
+            throw new RuntimeException("SketchImageAdd braucht Struktur und Rasterfeld, dazu"
+                    + " wahlweise die Groesse oder Groesse und Versatz: " + body);
+        double size = parts.length > 2 ? Double.parseDouble(parts[2].trim()) : 1;
+        double dx = parts.length > 4 ? Double.parseDouble(parts[3].trim()) : 0;
+        double dy = parts.length > 4 ? Double.parseDouble(parts[4].trim()) : 0;
+        return new SketchImageAdd(parts[0].trim(), Integer.parseInt(parts[1].trim()), size, dx, dy);
+    }
+
+    /** {@code <fläche>,<rasterfeld 0..8>} — setzt eine vorhandene Flaeche um, ohne sie neu zu bauen. */
+    private static Step parseSketchMove(String body) {
+        String[] parts = body.split(",", 2);
+        if (parts.length < 2)
+            throw new RuntimeException("SketchImageMove braucht Fläche und Rasterfeld: " + body);
+        return new SketchImageMove(Integer.parseInt(parts[0].trim()), Integer.parseInt(parts[1].trim()));
+    }
+
+    /** {@code <fläche>,<farbname>} — ein unbekannter Farbname fliegt beim Einlesen des Decks. */
+    private static Step parseSketchFill(String body) {
+        String[] parts = body.split(",", 2);
+        if (parts.length < 2)
+            throw new RuntimeException("SketchImageFill braucht Fläche und Farbe: " + body);
+        return new SketchImageFill(Integer.parseInt(parts[0].trim()), SketchColor.fromLabel(parts[1].trim()));
     }
 
     // --- Fast ---
@@ -171,23 +238,23 @@ public class Card {
      * selbst Doppelpunkte tragen ("Blade Runner: 2049") — das Limit trennt sauber ab.</p>
      */
     private static Step parseFast(String body) {
-        String[] teile = body.split(":", 3);
-        if (teile.length < 3)
+        String[] parts = body.split(":", 3);
+        if (parts.length < 3)
             throw new RuntimeException("Fast braucht Sekunden, Modus und Antworten: " + body);
 
-        int seconds = Integer.parseInt(teile[0].trim());
+        int seconds = Integer.parseInt(parts[0].trim());
         if (seconds < 1)
             throw new RuntimeException("Fast braucht eine Zeit größer null: " + body);
 
-        String modus = teile[1].trim();
-        List<Answer> answers = parseFastAnswers(teile[2]);
-        boolean ordered = modus.equals("ordered");
+        String mode = parts[1].trim();
+        List<Answer> answers = parseFastAnswers(parts[2]);
+        boolean ordered = mode.equals("ordered");
         int slots = answers.size();
 
-        if (!ordered && !modus.equals("any")) {
-            if (!modus.startsWith("any"))
-                throw new RuntimeException("Unbekannter Fast-Modus: " + modus);
-            slots = Integer.parseInt(modus.substring(3));
+        if (!ordered && !mode.equals("any")) {
+            if (!mode.startsWith("any"))
+                throw new RuntimeException("Unbekannter Fast-Modus: " + mode);
+            slots = Integer.parseInt(mode.substring(3));
             if (slots < 1 || slots > answers.size())
                 throw new RuntimeException("anyN braucht 1 bis " + answers.size() + " Felder, nicht " + slots);
             if (hasHints(answers))
@@ -236,38 +303,95 @@ public class Card {
 
     /** Ohne Reihenfolge wäre bei einer doppelten Variante nicht entscheidbar, welches Feld gemeint ist. */
     private static void checkNoDuplicates(List<Answer> answers) {
-        Set<String> gesehen = new HashSet<>();
+        Set<String> seen = new HashSet<>();
         for (Answer answer : answers)
             for (String variant : answer.variants())
-                if (!gesehen.add(variant.toLowerCase()))
+                if (!seen.add(variant.toLowerCase()))
                     throw new RuntimeException("Antwort '" + variant + "' kommt mehrfach vor — nur bei ordered erlaubt");
     }
 
     /**
-     * Zerlegt einen mit {@code |} getrennten Abschnitt und legt jeden nicht-leeren Teil als Antwort
-     * der gegebenen Sorte ab.
+     * Zerlegt einen MC-Body. Zwei Schreibweisen, pro Step eine: Alt {@code a|b*c|d} (richtig vor dem
+     * ersten Stern) oder Präfixform, sobald eine Option mit {@code +} beginnt (nackt → {@code ?}). Die
+     * Rolle frisst nur das erste Zeichen, der Rest ist Text ({@code +-40°} = richtig „-40°"). Ein
+     * führendes {@code \} macht das nächste Zeichen literal, ein führendes {@code =} hält die
+     * geschriebene Reihenfolge als {@code orderHint} fest.
      */
-    private static void sammleAntworten(String abschnitt, boolean correct, Set<AnswerOption> options) {
-        for (String text : abschnitt.split("\\|")) {
-            String getrimmt = text.trim(); // Sicherheitshalber Leerzeichen entfernen
-            if (!getrimmt.isEmpty())
-                options.add(new AnswerOption(getrimmt, correct));
+    private static Step parseMc(String body, boolean plus) {
+        String rest = body.trim();
+        boolean ordered = rest.startsWith("=");
+        if (ordered)
+            rest = rest.substring(1);
+
+        String[] parts = rest.split("\\|", -1);
+        boolean prefixForm = false;
+        for (String part : parts)
+            if (part.trim().startsWith("+")) // nur ein echtes + macht Präfixform; -/~/? sind sonst Text
+                prefixForm = true;
+
+        Set<AnswerOption> options = new LinkedHashSet<>();
+        Set<String> seen = new HashSet<>();
+
+        if (prefixForm) {
+            for (String part : parts) {
+                String p = part.trim();
+                if (hasRolePrefix(p))
+                    addOption(options, seen, p.substring(1), roleOf(p));
+                else
+                    addOption(options, seen, unescape(p), Role.DISTRACTOR_OPTIONAL);
+            }
+        } else {
+            // Der erste Stern trennt richtig von falsch; jeder weitere ist Text (Gender-Stern).
+            String[] halves = rest.split("\\*", 2);
+            for (String text : halves[0].split("\\|"))
+                addOption(options, seen, unescape(text.trim()), Role.CORRECT);
+            if (halves.length > 1)
+                for (String text : halves[1].split("\\|"))
+                    addOption(options, seen, unescape(text.trim()), Role.DISTRACTOR_OPTIONAL);
         }
+
+        boolean hasCorrect = false;
+        for (AnswerOption option : options)
+            if (option.role() == Role.CORRECT)
+                hasCorrect = true;
+        if (!hasCorrect)
+            throw new RuntimeException("MC ohne richtige Antwort — " + body);
+
+        List<String> orderHint = new ArrayList<>();
+        if (ordered)
+            for (AnswerOption option : options)
+                orderHint.add(option.text());
+
+        return plus ? new MCPlus(options, orderHint) : new MC(options, orderHint);
     }
 
-    // Multiple Choice
-    private static Set<AnswerOption> parseMcAnswers(String mcStepString) {
-        Set<AnswerOption> options = new HashSet<>();
-        String[] split = mcStepString.split("\\*");
-        
-        // Teil 1: Die korrekten Antworten (vor dem Sternchen)
-        sammleAntworten(split[0], true, options);
+    /** Legt eine nicht-leere Option ab und bricht bei doppeltem Text ab. */
+    private static void addOption(Set<AnswerOption> options, Set<String> seen, String text, Role role) {
+        if (text.isEmpty())
+            return;
+        if (!seen.add(text))
+            throw new RuntimeException("MC: Antwort '" + text + "' kommt doppelt vor");
+        options.add(new AnswerOption(text, role));
+    }
 
-        // Teil 2: Die falschen Antworten (nach dem Sternchen, falls vorhanden)
-        if (split.length > 1)
-            sammleAntworten(split[1], false, options);
+    private static boolean hasRolePrefix(String part) {
+        return !part.isEmpty() && "+-~?".indexOf(part.charAt(0)) >= 0;
+    }
 
-        return options;
+    /** Ein führendes {@code \} macht das nächste Zeichen literal — es wird beim Lesen weggeworfen. */
+    private static String unescape(String text) {
+        return text.startsWith("\\") ? text.substring(1) : text;
+    }
+
+    private static Role roleOf(String part) {
+        if (!hasRolePrefix(part))
+            return Role.DISTRACTOR_OPTIONAL;
+        return switch (part.charAt(0)) {
+            case '+' -> Role.CORRECT;
+            case '-' -> Role.WRONG_ALWAYS_SHOWN;
+            case '~' -> Role.TOLERATED;
+            default  -> Role.DISTRACTOR_OPTIONAL; // '?'
+        };
     }
 
 	private static Set<String> splitAndTrim(String commaSeparated) {

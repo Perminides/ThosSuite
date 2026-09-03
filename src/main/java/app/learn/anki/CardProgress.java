@@ -2,8 +2,12 @@ package app.learn.anki;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -11,14 +15,21 @@ import app.learn.anki.model.Card;
 import app.learn.anki.model.FastAnswers;
 import app.learn.anki.model.MultipleChoiceAnswers;
 import app.learn.anki.model.Card.AnswerOption;
+import app.learn.anki.model.Card.ChoiceStep;
 import app.learn.anki.model.Card.ClickMapElements;
 import app.learn.anki.model.Card.Fast;
 import app.learn.anki.model.Card.Image;
 import app.learn.anki.model.Card.Input;
-import app.learn.anki.model.Card.MC;
+import app.learn.anki.model.Card.MCPlus;
+import app.learn.anki.model.Card.Role;
 import app.learn.anki.model.Card.MarkMapElements;
 import app.learn.anki.model.Card.Output;
 import app.learn.anki.model.Card.Pause;
+import app.learn.anki.model.Card.SketchImage;
+import app.learn.anki.model.Card.SketchImageAdd;
+import app.learn.anki.model.Card.SketchImageMove;
+import app.learn.anki.model.Card.SketchImageFill;
+import app.learn.anki.model.Card.SketchImageMark;
 import app.learn.anki.model.Card.Step;
 import app.shared.Log;
 
@@ -48,9 +59,19 @@ public class CardProgress {
 	private Set<Integer> clickedMcAnswers = new HashSet<>();
 	private boolean isPaused = false;
 	
-	private List<String> lastMcOrder = null;
 	private MultipleChoiceAnswers activeSessionMC = null;
 	private FastAnswers activeFast = null;
+
+	private static final int MAX_MC = 8;
+	/** Je Optionsuniversum: die Pflicht-Antworten aus allen Steps und die feste Reihenfolge, falls eine. */
+	private Map<Set<String>, RequiredAnswers> requiredPerCluster;
+	/** Je Universum die einmal eingefrorene Darstellung dieses Durchlaufs. */
+	private final Map<Set<String>, List<String>> frozenDisplay = new HashMap<>();
+
+	private static final class RequiredAnswers {
+		final Set<String> fromAllSteps = new HashSet<>();
+		final List<String> order = new ArrayList<>();
+	}
 	
 	public CardProgress(Card hint, SessionPresenter presenter, SessionProgress sessionProgress) {
 		this.card = hint;
@@ -59,18 +80,84 @@ public class CardProgress {
 		this.steps = hint.getSteps();
 	}
 	
-	/** Die Antworttexte in ihrer aktuellen Reihenfolge. */
-	private static List<String> texteVon(MultipleChoiceAnswers mc) {
-		List<String> texte = new ArrayList<>();
-		for (AnswerOption option : mc.getAnswerOptions())
-			texte.add(option.text());
-		return texte;
-	}
-
 	public void start() {
 		Log.info(this, "Los geht es mit Karte: " + card.getId());
+	    planMcClusters();
 	    currentIndex = 0;
 	    runSteps();
+	}
+
+	/**
+	 * Deterministischer Scan über alle Steps: MC/MC+ nach ihrem Optionsuniversum (Textmenge) gruppieren,
+	 * je Cluster die Pflicht-Menge (alle Texte, die irgendwo {@code +} oder {@code -} sind) und die feste
+	 * Reihenfolge sammeln. Reine Herleitung fürs Anzeigen — nicht der Parser, nicht der Generator.
+	 */
+	private void planMcClusters() {
+		requiredPerCluster = new HashMap<>();
+		for (Step step : steps) {
+			if (!(step instanceof ChoiceStep cs))
+				continue;
+			RequiredAnswers req = requiredPerCluster.computeIfAbsent(universeOf(cs.options()),
+					_ -> new RequiredAnswers());
+			req.fromAllSteps.addAll(pinnedOf(cs.options()));
+			mergeOrder(req.order, cs.orderHint());
+		}
+		for (Map.Entry<Set<String>, RequiredAnswers> entry : requiredPerCluster.entrySet())
+			if (entry.getValue().fromAllSteps.size() > MAX_MC)
+				throw new RuntimeException("MC: Pflicht-Menge größer als " + MAX_MC + " — " + entry.getKey());
+	}
+
+	private static void mergeOrder(List<String> into, List<String> incoming) {
+		if (incoming.isEmpty())
+			return;
+		if (into.isEmpty())
+			into.addAll(incoming);
+		else if (!into.equals(incoming))
+			throw new RuntimeException("MC: widersprüchliche feste Reihenfolgen fürs selbe Universum: "
+					+ into + " vs " + incoming);
+	}
+
+	private static Set<String> universeOf(Set<AnswerOption> options) {
+		Set<String> texts = new HashSet<>();
+		for (AnswerOption option : options)
+			texts.add(option.text());
+		return texts;
+	}
+
+	private static Set<String> pinnedOf(Set<AnswerOption> options) {
+		Set<String> texts = new HashSet<>();
+		for (AnswerOption option : options)
+			if (option.role() == Role.CORRECT || option.role() == Role.WRONG_ALWAYS_SHOWN)
+				texts.add(option.text());
+		return texts;
+	}
+
+	private static Map<String, Role> rolesOf(Set<AnswerOption> options) {
+		Map<String, Role> roles = new HashMap<>();
+		for (AnswerOption option : options)
+			roles.put(option.text(), option.role());
+		return roles;
+	}
+
+	/** Einmal pro Cluster und Durchlauf: Pflicht pinnen, aus dem Pool auffüllen, ordnen, einfrieren. */
+	private List<String> buildFrozen(Set<String> universe) {
+		RequiredAnswers req = requiredPerCluster.get(universe);
+		List<String> chosen = new ArrayList<>(req.fromAllSteps);
+
+		List<String> pool = new ArrayList<>(universe);
+		pool.removeAll(req.fromAllSteps);
+		Collections.shuffle(pool);
+		for (String text : pool) {
+			if (chosen.size() >= MAX_MC)
+				break;
+			chosen.add(text);
+		}
+
+		if (req.order.isEmpty())
+			Collections.shuffle(chosen);
+		else
+			chosen.sort(Comparator.comparingInt(req.order::indexOf));
+		return chosen;
 	}
 	
 	// ========================================
@@ -92,10 +179,10 @@ public class CardProgress {
 	        return; // Ignorieren
 	    }
 	    
-	    String eingabe = text.trim().toLowerCase();
+	    String typed = text.trim().toLowerCase();
 	    boolean correct = false;
 	    for (String part : input.parts())
-	        if (part.toLowerCase().equals(eingabe)) {
+	        if (part.toLowerCase().equals(typed)) {
 	            correct = true;
 	            break;
 	        }
@@ -185,42 +272,92 @@ public class CardProgress {
 		if (isPaused)
 	        throw new RuntimeException("Aha, das kann also passieren. Na dann hier lieber einfach return machen :-)");
 		
-		// User klickt einfach mehrfach auf den gleichen Button, wenn mehr als eine Antwort gesucht wird...
-		if (clickedMcAnswers.contains(index)) 
-			return;
-		
 	    Step step = steps.get(currentIndex);
 	     // Wir reagieren auf alle Klicks. Wenn wir im Pause-Modus sind, bleiben sie im Presenter hängen.
 	     // Wenn nicht, dann müssen wir sie hier ignorieren.
-	    if (!(step instanceof MC)) {
+	    if (!(step instanceof ChoiceStep)) {
 	        return;
 	    }
-	    
+
 	    // Prüfen gegen das Session-Objekt (das max 8 Antworten hat), nicht gegen das Original im Step!
 	    if (activeSessionMC == null || activeSessionMC.getAnswerOptions().size() <= index)
 	    	return;
-	    
-	    clickedMcAnswers.add(index);
-	    boolean correct = activeSessionMC.isCorrectSoFar(clickedMcAnswers);
-	    presenter.mcClickChecked(index, correct);
-	    
-	    if (!correct) {
-	        // ----- FALSCH -----
+
+	    if (step instanceof MCPlus) {
+	    	// Hier wird nur markiert — geprüft wird erst beim Absenden.
+	    	boolean wasMarked = clickedMcAnswers.contains(index);
+	    	if (wasMarked)
+	    		clickedMcAnswers.remove(index);
+	    	else
+	    		clickedMcAnswers.add(index);
+	    	presenter.mcMarked(index, !wasMarked);
+	    	return;
+	    }
+
+	    // Einzelklick (MC), sofort gewertet.
+	    Role role = activeSessionMC.roleAt(index);
+
+	    if (role == Role.TOLERATED) {
+	    	// Falsch, aber kein Abbruch: markieren und weiter warten — wertungsfrei.
+	    	presenter.mcClickChecked(index, false);
+	    	return;
+	    }
+
+		// User klickt einfach mehrfach auf den gleichen Button, wenn mehr als eine Antwort gesucht wird...
+		if (clickedMcAnswers.contains(index))
+			return;
+
+	    if (role == Role.CORRECT) {
+	        clickedMcAnswers.add(index);
+	        presenter.mcClickChecked(index, true);
+	        if (activeSessionMC.isFinallyCorrect(clickedMcAnswers)) {
+	            // ----- VOLLSTÄNDIG -----
+	            clickedMcAnswers.clear();
+	            currentIndex++;
+	            runSteps();
+	        }
+	        // ----- NOCH NICHT VOLLSTÄNDIG ----- : auf die restlichen Pflicht-Klicks warten
+	    } else {
+	        // ----- FALSCH ----- (fest sichtbar oder Füller)
+	        presenter.mcClickChecked(index, false);
 	    	playedTimestamp = LocalDateTime.now();
 	    	correctlyAnswered = false;
 	    	clickedMcAnswers.clear();
 	    	// Lösung für die aktuell angezeigten Optionen anzeigen
 	        presenter.setCorrectMc(activeSessionMC.getCorrectIndexes());
 	        isPaused = true;
-	    } else if (activeSessionMC.isFinallyCorrect(clickedMcAnswers)) {
-	        // ----- VOLLSTÄNDIG -----
-	        clickedMcAnswers.clear();
-	        currentIndex++;
-	        runSteps();
 	    }
-	    // ----- NOCH NICHT VOLLSTÄNDIG ----- : auf die restlichen Pflicht-Klicks warten
 	}
-	
+
+	/**
+	 * Die markierte Auswahl wird als Ganzes geprüft. Falsch ist sie schon dann, wenn eine richtige
+	 * Antwort fehlt — aufgedeckt werden die falsch gewählten rot und alle richtigen grün.
+	 */
+	public void mcSubmitted() {
+		if (isPaused || activeSessionMC == null || !(steps.get(currentIndex) instanceof MCPlus))
+			return;
+		if (clickedMcAnswers.isEmpty())
+			return;
+
+		if (activeSessionMC.isFinallyCorrect(clickedMcAnswers)) {
+			// ----- RICHTIG -----
+			clickedMcAnswers.clear();
+			currentIndex++;
+			runSteps();
+		} else {
+			// ----- FALSCH -----
+			Set<Integer> correctIndexes = activeSessionMC.getCorrectIndexes();
+			for (Integer clicked : clickedMcAnswers)
+				if (!correctIndexes.contains(clicked))
+					presenter.mcClickChecked(clicked, false);
+			presenter.setCorrectMc(correctIndexes);
+			playedTimestamp = LocalDateTime.now();
+			correctlyAnswered = false;
+			clickedMcAnswers.clear();
+			isPaused = true;
+		}
+	}
+
 	// ========================================
 	// Other
 	// ========================================
@@ -318,32 +455,27 @@ public class CardProgress {
 			    presenter.waitForClick(allShapes);
 			}
 			case Image image -> presenter.showImage(image.file());
+			case SketchImage sketch -> presenter.showSketch(sketch.structure());
+			case SketchImageAdd add -> presenter.addSketch(add.structure(), add.cell(), add.size(),
+					add.offsetX(), add.offsetY());
+			case SketchImageMove move -> presenter.moveSketchArea(move.area(), move.cell());
+			case SketchImageMark mark -> presenter.markSketchArea(mark.area());
+			case SketchImageFill fill -> presenter.fillSketchArea(fill.area(), fill.color());
 			case Input _ -> presenter.waitForText();
 			case Pause _ -> {	presenter.pause();
 								isPaused = true;}
-			case MC mcStep -> {
-				// 1. Alle Texte des aktuellen Steps holen (um Vergleichbarkeit zu haben)
-				Set<String> currentTexts = new HashSet<>();
-				for (AnswerOption option : mcStep.options())
-					currentTexts.add(option.text());
-				
-				MultipleChoiceAnswers sessionMc;
+			case ChoiceStep cs -> {
+				Set<String> universe = universeOf(cs.options());
+				List<String> frozen = frozenDisplay.computeIfAbsent(universe, this::buildFrozen);
 
-				// 2. Check: Sind es dieselben Texte wie beim letzten Mal? (Stabilität)
-				if (lastMcOrder != null && currentTexts.equals(new HashSet<>(lastMcOrder))) {
-					// JA -> Wir nehmen die Daten vom neuen Step (wegen Correct-Flags), erzwingen aber die alte Reihenfolge
-					sessionMc = new MultipleChoiceAnswers(mcStep.options(), 8); // Copy-Konstruktor
-					sessionMc.reorderToMatch(lastMcOrder);
-				} else {
-					// NEIN -> Neu würfeln und auf max 8 begrenzen
-					sessionMc = new MultipleChoiceAnswers(mcStep.options(), 8); // Konstruktor mit Liste
-					
-					// Merken für den nächsten Step
-					lastMcOrder = texteVon(sessionMc);
-				}
-				
-				activeSessionMC = sessionMc;
-				presenter.showMultipleChoice(texteVon(sessionMc));
+				Map<String, Role> roles = rolesOf(cs.options());
+				List<AnswerOption> shown = new ArrayList<>();
+				for (String text : frozen)
+					shown.add(new AnswerOption(text, roles.get(text)));
+
+				activeSessionMC = new MultipleChoiceAnswers(shown);
+				clickedMcAnswers.clear(); // sonst zählt die Auswahl des vorigen Steps weiter mit
+				presenter.showMultipleChoice(frozen);
 			}
 			
 			case MarkMapElements left -> presenter.markMapElements(left.left());
@@ -358,7 +490,7 @@ public class CardProgress {
 
 	private boolean requiresUserInput(Step step) {
 	    return step instanceof Card.Input
-	        || step instanceof Card.MC
+	        || step instanceof Card.ChoiceStep
 	        || step instanceof Card.ClickMapElements
 	        || step instanceof Card.Pause
 	        || step instanceof Card.Fast;

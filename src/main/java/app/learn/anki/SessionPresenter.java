@@ -10,7 +10,9 @@ import app.learn.model.Deck;
 import app.learn.model.GeoMap;
 import app.learn.model.LearnStat;
 import app.learn.model.SessionProgressCounter;
+import app.learn.repository.SketchFileSource;
 import app.shared.model.ScreenView;
+import app.shared.model.SketchColor;
 import app.shared.model.AnkiCallbacks;
 import app.shared.ui.AnkiLearnView;
 import app.shared.ui.FastWriteLearnView;
@@ -29,6 +31,9 @@ public class SessionPresenter {
     private final AnkiLearnView view;
     private FastWriteLearnView fastView; // Gleiches Objekt wie die view, aber mit mehr Methoden sichtbar. Nur bei Fast Write gesetzt
     private final SessionProgress sessionProgress;
+    // Strukturdateien sind winzig und werden je Karte einmal gebraucht — gelesen wie ein Bild,
+    // ohne Vorrat.
+    private final SketchFileSource sketchSource = new SketchFileSource();
 
     SessionPresenter(Deck type, SessionProgress sessionProgress) {
     	this.sessionProgress = sessionProgress;
@@ -52,19 +57,20 @@ public class SessionPresenter {
         GeoMap map = type.getMapMetadata() != null ? MapService.getInstance().getMap(type) : null;
         String id = type.getId();
         String mapName = type.getMapName();
-        String kategorie = type.getCategory().toString();
+        String category = type.getCategory().toString();
 
         AnkiCallbacks callbacks = new AnkiCallbacks(
                 this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack,
-                this::timeExpired);
+                this::clickedSubmit, this::timeExpired);
 
         return switch(type) {
-            case GERMANY_CARDS -> new ShapeMapLearnView(id, mapName, kategorie, map.getShapeGeometries(), callbacks);
-            case MC_CARDS      -> new McLearnView(id, mapName, kategorie, callbacks);
+            case GERMANY_CARDS -> new ShapeMapLearnView(id, mapName, category, map.getShapeGeometries(), callbacks);
+            case MC_CARDS      -> new McLearnView(id, mapName, category, callbacks);
             case WORLD_CARDS,
-                 HANNOVER_CARDS-> new ImageMapLearnView(id, mapName, kategorie, map::geometryFor, callbacks);
+                 FLAG_CARDS,
+                 HANNOVER_CARDS-> new ImageMapLearnView(id, mapName, category, map::geometryFor, callbacks);
             case FAST_WRITE_CARDS -> {
-                fastView = new FastWriteLearnView(id, mapName, kategorie, Card.MAX_FAST_SLOTS, callbacks);
+                fastView = new FastWriteLearnView(id, mapName, category, Card.MAX_FAST_SLOTS, callbacks);
                 yield fastView;
             }
             default -> null; // oder throw new IllegalArgumentException?
@@ -79,28 +85,55 @@ public class SessionPresenter {
 		view.setImage(imageName);
 	}
 
+	/** Lädt die Struktur und zeigt sie leer — eine zuvor gezeigte Skizze ist damit weg. */
+	void showSketch(String structure) {
+		view.setSketch(sketchSource.load("backgrounds", structure));
+	}
+
+	/** Hängt eine weitere Struktur an, ohne die bisherigen Füllungen zu verlieren. */
+	void addSketch(String structure, int cell, double size, double offsetX, double offsetY) {
+		view.addSketch(sketchSource.load("elements", structure), cell, size, offsetX, offsetY);
+	}
+
+	/** Setzt eine Fläche in ein anderes Rasterfeld — Farbe und Markierung bleiben. */
+	void moveSketchArea(int area, int cell) {
+		view.moveSketchArea(area, cell);
+	}
+
+	void markSketchArea(int area) {
+		view.markSketchArea(area);
+	}
+
+	void fillSketchArea(int area, SketchColor color) {
+		view.fillSketchArea(area, color);
+	}
+
 	void showQuestion(String text) {
 		view.setQuestion(text);
 	}
 	
+	/** Submit ist auf MC und MC+ gleich sichtbar — seine Anwesenheit darf den Modus nicht verraten. */
 	void showMultipleChoice (List<String> answers) {
 		view.setMapActive(false);
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);
 		view.setMultipleChoice(answers);
+		view.setSubmitActive(true);
 	}
- 
+
 	void waitForClick(Set<String> idsInQuestion) {
 		view.setClickTargets(idsInQuestion);
 		view.setMapActive(true);
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);
 		view.disableMcPanel();
+		view.setSubmitActive(false);
 	}
 	void waitForText() {
 		view.setTextFieldActive(true);
 		view.setMapActive(false);
 		view.disableMcPanel();
+		view.setSubmitActive(false);
 	}
 
 	// ========================================
@@ -188,9 +221,14 @@ public class SessionPresenter {
 	void mcClickChecked(int id, boolean correct) {
 		view.setMcCorrect(id, correct);
 	}
+
+	void mcMarked(int id, boolean marked) {
+		view.setMcMarked(id, marked);
+	}
 	
 	void setCorrectMc(Set<Integer> correctIds) {
-		view.setMcSolution(correctIds); 
+		view.setMcSolution(correctIds);
+		view.setSubmitActive(false);
 	}
 	
 	// ========================================
@@ -210,6 +248,11 @@ public class SessionPresenter {
 	
 	void clickedBack() {
 		sessionProgress.goBack();
+	}
+
+	void clickedSubmit() {
+		if (!sessionProgress.isPaused())
+			sessionProgress.submitClicked();
 	}
 	
 	void clickedMCAnswer(int index) {
@@ -253,6 +296,7 @@ public class SessionPresenter {
 		view.setImage(null);
 		view.setTextInTextField("");
 		view.setQuestion("");
+		view.setSubmitActive(false);
 		if (fastView != null) {
 			fastView.stopClock(); // auch beim Zurückspringen, sonst tickt sie in die nächste Karte
 			fastView.clearSlots();
@@ -263,6 +307,7 @@ public class SessionPresenter {
 		view.setMapActive(false);
 		view.setTextFieldActive(false);
 		view.disableMcPanel();
+		view.setSubmitActive(false);
 	}
 
 }

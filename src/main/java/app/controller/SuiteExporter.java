@@ -127,7 +127,7 @@ public class SuiteExporter {
 
     private List<Path> scanFiles(LocalDate since, List<IgnoreRule> rules) throws IOException {
         List<Path> result = new ArrayList<>();
-        sammleDateien(rootFolder, since, rules, result);
+        collectFiles(rootFolder, since, rules, result);
         return result;
     }
 
@@ -135,12 +135,12 @@ public class SuiteExporter {
      * Laeuft einen Ordner samt Unterordnern ab und sammelt die Dateien ein, die nicht ignoriert sind
      * und seit dem Stichtag angefasst wurden. Verknuepfungen werden nicht verfolgt.
      */
-    private void sammleDateien(Path ordner, LocalDate since, List<IgnoreRule> rules, List<Path> result)
+    private void collectFiles(Path ordner, LocalDate since, List<IgnoreRule> rules, List<Path> result)
             throws IOException {
-        try (DirectoryStream<Path> inhalt = Files.newDirectoryStream(ordner)) {
-            for (Path eintrag : inhalt) {
+        try (DirectoryStream<Path> content = Files.newDirectoryStream(ordner)) {
+            for (Path eintrag : content) {
                 if (Files.isDirectory(eintrag, LinkOption.NOFOLLOW_LINKS))
-                    sammleDateien(eintrag, since, rules, result);
+                    collectFiles(eintrag, since, rules, result);
                 else if (Files.isRegularFile(eintrag)
                         && !isIgnored(eintrag, rules)
                         && lastModifiedDate(eintrag).compareTo(since) >= 0)

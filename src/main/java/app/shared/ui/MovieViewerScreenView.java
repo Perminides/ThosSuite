@@ -41,7 +41,7 @@ public class MovieViewerScreenView implements ScreenView {
     private SuiteSuggestionTextField directorField;
     private SuiteSuggestionTextField actorField;
     private SuiteSuggestionTextField titleField;
-    private SuiteCardList kartenListe;
+    private SuiteCardList cardList;
 
     /** Was gerade in den Kacheln steht — gemerkt, damit ein Neuaufbau die Anzeige wiederherstellen kann. */
     private List<CardData> shownCards = List.of();
@@ -108,25 +108,25 @@ public class MovieViewerScreenView implements ScreenView {
         Label titLabel = new Label("Title:");
 
         // SWYT-Felder mit Labels in einer VBox
-        double swytBreite = SkinService.get().getContentSize().getWidth() * SWYT_ANTEIL;
+        double swytWidth = SkinService.get().getContentSize().getWidth() * SWYT_ANTEIL;
         VBox swytPane = new VBox();
         swytPane.getStyleClass().add("movie-viewer-swyt");
-        swytPane.setMinWidth(swytBreite);
-        swytPane.setPrefWidth(swytBreite);
-        swytPane.setMaxWidth(swytBreite);
+        swytPane.setMinWidth(swytWidth);
+        swytPane.setPrefWidth(swytWidth);
+        swytPane.setMaxWidth(swytWidth);
         swytPane.getChildren().addAll(
                 dirLabel, directorField,
                 actLabel, actorField,
                 titLabel, titleField);
 
         // Ergebnisbereich — ohne Deckelung, er nimmt den Platz neben der Suchspalte
-        kartenListe = new SuiteCardList();
+        cardList = new SuiteCardList();
 
         // Hauptlayout: SWYT-Spalte links, Kacheln rechts — Breiten und Abstände kommen aus dem Skin.
         HBox contentBox = new HBox();
         contentBox.getStyleClass().add("movie-viewer-content");
-        HBox.setHgrow(kartenListe, Priority.ALWAYS);
-        contentBox.getChildren().addAll(swytPane, kartenListe);
+        HBox.setHgrow(cardList, Priority.ALWAYS);
+        contentBox.getChildren().addAll(swytPane, cardList);
 
         directorField.setAllItems(directorNames);
         actorField.setAllItems(actorNames);
@@ -155,10 +155,10 @@ public class MovieViewerScreenView implements ScreenView {
     public void showCards(List<CardData> cards) {
         shownCards = cards;
         MovieStyle style = SkinService.get().movieStyle();
-        List<MovieCard> inhalt = new ArrayList<>();
+        List<MovieCard> content = new ArrayList<>();
         for (CardData card : cards)
-            inhalt.add(new MovieCard(card, style, this::onDirectorClicked, this::onActorClicked));
-        kartenListe.setCards(inhalt);
+            content.add(new MovieCard(card, style, this::onDirectorClicked, this::onActorClicked));
+        cardList.setCards(content);
     }
 
     private void onDirectorClicked(String directorName) {
