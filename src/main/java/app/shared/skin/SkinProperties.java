@@ -102,6 +102,23 @@ public abstract class SkinProperties {
 	protected Double shapeMapStandardBorderWidth = 1.8;
 	protected Double shapeMapFederalStateBorderWidth = 2.8; // für Niedersachsen z. B.
 
+	// Die Skizzen (SketchPane). Die acht Füllfarben tragen Vorgaben, damit kein Skin sie kennen muss —
+	// sie beschreiben eine Flagge und nicht das Aussehen der Suite. Strich und Markierung dagegen
+	// gehören zum Skin und leiten sich in buildCss() aus dessen eigenen Farben ab.
+	protected Double sketchStrokeWidth = 1.8;
+	protected Color sketchStrokeColor;  // default = borderShapeColor
+	protected Color sketchMarkedColor;  // default = markedColor
+	protected Color sketchUnmarkedColor; // default = disabledComponentBgColor
+	protected Double sketchMarkedHatchWidth = 4.0; // Breite eines Schraffurstreifens, in Pixeln
+	protected Color sketchRed = Color.web("#d52b1e");
+	protected Color sketchBlue = Color.web("#003580");
+	protected Color sketchLightBlue = Color.web("#6cace4");
+	protected Color sketchGreen = Color.web("#007a3d");
+	protected Color sketchYellow = Color.web("#ffce00");
+	protected Color sketchOrange = Color.web("#ff7f00");
+	protected Color sketchWhite = Color.web("#ffffff");
+	protected Color sketchBlack = Color.web("#000000");
+
 	protected Font font;
 	protected Font smallFont;
 	protected Font clockFont; // die große Zahl der herunterzählenden Uhr
@@ -145,7 +162,8 @@ public abstract class SkinProperties {
 	
 	protected Integer moviePosterWidth = 154;
 
-	protected String backButtonIcon;
+	protected String backButtonIcon = "back icon.png";
+	protected String submitButtonIcon = "submit icon.png";
 	protected String skipButtonIcon;
 	protected String playButtonIcon;
 	protected String cancelButtonIcon;
@@ -190,6 +208,7 @@ public abstract class SkinProperties {
 	protected Rectangle2D mcSessionProgressPanel;
 	protected Rectangle2D mcSessionHistoryPanel;
 	protected Rectangle2D mcSessionBackButton;
+	protected Rectangle2D mcSessionSubmitButton;
 	protected Rectangle2D worldSessionMapPanel;
 	protected Rectangle2D worldSessionQuestionPanel;
 	protected Rectangle2D worldSessionTextInputPanel;
@@ -198,6 +217,16 @@ public abstract class SkinProperties {
 	protected Rectangle2D worldSessionProgressPanel;
 	protected Rectangle2D worldSessionHistoryPanel;
 	protected Rectangle2D worldSessionBackButton;
+	protected Rectangle2D worldSessionSubmitButton;
+	protected Rectangle2D flagSessionMapPanel;
+	protected Rectangle2D flagSessionQuestionPanel;
+	protected Rectangle2D flagSessionTextInputPanel;
+	protected Rectangle2D flagSessionImagePanel;
+	protected Rectangle2D flagSessionMcPanel;
+	protected Rectangle2D flagSessionProgressPanel;
+	protected Rectangle2D flagSessionHistoryPanel;
+	protected Rectangle2D flagSessionBackButton;
+	protected Rectangle2D flagSessionSubmitButton;
 	protected Rectangle2D hannoverSessionMapPanel;
 	protected Rectangle2D hannoverSessionQuestionPanel;
 	protected Rectangle2D hannoverSessionTextInputPanel;
@@ -206,6 +235,7 @@ public abstract class SkinProperties {
 	protected Rectangle2D hannoverSessionProgressPanel;
 	protected Rectangle2D hannoverSessionHistoryPanel;
 	protected Rectangle2D hannoverSessionBackButton;
+	protected Rectangle2D hannoverSessionSubmitButton;
 	protected Rectangle2D germanySessionMapPanel;
 	protected Rectangle2D germanySessionQuestionPanel;
 	protected Rectangle2D germanySessionTextInputPanel;
@@ -214,6 +244,7 @@ public abstract class SkinProperties {
 	protected Rectangle2D germanySessionProgressPanel;
 	protected Rectangle2D germanySessionHistoryPanel;
 	protected Rectangle2D germanySessionBackButton;
+	protected Rectangle2D germanySessionSubmitButton;
 	protected Rectangle2D regionSessionQuestionPanel;
 	protected Rectangle2D regionSessionMapPanel;
 	protected Rectangle2D regionSessionTextInputPanel;
@@ -304,16 +335,15 @@ public abstract class SkinProperties {
 	}
 
 	/**
-	 * Das Feld, in dem ein Bestandteil einer Session sitzt. Erst der spezifische Name, sonst die
-	 * Kategorie.
+	 * Das Feld, in dem ein Bestandteil einer Session sitzt — siehe {@link #cascadingValue}.
 	 */
-	public Rectangle2D learnComponentBounds(String mapName, String kategorie, LearnComponent teil) {
-		return staffelung(mapName, kategorie, teil.suffix());
+	public Rectangle2D learnComponentBounds(String deckId, String mapName, String category, LearnComponent teil) {
+		return (Rectangle2D) cascadingValue(deckId, mapName, category, teil.suffix());
 	}
 
 	/** Dasselbe für die drei Textfelder, die über {@link Skin.TextLabelType} unterschieden werden. */
-	public Rectangle2D learnTextLabelBounds(String mapName, String kategorie, Skin.TextLabelType typ) {
-		return staffelung(mapName, kategorie, "Session" + typ + "Panel");
+	public Rectangle2D learnTextLabelBounds(String deckId, String mapName, String category, Skin.TextLabelType typ) {
+		return (Rectangle2D) cascadingValue(deckId, mapName, category, "Session" + typ + "Panel");
 	}
 
 	/**
@@ -326,16 +356,28 @@ public abstract class SkinProperties {
 		return new BigComponentStyle(borderBigComponent.arc(), borderBigComponent.width());
 	}
 
-	// Erst spezifisch, dann Kategorie. Der Property-Name entsteht nur hier.
-	private Rectangle2D staffelung(String mapName, String kategorie, String suffix) {
-		Rectangle2D bounds = (Rectangle2D) getFieldValue(mapName + suffix);
-		if (bounds == null)
-			bounds = (Rectangle2D) getFieldValue(kategorie + suffix);
-		return bounds;
+	/**
+	 * Der erste gesetzte Wert in der Kette Deck → Karte → Kategorie. Der Property-Name entsteht nur hier.
+	 *
+	 * <p>Die Kette läuft von speziell nach allgemein, und ein Deck legt nur fest, was bei ihm anders
+	 * sein soll. Der mittlere Schritt ist der, mit dem sich mehrere Decks ein Layout teilen: Die vier
+	 * Berlin-Decks tragen denselben {@code mapName} und damit dieselben Maße, die vierzehn
+	 * Landkreis-Decks lassen auch den offen und landen bei ihrer Kategorie.</p>
+	 *
+	 * @return null, wenn keiner der drei Schlüssel gesetzt ist
+	 */
+	private Object cascadingValue(String deckId, String mapName, String category, String suffix) {
+		String[] prefixes = { deckId, mapName, category };
+		for (String prefix : prefixes) {
+			Object value = getFieldValue(prefix + suffix);
+			if (value != null)
+				return value;
+		}
+		return null;
 	}
 
 	public enum IconButtonType {
-		BACK, SKIP, PLAY, CANCEL
+		BACK, SUBMIT, SKIP, PLAY, CANCEL
 	};
 
 	public enum TextLabelType {
@@ -363,10 +405,11 @@ public abstract class SkinProperties {
 	}
 
 	/**
-	 * Das Wallpaper einer Lern-Session: erst das der Karte, dann das ihrer Kategorie, sonst das leere.
+	 * Das Wallpaper einer Lern-Session — dieselbe Kette wie die Maße (siehe {@link #cascadingValue}),
+	 * sonst das leere.
 	 */
-	public Path wallpaperPath(String mapName, String kategorie) {
-		return wallpaperFolder().resolve(getBackgroundImageName(mapName, kategorie));
+	public Path wallpaperPath(String deckId, String mapName, String category) {
+		return wallpaperFolder().resolve(getBackgroundImageName(deckId, mapName, category));
 	}
 
 	/**
@@ -390,11 +433,8 @@ public abstract class SkinProperties {
 		return Config.getPath("wallpaperFolder");
 	}
 
-	private String getBackgroundImageName (String mapName, String categoryName) {
-		String bgName = (String) getFieldValue(mapName + "WallpaperName");
-		if (bgName != null)
-			return bgName;
-		bgName = (String) getFieldValue(categoryName + "WallpaperName");
+	private String getBackgroundImageName (String deckId, String mapName, String category) {
+		String bgName = (String) cascadingValue(deckId, mapName, category, "WallpaperName");
 		if (bgName != null)
 			return bgName;
 		return emptyWallpaperName;
@@ -420,10 +460,10 @@ public abstract class SkinProperties {
 	 * den Inhaltsbereich.</p>
 	 */
 	private double mcBorderWidth() {
-	    double breite = borderSmallComponent.width();
+	    double width = borderSmallComponent.width();
 	    if (activeBorderColor != null)
-	        breite = Math.max(breite, activeBorderWidth);
-	    return Math.max(breite, mcResultBorderWidth);
+	        width = Math.max(width, activeBorderWidth);
+	    return Math.max(width, mcResultBorderWidth);
 	}
 
 	private double computeMcButtonHeight() {
@@ -451,13 +491,14 @@ public abstract class SkinProperties {
 	public Image iconFor(IconButtonType rolle) {
 		String iconName = switch (rolle) {
 			case BACK -> backButtonIcon;
+			case SUBMIT -> submitButtonIcon;
 			case SKIP -> skipButtonIcon;
 			case PLAY -> playButtonIcon;
 			case CANCEL -> cancelButtonIcon;
 		};
 
 		Image image = new Image(Config.getPath("iconFolder").resolve(iconName).toUri().toString());
-		if (rolle == IconButtonType.BACK)
+		if (rolle == IconButtonType.BACK || rolle == IconButtonType.SUBMIT)
 			image = UiUtils.tintImage(image, textActiveComponentColor);
 
 		return image;
@@ -488,6 +529,11 @@ public abstract class SkinProperties {
 	public int imageMapOverlayContentInset(String mapName) {
 	    Integer inset = (Integer) getFieldValue(mapName + "ImageMapOverlayContentInset");
 	    return inset != null ? inset : imageMapOverlayContentInset;
+	}
+
+	/** Wie breit eine Skizze ihre Flächen umrandet. */
+	public double sketchStrokeWidth() {
+		return sketchStrokeWidth;
 	}
 
 	/**
@@ -598,13 +644,13 @@ public abstract class SkinProperties {
 	 * eigene, und beide müssen für sich stimmen.</p>
 	 */
 	private void checkKeysHaveFields(Properties props, Path configPath) {
-	    Set<String> felder = new HashSet<>();
+	    Set<String> fields = new HashSet<>();
 	    for (Class<?> cls = this.getClass(); cls != null; cls = cls.getSuperclass())
 	        for (Field field : cls.getDeclaredFields())
-	            felder.add(field.getName());
+	            fields.add(field.getName());
 
 	    for (String key : props.stringPropertyNames())
-	        if (!felder.contains(key))
+	        if (!fields.contains(key))
 	            throw new RuntimeException("Schlüssel ohne Feld in " + configPath.getFileName() + ": '"
 	                    + key + "'. Entweder das Feld fehlt oder der Schlüssel ist ein Tippfehler —"
 	                    + " stillschweigend ignorieren tun wir ihn jedenfalls nicht mehr.");

@@ -35,8 +35,8 @@ public class ImageUtils {
 	 *                ein Bild mit Alpha-Kanal zurückgeben, auch wenn die Quelle keinen hatte —
 	 *                siehe {@link #toRgb(BufferedImage)}.
 	 */
-	public static BufferedImage scaleSmooth(BufferedImage img, int breite, int hoehe, Scalr.Method methode, BufferedImageOp... ops) {
-		return Scalr.resize(img, methode, Scalr.Mode.AUTOMATIC, breite, hoehe, ops);
+	public static BufferedImage scaleSmooth(BufferedImage img, int width, int height, Scalr.Method methode, BufferedImageOp... ops) {
+		return Scalr.resize(img, methode, Scalr.Mode.AUTOMATIC, width, height, ops);
 	}
 
 	/**
@@ -46,9 +46,9 @@ public class ImageUtils {
 	 * <p>Quelle des Verfahrens: <a href="https://www.locked.de/fast-image-scaling-in-java/">
 	 * locked.de</a>. Wenn die Ergebnisse nicht gut sind, probiere es halt mal mit JavaXT z. B.</p>
 	 */
-	public static BufferedImage scaleStepwise(BufferedImage img, int breite, int hoehe) {
-		Dimension ziel = new Dimension(breite, hoehe);
-		return scaleExact(scaleByHalf(img, ziel), ziel);
+	public static BufferedImage scaleStepwise(BufferedImage img, int width, int height) {
+		Dimension target = new Dimension(width, height);
+		return scaleExact(scaleByHalf(img, target), target);
 	}
 
 	/**

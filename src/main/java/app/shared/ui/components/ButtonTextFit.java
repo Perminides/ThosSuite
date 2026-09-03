@@ -55,7 +55,7 @@ final class ButtonTextFit {
 
 		// Limit ist die Button-Höhe ohne die beiden Rahmen. Kein Padding!
 		double absoluteMaxHeight = btn.getPrefHeight() - (metrics.borderWidth() * 2);
-		boolean passtGequetscht = measure.getLayoutBounds().getHeight() <= absoluteMaxHeight;
-		btn.pseudoClassStateChanged(passtGequetscht ? STATE_SQUEEZED : STATE_TINY, true);
+		boolean fitsSqueezed = measure.getLayoutBounds().getHeight() <= absoluteMaxHeight;
+		btn.pseudoClassStateChanged(fitsSqueezed ? STATE_SQUEEZED : STATE_TINY, true);
 	}
 }

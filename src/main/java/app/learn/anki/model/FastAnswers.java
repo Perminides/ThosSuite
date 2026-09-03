@@ -55,11 +55,11 @@ public class FastAnswers {
 	 *         auf keine offene Antwort passt — auch bei einer bereits gegebenen Antwort.
 	 */
 	public Hit accept(String typed) {
-		List<Integer> kandidaten = answerIndexesByVariant.get(typed.trim().toLowerCase());
-		if (kandidaten == null)
+		List<Integer> candidates = answerIndexesByVariant.get(typed.trim().toLowerCase());
+		if (candidates == null)
 			return null;
 
-		int answerIndex = pickAnswer(kandidaten);
+		int answerIndex = pickAnswer(candidates);
 		if (answerIndex < 0)
 			return null;
 
@@ -92,18 +92,18 @@ public class FastAnswers {
 	 */
 	public Map<Integer, String> revealRest() {
 		Map<Integer, String> rest = new LinkedHashMap<>();
-		int ungenannt = 0;
+		int unnamed = 0;
 		for (int slot = 0; slot < slotToAnswer.length; slot++) {
 			if (slotToAnswer[slot] >= 0)
 				continue;
 			if (bound) {
 				rest.put(slot, textOf(slot));
 			} else {
-				while (ungenannt < answered.length && answered[ungenannt])
-					ungenannt++;
-				if (ungenannt < answered.length) {
-					rest.put(slot, textOf(ungenannt));
-					ungenannt++;
+				while (unnamed < answered.length && answered[unnamed])
+					unnamed++;
+				if (unnamed < answered.length) {
+					rest.put(slot, textOf(unnamed));
+					unnamed++;
 				}
 			}
 		}
@@ -122,8 +122,8 @@ public class FastAnswers {
 		return nextOrdered;
 	}
 
-	private int pickAnswer(List<Integer> kandidaten) {
-		for (int index : kandidaten) {
+	private int pickAnswer(List<Integer> candidates) {
+		for (int index : candidates) {
 			if (answered[index])
 				continue;
 			if (step.ordered() && index != nextOrdered)

@@ -134,15 +134,15 @@ public class RegionSession implements Screen {
 	private ButtonEnum showMistakeAlert(SessionResult result) {
 		Log.info(this, "Alert wird erstellt. correct=false");
 
-		List<ButtonEnum> knoepfe = new ArrayList<>();
-		knoepfe.add(ButtonEnum.OK);
+		List<ButtonEnum> buttons = new ArrayList<>();
+		buttons.add(ButtonEnum.OK);
 		if (!spec.isPlaySession())
-			knoepfe.add(ButtonEnum.CANCEL);
+			buttons.add(ButtonEnum.CANCEL);
 		if (result.allowResume())
-			knoepfe.add(ButtonEnum.RESUME);
+			buttons.add(ButtonEnum.RESUME);
 
 		return Alerts.show("Nicht korrekt", result.incorrectText(), new AlertOptions().noEsc(),
-				knoepfe.toArray(new ButtonEnum[0]));
+				buttons.toArray(new ButtonEnum[0]));
 	}
 
 	/** Im Lernmodus fortschreiben und zeigen, wann das Deck wieder dran ist. Danach ist Schluss. */

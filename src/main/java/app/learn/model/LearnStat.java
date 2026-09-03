@@ -77,8 +77,8 @@ public class LearnStat {
 		if (!correct)
 			return playAgainToday ? 0 : 1;
 
-		double rand = 0.1 - random.nextDouble() / 5;
+		double jitter = 0.1 - random.nextDouble() / 5;
 		long gap = ChronoUnit.DAYS.between(lastPlayed, AppClock.TODAY);
-		return (int) Math.max(1, Math.round(2 * gap + (2 * gap) * rand));
+		return (int) Math.max(1, Math.round(2 * gap + (2 * gap) * jitter));
 	}
 }

@@ -30,8 +30,8 @@ public class FastWriteLearnView extends AnkiLearnView {
 	private SuiteCountdownLabel clock;
 
 	/** @param slotCount wie viele Antwortfelder die Säule zeigt — die Obergrenze kennt das Feature. */
-	public FastWriteLearnView(String deckId, String mapName, String kategorie, int slotCount, AnkiCallbacks callbacks) {
-		super(deckId, mapName, kategorie, callbacks);
+	public FastWriteLearnView(String deckId, String mapName, String category, int slotCount, AnkiCallbacks callbacks) {
+		super(deckId, mapName, category, callbacks);
 		this.slotCount = slotCount;
 		rebuild(); // muss die letzte Zeile sein, siehe AnkiLearnView
 	}
@@ -51,9 +51,9 @@ public class FastWriteLearnView extends AnkiLearnView {
 
 		Skin skin = SkinService.get();
 		slotPane = new AnswerSlotPane(
-				skin.learnComponentBounds(deckId(), kategorie(), LearnComponent.ANSWER_SLOTS), slotCount);
+				skin.learnComponentBounds(deckId(), mapName(), category(), LearnComponent.ANSWER_SLOTS), slotCount);
 		clock = new SuiteCountdownLabel(
-				skin.learnTextLabelBounds(mapName(), kategorie(), Skin.TextLabelType.CLOCK));
+				skin.learnTextLabelBounds(deckId(), mapName(), category(), Skin.TextLabelType.CLOCK));
 		clock.getStyleClass().add(Skin.TextLabelType.CLOCK.styleClass());
 		clock.onExpired(callbacks().timeExpired());
 

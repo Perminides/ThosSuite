@@ -40,8 +40,8 @@ public class DiaryScreenView implements ScreenView {
     private TextField queryField;
     private SuiteDatePicker fromPicker;
     private SuiteDatePicker toPicker;
-    private Label hinweis;
-    private SuiteCardList kartenListe;
+    private Label hint;
+    private SuiteCardList cardList;
 
     public void setSearchListener(SearchListener l) { this.searchListener = l; }
     public void setEditListener(Consumer<DiaryCardData> l) { this.editListener = l; }
@@ -66,7 +66,7 @@ public class DiaryScreenView implements ScreenView {
         view.getChildren().clear();
         view.setBackground(SuiteBackground.of(SkinService.get().emptyWallpaperPath()));
 
-        double spaltenBreite = SkinService.get().getContentSize().getWidth() * SPALTENANTEIL;
+        double columnWidth = SkinService.get().getContentSize().getWidth() * SPALTENANTEIL;
 
         // Filterleiste
         fromPicker = new SuiteDatePicker(LocalDate.now().minusMonths(1));
@@ -79,7 +79,7 @@ public class DiaryScreenView implements ScreenView {
         HBox filterBar = new HBox();
         filterBar.setAlignment(Pos.CENTER_LEFT);
         filterBar.getStyleClass().add("diary-viewer-filter-bar");
-        filterBar.setMaxWidth(spaltenBreite);
+        filterBar.setMaxWidth(columnWidth);
         filterBar.getChildren().addAll(
                 new Label("Von:"), fromPicker,
                 new Label("Bis:"), toPicker,
@@ -87,14 +87,14 @@ public class DiaryScreenView implements ScreenView {
         HBox.setHgrow(queryField, Priority.ALWAYS);
 
         // Hinweis auf zu viele Treffer — steht über der Liste und scrollt deshalb nicht weg
-        hinweis = new Label();
-        hinweis.getStyleClass().add("diary-viewer-hint");
-        hinweis.setMaxWidth(spaltenBreite);
-        zeigeHinweis(null);
+        hint = new Label();
+        hint.getStyleClass().add("diary-viewer-hint");
+        hint.setMaxWidth(columnWidth);
+        showHint(null);
 
         // Ergebnisbereich
-        kartenListe = new SuiteCardList();
-        kartenListe.setMaxWidth(spaltenBreite); // Dieselbe Zahl wie die Filterleiste — die beiden sind zusammen die Spalte
+        cardList = new SuiteCardList();
+        cardList.setMaxWidth(columnWidth); // Dieselbe Zahl wie die Filterleiste — die beiden sind zusammen die Spalte
 
         queryField.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ENTER) fireSearch();
@@ -102,8 +102,8 @@ public class DiaryScreenView implements ScreenView {
         fromPicker.setOnAction(_ -> fireSearch());
         toPicker.setOnAction(_ -> fireSearch());
 
-        view.getChildren().addAll(filterBar, hinweis, kartenListe);
-        VBox.setVgrow(kartenListe, Priority.ALWAYS);
+        view.getChildren().addAll(filterBar, hint, cardList);
+        VBox.setVgrow(cardList, Priority.ALWAYS);
         Platform.runLater(() -> queryField.requestFocus());
         fireSearch();
     }
@@ -113,25 +113,25 @@ public class DiaryScreenView implements ScreenView {
     }
 
     public void showResults(List<DiaryCardData> cards, boolean truncated, int maxResults) {
-        zeigeHinweis(truncated ? "Mehr als " + maxResults + " Treffer — bitte Suche verfeinern." : null);
+        showHint(truncated ? "Mehr als " + maxResults + " Treffer — bitte Suche verfeinern." : null);
 
-        List<DiaryCard> inhalt = new ArrayList<>();
+        List<DiaryCard> content = new ArrayList<>();
         for (DiaryCardData c : cards) {
             DiaryCard card = new DiaryCard(c);
             card.setOnMouseClicked(_ -> {
                 editListener.accept(c); // Screen öffnet Edit-Dialog (blockierend)
                 fireSearch();           // nach Edit neu suchen
             });
-            inhalt.add(card);
+            content.add(card);
         }
-        kartenListe.setCards(inhalt);
+        cardList.setCards(content);
     }
 
     /** {@code null} blendet aus — auch aus dem Layout, sonst bliebe die leere Zeile stehen. */
-    private void zeigeHinweis(String text) {
-        hinweis.setText(text == null ? "" : text);
-        hinweis.setVisible(text != null);
-        hinweis.setManaged(text != null);
+    private void showHint(String text) {
+        hint.setText(text == null ? "" : text);
+        hint.setVisible(text != null);
+        hint.setManaged(text != null);
     }
 
     public void setQueryValid(boolean valid) {

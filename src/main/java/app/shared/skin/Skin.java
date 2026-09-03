@@ -5,6 +5,7 @@ import java.util.Set;
 
 import app.shared.UiUtils;
 import app.shared.model.BorderParams;
+import app.shared.model.SketchColor;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
@@ -130,6 +131,10 @@ public abstract class Skin extends SkinProperties {
 		hannoverSessionProgressPanel = hannoverSessionProgressPanel == null ? worldSessionProgressPanel : hannoverSessionProgressPanel;
 		hannoverSessionHistoryPanel = hannoverSessionHistoryPanel == null ? worldSessionHistoryPanel : hannoverSessionHistoryPanel;
 		hannoverSessionBackButton = hannoverSessionBackButton == null ? worldSessionBackButton : hannoverSessionBackButton;
+		hannoverSessionSubmitButton = hannoverSessionSubmitButton == null ? worldSessionSubmitButton : hannoverSessionSubmitButton;
+		sketchStrokeColor = sketchStrokeColor == null ? borderShapeColor : sketchStrokeColor;
+		sketchMarkedColor = sketchMarkedColor == null ? markedColor : sketchMarkedColor;
+		sketchUnmarkedColor = sketchUnmarkedColor == null ? disabledComponentBgColor : sketchUnmarkedColor;
 		toEliminateColor = toEliminateColor == null ? disabledComponentBgColor : toEliminateColor;
 		dashBoardTileBottomColor = dashBoardTileBottomColor == null ? menuBarBackground : dashBoardTileBottomColor;
 
@@ -162,6 +167,7 @@ public abstract class Skin extends SkinProperties {
 	    addIconButtonStyles(css);
 	    addImageMapStyles(css);
 	    addImagePaneStyles(css);
+	    addSketchStyles(css);
 	    addMultipleChoiceStyles(css);
 	    addAnswerSlotStyles(css); // muss nach den MC-Regeln stehen, siehe dort
 	    addShapeMapStyles(css);
@@ -323,7 +329,7 @@ public abstract class Skin extends SkinProperties {
 	
 	private void addTextFieldStyles(CssBuilder builder) {
 	    Insets i = borderSmallComponent.insets();
-	    String paddingCss = String.format("%dpx %dpx %dpx %dpx", (int)i.getTop(), (int)i.getRight(), (int)i.getBottom(), (int)i.getLeft());
+	    String paddingCss = padding(i, 0);
 	    
 	  builder.start(".text-field")
 	       .add("-fx-text-fill", textActiveComponentColor)
@@ -339,9 +345,14 @@ public abstract class Skin extends SkinProperties {
 	       .end();
 
 	    // „Jetzt bist du dran": SuiteTextField.setActive holt den Fokus, der Zustand ist also schon da.
+	    //
+	    // Der Ring nimmt seine Breite aus der Polsterung, statt sie oben draufzulegen — siehe
+	    // {@link #padding}. Sonst wüchse das Feld beim Fokussieren um 2 x activeBorderWidth, und das
+	    // Layout ringsum ruckt.
 	    if (activeBorderColor != null)
 	        builder.start(".text-field:focused")
 	           .ring(activeBorderColor, activeBorderWidth)
+	           .add("-fx-padding", padding(i, activeBorderWidth))
 	           .end();
 
 	    builder.start(".text-field:disabled")
@@ -357,6 +368,32 @@ public abstract class Skin extends SkinProperties {
 	    .end();
 	}
 	
+	/**
+	 * Die Polsterung als CSS, um die Breite eines Rings verkleinert ({@code ring = 0} liefert sie
+	 * unverändert).
+	 *
+	 * <p>In JavaFX zählt die Rahmenbreite einer Region zu ihren Insets. Ein Ring, der erst in einem
+	 * Zustand auftaucht, macht die Komponente deshalb breiter und höher — im relativen Layout ruckt
+	 * dann alles ringsum. In einem Dialog kommt hinzu, dass das Fenster nicht mitwächst
+	 * (JDK-8087377, offen seit 2014): Die fehlenden Pixel holt sich die Zeile bei den Geschwistern,
+	 * und das Label daneben kürzt seinen Text.</p>
+	 *
+	 * <p>Nimmt der Ring seine Breite stattdessen aus der Polsterung, bleibt das Außenmaß in beiden
+	 * Zuständen gleich und der Inhalt steht weiterhin auf demselben Pixel. Die MC-Knöpfe lösen
+	 * dasselbe Problem anders — sie rechnen ihre Größe von vornherein mit dem breitesten je
+	 * möglichen Rahmen ({@code mcBorderWidth}); dort ist der Platz also reserviert statt geliehen.</p>
+	 */
+	private static String padding(Insets insets, int ring) {
+		int top = (int) insets.getTop() - ring;
+		int right = (int) insets.getRight() - ring;
+		int bottom = (int) insets.getBottom() - ring;
+		int left = (int) insets.getLeft() - ring;
+		if (Math.min(Math.min(top, right), Math.min(bottom, left)) < 0)
+			throw new RuntimeException("Der Ring ist breiter als die Polsterung: " + ring
+					+ "px Ring auf " + insets + " — der Skin braucht mehr Polster oder einen dünneren Ring");
+		return top + "px " + right + "px " + bottom + "px " + left + "px";
+	}
+
 	private void addTextAreaStyles(CssBuilder builder) {
 	    builder.start(".text-area")
 	       .add("-fx-text-fill", textActiveComponentColor)
@@ -447,6 +484,25 @@ public abstract class Skin extends SkinProperties {
 	    // Ein StackPane vererbt die Textfarbe NICHT automatisch an Text-Nodes. Wir müssen "Jeden
 	    // javafx.scene.text.Text innerhalb des Labels" ansprechen.
 	    builder.rule(".my-info-label Text", "-fx-fill", textColor);
+
+	    // Der Smiley kommt aus der Ersatzschrift des Systems und ist dort als Haarlinie gezeichnet —
+	    // neben Aptos sieht das dünn aus. -fx-font-weight hilft nicht: Für eine Ersatzschrift rechnet
+	    // JavaFX kein Fett hoch. Also ziehen wir den Glyphen selbst nach, denn Text ist ein Shape.
+	    //
+	    // Die Familie steht fest, sonst entschiede die Ersatzschrift-Heuristik. 'Segoe UI Symbol'
+	    // zeichnet schlicht — zwei Augen und ein Mund. 'Segoe UI Emoji' hat dieselben Zeichen, aber
+	    // einen viel dichteren Entwurf, der unter der Kontur zum Klumpen wird.
+	    //
+	    // Die Kontur wächst mit der Schrift: 3 Prozent der Schriftgröße, bei den üblichen 20px also
+	    // die 0,6, mit denen es abgestimmt ist. Gerundet, weil sonst 0.6000000000000001 im Stylesheet
+	    // stünde. Das Gewicht geht nicht ein — alle Skins setzen Aptos normal, und JavaFX gäbe uns
+	    // ohnehin keine Strichstärke, nur "Bold" oder "Regular".
+	    double smileyStroke = Math.round(font.getSize() * 3) / 100.0;
+	    builder.start(".my-info-label Text.smiley")
+	    		.add("-fx-font-family", "'Segoe UI Symbol'")
+	    		.add("-fx-stroke", textColor)
+	    		.add("-fx-stroke-width", smileyStroke + "px")
+	    		.end();
 
 	    // Nur noch die Abweichung. Die drei Farben fallen bereits beim Laden auf displayTextBgColor
 	    // zurück, wenn sie nicht gesetzt sind — dann schreibt das hier denselben Wert nochmal, was
@@ -574,6 +630,72 @@ public abstract class Skin extends SkinProperties {
 	
 
 	/**
+	 * Die Flächen einer Skizze.
+	 *
+	 * <p>Drei Zustände, und sie bauen aufeinander auf. Die Grundregel setzt nur den Strich — die
+	 * Füllung bleibt auf der Voreinstellung eines {@code Path}, nämlich keine. Das ist der Zustand
+	 * „noch nicht beantwortet": ein sichtbares Skelett, durch das der Bilderrahmen scheint.</p>
+	 *
+	 * <p>{@code :marked} legt eine Füllung darauf. Die Farbklassen füllen endgültig und nehmen den
+	 * Strich <b>weg</b>: Zwei benachbarte Flächen derselben Farbe sollen am Ende verschmelzen, denn
+	 * die Naht zwischen ihnen ist eine Erfindung der Strukturdatei und steht nicht auf dem Original.</p>
+	 */
+	private void addSketchStyles(CssBuilder builder) {
+	    builder.start(".my-sketch-area")
+	       // Ausdruecklich, nicht aus dem JavaFX-Standard: Ein Path startet ungefuellt, ein Circle
+	       // schwarz. "Noch nicht beantwortet" ist genau der ungefuellte Zustand, und er muss fuer
+	       // jede Form aus derselben Regel kommen. Die Farbregeln stehen als Zwei-Klassen-Selektoren
+	       // darueber und koennen damit nicht kollidieren.
+	       .add("-fx-fill", sketchUnmarkedColor)
+	       .add("-fx-stroke", sketchStrokeColor)
+	       .add("-fx-stroke-width", sketchStrokeWidth + "px")
+	       .end();
+
+	    // Die gefragte Flaeche wird SCHRAFFIERT statt eingefaerbt. Ein Farbton kaeme immer einer der
+	    // acht Antwortfarben nahe -- sie belegen den ganzen Helligkeitsbereich von Weiss bis Schwarz,
+	    // und derselbe Ton liest sich auf Weiss anders als auf dem Panel. Ein Muster kann sich mit
+	    // keiner Antwort beissen, weil keine Antwort je gemustert ist.
+	    //
+	    // Ganzflaechig und nicht am Rand: Die Kanten der Hintergrundflaechen liegen zum grossen Teil
+	    // ausserhalb des Bilderrahmens, ein dicker Strich oder ein Innenschatten waere dort nur an
+	    // einer Seite zu sehen.
+	    //
+	    // Die Schrittweite steht in Pixeln und braucht keine Anpassung je Flaechengroesse: Skaliert
+	    // werden nach SketchPane die Koordinaten und nicht der Knoten, auf dem liegt nur eine
+	    // Translation. Lokale Pixel sind damit Bildschirmpixel, fuer den Hintergrundstreifen wie
+	    // fuer den Stern im Kreis.
+	    String schritt = sketchMarkedHatchWidth + "px";
+	    String hell = UiUtils.toHex(sketchMarkedColor);
+	    String dunkel = UiUtils.toHex(sketchUnmarkedColor);
+	    // reflect statt repeat, und breite Uebergaenge statt harter Stopps: Ein Verlauf wird nicht
+	    // kantengeglaettet, ein Sprung von 49 auf 51 Prozent waere also eine harte Treppe. Gespiegelt
+	    // gibt es ausserdem an der Nahtstelle keinen Sprung -- bei repeat trifft dort die letzte
+	    // Farbe auf die erste. Die Schrittweite ist damit die Breite EINES Streifens, nicht die des
+	    // Paares.
+	    builder.start(".my-sketch-area:marked")
+	       .add("-fx-fill", "linear-gradient(from 0px 0px to " + schritt + " " + schritt + ", reflect, "
+	               + hell + " 0%, " + hell + " 30%, " + dunkel + " 70%, " + dunkel + " 100%)")
+	       .end();
+
+	    addSketchColorRule(builder, SketchColor.RED, sketchRed);
+	    addSketchColorRule(builder, SketchColor.BLUE, sketchBlue);
+	    addSketchColorRule(builder, SketchColor.LIGHT_BLUE, sketchLightBlue);
+	    addSketchColorRule(builder, SketchColor.GREEN, sketchGreen);
+	    addSketchColorRule(builder, SketchColor.YELLOW, sketchYellow);
+	    addSketchColorRule(builder, SketchColor.ORANGE, sketchOrange);
+	    addSketchColorRule(builder, SketchColor.WHITE, sketchWhite);
+	    addSketchColorRule(builder, SketchColor.BLACK, sketchBlack);
+	}
+
+	/** Eine gefüllte Fläche trägt ihre Farbe und keinen Strich mehr — siehe {@link #addSketchStyles}. */
+	private void addSketchColorRule(CssBuilder builder, SketchColor color, Color value) {
+	    builder.start(".my-sketch-area." + color.styleClass())
+	       .add("-fx-fill", value)
+	       .add("-fx-stroke", "transparent")
+	       .end();
+	}
+
+	/**
 	 * Die Formen der Shape-Karten.
 	 *
 	 * <p><b>Jede Zustandsregel hier muss {@code -fx-fill} setzen — die Füllung ist die Klickfläche.</b>
@@ -659,22 +781,30 @@ public abstract class Skin extends SkinProperties {
 	    //css.rule(".my-mc-button:active:pressed", "-fx-effect", "innershadow(gaussian, rgba(0,0,0,0.6), 10, 0, 0, 0)");
 	    builder.rule(".my-mc-button:inactive", "-fx-background-color", disabledComponentBgColor);
 
+	    // Ausgewählt, aber noch nicht abgeschickt: dieselbe Farbe, mit der die Karte zeigt, was gefragt
+	    // ist. Der Knopf bleibt antwortbar — also behält er den Ring des aktiven Knopfs.
+	    builder.start(".my-mc-button:marked")
+	       .add("-fx-background-color", markedColor)
+	       .ring(activeBorderColor, activeBorderWidth)
+	       .end();
+	    builder.rule(".my-mc-button:marked:hover", "-fx-background-color", UiUtils.contrastingShade(markedColor, 20));
+
 	    // Ergebnis in zwei Dosierungen: ohne mcResultBorderWidth färbt sich die ganze Fläche in der
 	    // Signalfarbe, mit ihm trägt ein Ring sie und die Fläche wird nur zu mcResultTintPercent
 	    // dorthin gemischt. Beide Male dieselbe Farbe, nur in anderer Menge.
 	    double tint = mcResultTintPercent / 100.0;
-	    Color correctFlaeche = mcResultBorderWidth > 0
+	    Color correctFill = mcResultBorderWidth > 0
 	            ? activeComponentBgColor.interpolate(correctColor, tint) : correctColor;
-	    Color incorrectFlaeche = mcResultBorderWidth > 0
+	    Color incorrectFill = mcResultBorderWidth > 0
 	            ? activeComponentBgColor.interpolate(incorrectColor, tint) : incorrectColor;
 
 	    builder.start(".my-mc-button:correct")
-	       .add("-fx-background-color", correctFlaeche)
+	       .add("-fx-background-color", correctFill)
 	       .ring(mcResultBorderWidth > 0 ? correctColor : null, mcResultBorderWidth)
 	       .end();
 
 	    builder.start(".my-mc-button:incorrect")
-	       .add("-fx-background-color", incorrectFlaeche)
+	       .add("-fx-background-color", incorrectFill)
 	       .ring(mcResultBorderWidth > 0 ? incorrectColor : null, mcResultBorderWidth)
 	       .end();
 
@@ -1096,10 +1226,10 @@ public abstract class Skin extends SkinProperties {
 	    
 	}
 	
-	private String innenabstand(double oben, int rechts, double unten, int links) { // Kurzform wo möglich: ohne Schatten steht dort dasselbe wie zuvor, der Vergleich bleibt aussagekräftig.
-		if (oben == unten && rechts == links)
-			return oben + "px " + rechts + "px";
-		return oben + "px " + rechts + "px " + unten + "px " + links + "px";
+	private String padding(double oben, int right, double unten, int left) { // Kurzform wo möglich: ohne Schatten steht dort dasselbe wie zuvor, der Vergleich bleibt aussagekräftig.
+		if (oben == unten && right == left)
+			return oben + "px " + right + "px";
+		return oben + "px " + right + "px " + unten + "px " + left + "px";
 	}
 
 	private void addDiaryViewerStyles(CssBuilder css) {
@@ -1132,19 +1262,19 @@ public abstract class Skin extends SkinProperties {
 	        .add("-fx-fill", textColor)
 	        .end();
 
-	    ShadowSpace schatten = ShadowSpace.of(componentShadow);
-	    double scrollPolster = font.getSize() * 0.5; // Muss dem Polster von .suite-card-list entsprechen, sonst stehen Filterleiste und Hinweis nicht mehr über der Kartenkante
-	    String spaltenEinzug = "0px 0px 0px " + (scrollPolster + schatten.left()) + "px"; // Links auf die Kartenkante: Polster der Liste plus Schattenplatz. Rechts null, weil die Scrollbar am äußeren Spaltenrand sitzt und das Polster sie nicht einrückt.
+	    ShadowSpace shadow = ShadowSpace.of(componentShadow);
+	    double scrollPadding = font.getSize() * 0.5; // Muss dem Polster von .suite-card-list entsprechen, sonst stehen Filterleiste und Hinweis nicht mehr über der Kartenkante
+	    String columnPadding = "0px 0px 0px " + (scrollPadding + shadow.left()) + "px"; // Links auf die Kartenkante: Polster der Liste plus Schattenplatz. Rechts null, weil die Scrollbar am äußeren Spaltenrand sitzt und das Polster sie nicht einrückt.
 
 	    css.start(".diary-viewer-hint")
 	        .add("-fx-fill", incorrectTextColor)
 	        .add("-fx-font-style", "italic")
-	        .add("-fx-padding", spaltenEinzug)
+	        .add("-fx-padding", columnPadding)
 	        .end();
 
 	    css.start(".diary-viewer-filter-bar")
-	    .add("-fx-spacing", scrollPolster + "px")
-	    .add("-fx-padding", spaltenEinzug)
+	    .add("-fx-spacing", scrollPadding + "px")
+	    .add("-fx-padding", columnPadding)
 	    .end();
 
 	    css.start(".diary-viewer-root")
@@ -1161,7 +1291,7 @@ public abstract class Skin extends SkinProperties {
 	 * als <em>Untergrenze</em> — hat der Skin keinen Schatten, bleibt es beim gewöhnlichen Abstand.</p>
 	 */
 	private void addCardListStyles(CssBuilder css) {
-	    ShadowSpace schatten = ShadowSpace.of(componentShadow);
+	    ShadowSpace shadow = ShadowSpace.of(componentShadow);
 
 	    css.start(".suite-card-list")
 	        .add("-fx-padding", font.getSize() * 0.5 + "px")
@@ -1174,9 +1304,9 @@ public abstract class Skin extends SkinProperties {
 	        .end();
 
 	    css.start(".suite-card-list .cards")
-	        .add("-fx-spacing", Math.max(font.getSize(), schatten.bottom()) + "px")
-	        .add("-fx-padding", innenabstand(Math.max(font.getSize(), schatten.top()),
-	        		schatten.right(), Math.max(font.getSize(), schatten.bottom()), schatten.left()))
+	        .add("-fx-spacing", Math.max(font.getSize(), shadow.bottom()) + "px")
+	        .add("-fx-padding", padding(Math.max(font.getSize(), shadow.top()),
+	        		shadow.right(), Math.max(font.getSize(), shadow.bottom()), shadow.left()))
 	        .end();
 	}
 

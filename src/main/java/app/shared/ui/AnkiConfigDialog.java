@@ -70,10 +70,10 @@ public class AnkiConfigDialog {
                 VBox col = new VBox(5);
                 col.setAlignment(Pos.TOP_LEFT);
                 for (String label : column) {
-                    boolean gekuerzt = label.length() > LABEL_MAX_LEN;
-                    CheckBox box = new CheckBox(gekuerzt ? label.substring(0, LABEL_MAX_LEN) + "..." : label);
+                    boolean shortened = label.length() > LABEL_MAX_LEN;
+                    CheckBox box = new CheckBox(shortened ? label.substring(0, LABEL_MAX_LEN) + "..." : label);
                     box.setUserData(label);              // volles Label bleibt id, auch wenn Anzeige gekürzt
-                    if (gekuerzt)
+                    if (shortened)
                         box.setTooltip(new Tooltip(label)); // sonst wiederholte der Tooltip nur die Beschriftung
                     labelBoxes.add(box);
                     col.getChildren().add(box);
