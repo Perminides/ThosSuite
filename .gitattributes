@@ -1,0 +1,12 @@
+# Zeilenenden: LF im Repository UND im Arbeitsverzeichnis. Es wird nirgends umgewandelt,
+# also kann auch nichts auseinanderlaufen. Die Regel haengt damit am Projekt und nicht an
+# core.autocrlf der jeweiligen Git-Installation.
+#
+# Keine Ausnahme fuer .bat/.cmd/.ps1 noetig - solche Dateien gibt es hier nicht.
+* text=auto eol=lf
+
+# Binaerdateien erkennt Git selbst; ausdruecklich ist sicherer.
+*.png  binary
+*.ico  binary
+*.ttf  binary
+*.xlsx binary
