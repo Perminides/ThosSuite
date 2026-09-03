@@ -87,10 +87,11 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 ## Gösch und Dreieck
 
 - Der Gösch belegt **immer Feld 0** und passt sich nie der Streifenzahl an.
-- Gösch und Dreieck werden in die **Hintergrunddatei gezeichnet**, nicht zur Laufzeit angehängt.
-- Der Dateiname trägt den Gösch: `waagerecht-7-goesch`.
-- Streifen **enden am Gösch**, sie laufen nicht unter ihm durch — eine ungefüllte Fläche ist
-  durchsichtig, überdecken reicht deshalb nicht.
+- Gösch und Dreieck sind **aufgelegte Silhouetten** aus `elements/`, angehängt nach ihrer Frage
+  (`goesch`, `dreieck-<n>`, jeweils auf die ganze Leinwand mit `cell = -1`). Sie stehen deshalb
+  **nicht** im Namen der Hintergrunddatei — es gibt kein `waagerecht-7-goesch`.
+- Beide bekommen ihre eigene Farbfläche und werden gefüllt. Überdecken reicht nur, *weil* gefüllt
+  wird: Eine ungefüllte Fläche ist durchsichtig, die Streifen liefen darunter durch.
 - Dreieckstiefe einheitlich 40 % der Breite.
 
 ## Sketch-Namen
@@ -103,7 +104,7 @@ kreuz-<ausrichtung>-<arme>         diagonal-<richtung>-<bänder>
 uni                                sw-<n>            spezial-<n>
 ```
 
-Wörter statt Ziffern in den Zweignamen. `-goesch` wird angehängt, wenn die Flagge einen hat.
+Wörter statt Ziffern in den Zweignamen. Gösch und Dreieck stehen nicht im Namen, sie werden aufgelegt.
 
 Wo nach der **Verteilung** gefragt wird, steht sie im Namen. Bei fünf waagerechten Streifen ist es die
 **ganze Abfolge** der Breiten: `waagerecht-5-3-1-2-1-3` — die Zahlen sind das Verhältnis selbst,
@@ -124,23 +125,44 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 - Die **Position** ist die Richtung vom Mittelpunkt, nicht das überdeckte Feld. Werte 0…8 wie das
   Raster, 9 ist verstreut.
 - Mehrere Instanzen, die **symmetrisch um die Mitte** liegen, gelten als zentriert.
-- Tolerierte Zweitantworten stehen als Klammer in der Zelle: `4(9)`.
+- Tolerierte Zweitantworten stehen als Klammer in der Zelle: `4(9)`, mehrere mit `|` getrennt:
+  `4(9|5)`. Kein Komma — das trennt im Blatt die Spalten. Der Generator macht daraus `~`-Optionen:
+  falsch, aber ohne Abbruch.
 - Distraktoren werden gezogen, damit auch eine falsche Vorstellung anklickbar bleibt.
 
 ## Daten
 
-- Karten-Id = Spalte 0 des Blattes. Sie überlebt jede Regenerierung.
-- Spalte `ID` ist der Kartenmarker: Shape-Name oder `small|x|y`. Immer gefüllt.
+- Karten-Id = Spalte `ID`, von Hand vergeben. Sie trägt den Lernfortschritt, wird nicht gerechnet
+  und überlebt jede Regenerierung. Zwei Zeilen mit derselben Id brechen den Lauf ab.
+- Der Kartenmarker hinter `Mark:` ist der **Name**. Nur wo die Weltkarte ihn nicht kennt, steht in
+  Spalte `ShapeId` eine Ausnahme (`middle|3434|951`) — leer heißt: nimm den Namen.
 - Erzeugt werden die Zeilen mit `Generieren = 1`.
 - **Keine Kommas in Zellen** — mehrere Werte mit `|` trennen. Sonst braucht der Leser einen
   quotefähigen CSV-Parser.
+- **Kein Semikolon in einem Schritt** — es trennt die Spalten der Deck-Datei. Der Generator bricht ab.
+- **Kein Zeilenumbruch in einer Zelle.** Das Fragefeld versteht dafür `<br />`, `<b>` und `<i>`.
 - Deck-CSV: UTF-8 mit BOM, CRLF, `;` als Trenner.
-- Der Generator ersetzt eine Karte an ihrer Id **oder** an ihrem `Mark:`.
+- Die Deck-Datei entsteht bei jedem Lauf **komplett neu**, nach Id sortiert. Was nicht aus dem Blatt
+  kommt, überlebt den Lauf nicht — handgeschriebene Zusatzfragen gehören in die zweite Deck-Datei.
+  Der Lauf meldet, wie viele Karten vorher drin standen.
+
+## Mehrere Flaggen für ein Land
+
+- Eine **Zeile je Flagge**, dazu die Spalte `Version`: leer oder 1 ist die normale, dann 2, 3 …
+- Die Id vergibst Du selbst. Konvention: `1000 + Nummer` für die zweite Flagge, `2000 + Nummer` für
+  die dritte. Der Generator rechnet nichts — er nimmt die Id, wie sie dasteht.
+- Die SVG-Datei trägt die Version ab der zweiten: `Afghanistan.svg`, `Afghanistan2.svg`. Fehlt sie,
+  meldet der Lauf es und macht weiter.
+- Der `Mark:` bleibt für alle Versionen derselbe — es ist dieselbe Fläche auf der Karte.
+- Spalte `Hinweistext` steht als `<i>…</i><br />` **vor der ersten Frage** („Flagge bis 2021"). Kein
+  eigener Schritt, das spart einen Klick; sichtbar ist er dann nur während der ersten Frage.
+- Die erste Flagge eines Landes braucht keinen Hinweistext, jede weitere schon.
 
 ## Werkzeuge
 
-- `sheet.py` / `FlagSheet` holen das Blatt als `systematik.csv`. Nichts wird über Spaltenpositionen
-  gelesen außer Nummer, Land und englischem Namen.
+- `sheet.py` / `FlagSheet` holen das Blatt als `systematik.csv`. **Nichts** wird über eine
+  Spaltenposition gelesen — jede Spalte hängt an ihrer Überschrift, der Attributblock an der
+  Signatur. Spalten dürfen also frei verschoben werden, umbenannte fliegen mit Klartext auf.
 - `build-streifen-sketch.py` erzeugt Streifen, `build-element-sketch.py` die gerechneten Elemente,
   `svg-zu-sketch.py` macht aus einem Piktogramm eine Strukturdatei.
 - Der Konverter flacht Kurven ab (Toleranz 0,01) und **bricht ab** bei Strichbildern, Text, Masken,
