@@ -454,6 +454,25 @@ public abstract class Skin extends SkinProperties {
 	    // javafx.scene.text.Text innerhalb des Labels" ansprechen.
 	    builder.rule(".my-info-label Text", "-fx-fill", textColor);
 
+	    // Der Smiley kommt aus der Ersatzschrift des Systems und ist dort als Haarlinie gezeichnet —
+	    // neben Aptos sieht das dünn aus. -fx-font-weight hilft nicht: Für eine Ersatzschrift rechnet
+	    // JavaFX kein Fett hoch. Also ziehen wir den Glyphen selbst nach, denn Text ist ein Shape.
+	    //
+	    // Die Familie steht fest, sonst entschiede die Ersatzschrift-Heuristik. 'Segoe UI Symbol'
+	    // zeichnet schlicht — zwei Augen und ein Mund. 'Segoe UI Emoji' hat dieselben Zeichen, aber
+	    // einen viel dichteren Entwurf, der unter der Kontur zum Klumpen wird.
+	    //
+	    // Die Kontur wächst mit der Schrift: 3 Prozent der Schriftgröße, bei den üblichen 20px also
+	    // die 0,6, mit denen es abgestimmt ist. Gerundet, weil sonst 0.6000000000000001 im Stylesheet
+	    // stünde. Das Gewicht geht nicht ein — alle Skins setzen Aptos normal, und JavaFX gäbe uns
+	    // ohnehin keine Strichstärke, nur "Bold" oder "Regular".
+	    double smileyStroke = Math.round(font.getSize() * 3) / 100.0;
+	    builder.start(".my-info-label Text.smiley")
+	    		.add("-fx-font-family", "'Segoe UI Symbol'")
+	    		.add("-fx-stroke", textColor)
+	    		.add("-fx-stroke-width", smileyStroke + "px")
+	    		.end();
+
 	    // Nur noch die Abweichung. Die drei Farben fallen bereits beim Laden auf displayTextBgColor
 	    // zurück, wenn sie nicht gesetzt sind — dann schreibt das hier denselben Wert nochmal, was
 	    // nichts kostet und die Regel gleichförmig hält.

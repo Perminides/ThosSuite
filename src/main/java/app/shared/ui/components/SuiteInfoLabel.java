@@ -1,5 +1,6 @@
 package app.shared.ui.components;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +32,15 @@ public class SuiteInfoLabel extends StackPane {
     // <b>|</b>   -> Erkennt Start- und End-Tag für Bold
     // <i>|</i>   -> Erkennt Start- und End-Tag für Italic
     private static final Pattern TAG_PATTERN = Pattern.compile("(?i)(<br\\s*/?>|<b>|</b>|<i>|</i>)");
+
+    /**
+     * Zeichen, die keine der geladenen Schriften hat und die deshalb aus der Ersatzschrift des
+     * Systems kommen: Zwinkersmiley (U+1F609) und leichtes Lächeln (U+1F642). Als Codepoint
+     * geschrieben, damit die Quelldatei selbst kein Emoji tragen muss. Ein weiteres ist ein Eintrag
+     * mehr — mehr braucht es nicht, weil alle Texte der Suite von Hand geschrieben sind.
+     */
+    private static final List<String> SMILEYS = List.of(
+            new String(Character.toChars(0x1F609)), new String(Character.toChars(0x1F642)));
 
     /**
      * Mit fester Lage und Größe — für absolut positionierende Hosts.
@@ -101,38 +111,6 @@ public class SuiteInfoLabel extends StackPane {
         setMaxHeight(height);
     }
 
-    /**
-     * !Sofort
-     * Farbige oder wenigstens kräftigere Emoji — drei Wege, keiner davon gegangen.
-     *
-     * <p>JavaFX rastert Glyphen einfarbig; Farbschriften (COLR/CPAL) liest der Textstack nicht. Der
-     * Smiley kommt außerdem nicht aus Aptos, sondern aus der Ersatzschrift des Systems — deshalb steht
-     * eine Haarlinie neben kräftiger Schrift, und {@code -fx-font-weight: bold} bleibt wirkungslos:
-     * Für eine Ersatzschrift rechnet JavaFX kein Fett hoch.</p>
-     *
-     * <p><b>Voraussetzung für jeden der drei Wege:</b> Der Smiley braucht hier einen eigenen
-     * {@code Text}-Knoten mit eigener Stilklasse — dasselbe Muster wie {@code <br>}. Erst dann kann
-     * {@code Skin} ihn ansprechen, ohne den umgebenden Text mitzutreffen.</p>
-     *
-     * <ol>
-     *   <li><b>{@code -fx-stroke}.</b> {@code Text} ist ein {@code Shape} und kann Kontur: in
-     *       Textfarbe, {@code -fx-stroke-width} um 0,6. Fettet genau dieses Zeichen, je Skin
-     *       einstellbar, keine Datei, rückgängig durch Löschen der Zeile. Der billigste Weg.</li>
-     *   <li><b>Noto Emoji.</b> Der monochrome Noto-Satz, nicht der bunte: Umrisse, für Fließtext
-     *       entworfen, bis Bold verfügbar, OFL-lizenziert. Eine Zeile in {@code loadFonts()} neben
-     *       Aptos, dann {@code -fx-font-family} auf der Stilklasse. Trägt auch alle künftigen
-     *       Symbole, nicht nur eines.</li>
-     *   <li><b>Selbst zeichnen.</b> Der einzige Weg zu echter Farbe: die Pfade einer SVG-Vorlage als
-     *       {@code SVGPath}-Knoten in einer Gruppe, Farben über Stilklassen aus dem Skin, Größe an der
-     *       Schriftgröße gebunden. {@code -fx-shape} taugt <b>nicht</b> — es füllt einen Pfad und
-     *       zeichnet ihn nicht nach, ein Strich-Emoji bliebe unsichtbar. Haken: OpenMoji zeichnet mit
-     *       2 von 72 Einheiten Strichstärke, bei Textgröße also unter einem Bildschirmpixel. Ohne
-     *       deutlich dickeren Strich verschmiert es, mit dickerem sieht es nicht mehr aus wie die
-     *       Vorlage.</li>
-     * </ol>
-     *
-     * <p>Sackgasse: {@code ☻} (U+263B) als von Haus aus kräftiges Zeichen — zu schwarz und zu klein.</p>
-     */
     private void rebuildChildren() {
         textFlow.getChildren().clear();
 
@@ -175,6 +153,26 @@ public class SuiteInfoLabel extends StackPane {
     }
 
     private void createNode(String content, boolean bold, boolean italic) {
+        // Ein Smiley kommt aus der Ersatzschrift und ist dort eine Haarlinie, die neben kräftiger
+        // Schrift dünn aussieht. Er bekommt deshalb seinen eigenen Knoten mit eigener Stilklasse —
+        // erst damit kann der Skin ihn nachziehen, ohne die Wörter daneben mitzutreffen.
+        String smiley = firstSmileyIn(content);
+        if (smiley != null) {
+            int at = content.indexOf(smiley);
+            if (at > 0) {
+                createNode(content.substring(0, at), bold, italic);
+            }
+            Text node = new Text(smiley);
+            applyStyle(node, bold, italic);
+            node.getStyleClass().add("smiley");
+            textFlow.getChildren().add(node);
+            String rest = content.substring(at + smiley.length());
+            if (!rest.isEmpty()) {
+                createNode(rest, bold, italic);
+            }
+            return;
+        }
+
         // Wenn der Content Bindestriche enthält, aufteilen und Hair Spaces einfügen
     	// Leider war ein echtes Soft-Hyphening nicht möglich. Also dass wir sagen "Hier
     	// darf umgebrochen werden" und wenn nötig, dann tut JavaFX das und setzt auch einen
@@ -208,6 +206,20 @@ public class SuiteInfoLabel extends StackPane {
             applyStyle(node, bold, italic);
             textFlow.getChildren().add(node);
         }
+    }
+
+    /** Der Smiley, der in diesem Stück am weitesten vorn steht — oder {@code null}, wenn keiner drin ist. */
+    private static String firstSmileyIn(String content) {
+        String found = null;
+        int first = Integer.MAX_VALUE;
+        for (String smiley : SMILEYS) {
+            int at = content.indexOf(smiley);
+            if (at >= 0 && at < first) {
+                first = at;
+                found = smiley;
+            }
+        }
+        return found;
     }
 
     private void applyStyle(Text node, boolean bold, boolean italic) {
