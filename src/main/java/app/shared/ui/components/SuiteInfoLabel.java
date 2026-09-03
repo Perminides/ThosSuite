@@ -101,6 +101,38 @@ public class SuiteInfoLabel extends StackPane {
         setMaxHeight(height);
     }
 
+    /**
+     * !Sofort
+     * Farbige oder wenigstens kräftigere Emoji — drei Wege, keiner davon gegangen.
+     *
+     * <p>JavaFX rastert Glyphen einfarbig; Farbschriften (COLR/CPAL) liest der Textstack nicht. Der
+     * Smiley kommt außerdem nicht aus Aptos, sondern aus der Ersatzschrift des Systems — deshalb steht
+     * eine Haarlinie neben kräftiger Schrift, und {@code -fx-font-weight: bold} bleibt wirkungslos:
+     * Für eine Ersatzschrift rechnet JavaFX kein Fett hoch.</p>
+     *
+     * <p><b>Voraussetzung für jeden der drei Wege:</b> Der Smiley braucht hier einen eigenen
+     * {@code Text}-Knoten mit eigener Stilklasse — dasselbe Muster wie {@code <br>}. Erst dann kann
+     * {@code Skin} ihn ansprechen, ohne den umgebenden Text mitzutreffen.</p>
+     *
+     * <ol>
+     *   <li><b>{@code -fx-stroke}.</b> {@code Text} ist ein {@code Shape} und kann Kontur: in
+     *       Textfarbe, {@code -fx-stroke-width} um 0,6. Fettet genau dieses Zeichen, je Skin
+     *       einstellbar, keine Datei, rückgängig durch Löschen der Zeile. Der billigste Weg.</li>
+     *   <li><b>Noto Emoji.</b> Der monochrome Noto-Satz, nicht der bunte: Umrisse, für Fließtext
+     *       entworfen, bis Bold verfügbar, OFL-lizenziert. Eine Zeile in {@code loadFonts()} neben
+     *       Aptos, dann {@code -fx-font-family} auf der Stilklasse. Trägt auch alle künftigen
+     *       Symbole, nicht nur eines.</li>
+     *   <li><b>Selbst zeichnen.</b> Der einzige Weg zu echter Farbe: die Pfade einer SVG-Vorlage als
+     *       {@code SVGPath}-Knoten in einer Gruppe, Farben über Stilklassen aus dem Skin, Größe an der
+     *       Schriftgröße gebunden. {@code -fx-shape} taugt <b>nicht</b> — es füllt einen Pfad und
+     *       zeichnet ihn nicht nach, ein Strich-Emoji bliebe unsichtbar. Haken: OpenMoji zeichnet mit
+     *       2 von 72 Einheiten Strichstärke, bei Textgröße also unter einem Bildschirmpixel. Ohne
+     *       deutlich dickeren Strich verschmiert es, mit dickerem sieht es nicht mehr aus wie die
+     *       Vorlage.</li>
+     * </ol>
+     *
+     * <p>Sackgasse: {@code ☻} (U+263B) als von Haus aus kräftiges Zeichen — zu schwarz und zu klein.</p>
+     */
     private void rebuildChildren() {
         textFlow.getChildren().clear();
 

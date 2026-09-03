@@ -23,8 +23,9 @@ import java.util.Map;
  *
  * <p><b>Nichts wird über Spaltenpositionen gelesen.</b> Der Kopf ist die Zeile, die irgendwo
  * "Signatur" trägt; wo der Attributblock anfängt, wird gesucht — es ist die Stelle, ab der sich die
- * Signatur aus den folgenden Spalten wieder zusammensetzen lässt. Damit brechen eingefügte,
- * verschobene oder gelöschte Spalten nichts. Genau das ist beim Aufräumen einmal passiert.</p>
+ * Signatur aus den folgenden Spalten wieder zusammensetzen lässt. Alles andere hängt an seiner
+ * Überschrift. Damit brechen eingefügte, verschobene oder gelöschte Spalten nichts. Genau das ist
+ * beim Aufräumen zweimal passiert.</p>
  *
  * <p>Beim Auflösen über Überschriften: Ein Blatt kann eine Überschrift doppelt tragen (früher
  * standen "3W" und "5W" zweimal drin, einmal im Attributblock und einmal in alten Arbeitsspalten).
@@ -37,17 +38,13 @@ public class FlagSheet {
 	private static final int GID = 184257391;   // Systematik. Eine Id, keine Position — Verschieben ändert sie nicht.
 	private static final Path FILE = Path.of("docs", "flaggen", "systematik.csv");
 
-	/** Feste Positionen gibt es nur zwei: die laufende Nummer und der deutsche Name. */
-	private static final int COLUMN_NUMBER = 0;
-	private static final int COLUMN_COUNTRY = 2;
-	/** Der englische Name. Die Spalte traegt keine Ueberschrift — sie zu benennen wuerde das hier los. */
-	private static final int COLUMN_ENGLISH = 6;
-
 	private final List<List<String>> rows;
 	private final List<List<String>> flags = new ArrayList<>();
 	private final List<String> withoutSignature = new ArrayList<>();
 	private final int headerRow;
 	private final int signatureColumn;
+	private final int numberColumn;
+	private final int nameColumn;
 	private final int attributeStart;
 	private final int attributeCount;
 	private final List<String> attributeNames = new ArrayList<>();
@@ -83,14 +80,18 @@ public class FlagSheet {
 		rows = parse(csv);
 		headerRow = findHeaderRow();
 		signatureColumn = indexOf(rows.get(headerRow), "Signatur");
+		// Signatur, ID und Name werden schon beim Sammeln der Datenzeilen gebraucht, also vor dem
+		// Attributblock. Aufgelöst werden sie trotzdem über die Überschrift, nicht über die Position.
+		numberColumn = column("ID");
+		nameColumn = column("Name");
 
-		// Datenzeile = Land in Spalte 2 und eine Signatur. Der Bildpfad taugt NICHT als Kriterium:
-		// Neu angelegte Länder haben noch keinen und wären still verschwunden statt aufzufallen.
+		// Datenzeile = Name und Signatur. Ein Bildpfad taugt NICHT als Kriterium: Neu angelegte
+		// Länder haben noch keinen und wären still verschwunden statt aufzufallen.
 		for (List<String> row : rows.subList(headerRow + 1, rows.size())) {
-			if (cell(row, COLUMN_COUNTRY).isEmpty())
+			if (cell(row, nameColumn).isEmpty())
 				continue;
 			if (cell(row, signatureColumn).isEmpty())
-				withoutSignature.add(cell(row, COLUMN_COUNTRY));
+				withoutSignature.add(cell(row, nameColumn));
 			else
 				flags.add(row);
 		}
@@ -123,6 +124,15 @@ public class FlagSheet {
 			result.add(List.of(line.split(",", -1)));
 		}
 		return result;
+	}
+
+	/** Die Spalte mit dieser Überschrift. Fehlt sie, ist das Blatt umbenannt worden — das fliegt. */
+	private int column(String name) {
+		int index = indexOf(rows.get(headerRow), name);
+		if (index < 0)
+			throw new RuntimeException("Die Spalte '" + name + "' gibt es im Blatt nicht: "
+					+ String.join(", ", rows.get(headerRow)));
+		return index;
 	}
 
 	private int findHeaderRow() {
@@ -180,9 +190,8 @@ public class FlagSheet {
 	public List<String> withoutSignature() { return withoutSignature; }
 	public List<String> attributeNames()   { return attributeNames; }
 
-	public String number(List<String> row)    { return cell(row, COLUMN_NUMBER); }
-	public String country(List<String> row)   { return cell(row, COLUMN_COUNTRY).replace('_', ' '); }
-	public String english(List<String> row)   { return cell(row, COLUMN_ENGLISH); }
+	public String number(List<String> row)    { return cell(row, numberColumn); }
+	public String country(List<String> row)   { return cell(row, nameColumn); }
 	public String signature(List<String> row) { return cell(row, signatureColumn); }
 
 	public List<String> attributes(List<String> row) {

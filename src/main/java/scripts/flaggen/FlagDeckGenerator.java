@@ -10,6 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.function.Consumer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,9 +27,10 @@ import app.learn.anki.model.Card;
  * Deshalb stehen die Regeln als Tabellen am Kopf der Klasse und nicht als {@code if} im Rumpf.</p>
  *
  * <p>Aufruf: {@code java scripts.flaggen.FlagDeckGenerator [--offline] [--trocken]}. Erzeugt werden
- * alle Zeilen mit {@code Generieren = 1}; vorhandene Karten derselben Id werden ersetzt, alle
- * anderen Zeilen der Datei bleiben stehen. Mit {@code --trocken} wird nur geprüft und nichts
- * geschrieben.</p>
+ * alle Zeilen mit {@code Generieren = 1}; die Deck-Datei entsteht dabei <b>vollständig neu</b> und
+ * nach Id sortiert — was nicht aus dem Blatt kommt, überlebt den Lauf nicht. Handgeschriebene
+ * Zusatzfragen gehören deshalb in die zweite Deck-Datei. Mit {@code --trocken} wird nur geprüft und
+ * nichts geschrieben.</p>
  *
  * <p>Jede erzeugte Zeile läuft durch zwei Prüfungen: durch den echten {@link Card}-Parser, und
  * durch einen Flächenlauf, der mitzählt, wie viele Flächen die Skizze zu jedem Zeitpunkt hat —
@@ -147,6 +150,15 @@ public class FlagDeckGenerator {
 			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog", "Emblem", "emblem");
 
 	/**
+	 * Grundgröße einzelner Elemente, ohne Eintrag 1,0. Manche Figuren sind von Natur aus groß —
+	 * Brasiliens Raute spannt fast die halbe Flagge, ein Stern tut das nie.
+	 *
+	 * <p>Sie wirkt auf das Element selbst <b>und</b> auf alles, was darin liegt: Wächst die Raute,
+	 * wächst der Kreis darin mit, sonst verschöben sich die Verhältnisse.</p>
+	 */
+	private static final Map<String, Double> ELEMENT_SIZE = Map.of("Raute", 2d);
+
+	/**
 	 * Behälter und der Faktor, mit dem ihr Inhalt gezeichnet wird — je nach <b>Anzahl der Kinder</b>,
 	 * denn mit jedem weiteren rückt der Inhalt nach außen.
 	 *
@@ -158,15 +170,6 @@ public class FlagDeckGenerator {
 	 * <p>Die Raute ist nicht gerechnet, sondern am Bild gefunden — ihre Ecken laufen spitz zu, da
 	 * gilt die Kastenregel nicht.</p>
 	 */
-	/**
-	 * Grundgröße einzelner Elemente, ohne Eintrag 1,0. Manche Figuren sind von Natur aus groß —
-	 * Brasiliens Raute spannt fast die halbe Flagge, ein Stern tut das nie.
-	 *
-	 * <p>Sie wirkt auf das Element selbst <b>und</b> auf alles, was darin liegt: Wächst die Raute,
-	 * wächst der Kreis darin mit, sonst verschöben sich die Verhältnisse.</p>
-	 */
-	private static final Map<String, Double> ELEMENT_SIZE = Map.of("Raute", 2d);
-
 	private static final Map<String, double[]> CONTAINERS = Map.of(
 			"Raute", new double[] {0.7, 0.7, 0.7, 0.7},
 			"Kreis", new double[] {0.7, 0.5, 0.45, 0.45});
@@ -188,6 +191,8 @@ public class FlagDeckGenerator {
 
 	private final FlagSheet sheet;
 	private final Map<String, Integer> areas = new LinkedHashMap<>();
+	/** Flaggenbilder, die es noch nicht gibt. Gemeldet am Ende, nicht abgebrochen. */
+	private final List<String> missing = new ArrayList<>();
 	/** {@code <ShuffleEnd>} gehoert an den Schritt NACH dem Block — er selbst liegt ausserhalb. */
 	private String pending = "";
 
@@ -200,14 +205,13 @@ public class FlagDeckGenerator {
 		FlagSheet sheet = options.contains("--offline") ? FlagSheet.read() : FlagSheet.fetch();
 		FlagDeckGenerator generator = new FlagDeckGenerator(sheet);
 
-		Map<String, String> generated = new LinkedHashMap<>();
+		// Sortiert nach Id — in dieser Reihenfolge entsteht die Deck-Datei.
+		Map<Integer, String> generated = new TreeMap<>();
 		for (List<String> row : sheet.flags())
-			if (sheet.value(row, "Generieren").equals("1")) {
-				List<String> steps = generator.card(row);
-				generator.check(sheet.country(row), steps);
-				generated.put(sheet.number(row), String.join(";", steps));
-			}
+			if (sheet.value(row, "Generieren").equals("1"))
+				generator.generate(generated, row);
 		System.out.println(generated.size() + " Karten erzeugt und geprüft");
+		generator.missing.forEach(file -> System.out.println("  ! Flaggenbild fehlt: " + file));
 
 		if (options.contains("--trocken")) {
 			generated.values().forEach(System.out::println);
@@ -216,14 +220,33 @@ public class FlagDeckGenerator {
 		write(generated);
 	}
 
+	/**
+	 * Eine Zeile zur Karte machen, prüfen und einhängen. Jede Meldung bekommt hier ihr Land — ohne
+	 * das steht da nur „für 'Löwe' fehlt der Artikel" und man sucht die Zeile in 214 anderen.
+	 */
+	private void generate(Map<Integer, String> generated, List<String> row) {
+		int id = id(row);
+		try {
+			List<String> steps = card(row);
+			check(steps);
+			if (generated.put(id, String.join(";", steps)) != null)
+				throw new RuntimeException("die Id " + id + " gibt es zweimal im Blatt");
+		} catch (RuntimeException e) {
+			throw new RuntimeException(sheet.country(row) + " (Id " + id + "): " + e.getMessage(), e);
+		}
+	}
+
 	// ---- Die Karte ------------------------------------------------------------
 
 	/** Die vollständige Zeile: Id, Bemerkung, Label, dann die Schritte. */
 	private List<String> card(List<String> row) {
-		List<String> steps = new ArrayList<>(List.of(sheet.number(row), "", "Flagge",
-				"Mark:" + sheet.value(row, "ID")));
+		List<String> steps = new ArrayList<>(List.of(String.valueOf(id(row)), remark(row), "Flagge",
+				"Mark:" + shape(row)));
 
-		ask(steps, "Welche Form hat die Flagge?", answer(rectangular(row), "Rechteckig", "Nicht rechteckig", "Quadratisch"));
+		// Der Hinweis trennt zwei Flaggen desselben Landes und muss deshalb vor der ersten Antwort
+		// stehen. Er hängt an der ersten Frage statt an einem eigenen Schritt — das spart einen Klick.
+		ask(steps, hint(row) + "Welche Form hat die Flagge?",
+				answer(rectangular(row), "Rechteckig", "Nicht rechteckig", "Quadratisch"));
 		ask(steps, "Hat die Flagge einen Rahmen?", answer(frame(row) ? "Ja" : "Nein", "Ja", "Nein"));
 
 		// Kreuz und Diagonale vorweg — sonst würde ihr linker Arm mit einem Dreieck von links verwechselt.
@@ -237,13 +260,16 @@ public class FlagDeckGenerator {
 					answer(BACKGROUNDS.get(type), FILL_BACKGROUNDS.toArray(new String[0])));
 		branchQuestions(steps, row, type);
 
-		add(steps, "SketchImage:" + branchSketch(row, type));
+		Canvas canvas = new Canvas(steps);
+		List<Fill> fills = new ArrayList<>();
+		String background = branchSketch(row, type);
+		paint(background, fills, canvas.background(background), colors(sheet.value(row, "Hintergrundfarben")));
 
 		// Gösch nach der Göschfrage auflegen (Leinwand-Silhouette, cell = -1).
 		boolean goesch = sheet.value(row, "Gösch?").equals("1");
 		ask(steps, "Hat die Flagge einen Gösch?", answer(goesch ? "Ja" : "Nein", "Ja", "Nein"));
 		if (goesch)
-			add(steps, "SketchImageAdd:goesch,-1");
+			paint("goesch", fills, canvas.overlay("goesch", "-1"), colors(sheet.value(row, "Gösch Farbe")));
 
 		// Dreieck nach der Dreieckfrage auflegen.
 		String dreieck = sheet.value(row, "Dreieck von links?");
@@ -254,21 +280,12 @@ public class FlagDeckGenerator {
 			ask(steps, "Die Dreiecksform(en) bestehen aus wie vielen Farben?",
 					fixedOrder(sheet.value(row, "Die Dreiecksform(en) bestehen aus wie vielen Farben?"),
 							"1", "2", "3", "4"));
-			add(steps, "SketchImageAdd:dreieck-" + dreieckForm + ",-1");
+			String dreieckSketch = "dreieck-" + dreieckForm;
+			paint(dreieckSketch, fills, canvas.overlay(dreieckSketch, "-1"),
+					colors(sheet.value(row, "Dreieck Farbe")));
 		}
 
-		List<Element> elements = elements(row);
-		// Flächen-Reihenfolge = Hintergrund → Gösch → Dreieck → Elemente. Jede Fläche trägt ihre eigene
-		// Nummer, damit eine ungefärbte Fläche (das Emblem) die folgenden nicht verschiebt.
-		List<Fill> fills = new ArrayList<>();
-		int area = 0;
-		for (String color : split(sheet.value(row, "Hintergrundfarben")))
-			fills.add(new Fill(area++, color));
-		if (goesch)
-			fills.add(new Fill(area++, sheet.value(row, "Gösch Farbe")));
-		if (dreieckForm != 0)
-			fills.add(new Fill(area++, sheet.value(row, "Dreieck Farbe")));
-		elementFills(steps, elements, fills, area);
+		elementFills(steps, canvas, elements(row), fills);
 		fillAreas(steps, fills);
 		add(steps, "Image:" + image(row));
 		add(steps, "Pause:"); // Zeit, die echte Flagge anzusehen
@@ -326,18 +343,13 @@ public class FlagDeckGenerator {
 				continue;
 			String position = sheet.value(row, "E" + slot + " Position");
 			if (position.equals("x"))
-				continue; // Phantom wie Keine: nur Antwort der Elementfrage, kein Ort, kein Sketch
+				continue; // Kein Ort, kein Sketch, keine Frage — Ort und Element stehen immer gemeinsam auf 'x'
 			result.add(new Element(name, position,
 					sheet.value(row, "E" + slot + " Farbe"), sheet.value(row, "E" + slot + " Anzahl")));
 		}
 		return result;
 	}
 
-	/**
-	 * Erst alle Elemente anhaken, dann Ort und Anzahl je Element, dann alles auf einmal zeichnen,
-	 * dann die Farben. Die Reihenfolge ist Absicht: Wer den Ort noch nicht beantwortet hat, soll das
-	 * Element nicht schon an seinem Platz sehen.
-	 */
 	/**
 	 * Erst alle Elemente anhaken, dann je Element Anzahl und Ort, dann alles auf einmal zeichnen.
 	 * Gefärbt wird nicht hier, sondern am Ende der Karte zusammen mit den Hintergrundflächen.
@@ -351,7 +363,7 @@ public class FlagDeckGenerator {
 	 * Farbe dasteht. Ein Element mit weniger Farben als Flächen (das ungefärbte Emblem) lässt seine
 	 * überzähligen Flächen aus — sie bleiben grau —, rückt die Flächennummer aber trotzdem vor.</p>
 	 */
-	private void elementFills(List<String> steps, List<Element> elements, List<Fill> fills, int firstArea) {
+	private void elementFills(List<String> steps, Canvas canvas, List<Element> elements, List<Fill> fills) {
 		List<String> names = new ArrayList<>();
 		for (Element element : elements)
 			if (!names.contains(element.name()))
@@ -377,10 +389,7 @@ public class FlagDeckGenerator {
 		for (Element element : elements)
 			if (FlagSheet.isSet(element.count()) || element.name().equals("Kreis"))
 				withAttribute.add(element);
-		for (int i = 0; i < withAttribute.size(); i++) {
-			Element element = withAttribute.get(i);
-			if (withAttribute.size() > 1)
-				pending = i == 0 ? "<ShuffleStart>" : "<ShuffleBreak>";
+		shuffled(steps, withAttribute, element -> {
 			if (FlagSheet.isSet(element.count()))
 				ask(steps, "Wie viele " + WORDS.get(element.name())[1].substring(4) + "?",
 						fixedOrder(element.count(), COUNTS.toArray(new String[0])));
@@ -388,47 +397,90 @@ public class FlagDeckGenerator {
 			// Annahme "ungeteilt". Geteilt ist er genau dann, wenn zwei Farben im Blatt stehen.
 			if (element.name().equals("Kreis"))
 				ask(steps, "Ist der Kreis geteilt?",
-						answer(split(element.color()).size() == 2 ? "Ja" : "Nein", "Ja", "Nein"));
-		}
-		// Eigenständiger Marker: der End- und der folgende Start-Marker können nicht auf demselben
-		// Schritt stehen — der Parser prüft Start, bevor er End abschneidet.
-		if (withAttribute.size() > 1)
-			add(steps, "<ShuffleEnd>");
+						answer(colors(element.color()).size() == 2 ? "Ja" : "Nein", "Ja", "Nein"));
+		});
 
-		for (int i = 0; i < elements.size(); i++) {
-			Element element = elements.get(i);
-			if (elements.size() > 1)
-				pending = i == 0 ? "<ShuffleStart>" : "<ShuffleBreak>";
-			ask(steps, "Wo " + verb(element) + " " + word(element) + "?",
-					fixedOrder(POSITIONS.get(Integer.parseInt(untolerated(element.position()))),
-							POSITIONS.toArray(new String[0])));
-		}
-		if (elements.size() > 1)
-			pending = "<ShuffleEnd>";
+		shuffled(steps, elements, element ->
+				ask(steps, "Wo " + verb(element) + " " + word(element) + "?", position(element)));
 
-		int area = firstArea;
-		for (Layout layout : layout(elements)) {
-			add(steps, "SketchImageAdd:" + layout.step());
-			// "x" ist wie leer die Unset-Markierung (vgl. sketchOf bei der Anzahl): keine Farbe, die
-			// Fläche bleibt grau — so das Emblem.
-			String cell = layout.element().color();
-			List<String> colors = cell.equals("x") ? List.of() : split(cell);
-			int areas = areasOf("elements", layout.step().split(",")[0]);
-			if (colors.size() > areas)
-				throw new RuntimeException(layout.step().split(",")[0] + ": " + colors.size()
-						+ " Farben, aber nur " + areas + " Flächen");
-			for (int j = 0; j < areas; j++) {
-				if (j < colors.size())
-					fills.add(new Fill(area, colors.get(j)));
-				area++;
-			}
-		}
+		for (Layout layout : layout(elements))
+			paint(layout.sketch(), fills, canvas.overlay(layout.sketch(), layout.placement()),
+					colors(layout.element().color()));
 	}
 
-	private record Layout(Element element, String step) {}
+	/**
+	 * Die Ortsfrage. Steht im Blatt eine Toleranzklammer, tragen deren Werte ein {@code ~}: Ein Klick
+	 * darauf gilt als falsch, bricht die Karte aber nicht ab.
+	 */
+	private static String position(Element element) {
+		List<String> tolerated = new ArrayList<>();
+		for (String value : bracket(element.position()))
+			tolerated.add(POSITIONS.get(Integer.parseInt(value)));
+		return fixedOrder(POSITIONS.get(Integer.parseInt(untolerated(element.position()))), tolerated,
+				POSITIONS.toArray(new String[0]));
+	}
+
+	/** Dateiname und Platzierung einer Figur: alles, was hinter {@code SketchImageAdd:} steht. */
+	private record Layout(Element element, String sketch, String placement) {}
 
 	/** Eine zu füllende Fläche: ihre Nummer und die Farbe. Ungefüllte Flächen stehen gar nicht drin. */
 	private record Fill(int area, String color) {}
+
+	/**
+	 * Der Zeichenstapel. Wer eine Skizze auflegt, bekommt von hier die Nummern ihrer Flächen — sonst
+	 * liefe neben der Zeichenreihenfolge ein Zähler her, den man an drei Stellen weiterdrehen müsste,
+	 * und ein {@code Fill} auf die falsche Fläche sieht man erst mitten in einer Session.
+	 *
+	 * <p>Die Reihenfolge ist Hintergrund → Gösch → Dreieck → Elemente. Jede Fläche behält ihre eigene
+	 * Nummer, auch wenn sie ungefärbt bleibt (das Emblem) — sonst verschöbe sie die folgenden.</p>
+	 */
+	private final class Canvas {
+
+		private final List<String> steps;
+		private int next;
+
+		private Canvas(List<String> steps) {
+			this.steps = steps;
+		}
+
+		/** Der Hintergrund. Er setzt die Leinwand zurück, gezählt wird wieder ab 0. */
+		private List<Integer> background(String sketch) {
+			add(steps, "SketchImage:" + sketch);
+			next = 0;
+			return claim(areasOf("backgrounds", sketch));
+		}
+
+		/** Eine Silhouette obendrauf. {@code placement} ist alles hinter dem Dateinamen. */
+		private List<Integer> overlay(String sketch, String placement) {
+			add(steps, "SketchImageAdd:" + sketch + "," + placement);
+			return claim(areasOf("elements", sketch));
+		}
+
+		private List<Integer> claim(int count) {
+			List<Integer> result = new ArrayList<>();
+			for (int i = 0; i < count; i++)
+				result.add(next++);
+			return result;
+		}
+	}
+
+	/**
+	 * Ordnet Farben und Flächen einander zu, in Flächenreihenfolge. Wo keine Farbe steht, bleibt die
+	 * Fläche grau und wird nicht gefragt — so das ungefärbte Emblem. Mehr Farben als Flächen ist
+	 * dagegen immer ein Fehler im Blatt.
+	 */
+	private static void paint(String sketch, List<Fill> fills, List<Integer> areas, List<String> colors) {
+		if (colors.size() > areas.size())
+			throw new RuntimeException(sketch + ": " + colors.size() + " Farben ("
+					+ String.join("|", colors) + "), aber nur " + areas.size() + " Flächen");
+		for (int i = 0; i < colors.size(); i++)
+			fills.add(new Fill(areas.get(i), colors.get(i)));
+	}
+
+	/** Die Farben einer Zelle. Leer und {@code x} heißen beide: keine Farbe. */
+	private static List<String> colors(String cell) {
+		return FlagSheet.isSet(cell) ? split(cell) : List.of();
+	}
 
 	/**
 	 * Größe und Versatz je Element. Ein Element ohne Behälter füllt sein Feld; was in einem Behälter
@@ -477,10 +529,10 @@ public class FlagDeckGenerator {
 			double size = available[i] * regel[0];
 			double offset = regel[1 + group.indexOf(i)] * available[i];
 
-			String step = sketchOf(element) + "," + untolerated(element.position()) + "," + number(size);
+			String placement = untolerated(element.position()) + "," + number(size);
 			if (group.size() > 1)
-				step += "," + number(offset) + ",0";
-			result.add(new Layout(element, step));
+				placement += "," + number(offset) + ",0";
+			result.add(new Layout(element, sketchOf(element), placement));
 		}
 		return result;
 	}
@@ -493,7 +545,7 @@ public class FlagDeckGenerator {
 			return count == 1 ? "stern" : count == 2 ? "stern-zwei" : "stern-haufen";
 		}
 		// Zwei Farben heißt: der Kreis ist geteilt — dann die zweiflächige Halbscheiben-Datei.
-		if (element.name().equals("Kreis") && split(element.color()).size() == 2)
+		if (element.name().equals("Kreis") && colors(element.color()).size() == 2)
 			return "geteilter-kreis";
 		String file = ELEMENT_FILES.get(element.name());
 		if (file == null)
@@ -536,16 +588,11 @@ public class FlagDeckGenerator {
 		if (fills.isEmpty())
 			return;
 		add(steps, "Output:Welche Farbe hat die markierte Fläche?");
-		for (int i = 0; i < fills.size(); i++) {
-			Fill fill = fills.get(i);
-			if (fills.size() > 1)
-				pending = i == 0 ? "<ShuffleStart>" : "<ShuffleBreak>";
+		shuffled(steps, fills, fill -> {
 			add(steps, "SketchImageMark:" + fill.area());
 			add(steps, answer(fill.color(), COLORS.toArray(new String[0])));
 			add(steps, "SketchImageFill:" + fill.area() + "," + fill.color());
-		}
-		if (fills.size() > 1)
-			pending = "<ShuffleEnd>";
+		});
 	}
 
 	// ---- Ableitungen ----------------------------------------------------------
@@ -563,24 +610,70 @@ public class FlagDeckGenerator {
 		return sheet.value(row, "Rahmen?").equals("1");
 	}
 
-	/** Die echte Flagge als SVG, benannt nach dem deutschen Namen. Den Ordner kennt der Lader. */
+	/**
+	 * Die Fläche, die auf der Weltkarte markiert wird. Fast immer ist das der deutsche Name; nur wo
+	 * die Karte ihn nicht kennt, steht in {@code ShapeId} eine Ausnahme (Abchasien, Singapur).
+	 */
+	private String shape(List<String> row) {
+		String value = sheet.value(row, "ShapeId");
+		return FlagSheet.isSet(value) ? value : sheet.country(row);
+	}
+
+	/**
+	 * Die Karten-Id: die Spalte {@code ID}, unverändert. Sie wird von Hand vergeben und trägt den
+	 * Lernfortschritt — der Generator rechnet nichts daran, damit sie sich nie verschiebt. Zwei
+	 * Zeilen mit derselben Id fliegen in {@link #generate}.
+	 */
+	private int id(List<String> row) {
+		return Integer.parseInt(sheet.number(row));
+	}
+
+	/** Die wievielte Flagge dieses Landes. Leer und {@code x} heißen beide: die erste. */
+	private int version(List<String> row) {
+		String value = sheet.value(row, "Version");
+		return FlagSheet.isSet(value) ? Integer.parseInt(value) : 1;
+	}
+
+	/** Spalte 2 der Deck-Datei. Die Suite liest sie nicht — sie macht den {@code git diff} lesbar. */
+	private String remark(List<String> row) {
+		return sheet.country(row) + (version(row) > 1 ? " (" + version(row) + ")" : "");
+	}
+
+	/**
+	 * Der Hinweis vor der ersten Frage, sonst leer. Er trennt zwei Flaggen desselben Landes
+	 * („Flagge bis 2021"). Der Umbruch steht als {@code <br />} da: In eine Deck-Zelle passt kein
+	 * echter Zeilenumbruch, das Fragefeld versteht aber {@code <br />}, {@code <b>} und {@code <i>}.
+	 */
+	private String hint(List<String> row) {
+		String text = sheet.value(row, "Hinweistext");
+		return FlagSheet.isSet(text) ? "<i>" + text + "</i><br />" : "";
+	}
+
+	/**
+	 * Die echte Flagge als SVG, benannt nach dem deutschen Namen und ab der zweiten Flagge mit der
+	 * Version dahinter: {@code Afghanistan2.svg}. Den Ordner kennt der Lader; dass die Datei da ist,
+	 * prüfen wir trotzdem — sonst bliebe die Karte am Ende einfach leer.
+	 */
 	private String image(List<String> row) {
-		return sheet.country(row) + ".svg";
+		String file = sheet.country(row) + (version(row) > 1 ? String.valueOf(version(row)) : "") + ".svg";
+		if (!Files.exists(DATA.resolve("images").resolve("svg").resolve(file)))
+			missing.add(file);
+		return file;
 	}
 
 	// ---- Prüfung --------------------------------------------------------------
 
 	/** Der echte Parser und ein Flächenlauf — beide finden anderes. */
-	private void check(String country, List<String> steps) {
+	private void check(List<String> steps) {
 		try {
 			new Card(steps);
 		} catch (RuntimeException e) {
-			throw new RuntimeException(country + ": die erzeugte Zeile ist nicht lesbar", e);
+			throw new RuntimeException("die erzeugte Zeile ist nicht lesbar", e);
 		}
 		int available = 0;
 		Set<Integer> filled = new HashSet<>();
 		for (String raw : steps) {
-			String step = raw.substring(raw.lastIndexOf('>') + 1);
+			String step = withoutMarkers(raw);
 			if (step.startsWith("SketchImage:"))
 				available = areasOf("backgrounds", step.substring("SketchImage:".length()));
 			else if (step.startsWith("SketchImageAdd:"))
@@ -588,49 +681,46 @@ public class FlagDeckGenerator {
 			else if (step.startsWith("SketchImageMark:") || step.startsWith("SketchImageFill:")) {
 				int area = Integer.parseInt(step.substring(step.indexOf(':') + 1).split(",")[0]);
 				if (area >= available)
-					throw new RuntimeException(country + ": " + step + ", aber es gibt erst "
-							+ available + " Flächen");
+					throw new RuntimeException(step + ", aber es gibt erst " + available + " Flächen");
 				if (step.startsWith("SketchImageFill:") && !filled.add(area))
-					throw new RuntimeException(country + ": Fläche " + area + " wird doppelt gefüllt");
+					throw new RuntimeException("Fläche " + area + " wird doppelt gefüllt");
 			}
 		}
 	}
 
+	/**
+	 * Der Schritt ohne seine Shuffle-Marker, in derselben Reihenfolge abgeschnitten wie im Parser.
+	 * Nicht bis zum letzten {@code >} springen: ein Fragetext darf {@code <br />} enthalten.
+	 */
+	private static String withoutMarkers(String raw) {
+		String step = raw;
+		for (String marker : List.of("<ShuffleStart>", "<ShuffleBreak>", "<ShuffleEnd>"))
+			if (step.startsWith(marker))
+				step = step.substring(marker.length());
+		return step;
+	}
+
 	// ---- Dateien --------------------------------------------------------------
 
-	/** Vorhandene Karten derselben Id werden ersetzt, alles andere bleibt stehen. */
-	private static void write(Map<String, String> generated) throws IOException {
-		List<String> lines = new ArrayList<>();
-		List<String> old = List.of(Files.readString(DECK, StandardCharsets.UTF_8)
-				.replace("﻿", "").split("\r\n"));
-		// Erkannt wird eine Karte an ihrer Id ODER an ihrem Mark: — sonst stuende eine
-		// handgeschriebene Karte nach dem ersten Lauf doppelt im Deck, einmal unter ihrer alten
-		// und einmal unter ihrer Id aus dem Blatt.
-		Map<String, String> byMark = new LinkedHashMap<>();
-		for (Map.Entry<String, String> card : generated.entrySet())
-			byMark.put(card.getValue().split(";")[3], card.getKey());
-		int replaced = 0;
-		for (String line : old) {
-			if (line.isBlank())
-				continue;
-			String[] parts = line.split(";");
-			String id = parts[0];
-			if (!generated.containsKey(id) && parts.length > 3)
-				id = byMark.getOrDefault(parts[3], id);
-			if (generated.containsKey(id)) {
-				lines.add(generated.remove(id));
-				replaced++;
-			} else
-				lines.add(line);
-		}
-		lines.addAll(generated.values());
-		int width = lines.stream().mapToInt(line -> line.split(";", -1).length).max().orElse(3);
+	/**
+	 * Die Deck-Datei entsteht komplett neu, nach Id sortiert. Was nicht aus dem Blatt kommt, überlebt
+	 * den Lauf nicht — handgeschriebene Zusatzfragen gehören in die zweite Deck-Datei. Deshalb steht
+	 * hier auch, wie viele Karten vorher drin standen: Ein versehentlich zurückgesetztes
+	 * {@code Generieren} soll auffallen und nicht still Karten löschen.
+	 */
+	private static void write(Map<Integer, String> generated) throws IOException {
+		long before = Files.exists(DECK)
+				? Files.readAllLines(DECK, StandardCharsets.UTF_8).stream().filter(line -> !line.isBlank()).count() - 1
+				: 0;
+		int width = generated.values().stream().mapToInt(line -> line.split(";", -1).length).max().orElse(3);
 		List<String> header = new ArrayList<>(List.of("Index", "Bemerkung", "Label"));
 		for (int i = 1; i <= width - 3; i++)
 			header.add("Step" + i);
-		lines.set(0, String.join(";", header));
-		Files.writeString(DECK, "﻿" + String.join("\r\n", lines) + "\r\n", StandardCharsets.UTF_8);
-		System.out.println(replaced + " ersetzt, " + generated.size() + " neu — " + DECK);
+
+		List<String> lines = new ArrayList<>(List.of(String.join(";", header)));
+		lines.addAll(generated.values());
+		Files.writeString(DECK, "\uFEFF" + String.join("\r\n", lines) + "\r\n", StandardCharsets.UTF_8);
+		System.out.println(generated.size() + " Karten geschrieben, vorher waren es " + before + " — " + DECK);
 	}
 
 	private int areasOf(String subfolder, String sketch) {
@@ -663,15 +753,44 @@ public class FlagDeckGenerator {
 			}
 			return result;
 		} catch (IOException e) {
-			throw new RuntimeException("Strukturdatei fehlt: " + SKETCHES.resolve(sketch + ".geojson"), e);
+			throw new RuntimeException("Strukturdatei fehlt: "
+					+ SKETCHES.resolve(subfolder).resolve(sketch + ".geojson"), e);
 		}
 	}
 
 	// ---- Kleinkram ------------------------------------------------------------
 
+	/**
+	 * Ein Schritt, mit dem wartenden Shuffle-Marker davor.
+	 *
+	 * <p>Das Semikolon trennt die Spalten der Deck-Datei. Stünde eines in einem Fragetext, verschöben
+	 * sich ab da alle Schritte der Karte — und zwar still, denn die Zeile bliebe lesbar.</p>
+	 */
 	private void add(List<String> steps, String step) {
+		if (step.indexOf(';') >= 0)
+			throw new RuntimeException("Ein Semikolon zerlegt die Deck-Zeile: " + step);
 		steps.add(pending + step);
 		pending = "";
+	}
+
+	/**
+	 * Ein Shuffle-Block: je Eintrag ein Segment, gemischt wird die Reihenfolge der Segmente. Bei
+	 * einem einzigen Eintrag gibt es nichts zu mischen — dann bleiben die Marker ganz weg.
+	 */
+	private <T> void shuffled(List<String> steps, List<T> items, Consumer<T> segment) {
+		if (items.size() < 2) {
+			items.forEach(segment);
+			return;
+		}
+		// Ein wartendes <ShuffleEnd> kann nicht auf demselben Schritt stehen wie der neue Start: Der
+		// Parser prüft auf Start, bevor er das End abschneidet. Also erst allein hinausschreiben.
+		if (!pending.isEmpty())
+			add(steps, "");
+		for (int i = 0; i < items.size(); i++) {
+			pending = i == 0 ? "<ShuffleStart>" : "<ShuffleBreak>";
+			segment.accept(items.get(i));
+		}
+		pending = "<ShuffleEnd>";
 	}
 
 	private void ask(List<String> steps, String question, String mc) {
@@ -694,23 +813,36 @@ public class FlagDeckGenerator {
 		return "MC:" + correct + "*" + String.join("|", wrong);
 	}
 
+	private static String fixedOrder(String correct, String... options) {
+		return fixedOrder(correct, List.of(), options);
+	}
+
 	/**
 	 * Wie {@link #answer}, aber in fester Reihenfolge: {@code =} hält die Optionen, wie sie hier
 	 * stehen, die richtige trägt ihr {@code +}. Für Sätze mit natürlicher Ordnung — Richtungen, Zahlen.
+	 *
+	 * <p>Tolerierte Antworten tragen ein {@code ~}: Ein Klick darauf gilt als falsch, bricht die Karte
+	 * aber nicht ab. Sie müssen genauso buchstabengleich unter den Optionen stehen wie die richtige.</p>
 	 */
-	private static String fixedOrder(String correct, String... options) {
+	private static String fixedOrder(String correct, List<String> tolerated, String... options) {
 		List<String> parts = new ArrayList<>();
 		boolean found = false;
 		for (String option : options)
 			if (option.equals(correct)) {
 				parts.add("+" + option);
 				found = true;
+			} else if (tolerated.contains(option)) {
+				parts.add("~" + option);
 			} else {
 				parts.add(option);
 			}
 		if (!found)
 			throw new IllegalArgumentException("Die richtige Antwort '" + correct
 					+ "' steht nicht unter ihren Optionen: " + String.join("|", options));
+		for (String value : tolerated)
+			if (!List.of(options).contains(value))
+				throw new IllegalArgumentException("Die tolerierte Antwort '" + value
+						+ "' steht nicht unter ihren Optionen: " + String.join("|", options));
 		return "MC:=" + String.join("|", parts);
 	}
 
@@ -742,10 +874,24 @@ public class FlagDeckGenerator {
 		return FlagSheet.isSet(element.count()) && !element.count().equals("1");
 	}
 
-	/** Alles vor einer Toleranzklammer: {@code 4(9)} ist die 4, die die 9 durchgehen lässt. */
+	/** Alles vor einer Toleranzklammer: {@code 4(9|5)} ist die 4. */
 	private static String untolerated(String value) {
-		int bracket = value.indexOf('(');
-		return bracket < 0 ? value.trim() : value.substring(0, bracket).trim();
+		int open = value.indexOf('(');
+		return open < 0 ? value.trim() : value.substring(0, open).trim();
+	}
+
+	/**
+	 * Die Werte in der Toleranzklammer: {@code 4(9|5)} lässt die 9 und die 5 durchgehen. Getrennt wird
+	 * wie überall im Blatt mit {@code |} — ein Komma ginge nicht, das trennt dort die Spalten.
+	 */
+	private static List<String> bracket(String value) {
+		int open = value.indexOf('(');
+		if (open < 0)
+			return List.of();
+		int close = value.lastIndexOf(')');
+		if (close < open)
+			throw new RuntimeException("Die Toleranzklammer ist nicht geschlossen: " + value);
+		return split(value.substring(open + 1, close));
 	}
 
 	private static List<String> split(String value) {
@@ -767,13 +913,6 @@ public class FlagDeckGenerator {
 		Map<String, String> map = new LinkedHashMap<>();
 		for (int i = 0; i < pairs.length; i += 2)
 			map.put(pairs[i], pairs[i + 1]);
-		return map;
-	}
-
-	private static Map<String, Double> orderedFactors(Object... pairs) {
-		Map<String, Double> map = new LinkedHashMap<>();
-		for (int i = 0; i < pairs.length; i += 2)
-			map.put((String) pairs[i], (Double) pairs[i + 1]);
 		return map;
 	}
 

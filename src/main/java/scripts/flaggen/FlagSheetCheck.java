@@ -110,7 +110,7 @@ public class FlagSheetCheck {
 						row -> "E" + (n - 1) + " leer");
 			report("E" + n + " Position ist 0..9",
 					row -> FlagSheet.isSet(sheet.value(row, "E" + n + " Position"))
-							&& !POSITIONS.contains(withoutTolerance(sheet.value(row, "E" + n + " Position"))),
+							&& !arePositions(sheet.value(row, "E" + n + " Position")),
 					row -> "Position=" + sheet.value(row, "E" + n + " Position"));
 			report("E" + n + " Farbe aus der Farbliste",
 					row -> FlagSheet.isSet(sheet.value(row, "E" + n + " Farbe"))
@@ -128,10 +128,28 @@ public class FlagSheetCheck {
 		System.out.println();
 	}
 
-	/** Alles vor einer Toleranzklammer: {@code 4(9)} ist die 4, die die 9 durchgehen lässt. */
-	private static String withoutTolerance(String value) {
-		int bracket = value.indexOf('(');
-		return bracket < 0 ? value : value.substring(0, bracket).trim();
+	/** Der Ortswert samt Toleranzklammer — {@code 4(9|5)} ist nur gültig, wenn 4, 9 und 5 es sind. */
+	private static boolean arePositions(String value) {
+		for (String part : positionValues(value))
+			if (!POSITIONS.contains(part))
+				return false;
+		return true;
+	}
+
+	/** Der Hauptwert und die tolerierten aus der Klammer. Getrennt wird mit {@code |}, nie mit Komma. */
+	private static List<String> positionValues(String value) {
+		int open = value.indexOf('(');
+		int close = value.lastIndexOf(')');
+		if (open < 0)
+			return List.of(value.trim());
+		if (close < open)
+			return List.of(value); // nicht geschlossen — fällt als kein gültiger Ort auf
+		List<String> result = new ArrayList<>();
+		result.add(value.substring(0, open).trim());
+		for (String part : value.substring(open + 1, close).split("\\|"))
+			if (!part.isBlank())
+				result.add(part.trim());
+		return result;
 	}
 
 	private static boolean areColors(String value) {
@@ -152,15 +170,68 @@ public class FlagSheetCheck {
 						&& sheet.value(row, "Dreieck von links?").equals("0")
 						&& !FlagSheet.isSet(sheet.value(row, "E1")),
 				row -> "keine Fläche zum Einfärben");
-		// Der Kartenmarker landet unbesehen hinter Mark: — fehlt er, endet die Karte im Nichts.
-		report("Kartenmarker (ID) ist gesetzt",
-				row -> sheet.value(row, "ID").isEmpty(), row -> "ID fehlt");
-		// Was generiert werden soll, braucht seine Farben.
+		// Die Id wird von Hand vergeben und trägt den Lernfortschritt. Zwei Karten mit derselben Id
+		// gäbe es nur einmal im Deck — die zweite verschwände beim Schreiben.
+		report("ID ist eine Zahl",
+				row -> !sheet.number(row).matches("[1-9][0-9]*"),
+				row -> "ID=" + orEmpty(sheet.number(row)));
+		checkUnique("ID", this::sheetId);
+		// Was generiert werden soll, braucht seine Farben — auch die des Gösch und des Dreiecks.
+		// Ohne Farbe bliebe die Fläche grau und würde stillschweigend nicht gefragt.
 		report("Generieren=1 -> Hintergrundfarben gesetzt",
 				row -> sheet.value(row, "Generieren").equals("1")
 						&& sheet.value(row, "Hintergrundfarben").isEmpty(),
 				row -> "Hintergrundfarben fehlen");
+		report("Generieren=1 und Gösch -> Gösch Farbe gesetzt",
+				row -> sheet.value(row, "Generieren").equals("1")
+						&& sheet.value(row, "Gösch?").equals("1")
+						&& !FlagSheet.isSet(sheet.value(row, "Gösch Farbe")),
+				row -> "Gösch Farbe fehlt");
+		report("Generieren=1 und Dreieck -> Dreieck Farbe gesetzt",
+				row -> sheet.value(row, "Generieren").equals("1")
+						&& !sheet.value(row, "Dreieck von links?").equals("0")
+						&& FlagSheet.isSet(sheet.value(row, "Dreieck von links?"))
+						&& !FlagSheet.isSet(sheet.value(row, "Dreieck Farbe")),
+				row -> "Dreieck Farbe fehlt");
+		// Die Version hängt am Namen der SVG-Datei und trennt zwei Flaggen desselben Landes.
+		report("Version ist eine Zahl ab 1",
+				row -> FlagSheet.isSet(sheet.value(row, "Version"))
+						&& !sheet.value(row, "Version").matches("[1-9][0-9]*"),
+				row -> "Version=" + sheet.value(row, "Version"));
+		// Die erste Flagge eines Landes ist die normale und braucht keinen Hinweis. Jede weitere
+		// schon — sonst weiß niemand, welche der beiden gerade gefragt ist.
+		report("Version ab 2 -> Hinweistext gesetzt",
+				row -> version(row) > 1 && !FlagSheet.isSet(sheet.value(row, "Hinweistext")),
+				row -> "Hinweistext fehlt");
+		checkUnique("Land und Version zusammen", row -> sheet.country(row) + " / Version " + version(row));
 		System.out.println();
+	}
+
+	/**
+	 * Ein Wert, den es im ganzen Blatt nur einmal geben darf. Zwei Zeilen für dasselbe Land sind
+	 * erlaubt — zwei Zeilen mit derselben Version nicht, und zwei mit derselben Id erst recht nicht:
+	 * Der Generator schriebe nur eine der beiden ins Deck.
+	 */
+	private void checkUnique(String was, java.util.function.Function<List<String>, String> key) {
+		Set<String> seen = new LinkedHashSet<>();
+		List<String> hits = new ArrayList<>();
+		for (List<String> row : sheet.flags())
+			if (!seen.add(key.apply(row)))
+				hits.add(key.apply(row) + " steht zweimal im Blatt");
+		problems += hits.size();
+		System.out.printf("  %-62s %s%n", was + " eindeutig", hits.isEmpty() ? "ok" : hits.size() + " Abweichung(en)");
+		for (String hit : hits)
+			System.out.println("        " + hit);
+	}
+
+	/** Die wievielte Flagge dieses Landes. Leer und {@code x} heißen beide: die erste. */
+	private int version(List<String> row) {
+		String value = sheet.value(row, "Version");
+		return FlagSheet.isSet(value) && value.matches("[1-9][0-9]*") ? Integer.parseInt(value) : 1;
+	}
+
+	private String sheetId(List<String> row) {
+		return "ID " + sheet.number(row);
 	}
 
 	// ---- 4. Ausreißer ----------------------------------------------------------
