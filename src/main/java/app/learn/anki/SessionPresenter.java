@@ -100,12 +100,12 @@ public class SessionPresenter {
 		view.moveSketchArea(area, cell);
 	}
 
-	void markSketchArea(int area) {
-		view.markSketchArea(area);
+	void markSketchAreas(List<Integer> areas) {
+		view.markSketchAreas(areas);
 	}
 
-	void fillSketchArea(int area, SketchColor color) {
-		view.fillSketchArea(area, color);
+	void fillSketchAreas(List<Integer> areas, SketchColor color) {
+		view.fillSketchAreas(areas, color);
 	}
 
 	void showQuestion(String text) {

@@ -314,13 +314,13 @@ public class SuiteImage extends StackPane {
     }
 
     /** Hebt eine Fläche der Skizze hervor. */
-    public void markSketchArea(int area) {
-    	activeSketch().mark(area);
+    public void markSketchAreas(List<Integer> areas) {
+    	activeSketch().mark(areas);
     }
 
     /** Färbt eine Fläche der Skizze. */
-    public void fillSketchArea(int area, SketchColor color) {
-    	activeSketch().fill(area, color);
+    public void fillSketchAreas(List<Integer> areas, SketchColor color) {
+    	activeSketch().fill(areas, color);
     }
 
     private SketchPane activeSketch() {

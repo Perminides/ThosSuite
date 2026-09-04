@@ -51,8 +51,8 @@ public class Card {
     public record SketchImageAdd(String structure, int cell, double size, double offsetX,
             double offsetY) implements Step {}
     public record SketchImageMove(int area, int cell) implements Step {}
-    public record SketchImageMark(int area) implements Step {}
-    public record SketchImageFill(int area, SketchColor color) implements Step {}
+    public record SketchImageMark(List<Integer> areas) implements Step {}
+    public record SketchImageFill(List<Integer> areas, SketchColor color) implements Step {}
     
     public record AnswerOption(String text, Role role) {}
     public enum Role { CORRECT, WRONG_ALWAYS_SHOWN, TOLERATED, DISTRACTOR_OPTIONAL }
@@ -188,7 +188,7 @@ public class Card {
             case "SketchImage"     -> new SketchImage(body.trim());
             case "SketchImageAdd"  -> parseSketchAdd(body);
             case "SketchImageMove" -> parseSketchMove(body);
-            case "SketchImageMark" -> new SketchImageMark(Integer.parseInt(body.trim()));
+            case "SketchImageMark" -> new SketchImageMark(parseAreas(body));
             case "SketchImageFill" -> parseSketchFill(body);
             default      -> throw new RuntimeException("Unbekannter Step: " + kind);
         };
@@ -226,7 +226,23 @@ public class Card {
         String[] parts = body.split(",", 2);
         if (parts.length < 2)
             throw new RuntimeException("SketchImageFill braucht Fläche und Farbe: " + body);
-        return new SketchImageFill(Integer.parseInt(parts[0].trim()), SketchColor.fromLabel(parts[1].trim()));
+        return new SketchImageFill(parseAreas(parts[0]), SketchColor.fromLabel(parts[1].trim()));
+    }
+
+    /**
+     * Eine oder mehrere Flächennummern, mit {@code |} getrennt: {@code 3|4}.
+     *
+     * <p>Mehrere stehen für ein Element, das aus mehreren Flächen besteht — das Emblem etwa. Sie
+     * werden gemeinsam hervorgehoben und gemeinsam gefüllt, weil die Farbe dem ganzen Element gilt
+     * und nicht einem seiner Teile.</p>
+     */
+    private static List<Integer> parseAreas(String body) {
+        List<Integer> areas = new ArrayList<>();
+        for (String part : body.split("\\|"))
+            areas.add(Integer.parseInt(part.trim()));
+        if (areas.isEmpty())
+            throw new RuntimeException("Kein Flächenwert: " + body);
+        return List.copyOf(areas);
     }
 
     // --- Fast ---
