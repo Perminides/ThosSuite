@@ -1456,6 +1456,17 @@ public abstract class Skin extends SkinProperties {
 	     * <p>Die Insets ziehen mit der Breite mit: sonst zeichnet der Hintergrund bis unter den Ring
 	     * und lugt an den runden Ecken hervor. Aus demselben Grund stehen sie überall sonst auf der
 	     * jeweiligen Rahmenbreite.</p>
+	     *
+	     * <p>!Idee Zustandssignale über gestapelte Hintergründe statt über Rahmen — gemeint sind nur
+	     * die Aufrufer dieser Methode; statische Rahmen wie die Trennlinie unter der Titelleiste
+	     * bleiben, wie sie sind. Eine Rahmenbreite zählt zu den Insets: Ein Ring, der erst in einem
+	     * Zustand auftaucht, ändert die Größe der Region. Heute wird das kompensiert — die MC-Knöpfe
+	     * reservieren vorab den breitesten Rahmen ({@code mcBorderWidth}), das Textfeld nimmt ihn aus
+	     * der Polsterung ({@code padding}) —, und beides muss man bei jeder neuen Zustandsregel
+	     * mitdenken. Hintergrundebenen ändern die Größe nie; die Fehlerklasse wäre damit konstruktiv
+	     * ausgeschlossen statt durch Aufpassen vermieden. Modena baut es so, dort steht
+	     * {@code -fx-border-width} 7 Mal in der ganzen Datei:
+	     * https://www.pragmaticcoding.ca/javafx/elements/modena</p>
 	     */
 	    public CssBuilder ring(Color color, int width) {
 	        if (color == null)
