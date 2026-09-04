@@ -1,9 +1,9 @@
 ID,Version,Flagge,Name,Generieren,ShapeId,Hinweistext,Tmp 1,Tmp 2,Signatur,Clustergröße,Rechtwinklig?,Rahmen?,Gösch?,Dreieck von links?,Die Dreiecksform(en) bestehen aus wie vielen Farben?,Hintergrundtyp,W-Streifen,3W,5W,S-Streifen,S-Anordnung,Kreuzausrichtung,Kreuzarme,Diagonal Richtung,Diagonal Anzahl Streifen,SW Streifen,Spezial,Hintergrundfarben,E1,E1 Position,E1 Farbe,E1 Anzahl,E2,E2 Position,E2 Farbe,E2 Anzahl,E3,E3 Position,E3 Farbe,E3 Anzahl,E4,E4 Position,E4 Farbe,E4 Anzahl,Gösch Farbe,Dreieck Farbe
 1,,,Abchasien,1,middle|3434|951,,,,1|0|1|0|x|0|7|x|x|x|x|x|x|x|x|x|x,1,1,0,1,0,x,0,7,x,x,x,x,x,x,x,x,x,x,Grün|Weiß|Grün|Weiß|Grün|Weiß|Grün,Hand,0,Weiß,x,Stern,0,Weiß,7,x,x,x,x,x,x,x,x,Rot,x
-2,,,Afghanistan,1,,,,,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,Schwarz|Rot|Grün,Emblem,4,Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+2,,,Afghanistan,1,,,,,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,Schwarz|Rot|Grün,Emblem,4,&Weiß,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
 1002,2,,Afghanistan,1,,International nicht anerkannte Flagge seit 2021,,,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,23,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,Weiß,Schrift,4,Schwarz,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-3,,,Ägypten,,,,../images/pictures/flags96/Egypt.jpg,Egypt,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,,Vogel,4,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
-4,,,Albanien,,,,../images/pictures/flags96/Albania.jpg,Albania,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,23,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,,Vogel,4,Schwarz,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+3,,,Ägypten,1,,,,,1|0|0|0|x|0|3|0|x|x|x|x|x|x|x|x|x,38,1,0,0,0,x,0,3,0,x,x,x,x,x,x,x,x,x,Rot|Weiß|Schwarz,Vogel (Emblem),4,Gelb,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
+4,,,Albanien,1,,,,,1|0|0|0|x|4|x|x|x|x|x|x|x|x|x|x|x,23,1,0,0,0,x,4,x,x,x,x,x,x,x,x,x,x,x,Rot,Vogel (Emblem),4,Schwarz,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
 5,,,Algerien,,,,../images/pictures/flags96/Algeria.jpg,Algeria,1|0|0|0|x|1|x|x|x|2|0|x|x|x|x|x|x,2,1,0,0,0,x,1,x,x,x,2,0,x,x,x,x,x,x,,Mond,4,Rot,x,Stern,4,Rot,1,x,x,x,x,x,x,x,x,x,x
 6,,,Andorra,,,,../images/pictures/flags96/Andorra.jpg,Andorra,1|0|0|0|x|1|x|x|x|3|0|x|x|x|x|x|x,20,1,0,0,0,x,1,x,x,x,3,0,x,x,x,x,x,x,,Emblem,4,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x
 7,,,Angola,,,,../images/pictures/flags96/Angola.jpg,Angola,1|0|0|0|x|0|2|x|x|x|x|x|x|x|x|x|x,12,1,0,0,0,x,0,2,x,x,x,x,x,x,x,x,x,x,Rot|Schwarz,Machete,4,Gelb,x,Stern,4,Gelb,1,Zahnrad,4,Gelb,x,x,x,x,x,x,x
