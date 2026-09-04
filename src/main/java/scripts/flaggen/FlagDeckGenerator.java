@@ -147,7 +147,8 @@ public class FlagDeckGenerator {
 	/** Elementname → Datei. Der Stern hängt zusätzlich an der Anzahl, siehe {@link #sketchOf}. */
 	private static final Map<String, String> ELEMENT_FILES = ordered(
 			"Kreis", "kreis", "Raute", "raute", "Schrift", "schrift-t", "Mond", "sichel",
-			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog", "Emblem", "emblem");
+			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog", "Emblem", "emblem",
+			"Vogel", "vogel");
 
 	/**
 	 * Grundgröße einzelner Elemente, ohne Eintrag 1,0. Manche Figuren sind von Natur aus groß —
@@ -333,7 +334,14 @@ public class FlagDeckGenerator {
 
 	// ---- Elemente -------------------------------------------------------------
 
-	private record Element(String name, String position, String color, String count) {}
+	/**
+	 * Ein Zusatzelement. {@code tolerated} sind Namen, die beim Anklicken durchgehen sollen, ohne
+	 * richtig zu sein — Ägyptens Adler ist ein {@code Vogel}, wer ihn für ein {@code Emblem} hält,
+	 * liegt nicht wirklich daneben. Sie stehen im Blatt als Klammer hinter dem Namen, genau wie bei
+	 * den Ortsangaben: {@code Vogel (Emblem)}.
+	 */
+	private record Element(String name, List<String> tolerated, String position, String color,
+			String count) {}
 
 	private List<Element> elements(List<String> row) {
 		List<Element> result = new ArrayList<>();
@@ -344,7 +352,7 @@ public class FlagDeckGenerator {
 			String position = sheet.value(row, "E" + slot + " Position");
 			if (position.equals("x"))
 				continue; // Kein Ort, kein Sketch, keine Frage — Ort und Element stehen immer gemeinsam auf 'x'
-			result.add(new Element(name, position,
+			result.add(new Element(untolerated(name), bracket(name), position,
 					sheet.value(row, "E" + slot + " Farbe"), sheet.value(row, "E" + slot + " Anzahl")));
 		}
 		return result;
@@ -370,14 +378,28 @@ public class FlagDeckGenerator {
 				names.add(element.name());
 		add(steps, "Output:Welche Zusatzelemente siehst Du?");
 		List<String> correct = names.isEmpty() ? List.of("Keine") : names;
+		// Toleriert: falsch, aber ohne Abbruch. Wer Ägyptens Adler für ein Emblem hält, liegt nicht
+		// wirklich daneben. Sie kommen aus der Klammer hinter dem Elementnamen.
+		List<String> tolerated = new ArrayList<>();
+		for (Element element : elements)
+			for (String name : element.tolerated())
+				if (!correct.contains(name) && !tolerated.contains(name))
+					tolerated.add(name);
+
+		// Ein Text darf nur einmal in der Frage stehen, sonst lehnt der MC-Parser sie ab. Deshalb
+		// prüft jede Runde gegen alles bereits Vergebene.
+		List<String> vergeben = new ArrayList<>(correct);
+		vergeben.addAll(tolerated);
 		List<String> options = new ArrayList<>();
 		for (String name : correct)
 			options.add("+" + name);
 		for (String pinned : ELEMENT_PINNED)
-			if (!correct.contains(pinned))
-				options.add("-" + pinned); // immer sichtbar, außer schon als richtig dabei
+			if (!vergeben.contains(pinned))
+				options.add("-" + pinned); // immer sichtbar, außer schon anders vergeben
+		for (String name : tolerated)
+			options.add("~" + name);
 		for (String pool : ELEMENT_POOL)
-			if (!ELEMENT_PINNED.contains(pool) && !correct.contains(pool))
+			if (!ELEMENT_PINNED.contains(pool) && !vergeben.contains(pool))
 				options.add(pool);
 		add(steps, "MC+:" + String.join("|", options));
 
@@ -397,7 +419,7 @@ public class FlagDeckGenerator {
 			// Annahme "ungeteilt". Geteilt ist er genau dann, wenn zwei Farben im Blatt stehen.
 			if (element.name().equals("Kreis"))
 				ask(steps, "Ist der Kreis geteilt?",
-						answer(colors(element.color()).size() == 2 ? "Ja" : "Nein", "Ja", "Nein"));
+						answer(colors(element.color()).liste().size() == 2 ? "Ja" : "Nein", "Ja", "Nein"));
 		});
 
 		shuffled(steps, elements, element ->
@@ -423,8 +445,11 @@ public class FlagDeckGenerator {
 	/** Dateiname und Platzierung einer Figur: alles, was hinter {@code SketchImageAdd:} steht. */
 	private record Layout(Element element, String sketch, String placement) {}
 
-	/** Eine zu füllende Fläche: ihre Nummer und die Farbe. Ungefüllte Flächen stehen gar nicht drin. */
-	private record Fill(int area, String color) {}
+	/**
+	 * Was gemeinsam gefragt und gefärbt wird: eine oder mehrere Flächen und ihre Farbe. Mehrere sind
+	 * ein Element, dessen Farbe dem Ganzen gilt. Ungefüllte Flächen stehen gar nicht drin.
+	 */
+	private record Fill(List<Integer> areas, String color) {}
 
 	/**
 	 * Der Zeichenstapel. Wer eine Skizze auflegt, bekommt von hier die Nummern ihrer Flächen — sonst
@@ -468,18 +493,43 @@ public class FlagDeckGenerator {
 	 * Ordnet Farben und Flächen einander zu, in Flächenreihenfolge. Wo keine Farbe steht, bleibt die
 	 * Fläche grau und wird nicht gefragt — so das ungefärbte Emblem. Mehr Farben als Flächen ist
 	 * dagegen immer ein Fehler im Blatt.
+	 *
+	 * <p>Trägt die Zelle ein {@code &}, gilt die eine Farbe dem ganzen Element: Alle seine Flächen
+	 * werden gemeinsam hervorgehoben, einmal gefragt und gemeinsam gefüllt.</p>
 	 */
-	private static void paint(String sketch, List<Fill> fills, List<Integer> areas, List<String> colors) {
+	private static void paint(String sketch, List<Fill> fills, List<Integer> areas, Farben farben) {
+		List<String> colors = farben.liste();
+		if (farben.fuerAlleFlaechen()) {
+			fills.add(new Fill(areas, colors.get(0)));
+			return;
+		}
 		if (colors.size() > areas.size())
 			throw new RuntimeException(sketch + ": " + colors.size() + " Farben ("
 					+ String.join("|", colors) + "), aber nur " + areas.size() + " Flächen");
 		for (int i = 0; i < colors.size(); i++)
-			fills.add(new Fill(areas.get(i), colors.get(i)));
+			fills.add(new Fill(List.of(areas.get(i)), colors.get(i)));
 	}
 
-	/** Die Farben einer Zelle. Leer und {@code x} heißen beide: keine Farbe. */
-	private static List<String> colors(String cell) {
-		return FlagSheet.isSet(cell) ? split(cell) : List.of();
+	/** Die Farben einer Zelle und ob sie dem ganzen Element gelten. */
+	private record Farben(List<String> liste, boolean fuerAlleFlaechen) {}
+
+	/**
+	 * Die Farben einer Zelle. Leer und {@code x} heißen beide: keine Farbe.
+	 *
+	 * <p>Ein führendes {@code &} heißt: Die eine Farbe gilt dem <b>ganzen Element</b> und nicht
+	 * seiner ersten Fläche. Das Emblem besteht aus zwei Flächen, die zusammen ein Wappen ergeben —
+	 * gefragt wird es als Ganzes. Die Entscheidung trifft das Blatt, nicht der Generator; er sieht
+	 * das Zeichen und gehorcht.</p>
+	 */
+	private static Farben colors(String cell) {
+		if (!FlagSheet.isSet(cell))
+			return new Farben(List.of(), false);
+		boolean fuerAlle = cell.startsWith("&");
+		List<String> liste = split(fuerAlle ? cell.substring(1) : cell);
+		if (fuerAlle && liste.size() != 1)
+			throw new RuntimeException("'&' meint eine Farbe fürs ganze Element, hier stehen "
+					+ liste.size() + ": " + cell);
+		return new Farben(liste, fuerAlle);
 	}
 
 	/**
@@ -545,7 +595,7 @@ public class FlagDeckGenerator {
 			return count == 1 ? "stern" : count == 2 ? "stern-zwei" : "stern-haufen";
 		}
 		// Zwei Farben heißt: der Kreis ist geteilt — dann die zweiflächige Halbscheiben-Datei.
-		if (element.name().equals("Kreis") && colors(element.color()).size() == 2)
+		if (element.name().equals("Kreis") && colors(element.color()).liste().size() == 2)
 			return "geteilter-kreis";
 		String file = ELEMENT_FILES.get(element.name());
 		if (file == null)
@@ -587,12 +637,20 @@ public class FlagDeckGenerator {
 	private void fillAreas(List<String> steps, List<Fill> fills) {
 		if (fills.isEmpty())
 			return;
-		add(steps, "Output:Welche Farbe hat die markierte Fläche?");
+		add(steps, "Output:Welche Farbe hat die schraffierte Fläche?");
 		shuffled(steps, fills, fill -> {
-			add(steps, "SketchImageMark:" + fill.area());
+			add(steps, "SketchImageMark:" + areaList(fill));
 			add(steps, answer(fill.color(), COLORS.toArray(new String[0])));
-			add(steps, "SketchImageFill:" + fill.area() + "," + fill.color());
+			add(steps, "SketchImageFill:" + areaList(fill) + "," + fill.color());
 		});
+	}
+
+	/** Die Flächennummern einer Füllung, mit {@code |} getrennt: {@code 3|4}. */
+	private static String areaList(Fill fill) {
+		List<String> parts = new ArrayList<>();
+		for (int area : fill.areas())
+			parts.add(String.valueOf(area));
+		return String.join("|", parts);
 	}
 
 	// ---- Ableitungen ----------------------------------------------------------
@@ -679,11 +737,13 @@ public class FlagDeckGenerator {
 			else if (step.startsWith("SketchImageAdd:"))
 				available += areasOf("elements", step.substring("SketchImageAdd:".length()).split(",")[0]);
 			else if (step.startsWith("SketchImageMark:") || step.startsWith("SketchImageFill:")) {
-				int area = Integer.parseInt(step.substring(step.indexOf(':') + 1).split(",")[0]);
-				if (area >= available)
-					throw new RuntimeException(step + ", aber es gibt erst " + available + " Flächen");
-				if (step.startsWith("SketchImageFill:") && !filled.add(area))
-					throw new RuntimeException("Fläche " + area + " wird doppelt gefüllt");
+				for (String value : step.substring(step.indexOf(':') + 1).split(",")[0].split("\\|")) {
+					int area = Integer.parseInt(value.trim());
+					if (area >= available)
+						throw new RuntimeException(step + ", aber es gibt erst " + available + " Flächen");
+					if (step.startsWith("SketchImageFill:") && !filled.add(area))
+						throw new RuntimeException("Fläche " + area + " wird doppelt gefüllt");
+				}
 			}
 		}
 	}
