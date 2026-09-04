@@ -152,8 +152,9 @@ public class FlagSheetCheck {
 		return result;
 	}
 
+	/** Ein fuehrendes {@code &} heisst „gilt fuers ganze Element" und ist keine Farbe. */
 	private static boolean areColors(String value) {
-		for (String part : value.split("\\|"))
+		for (String part : (value.startsWith("&") ? value.substring(1) : value).split("\\|"))
 			if (!COLORS.contains(part.trim()))
 				return false;
 		return true;

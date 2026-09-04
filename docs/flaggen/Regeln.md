@@ -75,6 +75,11 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 
 - Flächen werden in **Leserichtung** nummeriert. Was über anderen liegt, kommt zuletzt.
 - Die Farbliste ist **positionsbezogen**: eine Farbe je Fläche, in Flächenreihenfolge, `|`-getrennt.
+- Ein führendes **`&`** kehrt das um: `&Weiß` heißt „diese eine Farbe gilt dem **ganzen Element**".
+  Alle seine Flächen werden gemeinsam hervorgehoben, einmal gefragt und gemeinsam gefüllt. Für das
+  mehrflächige Emblem, dessen Teile zusammen ein Wappen ergeben und keine eigenen Farbträger sind.
+  Nur mit genau einer Farbe erlaubt; bei einflächigen Elementen wirkungslos und geduldet. Die
+  Entscheidung trifft das Blatt, nicht der Generator.
 - Acht Farben: Rot, Blau, Hellblau, Grün, Gelb, Orange, Weiß, Schwarz. Kein `bunt`.
 - Die Farbfrage wird gestellt, wenn im Blatt eine Farbe steht. Der Leak ist bekannt und gekauft.
 - Eine Fläche **ohne** Farbe im Blatt bleibt grau und wird nicht gefragt — so das ungefärbte Emblem.
@@ -128,6 +133,9 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 - Tolerierte Zweitantworten stehen als Klammer in der Zelle: `4(9)`, mehrere mit `|` getrennt:
   `4(9|5)`. Kein Komma — das trennt im Blatt die Spalten. Der Generator macht daraus `~`-Optionen:
   falsch, aber ohne Abbruch.
+- Dieselbe Klammer gilt für **Elementnamen**: `Vogel (Emblem)` heißt „richtig ist Vogel, wer Emblem
+  klickt, wird nicht bestraft". Überall sonst — Artikel, Ortsfrage, Elementdatei — zählt nur der
+  Name vor der Klammer.
 - Distraktoren werden gezogen, damit auch eine falsche Vorstellung anklickbar bleibt.
 
 ## Daten
@@ -165,8 +173,10 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
   Signatur. Spalten dürfen also frei verschoben werden, umbenannte fliegen mit Klartext auf.
 - `build-streifen-sketch.py` erzeugt Streifen, `build-element-sketch.py` die gerechneten Elemente,
   `svg-zu-sketch.py` macht aus einem Piktogramm eine Strukturdatei.
-- Der Konverter flacht Kurven ab (Toleranz 0,01) und **bricht ab** bei Strichbildern, Text, Masken,
-  Clip-Pfaden, Verläufen und `transform`.
+- Der Konverter flacht Kurven ab (Toleranz 0,01) und **bricht ab** bei Strichbildern (`fill=none`),
+  Text, Masken, Clip-Pfaden, Verläufen, Filtern, eingebetteten Bildern und `use`. `transform`
+  dagegen **löst er auf**, und ein bildfüllendes Hintergrundrechteck wirft er weg — viele
+  Symbolsätze legen ihre Piktogramme darauf ab.
 - Der Generator prüft jede Zeile doppelt: durch den echten `Card`-Parser und durch einen Flächenlauf.
 
 ## Bewusst nicht so

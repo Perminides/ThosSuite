@@ -110,8 +110,10 @@ Vom Flaggen-Generator ausgerechnet, selten von Hand. Felder `0…8` sind das 3×
 | `SketchImageAdd:stern,4` | „stern" in Feld 4, Größe 1,0. |
 | `SketchImageAdd:stern,4,0.8` | mit Größe 0,8. |
 | `SketchImageAdd:stern,4,0.8,-10,0` | mit Größe und Versatz dx=-10, dy=0. |
-| `SketchImageMark:2` | Fläche 2 hervorheben. |
+| `SketchImageMark:2` | Fläche 2 hervorheben, alle anderen verlieren die Markierung. |
+| `SketchImageMark:3\|4` | Flächen 3 und 4 gemeinsam hervorheben — ein Element aus mehreren Flächen. |
 | `SketchImageFill:2,Rot` | Fläche 2 rot füllen (unbekannte Farbe fliegt). |
+| `SketchImageFill:3\|4,Rot` | Flächen 3 und 4 rot füllen, eine Farbentscheidung für beide. |
 | `SketchImageMove:2,5` | Fläche 2 nach Feld 5. |
 
 ## Shuffle-Marker
