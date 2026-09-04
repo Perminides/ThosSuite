@@ -284,7 +284,15 @@ public class CardProgress {
 	    	return;
 
 	    if (step instanceof MCPlus) {
-	    	// Hier wird nur markiert — geprüft wird erst beim Absenden.
+	    	// Eine tolerierte Antwort haftet nicht. Sie zeigt sich falsch und bleibt aus der Auswahl
+	    	// heraus — sonst koennte man sie STATT der richtigen abschicken, und genau das soll sie
+	    	// nicht sein: nicht bestraft, aber auch nicht die gesuchte Antwort. Damit verhaelt sich
+	    	// der Sammelmodus hier wie der Einzelklick weiter unten.
+	    	if (activeSessionMC.roleAt(index) == Role.TOLERATED) {
+	    		presenter.mcClickChecked(index, false);
+	    		return;
+	    	}
+	    	// Sonst wird nur markiert — geprüft wird erst beim Absenden.
 	    	boolean wasMarked = clickedMcAnswers.contains(index);
 	    	if (wasMarked)
 	    		clickedMcAnswers.remove(index);
@@ -459,8 +467,8 @@ public class CardProgress {
 			case SketchImageAdd add -> presenter.addSketch(add.structure(), add.cell(), add.size(),
 					add.offsetX(), add.offsetY());
 			case SketchImageMove move -> presenter.moveSketchArea(move.area(), move.cell());
-			case SketchImageMark mark -> presenter.markSketchArea(mark.area());
-			case SketchImageFill fill -> presenter.fillSketchArea(fill.area(), fill.color());
+			case SketchImageMark mark -> presenter.markSketchAreas(mark.areas());
+			case SketchImageFill fill -> presenter.fillSketchAreas(fill.areas(), fill.color());
 			case Input _ -> presenter.waitForText();
 			case Pause _ -> {	presenter.pause();
 								isPaused = true;}

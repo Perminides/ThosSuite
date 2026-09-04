@@ -186,8 +186,8 @@ public abstract class AnkiLearnView {
 	public void addSketch(List<ShapeGeometry> areas, int cell, double size, double offsetX,
 			double offsetY) { imageComponent.addSketch(areas, cell, size, offsetX, offsetY); }
 	public void moveSketchArea(int area, int cell)          { imageComponent.moveSketchArea(area, cell); }
-	public void markSketchArea(int area)                    { imageComponent.markSketchArea(area); }
-	public void fillSketchArea(int area, SketchColor color) { imageComponent.fillSketchArea(area, color); }
+	public void markSketchAreas(List<Integer> areas)                    { imageComponent.markSketchAreas(areas); }
+	public void fillSketchAreas(List<Integer> areas, SketchColor color) { imageComponent.fillSketchAreas(areas, color); }
 
 	// ===== Antwortauswahl =====
 

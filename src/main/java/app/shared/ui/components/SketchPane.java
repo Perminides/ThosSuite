@@ -167,21 +167,29 @@ class SketchPane extends StackPane {
 		return Shape.subtract(circle, new Circle(cutout.x(), cutout.y(), cutout.radius()));
 	}
 
-	/** Hebt eine Fläche hervor; eine zuvor hervorgehobene verliert die Markierung. */
-	public void mark(int area) {
+	/**
+	 * Hebt Flächen hervor; zuvor hervorgehobene verlieren ihre Markierung.
+	 *
+	 * <p>Mehrere, weil ein Element aus mehreren Flächen bestehen kann — das Emblem etwa. Die gehören
+	 * zusammen und werden gemeinsam gefragt, also müssen sie auch gemeinsam leuchten.</p>
+	 */
+	public void mark(List<Integer> marked) {
 		for (Shape shape : areas.values())
 			shape.pseudoClassStateChanged(MARKED, false);
-		shapeFor(area).pseudoClassStateChanged(MARKED, true);
+		for (int area : marked)
+			shapeFor(area).pseudoClassStateChanged(MARKED, true);
 	}
 
-	/** Färbt eine Fläche. Eine markierte verliert dabei ihre Markierung — gefüllt sticht markiert. */
-	public void fill(int area, SketchColor color) {
-		Shape shape = shapeFor(area);
-		shape.pseudoClassStateChanged(MARKED, false);
-		// Exklusiv: eine Fläche trägt genau eine Farbe, sonst entschiede die Reihenfolge im Stylesheet.
-		for (SketchColor other : SketchColor.values())
-			shape.getStyleClass().remove(other.styleClass());
-		shape.getStyleClass().add(color.styleClass());
+	/** Färbt Flächen. Markierte verlieren dabei ihre Markierung — gefüllt sticht markiert. */
+	public void fill(List<Integer> filled, SketchColor color) {
+		for (int area : filled) {
+			Shape shape = shapeFor(area);
+			shape.pseudoClassStateChanged(MARKED, false);
+			// Exklusiv: eine Fläche trägt genau eine Farbe, sonst entschiede die Reihenfolge im Stylesheet.
+			for (SketchColor other : SketchColor.values())
+				shape.getStyleClass().remove(other.styleClass());
+			shape.getStyleClass().add(color.styleClass());
+		}
 	}
 
 	private Shape shapeFor(int number) {
