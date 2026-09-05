@@ -91,6 +91,17 @@ public class CardProgress {
 	 * Deterministischer Scan über alle Steps: MC/MC+ nach ihrem Optionsuniversum (Textmenge) gruppieren,
 	 * je Cluster die Pflicht-Menge (alle Texte, die irgendwo {@code +} oder {@code -} sind) und die feste
 	 * Reihenfolge sammeln. Reine Herleitung fürs Anzeigen — nicht der Parser, nicht der Generator.
+	 *
+	 * <p><b>Wozu:</b> Fragt eine Karte dasselbe Vokabular mehrfach — zehn Orte, acht Farben —, sollen die
+	 * Antworten an ihrem Platz stehen bleiben, statt bei jedem Step neu zu springen. Gleichzeitig darf
+	 * nicht durch das <i>Auftauchen</i> einer Option verraten werden, dass sie diesmal die richtige ist.
+	 * Deshalb wird einmal je Cluster und Durchlauf eingefroren: Pflicht pinnen, aus dem Pool auffüllen,
+	 * ordnen. Die Rolle zieht jeder Step danach frisch aus seinen eigenen Optionen — Präsenz und
+	 * Verhalten sind entkoppelt.</p>
+	 *
+	 * <p><b>Was der Autor dafür tun muss:</b> gleichartige Steps mit demselben Optionsuniversum
+	 * schreiben; nur die Präfixe wandern. Vergisst man es, springen die Antworten sichtbar. Das ist ein
+	 * Netz, kein Zwang — erzwungen wird nur die Pflicht-Menge ≤ {@value #MAX_MC}.</p>
 	 */
 	private void planMcClusters() {
 		requiredPerCluster = new HashMap<>();
