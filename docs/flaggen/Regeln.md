@@ -19,8 +19,12 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 
 ## Elementdateien
 
-- Um den **Nullpunkt zentriert**, höchstens **40 × 40**. Die Höhe bindet; die restliche Feldbreite ist
-  Reserve für Geschwister und Behälter.
+- Um den **Nullpunkt zentriert**, höchstens **60 × 40** — also ein ganzes Rasterfeld. Die Höhe
+  bindet, in der Breite bleibt frei, was die Figur braucht. `svg-zu-sketch.py` normiert genau
+  darauf (`|x| ≤ 30`, `|y| ≤ 20`).
+- Wer **breiter als 40** ist, gehört vorerst **nicht in einen Behälter** und nicht neben
+  Geschwister: Die Faktoren dafür sind auf einen 40er Kasten gerechnet, siehe „Platzieren". Bisher
+  betrifft das nur den Vogel mit 50,8.
 - Faktor 1,0 füllt die Feldhöhe. Faktoren über 1 sind erlaubt.
 - Eine Datei kann mehrere Flächen tragen. Getrennte Teile **einer** Fläche dürfen sich nicht berühren —
   beim Füllen fällt der Strich weg, Berührendes verschmilzt.
@@ -54,7 +58,11 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 - Größen stehen beim Platzieren, nicht in den Dateien — sonst müsste man alle anfassen, wenn man es
   sich anders überlegt.
 
-- Keine Messung der einzelnen Datei. Wir verlassen uns auf die 40 × 40.
+- Keine Messung der einzelnen Datei. Größen und Versätze rechnen mit einem Kasten von **40 × 40** —
+  nicht mit den 60 × 40, die eine Datei haben darf. Das ist Absicht: Der schlechteste Fall würde
+  alles kleiner machen, auch die schmalen Figuren, die es nicht nötig haben. Der Preis ist die
+  Bedingung oben — breitere Elemente bleiben aus Behältern und Geschwistergruppen heraus, bis diese
+  Faktoren nachgerechnet sind.
 - **Behälter** und der Faktor für ihren Inhalt, je nach Anzahl der Kinder:
 
   ```
@@ -67,6 +75,9 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
   im Radius bleiben. Bei einem Kind ist das die halbe Diagonale — `40k/√2 ≤ 20`, also `k ≤ 0,707`;
   mit Versatz sinkt es auf 0,52 · 0,48 · 0,49. Die Raute ist am Bild gefunden, ihre Ecken laufen
   spitz zu.
+- Für einen Kasten von 60 × 40 sähe dieselbe Rechnung anders aus: halbe Diagonale
+  `√(30² + 20²) = 36,06`, also `k ≤ 0,555` statt 0,707. Deshalb die Bedingung — nicht weil breite
+  Elemente unmöglich wären, sondern weil ihre Faktoren nicht gerechnet sind.
 - Das Kind erbt die ganze Kette.
 - Ein Element hängt am **letzten Behälter davor im selben Feld**; gibt es keinen, am Feld.
 - Gezeichnet wird in **Spaltenreihenfolge** E1 → E4, von hinten nach vorn.
@@ -136,12 +147,19 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 - Dieselbe Klammer gilt für **Elementnamen**: `Vogel (Emblem)` heißt „richtig ist Vogel, wer Emblem
   klickt, wird nicht bestraft". Überall sonst — Artikel, Ortsfrage, Elementdatei — zählt nur der
   Name vor der Klammer.
+- Und für **Farben**: `Hellblau (Blau)` in der Farbliste. Gemalt wird die Farbe vor der Klammer.
+  Gemessen sind die Grenzfälle in `blautoene.csv`; sieben Flaggen liegen im Mittelband, für die
+  taugt genau diese Schreibweise.
 - Distraktoren werden gezogen, damit auch eine falsche Vorstellung anklickbar bleibt.
 
 ## Daten
 
-- Karten-Id = Spalte `ID`, von Hand vergeben. Sie trägt den Lernfortschritt, wird nicht gerechnet
-  und überlebt jede Regenerierung. Zwei Zeilen mit derselben Id brechen den Lauf ab.
+- Karten-Id = `(Version − 1) × 1000 + Land-Id`, aus der Spalte `Land-ID`. Sie trägt den
+  Lernfortschritt und überlebt jede Regenerierung; zwei Zeilen mit derselben Karten-Id brechen den
+  Lauf ab. Die **Land-Id** steht bewusst im Blatt statt der fertigen Karten-Id: Die
+  handgeschriebenen Zusatzfragen gruppieren nach Land, nicht nach Flagge.
+- Bei 214 Ländern reicht der Flaggenblock für **zehn** Versionen (bis 9214). Die elfte ergäbe 10214
+  und läge im Block der Kartenkarten.
 - Der Kartenmarker hinter `Mark:` ist der **Name**. Nur wo die Weltkarte ihn nicht kennt, steht in
   Spalte `ShapeId` eine Ausnahme (`middle|3434|951`) — leer heißt: nimm den Namen.
 - Erzeugt werden die Zeilen mit `Generieren = 1`.
@@ -157,14 +175,30 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 ## Mehrere Flaggen für ein Land
 
 - Eine **Zeile je Flagge**, dazu die Spalte `Version`: leer oder 1 ist die normale, dann 2, 3 …
-- Die Id vergibst Du selbst. Konvention: `1000 + Nummer` für die zweite Flagge, `2000 + Nummer` für
-  die dritte. Der Generator rechnet nichts — er nimmt die Id, wie sie dasteht.
+  Alle Zeilen eines Landes tragen dieselbe `Land-ID`; die Karten-Id rechnet der Generator daraus.
 - Die SVG-Datei trägt die Version ab der zweiten: `Afghanistan.svg`, `Afghanistan2.svg`. Fehlt sie,
   meldet der Lauf es und macht weiter.
 - Der `Mark:` bleibt für alle Versionen derselbe — es ist dieselbe Fläche auf der Karte.
 - Spalte `Hinweistext` steht als `<i>…</i><br />` **vor der ersten Frage** („Flagge bis 2021"). Kein
   eigener Schritt, das spart einen Klick; sichtbar ist er dann nur während der ersten Frage.
 - Die erste Flagge eines Landes braucht keinen Hinweistext, jede weitere schon.
+
+## Nummernblöcke
+
+Jeder erzeugte Fragetyp bekommt einen eigenen Block von zehntausend, die handgeschriebenen
+Zusatzfragen liegen ab einer Million.
+
+```
+        1 …  9214   Flaggenkarte              generiert
+    10001 … 19214   Flagge zu Karte           generiert
+    20001 … 29214   der nächste Typ           generiert
+  k·10000 + Id      Block k, bis k = 99       generiert
+1000000 + Land·1000 + n                       von Hand, 1000 je Land
+```
+
+Die Blöcke 0 bis 99 reichen bis 998214 und stoßen damit nicht an die Million — Platz für
+99 erzeugte Fragetypen. Die handgeschriebenen gruppieren nach **Land**, nicht nach Flagge; welche
+Flagge gemeint ist, sagt der Karteninhalt.
 
 ## Werkzeuge
 

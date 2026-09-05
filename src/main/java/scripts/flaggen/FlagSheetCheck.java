@@ -152,11 +152,16 @@ public class FlagSheetCheck {
 		return result;
 	}
 
-	/** Ein fuehrendes {@code &} heisst „gilt fuers ganze Element" und ist keine Farbe. */
+	/**
+	 * Ein fuehrendes {@code &} heisst „gilt fuers ganze Element" und ist keine Farbe. Eine
+	 * Toleranzklammer dahinter — {@code Hellblau (Blau)} — enthaelt Farben, gehoert aber nicht zum
+	 * Namen; geprueft wird jeder Teil einzeln.
+	 */
 	private static boolean areColors(String value) {
 		for (String part : (value.startsWith("&") ? value.substring(1) : value).split("\\|"))
-			if (!COLORS.contains(part.trim()))
-				return false;
+			for (String einzel : positionValues(part))
+				if (!COLORS.contains(einzel))
+					return false;
 		return true;
 	}
 
@@ -171,12 +176,13 @@ public class FlagSheetCheck {
 						&& sheet.value(row, "Dreieck von links?").equals("0")
 						&& !FlagSheet.isSet(sheet.value(row, "E1")),
 				row -> "keine Fläche zum Einfärben");
-		// Die Id wird von Hand vergeben und trägt den Lernfortschritt. Zwei Karten mit derselben Id
-		// gäbe es nur einmal im Deck — die zweite verschwände beim Schreiben.
-		report("ID ist eine Zahl",
+		// Die Land-Id ist absichtlich mehrfach vorhanden — jede Flagge eines Landes trägt sie. Was
+		// eindeutig sein muss, ist die daraus gerechnete Karten-Id: Zwei Karten mit derselben Id
+		// gäbe es nur einmal im Deck, die zweite verschwände beim Schreiben.
+		report("Land-ID ist eine Zahl",
 				row -> !sheet.number(row).matches("[1-9][0-9]*"),
-				row -> "ID=" + orEmpty(sheet.number(row)));
-		checkUnique("ID", this::sheetId);
+				row -> "Land-ID=" + orEmpty(sheet.number(row)));
+		checkUnique("Karten-Id", this::kartenId);
 		// Was generiert werden soll, braucht seine Farben — auch die des Gösch und des Dreiecks.
 		// Ohne Farbe bliebe die Fläche grau und würde stillschweigend nicht gefragt.
 		report("Generieren=1 -> Hintergrundfarben gesetzt",
@@ -231,8 +237,11 @@ public class FlagSheetCheck {
 		return FlagSheet.isSet(value) && value.matches("[1-9][0-9]*") ? Integer.parseInt(value) : 1;
 	}
 
-	private String sheetId(List<String> row) {
-		return "ID " + sheet.number(row);
+	/** Dieselbe Rechnung wie im Generator: {@code (Version − 1) × 1000 + Land-Id}. */
+	private String kartenId(List<String> row) {
+		if (!sheet.number(row).matches("[1-9][0-9]*"))
+			return "Land-ID " + orEmpty(sheet.number(row));   // faellt schon oben auf
+		return "Karten-Id " + ((version(row) - 1) * 1000 + Integer.parseInt(sheet.number(row)));
 	}
 
 	// ---- 4. Ausreißer ----------------------------------------------------------

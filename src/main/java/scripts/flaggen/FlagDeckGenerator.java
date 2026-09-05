@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -148,7 +149,7 @@ public class FlagDeckGenerator {
 	private static final Map<String, String> ELEMENT_FILES = ordered(
 			"Kreis", "kreis", "Raute", "raute", "Schrift", "schrift-t", "Mond", "sichel",
 			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog", "Emblem", "emblem",
-			"Vogel", "vogel");
+			"Vogel", "vogel", "Sonne", "sonne");
 
 	/**
 	 * Grundgröße einzelner Elemente, ohne Eintrag 1,0. Manche Figuren sind von Natur aus groß —
@@ -168,6 +169,11 @@ public class FlagDeckGenerator {
 	 * Diagonale, {@code 40k/√2 ≤ 20}, also {@code k ≤ 0,707}. Bei mehreren kommt der Versatz dazu
 	 * und die Grenzen sinken auf 0,52 · 0,48 · 0,49. Eingetragen ist jeweils etwas darunter.</p>
 	 *
+	 * <p>Eine Elementdatei <b>darf</b> 60 × 40 groß sein — die Rechnung hier geht trotzdem von 40 aus,
+	 * sonst würde der schlechteste Fall alle schmalen Figuren mitverkleinern. Ein Element, das breiter
+	 * als 40 ist, gehört deshalb nicht in einen Behälter, solange diese Faktoren nicht nachgerechnet
+	 * sind ({@code k ≤ 0,555} statt 0,707).</p>
+	 *
 	 * <p>Die Raute ist nicht gerechnet, sondern am Bild gefunden — ihre Ecken laufen spitz zu, da
 	 * gilt die Kastenregel nicht.</p>
 	 */
@@ -177,13 +183,22 @@ public class FlagDeckGenerator {
 
 	/**
 	 * Geschwister im selben Feld: Größe und Mittelpunkte, je nach Anzahl. Keine Messung der
-	 * einzelnen Datei — wir verlassen uns darauf, dass eine Figur in 40 × 40 passt.
+	 * einzelnen Datei — gerechnet wird mit einem Kasten von 40 × 40, auch wenn eine Datei bis zu
+	 * 60 × 40 groß sein darf.
 	 *
 	 * <p>Die Größe trägt zweierlei in einer Zahl: den Platz, den sich n Figuren im 60 breiten Feld
 	 * teilen müssen, und die Luft zum Feldrand — eine Figur, die oben genau anstößt, sieht im Gösch
 	 * schlecht aus. Ohne die Luft wären es 1,0 · 1,0 · 0,7 · 0,55. Dass beides in einer Zahl steht,
 	 * heißt auch: Die Luft ist je Anzahl einstellbar.</p>
 	 */
+	/**
+	 * Der Zahlenblock der Kartenkarten: {@code 10000 + Karten-Id}. Ein eigener Block, weil die
+	 * handgeschriebenen Zusatzfragen in der zweiten Deck-Datei ihre Nummern von Hand bekommen — der
+	 * Generator kann nicht wissen, welche dort frei ist, und zwei Karten mit derselben Id teilten
+	 * sich den Lernfortschritt.
+	 */
+	private static final int MAP_CARD_BASE = 10000;
+
 	private static final Map<Integer, double[]> SIBLINGS = Map.of(
 			1, new double[] {0.8,  0},
 			2, new double[] {0.8,  -10, 10},
@@ -193,7 +208,7 @@ public class FlagDeckGenerator {
 	private final FlagSheet sheet;
 	private final Map<String, Integer> areas = new LinkedHashMap<>();
 	/** Flaggenbilder, die es noch nicht gibt. Gemeldet am Ende, nicht abgebrochen. */
-	private final List<String> missing = new ArrayList<>();
+	private final Set<String> missing = new LinkedHashSet<>();
 	/** {@code <ShuffleEnd>} gehoert an den Schritt NACH dem Block — er selbst liegt ausserhalb. */
 	private String pending = "";
 
@@ -228,13 +243,17 @@ public class FlagDeckGenerator {
 	private void generate(Map<Integer, String> generated, List<String> row) {
 		int id = id(row);
 		try {
-			List<String> steps = card(row);
-			check(steps);
-			if (generated.put(id, String.join(";", steps)) != null)
-				throw new RuntimeException("die Id " + id + " gibt es zweimal im Blatt");
+			einhaengen(generated, id, card(row));
+			einhaengen(generated, MAP_CARD_BASE + id, mapCard(row));
 		} catch (RuntimeException e) {
 			throw new RuntimeException(sheet.country(row) + " (Id " + id + "): " + e.getMessage(), e);
 		}
+	}
+
+	private void einhaengen(Map<Integer, String> generated, int id, List<String> steps) {
+		check(steps);
+		if (generated.put(id, String.join(";", steps)) != null)
+			throw new RuntimeException("die Id " + id + " gibt es zweimal");
 	}
 
 	// ---- Die Karte ------------------------------------------------------------
@@ -266,24 +285,30 @@ public class FlagDeckGenerator {
 		String background = branchSketch(row, type);
 		paint(background, fills, canvas.background(background), colors(sheet.value(row, "Hintergrundfarben")));
 
-		// Gösch nach der Göschfrage auflegen (Leinwand-Silhouette, cell = -1).
-		boolean goesch = sheet.value(row, "Gösch?").equals("1");
-		ask(steps, "Hat die Flagge einen Gösch?", answer(goesch ? "Ja" : "Nein", "Ja", "Nein"));
-		if (goesch)
-			paint("goesch", fills, canvas.overlay("goesch", "-1"), colors(sheet.value(row, "Gösch Farbe")));
+		// Ein Sonderhintergrund ist eine handgemachte Datei, die alles enthalten kann — auch einen
+		// Gösch oder etwas Dreiecksartiges. Ihn zusätzlich nach diesen Attributen zu fragen, führt
+		// zwangsläufig in Widersprüche: Bei Antigua schiebt sich von links sichtbar eine Spitze ins
+		// Bild, im Blatt steht trotzdem 0. Wer richtig hinsieht, bekäme falsch. Also nicht fragen.
+		if (!type.equals("7")) {
+			// Gösch nach der Göschfrage auflegen (Leinwand-Silhouette, cell = -1).
+			boolean goesch = sheet.value(row, "Gösch?").equals("1");
+			ask(steps, "Hat die Flagge einen Gösch?", answer(goesch ? "Ja" : "Nein", "Ja", "Nein"));
+			if (goesch)
+				paint("goesch", fills, canvas.overlay("goesch", "-1"), colors(sheet.value(row, "Gösch Farbe")));
 
-		// Dreieck nach der Dreieckfrage auflegen.
-		String dreieck = sheet.value(row, "Dreieck von links?");
-		int dreieckForm = FlagSheet.isSet(dreieck) ? Integer.parseInt(dreieck) : 0;
-		ask(steps, "Schiebt sich eine dreiecksähnliche Form von ganz links in die Flagge?",
-				fixedOrder(DREIECK_FORMEN.get(dreieckForm), DREIECK_ANZEIGE.toArray(new String[0])));
-		if (dreieckForm != 0) {
-			ask(steps, "Die Dreiecksform(en) bestehen aus wie vielen Farben?",
-					fixedOrder(sheet.value(row, "Die Dreiecksform(en) bestehen aus wie vielen Farben?"),
-							"1", "2", "3", "4"));
-			String dreieckSketch = "dreieck-" + dreieckForm;
-			paint(dreieckSketch, fills, canvas.overlay(dreieckSketch, "-1"),
-					colors(sheet.value(row, "Dreieck Farbe")));
+			// Dreieck nach der Dreieckfrage auflegen.
+			String dreieck = sheet.value(row, "Dreieck von links?");
+			int dreieckForm = FlagSheet.isSet(dreieck) ? Integer.parseInt(dreieck) : 0;
+			ask(steps, "Schiebt sich eine dreiecksähnliche Form von ganz links in die Flagge?",
+					fixedOrder(DREIECK_FORMEN.get(dreieckForm), DREIECK_ANZEIGE.toArray(new String[0])));
+			if (dreieckForm != 0) {
+				ask(steps, "Die Dreiecksform(en) bestehen aus wie vielen Farben?",
+						fixedOrder(sheet.value(row, "Die Dreiecksform(en) bestehen aus wie vielen Farben?"),
+								"1", "2", "3", "4"));
+				String dreieckSketch = "dreieck-" + dreieckForm;
+				paint(dreieckSketch, fills, canvas.overlay(dreieckSketch, "-1"),
+						colors(sheet.value(row, "Dreieck Farbe")));
+			}
 		}
 
 		elementFills(steps, canvas, elements(row), fills);
@@ -291,6 +316,17 @@ public class FlagDeckGenerator {
 		add(steps, "Image:" + image(row));
 		add(steps, "Pause:"); // Zeit, die echte Flagge anzusehen
 		return steps;
+	}
+
+	/**
+	 * Die Gegenrichtung: die echte Flagge zeigen und das Land auf der Karte anklicken lassen.
+	 *
+	 * <p>Zwei Schritte, mehr braucht sie nicht. Sie hängt an denselben Ableitungen wie die
+	 * Flaggenkarte — {@link #image} für die Datei, {@link #shape} für die Fläche auf der Weltkarte.</p>
+	 */
+	private List<String> mapCard(List<String> row) {
+		return List.of(String.valueOf(MAP_CARD_BASE + id(row)), remark(row), "Flagge zu Karte",
+				"Image:" + image(row), "Click:" + shape(row));
 	}
 
 	/** Die Folgefragen des Zweigs — je Hintergrundtyp die Spalten, die er nach sich zieht. */
@@ -639,9 +675,12 @@ public class FlagDeckGenerator {
 			return;
 		add(steps, "Output:Welche Farbe hat die schraffierte Fläche?");
 		shuffled(steps, fills, fill -> {
+			// Die Zelle darf eine Toleranzklammer tragen: `Hellblau (Blau)`. Gemalt wird die Farbe
+			// davor — SketchColor kennt den Klammertext nicht.
+			String farbe = untolerated(fill.color());
 			add(steps, "SketchImageMark:" + areaList(fill));
-			add(steps, answer(fill.color(), COLORS.toArray(new String[0])));
-			add(steps, "SketchImageFill:" + areaList(fill) + "," + fill.color());
+			add(steps, answer(farbe, bracket(fill.color()), COLORS.toArray(new String[0])));
+			add(steps, "SketchImageFill:" + areaList(fill) + "," + farbe);
 		});
 	}
 
@@ -678,12 +717,21 @@ public class FlagDeckGenerator {
 	}
 
 	/**
-	 * Die Karten-Id: die Spalte {@code ID}, unverändert. Sie wird von Hand vergeben und trägt den
-	 * Lernfortschritt — der Generator rechnet nichts daran, damit sie sich nie verschiebt. Zwei
-	 * Zeilen mit derselben Id fliegen in {@link #generate}.
+	 * Die Karten-Id: {@code (Version − 1) × 1000 + Land-Id}. Version 1 behält also die Landnummer,
+	 * die zweite Flagge eines Landes bekommt ihre eigenen Tausend.
+	 *
+	 * <p>Gerechnet statt im Blatt vergeben, weil die <b>Land-Id</b> als Wert gebraucht wird: Die
+	 * handgeschriebenen Zusatzfragen gruppieren nach Land, nicht nach Flagge. Stünde im Blatt die
+	 * fertige Karten-Id, ließe sich das Land daraus nur über eine Konvention zurückrechnen, die
+	 * nichts erzwingt.</p>
+	 *
+	 * <p>Die Id trägt den Lernfortschritt und darf sich nie verschieben. Deshalb die Tausenderstufen:
+	 * Eine weitere Flagge hängt sich hinten an, statt etwas dazwischenzuschieben. Bei 214 Ländern
+	 * reicht das für <b>zehn</b> Versionen — die elfte ergäbe 10214 und läge im Block der
+	 * Kartenkarten.</p>
 	 */
 	private int id(List<String> row) {
-		return Integer.parseInt(sheet.number(row));
+		return (version(row) - 1) * 1000 + Integer.parseInt(sheet.number(row));
 	}
 
 	/** Die wievielte Flagge dieses Landes. Leer und {@code x} heißen beide: die erste. */
@@ -871,6 +919,37 @@ public class FlagDeckGenerator {
 			throw new IllegalArgumentException("Die richtige Antwort '" + correct
 					+ "' steht nicht unter ihren Optionen: " + String.join("|", wrong));
 		return "MC:" + correct + "*" + String.join("|", wrong);
+	}
+
+	/**
+	 * Wie {@link #answer}, aber mit tolerierten Zweitantworten — ein Klick darauf gilt als falsch,
+	 * bricht die Karte aber nicht ab.
+	 *
+	 * <p>Dafür muss die <b>Präfixform</b> her, die Altform kennt kein {@code ~}. Kein {@code =}
+	 * dabei: Die Reihenfolge soll weiter gemischt werden, anders als bei {@link #fixedOrder}. Ohne
+	 * Klammer bleibt es bei der Altform — es soll sich nur ändern, wo wirklich eine Toleranz steht.</p>
+	 */
+	private static String answer(String correct, List<String> tolerated, String... options) {
+		if (tolerated.isEmpty())
+			return answer(correct, options);
+		List<String> alle = List.of(options);
+		if (!alle.contains(correct))
+			throw new IllegalArgumentException("Die richtige Antwort '" + correct
+					+ "' steht nicht unter ihren Optionen: " + String.join("|", alle));
+		for (String value : tolerated)
+			if (!alle.contains(value))
+				throw new IllegalArgumentException("Die tolerierte Antwort '" + value
+						+ "' steht nicht unter ihren Optionen: " + String.join("|", alle));
+
+		List<String> parts = new ArrayList<>();
+		parts.add("+" + correct);
+		for (String value : tolerated)
+			if (!value.equals(correct))
+				parts.add("~" + value);
+		for (String option : options)
+			if (!option.equals(correct) && !tolerated.contains(option))
+				parts.add(option);
+		return "MC:" + String.join("|", parts);
 	}
 
 	private static String fixedOrder(String correct, String... options) {
