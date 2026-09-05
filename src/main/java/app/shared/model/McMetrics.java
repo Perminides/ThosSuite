@@ -3,8 +3,10 @@ package app.shared.model;
 import javafx.scene.text.Font;
 
 /**
- * Die Maße, die eine Multiple-Choice-Auswahl braucht — alle unabhängig davon, für welches Deck sie
- * gebaut wird.
+ * Die Maße, die eine Multiple-Choice-Auswahl braucht.
+ *
+ * <p>Der Knopfabstand darf je Deck abweichen — im Flaggendeck stehen die Knöpfe enger. Aufgelöst
+ * wird das in der Ansicht, die als Einzige die Deck-Id kennt; hereingereicht wird das Ergebnis.</p>
  *
  * <p>Die Auswahl misst selbst, wie viele Zeilen ein Antworttext braucht, und schaltet danach ihre
  * Darstellungsstufe um. Dafür braucht sie Schrift und die Ränder, die ein Knopf verbraucht.</p>

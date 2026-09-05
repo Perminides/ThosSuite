@@ -286,6 +286,15 @@ public abstract class SkinProperties {
 	protected Rectangle2D hrSessionTextInputPanel;
 
 	protected Integer verticalGapMC;
+	/**
+	 * Abstand der Antwortknöpfe im Flaggendeck. Dessen Fragen haben acht Farben und bis zu elf
+	 * Elemente zur Auswahl; wo die Knöpfe eng stehen, braucht es weniger Luft dazwischen als auf
+	 * den übrigen Schirmen desselben Skins. Nicht gesetzt heißt {@link #verticalGapMC}.
+	 *
+	 * <p>Der Name ist kein Sonderfall, sondern die Kaskade aus {@code cascadingValue}:
+	 * {@code <deckId>} + Suffix, und die Deck-Id des Flaggendecks ist {@code flag}.</p>
+	 */
+	protected Integer flagVerticalGapMC;
 
 	/** Innenabstand der Diagramm-Wurzel (Alkohol- und Fitbit-Statistik). CSS-Schreibweise, vier Werte. */
 	protected String chartRootPadding = "50px 50px 50px 50px";
@@ -440,14 +449,24 @@ public abstract class SkinProperties {
 		return emptyWallpaperName;
 	}
 
-	/** Die Maße einer Multiple-Choice-Auswahl. Ohne Schlüssel — die Auswahl holt sie sich selbst. */
-	public McMetrics mcMetrics() {
+	/**
+	 * Die Maße einer Multiple-Choice-Auswahl.
+	 *
+	 * <p>Mit Schlüssel, seit der Knopfabstand je Deck abweichen darf: Deckabhängiges löst die Ansicht
+	 * auf und reicht das Ergebnis hinein — so wie die Maße der Felder auch. Die Komponenten unter
+	 * {@code shared.ui.components} wissen deshalb weiterhin nicht, was ein Deck ist.</p>
+	 */
+	public McMetrics mcMetrics(String deckId, String mapName, String category) {
 	    Insets insets = borderSmallComponent.insets();
 	    double borderWidth = mcBorderWidth();
 	    double horizontalOverhead = insets.getLeft() + insets.getRight() + (borderWidth * 2);
 
+	    // Die Kaskade liefert null, wenn kein Deck etwas Eigenes sagt — dann gilt der Grundwert.
+	    Integer eigener = (Integer) cascadingValue(deckId, mapName, category, "VerticalGapMC");
+	    int gap = eigener != null ? eigener : verticalGapMC;
+
 	    return new McMetrics(font, horizontalOverhead, borderWidth, mcLineSpacingSqueezed(),
-	            computeMcButtonHeight(), verticalGapMC);
+	            computeMcButtonHeight(), gap);
 	}
 
 	/**
