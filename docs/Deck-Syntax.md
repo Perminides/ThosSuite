@@ -58,7 +58,7 @@ Nur ein führendes `+` schaltet auf Präfix um — ein führendes `-`/`~`/`?` al
 |---|---|---|
 | `+` | richtig | die gesuchte Antwort |
 | `-` | falsch, **immer sichtbar** | fester Distraktor (z. B. `Keine`) |
-| `~` | falsch, **kein Abbruch** | anklickbar ohne Wertung (nur `MC`) |
+| `~` | falsch, **kein Abbruch** | wird als falsch gezeigt, bricht nicht ab und zählt in **keinem** der beiden Typen zur Antwort |
 | `?` | Füller | wird nur zum Auffüllen gezogen |
 | *(nackt)* | Füller | wie `?` |
 
@@ -79,6 +79,24 @@ Nur ein führendes `+` schaltet auf Präfix um — ein führendes `-`/`~`/`?` al
 
 Feste Reihenfolge: führendes `=` am Body (`MC:=…`, `MC+:=…`). Mehr als 8 sichtbare Pflicht-Antworten
 (`+`/`-` zusammen) fliegen erst zur Laufzeit.
+
+### Verhalten
+
+Nicht Syntax, aber die Antwort auf „warum tickt das so":
+
+- **Der Typ bestimmt den Modus, nicht die Zahl der richtigen Antworten.** `MC+` sammelt **immer**,
+  auch bei einer einzigen Richtigen — sonst verriete das Klickverhalten (sofort werten gegen
+  markieren), wie viele gesucht sind.
+- Aus demselben Grund ist der **Submit-Knopf immer sichtbar**, bei `MC` inert. Seine Anwesenheit darf
+  den Modus nicht verraten.
+- Ein `~`-Klick wird in beiden Typen als falsch **gezeigt**, aber nicht gewertet: In `MC` läuft die
+  Karte weiter, in `MC+` landet er gar nicht erst in der Auswahl — sonst könnte man ihn *statt* der
+  richtigen Antwort abschicken. `isFinallyCorrect` streicht ihn zusätzlich heraus.
+- Die `~`-Optik ist der bestehende `incorrect`-Zustand — kein eigener PseudoState, kein Skin-Eingriff.
+- **Fragt eine Karte dasselbe Vokabular mehrfach, schreibe überall dieselbe Optionsmenge** und lass nur
+  die Präfixe wandern. Dann stehen die Antworten über alle diese Steps hinweg an ihrem Platz; sonst
+  springen sie sichtbar. Erzwungen wird nur, dass die Pflicht-Antworten (`+`/`-`) in einer solchen
+  Gruppe zusammen höchstens acht sind.
 
 ## Fast — Details
 
