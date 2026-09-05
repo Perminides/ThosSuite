@@ -38,3 +38,7 @@ docs/flaggen/Chats/
 # Python-Bytecode der Skripte in docs/
 __pycache__/
 *.pyc
+
+# Skin-Entwuerfe. Arbeitsstand mit Screenshots und Fotos, mehrere Megabyte Bilder —
+# das gehoert nicht in die Historie, aus der man es nicht mehr herausbekommt.
+docs/skin/mockups/
