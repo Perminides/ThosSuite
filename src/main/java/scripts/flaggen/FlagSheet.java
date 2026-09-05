@@ -82,7 +82,7 @@ public class FlagSheet {
 		signatureColumn = indexOf(rows.get(headerRow), "Signatur");
 		// Signatur, ID und Name werden schon beim Sammeln der Datenzeilen gebraucht, also vor dem
 		// Attributblock. Aufgelöst werden sie trotzdem über die Überschrift, nicht über die Position.
-		numberColumn = column("ID");
+		numberColumn = column("Land-ID");
 		nameColumn = column("Name");
 
 		// Datenzeile = Name und Signatur. Ein Bildpfad taugt NICHT als Kriterium: Neu angelegte
