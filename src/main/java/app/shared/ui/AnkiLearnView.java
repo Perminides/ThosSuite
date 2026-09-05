@@ -118,7 +118,8 @@ public abstract class AnkiLearnView {
 		mcPane = null;
 		submitButton = null;
 		if (hasMcPane()) {
-			mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.MC));
+			mcPane = new MultipleChoicePane(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.MC),
+					skin.mcMetrics(deckId, mapName, category));
 			mcPane.addListener(callbacks.mcAnswerClicked());
 
 			submitButton = new SuiteIconButton(Skin.IconButtonType.SUBMIT,

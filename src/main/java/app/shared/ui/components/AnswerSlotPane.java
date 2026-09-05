@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import app.shared.model.McMetrics;
-import app.shared.skin.SkinService;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -42,15 +41,15 @@ public class AnswerSlotPane extends Pane {
 	private final List<Button> slots = new ArrayList<>();
 
 	/** Mit fester Lage — für absolut positionierende Hosts. Nur die Breite zählt, die Höhe ergibt sich. */
-	public AnswerSlotPane(Rectangle2D bounds, int slotCount) {
-		this(bounds.getWidth(), slotCount);
+	public AnswerSlotPane(Rectangle2D bounds, int slotCount, McMetrics metrics) {
+		this(bounds.getWidth(), slotCount, metrics);
 		setLayoutX(bounds.getMinX());
 		setLayoutY(bounds.getMinY());
 	}
 
 	/** Ohne feste Lage — für Aufrufer, die die Spalte in ein Layout hängen. Muss es laut Regeldokument geben */
-	public AnswerSlotPane(double width, int slotCount) {
-		this.metrics = SkinService.get().mcMetrics();
+	public AnswerSlotPane(double width, int slotCount, McMetrics metrics) {
+		this.metrics = metrics;
 		setMouseTransparent(true);
 
 		double slotHeight = metrics.buttonHeight();

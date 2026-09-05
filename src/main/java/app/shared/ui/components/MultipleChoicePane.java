@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import app.shared.model.McMetrics;
-import app.shared.skin.SkinService;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -42,15 +41,15 @@ public class MultipleChoicePane extends Pane {
     private Consumer<Integer> listener;
 
     /** Mit fester Lage — für absolut positionierende Hosts. Nur die Breite zählt, die Höhe ergibt sich. */
-    public MultipleChoicePane(Rectangle2D bounds) {
-        this(bounds.getWidth());
+    public MultipleChoicePane(Rectangle2D bounds, McMetrics metrics) {
+        this(bounds.getWidth(), metrics);
         setLayoutX(bounds.getMinX());
         setLayoutY(bounds.getMinY());
     }
 
     /** Ohne feste Lage — für Aufrufer, die die Auswahl in ein Layout hängen. */
-    public MultipleChoicePane(double width) {
-        this.metrics = SkinService.get().mcMetrics();
+    public MultipleChoicePane(double width, McMetrics metrics) {
+        this.metrics = metrics;
 
         double buttonHeight = metrics.buttonHeight();
         int verticalGap = metrics.verticalGap();
