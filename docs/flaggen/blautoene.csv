@@ -1,0 +1,101 @@
+﻿Flagge;Hexwert;Farbton;Saettigung;Blauanteil;HSL-Helligkeit;CIE L*;Vorschlag
+St. Lucia;#66CCFF;200;100;72.6;70.0;78.0;Hellblau
+Fidschi;#68BFE5;198;71;64.1;65.3;73.5;Hellblau
+San Marino;#5EB6E4;201;71;44.1;63.1;70.5;Hellblau
+Mikronesien;#75B2DD;205;60;95.7;66.3;70.1;Hellblau
+Dschibuti;#6AB2E7;205;72;32.5;66.1;69.9;Hellblau
+Argentinien;#74ACDF;209;63;67.1;66.5;68.4;Hellblau
+Botswana;#75AADB;209;59;75.4;65.9;67.8;Hellblau
+Palau;#4AADD6;198;63;71.7;56.5;66.7;Hellblau
+Kasachstan;#00AFCA;188;100;82.1;39.6;65.7;Hellblau
+Bahamas;#00ABC9;189;100;63.6;39.4;64.4;Hellblau
+Tansania;#00A3DD;196;100;28.9;43.3;62.9;Hellblau
+Luxemburg;#00A1DE;196;100;33.5;43.5;62.3;Hellblau
+Ruanda;#00A1DE;196;100;47.7;43.5;62.3;Hellblau
+Guatemala;#4997D0;205;59;67.1;55.1;60.0;Hellblau
+Tuvalu;#5B97B1;198;36;72.3;52.5;59.5;Hellblau
+Estland;#4891D9;210;66;33.5;56.7;58.6;Hellblau
+Aserbaidschan;#0098C3;193;100;33.5;38.2;58.4;Hellblau
+Usbekistan;#0099B5;189;100;30.8;35.5;58.1;Hellblau
+Eritrea;#4189DD;212;70;16.5;56.1;56.3;Hellblau
+Somalia;#4189DD;212;70;93.6;56.1;56.3;Hellblau
+congo-democratic-republic-of-the;#007FFF;210;100;65.9;50.0;54.4;Hellblau
+Komoren;#3A75C4;214;54;19.8;49.8;49.0;Grenzfall
+Gabun;#3A75C4;214;54;32.9;49.8;49.0;Grenzfall
+Honduras;#0073CF;207;100;68.9;40.6;48.0;Grenzfall
+Äquatorialguinea;#0073CE;207;100;11.5;40.4;47.9;Grenzfall
+antigua-and-barbuda;#0072C6;205;100;16.2;38.8;47.1;Grenzfall
+St. Vincent und die Grenadinen;#0072C6;205;100;25.1;38.8;47.1;Grenzfall
+Sierra Leone;#0072C6;205;100;33.5;38.8;47.1;Grenzfall
+Mosambik;#007168;175;100;25.0;22.2;42.5;Blau
+Eswatini;#3E5EB9;224;50;37.2;48.4;42.0;Blau
+Griechenland;#0D5EAF;210;86;62.0;36.9;39.9;Blau
+Ukraine;#005BBB;211;100;50.3;36.7;39.7;Blau
+Slowenien;#005EA5;206;100;34.2;32.4;39.1;Blau
+niue;#005A9A;205;100;12.9;30.2;37.2;Blau
+Salomonen;#0051BA;214;100;57.3;36.5;36.8;Blau
+Ecuador;#05509F;211;94;20.2;32.2;34.5;Blau
+Nordkorea;#024FA2;211;98;33.5;32.2;34.4;Blau
+Panama;#005293;207;100;26.9;28.8;34.3;Blau
+Schweden;#005293;207;100;64.4;28.8;34.3;Blau
+Slowakei;#0B4EA2;213;87;23.3;33.9;34.2;Blau
+Mongolei;#015197;208;99;32.9;29.8;34.2;Blau
+El Salvador;#0F47AF;219;84;68.0;37.3;33.4;Blau
+Äthiopien;#0F47AF;219;84;29.4;37.3;33.4;Blau
+Südsudan;#0F47AF;219;84;25.4;37.3;33.4;Blau
+Moldau;#0046AE;216;100;33.9;34.1;32.8;Blau
+kosovo;#004795;211;100;87.9;29.2;31.1;Blau
+Niederlande;#21468B;219;62;33.5;33.7;30.8;Blau
+Israel;#0038B8;222;100;36.8;36.1;30.1;Blau
+Tschechien;#11457E;211;76;16.8;28.0;29.1;Blau
+Chile;#0039A6;219;100;23.6;32.5;28.6;Blau
+Russland;#0039A6;219;100;32.9;32.5;28.6;Blau
+Paraguay;#0038A8;220;100;33.5;32.9;28.5;Blau
+Philippinen;#0038A8;220;100;28.5;32.9;28.5;Blau
+Uruguay;#0038A8;220;100;32.9;32.9;28.5;Blau
+Belize;#003F87;212;100;38.8;26.5;27.6;Blau
+Kiribati;#003F87;212;100;26.6;26.5;27.6;Blau
+Seychellen;#003F87;212;100;19.0;26.5;27.6;Blau
+united-states-of-america;#3C3B6E;241;30;34.6;33.1;27.3;Blau
+Island;#003897;218;100;60.6;29.6;26.9;Blau
+Serbien;#0C4076;211;82;21.2;25.5;26.9;Blau
+Kap Verde;#003893;217;100;73.7;28.8;26.5;Blau
+Kolumbien;#003893;217;100;24.6;28.8;26.5;Blau
+Nepal;#003893;217;100;12.5;28.8;26.5;Blau
+Armenien;#0033A0;221;100;32.9;31.4;26.5;Blau
+Kambodscha;#032EA1;224;96;50.3;32.2;25.4;Blau
+Taiwan;#2B2F83;237;51;33.1;34.1;24.3;Blau
+Nicaragua;#003876;212;100;68.1;23.1;24.1;Blau
+Finnland;#003580;215;100;47.5;25.1;24.0;Blau
+Namibia;#003580;215;100;38.6;25.1;24.0;Blau
+Zentralafrikanische Republik;#003082;218;100;17.5;25.5;22.7;Blau
+Kuba;#002A8F;222;100;37.4;28.0;22.4;Blau
+Haiti;#00209F;228;100;47.1;31.2;22.1;Blau
+Lesotho;#00209F;228;100;29.9;31.2;22.1;Blau
+andorra;#0018A8;231;100;32.3;32.9;21.9;Blau
+Bosnien und Herzegowina;#002395;226;100;46.1;29.2;21.5;Blau
+Frankreich;#002395;226;100;33.5;29.2;21.5;Blau
+Südafrika;#002395;226;100;17.8;29.2;21.5;Blau
+Costa Rica;#002B7F;220;100;33.5;24.9;21.1;Blau
+Liechtenstein;#002B7F;220;100;43.8;24.9;21.1;Blau
+Nauru;#002B7F;220;100;87.4;24.9;21.1;Blau
+Rumänien;#002B7F;220;100;33.5;24.9;21.1;Blau
+Samoa;#002B7F;220;100;40.2;24.9;21.1;Blau
+Kroatien;#171796;240;73;35.2;33.9;20.0;Blau
+Barbados;#00267F;222;100;50.3;24.9;19.7;Blau
+azores;#182C61;224;60;43.3;23.7;19.5;Blau
+gambia;#0C1C8C;232;84;22.2;29.8;19.2;Blau
+Brasilien;#002776;220;100;17.6;23.1;19.1;Blau
+Dominikanische Republik;#002D62;212;100;30.9;19.2;19.1;Blau
+Neuseeland;#00247D;223;100;87.1;24.5;19.0;Blau
+Vereinigtes Königreich;#00247D;223;100;32.4;24.5;19.0;Blau
+Venezuela;#00247D;223;100;31.6;24.5;19.0;Blau
+Laos;#002868;217;100;37.3;20.4;18.0;Blau
+Liberia;#002868;217;100;18.7;20.4;18.0;Blau
+Norwegen;#002868;217;100;23.6;20.4;18.0;Blau
+Mauritius;#1A206D;236;61;25.1;26.5;17.3;Blau
+Marshallinseln;#00285D;214;100;72.8;18.2;17.0;Blau
+Tschad;#002664;217;100;25.1;19.6;17.0;Blau
+Thailand;#241D4F;248;46;32.9;21.2;14.5;Blau
+Australien;#001B69;225;100;79.7;20.6;14.4;Blau
+Malaysia;#010066;241;100;39.0;20.0;8.7;Blau

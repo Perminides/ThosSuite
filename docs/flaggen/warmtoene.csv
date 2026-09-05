@@ -1,0 +1,85 @@
+﻿Flagge;Hexwert;Farbton;Saettigung;Helligkeit;Anteil;Vorschlag
+Niger;#E05206;20.9;95;45.1;39.8;Orange
+Irland;#FF7900;28.5;100;50.0;33.5;Orange
+Indien;#FF9933;30.0;100;60.0;33.5;Orange
+cote-d-ivoire;#F77F00;30.9;100;48.4;25.1;Orange
+Sambia;#EF7D00;31.4;100;46.9;14.3;Orange
+Marshallinseln;#F7981D;33.9;93;54.1;8.7;Orange
+Zypern;#FFAD2D;36.6;100;58.8;13.1;Grenzfall
+Bhutan;#EFB22D;41.1;86;55.7;41.2;Grenzfall
+Südafrika;#FFB612;41.5;100;53.5;5.3;Grenzfall
+armenia;#F2A800;41.7;100;47.5;33.5;Grenzfall
+Litauen;#FDB913;42.6;98;53.3;33.5;Grenzfall
+Sri Lanka;#FFB700;43.1;100;50.0;54.3;Grenzfall
+Eritrea;#FFC726;44.5;100;57.5;12.4;Gelb
+Barbados;#FFC726;44.5;100;57.5;43.9;Gelb
+Osttimor;#FFC61F;44.7;100;56.1;25.3;Gelb
+Nauru;#FFC61E;44.8;100;55.9;8.4;Gelb
+Komoren;#FFC61E;44.8;100;55.9;20.0;Gelb
+Montenegro;#D2AD39;45.5;63;52.4;26.4;Gelb
+Kasachstan;#FEC50C;45.9;99;52.2;16.1;Gelb
+azores;#FFCB21;45.9;100;56.5;8.0;Gelb
+Mauretanien;#FFC400;46.1;100;50.0;8.1;Gelb
+Spanien;#FFC400;46.1;100;50.0;43.4;Gelb
+Seychellen;#FCD856;47.0;97;66.3;31.2;Gelb
+kosovo;#FDC800;47.4;100;49.6;8.9;Gelb
+Myanmar;#FECB00;48.0;100;49.8;33.0;Gelb
+Schweden;#FECB00;48.0;100;49.8;35.6;Gelb
+Bosnien und Herzegowina;#FECB00;48.0;100;49.8;46.8;Gelb
+Tschad;#FECB00;48.0;100;49.8;49.7;Gelb
+Malaysia;#FFCC00;48.0;100;50.0;8.7;Gelb
+Venezuela;#FFCC00;48.0;100;50.0;33.5;Gelb
+Zentralafrikanische Republik;#FFCE00;48.5;100;50.0;20.4;Gelb
+Togo;#FFCE00;48.5;100;50.0;28.8;Gelb
+São Tomé und Príncipe;#FFCE00;48.5;100;50.0;30.4;Gelb
+Deutschland;#FFCE00;48.5;100;50.0;33.5;Gelb
+Uruguay;#FCD116;48.8;97;53.7;6.1;Gelb
+Philippinen;#FCD116;48.8;97;53.7;7.2;Gelb
+Papua-Neuguinea;#FCD116;48.8;97;53.7;7.5;Gelb
+antigua-and-barbuda;#FCD116;48.8;97;53.7;8.6;Gelb
+Dominica;#FCD116;48.8;97;53.7;9.1;Gelb
+Salomonen;#FCD116;48.8;97;53.7;11.1;Gelb
+St. Kitts und Nevis;#FCD116;48.8;97;53.7;11.2;Gelb
+Tansania;#FCD116;48.8;97;53.7;11.5;Gelb
+Kiribati;#FCD116;48.8;97;53.7;11.8;Gelb
+St. Lucia;#FCD116;48.8;97;53.7;13.9;Gelb
+Guinea-Bissau;#FCD116;48.8;97;53.7;25.0;Gelb
+Guyana;#FCD116;48.8;97;53.7;26.2;Gelb
+Kamerun;#FCD116;48.8;97;53.7;27.1;Gelb
+Ghana;#FCD116;48.8;97;53.7;29.1;Gelb
+Benin;#FCD116;48.8;97;53.7;32.5;Gelb
+Gabun;#FCD116;48.8;97;53.7;32.9;Gelb
+Guinea;#FCD116;48.8;97;53.7;32.9;Gelb
+Mali;#FCD116;48.8;97;53.7;33.5;Gelb
+Rumänien;#FCD116;48.8;97;53.7;33.5;Gelb
+St. Vincent und die Grenadinen;#FCD116;48.8;97;53.7;46.0;Gelb
+Grenada;#FCD116;48.8;97;53.7;47.0;Gelb
+Kolumbien;#FCD116;48.8;97;53.7;50.3;Gelb
+Jamaika;#FED100;49.4;100;49.8;27.6;Gelb
+Simbabwe;#FFD200;49.4;100;50.0;26.0;Gelb
+Moldau;#FFD200;49.4;100;50.0;31.3;Gelb
+Mauritius;#FFD500;50.1;100;50.0;24.6;Gelb
+Ukraine;#FFD500;50.1;100;50.0;49.7;Gelb
+congo-republic-of-the;#FBDE4A;50.2;96;63.7;44.0;Gelb
+Ruanda;#FAD201;50.4;99;49.2;26.7;Gelb
+angola;#F9D616;50.7;95;53.1;7.1;Gelb
+Eswatini;#FFD900;51.1;100;50.0;15.5;Gelb
+congo-democratic-republic-of-the;#F7D618;51.1;93;53.1;14.0;Gelb
+Bahamas;#FAE042;51.5;95;62.0;21.0;Gelb
+Belgien;#FAE042;51.5;95;62.0;33.5;Gelb
+Ecuador;#FDDB00;51.9;100;49.6;48.0;Gelb
+Palau;#FFDE00;52.2;100;50.0;28.1;Gelb
+Uganda;#FCDC04;52.3;98;50.2;33.6;Gelb
+Äthiopien;#FCDD09;52.3;98;51.2;17.1;Gelb
+Brasilien;#FEDF00;52.7;100;49.8;24.0;Gelb
+andorra;#FEDF00;52.7;100;49.8;33.2;Gelb
+guernsey;#F9DE0E;53.1;95;51.6;12.5;Gelb
+Mosambik;#FCE100;53.6;100;49.4;27.3;Gelb
+Brunei;#F7E017;53.8;93;52.9;54.2;Gelb
+Nordmazedonien;#FFE600;54.1;100;50.0;30.8;Gelb
+Bolivien;#F9E300;54.7;100;48.8;32.9;Gelb
+Senegal;#FDEF42;55.5;98;62.5;32.1;Gelb
+Kirgisistan;#FFEF00;56.2;100;50.0;13.5;Gelb
+niue;#FFF100;56.7;100;50.0;59.4;Gelb
+Vietnam;#FFFF00;60.0;100;50.0;5.7;Gelb
+Portugal;#FFFF00;60.0;100;50.0;6.4;Gelb

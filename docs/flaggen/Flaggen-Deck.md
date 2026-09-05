@@ -343,6 +343,80 @@ wächst — sieben Ausnahmen sind ein CheatSheet, zwanzig sind eine kaputte Gren
 
 Die Messung bleibt als **Werkzeug zum Füllen der Tabelle** nützlich, nicht als Regel fürs Lernen.
 
+**Nachgemessen am 04.09.2026 — das Maß war schuld, nicht die Idee.** Die Messung oben benutzte die
+**HSL-Helligkeit** `L = (max + min) / 2`. Die hat einen eingebauten Deckel: Bei voll gesättigten
+Farben ist der kleinste Kanal null, also ist L höchstens 50 — egal wie hell die Farbe wirkt.
+Luxemburgs `#00A1DE` landet damit zwangsläufig bei 43.5, in einem Topf mit Marineblau. Genau das
+hatte der Absatz oben beobachtet, ohne den Grund zu benennen.
+
+Mit **CIE L\*** (wahrnehmungsnah) rücken sieben Flaggen dorthin, wo das Auge sie hinsetzt:
+
+```
+                 HSL      CIE L*
+  Usbekistan     35.5  →   58.1        Kasachstan   39.6  →  65.7
+  Aserbaidschan  38.2  →   58.4        Tansania     43.3  →  62.9
+  Bahamas        39.4  →   64.4        Ruanda       43.5  →  62.3
+                                       Luxemburg    43.5  →  62.3
+```
+
+**Ein Trennband entsteht dadurch trotzdem nicht** — die größte Lücke schrumpft sogar von 6.5 auf
+5.4. Es ist unter jedem Maß ein Kontinuum. Aber die Verteilung hat eine Stelle mit Luft nach beiden
+Seiten:
+
+```
+  42.5  Mosambik
+        ↓ 4.6
+  47.1  Antigua · St. Vincent · Sierra Leone · Äquatorialguinea · Honduras · Komoren · Gabun
+  49.0
+        ↓ 5.4
+  54.4  Kongo, dann Eritrea, Somalia, Usbekistan …
+```
+
+Mit Schwellen **in** den Lücken (45.0 und 51.5) ergibt das **72 Blau, 7 Grenzfälle, 21 Hellblau**.
+Sieben ist genau die Zahl, die der Absatz oben als Obergrenze gesetzt hatte — diesmal aber mit
+Abstand nach beiden Seiten statt mit einer Grenze mitten im Kontinuum. Die sieben sind ein anderer
+Satz als damals, alle um `#0072C6`, ein echtes Mittelblau. Antigua gehört dazu; dass es sich schwer
+entscheiden lässt, ist also gemessen und keine Einbildung.
+
+Die vollständige Liste steht in `blautoene.csv` — 100 Flaggen mit Hexwert, Farbton, Sättigung,
+Blauanteil, beiden Maßen und einem Vorschlag je Flagge.
+
+**Dieselbe Messung für Gelb / Orange, 04.09.2026.** Hier ist der **Farbton** die richtige Achse, nicht
+die Helligkeit. 84 Flaggen tragen einen kräftigen Warmton:
+
+```
+  20.9  Niger
+        ↓ 7.6                      (Ausreißer nach unten, gehört zu Orange)
+  28.5 … 33.9   Irland, Indien, Côte d'Ivoire, Sambia, Marshallinseln
+        ↓ 2.7
+  36.6  Zypern
+        ↓ 4.6                      ← die Grenze
+  41.1 … 43.1   Bhutan, Südafrika, Armenien, Litauen, Sri Lanka
+        ↓ 1.4
+  44.5 …        die gelbe Masse; 22 Flaggen tragen exakt #FCD116 (48.8)
+```
+
+Mit Schwellen in den Lücken (35.25 und 43.8): **6 Orange, 6 Grenzfälle, 72 Gelb**. Liste in
+`warmtoene.csv`.
+
+**Strukturell anders als bei Blau:** Dort bilden die Grenzfälle eine Insel mit Luft nach beiden
+Seiten (4.6 und 5.4). Hier gibt es nur **eine** Trennlücke von 4.6, und die Grenzfälle kleben an den
+Rändern der beiden Gruppen — Zypern allein oberhalb von Orange, die Bernsteingruppe unmittelbar
+unterhalb von Gelb. Zypern ist dabei der sauberste Klammerfall des ganzen Decks: die einzige Flagge,
+die zwischen zwei Lücken allein steht und zu keiner Gruppe gehört.
+
+**Und eine Zahl zur Abwägung, falls Orange je wieder infrage steht:** Es kauft **sieben** Flaggen und
+kostet **sechs** Grenzfälle. Bei Hellblau stehen 21 Flaggen sieben Grenzfällen gegenüber. Orange ist
+also das teurere der beiden Zusatzworte — kein Grund, es zu streichen (Niger und Irland als „Gelb"
+sähen falsch aus), aber die Zahl, um die es dann ginge.
+
+**Vorbehalt, und kein kleiner:** Gemessen wurde auf den PNG-Bildern aus `images/500x500`, nicht auf
+den amtlichen Farbfestlegungen. Ob diese Bilder die offiziellen Werte tragen, ist ungeprüft. Mehrere
+Flaggen kommen mit identischem Hexwert heraus (Luxemburg und Ruanda beide `#00A1DE`, Antigua und
+Sierra Leone beide `#0072C6`) — das kann an genormten Blautönen liegen oder an einer begrenzten
+Palette der Bildquelle. Für das Einsortieren reicht es; als Beleg über die echten Flaggenfarben
+nicht.
+
 Ins CheatSheet gehören: **Gold = Gelb** und die zwei, drei echten Randfälle (Kasachstans `#00ABC2`
 ist deutlich ins Cyan gezogen, wird aber als Hellblau geführt).
 
