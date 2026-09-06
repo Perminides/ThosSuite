@@ -1,12 +1,15 @@
 package app.controller;
 
 import java.text.NumberFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import app.alc.repository.AlcRepository;
 import app.fitbit.DashboardService;
+import app.learn.anki.repository.DeckRepository;
 import app.mattress.repository.MattressRepository;
 import app.messaging.repository.MessageRepository;
 import app.shared.AppClock;
@@ -71,11 +74,24 @@ public class DashboardScreen implements Screen {
         tiles.add(new DashboardTileData(
             	"" + messagesToday,
                 "Heute importierte Nachrichten"));
+        
+        LocalDate lastWhatsApp = sr.getLastWhatsAppMessageDate();
+        tiles.add(new DashboardTileData(
+            	lastWhatsApp.format(DateTimeFormatter.ofPattern("dd.MM.")),
+                "Letzte WhatsApp-Nachricht"));
 
         int daysSinceLastAdditionalTmdbImport = Config.getDaysSince("tmdb.lastAdditionalImportRun");
         tiles.add(new DashboardTileData(
             	"" + daysSinceLastAdditionalTmdbImport,
                 "Tage seit letztem Extra-TMDB-Import"));
+        
+        DeckRepository dr = new DeckRepository();
+        int ankiCards = dr.getNoOfLearnedCards();
+        String formattedCards = NumberFormat.getInstance(Locale.GERMANY).format(ankiCards);
+        tiles.add(new DashboardTileData(
+                formattedCards,
+                "Anzahl Ankikarten"
+            ));
 
         view.build(tiles);
 

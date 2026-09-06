@@ -15,8 +15,6 @@ import app.learn.model.Deck;
 import app.learn.model.LearnStat;
 import app.shared.AppClock;
 import app.shared.DB;
-import app.shared.model.ButtonEnum;
-import app.shared.ui.Alerts;
 
 /**
  * Zugriff auf den Anki-Lernfortschritt in {@code card_learn_stat} und {@code card_log}.
@@ -99,7 +97,7 @@ class DbDeckProgressRepository {
 		        rs.next();
 		        return rs.getInt(1);
 		    } catch (Exception e) {
-		        throw new RuntimeException("Problem beim Zählen der heute neu gelernten Karten...");
+		        throw new RuntimeException("Problem beim Zählen der heute neu gelernten Karten...", e);
 		    }
 		}
 
@@ -115,7 +113,20 @@ class DbDeckProgressRepository {
 		        rs.next();
 		        return rs.getInt(1);
 		    } catch (Exception e) {
-		        throw new RuntimeException("Problem beim Berechnen des initial due counts...");
+		        throw new RuntimeException("Problem beim Berechnen des initial due counts...", e);
+		    }
+		}
+		
+		int getNoOfLearnedCards() {
+			Connection conn = DB.getConnection();
+		    String sql = "select count(*) "
+		            + "from card_learn_stat ";
+		    try (Statement statement = conn.createStatement();
+		         ResultSet rs = statement.executeQuery(sql)) {
+		        rs.next();
+		        return rs.getInt(1);
+		    } catch (Exception e) {
+		        throw new RuntimeException("Problem beim Berechnen der Anzahl aller Ankikarten", e);
 		    }
 		}
 }
