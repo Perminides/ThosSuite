@@ -332,6 +332,9 @@ public class FlagDeckGenerator {
 		fillAreas(steps, fills);
 		add(steps, "Image:" + image(row));
 		add(steps, "Pause:"); // Zeit, die echte Flagge anzusehen
+		// Dasselbe noch einmal als Abspann: Auch wer die Karte reisst, soll die Flagge sehen.
+		add(steps, "<OnFail>Image:" + image(row));
+		add(steps, "Pause:");
 		return steps;
 	}
 

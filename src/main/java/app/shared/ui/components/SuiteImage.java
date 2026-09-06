@@ -308,11 +308,6 @@ public class SuiteImage extends StackPane {
         activeSketch().append(areas, cell, size, offsetX, offsetY);
     }
 
-    /** Setzt eine Fläche der Skizze in ein anderes Rasterfeld. */
-    public void moveSketchArea(int area, int cell) {
-        activeSketch().move(area, cell);
-    }
-
     /** Hebt eine Fläche der Skizze hervor. */
     public void markSketchAreas(List<Integer> areas) {
     	activeSketch().mark(areas);

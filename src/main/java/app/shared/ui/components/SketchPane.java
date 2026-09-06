@@ -110,21 +110,9 @@ class SketchPane extends StackPane {
 	}
 
 	/**
-	 * Setzt eine bereits vorhandene Fläche in ein anderes Rasterfeld. Farbe und Markierung bleiben,
-	 * es wird nichts neu gebaut.
-	 *
-	 * <p>Trägt ein Element mehrere Flächen (ein zweigeteilter Kreis etwa), braucht jede ihren
-	 * eigenen Aufruf — der Schritt kennt Flächen, keine Elemente.</p>
-	 */
-	public void move(int area, int cell) {
-		place(shapeFor(area), cell, 0, 0);
-	}
-
-	/**
-	 * Die Lage ist eine <b>Verschiebung des Knotens</b>, nicht eingebackene Koordinaten: Nur so ist
-	 * Setzen und späteres Umsetzen derselbe Vorgang. Anders als eine Skalierung zieht eine
-	 * Translation die Strichbreite nicht mit — der Einwand aus {@link ShapeGeometry#scaled} trifft
-	 * hier also nicht zu.
+	 * Die Lage ist eine <b>Verschiebung des Knotens</b>, nicht eingebackene Koordinaten: Anders als
+	 * eine Skalierung zieht eine Translation die Strichbreite nicht mit — der Einwand aus
+	 * {@link ShapeGeometry#scaled} trifft hier also nicht zu.
 	 */
 	private void place(Shape shape, int cell, double offsetX, double offsetY) {
 		if (cell < 0 || cell > 8)

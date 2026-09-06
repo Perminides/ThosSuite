@@ -17,7 +17,7 @@ import app.shared.AppClock;
  */
 public class Card {
     public sealed interface Step permits Image, ClickMapElements, Output, Input, ChoiceStep, MarkMapElements, Pause, Fast,
-            SketchImage, SketchImageAdd, SketchImageMove, SketchImageMark, SketchImageFill {}
+            SketchImage, SketchImageAdd, SketchImageMark, SketchImageFill {}
 
     /** MC und MC+ teilen sich Optionen und Reihenfolge; der Typ trägt das Verhalten. */
     public sealed interface ChoiceStep extends Step permits MC, MCPlus {
@@ -50,7 +50,6 @@ public class Card {
     public record SketchImage(String structure) implements Step {}
     public record SketchImageAdd(String structure, int cell, double size, double offsetX,
             double offsetY) implements Step {}
-    public record SketchImageMove(int area, int cell) implements Step {}
     public record SketchImageMark(List<Integer> areas) implements Step {}
     public record SketchImageFill(List<Integer> areas, SketchColor color) implements Step {}
     
@@ -59,6 +58,7 @@ public class Card {
     public record Answer(String hint, List<String> variants) {} // Eine gesuchte Antwort: ihre Schreibvarianten und ein Hinweis, der bis zum Treffer im Feld steht.  
 
     private final List<Step> steps;
+	private final List<Step> onFailSteps;
 	private final int id;
 	private final String remark;
 	private final Set<String> labels = new HashSet<>();
@@ -76,10 +76,12 @@ public class Card {
 		labels.addAll(splitAndTrim(csvTokens.get(2)));
 		
 		List<Step> out = new ArrayList<>(); // Ergebnisliste
+		List<Step> onFail = new ArrayList<>(); // Alles ab <OnFail>
 		List<List<Step>> segments = null; // Segmente zwischen ShuffleStart und ShuffleEnd
 		List<Step> cur = null; // Aktuelles Segment
 
 		boolean cardExpectsInput = false;
+		boolean inOnFail = false;
 		for (String raw : csvTokens.subList(3, csvTokens.size())) {
 			try {
 				String s = raw.trim();
@@ -96,8 +98,19 @@ public class Card {
 				if (end)
 					s = s.substring("<ShuffleEnd>".length());
 
+				if (s.startsWith("<OnFail>")) {
+					if (segments != null)
+						throw new RuntimeException("<OnFail> mitten in einem Shuffle-Block");
+					if (inOnFail)
+						throw new RuntimeException("Zweimal <OnFail> in derselben Karte");
+					inOnFail = true;
+					s = s.substring("<OnFail>".length());
+				}
+
 				// Wir starten eine neue segments und cur
 				if (start) {
+					if (inOnFail)
+						throw new RuntimeException("Shuffle im <OnFail>-Block");
 					segments = new ArrayList<>();
 					cur = new ArrayList<>();
 				}
@@ -131,9 +144,15 @@ public class Card {
 
 				if (!s.isEmpty()) {
 					Step step = parseStep(s);
-					if (expectsInput(step))
+					if (expectsInput(step)) {
+						// Die Karte ist an dieser Stelle längst entschieden — eine Frage danach wäre keine.
+						if (inOnFail)
+							throw new RuntimeException("Der <OnFail>-Block fragt etwas: " + s);
 						cardExpectsInput = true;
-					if (segments == null)
+					}
+					if (inOnFail)
+						onFail.add(step);
+					else if (segments == null)
 						out.add(step);
 					else
 						cur.add(step);
@@ -153,6 +172,7 @@ public class Card {
 			steps = List.copyOf(out);
 		else
 			throw new RuntimeException("Karte erwartet keinen Input\n" + String.join("\n", csvTokens));
+		onFailSteps = List.copyOf(onFail);
 	}
 
 	/** Die Schritte, bei denen die Karte etwas von mir will. Alles andere zeigt nur an. */
@@ -187,7 +207,6 @@ public class Card {
             case "Fast"  -> parseFast(body);
             case "SketchImage"     -> new SketchImage(body.trim());
             case "SketchImageAdd"  -> parseSketchAdd(body);
-            case "SketchImageMove" -> parseSketchMove(body);
             case "SketchImageMark" -> new SketchImageMark(parseAreas(body));
             case "SketchImageFill" -> parseSketchFill(body);
             default      -> throw new RuntimeException("Unbekannter Step: " + kind);
@@ -211,14 +230,6 @@ public class Card {
         double dx = parts.length > 4 ? Double.parseDouble(parts[3].trim()) : 0;
         double dy = parts.length > 4 ? Double.parseDouble(parts[4].trim()) : 0;
         return new SketchImageAdd(parts[0].trim(), Integer.parseInt(parts[1].trim()), size, dx, dy);
-    }
-
-    /** {@code <fläche>,<rasterfeld 0..8>} — setzt eine vorhandene Flaeche um, ohne sie neu zu bauen. */
-    private static Step parseSketchMove(String body) {
-        String[] parts = body.split(",", 2);
-        if (parts.length < 2)
-            throw new RuntimeException("SketchImageMove braucht Fläche und Rasterfeld: " + body);
-        return new SketchImageMove(Integer.parseInt(parts[0].trim()), Integer.parseInt(parts[1].trim()));
     }
 
     /** {@code <fläche>,<farbname>} — ein unbekannter Farbname fliegt beim Einlesen des Decks. */
@@ -447,7 +458,21 @@ public class Card {
 
 	public List<Step> getSteps() {
 		return steps;
-	}    
+	}
+
+	/**
+	 * Der Abspann hinter {@code <OnFail>} — läuft nur, wenn die Karte falsch beantwortet wurde, und
+	 * ersetzt dann das sofortige Ende. Leer, wenn die Zeile keinen Block trägt.
+	 *
+	 * <p>Er zeigt nur an: eine Merkhilfe fürs nächste Mal, die Auflösung, das echte Bild. Eine Frage
+	 * darf nicht darin stehen — an dieser Stelle ist die Karte längst entschieden.</p>
+	 *
+	 * <p>Eine eigene Liste und kein Index in {@link #getSteps()}: So kann kein Aufrufer versehentlich
+	 * durchlaufen und den Abspann auch nach einem fehlerfreien Durchgang zeigen.</p>
+	 */
+	public List<Step> getOnFailSteps() {
+		return onFailSteps;
+	}
 	
 	public Set<String> getLabels() {
 		return labels;

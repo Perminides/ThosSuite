@@ -132,7 +132,6 @@ Vom Flaggen-Generator ausgerechnet, selten von Hand. Felder `0…8` sind das 3×
 | `SketchImageMark:3\|4` | Flächen 3 und 4 gemeinsam hervorheben — ein Element aus mehreren Flächen. |
 | `SketchImageFill:2,Rot` | Fläche 2 rot füllen (unbekannte Farbe fliegt). |
 | `SketchImageFill:3\|4,Rot` | Flächen 3 und 4 rot füllen, eine Farbentscheidung für beide. |
-| `SketchImageMove:2,5` | Fläche 2 nach Feld 5. |
 
 ## Shuffle-Marker
 
@@ -146,6 +145,27 @@ Einem Step **vorangestellt**; mischen die Reihenfolge ganzer Blöcke.
 
 - **Jedes Segment muss selbst Input verlangen** — sonst rutscht es je nach Wurf unbemerkt durch → Abbruch.
 - `<ShuffleStart>` ohne `<ShuffleEnd>` → Abbruch.
+
+## Abspann — `<OnFail>`
+
+Einem Step **vorangestellt**. Alles ab `<OnFail>` bis zum Zeilenende läuft nur, wenn die Karte falsch
+beantwortet wurde, und ersetzt dann das sofortige Ende. Nach einem fehlerfreien Durchlauf wird der
+Block nie erreicht.
+
+| Zeile | Bedeutung |
+|---|---|
+| `Output:Frage?;MC:A*B;Image:X.svg;Pause:;<OnFail>Image:X.svg;Pause:` | Richtig: Bild, Pause, Ende. Falsch: Aufdeckung, Pause, dann Bild, Pause, Ende. |
+
+- Der Block **darf nichts fragen** (`MC`, `MC+`, `Input`, `Click`, `Fast`) → Abbruch. Die Karte ist an
+  dieser Stelle längst entschieden. Er zählt deshalb auch nicht für die Pflicht, dass eine Karte
+  irgendwo Input verlangt.
+- **Kein Endezeichen** — der Block reicht bis Zeilenende. Anders als bei `<ShuffleStart>` kann dabei
+  nichts verloren gehen.
+- Höchstens einmal je Zeile; nicht innerhalb eines Shuffle-Blocks und kein Shuffle darin → Abbruch.
+- Der Fehler wird wie bisher aufgedeckt und pausiert; erst der Druck darauf startet den Abspann. Im
+  Fehlerfall also zwei Tastendrücke — erst die Aufdeckung ansehen, dann den Abspann.
+- Wer ihn **immer** sehen will, schreibt seine Steps zweimal: einmal am normalen Ende, einmal im
+  Block. Der Flaggen-Generator tut genau das mit dem `Image:`-Step.
 
 ## Datei-Konventionen
 
