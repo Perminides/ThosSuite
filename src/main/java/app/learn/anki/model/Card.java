@@ -464,12 +464,7 @@ public class Card {
 	}
 
 	/**
-	 * Die Schritte eines Durchgangs. Shuffle-Blöcke werden dabei frisch gewürfelt, <b>jeder Aufruf
-	 * liefert also eine eigene Reihenfolge</b> — wer sie braucht, holt sie einmal und hält sie fest.
-	 *
-	 * <p>Der Zufall wohnt hier und nicht im Konstruktor, damit dieselbe Karte in jedem Durchgang
-	 * anders läuft und nicht nur einmal je geladenem Deck. Das ist dieselbe Stelle, an der auch die
-	 * MC-Antworten ihre Reihenfolge bekommen: der Durchgang, nicht die Datei.</p>
+	 * Die Schritte eines Durchgangs. Shuffle-Blöcke werden dabei frisch gewürfelt
 	 */
 	public List<Step> getSteps() {
 		List<Step> out = new ArrayList<>();

@@ -8,7 +8,7 @@ import app.learn.model.Deck;
 import app.learn.model.LearnStat;
 
 /**
- * Diese Klasse sollte nur vom AnkiDeckService gekannt werden.
+ * Diese Klasse sollte nur vom AnkiDeckService (und vom DashboardScreen) gekannt werden.
  * Wrapper um das CSV und DB Repository
  */
 public class DeckRepository {
@@ -43,5 +43,9 @@ public class DeckRepository {
 
 	public int getNewLearnedToday(Deck type) {
 		return db.getNewLearnedToday(type);
+	}
+	
+	public int getNoOfLearnedCards() {
+		return db.getNoOfLearnedCards();
 	}
 }

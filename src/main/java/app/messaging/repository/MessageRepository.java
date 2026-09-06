@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
@@ -362,4 +363,15 @@ public class MessageRepository {
             throw new RuntimeException("Fehler beim Laden der Kontakte nach Anzeigename", e);
         }
     }
+    
+	public LocalDate getLastWhatsAppMessageDate() {
+		String sql = "select max (sent_at) from msg_messages where source = 'whatsapp'";
+		Connection con = DB.getConnection();
+		try (Statement statement = con.createStatement(); ResultSet rs = statement.executeQuery(sql)) {
+			rs.next();
+			return LocalDateTime.parse(rs.getString(1), DB_FORMAT).toLocalDate();
+		} catch (Exception e) {
+			throw new RuntimeException("Problem beim Holen des letzten WhatsApp-Imports", e);
+		}
+	}
 }
