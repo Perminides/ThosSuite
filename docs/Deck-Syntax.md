@@ -145,6 +145,8 @@ Einem Step **vorangestellt**; mischen die Reihenfolge ganzer Blöcke.
 
 - **Jedes Segment muss selbst Input verlangen** — sonst rutscht es je nach Wurf unbemerkt durch → Abbruch.
 - `<ShuffleStart>` ohne `<ShuffleEnd>` → Abbruch.
+- **Gemischt wird bei jedem Durchgang neu**, nicht einmal beim Einlesen des Decks — dieselbe
+  Karte läuft beim nächsten Mal anders. Gleiche Stelle wie die Reihenfolge der MC-Antworten.
 
 ## Abspann — `<OnFail>`
 
