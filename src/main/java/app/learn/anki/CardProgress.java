@@ -27,7 +27,6 @@ import app.learn.anki.model.Card.Output;
 import app.learn.anki.model.Card.Pause;
 import app.learn.anki.model.Card.SketchImage;
 import app.learn.anki.model.Card.SketchImageAdd;
-import app.learn.anki.model.Card.SketchImageMove;
 import app.learn.anki.model.Card.SketchImageFill;
 import app.learn.anki.model.Card.SketchImageMark;
 import app.learn.anki.model.Card.Step;
@@ -48,9 +47,11 @@ public class CardProgress {
 
 	private final SessionPresenter presenter;
 	private final Card card;
-	private final List<Card.Step> steps;
+	/** Die laufende Liste — nach einem Fehler der Abspann statt der Karte. */
+	private List<Card.Step> steps;
 	private final SessionProgress sessionProgress;
-	
+
+	private boolean inOnFail = false;
 	private Boolean correctlyAnswered = null; // null = Noch nicht gespielt.
 	private LocalDateTime playedTimestamp = null;
 
@@ -395,8 +396,17 @@ public class CardProgress {
 
 		isPaused = false;
 
-		if (correctlyAnswered != null && !correctlyAnswered) {
-			cardFinished();
+		if (correctlyAnswered != null && !correctlyAnswered && !inOnFail) {
+			// Statt sofort zu enden: der Abspann, falls die Karte einen trägt. Die Aufdeckung des
+			// Fehlers stand schon da, dieser Druck quittiert sie.
+			if (card.getOnFailSteps().isEmpty()) {
+				cardFinished();
+			} else {
+				inOnFail = true;
+				steps = card.getOnFailSteps();
+				currentIndex = 0;
+				runSteps();
+			}
 		} else {
 			currentIndex++;
 			runSteps();
@@ -444,7 +454,7 @@ public class CardProgress {
 	}
 	
 	private void runSteps() {
-	    if (currentIndex >= card.getSteps().size()) {
+	    if (currentIndex >= steps.size()) {
 	    	// Wenn es nicht auf false steht, habe ich noch keinen Fehler gemacht, dann setze es auf true, wenn alle Steps durch.
 	    	if (correctlyAnswered == null) {
 	    		playedTimestamp = LocalDateTime.now();
@@ -477,7 +487,6 @@ public class CardProgress {
 			case SketchImage sketch -> presenter.showSketch(sketch.structure());
 			case SketchImageAdd add -> presenter.addSketch(add.structure(), add.cell(), add.size(),
 					add.offsetX(), add.offsetY());
-			case SketchImageMove move -> presenter.moveSketchArea(move.area(), move.cell());
 			case SketchImageMark mark -> presenter.markSketchAreas(mark.areas());
 			case SketchImageFill fill -> presenter.fillSketchAreas(fill.areas(), fill.color());
 			case Input _ -> presenter.waitForText();

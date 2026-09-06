@@ -757,6 +757,18 @@ echte Anordnung gelesen zu werden.
 Eine falsche Antwort beendet die Karte, wie überall sonst in der Suite. Die Skizze bleibt dann
 halbfertig stehen; sie baut sich also nur bei einem fehlerfreien Durchlauf ganz auf.
 
+**Die echte Flagge kommt trotzdem** — über einen `<OnFail>`-Abspann am Zeilenende, der nur nach einem
+Fehler läuft. Erst wird wie bisher aufgedeckt und pausiert, dann erscheint die Flagge neben der
+halbfertigen Skizze. Das ist das ehrliche Bild: so weit bist Du gekommen, und daneben steht die
+Auflösung. Ohne den Abspann wäre gerade der Durchlauf ohne Belohnung geblieben, in dem man sie am
+nötigsten hat.
+
+Weil der Block nur im Fehlerfall läuft, steht der `Image:`-Step **zweimal** in der Zeile — einmal als
+normales Ende, einmal im Abspann. Das ist der Preis dafür, dass der Mechanismus allgemein bleibt: Ein
+Block, der immer liefe, könnte keine Merkhilfe tragen, die nach dem hundertsten richtigen Durchlauf
+nur noch nervt. Der Generator schreibt beide Kopien aus derselben Stelle, auseinanderlaufen können sie
+nicht.
+
 ### Wie es gebaut ist
 
 Vier Steps, bewusst getrennt, damit der Ablauf vollständig in der CSV-Zeile steht und kein Schritt
@@ -765,7 +777,6 @@ etwas über seine Nachbarn wissen muss:
 ```
 SketchImage:<struktur>            laden, alle Flächen leer — und zugleich das Zurücksetzen
 SketchImageAdd:<struktur>,<feld>  eine weitere Datei anhängen, ohne zurückzusetzen
-SketchImageMove:<n>,<feld>        eine vorhandene Fläche in ein anderes Rasterfeld setzen
 SketchImageMark:<n>               Fläche hervorheben
 SketchImageFill:<n>,<Farbname>    Fläche einfärben, läuft nach dem MC
 ```
@@ -784,18 +795,11 @@ statt in einer Rangfolge-Konvention. Und ein neuer Elementtyp ist eine neue klei
 **Eine Elementdatei kann mehr als eine Fläche tragen.** Grönlands geteilter Kreis sind zwei
 Halbscheiben in einer Datei, und `Add` hängt beide an.
 
-**`Move` gibt es, damit ein Element sofort erscheint und erst danach an seinen Platz rückt.** Sonst
-laufen zwei bis drei Elementfragen ohne jedes sichtbare Feedback ab, und die Figur taucht erst nach
-der Positionsfrage auf. Also: `Add` in die Mitte, sobald die Form bekannt ist, dann die Frage nach
-dem Ort, dann `Move`. Die Lage ist deshalb eine **Verschiebung des Knotens** statt eingebackener
-Koordinaten — Setzen und Umsetzen sind derselbe Vorgang, und eine Translation zieht die Strichbreite
-nicht mit.
-
-> **Der `Move`-Schritt wird immer geschrieben, auch wenn er nichts bewegt.** Stünde er nur bei
-> Elementen, die nicht in der Mitte sitzen, verriete allein sein Vorhandensein, dass die Antwort
-> nicht „Mitte" lautet. Dieselbe Regel wie beim Gösch.
-
-Er kennt Flächen, keine Elemente: Ein zweigeteilter Kreis braucht zwei `Move`-Schritte.
+**Die Elemente werden erst gezeichnet, wenn alle Elementfragen durch sind.** Ein Element schon beim
+Nennen erscheinen zu lassen und es nach der Ortsfrage umzusetzen, wäre schöneres Feedback — es
+scheitert aber an der Mehrfachauswahl, siehe §9. Die Lage ist trotzdem eine **Verschiebung des
+Knotens** statt eingebackener Koordinaten: Eine Translation zieht die Strichbreite nicht mit, eine
+Skalierung schon.
 
 **Dass die Fragen dafür je Zweig anders geordnet sind, ist kein Problem** — das Blatt war nie die
 Fragenreihenfolge. §2 sagt es ausdrücklich: Zwischen Attribut und Frage liegt eine Ableitung, und die
@@ -877,9 +881,9 @@ McPanel       = 20,547,370,0
 4. **SuiteImage: mittig einpassen statt strecken** — erledigt, und wie erwartet ein No-Op für die
    bestehenden Decks.
 
-5. **`SketchImageAdd` und `SketchImageMove`** — anhängen ohne Zurücksetzen und umsetzen ohne
-   Neubauen. `SketchPane` merkt sich den Maßstab vom ersten Laden, statt ihn neu zu rechnen: Sonst
-   schrumpfte eine Elementdatei, die versehentlich über den Rand ragt, nachträglich die ganze Skizze.
+5. **`SketchImageAdd`** — anhängen ohne Zurücksetzen. `SketchPane` merkt sich den Maßstab vom ersten
+   Laden, statt ihn neu zu rechnen: Sonst schrumpfte eine Elementdatei, die versehentlich über den
+   Rand ragt, nachträglich die ganze Skizze.
 6. **Kreise in der Skizze** — `SketchFileSource` liest `Point` + `properties.radius`, `SketchPane`
    hält `Map<Integer, Shape>` und baut Polygon oder `Circle`. Der ungefüllte Startzustand steht jetzt
    ausdrücklich im Skin statt im JavaFX-Standard — die Bedingung dafür, dass zwei Formfamilien
@@ -1203,5 +1207,6 @@ reine Dateneingabe ohne Entwurfsrisiko.
 | **Auch die Zusatzelemente backen** — pro Stufe eine vollständige Datei nachladen | Bis zu 206 × 3 Dateien, weil jede Stufe alles Vorherige mitbringen muss. Schwerer wiegt: `SketchImage` setzt zurück, die Karte müsste also die schon gegebenen Farbantworten wieder ausschreiben. Diese Füllungen gehörten zu keiner Frage, und die Zeile läse sich nicht mehr als Protokoll des Dialogs — genau das, was §4 mit dem Generator gewinnen wollte. Die Kombinatorik war dagegen **kein** gültiger Einwand: Sie ist beschränkt, nicht explosiv. |
 | **Ein Kriterium „was den Hintergrund zerschneidet, gehört in die Datei"** | Klingt geometrisch sauber, hält aber nicht: Japans Kreis schneidet in das weiße Feld genauso wie ein Dreieck in die Streifen. Es entscheidet das zeitliche Kriterium (§5) — vor der Skizze gefragt oder danach. |
 | **Ein Kreis als Vieleck** | Sieht auch als 64-Eck schlecht aus. Ersetzt durch `Point` + `radius`; die Sichel entsprechend durch `Shape.subtract` statt durch eine Näherung. |
-| **Den Union Jack nachbauen** | Er ist *ein* Antwortwert. Zehn Flächen dafür wären das einzige Stück Realismus in einer schematischen Zeichnung und bräuchten Farben, nach denen keine Frage fragt. Benannt, nicht gezeichnet — wie „komplexes Emblem". |
+| ~~**Den Union Jack nachbauen**~~ — **zurückgenommen** | Stand hier mit der Begründung: Er ist *ein* Antwortwert, zehn Flächen dafür wären das einzige Stück Realismus in einer schematischen Zeichnung und bräuchten Farben, nach denen keine Frage fragt. Gebaut wurde er trotzdem — mit drei Flächen statt zehn, und die Farben stehen in der Datei und werden nicht gefragt (§5). Damit fällt der Einwand: Es kommt keine Frage dazu, sondern eine entfällt. |
+| **`SketchImageMove` — das Element erscheint sofort und rückt danach an seinen Platz** | Trug, solange je Element zusammenhängend gefragt wurde: Stern nennen → Stern erscheint mittig → Ort fragen → `Move`. Mit der Mehrfachauswahl fällt das auseinander — erst werden alle Elemente genannt, dann für den Stern die Anzahl, dann für alle der Ort. Bis zu vier Figuren müssten gleichzeitig verkleinert in der Mitte liegen und danach einzeln wegrücken, und dieser Zwischenzustand zeigt eine Anordnung, die es auf keiner Flagge gibt. Der Step ist aus der Suite entfernt. Preis: Die Elementfragen laufen ohne sichtbares Feedback, gezeichnet wird erst danach. |
 | **Elementdateien je Position** (`kreis-mitte`, `stern-links-oben`) | Wieder ein Produkt aus Formen × neun Feldern. Stattdessen eine Datei je Form und das Rasterfeld im Step. |

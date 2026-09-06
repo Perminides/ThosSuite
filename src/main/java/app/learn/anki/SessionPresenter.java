@@ -95,11 +95,6 @@ public class SessionPresenter {
 		view.addSketch(sketchSource.load("elements", structure), cell, size, offsetX, offsetY);
 	}
 
-	/** Setzt eine Fläche in ein anderes Rasterfeld — Farbe und Markierung bleiben. */
-	void moveSketchArea(int area, int cell) {
-		view.moveSketchArea(area, cell);
-	}
-
 	void markSketchAreas(List<Integer> areas) {
 		view.markSketchAreas(areas);
 	}
