@@ -639,9 +639,26 @@ davon sind einfache Formen, die ohnehin gezeichnet werden. Der Union Jack ist de
 Dafür, ihn zu zeichnen, spricht das Kriterium selbst: Aus der Antwort `Union Jack` folgt sein
 Aussehen vollständig, Farben eingeschlossen — ihn zu zeigen verrät nichts, sondern ist §2s „eine
 Frage entfällt, wenn ihre Antwort zwingend folgt". Dagegen spricht nur, dass er das einzige
-realistische und das einzige vorgefüllte Stück der Skizze wäre. Ein **stilisierter** Union Jack —
-die drei Kreuze ohne Fimbrierung und ohne die versetzten Diagonalen — ist der dritte Weg und
-vermutlich der beste.
+realistische und das einzige vorgefüllte Stück der Skizze wäre.
+
+**Entschieden: der echte, vollständig gefärbt.** Der stilisierte Mittelweg — die drei Kreuze ohne
+Fimbrierung und ohne versetzte Diagonalen — ist damit verworfen. Er hätte nichts gewonnen: Das
+Kriterium erlaubt den echten ausdrücklich, und eine Zwischenform wäre weder die Antwort noch ein
+Platzhalter, sondern eine dritte Sache, die niemand beantwortet hat. Dass er das einzige vorgefüllte
+Stück der Skizze ist, ist kein Einwand, sondern die Aussage: Er kommt eingefärbt auf die Leinwand,
+zusammen mit den anderen Zusatzelementen, und man sieht ihm sofort an, dass nach ihm keine Frage mehr
+kommt.
+
+Gezeichnet wird er **gerechnet, nicht abgezeichnet** — `docs/flaggen/build-union-jack.py`. Die Maße
+stehen als Bruchteile der Höhe, so wie die amtliche Beschreibung sie angibt; das Original ist 2:1 und
+unsere Leinwand 3:2, die Diagonalen laufen also steiler. Der Gegenwechsel ist am Flaggenbild
+nachgemessen und nicht erinnert: In der linken Hälfte liegt Rot unterhalb der Diagonalen, in der
+rechten oberhalb. Vertauscht wäre die Flagge auf dem Kopf.
+
+Dasselbe Skript schreibt ihn auf beide Leinwände — als Elementdatei (60 × 40, zentriert) und als
+Hintergrund (180 × 120) für das Vereinigte Königreich selbst. Als Hintergrund trägt er **keine**
+festen Farben: Dort ist er eine ganz normale Skizze mit drei Flächen und wird gefragt wie jede
+andere.
 
 **Ausgeschlossen ist die dritte Variante:** ein generischer Platzhalter im Gösch. Der zeigte *weniger*
 als die schon gegebene Antwort, und das ist in beide Richtungen falsch. Also der echte oder keiner.
@@ -688,6 +705,12 @@ kann also keine Lücke entstehen.
 **Die reinen Streifenstrukturen werden erzeugt, nicht gezeichnet** —
 `docs/flaggen/build-streifen-sketch.py` schreibt `waagerecht-<n>` und `senkrecht-<n>`. Das deckt 78
 der 103 Flaggen im Waagerecht-Zweig ab; Dreieck, Gösch, Kreuz und die Sonderfälle bleiben Handarbeit.
+
+Daneben liegen drei weitere Erzeuger: `build-element-sketch.py` für die rechenbaren Elemente (Kreis,
+Stern, Raute, Sichel), `build-union-jack.py` für den Union Jack auf beiden Leinwänden, und
+`svg-zu-sketch.py`, das ein heruntergeladenes Piktogramm in eine Silhouette umwandelt — Kurven
+abgeflacht, Y gespiegelt, auf ein Rasterfeld normiert. Es löst bewusst nur den einfarbigen Fall:
+Striche ohne Füllung, Text, Masken und Clip-Pfade brechen ab, statt still falsch zu werden.
 
 Die echten Flaggen werden hochaufgelöst im wahren Format geladen und wie jedes andere Bild
 verkleinert und mittig platziert.
@@ -796,6 +819,18 @@ baut. Die Sichel ist **Kreis minus versetzter Kreis** über `Shape.subtract` —
 Näherung, und in der Datei ein `cutout` in den `properties`. Das bleibt im selben Vokabular, weil
 eine Sichel wirklich ein Kreis minus einem Kreis *ist*; ein SVG-Pfad-String wäre eine Kodierung statt
 einer Beschreibung.
+
+**Eine Elementdatei darf ihre Farben selbst tragen: `farbe` in den `properties`.** Das heißt „diese
+Figur sieht immer gleich aus, ihre Farbe ist keine Frage" — der Union Jack ist der Fall. Der Generator
+liest die Eigenschaft und schreibt die `SketchImageFill`-Schritte direkt hinter das
+`SketchImageAdd`, noch vor die erste Farbfrage; das Blatt darf für so ein Element dann keine Farbe
+mehr nennen. **Die Suite liest `farbe` nicht.** Sie ist eine Abmachung zwischen der Datei und dem
+Generator, und am Ende steht in der Deck-Zeile derselbe Schritt, den auch eine Antwort erzeugt hätte
+— der Ablauf bleibt vollständig in der CSV lesbar.
+
+Entweder alle Flächen einer Datei tragen eine `farbe` oder keine. Halb gefärbt wäre der Fall, in dem
+eine vergessene Zeile in der Datei entscheidet, ob eine Fläche gefragt wird — und das sähe man erst
+mitten in einer Session; der Generator bricht deshalb ab.
 
 **Der Startzustand steht als eine Regel im Skin**, nicht im JavaFX-Standard. Das ist die Bedingung
 dafür, dass Formen unterschiedlicher Art nebeneinander liegen dürfen: Ein `Path` startet ungefüllt,
