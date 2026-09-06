@@ -57,7 +57,16 @@ public class Card {
     public enum Role { CORRECT, WRONG_ALWAYS_SHOWN, TOLERATED, DISTRACTOR_OPTIONAL }
     public record Answer(String hint, List<String> variants) {} // Eine gesuchte Antwort: ihre Schreibvarianten und ein Hinweis, der bis zum Treffer im Feld steht.  
 
-    private final List<Step> steps;
+    /**
+     * Ein Stück Karte: ein fester Schritt oder ein Block, dessen Segmente gegeneinander gewürfelt
+     * werden. Die Karte hält ihre Stücke und nicht die fertige Folge — gewürfelt wird beim Abrufen,
+     * einmal je Durchgang.
+     */
+    private sealed interface Chunk permits Fixed, Block {}
+    private record Fixed(Step step) implements Chunk {}
+    private record Block(List<List<Step>> segments) implements Chunk {}
+
+    private final List<Chunk> chunks;
 	private final List<Step> onFailSteps;
 	private final int id;
 	private final String remark;
@@ -75,7 +84,7 @@ public class Card {
 		remark = csvTokens.get(1);
 		labels.addAll(splitAndTrim(csvTokens.get(2)));
 		
-		List<Step> out = new ArrayList<>(); // Ergebnisliste
+		List<Chunk> out = new ArrayList<>(); // Ergebnisliste: feste Schritte und Bloecke
 		List<Step> onFail = new ArrayList<>(); // Alles ab <OnFail>
 		List<List<Step>> segments = null; // Segmente zwischen ShuffleStart und ShuffleEnd
 		List<Step> cur = null; // Aktuelles Segment
@@ -121,7 +130,7 @@ public class Card {
 					cur = new ArrayList<>();
 				}
 
-				// Wir fügen cur den segments hinzu, shufflen letztere und fügen sie out hinzu, Dann cur und segment zurück auf null
+				// Wir fügen cur den segments hinzu und legen den Block ab. Dann cur und segments zurück auf null
 				if (end) {
 					if (cur != null)
 						segments.add(cur);
@@ -135,9 +144,7 @@ public class Card {
 							throw new RuntimeException("Shuffle-Segment " + (i + 1) + " von " + segments.size()
 									+ " erwartet keinen Input");
 
-					Collections.shuffle(segments);
-					for (var seg : segments)
-						out.addAll(seg);
+					out.add(new Block(List.copyOf(segments)));
 					segments = null;
 					cur = null;
 				}
@@ -153,7 +160,7 @@ public class Card {
 					if (inOnFail)
 						onFail.add(step);
 					else if (segments == null)
-						out.add(step);
+						out.add(new Fixed(step));
 					else
 						cur.add(step);
 				}
@@ -169,7 +176,7 @@ public class Card {
 			throw new RuntimeException("<ShuffleStart> ohne <ShuffleEnd>\n" + String.join("\n", csvTokens));
 
 		if (cardExpectsInput)
-			steps = List.copyOf(out);
+			chunks = List.copyOf(out);
 		else
 			throw new RuntimeException("Karte erwartet keinen Input\n" + String.join("\n", csvTokens));
 		onFailSteps = List.copyOf(onFail);
@@ -456,8 +463,27 @@ public class Card {
 		this.learnStat = learnStat;
 	}
 
+	/**
+	 * Die Schritte eines Durchgangs. Shuffle-Blöcke werden dabei frisch gewürfelt, <b>jeder Aufruf
+	 * liefert also eine eigene Reihenfolge</b> — wer sie braucht, holt sie einmal und hält sie fest.
+	 *
+	 * <p>Der Zufall wohnt hier und nicht im Konstruktor, damit dieselbe Karte in jedem Durchgang
+	 * anders läuft und nicht nur einmal je geladenem Deck. Das ist dieselbe Stelle, an der auch die
+	 * MC-Antworten ihre Reihenfolge bekommen: der Durchgang, nicht die Datei.</p>
+	 */
 	public List<Step> getSteps() {
-		return steps;
+		List<Step> out = new ArrayList<>();
+		for (Chunk chunk : chunks) {
+			if (chunk instanceof Fixed fixed) {
+				out.add(fixed.step());
+				continue;
+			}
+			List<List<Step>> segments = new ArrayList<>(((Block) chunk).segments());
+			Collections.shuffle(segments);
+			for (List<Step> segment : segments)
+				out.addAll(segment);
+		}
+		return List.copyOf(out);
 	}
 
 	/**
