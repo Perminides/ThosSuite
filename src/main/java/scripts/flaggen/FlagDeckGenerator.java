@@ -149,7 +149,7 @@ public class FlagDeckGenerator {
 	private static final Map<String, String> ELEMENT_FILES = ordered(
 			"Kreis", "kreis", "Raute", "raute", "Schrift", "schrift-t", "Mond", "sichel",
 			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog", "Emblem", "emblem",
-			"Vogel", "vogel", "Sonne", "sonne");
+			"Vogel", "vogel", "Sonne", "sonne", "Union Jack", "union-jack");
 
 	/**
 	 * Grundgröße einzelner Elemente, ohne Eintrag 1,0. Manche Figuren sind von Natur aus groß —
@@ -199,6 +199,22 @@ public class FlagDeckGenerator {
 	 */
 	private static final int MAP_CARD_BASE = 10000;
 
+	/**
+	 * Streumuster für „verstreut" (Ortswert 9): drei Rasterfelder, die gestreut <i>aussehen</i> —
+	 * keine Reihe, keine Diagonale, nichts aneinandergrenzend.
+	 *
+	 * <p>Eine Tabelle statt einer Rechnung, weil Arithmetik wie {@code (id * 3) % 9} zwar ebenso
+	 * deterministisch wäre, aber Tripel erzeugt, die zufällig auf einer Linie liegen — und drei
+	 * Sterne in einer Reihe sehen nach Absicht aus, nicht nach Streuung. Hier hat ein Mensch
+	 * entschieden.</p>
+	 *
+	 * <p>Gewählt wird über die Karten-Id, nicht gewürfelt: Dieselbe Flagge bekommt bei jedem Lauf
+	 * dieselben Felder, und der {@code git diff} der Deck-Datei bleibt still.</p>
+	 */
+	private static final List<int[]> VERSTREUT = List.of(
+			new int[] {0, 5, 7}, new int[] {1, 3, 8}, new int[] {2, 3, 7},
+			new int[] {1, 5, 6}, new int[] {0, 5, 6}, new int[] {2, 4, 7});
+
 	private static final Map<Integer, double[]> SIBLINGS = Map.of(
 			1, new double[] {0.8,  0},
 			2, new double[] {0.8,  -10, 10},
@@ -207,6 +223,7 @@ public class FlagDeckGenerator {
 
 	private final FlagSheet sheet;
 	private final Map<String, Integer> areas = new LinkedHashMap<>();
+	private final Map<String, List<String>> sketchColors = new LinkedHashMap<>();
 	/** Flaggenbilder, die es noch nicht gibt. Gemeldet am Ende, nicht abgebrochen. */
 	private final Set<String> missing = new LinkedHashSet<>();
 	/** {@code <ShuffleEnd>} gehoert an den Schritt NACH dem Block — er selbst liegt ausserhalb. */
@@ -311,7 +328,7 @@ public class FlagDeckGenerator {
 			}
 		}
 
-		elementFills(steps, canvas, elements(row), fills);
+		elementFills(steps, canvas, elements(row), fills, id(row));
 		fillAreas(steps, fills);
 		add(steps, "Image:" + image(row));
 		add(steps, "Pause:"); // Zeit, die echte Flagge anzusehen
@@ -407,7 +424,7 @@ public class FlagDeckGenerator {
 	 * Farbe dasteht. Ein Element mit weniger Farben als Flächen (das ungefärbte Emblem) lässt seine
 	 * überzähligen Flächen aus — sie bleiben grau —, rückt die Flächennummer aber trotzdem vor.</p>
 	 */
-	private void elementFills(List<String> steps, Canvas canvas, List<Element> elements, List<Fill> fills) {
+	private void elementFills(List<String> steps, Canvas canvas, List<Element> elements, List<Fill> fills, int id) {
 		List<String> names = new ArrayList<>();
 		for (Element element : elements)
 			if (!names.contains(element.name()))
@@ -461,9 +478,50 @@ public class FlagDeckGenerator {
 		shuffled(steps, elements, element ->
 				ask(steps, "Wo " + verb(element) + " " + word(element) + "?", position(element)));
 
-		for (Layout layout : layout(elements))
-			paint(layout.sketch(), fills, canvas.overlay(layout.sketch(), layout.placement()),
-					colors(layout.element().color()));
+		for (Layout layout : layout(elements, id)) {
+			List<Integer> areas = new ArrayList<>();
+			for (String placement : layout.placements())
+				areas.addAll(canvas.overlay(layout.sketch(), placement));
+			if (paintFixed(steps, layout, areas))
+				continue;
+			// Drei Kopien sind unsere Zeichenentscheidung, nicht seine Daten: Sie werden gemeinsam
+			// schraffiert und gemeinsam gefärbt, so als stünde ein '&' im Blatt.
+			Farben farben = colors(layout.element().color());
+			if (layout.placements().size() > 1 && !farben.liste().isEmpty()) {
+				if (farben.liste().size() > 1)
+					throw new RuntimeException(layout.element().name()
+							+ " ist verstreut und trägt mehr als eine Farbe: " + layout.element().color());
+				farben = new Farben(farben.liste(), true);
+			}
+			paint(layout.sketch(), fills, areas, farben);
+		}
+	}
+
+	/**
+	 * Färbt eine Figur, deren Farben in ihrer Strukturdatei stehen — sofort, noch bevor die erste
+	 * Farbfrage kommt. Antwort: ob sie eine solche Figur war und damit erledigt ist.
+	 *
+	 * <p>Der Zeitpunkt ist die halbe Aussage. Der Union Jack erscheint fertig gefärbt zusammen mit
+	 * den anderen Zusatzelementen; wer die Karte lernt, sieht daran sofort, dass nach ihm nicht mehr
+	 * gefragt wird. Käme die Füllung später, sähe sie aus wie eine übersprungene Frage.</p>
+	 *
+	 * <p>Ist die Figur verstreut, liegt sie mehrfach auf der Leinwand. Dann trägt jede Kopie dieselbe
+	 * Farbfolge, und gleichfarbige Flächen aller Kopien werden in einem Schritt gefüllt.</p>
+	 */
+	private boolean paintFixed(List<String> steps, Layout layout, List<Integer> areas) {
+		List<String> fixed = colorsOf("elements", layout.sketch());
+		if (fixed.isEmpty())
+			return false;
+		if (FlagSheet.isSet(layout.element().color()))
+			throw new RuntimeException(layout.sketch() + " trägt seine Farben selbst, im Blatt steht"
+					+ " trotzdem eine: " + layout.element().color());
+		for (int i = 0; i < fixed.size(); i++) {
+			List<Integer> gleiche = new ArrayList<>();
+			for (int k = i; k < areas.size(); k += fixed.size())
+				gleiche.add(areas.get(k));
+			add(steps, "SketchImageFill:" + areaList(gleiche) + "," + fixed.get(i));
+		}
+		return true;
 	}
 
 	/**
@@ -478,8 +536,11 @@ public class FlagDeckGenerator {
 				POSITIONS.toArray(new String[0]));
 	}
 
-	/** Dateiname und Platzierung einer Figur: alles, was hinter {@code SketchImageAdd:} steht. */
-	private record Layout(Element element, String sketch, String placement) {}
+	/**
+	 * Dateiname und Platzierungen einer Figur: alles, was hinter {@code SketchImageAdd:} steht.
+	 * Mehrere, wenn das Element verstreut ist — dann steht dieselbe Figur in drei Feldern.
+	 */
+	private record Layout(Element element, String sketch, List<String> placements) {}
 
 	/**
 	 * Was gemeinsam gefragt und gefärbt wird: eine oder mehrere Flächen und ihre Farbe. Mehrere sind
@@ -573,7 +634,7 @@ public class FlagDeckGenerator {
 	 * liegt, erbt dessen Faktor. Geschwister werden nebeneinandergelegt und dabei zur Mitte hin
 	 * zusammengeschoben — im Behälter stärker als im freien Feld.
 	 */
-	private List<Layout> layout(List<Element> elements) {
+	private List<Layout> layout(List<Element> elements, int id) {
 		List<Layout> result = new ArrayList<>();
 
 		// Jedes Element haengt am letzten Behaelter davor, der im selben Feld liegt.
@@ -615,17 +676,66 @@ public class FlagDeckGenerator {
 			double size = available[i] * regel[0];
 			double offset = regel[1 + group.indexOf(i)] * available[i];
 
+			if (untolerated(element.position()).equals(VERSTREUT_ORT)) {
+				List<String> placements = new ArrayList<>();
+				for (int cell : streufelder(id, belegteFelder(elements)))
+					placements.add(cell + "," + number(size));
+				// Verstreut heißt: dieselbe Figur mehrfach. Der Sammelglyph des Sterns stünde dann
+				// drei Mal da — drei Haufen statt drei Sternen. Also der einzelne.
+				result.add(new Layout(element, sketchOf(element, true), placements));
+				continue;
+			}
 			String placement = untolerated(element.position()) + "," + number(size);
 			if (group.size() > 1)
 				placement += "," + number(offset) + ",0";
-			result.add(new Layout(element, sketchOf(element), placement));
+			result.add(new Layout(element, sketchOf(element, false), List.of(placement)));
 		}
 		return result;
 	}
 
-	/** Sterne haben drei Bilder: einer, zwei, mehr als zwei. Alles andere hat genau eins. */
-	private static String sketchOf(Element element) {
+	/** Der Ortswert, der „über die ganze Flagge verteilt" bedeutet. */
+	private static final String VERSTREUT_ORT = "9";
+
+	/** Die Rasterfelder, in denen schon etwas liegt — verstreute Elemente zählen nicht mit. */
+	private static Set<Integer> belegteFelder(List<Element> elements) {
+		Set<Integer> belegt = new HashSet<>();
+		for (Element element : elements) {
+			String ort = untolerated(element.position());
+			if (!ort.equals(VERSTREUT_ORT))
+				belegt.add(Integer.parseInt(ort));
+		}
+		return belegt;
+	}
+
+	/**
+	 * Drei freie Felder aus {@link #VERSTREUT} — das erste Muster ab {@code id}, das kein belegtes
+	 * Feld trifft. Passt keins, fliegt es: Bei höchstens drei belegten Feldern und sechs Mustern
+	 * kommt das praktisch nicht vor, und wenn doch, will man ein Muster ergänzen statt still etwas
+	 * Schlechteres zu malen.
+	 */
+	private static int[] streufelder(int id, Set<Integer> belegt) {
+		for (int i = 0; i < VERSTREUT.size(); i++) {
+			int[] muster = VERSTREUT.get(Math.floorMod(id + i, VERSTREUT.size()));
+			boolean frei = true;
+			for (int cell : muster)
+				if (belegt.contains(cell))
+					frei = false;
+			if (frei)
+				return muster;
+		}
+		throw new RuntimeException("Kein Streumuster passt, belegt sind " + belegt);
+	}
+
+	/**
+	 * Sterne haben drei Bilder: einer, zwei, mehr als zwei. Alles andere hat genau eins.
+	 *
+	 * <p>{@code einzeln} zwingt zum Einzelglyph — beim Verstreuten, wo dieselbe Figur mehrfach
+	 * gezeichnet wird und der Sammelglyph zu drei Haufen würde.</p>
+	 */
+	private static String sketchOf(Element element, boolean einzeln) {
 		if (element.name().equals("Stern")) {
+			if (einzeln)
+				return "stern";
 			int count = element.count().isEmpty() || element.count().equals("x")
 					? 1 : Integer.parseInt(element.count());
 			return count == 1 ? "stern" : count == 2 ? "stern-zwei" : "stern-haufen";
@@ -678,16 +788,16 @@ public class FlagDeckGenerator {
 			// Die Zelle darf eine Toleranzklammer tragen: `Hellblau (Blau)`. Gemalt wird die Farbe
 			// davor — SketchColor kennt den Klammertext nicht.
 			String farbe = untolerated(fill.color());
-			add(steps, "SketchImageMark:" + areaList(fill));
+			add(steps, "SketchImageMark:" + areaList(fill.areas()));
 			add(steps, answer(farbe, bracket(fill.color()), COLORS.toArray(new String[0])));
-			add(steps, "SketchImageFill:" + areaList(fill) + "," + farbe);
+			add(steps, "SketchImageFill:" + areaList(fill.areas()) + "," + farbe);
 		});
 	}
 
 	/** Die Flächennummern einer Füllung, mit {@code |} getrennt: {@code 3|4}. */
-	private static String areaList(Fill fill) {
+	private static String areaList(List<Integer> areas) {
 		List<String> parts = new ArrayList<>();
-		for (int area : fill.areas())
+		for (int area : areas)
 			parts.add(String.valueOf(area));
 		return String.join("|", parts);
 	}
@@ -782,8 +892,15 @@ public class FlagDeckGenerator {
 			String step = withoutMarkers(raw);
 			if (step.startsWith("SketchImage:"))
 				available = areasOf("backgrounds", step.substring("SketchImage:".length()));
-			else if (step.startsWith("SketchImageAdd:"))
-				available += areasOf("elements", step.substring("SketchImageAdd:".length()).split(",")[0]);
+			else if (step.startsWith("SketchImageAdd:")) {
+				String[] teile = step.substring("SketchImageAdd:".length()).split(",");
+				// Der Renderer wirft bei allem ausserhalb von -1..8 — das gehoert hierhin und nicht
+				// mitten in eine Session. -1 ist der Leinwand-Modus von Goesch und Dreieck.
+				int cell = Integer.parseInt(teile[1].trim());
+				if (cell < -1 || cell > 8)
+					throw new RuntimeException(step + ": Rasterfeld " + cell + " liegt ausserhalb von -1..8");
+				available += areasOf("elements", teile[0]);
+			}
 			else if (step.startsWith("SketchImageMark:") || step.startsWith("SketchImageFill:")) {
 				for (String value : step.substring(step.indexOf(':') + 1).split(",")[0].split("\\|")) {
 					int area = Integer.parseInt(value.trim());
@@ -835,34 +952,68 @@ public class FlagDeckGenerator {
 		return areas.computeIfAbsent(subfolder + "/" + sketch, key -> read(subfolder, sketch).size());
 	}
 
+	/**
+	 * Die festen Farben einer Strukturdatei, in Flächenreihenfolge — leer, wenn sie keine trägt.
+	 *
+	 * <p>Ein {@code farbe} in den {@code properties} heißt: Diese Figur sieht immer gleich aus, ihre
+	 * Farbe ist keine Frage. Der Union Jack ist der Fall — er wird gefärbt, sobald er auftaucht, und
+	 * kommt in keiner Farbfrage vor. Die Suite liest die Eigenschaft nicht, sie ist eine Abmachung
+	 * zwischen der Datei und diesem Generator.</p>
+	 */
+	private List<String> colorsOf(String subfolder, String sketch) {
+		return sketchColors.computeIfAbsent(subfolder + "/" + sketch,
+				key -> readColors(subfolder, sketch));
+	}
+
+	private static List<String> readColors(String subfolder, String sketch) {
+		JsonNode features = tree(subfolder, sketch).get("features");
+		List<String> result = new ArrayList<>();
+		for (JsonNode feature : features) {
+			JsonNode color = feature.path("properties").path("farbe");
+			if (color.isMissingNode())
+				continue;
+			if (!COLORS.contains(color.asText()))
+				throw new RuntimeException(sketch + ": '" + color.asText() + "' ist keine Skizzenfarbe");
+			result.add(color.asText());
+		}
+		// Halb gefärbt gibt es nicht: Sonst hinge an einer vergessenen Zeile in der Datei, ob eine
+		// Fläche gefragt wird oder nicht, und das sähe man erst mitten in einer Session.
+		if (!result.isEmpty() && result.size() != features.size())
+			throw new RuntimeException(sketch + ": " + result.size() + " Farben, aber "
+					+ features.size() + " Flächen — entweder alle oder keine");
+		return result;
+	}
+
 	/** Die Flächen einer Strukturdatei — gezählt wird nur, wie viele es sind. */
 	private static List<double[]> read(String subfolder, String sketch) {
-		try {
-			JsonNode root = new ObjectMapper().readTree(
-					SKETCHES.resolve(subfolder).resolve(sketch + ".geojson").toFile());
-			List<double[]> result = new ArrayList<>();
-			for (JsonNode feature : root.get("features")) {
-				JsonNode geometry = feature.get("geometry");
-				if (geometry.get("type").asText().equals("Point")) {
-					double x = geometry.get("coordinates").get(0).asDouble();
-					double radius = feature.get("properties").get("radius").asDouble();
-					result.add(new double[] {x - radius, x + radius});
-					continue;
-				}
-				double min = Double.MAX_VALUE;
-				double max = -Double.MAX_VALUE;
-				for (JsonNode polygon : geometry.get("coordinates"))
-					for (JsonNode ring : polygon)
-						for (JsonNode point : ring) {
-							min = Math.min(min, point.get(0).asDouble());
-							max = Math.max(max, point.get(0).asDouble());
-						}
-				result.add(new double[] {min, max});
+		List<double[]> result = new ArrayList<>();
+		for (JsonNode feature : tree(subfolder, sketch).get("features")) {
+			JsonNode geometry = feature.get("geometry");
+			if (geometry.get("type").asText().equals("Point")) {
+				double x = geometry.get("coordinates").get(0).asDouble();
+				double radius = feature.get("properties").get("radius").asDouble();
+				result.add(new double[] {x - radius, x + radius});
+				continue;
 			}
-			return result;
+			double min = Double.MAX_VALUE;
+			double max = -Double.MAX_VALUE;
+			for (JsonNode polygon : geometry.get("coordinates"))
+				for (JsonNode ring : polygon)
+					for (JsonNode point : ring) {
+						min = Math.min(min, point.get(0).asDouble());
+						max = Math.max(max, point.get(0).asDouble());
+					}
+			result.add(new double[] {min, max});
+		}
+		return result;
+	}
+
+	private static JsonNode tree(String subfolder, String sketch) {
+		Path file = SKETCHES.resolve(subfolder).resolve(sketch + ".geojson");
+		try {
+			return new ObjectMapper().readTree(file.toFile());
 		} catch (IOException e) {
-			throw new RuntimeException("Strukturdatei fehlt: "
-					+ SKETCHES.resolve(subfolder).resolve(sketch + ".geojson"), e);
+			throw new RuntimeException("Strukturdatei fehlt: " + file, e);
 		}
 	}
 
