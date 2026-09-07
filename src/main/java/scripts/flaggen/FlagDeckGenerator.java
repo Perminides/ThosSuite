@@ -281,9 +281,7 @@ public class FlagDeckGenerator {
 		List<String> steps = new ArrayList<>(List.of(String.valueOf(id(row)), remark(row), "Flagge",
 				"Mark:" + shape(row)));
 
-		// Der Hinweis trennt zwei Flaggen desselben Landes und muss deshalb vor der ersten Antwort
-		// stehen. Er hängt an der ersten Frage statt an einem eigenen Schritt — das spart einen Klick.
-		ask(steps, hint(row) + "Welche Form hat die Flagge?",
+		ask(steps, "Welche Form hat die Flagge?",
 				answer(rectangular(row), "Rechteckig", "Nicht rechteckig", "Quadratisch"));
 		ask(steps, "Hat die Flagge einen Rahmen?", answer(frame(row) ? "Ja" : "Nein", "Ja", "Nein"));
 
@@ -338,6 +336,7 @@ public class FlagDeckGenerator {
 		// Dasselbe noch einmal als Abspann: Auch wer die Karte reisst, soll die Flagge sehen.
 		add(steps, "<OnFail>Image:" + image(row));
 		add(steps, "Pause:");
+		prependHint(steps, row);
 		return steps;
 	}
 
@@ -896,13 +895,44 @@ public class FlagDeckGenerator {
 	}
 
 	/**
-	 * Der Hinweis vor der ersten Frage, sonst leer. Er trennt zwei Flaggen desselben Landes
-	 * („Flagge bis 2021"). Der Umbruch steht als {@code <br />} da: In eine Deck-Zelle passt kein
-	 * echter Zeilenumbruch, das Fragefeld versteht aber {@code <br />}, {@code <b>} und {@code <i>}.
+	 * Der Hinweis, sonst leer. Er trennt zwei Flaggen desselben Landes („Flagge bis 2021"). Zwei
+	 * Umbrüche dahinter setzen ihn als eigenen Absatz ab; sie stehen als {@code <br />} da, weil in
+	 * eine Deck-Zelle kein echter Zeilenumbruch passt — das Fragefeld versteht {@code <br />},
+	 * {@code <b>} und {@code <i>}.
 	 */
 	private String hint(List<String> row) {
 		String text = sheet.value(row, "Hinweistext");
-		return FlagSheet.isSet(text) ? "<i>" + text + "</i><br />" : "";
+		return FlagSheet.isSet(text) ? "<i>" + text + "</i><br /><br />" : "";
+	}
+
+	/**
+	 * Stellt den Hinweis <b>jeder</b> Frage der Karte voran, nicht nur der ersten.
+	 *
+	 * <p>Er sagt, welche der Flaggen eines Landes gemeint ist. Stünde er nur einmal, müsste man ihn
+	 * über ein Dutzend Fragen hinweg im Kopf behalten — und die Antwort auf Frage neun hängt genauso
+	 * an ihm wie die auf Frage eins.</p>
+	 *
+	 * <p>Ein Nachlauf über die fertige Zeile statt eines Zusatzes an jeder Frage: So kann keine Frage
+	 * ihn vergessen, auch keine, die es hier noch gar nicht gibt.</p>
+	 */
+	private void prependHint(List<String> steps, List<String> row) {
+		String hint = hint(row);
+		if (hint.isEmpty())
+			return;
+		for (int i = 3; i < steps.size(); i++) {   // 0 bis 2 sind Id, Bemerkung und Label
+			String step = steps.get(i);
+			int start = 0;
+			while (start < step.length() && step.charAt(start) == '<') {   // über die Marker hinweg
+				int close = step.indexOf('>', start);
+				if (close < 0)
+					break;
+				start = close + 1;
+			}
+			if (!step.startsWith("Output:", start))
+				continue;
+			int text = start + "Output:".length();
+			steps.set(i, step.substring(0, text) + hint + step.substring(text));
+		}
 	}
 
 	/**
