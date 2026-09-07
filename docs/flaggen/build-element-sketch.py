@@ -173,8 +173,46 @@ def hand():   # nicht mehr in ELEMENTE: die Hand kommt aus svg-zu-sketch.py
     return [flaeche(0, zentriere([ring(punkte)]))]
 
 
+def strich(cx, cy, richtung, halbe_laenge, halbbreite):
+    """Ein Strich mit runden Enden: zwei Halbkreise, verbunden durch ihre Flanken.
+
+    {@code halbe_laenge} ist der halbe Abstand der beiden Kappenmittelpunkte; die sichtbare Laenge
+    ist also zwei mal halbe_laenge plus zwei mal halbbreite.
+    """
+    rx, ry = richtung
+    vorn = (cx + rx * halbe_laenge, cy + ry * halbe_laenge)
+    hinten = (cx - rx * halbe_laenge, cy - ry * halbe_laenge)
+    # Gerade Bogenzahl: Dann liegt ein Punkt genau auf der Spitze und der Strich wird exakt so lang,
+    # wie er soll. Bei sieben Abschnitten fehlten am Ende 0,4 Prozent.
+    return ring(kappe(vorn[0], vorn[1], richtung, halbbreite, 8)
+                + kappe(hinten[0], hinten[1], (-rx, -ry), halbbreite, 8))
+
+
+def muster():
+    """Neun Striche im Schachbrett -- ein Ausschnitt aus einem Ornamentband, nicht das Band selbst.
+
+    Waagerecht, wo Spalte plus Zeile gerade ist, sonst senkrecht; so steht es in der Vorlage.
+    Drei mal drei und damit quadratisch: Das Element wird uebereinandergestapelt, und ein breiterer
+    Ausschnitt fuellte die Mastspalte aus und saehe nicht mehr nach Band aus.
+
+    Nichts beruehrt sich. Gleich ausgerichtete Nachbarn stehen zwei Rasterschritte auseinander,
+    quer stehende ueberlappen sich nicht -- ein Strich ist halb so dick wie lang.
+    """
+    raster = 2 * FELD_Y / 3          # drei Reihen fuellen die Feldhoehe
+    dicke = raster / 2
+    halbbreite = dicke / 2
+    halbe_laenge = raster / 2 - halbbreite     # sichtbare Laenge bleibt genau ein Raster
+    teile = []
+    for zeile in range(3):
+        for spalte in range(3):
+            cx, cy = (spalte - 1) * raster, (1 - zeile) * raster
+            richtung = (1.0, 0.0) if (spalte + zeile) % 2 == 0 else (0.0, 1.0)
+            teile.append(strich(cx, cy, richtung, halbe_laenge, halbbreite))
+    return [flaeche(0, teile)]
+
+
 ELEMENTE = {"kreis": kreis, "sichel": sichel, "stern": einzelstern, "raute": raute, "schrift-t": schrift_t,
-            "stern-haufen": sternhaufen, "stern-zwei": zweisterne}
+            "stern-haufen": sternhaufen, "stern-zwei": zweisterne, "muster": muster}
 
 
 def schreibe(zielordner, name):

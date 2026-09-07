@@ -149,7 +149,8 @@ public class FlagDeckGenerator {
 	private static final Map<String, String> ELEMENT_FILES = ordered(
 			"Kreis", "kreis", "Raute", "raute", "Schrift", "schrift-t", "Mond", "sichel",
 			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog", "Emblem", "emblem",
-			"Vogel", "vogel", "Sonne", "sonne", "Union Jack", "union-jack");
+			"Vogel", "vogel", "Sonne", "sonne", "Union Jack", "union-jack",
+			"Dreizack", "dreizack", "Muster", "muster");
 
 	/**
 	 * Grundgröße einzelner Elemente, ohne Eintrag 1,0. Manche Figuren sind von Natur aus groß —
@@ -287,14 +288,16 @@ public class FlagDeckGenerator {
 		ask(steps, "Hat die Flagge einen Rahmen?", answer(frame(row) ? "Ja" : "Nein", "Ja", "Nein"));
 
 		// Kreuz und Diagonale vorweg — sonst würde ihr linker Arm mit einem Dreieck von links verwechselt.
-		String type = sheet.value(row, "Hintergrundtyp");
+		String typeCell = sheet.value(row, "Hintergrundtyp");
+		String type = untolerated(typeCell);
 		String vorweg = type.equals("2") ? "Kreuz" : type.equals("3") ? "Diagonale" : "Nein";
 		ask(steps, "Teilt ein Kreuz oder eine Diagonale die Flagge, wenn Du Zusatzelemente und Rahmen ignorierst?",
 				answer(vorweg, "Kreuz", "Diagonale", "Nein"));
 		if (vorweg.equals("Nein"))
 			ask(steps, "Entferne gedanklich eine Dreiecksstruktur von links, eine Gösch, alle "
 					+ "Zusatzelemente und einen Rahmen. Was beschreibt nun den Hintergrund am besten?",
-					answer(BACKGROUNDS.get(type), FILL_BACKGROUNDS.toArray(new String[0])));
+					answer(BACKGROUNDS.get(type), backgroundTolerated(typeCell),
+							FILL_BACKGROUNDS.toArray(new String[0])));
 		branchQuestions(steps, row, type);
 
 		Canvas canvas = new Canvas(steps);
@@ -528,6 +531,28 @@ public class FlagDeckGenerator {
 	}
 
 	/**
+	 * Die tolerierten Hintergrundtypen aus der Klammer, als Antworttexte. Belarus steht als
+	 * {@code 0 (5)} im Blatt: zwei waagerechte Streifen — wer sein Ornamentband aber für einen Teil
+	 * des Hintergrunds hält, liegt nicht wirklich daneben.
+	 *
+	 * <p>Kreuz und Diagonale dürfen nicht in der Klammer stehen. Über die beiden entscheidet die
+	 * Frage davor, und die wüsste von der Toleranz nichts — die Karte bräche still an der falschen
+	 * Stelle ab.</p>
+	 */
+	private static List<String> backgroundTolerated(String cell) {
+		List<String> result = new ArrayList<>();
+		for (String value : bracket(cell)) {
+			if (value.equals("2") || value.equals("3"))
+				throw new RuntimeException("Kreuz und Diagonale gehen als tolerierter Hintergrundtyp nicht: " + cell);
+			String text = BACKGROUNDS.get(value);
+			if (text == null)
+				throw new RuntimeException("Kein Hintergrundtyp mit dem Wert " + value + ": " + cell);
+			result.add(text);
+		}
+		return result;
+	}
+
+	/**
 	 * Die Ortsfrage. Steht im Blatt eine Toleranzklammer, tragen deren Werte ein {@code ~}: Ein Klick
 	 * darauf gilt als falsch, bricht die Karte aber nicht ab.
 	 */
@@ -686,6 +711,18 @@ public class FlagDeckGenerator {
 				// Verstreut heißt: dieselbe Figur mehrfach. Der Sammelglyph des Sterns stünde dann
 				// drei Mal da — drei Haufen statt drei Sternen. Also der einzelne.
 				result.add(new Layout(element, sketchOf(element, true), placements));
+				continue;
+			}
+			// Ein Ornamentband besetzt eine ganze Spalte, keinen Punkt. Bei ihm sind die Werte der
+			// Toleranzklammer deshalb Platzierungen und nicht bloß geduldete Klicks.
+			if (element.name().equals("Muster") && !bracket(element.position()).isEmpty()) {
+				List<String> felder = new ArrayList<>(bracket(element.position()));
+				felder.add(untolerated(element.position()));
+				List<String> placements = new ArrayList<>();
+				for (int feld = 0; feld <= 8; feld++)      // aufsteigend, damit die Flächen von oben zählen
+					if (felder.contains(String.valueOf(feld)))
+						placements.add(feld + "," + number(size));
+				result.add(new Layout(element, sketchOf(element, false), placements));
 				continue;
 			}
 			String placement = untolerated(element.position()) + "," + number(size);
