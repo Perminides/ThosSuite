@@ -85,7 +85,7 @@ public class FlagSheetCheck {
 		for (Chain chain : CHAINS) {
 			String title = chain.column() + "=" + String.join("/", new java.util.TreeSet<>(chain.values()))
 					+ " -> " + chain.required();
-			report(title, row -> chain.values().contains(sheet.value(row, chain.column()))
+			report(title, row -> chain.values().contains(hauptwert(sheet.value(row, chain.column())))
 					!= FlagSheet.isSet(sheet.value(row, chain.required())),
 					row -> chain.required() + "=" + orEmpty(sheet.value(row, chain.required())));
 		}
@@ -136,6 +136,14 @@ public class FlagSheetCheck {
 		return true;
 	}
 
+	/**
+	 * Der Wert einer Zelle ohne ihre Toleranzklammer. Die Kettenregeln fragen danach, ob eine Frage
+	 * hierher geführt hat — und das entscheidet die gegebene Antwort, nicht die geduldete.
+	 */
+	private static String hauptwert(String value) {
+		return positionValues(value).get(0);
+	}
+
 	/** Der Hauptwert und die tolerierten aus der Klammer. Getrennt wird mit {@code |}, nie mit Komma. */
 	private static List<String> positionValues(String value) {
 		int open = value.indexOf('(');
@@ -171,7 +179,7 @@ public class FlagSheetCheck {
 		System.out.println("Invarianten");
 		// Eine einfarbige Fläche ohne Gösch, ohne Dreieck und ohne Element wäre leer. Die gibt es nicht.
 		report("einfarbig, ohne Gösch, ohne Dreieck, ohne Element (gibt es nicht)",
-				row -> sheet.value(row, "Hintergrundtyp").equals("4")
+				row -> hauptwert(sheet.value(row, "Hintergrundtyp")).equals("4")
 						&& sheet.value(row, "Gösch?").equals("0")
 						&& sheet.value(row, "Dreieck von links?").equals("0")
 						&& !FlagSheet.isSet(sheet.value(row, "E1")),
