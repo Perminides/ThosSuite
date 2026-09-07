@@ -187,7 +187,7 @@ public class FlagDeckGenerator {
 	 * 60 × 40 groß sein darf.
 	 *
 	 * <p>Die Größe trägt zweierlei in einer Zahl: den Platz, den sich n Figuren im 60 breiten Feld
-	 * teilen müssen, und die Luft zum Feldrand — eine Figur, die oben genau anstößt, sieht im Gösch
+	 * teilen müssen, und die Luft zum Feldrand — eine Figur, die oben genau anstößt, sieht in der Gösch
 	 * schlecht aus. Ohne die Luft wären es 1,0 · 1,0 · 0,7 · 0,55. Dass beides in einer Zahl steht,
 	 * heißt auch: Die Luft ist je Anzahl einstellbar.</p>
 	 */
@@ -292,7 +292,7 @@ public class FlagDeckGenerator {
 		ask(steps, "Teilt ein Kreuz oder eine Diagonale die Flagge, wenn Du Zusatzelemente und Rahmen ignorierst?",
 				answer(vorweg, "Kreuz", "Diagonale", "Nein"));
 		if (vorweg.equals("Nein"))
-			ask(steps, "Entferne gedanklich eine Dreiecksstruktur von links, einen Gösch, alle "
+			ask(steps, "Entferne gedanklich eine Dreiecksstruktur von links, eine Gösch, alle "
 					+ "Zusatzelemente und einen Rahmen. Was beschreibt nun den Hintergrund am besten?",
 					answer(BACKGROUNDS.get(type), FILL_BACKGROUNDS.toArray(new String[0])));
 		branchQuestions(steps, row, type);
@@ -302,14 +302,14 @@ public class FlagDeckGenerator {
 		String background = branchSketch(row, type);
 		paint(background, fills, canvas.background(background), colors(sheet.value(row, "Hintergrundfarben")));
 
-		// Ein Sonderhintergrund ist eine handgemachte Datei, die alles enthalten kann — auch einen
+		// Ein Sonderhintergrund ist eine handgemachte Datei, die alles enthalten kann — auch eine
 		// Gösch oder etwas Dreiecksartiges. Ihn zusätzlich nach diesen Attributen zu fragen, führt
 		// zwangsläufig in Widersprüche: Bei Antigua schiebt sich von links sichtbar eine Spitze ins
 		// Bild, im Blatt steht trotzdem 0. Wer richtig hinsieht, bekäme falsch. Also nicht fragen.
 		if (!type.equals("7")) {
 			// Gösch nach der Göschfrage auflegen (Leinwand-Silhouette, cell = -1).
 			boolean goesch = sheet.value(row, "Gösch?").equals("1");
-			ask(steps, "Hat die Flagge einen Gösch?", answer(goesch ? "Ja" : "Nein", "Ja", "Nein"));
+			ask(steps, "Hat die Flagge eine Gösch?", answer(goesch ? "Ja" : "Nein", "Ja", "Nein"));
 			if (goesch)
 				paint("goesch", fills, canvas.overlay("goesch", "-1"), colors(sheet.value(row, "Gösch Farbe")));
 
