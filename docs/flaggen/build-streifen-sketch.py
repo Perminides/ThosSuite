@@ -1,11 +1,15 @@
 """Erzeugt Strukturdateien fuer reine Streifen-Skizzen.
 
 Aufruf:
-    python build-streifen-sketch.py <zielordner> waagerecht-3 senkrecht-4 waagerecht-5-3-1-2-1-3 ...
+    python build-streifen-sketch.py <zielordner> waagerecht-3 senkrecht-4 sw-2 waagerecht-5-3-1-2-1-3 ...
 
 Der Name traegt die Streifenzahl und wahlweise die Verteilung: so viele Zahlen wie Streifen sind das
 Breitenverhaeltnis selbst (waagerecht-5-3-1-2-1-3), eine einzelne Zahl ist ein Index in die
 Fallback-Tabelle VERTEILUNG (3W, senkrecht), keine Zusatzzahl heisst gleich breit.
+
+`sw-<n>` ist das senkrechte Band am Mast mit waagerechten Streifen daneben: Flaeche 0 ist das
+Band und belegt die linke Rasterspalte, danach folgen die Streifen von oben. Ein Goesch ist
+dort ausgeschlossen -- er saesse im Band.
 
 Konvention (siehe Flaggen-Deck.md):
   * Das Seitenverhaeltnis ist immer 3:2 -- die Skizze wird in ein 3:2-Feld eingepasst,
@@ -36,6 +40,10 @@ GOESCH = "-goesch"
 # (waagerecht-5-3-1-2-1-3) und brauchen die Tabelle nicht. Schematisch, nicht massstabsgetreu: Nordkoreas
 # duenne Streifen sind in Wirklichkeit halb so dick wie hier -- so duenn wuerden sie zu Strichen.
 VERTEILUNG = {
+    # 3W = 1, "mittlerer breiter": 1:2:1. Fuenf der neun Flaggen haben es wirklich so (Kambodscha,
+    # Laos, Libanon, Libyen, Spanien), die uebrigen sind sanfter (Lesotho, Tadschikistan) oder
+    # deutlich krasser (Belize). Eine Zahl fuer alle, wie ueberall sonst auch.
+    ("waagerecht", 3, 1): [1, 2, 1],
 }
 
 
@@ -91,28 +99,41 @@ def flaechen(richtung, anzahl, goesch, gewichte):
     """
     breite, hoehe = masse(anzahl)
     gx, gy = breite / 3, -hoehe / 3
+
+    # Band am Mast: erst das Band, dann die Streifen daneben von oben. Die Reihenfolge steht so im
+    # Blatt -- Benin traegt "Gruen|Gelb|Rot" fuer Band, oben, unten.
+    if richtung == "sw":
+        yield flaeche(0, ring(0, 0, gx, -hoehe))
+        kanten = grenzen(gewichte, hoehe)
+        for i in range(anzahl):
+            yield flaeche(i + 1, ring(gx, -kanten[i], breite, -kanten[i + 1]))
+        return
+
     kanten = grenzen(gewichte, hoehe if richtung == "waagerecht" else breite)
     for i in range(anzahl):
         if richtung == "waagerecht":
             x0, y0, x1, y1 = 0, -kanten[i], breite, -kanten[i + 1]
         else:
             x0, y0, x1, y1 = kanten[i], 0, kanten[i + 1], -hoehe
-        r = ohne_goesch(x0, y0, x1, y1, gx, gy) if goesch else ring(x0, y0, x1, y1)
-        yield {"type": "Feature",
-               "properties": {"id": i},
-               "geometry": {"type": "MultiPolygon", "coordinates": [[r]]}}
+        yield flaeche(i, ohne_goesch(x0, y0, x1, y1, gx, gy) if goesch else ring(x0, y0, x1, y1))
     if goesch:
-        yield {"type": "Feature",
-               "properties": {"id": anzahl},
-               "geometry": {"type": "MultiPolygon", "coordinates": [[ring(0, 0, gx, gy)]]}}
+        yield flaeche(anzahl, ring(0, 0, gx, gy))
+
+
+def flaeche(nummer, r):
+    return {"type": "Feature",
+            "properties": {"id": nummer},
+            "geometry": {"type": "MultiPolygon", "coordinates": [[r]]}}
 
 
 def schreibe(zielordner, name):
     goesch = name.endswith(GOESCH)
     teile = (name[:-len(GOESCH)] if goesch else name).split("-")
     richtung = teile[0]
-    if richtung not in ("waagerecht", "senkrecht"):
-        raise SystemExit("Nur waagerecht-<n>, senkrecht-<n>, wahlweise mit -goesch, nicht: " + name)
+    if richtung not in ("waagerecht", "senkrecht", "sw"):
+        raise SystemExit("Nur waagerecht-<n>, senkrecht-<n>, sw-<n>, wahlweise mit -goesch, nicht: " + name)
+    if richtung == "sw" and goesch:
+        raise SystemExit("Ein Goesch belegt Rasterfeld 0 -- da steht bei sw schon das Band: " + name)
     anzahl = int(teile[1])
 
     # Die Streifenbreiten: stehen so viele Zahlen im Namen wie es Streifen gibt, sind sie das
@@ -142,7 +163,7 @@ def schreibe(zielordner, name):
     ziel.parent.mkdir(parents=True, exist_ok=True)
     ziel.write_text(text, encoding="utf-8")
     breite, hoehe = masse(anzahl)
-    print("%s  (%d x %d, %d Flaechen)" % (ziel, breite, hoehe, anzahl + (1 if goesch else 0)))
+    print("%s  (%d x %d, %d Flaechen)" % (ziel, breite, hoehe, len(features)))
 
 
 if __name__ == "__main__":
