@@ -19,19 +19,22 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 
 ## Elementdateien
 
-- Um den **Nullpunkt zentriert**, höchstens **60 × 40** — also ein ganzes Rasterfeld. Die Höhe
-  bindet, in der Breite bleibt frei, was die Figur braucht. `svg-zu-sketch.py` normiert genau
-  darauf (`|x| ≤ 30`, `|y| ≤ 20`).
-- Wer **breiter als 40** ist, gehört vorerst **nicht in einen Behälter** und nicht neben
-  Geschwister: Die Faktoren dafür sind auf einen 40er Kasten gerechnet, siehe „Platzieren". Bisher
-  betrifft das nur den Vogel mit 50,8.
-- Faktor 1,0 füllt die Feldhöhe. Faktoren über 1 sind erlaubt.
+- Um den **Nullpunkt zentriert**. Die Datei trägt ihre **natürliche Größe**: Die meisten füllen ein
+  Rasterfeld (60 × 40), `kreis` hat Radius 25, `raute` ist 120 × 80. `svg-zu-sketch.py` normiert auf
+  das Feld (`|x| ≤ 30`, `|y| ≤ 20`), von Hand gebaute Dateien dürfen darüber hinaus.
+- Keine Größe und kein Faktor in der Datei. Wie groß eine Figur gezeichnet wird, entscheidet allein
+  die Faktorenkette beim Platzieren.
+- Die Faktoren dort rechnen mit einem Kasten von **40 × 40**. Ein **Kind**, das breiter ist, kann
+  über seinen Behälter hinausragen; bisher betrifft das nur den Vogel mit 50,8, und der bleibt aus
+  Behältern und Geschwistergruppen heraus. `kreis` und `raute` sind ebenfalls breiter, treten dort
+  aber als **Behälter** auf — ihre Faktoren sind am Bild gefunden, nicht gerechnet.
 - Eine Datei kann mehrere Flächen tragen. Getrennte Teile **einer** Fläche dürfen sich nicht berühren —
   beim Füllen fällt der Strich weg, Berührendes verschmilzt.
 - Kreis: `Point` + `properties.radius`. Sichel: zusätzlich `properties.cutout`.
 - Höhe einer Sichel = 2 × Radius. Der oberste Punkt ist der Scheitel des äußeren Kreises, nicht die
   Hornspitze.
-- Sterne haben drei Bilder: eins, zwei, mehr als zwei.
+- Sterne haben sechs Bilder: eins, zwei, drei, vier, fünf, Haufen. Der Haufen steht für alles ab
+  sechs und zeigt keine zählbare Zahl.
 - Ein Kreis mit **zwei Farben** ist geteilt: eigene Datei `geteilter-kreis`, zwei Halbscheiben (oben,
   unten). Der volle Kreis bleibt `kreis`. `sketchOf` wählt nach der Farbanzahl — wie der Stern nach der
   Anzahl. Eine Flagge mit zwei echten Kreisen wäre damit abgedeckt, solange beide dieselbe Farbe haben.
@@ -43,41 +46,42 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 
 ## Platzieren
 
-- Größe und Mittelpunkte der Geschwister im selben Feld, je Anzahl:
+- **Alle** Größenfaktoren stehen an einer Stelle: `CONTAINERS` im Generator. Ein Behälter je Zeile,
+  ein Wert je Kinderzahl. Das Rasterfeld steht als `Segment` mit drin — es ist der äußerste Behälter,
+  den jedes Element durchläuft.
 
   ```
-  1   Faktor 0,8    Mitte 0
-  2   Faktor 0,8    ∓10
-  3   Faktor 0,56   ∓20 · 0
-  4   Faktor 0,44   ∓22,5 · ∓7,5
+            1 Kind   2       3       4
+  Segment   0,8      0,8     0,56    0,44
+  Raute     1,12     1,12    0,784   0,616
+  Kreis     0,875    0,625   0,394   0,309
   ```
 
-- Die Größe trägt zweierlei in einer Zahl: den geteilten Platz (1,0 · 1,0 · 0,7 · 0,55) und die Luft
-  zum Feldrand (× 0,8). Sie ist damit **je Anzahl** einstellbar. Die Verkleinerung wirkt wie ein Rand
-  ringsum, weil die Dateien um den Nullpunkt zentriert sind; der Versatz bleibt unberührt.
-- Größen stehen beim Platzieren, nicht in den Dateien — sonst müsste man alle anfassen, wenn man es
-  sich anders überlegt.
-
-- Keine Messung der einzelnen Datei. Größen und Versätze rechnen mit einem Kasten von **40 × 40** —
-  nicht mit den 60 × 40, die eine Datei haben darf. Das ist Absicht: Der schlechteste Fall würde
-  alles kleiner machen, auch die schmalen Figuren, die es nicht nötig haben. Der Preis ist die
-  Bedingung oben — breitere Elemente bleiben aus Behältern und Geschwistergruppen heraus, bis diese
-  Faktoren nachgerechnet sind.
-- **Behälter** und der Faktor für ihren Inhalt, je nach Anzahl der Kinder:
+- Die gezeichnete Größe ist das **Produkt dieser Faktoren von außen nach innen**, mal den Koordinaten
+  der Datei. Brasiliens Schrift zu zweit im Kreis in der Raute: `0,8 · 1,12 · 0,625 = 0,56`.
+- `OFFSETS` trägt nur die **Orte**, keine Größen, je nach Anzahl der Geschwister:
 
   ```
-            1 Kind   2      3      4
-  Raute     0,7      0,7    0,7    0,7
-  Kreis     0,7      0,5    0,45   0,45
+  1   Mitte 0
+  2   ∓10
+  3   ∓20 · 0
+  4   ∓22,5 · ∓7,5
   ```
 
-- Beim Kreis ist die Grenze gerechnet: Der Kasten eines Elements ist 40 × 40, seine äußere Ecke muss
-  im Radius bleiben. Bei einem Kind ist das die halbe Diagonale — `40k/√2 ≤ 20`, also `k ≤ 0,707`;
-  mit Versatz sinkt es auf 0,52 · 0,48 · 0,49. Die Raute ist am Bild gefunden, ihre Ecken laufen
-  spitz zu.
-- Für einen Kasten von 60 × 40 sähe dieselbe Rechnung anders aus: halbe Diagonale
-  `√(30² + 20²) = 36,06`, also `k ≤ 0,555` statt 0,707. Deshalb die Bedingung — nicht weil breite
-  Elemente unmöglich wären, sondern weil ihre Faktoren nicht gerechnet sind.
+- Ein Versatz skaliert mit dem Kasten, in dem er steht — also mit dem Faktor des Behälters, nicht
+  mit dem des Elements selbst.
+- Die Zahlen des `Segment` tragen zweierlei: den geteilten Platz (1,0 · 1,0 · 0,7 · 0,55) und die Luft
+  zum Feldrand (× 0,8). Beides in einer Zahl heißt: Die Luft ist **je Anzahl** einstellbar, ohne eine
+  Datei anzufassen.
+- Keine Messung der einzelnen Datei. Gerechnet wird mit einem Kasten von **40 × 40** — nicht mit den
+  60 × 40, die eine Datei haben darf. Der schlechteste Fall würde sonst alles kleiner machen, auch die
+  schmalen Figuren, die es nicht nötig haben.
+- Beim Kreis ist die Grenze ausrechenbar: Die äußere Ecke des Kastens muss im Radius 25 bleiben. Bei
+  einem Kind ist das die halbe Diagonale — `40k/√2 ≤ 25`, also `k ≤ 0,884`; eingetragen ist 0,875. Bei
+  mehreren kommt der Versatz dazu, die Grenzen sinken. Die Raute ist am Bild gefunden, ihre Ecken
+  laufen spitz zu.
+- Ändert man einen Behälter, ändern sich **alle vier** seiner Zahlen mit — sonst verschiebt sich nur
+  der Fall mit dieser Kinderzahl gegen die anderen.
 - Das Kind erbt die ganze Kette.
 - Ein Element hängt am **letzten Behälter davor im selben Feld**; gibt es keinen, am Feld.
 - Gezeichnet wird in **Spaltenreihenfolge** E1 → E4, von hinten nach vorn.

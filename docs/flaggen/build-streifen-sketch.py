@@ -15,9 +15,9 @@ Konvention (siehe Flaggen-Deck.md):
   * Das Seitenverhaeltnis ist immer 3:2 -- die Skizze wird in ein 3:2-Feld eingepasst,
     ein anderes Verhaeltnis wuerde gestaucht.
   * Die Leinwand ist IMMER 180 x 120. Sie ist keine Kosmetik: SketchPane rechnet das
-    3x3-Raster als Drittel der zuerst geladenen Skizze, und Elementdateien sind auf ein
-    Feld von 60 x 40 normiert. Eine abweichende Leinwand macht jedes angehaengte Element
-    ein wenig zu klein.
+    3x3-Raster als Drittel der zuerst geladenen Skizze, und die Groesse eines angehaengten
+    Elements ergibt sich aus diesem Raster. Eine abweichende Leinwand verzieht jedes
+    Element.
   * Dezimalstellen bei Streifenzahlen, die 120 nicht teilen, sind Absicht und harmlos:
     Der Leser liest double, und Unterkante i und Oberkante i+1 tragen denselben Wert,
     es kann also keine Luecke entstehen.
