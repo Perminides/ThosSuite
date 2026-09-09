@@ -57,12 +57,15 @@ public class FlagDeckGenerator {
 			"Links unten vom Zentrum", "Unten vom Zentrum", "Rechts unten vom Zentrum", "Verstreut");
 
 	/** Index = Wert der Spalte „Dreieck von links?". Wert 0 heißt „kein Dreieck". */
+	/** Die dritte Antwort der Kreuz-und-Diagonale-Frage. Steht dreimal, deshalb als Konstante. */
+	private static final String KEIN_KREUZ = "Keine Diagonale oder Kreuz";
+
 	private static final List<String> DREIECK_FORMEN = List.of(
-			"Nein",
-			"Ja und zwar nur in der linken Hälfte",
-			"Ja, aber es ist eher ein Trapez als ein Dreieck",
-			"Ja und zwar bis zum rechten Rand",
-			"Ja, aber dieses Dreiecksgebilde geht in eine waagerechte Spur bis zum rechten Rand über");
+			"Kein Dreieck",
+			"Dreieck nur in der linken Hälfte",
+			"Eher ein Trapez als ein Dreieck",
+			"Dreieck bis zum rechten Rand",
+			"Das Dreiecksgebilde geht in eine waagerechte Spur bis zum rechten Rand über");
 
 	/** Feste Anzeige-Reihenfolge der Dreiecksfrage: Werte 0, 1, 3, 2, 4. */
 	private static final List<String> DREIECK_ANZEIGE = List.of(
@@ -150,48 +153,56 @@ public class FlagDeckGenerator {
 			"Kreis", "kreis", "Raute", "raute", "Schrift", "schrift-t", "Mond", "sichel",
 			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog", "Emblem", "emblem",
 			"Vogel", "vogel", "Sonne", "sonne", "Union Jack", "union-jack",
-			"Dreizack", "dreizack", "Muster", "muster");
+			"Dreizack", "dreizack", "Muster", "muster", "Drache", "drache");
+
+	/** Das Rasterfeld als Behälter — der äußerste, den jedes Element durchläuft. */
+	private static final String SEGMENT = "Segment";
 
 	/**
-	 * Grundgröße einzelner Elemente, ohne Eintrag 1,0. Manche Figuren sind von Natur aus groß —
-	 * Brasiliens Raute spannt fast die halbe Flagge, ein Stern tut das nie.
+	 * <b>Alle Größenfaktoren, und zwar alle.</b> Ein Behälter, eine Zeile, ein Wert je Kinderzahl
+	 * (Index = Anzahl − 1). Die gezeichnete Größe einer Figur ist das Produkt dieser Faktoren vom
+	 * Rasterfeld nach innen, mal den Koordinaten ihrer Datei:
 	 *
-	 * <p>Sie wirkt auf das Element selbst <b>und</b> auf alles, was darin liegt: Wächst die Raute,
-	 * wächst der Kreis darin mit, sonst verschöben sich die Verhältnisse.</p>
-	 */
-	private static final Map<String, Double> ELEMENT_SIZE = Map.of("Raute", 2d);
-
-	/**
-	 * Behälter und der Faktor, mit dem ihr Inhalt gezeichnet wird — je nach <b>Anzahl der Kinder</b>,
-	 * denn mit jedem weiteren rückt der Inhalt nach außen.
+	 * <pre>
+	 * Burundi     Kreis     im Segment, allein         0,8
+	 *             Sterne    im Kreis, allein           0,8 · 0,875   = 0,7
+	 * Brasilien   Raute     im Segment, allein         0,8
+	 *             Kreis     in der Raute, allein       0,8 · 1,12    = 0,896
+	 *             Schrift   im Kreis, zu zweit         0,8 · 1,12 · 0,625 = 0,56
+	 * </pre>
+	 *
+	 * <p>Das Rasterfeld steht als {@code Segment} mit in der Tabelle: Es ist der äußerste Behälter,
+	 * und seine Zahlen tragen zweierlei — den Platz, den sich n Figuren im 60 breiten Feld teilen
+	 * müssen, und die Luft zum Feldrand. Ohne die Luft wären es 1,0 · 1,0 · 0,7 · 0,55. Beides in
+	 * einer Zahl heißt auch: Die Luft ist je Anzahl einstellbar, ohne eine Datei anzufassen.</p>
 	 *
 	 * <p>Beim Kreis ist die Grenze ausrechenbar: Ein Element bringt seinen Kasten von 40 × 40 mit,
 	 * und dessen äußere Ecke muss innerhalb des Radius bleiben. Bei einem Kind ist das die halbe
-	 * Diagonale, {@code 40k/√2 ≤ 20}, also {@code k ≤ 0,707}. Bei mehreren kommt der Versatz dazu
-	 * und die Grenzen sinken auf 0,52 · 0,48 · 0,49. Eingetragen ist jeweils etwas darunter.</p>
+	 * Diagonale, {@code 40 · k / √2 ≤ 25}, also {@code k ≤ 0,884}. Eingetragen ist 0,875. Bei
+	 * mehreren kommt der Versatz dazu und die Grenzen sinken.</p>
 	 *
-	 * <p>Eine Elementdatei <b>darf</b> 60 × 40 groß sein — die Rechnung hier geht trotzdem von 40 aus,
-	 * sonst würde der schlechteste Fall alle schmalen Figuren mitverkleinern. Ein Element, das breiter
-	 * als 40 ist, gehört deshalb nicht in einen Behälter, solange diese Faktoren nicht nachgerechnet
-	 * sind ({@code k ≤ 0,555} statt 0,707).</p>
+	 * <p>Eine Elementdatei <b>darf</b> 60 × 40 groß sein — die Rechnung geht trotzdem von 40 aus,
+	 * sonst würde der schlechteste Fall alle schmalen Figuren mitverkleinern. Ein Element, das
+	 * breiter als 40 ist, gehört deshalb nicht in einen Behälter.</p>
 	 *
 	 * <p>Die Raute ist nicht gerechnet, sondern am Bild gefunden — ihre Ecken laufen spitz zu, da
 	 * gilt die Kastenregel nicht.</p>
 	 */
 	private static final Map<String, double[]> CONTAINERS = Map.of(
-			"Raute", new double[] {0.7, 0.7, 0.7, 0.7},
-			"Kreis", new double[] {0.7, 0.5, 0.45, 0.45});
+			SEGMENT, new double[] {0.8, 0.8, 0.56, 0.44},
+			"Raute", new double[] {1.12, 1.12, 0.784, 0.616},
+			"Kreis", new double[] {0.875, 0.625, 0.394, 0.309});
 
 	/**
-	 * Geschwister im selben Feld: Größe und Mittelpunkte, je nach Anzahl. Keine Messung der
-	 * einzelnen Datei — gerechnet wird mit einem Kasten von 40 × 40, auch wenn eine Datei bis zu
-	 * 60 × 40 groß sein darf.
-	 *
-	 * <p>Die Größe trägt zweierlei in einer Zahl: den Platz, den sich n Figuren im 60 breiten Feld
-	 * teilen müssen, und die Luft zum Feldrand — eine Figur, die oben genau anstößt, sieht in der Gösch
-	 * schlecht aus. Ohne die Luft wären es 1,0 · 1,0 · 0,7 · 0,55. Dass beides in einer Zahl steht,
-	 * heißt auch: Die Luft ist je Anzahl einstellbar.</p>
+	 * Wo die Geschwister im Kasten ihres Behälters sitzen, je nach Anzahl. Keine Größen — Orte.
+	 * Sie skalieren mit dem Kasten, also mit dem Faktor des Behälters.
 	 */
+	private static final Map<Integer, double[]> OFFSETS = Map.of(
+			1, new double[] {0},
+			2, new double[] {-10, 10},
+			3, new double[] {-20, 0, 20},
+			4, new double[] {-22.5, -7.5, 7.5, 22.5});
+
 	/**
 	 * Der Zahlenblock der Kartenkarten: {@code 10000 + Karten-Id}. Ein eigener Block, weil die
 	 * handgeschriebenen Zusatzfragen in der zweiten Deck-Datei ihre Nummern von Hand bekommen — der
@@ -215,12 +226,6 @@ public class FlagDeckGenerator {
 	private static final List<int[]> VERSTREUT = List.of(
 			new int[] {0, 5, 7}, new int[] {1, 3, 8}, new int[] {2, 3, 7},
 			new int[] {1, 5, 6}, new int[] {0, 5, 6}, new int[] {2, 4, 7});
-
-	private static final Map<Integer, double[]> SIBLINGS = Map.of(
-			1, new double[] {0.8,  0},
-			2, new double[] {0.8,  -10, 10},
-			3, new double[] {0.56, -20, 0, 20},
-			4, new double[] {0.44, -22.5, -7.5, 7.5, 22.5});
 
 	private final FlagSheet sheet;
 	private final Map<String, Integer> areas = new LinkedHashMap<>();
@@ -283,15 +288,19 @@ public class FlagDeckGenerator {
 
 		ask(steps, "Welche Form hat die Flagge?",
 				answer(rectangular(row), "Rechteckig", "Nicht rechteckig", "Quadratisch"));
-		ask(steps, "Hat die Flagge einen Rahmen?", answer(frame(row) ? "Ja" : "Nein", "Ja", "Nein"));
+		ask(steps, "Hat die Flagge einen Rahmen?", answer(frame(row) ? "Ja, sie hat einen Rahmen" : "Kein Rahmen",
+				"Ja, sie hat einen Rahmen", "Kein Rahmen"));
 
 		// Kreuz und Diagonale vorweg — sonst würde ihr linker Arm mit einem Dreieck von links verwechselt.
 		String typeCell = sheet.value(row, "Hintergrundtyp");
 		String type = untolerated(typeCell);
-		String vorweg = type.equals("2") ? "Kreuz" : type.equals("3") ? "Diagonale" : "Nein";
+		// Der Zweig haengt am Typ, nicht am Antworttext: Sonst bricht ein Umbenennen der Option
+		// still den Ablauf, statt nur die Anzeige zu aendern.
+		boolean geteilt = type.equals("2") || type.equals("3");
+		String vorweg = type.equals("2") ? "Kreuz" : type.equals("3") ? "Diagonale" : KEIN_KREUZ;
 		ask(steps, "Teilt ein Kreuz oder eine Diagonale die Flagge, wenn Du Zusatzelemente und Rahmen ignorierst?",
-				answer(vorweg, "Kreuz", "Diagonale", "Nein"));
-		if (vorweg.equals("Nein"))
+				answer(vorweg, "Kreuz", "Diagonale", KEIN_KREUZ));
+		if (!geteilt)
 			ask(steps, "Entferne gedanklich eine Dreiecksstruktur von links, eine Gösch, alle "
 					+ "Zusatzelemente und einen Rahmen. Was beschreibt nun den Hintergrund am besten?",
 					answer(BACKGROUNDS.get(type), backgroundTolerated(typeCell),
@@ -310,22 +319,31 @@ public class FlagDeckGenerator {
 		if (!type.equals("7")) {
 			// Gösch nach der Göschfrage auflegen (Leinwand-Silhouette, cell = -1).
 			boolean goesch = sheet.value(row, "Gösch?").equals("1");
-			ask(steps, "Hat die Flagge eine Gösch?", answer(goesch ? "Ja" : "Nein", "Ja", "Nein"));
+			ask(steps, "Hat die Flagge eine Gösch?", answer(goesch ? "Ja, sie hat einen Gösch" : "Kein Gösch", "Ja, sie hat einen Gösch", "Kein Gösch"));
 			if (goesch)
 				paint("goesch", fills, canvas.overlay("goesch", "-1"), colors(sheet.value(row, "Gösch Farbe")));
 
-			// Dreieck nach der Dreieckfrage auflegen.
-			String dreieck = sheet.value(row, "Dreieck von links?");
-			int dreieckForm = FlagSheet.isSet(dreieck) ? Integer.parseInt(dreieck) : 0;
-			ask(steps, "Schiebt sich eine dreiecksähnliche Form von ganz links in die Flagge?",
-					fixedOrder(DREIECK_FORMEN.get(dreieckForm), DREIECK_ANZEIGE.toArray(new String[0])));
-			if (dreieckForm != 0) {
-				ask(steps, "Die Dreiecksform(en) bestehen aus wie vielen Farben?",
-						fixedOrder(sheet.value(row, "Die Dreiecksform(en) bestehen aus wie vielen Farben?"),
-								"1", "2", "3", "4"));
-				String dreieckSketch = "dreieck-" + dreieckForm;
-				paint(dreieckSketch, fills, canvas.overlay(dreieckSketch, "-1"),
-						colors(sheet.value(row, "Dreieck Farbe")));
+			// Bei einer Schräge ist die untere linke Hälfte selbst ein Dreieck von links; wer richtig
+			// hinsieht, bekäme falsch. Beim senkrechten Kreuz gilt das nicht — dort trägt aber keine
+			// Flagge ein Dreieck, und das Blatt sagt im ganzen Zweig `x`. Also überall nicht fragen.
+			if (type.equals("2") || type.equals("3")) {
+				if (FlagSheet.isSet(sheet.value(row, "Dreieck von links?")))
+					throw new RuntimeException("Kreuz oder Diagonale mit einem Dreieck von links — die"
+							+ " Frage entfällt hier, das Dreieck würde also still verschwinden");
+			} else {
+				// Dreieck nach der Dreieckfrage auflegen.
+				String dreieck = sheet.value(row, "Dreieck von links?");
+				int dreieckForm = FlagSheet.isSet(dreieck) ? Integer.parseInt(dreieck) : 0;
+				ask(steps, "Schiebt sich eine dreiecksähnliche Form von ganz links in die Flagge?",
+						fixedOrder(DREIECK_FORMEN.get(dreieckForm), DREIECK_ANZEIGE.toArray(new String[0])));
+				if (dreieckForm != 0) {
+					ask(steps, "Die Dreiecksform(en) bestehen aus wie vielen Farben?",
+							fixedOrder(sheet.value(row, "Die Dreiecksform(en) bestehen aus wie vielen Farben?"),
+									"1", "2", "3", "4"));
+					String dreieckSketch = "dreieck-" + dreieckForm;
+					paint(dreieckSketch, fills, canvas.overlay(dreieckSketch, "-1"),
+							colors(sheet.value(row, "Dreieck Farbe")));
+				}
 			}
 		}
 
@@ -477,7 +495,8 @@ public class FlagDeckGenerator {
 			// Annahme "ungeteilt". Geteilt ist er genau dann, wenn zwei Farben im Blatt stehen.
 			if (element.name().equals("Kreis"))
 				ask(steps, "Ist der Kreis geteilt?",
-						answer(colors(element.color()).liste().size() == 2 ? "Ja" : "Nein", "Ja", "Nein"));
+						answer(colors(element.color()).liste().size() == 2 ? "Ja, der Kreis ist geteilt" : "Ungeteilter Kreis",
+						"Ja, der Kreis ist geteilt", "Ungeteilter Kreis"));
 		});
 
 		shuffled(steps, elements, element ->
@@ -676,32 +695,22 @@ public class FlagDeckGenerator {
 				}
 		}
 
-		// "Verfuegbar" ist der Faktor des Kastens, den sich die Geschwister teilen: 1 im Rasterfeld,
-		// sonst die Kette der Behaelterfaktoren. Der Faktor eines Behaelters haengt daran, wie viele
-		// Kinder er traegt -- deshalb erst zaehlen, dann rechnen.
-		double[] available = new double[elements.size()];
+		// Der Faktor ist das laufende Produkt der Behaelter von aussen nach innen. Das Rasterfeld
+		// zaehlt als aeusserster Behaelter mit, deshalb faengt die Kette nicht bei 1 an.
+		double[] faktor = new double[elements.size()];
+		double[] kasten = new double[elements.size()];      // der Kasten, in dem die Figur sitzt
 		for (int i = 0; i < elements.size(); i++) {
-			if (parent[i] < 0) {
-				available[i] = ELEMENT_SIZE.getOrDefault(elements.get(i).name(), 1.0);
-				continue;
-			}
-			int kinder = 0;
-			for (int j = 0; j < elements.size(); j++)
-				if (parent[j] == parent[i])
-					kinder++;
-			available[i] = available[parent[i]]
-					* CONTAINERS.get(elements.get(parent[i]).name())[Math.min(kinder, 4) - 1];
+			kasten[i] = parent[i] < 0 ? 1.0 : faktor[parent[i]];
+			String behaelter = parent[i] < 0 ? SEGMENT : elements.get(parent[i]).name();
+			int anzahl = Math.min(gruppe(elements, parent, i).size(), 4);
+			faktor[i] = kasten[i] * CONTAINERS.get(behaelter)[anzahl - 1];
 		}
 
 		for (int i = 0; i < elements.size(); i++) {
 			Element element = elements.get(i);
-			List<Integer> group = new ArrayList<>();
-			for (int j = 0; j < elements.size(); j++)
-				if (parent[j] == parent[i] && elements.get(j).position().equals(element.position()))
-					group.add(j);
-			double[] regel = SIBLINGS.get(Math.min(group.size(), 4));
-			double size = available[i] * regel[0];
-			double offset = regel[1 + group.indexOf(i)] * available[i];
+			List<Integer> group = gruppe(elements, parent, i);
+			double size = faktor[i];
+			double offset = OFFSETS.get(Math.min(group.size(), 4))[group.indexOf(i)] * kasten[i];
 
 			if (untolerated(element.position()).equals(VERSTREUT_ORT)) {
 				List<String> placements = new ArrayList<>();
@@ -729,6 +738,16 @@ public class FlagDeckGenerator {
 				placement += "," + number(offset) + ",0";
 			result.add(new Layout(element, sketchOf(element, false), List.of(placement)));
 		}
+		return result;
+	}
+
+	/** Die Figuren, die sich denselben Kasten teilen: gleicher Behälter, gleiches Rasterfeld. */
+	private static List<Integer> gruppe(List<Element> elements, int[] parent, int i) {
+		List<Integer> result = new ArrayList<>();
+		for (int j = 0; j < elements.size(); j++)
+			if (parent[j] == parent[i]
+					&& elements.get(j).position().equals(elements.get(i).position()))
+				result.add(j);
 		return result;
 	}
 
@@ -777,7 +796,16 @@ public class FlagDeckGenerator {
 				return "stern";
 			int count = element.count().isEmpty() || element.count().equals("x")
 					? 1 : Integer.parseInt(element.count());
-			return count == 1 ? "stern" : count == 2 ? "stern-zwei" : "stern-haufen";
+			// Bis fuenf zeigt die Skizze die echte Anzahl -- so weit erfasst man sie auf einen Blick.
+			// Darueber liest man ohnehin nur "viele", und der Haufen sagt genau das.
+			return switch (count) {
+				case 1 -> "stern";
+				case 2 -> "stern-zwei";
+				case 3 -> "stern-drei";
+				case 4 -> "stern-vier";
+				case 5 -> "stern-fuenf";
+				default -> "stern-haufen";
+			};
 		}
 		// Zwei Farben heißt: der Kreis ist geteilt — dann die zweiflächige Halbscheiben-Datei.
 		if (element.name().equals("Kreis") && colors(element.color()).liste().size() == 2)

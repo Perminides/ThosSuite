@@ -195,7 +195,7 @@ def schreibe(zielordner, art):
     if art not in MASSE:
         raise SystemExit("Nur element oder hintergrund, nicht: " + art)
     w, h = MASSE[art]
-    hinweis = ("Elementdatei: um den Nullpunkt zentriert, Faktor 1,0 fuellt ein Rasterfeld."
+    hinweis = ("Elementdatei: um den Nullpunkt zentriert, ein Rasterfeld gross (60 x 40)."
                " Die Farben stehen in properties.farbe fest und werden nicht gefragt."
                if art == "element" else "Hintergrunddatei: fuellt die Leinwand 180 x 120.")
     features = [json.dumps(f, ensure_ascii=False) for f in zeichne(w, h, art)]

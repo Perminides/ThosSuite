@@ -321,7 +321,7 @@ def schreibe(zielordner, name, alle):
     kopf = ['{',
             '"type": "FeatureCollection",',
             '"name": "%s",' % name,
-            '"comment": "Aus einem SVG-Piktogramm erzeugt: um den Nullpunkt zentriert, Faktor 1,0 fuellt ein Rasterfeld.",',
+            '"comment": "Aus einem SVG-Piktogramm erzeugt: um den Nullpunkt zentriert, in ein Rasterfeld eingepasst.",',
             '"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },',
             '"features": [']
     text = NL.join(kopf) + NL + json.dumps(feature) + NL + "]" + NL + "}" + NL

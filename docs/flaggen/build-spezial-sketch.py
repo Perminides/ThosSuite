@@ -33,10 +33,11 @@ def punkte(folge):
     return [[runde(x), runde(-y)] for x, y in folge]
 
 
-def flaeche(nummer, folge):
-    ring = punkte(folge)
+def flaeche(nummer, *teile):
+    """Eine Flaeche aus einem oder mehreren getrennten Stuecken."""
+    ringe = [punkte(folge) for folge in teile]
     return {"type": "Feature", "properties": {"id": nummer},
-            "geometry": {"type": "MultiPolygon", "coordinates": [[ring + [ring[0]]]]}}
+            "geometry": {"type": "MultiPolygon", "coordinates": [[r + [r[0]]] for r in ringe]}}
 
 
 def zackenkante(grund, spitze, anzahl):
@@ -69,7 +70,26 @@ def gezackt():
     return [flaeche(0, mast), flaeche(1, flug)]
 
 
-SPEZIAL = {"spezial-1": gezackt}
+def bosnisches_dreieck():
+    """Bosnien und Herzegowina: ein gelbes Dreieck auf blauem Grund, ohne die Sterne.
+
+    Die Ecken stehen so in der Flaggen-SVG (viewBox 16 x 8): 4,24 und 12,24 auf der Oberkante,
+    die senkrechte Seite hinunter bis zur Unterkante. Auf 180 uebertragen sind das 47,7 und
+    137,7 -- die Grundseite bleibt damit exakt 90, also die halbe Breite.
+
+    Das Blau ist **zwei Stuecke**: Links und rechts des Dreiecks haengen sie nur an dessen unterer
+    Ecke zusammen. Ein einziger Ring muesste sich dort selbst beruehren -- zwei Stuecke sagen
+    dasselbe, ohne zu schummeln.
+
+    Die neun Sterne laengs der Schraege sind ein eigenes Element im Blatt und gehoeren nicht hierher.
+    """
+    links, rechts = BREITE * 4.24 / 16, BREITE * 12.24 / 16
+    return [flaeche(0, [(0, 0), (links, 0), (rechts, HOEHE), (0, HOEHE)],
+                       [(rechts, 0), (BREITE, 0), (BREITE, HOEHE), (rechts, HOEHE)]),
+            flaeche(1, [(links, 0), (rechts, 0), (rechts, HOEHE)])]
+
+
+SPEZIAL = {"spezial-1": gezackt, "spezial-2": bosnisches_dreieck}
 
 
 def schreibe(zielordner, name):

@@ -4,10 +4,11 @@ Aufruf:
     python build-element-sketch.py <zielordner>
 
 Konvention (siehe Flaggen-Deck.md, §5):
-  * Elementdateien sind um den Nullpunkt **zentriert**: |x| <= 30, |y| <= 20. Damit bleibt
-    beim Skalieren der Mittelpunkt stehen -- Groesse und Lage haengen nicht aneinander.
-    Hintergrunddateien sind das Gegenteil: Sie fuellen die Leinwand 0..180 / -120..0.
-  * Faktor 1,0 heisst "fuellt ein Rasterfeld" (60 x 40). Groesser ist erlaubt.
+  * Elementdateien sind um den Nullpunkt **zentriert**. Damit bleibt beim Skalieren der
+    Mittelpunkt stehen -- Groesse und Lage haengen nicht aneinander. Hintergrunddateien sind
+    das Gegenteil: Sie fuellen die Leinwand 0..180 / -120..0.
+  * Die Datei traegt ihre natuerliche Groesse. Die meisten fuellen ein Rasterfeld (60 x 40);
+    Kreis und Raute sind groesser, weil ihre Figuren es sind. Kein Groessenfaktor im Generator.
   * Y ist positiv nach oben, der Leser invertiert beim Einlesen.
   * In properties steht nur die Flaechennummer, bei Kreisen zusaetzlich der Radius.
   * Eine Datei kann mehrere Flaechen tragen; eine Flaeche kann aus mehreren getrennten
@@ -69,8 +70,13 @@ def kreisflaeche(nummer, cx, cy, radius):
 
 # --- die Elemente ------------------------------------------------------------
 def kreis():
-    """Rund bleibt rund: Point plus radius, kein Vieleck. Die Hoehe begrenzt ihn, nicht die Breite."""
-    return [kreisflaeche(0, 0, 0, FELD_Y)]
+    """Rund bleibt rund: Point plus radius, kein Vieleck.
+
+    Radius 25 statt der 20 eines Rasterfeldes: Der Kreis ist von Natur aus gross, und wo er einen
+    Behaelter abgibt, brauchen seine Kinder Platz. Die Groesse steht hier und nicht als Faktor im
+    Generator -- eine Datei sagt selbst, wie gross ihre Figur ist.
+    """
+    return [kreisflaeche(0, 0, 0, 25.0)]
 
 
 def einzelstern():
@@ -78,7 +84,8 @@ def einzelstern():
 
 
 def raute():
-    return [flaeche(0, [ring([(0, FELD_Y), (FELD_X, 0), (0, -FELD_Y), (-FELD_X, 0)])])]
+    """Zwei Rasterfelder breit und hoch -- Brasiliens Raute spannt fast die halbe Flagge."""
+    return [flaeche(0, [ring([(0, 2 * FELD_Y), (2 * FELD_X, 0), (0, -2 * FELD_Y), (-2 * FELD_X, 0)])])]
 
 
 def schrift_t():
@@ -96,15 +103,37 @@ def plus(cx, cy, staerke, laenge):
                  (cx - d, cy - d), (cx - l, cy - d), (cx - l, cy + d), (cx - d, cy + d)])
 
 
-def sternhaufen():
-    """Mehr als zwei Sterne: drei nach unten rechts versetzte plus ein grosses Plus oben rechts.
+def dreisterne():
+    """Drei im Dreieck, Spitze oben -- die haeufigste echte Anordnung."""
+    return [flaeche(0, [stern(0, 9, 7.5), stern(-10, -7, 7.5), stern(10, -7, 7.5)])]
 
-    Die Figur bleibt annaehernd quadratisch. Breit auseinandergezogen wuerde sie beim
-    Verkleinern unnoetig klein, weil der Faktor an der breitesten Stelle haengt.
+
+def viersterne():
+    """Vier im Quadrat. Eine Raute waere die Alternative, sie kollidiert aber mit dem Element."""
+    return [flaeche(0, [stern(x, y, 7) for x in (-10, 10) for y in (-9, 9)])]
+
+
+def fuenfsterne():
+    """Fuenf im gleichmaessigen Ring, einer oben."""
+    return [flaeche(0, [stern(12 * math.cos(math.radians(90 + i * 72)),
+                              12 * math.sin(math.radians(90 + i * 72)), 6) for i in range(5)])]
+
+
+# Acht Mittelpunkte, per Ablehnungsprobe mit festem Startwert gesetzt und danach eingefroren:
+# zufaellig aussehend, aber bei jedem Lauf gleich. Der kleinste Spalt betraegt 1,5 -- so beruehrt
+# sich nichts und beim Fuellen verschmilzt nichts zu einem Klecks.
+HAUFEN = [(2.15, -9.33), (-14.61, 4.33), (11.15, -4.26), (4.16, 7.54),
+          (-15.47, -5.86), (-4.62, 1.03), (16.66, 5.76), (-6.12, 10.42)]
+
+
+def sternhaufen():
+    """Mehr als fuenf: ein ungeordneter Haufen.
+
+    Bis vier oder fuenf erfasst man eine Anzahl auf einen Blick, darueber liest man nur noch
+    "viele" -- genau da hoert die Skizze auf, genau zu sein. Acht sind es, aber bei Feldgroesse
+    zaehlt sie niemand nach; die Unordnung sagt, dass die Zahl nicht gemeint ist.
     """
-    r = 5.0
-    teile = [stern(-13, 4, r), stern(-4, -4, r), stern(5, -12, r), plus(11, 11, 3.0, 8.5)]
-    return [flaeche(0, zentriere(teile))]
+    return [flaeche(0, [stern(x, y, 4.0) for x, y in HAUFEN])]
 
 
 def zweisterne():
@@ -212,14 +241,15 @@ def muster():
 
 
 ELEMENTE = {"kreis": kreis, "sichel": sichel, "stern": einzelstern, "raute": raute, "schrift-t": schrift_t,
-            "stern-haufen": sternhaufen, "stern-zwei": zweisterne, "muster": muster}
+            "stern-haufen": sternhaufen, "stern-zwei": zweisterne, "muster": muster,
+            "stern-drei": dreisterne, "stern-vier": viersterne, "stern-fuenf": fuenfsterne}
 
 
 def schreibe(zielordner, name):
     kopf = ['{',
             '"type": "FeatureCollection",',
             '"name": "%s",' % name,
-            '"comment": "Elementdatei: um den Nullpunkt zentriert, Faktor 1,0 fuellt ein Rasterfeld.",',
+            '"comment": "Elementdatei: um den Nullpunkt zentriert, in ihrer natuerlichen Groesse.",',
             '"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },',
             '"features": [']
     features = [json.dumps(f) for f in ELEMENTE[name]()]
