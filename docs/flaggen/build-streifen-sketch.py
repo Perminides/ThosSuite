@@ -44,6 +44,10 @@ VERTEILUNG = {
     # Laos, Libanon, Libyen, Spanien), die uebrigen sind sanfter (Lesotho, Tadschikistan) oder
     # deutlich krasser (Belize). Eine Zahl fuer alle, wie ueberall sonst auch.
     ("waagerecht", 3, 1): [1, 2, 1],
+
+    # 3W = 3, "oberster breiter": 2:1:1. Hier muss nichts gemittelt werden -- Ecuador, Kolumbien
+    # und Ruanda, die einzigen drei mit diesem Wert, haben alle genau dieses Verhaeltnis.
+    ("waagerecht", 3, 3): [2, 1, 1],
 }
 
 

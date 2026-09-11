@@ -419,19 +419,46 @@ public class FlagDeckGenerator {
 	private record Element(String name, List<String> tolerated, String position, String color,
 			String count) {}
 
-	private List<Element> elements(List<String> row) {
+	/**
+	 * Was in E1 steht, wenn die Flagge keine Zusatzelemente hat — der Antworttext selbst und kein
+	 * Elementname. Die Elementfrage entfällt nie, sie hat dann eben diese Antwort. E2 bis E4 bleiben
+	 * dabei auf {@code x}: Die sprechen über einen unbelegten Platz, E1 über die Antwort.
+	 */
+	private static final String KEINE = "Keine";
+
+	/**
+	 * Die Elemente einer Zeile, dazu die Namen, die bei der Elementfrage der ganzen Zeile durchgehen
+	 * sollen. Getrennt, weil {@link #KEINE} kein Element ist, seine Klammer aber eine Toleranz trägt:
+	 * {@code Keine (Emblem)} duldet, wer bei Bolivien das Staatswappen erwartet.
+	 */
+	private record Elemente(List<Element> liste, List<String> toleriert) {}
+
+	private Elemente elements(List<String> row) {
 		List<Element> result = new ArrayList<>();
+		List<String> toleriert = List.of();
+		boolean keine = false;
 		for (int slot = 1; slot <= 4; slot++) {
 			String name = sheet.value(row, "E" + slot);
 			if (!FlagSheet.isSet(name))
 				continue;
 			String position = sheet.value(row, "E" + slot + " Position");
+			if (untolerated(name).equals(KEINE)) {
+				if (slot != 1)
+					throw new RuntimeException("'" + KEINE + "' steht nur in E1, hier aber in E" + slot);
+				if (!position.equals("x"))
+					throw new RuntimeException("'" + KEINE + "' hat keinen Ort, in 'E1 Position' steht: " + position);
+				keine = true;
+				toleriert = bracket(name);
+				continue;
+			}
 			if (position.equals("x"))
 				continue; // Kein Ort, kein Sketch, keine Frage — Ort und Element stehen immer gemeinsam auf 'x'
 			result.add(new Element(untolerated(name), bracket(name), position,
 					sheet.value(row, "E" + slot + " Farbe"), sheet.value(row, "E" + slot + " Anzahl")));
 		}
-		return result;
+		if (keine && !result.isEmpty())
+			throw new RuntimeException("'" + KEINE + "' und daneben ein echtes Element: " + result.get(0).name());
+		return new Elemente(result, toleriert);
 	}
 
 	/**
@@ -447,20 +474,29 @@ public class FlagDeckGenerator {
 	 * Farbe dasteht. Ein Element mit weniger Farben als Flächen (das ungefärbte Emblem) lässt seine
 	 * überzähligen Flächen aus — sie bleiben grau —, rückt die Flächennummer aber trotzdem vor.</p>
 	 */
-	private void elementFills(List<String> steps, Canvas canvas, List<Element> elements, List<Fill> fills, int id) {
+	private void elementFills(List<String> steps, Canvas canvas, Elemente elemente, List<Fill> fills, int id) {
+		List<Element> elements = elemente.liste();
 		List<String> names = new ArrayList<>();
 		for (Element element : elements)
 			if (!names.contains(element.name()))
 				names.add(element.name());
 		add(steps, "Output:Welche Zusatzelemente siehst Du?");
-		List<String> correct = names.isEmpty() ? List.of("Keine") : names;
+		List<String> correct = names.isEmpty() ? List.of(KEINE) : names;
 		// Toleriert: falsch, aber ohne Abbruch. Wer Ägyptens Adler für ein Emblem hält, liegt nicht
-		// wirklich daneben. Sie kommen aus der Klammer hinter dem Elementnamen.
+		// wirklich daneben. Sie kommen aus der Klammer hinter dem Elementnamen — und bei einer Flagge
+		// ohne Elemente aus der Klammer hinter dem 'Keine'.
 		List<String> tolerated = new ArrayList<>();
+		List<List<String>> quellen = new ArrayList<>();
+		quellen.add(elemente.toleriert());
 		for (Element element : elements)
-			for (String name : element.tolerated())
+			quellen.add(element.tolerated());
+		for (List<String> quelle : quellen)
+			for (String name : quelle) {
+				if (!ELEMENT_POOL.contains(name))
+					throw new RuntimeException("Kein Elementname in der Toleranzklammer: " + name);
 				if (!correct.contains(name) && !tolerated.contains(name))
 					tolerated.add(name);
+			}
 
 		// Ein Text darf nur einmal in der Frage stehen, sonst lehnt der MC-Parser sie ab. Deshalb
 		// prüft jede Runde gegen alles bereits Vergebene.

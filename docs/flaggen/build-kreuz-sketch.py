@@ -24,6 +24,7 @@ NL = chr(10)
 
 BREITE, HOEHE = 180.0, 120.0
 ARM = 20.0                  # Breite der Arme, senkrecht gemessen
+STREIFEN = 10.0             # ein Farbstreifen im dreifarbigen Arm; drei davon ergeben den Arm
 STELLEN = 3
 
 
@@ -32,11 +33,18 @@ def runde(wert):
     return int(wert) if float(wert).is_integer() else round(float(wert), STELLEN)
 
 
-def flaeche(nummer, punkte):
-    """Ein Ring; gerechnet wird in Tiefe von oben, geschrieben mit negativem y."""
-    ring = [[runde(x), runde(-h)] for x, h in punkte]
+def flaeche(nummer, *teile):
+    """Eine Flaeche aus einem oder mehreren getrennten Stuecken.
+
+    Gerechnet wird in Tiefe von oben, geschrieben mit negativem y.
+    """
+    ringe = [[[runde(x), runde(-h)] for x, h in folge] for folge in teile]
     return {"type": "Feature", "properties": {"id": nummer},
-            "geometry": {"type": "MultiPolygon", "coordinates": [[ring + [ring[0]]]]}}
+            "geometry": {"type": "MultiPolygon", "coordinates": [[r + [r[0]]] for r in ringe]}}
+
+
+def rechteck(x0, h0, x1, h1):
+    return [(x0, h0), (x1, h0), (x1, h1), (x0, h1)]
 
 
 def andreaskreuz():
@@ -68,7 +76,47 @@ def andreaskreuz():
             flaeche(4, kreuz)]
 
 
-KREUZE = {"kreuz-diagonal-uni": andreaskreuz}
+def dreifarbiges_kreuz():
+    """Dominica: ein senkrechtes Kreuz, dessen Arme aus drei parallelen Farbstreifen bestehen.
+
+    Die Frage im Deck heisst "drei parallele Farben" -- parallel und nicht geschachtelt. Das
+    unterscheidet die Antwort vom fimbrierten Kreuz, wo eine Farbe die andere umrandet. Die Skizze
+    muss diesen Unterschied tragen, sonst beantwortet sie die Frage nicht.
+
+    Der Arm ist mit 30 breiter als die 20 des einfarbigen Kreuzes. Drei Streifen zu je 10 bleiben
+    einzeln erkennbar; 20 durch 3 waere weder rund noch sichtbar. Die 10 gibt es im System schon.
+
+    Am Kreuzungspunkt liegt der **senkrechte** Arm oben. Damit bleibt jeder waagerechte Streifen
+    in zwei Stuecken stehen, links und rechts -- genau das Bild, das eine durchlaufende Spur ergibt.
+    Jede Farbe ist eine Flaeche, egal aus wie vielen Stuecken.
+
+    Nummeriert wird in Leserichtung: erst das Feld, dann die Streifen von links beziehungsweise von
+    oben. Dominica steht im Blatt mit `Gruen|Gelb|Schwarz|Weiss` -- ein Feld, dann drei Streifen.
+    """
+    links, rechts = BREITE / 2 - 1.5 * STREIFEN, BREITE / 2 + 1.5 * STREIFEN
+    oben, unten = HOEHE / 2 - 1.5 * STREIFEN, HOEHE / 2 + 1.5 * STREIFEN
+
+    feld = flaeche(0, rechteck(0, 0, links, oben), rechteck(rechts, 0, BREITE, oben),
+                   rechteck(0, unten, links, HOEHE), rechteck(rechts, unten, BREITE, HOEHE))
+
+    x = [links + i * STREIFEN for i in range(4)]        # Raender der senkrechten Streifen
+    h = [oben + i * STREIFEN for i in range(4)]         # Raender der waagerechten
+
+    # Der erste Streifen haengt links mit seiner waagerechten Spur zusammen, der letzte rechts;
+    # der mittlere steht allein. Deshalb drei Stuecklisten statt einer Schleife ueber alles.
+    erste = flaeche(1, [(x[0], 0), (x[1], 0), (x[1], HOEHE), (x[0], HOEHE), (x[0], h[1]),
+                        (0, h[1]), (0, h[0]), (x[0], h[0])],
+                    rechteck(rechts, h[0], BREITE, h[1]))
+    zweite = flaeche(2, rechteck(x[1], 0, x[2], HOEHE),
+                     rechteck(0, h[1], links, h[2]), rechteck(rechts, h[1], BREITE, h[2]))
+    dritte = flaeche(3, [(x[2], 0), (x[3], 0), (x[3], h[2]), (BREITE, h[2]), (BREITE, h[3]),
+                         (x[3], h[3]), (x[3], HOEHE), (x[2], HOEHE)],
+                     rechteck(0, h[2], links, h[3]))
+    return [feld, erste, zweite, dritte]
+
+
+KREUZE = {"kreuz-diagonal-uni": andreaskreuz,
+          "kreuz-senkrecht-dreifarbig": dreifarbiges_kreuz}
 
 
 def schreibe(zielordner, name):
