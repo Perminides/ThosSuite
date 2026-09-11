@@ -6,12 +6,16 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import app.shared.model.McMetrics;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.TextAlignment;
+import javafx.util.Duration;
 
 /**
  * A pane that shows up to 8 Multiple-Choice-Buttons. Three different layouts depending on font-size:
@@ -35,10 +39,21 @@ public class MultipleChoicePane extends Pane {
     private static final PseudoClass STATE_INCORRECT = PseudoClass.getPseudoClass("incorrect");
     private static final PseudoClass STATE_MARKED = PseudoClass.getPseudoClass("marked");
 
+    /**
+     * Der Ausschlag des Schüttelns, als Teiler der Knopfhöhe. Abgeleitet und nicht fest, damit er
+     * mit dem Skin wächst — die Höhe rechnet {@link McMetrics} aus Schrift und Rändern. Die Breite
+     * taugt dafür nicht, die kommt von außen aus dem Layout und sagt nichts über den Maßstab.
+     */
+    private static final double SHAKE_AMPLITUDE_DIVISOR = 8;
+
+    /** Fest, nicht abgeleitet: Zeitempfinden hängt nicht an der Pixelgröße. */
+    private static final Duration SHAKE_DURATION = Duration.millis(240);
+
     private final List<Button> buttons = new ArrayList<>();
     private final McMetrics metrics;
 
     private Consumer<Integer> listener;
+    private Timeline shake;
 
     /** Mit fester Lage — für absolut positionierende Hosts. Nur die Breite zählt, die Höhe ergibt sich. */
     public MultipleChoicePane(Rectangle2D bounds, McMetrics metrics) {
@@ -93,6 +108,7 @@ public class MultipleChoicePane extends Pane {
     }
 
     public void initiateMultipleChoice(List<String> answers) {
+        stopShake();
         for (int i = 0; i < 8; i++) {
             Button btn = buttons.get(i);
             String text = i < answers.size() ? answers.get(i) : "";
@@ -104,6 +120,7 @@ public class MultipleChoicePane extends Pane {
     }
 
     public void clearAndSetInactive() {
+        stopShake();
         for (Button btn : buttons) {
             btn.setText("");
             setButtonLogicState(btn, STATE_INACTIVE);
@@ -130,6 +147,44 @@ public class MultipleChoicePane extends Pane {
     /** Die Auswahl des Nutzers, solange sie noch nicht abgeschickt ist. */
     public void setMarked(int index, boolean marked) {
         setButtonLogicState(buttons.get(index), marked ? STATE_MARKED : STATE_ACTIVE);
+    }
+
+    /**
+     * Der Klick ist angekommen und wird nicht angenommen: Der Knopf schüttelt kurz den Kopf und
+     * steht danach wieder genau so da wie vorher.
+     *
+     * <p>Ohne Farbe. Grün und Rot heißen in der Auswahl „gewertet", und gewertet wird hier nichts.
+     * Bewegung ist der einzige Kanal, der noch keine zweite Bedeutung trägt, und sie ist von Natur
+     * aus flüchtig — sie kann also gar keinen Zustand hinterlassen.</p>
+     *
+     * <p>Verschoben wird über {@code translateX}. Die Knöpfe liegen absolut über {@code layoutX},
+     * das Layout merkt vom Ausschlag deshalb nichts.</p>
+     */
+    public void rejectClick(int index) {
+        Button btn = buttons.get(index);
+        stopShake();
+        double amplitude = metrics.buttonHeight() / SHAKE_AMPLITUDE_DIVISOR;
+        double[] stations = {amplitude, -amplitude, amplitude / 2, -amplitude / 2, 0};
+
+        KeyFrame[] frames = new KeyFrame[stations.length + 1];
+        frames[0] = new KeyFrame(Duration.ZERO, new KeyValue(btn.translateXProperty(), 0.0));
+        for (int i = 0; i < stations.length; i++)
+            frames[i + 1] = new KeyFrame(SHAKE_DURATION.multiply((i + 1.0) / stations.length),
+                    new KeyValue(btn.translateXProperty(), stations[i]));
+
+        shake = new Timeline(frames);
+        shake.setOnFinished(_ -> btn.setTranslateX(0));
+        shake.play();
+    }
+
+    /** Bricht ein laufendes Schütteln ab; ohne das bliebe ein Knopf verschoben stehen. */
+    private void stopShake() {
+        if (shake == null)
+            return;
+        shake.stop();
+        shake = null;
+        for (Button btn : buttons)
+            btn.setTranslateX(0);
     }
 
     public void addListener(Consumer<Integer> listener) {

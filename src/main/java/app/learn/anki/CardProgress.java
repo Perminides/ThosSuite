@@ -296,12 +296,12 @@ public class CardProgress {
 	    	return;
 
 	    if (step instanceof MCPlus) {
-	    	// Eine tolerierte Antwort haftet nicht. Sie zeigt sich falsch und bleibt aus der Auswahl
-	    	// heraus — sonst koennte man sie STATT der richtigen abschicken, und genau das soll sie
-	    	// nicht sein: nicht bestraft, aber auch nicht die gesuchte Antwort. Damit verhaelt sich
-	    	// der Sammelmodus hier wie der Einzelklick weiter unten.
+	    	// Eine tolerierte Antwort haftet nicht. Sie bleibt aus der Auswahl heraus — sonst koennte
+	    	// man sie STATT der richtigen abschicken, und genau das soll sie nicht sein: nicht
+	    	// bestraft, aber auch nicht die gesuchte Antwort. Damit verhaelt sich der Sammelmodus
+	    	// hier wie der Einzelklick weiter unten.
 	    	if (activeSessionMC.roleAt(index) == Role.TOLERATED) {
-	    		presenter.mcClickChecked(index, false);
+	    		presenter.mcClickRejected(index);
 	    		return;
 	    	}
 	    	// Sonst wird nur markiert — geprüft wird erst beim Absenden.
@@ -318,8 +318,8 @@ public class CardProgress {
 	    Role role = activeSessionMC.roleAt(index);
 
 	    if (role == Role.TOLERATED) {
-	    	// Falsch, aber kein Abbruch: markieren und weiter warten — wertungsfrei.
-	    	presenter.mcClickChecked(index, false);
+	    	// Falsch, aber kein Abbruch: der Knopf schuettelt kurz den Kopf, dann weiter warten.
+	    	presenter.mcClickRejected(index);
 	    	return;
 	    }
 

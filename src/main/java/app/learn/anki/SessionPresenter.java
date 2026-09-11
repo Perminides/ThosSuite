@@ -220,6 +220,11 @@ public class SessionPresenter {
 	void mcMarked(int id, boolean marked) {
 		view.setMcMarked(id, marked);
 	}
+
+	/** Angekommen, aber nicht angenommen — ohne Wertung und ohne bleibende Spur. */
+	void mcClickRejected(int id) {
+		view.rejectMcClick(id);
+	}
 	
 	void setCorrectMc(Set<Integer> correctIds) {
 		view.setMcSolution(correctIds);

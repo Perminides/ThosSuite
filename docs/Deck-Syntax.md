@@ -92,7 +92,9 @@ Nicht Syntax, aber die Antwort auf „warum tickt das so":
 - Ein `~`-Klick wird in beiden Typen als falsch **gezeigt**, aber nicht gewertet: In `MC` läuft die
   Karte weiter, in `MC+` landet er gar nicht erst in der Auswahl — sonst könnte man ihn *statt* der
   richtigen Antwort abschicken. `isFinallyCorrect` streicht ihn zusätzlich heraus.
-- Die `~`-Optik ist der bestehende `incorrect`-Zustand — kein eigener PseudoState, kein Skin-Eingriff.
+- Ein `~`-Klick **schüttelt** den Knopf kurz und lässt ihn danach stehen wie vorher. Keine Farbe:
+  Grün und Rot heißen „gewertet", und gewertet wird hier nichts. Eine bleibende Markierung würde
+  außerdem verraten, dass die Antwort nicht dazugehört.
 - **Fragt eine Karte dasselbe Vokabular mehrfach, schreibe überall dieselbe Optionsmenge** und lass nur
   die Präfixe wandern. Dann stehen die Antworten über alle diese Steps hinweg an ihrem Platz; sonst
   springen sie sichtbar. Erzwungen wird nur, dass die Pflicht-Antworten (`+`/`-`) in einer solchen

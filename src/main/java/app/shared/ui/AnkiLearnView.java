@@ -195,6 +195,7 @@ public abstract class AnkiLearnView {
 	public void setMcCorrect(int id, boolean correct)   { mcPane.setCorrect(id, correct); }
 	public void setMcMarked(int id, boolean marked)     { mcPane.setMarked(id, marked); }
 	public void setMcSolution(Set<Integer> correctIds)  { mcPane.setCorrectAndInactive(correctIds); }
+	public void rejectMcClick(int id)                   { mcPane.rejectClick(id); }
 
 	/**
 	 * Der Absende-Knopf steht immer da und ist nur bei einer Frage mit mehreren richtigen Antworten
