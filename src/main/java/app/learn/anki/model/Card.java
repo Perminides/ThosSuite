@@ -345,11 +345,20 @@ public class Card {
     }
 
     /**
-     * Zerlegt einen MC-Body. Zwei Schreibweisen, pro Step eine: Alt {@code a|b*c|d} (richtig vor dem
-     * ersten Stern) oder Präfixform, sobald eine Option mit {@code +} beginnt (nackt → {@code ?}). Die
-     * Rolle frisst nur das erste Zeichen, der Rest ist Text ({@code +-40°} = richtig „-40°"). Ein
-     * führendes {@code \} macht das nächste Zeichen literal, ein führendes {@code =} hält die
-     * geschriebene Reihenfolge als {@code orderHint} fest.
+     * Zerlegt einen MC-Body. <b>Eine</b> Schreibweise: Optionen trennt {@code |}, ein führendes
+     * {@code + - ~ ?} gibt die Rolle, nackt heißt {@code ?}. Die Rolle frisst nur das erste Zeichen,
+     * der Rest ist Text ({@code +-40°} = richtig „-40°").
+     *
+     * <p>Ein führendes {@code \} macht das nächste Zeichen literal und darf hinter einer Rolle
+     * stehen: {@code +\+4°} ist die richtige Antwort „+4°". Nur so lassen sich Vorzeichen und
+     * Rolle zugleich schreiben.</p>
+     *
+     * <p>Ein führendes {@code =} hält die geschriebene Reihenfolge als {@code orderHint} fest.</p>
+     *
+     * <p>Die alte Sternform {@code a|b*c|d} gibt es nicht mehr. Sie hat die Bedeutung einer Antwort
+     * davon abhängig gemacht, ob eine <i>andere</i> Antwort derselben Zeile mit {@code +} beginnt —
+     * ein führendes Minus war mal Text und mal Rolle. Ein Step, der noch so geschrieben ist, hat
+     * jetzt keine richtige Antwort und bricht unten ab, statt still etwas anderes zu bedeuten.</p>
      */
     private static Step parseMc(String body, boolean plus) {
         String rest = body.trim();
@@ -357,31 +366,14 @@ public class Card {
         if (ordered)
             rest = rest.substring(1);
 
-        String[] parts = rest.split("\\|", -1);
-        boolean prefixForm = false;
-        for (String part : parts)
-            if (part.trim().startsWith("+")) // nur ein echtes + macht Präfixform; -/~/? sind sonst Text
-                prefixForm = true;
-
         Set<AnswerOption> options = new LinkedHashSet<>();
         Set<String> seen = new HashSet<>();
-
-        if (prefixForm) {
-            for (String part : parts) {
-                String p = part.trim();
-                if (hasRolePrefix(p))
-                    addOption(options, seen, p.substring(1), roleOf(p));
-                else
-                    addOption(options, seen, unescape(p), Role.DISTRACTOR_OPTIONAL);
-            }
-        } else {
-            // Der erste Stern trennt richtig von falsch; jeder weitere ist Text (Gender-Stern).
-            String[] halves = rest.split("\\*", 2);
-            for (String text : halves[0].split("\\|"))
-                addOption(options, seen, unescape(text.trim()), Role.CORRECT);
-            if (halves.length > 1)
-                for (String text : halves[1].split("\\|"))
-                    addOption(options, seen, unescape(text.trim()), Role.DISTRACTOR_OPTIONAL);
+        for (String part : rest.split("\\|", -1)) {
+            String p = part.trim();
+            if (hasRolePrefix(p))
+                addOption(options, seen, unescape(p.substring(1)), roleOf(p));
+            else
+                addOption(options, seen, unescape(p), Role.DISTRACTOR_OPTIONAL);
         }
 
         boolean hasCorrect = false;
@@ -389,7 +381,7 @@ public class Card {
             if (option.role() == Role.CORRECT)
                 hasCorrect = true;
         if (!hasCorrect)
-            throw new RuntimeException("MC ohne richtige Antwort — " + body);
+            throw new RuntimeException("MC ohne richtige Antwort — fehlt ein '+'? — " + body);
 
         List<String> orderHint = new ArrayList<>();
         if (ordered)
