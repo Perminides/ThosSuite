@@ -1270,7 +1270,7 @@ public class FlagDeckGenerator {
 	}
 
 	/**
-	 * Die richtige Antwort vor dem Sternchen, alle anderen dahinter.
+	 * Die richtige Antwort mit {@code +}, alle anderen nackt.
 	 *
 	 * <p>Sie muss <b>buchstabengleich</b> unter den Optionen stehen — sonst bliebe sie in der
 	 * Ablenkerliste stehen und stünde zweimal in der Frage, einmal als richtig und einmal als
@@ -1281,7 +1281,7 @@ public class FlagDeckGenerator {
 		if (!wrong.remove(correct))
 			throw new IllegalArgumentException("Die richtige Antwort '" + correct
 					+ "' steht nicht unter ihren Optionen: " + String.join("|", wrong));
-		return "MC:" + correct + "*" + String.join("|", wrong);
+		return "MC:+" + correct + "|" + String.join("|", wrong);
 	}
 
 	/**

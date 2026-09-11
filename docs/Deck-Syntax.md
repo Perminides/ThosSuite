@@ -27,9 +27,9 @@ Aufbau: `<id>;<remark>;<label,label,…>;<step>;<step>;…`
 | `Click:hannover` | Die Form „hannover" auf der Karte anklicken. |
 | `Click:berlin,potsdam-brandenburg` | Pflicht: berlin + potsdam; optional: brandenburg. |
 | `Mark:bayern,sachsen` | Markiert die zwei Formen (nur Anzeige). |
-| `MC:Paris*Lyon\|Marseille` | Auswahl, Einzelklick: Paris richtig, Rest falsch. |
-| `MC:Rot\|Blau*Grün` | Rot **und** Blau richtig, Grün falsch. |
-| `MC:+Paris\|-Keine\|Lyon` | Präfix: Paris richtig, „Keine" immer sichtbar, Lyon Füller. |
+| `MC:+Paris\|Lyon\|Marseille` | Auswahl, Einzelklick: Paris richtig, Rest falsch. |
+| `MC:+Rot\|+Blau\|Grün` | Rot **und** Blau richtig, Grün falsch. |
+| `MC:+Paris\|-Keine\|Lyon` | Paris richtig, „Keine" immer sichtbar, Lyon Füller. |
 | `MC+:+Rot\|+Blau\|-Keine\|Gelb` | Sammeln + absenden: Rot+Blau richtig, „Keine" immer dabei. |
 | `MC:=1\|2\|+3\|4\|mehr` | Feste Reihenfolge, 3 ist richtig. |
 | `Fast:20:any:Berlin\|Hamburg` | Tippen auf Zeit, beliebige Reihenfolge, beide nötig. |
@@ -40,19 +40,20 @@ Aufbau: `<id>;<remark>;<label,label,…>;<step>;<step>;…`
 
 Reicht das, bist du durch. Der Rest sind die Feinheiten von MC, Fast, Sketch und den Shuffle-Markern.
 
-## MC / MC+ — Formen
+## MC / MC+ — Optionen
 
 `MC` wertet jeden Klick **sofort** (ein Fehlklick bricht ab). `MC+` lässt **markieren und absenden**
-(alles oder nichts). Beide teilen sich dieselbe Optionssyntax und **beide** verstehen beide Schreibweisen:
+(alles oder nichts). Beide teilen sich dieselbe Optionssyntax, und es gibt nur eine:
 
-| Form | Regel |
-|---|---|
-| **Alt** | Richtig vor dem ersten `*`, falsch danach. Kein `*` → alle richtig. |
-| **Präfix** | Gilt für den ganzen Step, **sobald eine seiner Optionen mit `+` beginnt**. Jede Option trägt dann eine Rolle, nackt heißt `?`. |
+Optionen trennt `|`. Ein führendes `+ - ~ ?` gibt die Rolle, nackt heißt `?`. Die Rolle frisst nur
+das erste Zeichen, der Rest ist Text. Mehr Regeln gibt es nicht.
 
-Nur ein führendes `+` schaltet auf Präfix um — ein führendes `-`/`~`/`?` allein bleibt Text.
+Die alte Sternform `a|b*c|d` ist abgeschafft. Sie hat die Bedeutung einer Antwort davon abhängig
+gemacht, ob eine **andere** Antwort derselben Zeile mit `+` beginnt: Ein führendes Minus war mal
+Text und mal Rolle. Ein Step, der noch so geschrieben ist, hat jetzt keine richtige Antwort und
+bricht ab, statt still etwas anderes zu bedeuten.
 
-### Rollen (Präfixform)
+### Rollen
 
 | Präfix | Rolle | Wirkung |
 |---|---|---|
@@ -66,15 +67,14 @@ Nur ein führendes `+` schaltet auf Präfix um — ein führendes `-`/`~`/`?` al
 
 | Beispiel | | Bedeutung |
 |---|---|---|
-| `MC:-40°*0°\|32°` | ✓ | Altform, „-40°" richtig — führendes Minus ist Text, kein Escape nötig. |
 | `MC:+-40°\|0°` | ✓ | Die Rolle frisst nur das erste Zeichen → richtig ist „-40°". |
 | `MC:+50°\|--40°` | ✓ | `--40°` = fester Distraktor „-40°". |
-| `MC:Ja\|Nein` | ✓ | Beide richtig — kein `*`. |
-| `MC:Bürger*alle Einwohner*innen` | ✓ | Nur der **erste** `*` trennt; jeder weitere ist Text (Gender-Stern). |
-| `MC:\+5*0\|10` | ✓ | Escape `\`: „+5" bleibt die richtige Antwort. |
-| `MC:+5*0\|10` | ✗ | „+5" wird als Präfix gelesen → verstümmelt, **ohne Abbruch**. Nimm `\+5`. |
-| `MC:*a\|b` | ✗ | Keine richtige Antwort. |
-| `MC:Berlin\|Berlin*Hamburg` | ✗ | Text doppelt. |
+| `MC:+\+5\|0\|10` | ✓ | Escape **hinter** der Rolle → richtig ist „+5". Nur so gehen Vorzeichen und Rolle zusammen. |
+| `MC:+0°\|\-40°` | ✓ | Escape ohne Rolle → „-40°" ist ein Füller, kein fester Distraktor. |
+| `MC:+Ja\|+Nein` | ✓ | Beide richtig. |
+| `MC:+Bürger\|alle Einwohner*innen` | ✓ | `*` ist gewöhnlicher Text — der Gender-Stern braucht nichts. |
+| `MC:Paris\|Lyon` | ✗ | Kein `+` → keine richtige Antwort. |
+| `MC:+Berlin\|Berlin` | ✗ | Text doppelt. |
 | `MC:` | ✗ | Leer. |
 
 Feste Reihenfolge: führendes `=` am Body (`MC:=…`, `MC+:=…`). Mehr als 8 sichtbare Pflicht-Antworten
