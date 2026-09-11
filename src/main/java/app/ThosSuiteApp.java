@@ -73,7 +73,7 @@ public class ThosSuiteApp extends Application {
     	    Alert alert = new Alert(Alert.AlertType.WARNING);
     	    alert.setTitle("Falsche Zeitzone");
     	    alert.setHeaderText("Die Suite läuft in der Zeitzone " + current + " statt " + expected);
-    	    alert.setContentText("Timestamps werden falsch berechnet. (Beim Message Import z.B.)\n\nTrotzdem starten?");
+    	    alert.setContentText("Timestamps werden falsch berechnet. (Beim Message Import z.B.\noder beim Abspeichern des Fortschritts)\n\nTrotzdem starten?");
     	    ButtonType yes = new ButtonType("Ja, trotzdem starten", ButtonBar.ButtonData.YES);
     	    ButtonType cancel = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
     	    alert.getButtonTypes().setAll(yes, cancel);
