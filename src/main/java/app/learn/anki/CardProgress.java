@@ -139,7 +139,7 @@ public class CardProgress {
 	private static Set<String> pinnedOf(Set<AnswerOption> options) {
 		Set<String> texts = new HashSet<>();
 		for (AnswerOption option : options)
-			if (option.role() == Role.CORRECT || option.role() == Role.WRONG_ALWAYS_SHOWN)
+			if (option.role().alwaysShown())
 				texts.add(option.text());
 		return texts;
 	}
@@ -300,7 +300,7 @@ public class CardProgress {
 	    	// man sie STATT der richtigen abschicken, und genau das soll sie nicht sein: nicht
 	    	// bestraft, aber auch nicht die gesuchte Antwort. Damit verhaelt sich der Sammelmodus
 	    	// hier wie der Einzelklick weiter unten.
-	    	if (activeSessionMC.roleAt(index) == Role.TOLERATED) {
+	    	if (activeSessionMC.roleAt(index).tolerated()) {
 	    		presenter.mcClickRejected(index);
 	    		return;
 	    	}
@@ -317,7 +317,7 @@ public class CardProgress {
 	    // Einzelklick (MC), sofort gewertet.
 	    Role role = activeSessionMC.roleAt(index);
 
-	    if (role == Role.TOLERATED) {
+	    if (role.tolerated()) {
 	    	// Falsch, aber kein Abbruch: der Knopf schuettelt kurz den Kopf, dann weiter warten.
 	    	presenter.mcClickRejected(index);
 	    	return;

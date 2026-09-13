@@ -108,7 +108,7 @@ public class FlagDeckGenerator {
 			"Kreis", "Vogel", "Emblem", "Kreuz", "Krone", "Landumriss");
 
 	/** Immer sichtbare Ablenker der Elementfrage — außer sie sind selbst die richtige Antwort. */
-	private static final List<String> ELEMENT_PINNED = List.of("Keine", "Stern");
+	private static final List<String> ELEMENT_PINNED = List.of("Keine", "Stern", "Emblem");
 
 	// ---- Sprache --------------------------------------------------------------
 
@@ -153,7 +153,9 @@ public class FlagDeckGenerator {
 			"Kreis", "kreis", "Raute", "raute", "Schrift", "schrift-t", "Mond", "sichel",
 			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog", "Emblem", "emblem",
 			"Vogel", "vogel", "Sonne", "sonne", "Union Jack", "union-jack",
-			"Dreizack", "dreizack", "Muster", "muster", "Drache", "drache");
+			"Dreizack", "dreizack", "Muster", "muster", "Drache", "drache", "Zweig",
+			"zweig", "Kreuz", "kreuz", "Nuss", "nuss", "Blume", "blume",
+			"Gebäude", "gebaeude", "Blatt", "blatt", "Landumriss", "landumriss");
 
 	/** Das Rasterfeld als Behälter — der äußerste, den jedes Element durchläuft. */
 	private static final String SEGMENT = "Segment";
@@ -288,8 +290,6 @@ public class FlagDeckGenerator {
 
 		ask(steps, "Welche Form hat die Flagge?",
 				answer(rectangular(row), "Rechteckig", "Nicht rechteckig", "Quadratisch"));
-		ask(steps, "Hat die Flagge einen Rahmen?", answer(frame(row) ? "Ja, sie hat einen Rahmen" : "Kein Rahmen",
-				"Ja, sie hat einen Rahmen", "Kein Rahmen"));
 
 		// Kreuz und Diagonale vorweg — sonst würde ihr linker Arm mit einem Dreieck von links verwechselt.
 		String typeCell = sheet.value(row, "Hintergrundtyp");
@@ -310,10 +310,17 @@ public class FlagDeckGenerator {
 		Canvas canvas = new Canvas(steps);
 		List<Fill> fills = new ArrayList<>();
 		String background = branchSketch(row, type);
-		paint(background, fills, canvas.background(background), colors(sheet.value(row, "Hintergrundfarben")));
+		List<Integer> hintergrund = canvas.background(background);
+		Farben hintergrundFarben = colors(sheet.value(row, "Hintergrundfarben"));
+		// Ein Hintergrund wird immer ganz gefärbt; eine graue Fläche wäre ein Versehen im Blatt.
+		if (!hintergrundFarben.fuerAlleFlaechen() && hintergrundFarben.liste().size() != hintergrund.size())
+			throw new RuntimeException(background + ": " + hintergrundFarben.liste().size() + " Farben ("
+					+ String.join("|", hintergrundFarben.liste()) + "), aber " + hintergrund.size()
+					+ " Flächen — ein Hintergrund braucht für jede Fläche eine Farbe");
+		paint(background, fills, hintergrund, hintergrundFarben);
 
 		// Ein Sonderhintergrund ist eine handgemachte Datei, die alles enthalten kann — auch eine
-		// Gösch oder etwas Dreiecksartiges. Ihn zusätzlich nach diesen Attributen zu fragen, führt
+		// Gösch, etwas Dreiecksartiges oder einen Rahmen. Ihn zusätzlich nach diesen Attributen zu fragen, führt
 		// zwangsläufig in Widersprüche: Bei Antigua schiebt sich von links sichtbar eine Spitze ins
 		// Bild, im Blatt steht trotzdem 0. Wer richtig hinsieht, bekäme falsch. Also nicht fragen.
 		if (!type.equals("7")) {
@@ -340,11 +347,20 @@ public class FlagDeckGenerator {
 					ask(steps, "Die Dreiecksform(en) bestehen aus wie vielen Farben?",
 							fixedOrder(sheet.value(row, "Die Dreiecksform(en) bestehen aus wie vielen Farben?"),
 									"1", "2", "3", "4"));
-					String dreieckSketch = "dreieck-" + dreieckForm;
+					// Mehr als eine Farbe heißt eigene Datei mit einer Fläche je Farbe: dreieck-3-4.
+					String anzahl = sheet.value(row, "Die Dreiecksform(en) bestehen aus wie vielen Farben?");
+					String dreieckSketch = "dreieck-" + dreieckForm + (anzahl.equals("1") ? "" : "-" + anzahl);
 					paint(dreieckSketch, fills, canvas.overlay(dreieckSketch, "-1"),
 							colors(sheet.value(row, "Dreieck Farbe")));
 				}
 			}
+
+			// Rahmen nach dem Dreieck fragen und auflegen: Er umfasst die Flagge und liegt am Rand obenauf.
+			boolean rahmen = frame(row);
+			ask(steps, "Hat die Flagge einen Rahmen?", answer(rahmen ? "Ja, sie hat einen Rahmen" : "Kein Rahmen",
+					"Ja, sie hat einen Rahmen", "Kein Rahmen"));
+			if (rahmen)
+				paint("rahmen", fills, canvas.overlay("rahmen", "-1"), colors(sheet.value(row, "Rahmen Farbe")));
 		}
 
 		elementFills(steps, canvas, elements(row), fills, id(row));
@@ -508,8 +524,9 @@ public class FlagDeckGenerator {
 		for (String pinned : ELEMENT_PINNED)
 			if (!vergeben.contains(pinned))
 				options.add("-" + pinned); // immer sichtbar, außer schon anders vergeben
+		// Ein fester Ablenker bleibt fest, auch wenn er toleriert ist: Doppelrolle -~.
 		for (String name : tolerated)
-			options.add("~" + name);
+			options.add((ELEMENT_PINNED.contains(name) ? "-~" : "~") + name);
 		for (String pool : ELEMENT_POOL)
 			if (!ELEMENT_PINNED.contains(pool) && !vergeben.contains(pool))
 				options.add(pool);

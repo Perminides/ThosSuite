@@ -15,6 +15,7 @@ Konvention (siehe Flaggen-Deck.md):
     Koordinaten, sonst blitzt beim Fuellen der Hintergrund durch.
 """
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -89,7 +90,35 @@ def bosnisches_dreieck():
             flaeche(1, [(links, 0), (rechts, 0), (rechts, HOEHE)])]
 
 
-SPEZIAL = {"spezial-1": gezackt, "spezial-2": bosnisches_dreieck}
+def wellen():
+    """Kiribati: die obere Haelfte rot, darunter das Meer als Wellen in Weiss und Blau.
+
+    Sechs Wellenbaender zu je 10, abwechselnd weiss und blau, von oben mit Weiss beginnend. Alle
+    Grenzen laufen mit derselben Welle, damit jedes Band ueberall gleich dick ist -- nur das
+    unterste nicht, weil die Leinwand unten gerade endet. Drei volle Wellen ueber die Breite,
+    Ausschlag 3; beides am Bild gefunden.
+
+    Drei Flaechen wie im Blatt, `Rot|Weiss|Blau`: das Rot, alle weissen Baender, alle blauen. Die
+    Baender einer Farbe beruehren sich nicht, dazwischen liegt immer eines der anderen. Benachbarte
+    Flaechen teilen sich jede Grenze Punkt fuer Punkt. Sonne und Vogel sind eigene Elemente.
+    """
+    wellenlaenge, ausschlag, schritt, band = 60.0, 3.0, 3.0, 10.0
+    xs = [i * schritt for i in range(int(BREITE / schritt) + 1)]
+
+    def grenze(tiefe):
+        return [(x, tiefe + ausschlag * math.sin(2 * math.pi * x / wellenlaenge)) for x in xs]
+
+    grenzen = [grenze(HOEHE / 2 + k * band) for k in range(6)]
+    grenzen.append([(x, HOEHE) for x in xs])                  # unten gerade
+
+    rot = [(0, 0), (BREITE, 0)] + list(reversed(grenzen[0]))
+    baender = [grenzen[k] + list(reversed(grenzen[k + 1])) for k in range(6)]
+    return [flaeche(0, rot),
+            flaeche(1, baender[0], baender[2], baender[4]),
+            flaeche(2, baender[1], baender[3], baender[5])]
+
+
+SPEZIAL = {"spezial-1": gezackt, "spezial-2": bosnisches_dreieck, "spezial-4": wellen}
 
 
 def schreibe(zielordner, name):

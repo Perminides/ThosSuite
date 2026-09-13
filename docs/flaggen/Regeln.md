@@ -89,6 +89,19 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 ## Flächen und Farben
 
 - Flächen werden in **Leserichtung** nummeriert. Was über anderen liegt, kommt zuletzt.
+- **Ausnahme Kreuze:** Sind die vier Felder um ein Kreuz einzelne Flächen, laufen sie im
+  **Uhrzeigersinn** — beim senkrechten Kreuz ab links oben, beim diagonalen ab dem oberen Dreieck —,
+  danach kommt das Kreuz selbst. Vier Viertel um eine Mitte liest man im Kreis und nicht
+  zeilenweise. Burundis `Rot|Grün|Rot|Grün` ergibt nur so oben und unten dieselbe Farbe; in
+  Leserichtung läge Rot rechts. Einzeln sind die Felder beim einfarbigen und beim unsichtbaren
+  Kreuz, weil dort verschiedenfarbige Viertel vorkommen (Dominikanische Republik, Grenada).
+- Beim **dreifarbigen** und beim **gesäumten** Kreuz ist das Feld dagegen **eine** Fläche in vier
+  Stücken und steht zuerst, danach die Teile des Kreuzes von außen nach innen. Island steht so mit
+  `Blau|Weiß|Rot` im Blatt.
+- **Ausnahme ineinanderliegende Dreiecke:** Sie zählen nach ihrer Spitze von links nach rechts,
+  also vom innersten nach außen. Guyana steht so mit `Rot|Schwarz|Gelb|Weiß` im Blatt. Die Spitzen
+  liegen gleichmäßig verteilt, bei vier Farben auf einem, zwei, drei und vier Vierteln der
+  Dreieckslänge. Die Datei heißt dann `dreieck-<form>-<farbanzahl>`.
 - Die Farbliste ist **positionsbezogen**: eine Farbe je Fläche, in Flächenreihenfolge, `|`-getrennt.
 - Ein führendes **`&`** kehrt das um: `&Weiß` heißt „diese eine Farbe gilt dem **ganzen Element**".
   Alle seine Flächen werden gemeinsam hervorgehoben, einmal gefragt und gemeinsam gefüllt. Für das
@@ -134,8 +147,10 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 
 ## Fragen
 
-- Aufbau einer Karte: Form → Rahmen → Gösch → Dreieck → Hintergrund → Zweigfragen → Skizze →
-  Zusatzelemente → je Element Anzahl und Ort → zeichnen → **alle Farben** → echte Flagge.
+- Aufbau einer Karte: Form → Kreuz oder Diagonale → Hintergrund → Zweigfragen → Skizze → Gösch →
+  Dreieck → Rahmen → Zusatzelemente → je Element Anzahl und Ort → zeichnen → **alle Farben** → echte
+  Flagge. Gösch, Dreieck und Rahmen werden jeweils direkt nach ihrer Frage aufgelegt; bei
+  Sonderhintergründen entfallen alle drei.
 - Gefärbt wird gesammelt am Ende, Hintergrundflächen und Elemente zusammen.
 - Zwei Shuffle-Blöcke: erst alle **Attribut-Fragen** (Anzahl, geteilt) gemischt, dann alle **Ortsfragen**
   gemischt. So steht die Anzahl vor dem Ort, und in keinem Block leakt die Reihenfolge das Blatt.
