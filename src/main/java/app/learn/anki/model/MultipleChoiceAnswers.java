@@ -36,7 +36,7 @@ public class MultipleChoiceAnswers {
     public boolean isFinallyCorrect(Set<Integer> clickedIds) {
         Set<Integer> effective = new HashSet<>(clickedIds);
         for (int i = 0; i < options.size(); i++)
-            if (options.get(i).role() == Role.TOLERATED)
+            if (options.get(i).role().tolerated())
                 effective.remove(i);
         return getCorrectIndexes().equals(effective);
     }

@@ -6,8 +6,9 @@ Aufruf:
 Der Name ist `kreuz-<ausrichtung>-<arme>`, genau wie der Generator ihn ableitet: `senkrecht`,
 `diagonal` oder `beides`, dahinter `uni`, `dreifarbig`, `fimbriert` oder `unsichtbar`.
 
-Gebaut ist bisher `diagonal-uni`. `senkrecht-uni` liegt als handgemachte Datei daneben und bleibt
-es; die uebrigen Armformen sind eigene Geometrie und kommen, wenn die erste Flagge sie braucht.
+Gebaut werden hier `diagonal-uni`, `diagonal-unsichtbar`, `senkrecht-dreifarbig` und `senkrecht-fimbriert`. `senkrecht-uni`
+liegt als handgemachte Datei daneben und bleibt es; die uebrigen Armformen sind eigene Geometrie und
+kommen, wenn die erste Flagge sie braucht.
 
 Konvention (siehe Flaggen-Deck.md und die vorhandene Datei kreuz-senkrecht-uni):
   * Leinwand IMMER 180 x 120, x von 0 bis 180, y von -120 bis 0.
@@ -76,47 +77,112 @@ def andreaskreuz():
             flaeche(4, kreuz)]
 
 
+def diagonal_unsichtbar():
+    """Grenada: die Flaeche durch beide Eckdiagonalen in vier Dreiecke geteilt, ohne eigenes Band.
+
+    "Nicht sichtbar" heisst, das Kreuz teilt die Flagge, hat aber keine eigene Farbe -- die vier
+    Dreiecke stossen unmittelbar aneinander. Deshalb gibt es hier keine fuenfte Flaeche fuers
+    Kreuz, nur die vier Felder, im Uhrzeigersinn ab dem obersten wie bei jedem Kreuz. Grenada
+    stuende damit als `Gelb|Gruen|Gelb|Gruen` im Blatt. Rahmen, Kreis und Sterne sind eigene Teile.
+    """
+    mitte = (BREITE / 2, HOEHE / 2)
+    oben = [(0, 0), (BREITE, 0), mitte]
+    rechts = [(BREITE, 0), (BREITE, HOEHE), mitte]
+    unten = [(BREITE, HOEHE), (0, HOEHE), mitte]
+    links = [(0, HOEHE), (0, 0), mitte]
+    return [flaeche(0, oben), flaeche(1, rechts), flaeche(2, unten), flaeche(3, links)]
+
+
+def plus(links, rechts, oben, unten):
+    """Ein Plus ueber die ganze Leinwand: senkrechter Arm links..rechts, waagerechter oben..unten."""
+    return [(links, 0), (rechts, 0), (rechts, oben), (BREITE, oben), (BREITE, unten), (rechts, unten),
+            (rechts, HOEHE), (links, HOEHE), (links, unten), (0, unten), (0, oben), (links, oben)]
+
+
+def fimbriertes_kreuz():
+    """Norwegen und Island: ein senkrechtes Kreuz mit schmalem andersfarbigem Saum.
+
+    Der Saum umschliesst das Kreuz auf beiden Seiten -- geschachtelt, nicht parallel. Das
+    unterscheidet ihn vom dreifarbigen Kreuz, wo drei Streifen nebeneinander laufen.
+
+    Das innere Kreuz ist 20 breit, genau wie das einfarbige, damit es als dasselbe Kreuz gelesen
+    wird. Der Saum ist 5 breit, schmaler als das Kreuz, sonst saehe er aus wie ein dritter Streifen.
+    Zusammen 30, dieselbe Aussenbreite wie beim dreifarbigen Kreuz.
+
+    Weil die Arme bis zum Leinwandrand laufen, ist der Saum kein Ring, sondern vier L-Stuecke, eins
+    in jeder Ecke der Kreuzung. Sie beruehren sich nicht, das innere Kreuz liegt dazwischen.
+
+    Drei Flaechen: das Feld in vier Stuecken, der Saum, das Kreuz. Wie beim dreifarbigen Kreuz ist
+    das Feld eine Flaeche -- Island steht mit `Blau|Weiss|Rot` im Blatt, Norwegen waere `Rot|Weiss|Blau`.
+    """
+    mitte_x, mitte_h, halb, saum = BREITE / 2, HOEHE / 2, ARM / 2, 5.0
+    il, ir, io, iu = mitte_x - halb, mitte_x + halb, mitte_h - halb, mitte_h + halb
+    al, ar, ao, au = il - saum, ir + saum, io - saum, iu + saum
+    feld = flaeche(0, rechteck(0, 0, al, ao), rechteck(ar, 0, BREITE, ao),
+                   rechteck(ar, au, BREITE, HOEHE), rechteck(0, au, al, HOEHE))
+    saeume = flaeche(1,
+                     [(al, 0), (il, 0), (il, io), (0, io), (0, ao), (al, ao)],
+                     [(ir, 0), (ar, 0), (ar, ao), (BREITE, ao), (BREITE, io), (ir, io)],
+                     [(ir, iu), (BREITE, iu), (BREITE, au), (ar, au), (ar, HOEHE), (ir, HOEHE)],
+                     [(0, iu), (il, iu), (il, HOEHE), (al, HOEHE), (al, au), (0, au)])
+    return [feld, saeume, flaeche(2, plus(il, ir, io, iu))]
+
+
 def dreifarbiges_kreuz():
-    """Dominica: ein senkrechtes Kreuz, dessen Arme aus drei parallelen Farbstreifen bestehen.
+    """Ein senkrechtes Kreuz, dessen Arme aus drei parallelen Farbstreifen bestehen (Dominica).
 
     Die Frage im Deck heisst "drei parallele Farben" -- parallel und nicht geschachtelt. Das
-    unterscheidet die Antwort vom fimbrierten Kreuz, wo eine Farbe die andere umrandet. Die Skizze
-    muss diesen Unterschied tragen, sonst beantwortet sie die Frage nicht.
+    unterscheidet die Antwort vom fimbrierten Kreuz, wo eine Farbe die andere umrandet.
+
+    Die Geometrie ist **neutral**: neun Stuecke, die keine Farbzuordnung vorwegnehmen. Acht
+    Randstreifen (je Arm die beiden aeusseren) und in der Mitte ein durchgehendes Plus aus den vier
+    mittleren Streifen. An den vier einspringenden Ecken treffen zwei Randstreifen auf Gehrung
+    aufeinander, so wie ein Bilderrahmen. Wer welche Farbe bekommt, entscheidet erst die Gruppierung
+    unten -- und damit das Blatt.
 
     Der Arm ist mit 30 breiter als die 20 des einfarbigen Kreuzes. Drei Streifen zu je 10 bleiben
     einzeln erkennbar; 20 durch 3 waere weder rund noch sichtbar. Die 10 gibt es im System schon.
-
-    Am Kreuzungspunkt liegt der **senkrechte** Arm oben. Damit bleibt jeder waagerechte Streifen
-    in zwei Stuecken stehen, links und rechts -- genau das Bild, das eine durchlaufende Spur ergibt.
-    Jede Farbe ist eine Flaeche, egal aus wie vielen Stuecken.
-
-    Nummeriert wird in Leserichtung: erst das Feld, dann die Streifen von links beziehungsweise von
-    oben. Dominica steht im Blatt mit `Gruen|Gelb|Schwarz|Weiss` -- ein Feld, dann drei Streifen.
     """
-    links, rechts = BREITE / 2 - 1.5 * STREIFEN, BREITE / 2 + 1.5 * STREIFEN
-    oben, unten = HOEHE / 2 - 1.5 * STREIFEN, HOEHE / 2 + 1.5 * STREIFEN
+    x0, x1, x2, x3 = 75.0, 85.0, 95.0, 105.0        # Raender der senkrechten Streifen
+    y0, y1, y2, y3 = 45.0, 55.0, 65.0, 75.0         # Raender der waagerechten
 
-    feld = flaeche(0, rechteck(0, 0, links, oben), rechteck(rechts, 0, BREITE, oben),
-                   rechteck(0, unten, links, HOEHE), rechteck(rechts, unten, BREITE, HOEHE))
+    stuecke = {
+        # Senkrechte Randstreifen, oben und unten vom Kreuz getrennt durch das mittlere Plus.
+        "ol": [(x0, 0), (x1, 0), (x1, y1), (x0, y0)],
+        "or": [(x2, 0), (x3, 0), (x3, y0), (x2, y1)],
+        "ul": [(x0, y3), (x1, y2), (x1, HOEHE), (x0, HOEHE)],
+        "ur": [(x2, y2), (x3, y3), (x3, HOEHE), (x2, HOEHE)],
+        # Waagerechte Randstreifen, links und rechts.
+        "lo": [(0, y0), (x0, y0), (x1, y1), (0, y1)],
+        "lu": [(0, y2), (x1, y2), (x0, y3), (0, y3)],
+        "ro": [(x3, y0), (BREITE, y0), (BREITE, y1), (x2, y1)],
+        "ru": [(x2, y2), (BREITE, y2), (BREITE, y3), (x3, y3)],
+        # Das mittlere Plus -- die vier mittleren Streifen haengen durch die Mitte zusammen.
+        "plus": [(x1, 0), (x2, 0), (x2, y1), (BREITE, y1), (BREITE, y2), (x2, y2), (x2, HOEHE),
+                 (x1, HOEHE), (x1, y2), (0, y2), (0, y1), (x1, y1)],
+    }
 
-    x = [links + i * STREIFEN for i in range(4)]        # Raender der senkrechten Streifen
-    h = [oben + i * STREIFEN for i in range(4)]         # Raender der waagerechten
+    feld = [rechteck(0, 0, x0, y0), rechteck(x3, 0, BREITE, y0),
+            rechteck(0, y3, x0, HOEHE), rechteck(x3, y3, BREITE, HOEHE)]
 
-    # Der erste Streifen haengt links mit seiner waagerechten Spur zusammen, der letzte rechts;
-    # der mittlere steht allein. Deshalb drei Stuecklisten statt einer Schleife ueber alles.
-    erste = flaeche(1, [(x[0], 0), (x[1], 0), (x[1], HOEHE), (x[0], HOEHE), (x[0], h[1]),
-                        (0, h[1]), (0, h[0]), (x[0], h[0])],
-                    rechteck(rechts, h[0], BREITE, h[1]))
-    zweite = flaeche(2, rechteck(x[1], 0, x[2], HOEHE),
-                     rechteck(0, h[1], links, h[2]), rechteck(rechts, h[1], BREITE, h[2]))
-    dritte = flaeche(3, [(x[2], 0), (x[3], 0), (x[3], h[2]), (BREITE, h[2]), (BREITE, h[3]),
-                         (x[3], h[3]), (x[3], HOEHE), (x[2], HOEHE)],
-                     rechteck(0, h[2], links, h[3]))
-    return [feld, erste, zweite, dritte]
+    # Gruppierung: welche Stuecke eine abfragbare Flaeche bilden. Dominica faerbt die senkrechten
+    # Streifen von links nach rechts und die waagerechten von oben nach unten gleich -- links und
+    # oben tragen also dieselbe Farbe, rechts und unten die andere. Dass dabei oben links und unten
+    # rechts sichtbar verschmelzen und die beiden anderen Ecken nicht, faellt aus der Faerbung und
+    # nicht aus der Geometrie. Eine Flagge, die den Rahmen durchgehend einfarbig zieht, bekaeme
+    # dieselben neun Stuecke in einer anderen Gruppierung.
+    gruppen = [["ol", "ul", "lo", "ro"], ["plus"], ["or", "ur", "lu", "ru"]]
+
+    features = [flaeche(0, *feld)]
+    for nummer, gruppe in enumerate(gruppen, start=1):
+        features.append(flaeche(nummer, *[stuecke[name] for name in gruppe]))
+    return features
 
 
 KREUZE = {"kreuz-diagonal-uni": andreaskreuz,
-          "kreuz-senkrecht-dreifarbig": dreifarbiges_kreuz}
+          "kreuz-diagonal-unsichtbar": diagonal_unsichtbar,
+          "kreuz-senkrecht-dreifarbig": dreifarbiges_kreuz,
+          "kreuz-senkrecht-fimbriert": fimbriertes_kreuz}
 
 
 def schreibe(zielordner, name):

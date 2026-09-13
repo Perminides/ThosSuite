@@ -1,4 +1,15 @@
-﻿Flagge;Hexwert;Farbton;Saettigung;Blauanteil;HSL-Helligkeit;CIE L*;Vorschlag
+﻿# Gemessen am 04.09.2026 auf den quadratischen Bildern images/500x500/<land>-flag-square-small.png (500 x 500 Pixel, voll deckend).
+# Als Blau zählt ein Pixel, wenn B > R + 25 und B > G + 15 und B > 60 (Kanäle 0 bis 255).
+# Hexwert: die häufigste Pixelfarbe im Bild, die als Blau zählt.
+# Farbton: HSL-Farbton des Hexwerts in Grad, ganzzahlig gerundet.
+# Saettigung: HSL-Sättigung des Hexwerts in Prozent, ganzzahlig gerundet.
+# Blauanteil: Anteil aller Pixel des Bildes, die als Blau zählen, in Prozent. Am Bild gemessen, hängt nicht vom Hexwert ab.
+# HSL-Helligkeit: (größter + kleinster Kanal) / 2 des Hexwerts, in Prozent.
+# CIE L*: sRGB linearisieren, Y = 0.2126 R + 0.7152 G + 0.0722 B, dann L* = 116 · Y^(1/3) − 16.
+# Vorschlag: CIE L* unter 45.0 Blau, über 51.5 Hellblau, dazwischen Grenzfall.
+# Sortiert nach CIE L* absteigend.
+# Abweichung: Estland trägt #0072CE aus Wikipedia statt des gemessenen #4891D9. Der Blauanteil bleibt gemessen.
+Flagge;Hexwert;Farbton;Saettigung;Blauanteil;HSL-Helligkeit;CIE L*;Vorschlag
 St. Lucia;#66CCFF;200;100;72.6;70.0;78.0;Hellblau
 Fidschi;#68BFE5;198;71;64.1;65.3;73.5;Hellblau
 San Marino;#5EB6E4;201;71;44.1;63.1;70.5;Hellblau
@@ -14,7 +25,6 @@ Luxemburg;#00A1DE;196;100;33.5;43.5;62.3;Hellblau
 Ruanda;#00A1DE;196;100;47.7;43.5;62.3;Hellblau
 Guatemala;#4997D0;205;59;67.1;55.1;60.0;Hellblau
 Tuvalu;#5B97B1;198;36;72.3;52.5;59.5;Hellblau
-Estland;#4891D9;210;66;33.5;56.7;58.6;Hellblau
 Aserbaidschan;#0098C3;193;100;33.5;38.2;58.4;Hellblau
 Usbekistan;#0099B5;189;100;30.8;35.5;58.1;Hellblau
 Eritrea;#4189DD;212;70;16.5;56.1;56.3;Hellblau
@@ -24,6 +34,7 @@ Komoren;#3A75C4;214;54;19.8;49.8;49.0;Grenzfall
 Gabun;#3A75C4;214;54;32.9;49.8;49.0;Grenzfall
 Honduras;#0073CF;207;100;68.9;40.6;48.0;Grenzfall
 Äquatorialguinea;#0073CE;207;100;11.5;40.4;47.9;Grenzfall
+Estland;#0072CE;207;100;33.5;40.4;47.6;Grenzfall
 antigua-and-barbuda;#0072C6;205;100;16.2;38.8;47.1;Grenzfall
 St. Vincent und die Grenadinen;#0072C6;205;100;25.1;38.8;47.1;Grenzfall
 Sierra Leone;#0072C6;205;100;33.5;38.8;47.1;Grenzfall

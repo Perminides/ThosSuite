@@ -45,8 +45,8 @@ Reicht das, bist du durch. Der Rest sind die Feinheiten von MC, Fast, Sketch und
 `MC` wertet jeden Klick **sofort** (ein Fehlklick bricht ab). `MC+` lässt **markieren und absenden**
 (alles oder nichts). Beide teilen sich dieselbe Optionssyntax, und es gibt nur eine:
 
-Optionen trennt `|`. Ein führendes `+ - ~ ?` gibt die Rolle, nackt heißt `?`. Die Rolle frisst nur
-das erste Zeichen, der Rest ist Text. Mehr Regeln gibt es nicht.
+Optionen trennt `|`. Ein führendes `+ - ~ ?` gibt die Rolle, nackt heißt `?`. Die Rolle frisst nur ihr
+Zeichen, der Rest ist Text. Einzige Doppelrolle: `-~` oder `~-` heißt toleriert und immer sichtbar.
 
 Die alte Sternform `a|b*c|d` ist abgeschafft. Sie hat die Bedeutung einer Antwort davon abhängig
 gemacht, ob eine **andere** Antwort derselben Zeile mit `+` beginnt: Ein führendes Minus war mal
@@ -59,7 +59,8 @@ bricht ab, statt still etwas anderes zu bedeuten.
 |---|---|---|
 | `+` | richtig | die gesuchte Antwort |
 | `-` | falsch, **immer sichtbar** | fester Distraktor (z. B. `Keine`) |
-| `~` | falsch, **kein Abbruch** | wird als falsch gezeigt, bricht nicht ab und zählt in **keinem** der beiden Typen zur Antwort |
+| `~` | falsch, **kein Abbruch** | der Knopf schüttelt beim Klick, die Karte läuft weiter; zählt in **keinem** der beiden Typen zur Antwort; wird aus dem Pool gelost |
+| `-~` oder `~-` | falsch, kein Abbruch, **immer sichtbar** | wie `~`, wird aber nie weggelost |
 | `?` | Füller | wird nur zum Auffüllen gezogen |
 | *(nackt)* | Füller | wie `?` |
 
@@ -69,8 +70,10 @@ bricht ab, statt still etwas anderes zu bedeuten.
 |---|---|---|
 | `MC:+-40°\|0°` | ✓ | Die Rolle frisst nur das erste Zeichen → richtig ist „-40°". |
 | `MC:+50°\|--40°` | ✓ | `--40°` = fester Distraktor „-40°". |
-| `MC:+\+5\|0\|10` | ✓ | Escape **hinter** der Rolle → richtig ist „+5". Nur so gehen Vorzeichen und Rolle zusammen. |
+| `MC:++5\|0\|10` | ✓ | Die Rolle frisst nur ihr Zeichen → richtig ist „+5", ohne Escape. |
 | `MC:+0°\|\-40°` | ✓ | Escape ohne Rolle → „-40°" ist ein Füller, kein fester Distraktor. |
+| `MC:+0°\|-~-40°` | ✓ | Doppelrolle, danach ist das Minus Text → toleriert und immer sichtbar „-40°". |
+| `MC:+0°\|~\-40°` | ✓ | Einfache Rolle, deren Text mit dem anderen Zeichen des Paars beginnt → Escape nötig, sonst wäre es die Doppelrolle. |
 | `MC:+Ja\|+Nein` | ✓ | Beide richtig. |
 | `MC:+Bürger\|alle Einwohner*innen` | ✓ | `*` ist gewöhnlicher Text — der Gender-Stern braucht nichts. |
 | `MC:Paris\|Lyon` | ✗ | Kein `+` → keine richtige Antwort. |

@@ -103,6 +103,16 @@ def plus(cx, cy, staerke, laenge):
                  (cx - d, cy - d), (cx - l, cy - d), (cx - l, cy + d), (cx - d, cy + d)])
 
 
+def kreuz():
+    """Ein gleicharmiges Kreuz: Georgien (vier verstreut), Griechenland und Tonga (Gösch), Schweiz.
+
+    Die Höhe bindet, also 40 hoch und 40 breit. Die Armstärke ist drei Zehntel der Spannweite --
+    das Schweizer Verhältnis, Arm 6 breit und 7 lang. Kräftig genug, dass es auch in Georgiens
+    Vierergruppe verkleinert noch als Kreuz und nicht als Strich gelesen wird.
+    """
+    return [flaeche(0, [plus(0, 0, 0.3 * FELD_Y, FELD_Y)])]
+
+
 def dreisterne():
     """Drei im Dreieck, Spitze oben -- die haeufigste echte Anordnung."""
     return [flaeche(0, [stern(0, 9, 7.5), stern(-10, -7, 7.5), stern(10, -7, 7.5)])]
@@ -132,8 +142,12 @@ def sternhaufen():
     Bis vier oder fuenf erfasst man eine Anzahl auf einen Blick, darueber liest man nur noch
     "viele" -- genau da hoert die Skizze auf, genau zu sein. Acht sind es, aber bei Feldgroesse
     zaehlt sie niemand nach; die Unordnung sagt, dass die Zahl nicht gemeint ist.
+
+    Radius 7 statt der 4, mit denen die Mittelpunkte gesetzt wurden: Bei 4 war die Schraffur der
+    Markierung in den schmalen Zacken kaum zu erkennen. Zwei, drei Zacken beruehren sich dadurch --
+    das ist gewollt und faellt in der Unordnung nicht auf.
     """
-    return [flaeche(0, [stern(x, y, 4.0) for x, y in HAUFEN])]
+    return [flaeche(0, [stern(x, y, 7.0) for x, y in HAUFEN])]
 
 
 def zweisterne():
@@ -240,8 +254,82 @@ def muster():
     return [flaeche(0, teile)]
 
 
+def landumriss():
+    """Ein erfundenes Land: Kosovo und Zypern, beide mit ihrem Umriss auf der Flagge.
+
+    Kein echtes Land -- wie beim Vogel soll die Silhouette zu keiner bestimmten Flagge passen. Was
+    einen Umriss nach Land aussehen laesst, ist die Mischung: Grenzen mit wenigen deutlichen Knicken,
+    daneben eine zerklueftete Kueste. Ueberall gleich feines Rauschen saehe nach einem Blatt aus.
+
+    Die Eckpunkte stehen fest, dazwischen wird gewuerfelt, mit festem Startwert 202 -- bei ihm kreuzt
+    sich der Umriss nicht. Kueste: Mittelpunktverschiebung in fuenf Stufen. Grenze: ein bis vier
+    Zwischenpunkte mit mittlerem Ausschlag. Danach eingepasst wie ein Rasterfeld und mit Douglas-
+    Peucker ausgeduennt, damit die Kueste rau bleibt, ohne dass die Datei aufquillt.
+    """
+    import random
+    rnd = random.Random(202)
+
+    def zerklueftet(a, b, tiefe, rauheit):
+        if tiefe == 0:
+            return [a]
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        laenge = math.hypot(dx, dy) or 1e-9
+        d = rnd.uniform(-1, 1) * laenge * rauheit
+        m = ((a[0] + b[0]) / 2 - dy / laenge * d, (a[1] + b[1]) / 2 + dx / laenge * d)
+        return zerklueftet(a, m, tiefe - 1, rauheit * 0.62) + zerklueftet(m, b, tiefe - 1, rauheit * 0.62)
+
+    def geknickt(a, b, knicke, ausschlag, bogen):
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        laenge = math.hypot(dx, dy) or 1e-9
+        nx, ny = -dy / laenge, dx / laenge
+        punkte = [a]
+        for i in range(1, knicke + 1):
+            t = (i + rnd.uniform(-0.25, 0.25)) / (knicke + 1)
+            versatz = bogen * laenge * math.sin(math.pi * t) + rnd.uniform(-ausschlag, ausschlag) * laenge
+            punkte.append((a[0] + dx * t + nx * versatz, a[1] + dy * t + ny * versatz))
+        return punkte
+
+    def ausduennen(punkte, toleranz):
+        """Douglas-Peucker fuer einen offenen Linienzug."""
+        if len(punkte) < 3:
+            return punkte
+        a, b = punkte[0], punkte[-1]
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        laenge = math.hypot(dx, dy)
+        weit, index = -1.0, 0
+        for i in range(1, len(punkte) - 1):
+            px, py = punkte[i]
+            d = (abs(dy * px - dx * py + b[0] * a[1] - b[1] * a[0]) / laenge if laenge
+                 else math.hypot(px - a[0], py - a[1]))
+            if d > weit:
+                weit, index = d, i
+        if weit <= toleranz:
+            return [a, b]
+        return ausduennen(punkte[:index + 1], toleranz)[:-1] + ausduennen(punkte[index:], toleranz)
+
+    # Eckpunkte im Uhrzeigersinn, y nach oben. K = Kueste, G = geschwungene Grenze, S = gerade Grenze.
+    ecken = [(-14, 8), (-2, 10), (9, 7), (12, 1), (8, -3), (11, -10), (7, -14), (3, -6), (-4, -5), (-11, -7), (-15, -1)]
+    arten = ["S", "G", "K", "K", "K", "K", "K", "K", "G", "G", "G"]
+    punkte = []
+    for i, art in enumerate(arten):
+        a, b = ecken[i], ecken[(i + 1) % len(ecken)]
+        if art == "K":
+            punkte += zerklueftet(a, b, 5, 0.32)
+        elif art == "G":
+            punkte += geknickt(a, b, rnd.randint(2, 4), 0.09, rnd.uniform(-0.05, 0.05))
+        else:
+            punkte += geknickt(a, b, rnd.randint(1, 2), 0.06, 0.0)
+
+    xs, ys = [p[0] for p in punkte], [p[1] for p in punkte]
+    faktor = min(2 * FELD_X / (max(xs) - min(xs)), 2 * FELD_Y / (max(ys) - min(ys)))
+    mx, my = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    punkte = [((x - mx) * faktor, (y - my) * faktor) for x, y in punkte]
+    punkte = ausduennen(punkte + [punkte[0]], 0.03)[:-1]
+    return [flaeche(0, [ring(punkte)])]
+
+
 ELEMENTE = {"kreis": kreis, "sichel": sichel, "stern": einzelstern, "raute": raute, "schrift-t": schrift_t,
-            "stern-haufen": sternhaufen, "stern-zwei": zweisterne, "muster": muster,
+            "stern-haufen": sternhaufen, "stern-zwei": zweisterne, "muster": muster, "kreuz": kreuz, "landumriss": landumriss,
             "stern-drei": dreisterne, "stern-vier": viersterne, "stern-fuenf": fuenfsterne}
 
 

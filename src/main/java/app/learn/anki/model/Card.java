@@ -54,7 +54,19 @@ public class Card {
     public record SketchImageFill(List<Integer> areas, SketchColor color) implements Step {}
     
     public record AnswerOption(String text, Role role) {}
-    public enum Role { CORRECT, WRONG_ALWAYS_SHOWN, TOLERATED, DISTRACTOR_OPTIONAL }
+    public enum Role {
+        CORRECT, WRONG_ALWAYS_SHOWN, TOLERATED, TOLERATED_ALWAYS_SHOWN, DISTRACTOR_OPTIONAL;
+
+        /** Falsch, aber ohne Abbruch — gleich ob gelost oder immer sichtbar. */
+        public boolean tolerated() {
+            return this == TOLERATED || this == TOLERATED_ALWAYS_SHOWN;
+        }
+
+        /** Steht in jedem Fall in der Auswahl und wird nie weggelost. */
+        public boolean alwaysShown() {
+            return this == CORRECT || this == WRONG_ALWAYS_SHOWN || this == TOLERATED_ALWAYS_SHOWN;
+        }
+    }
     public record Answer(String hint, List<String> variants) {} // Eine gesuchte Antwort: ihre Schreibvarianten und ein Hinweis, der bis zum Treffer im Feld steht.  
 
     /**
@@ -346,12 +358,15 @@ public class Card {
 
     /**
      * Zerlegt einen MC-Body. <b>Eine</b> Schreibweise: Optionen trennt {@code |}, ein führendes
-     * {@code + - ~ ?} gibt die Rolle, nackt heißt {@code ?}. Die Rolle frisst nur das erste Zeichen,
-     * der Rest ist Text ({@code +-40°} = richtig „-40°").
+     * {@code + - ~ ?} gibt die Rolle, nackt heißt {@code ?}. Die Rolle frisst nur ihr Zeichen, der
+     * Rest ist Text ({@code +-40°} = richtig „-40°", {@code ++5} = richtig „+5").
      *
-     * <p>Ein führendes {@code \} macht das nächste Zeichen literal und darf hinter einer Rolle
-     * stehen: {@code +\+4°} ist die richtige Antwort „+4°". Nur so lassen sich Vorzeichen und
-     * Rolle zugleich schreiben.</p>
+     * <p>Die eine Doppelrolle: {@code -~} oder {@code ~-} heißt toleriert und immer sichtbar. Sie
+     * frisst beide Zeichen ({@code -~-40°} = „-40°"). Beginnt der Text einer <i>einfachen</i> Rolle
+     * mit dem anderen Zeichen des Paars, braucht er deshalb ein Escape: {@code ~\-40°}.</p>
+     *
+     * <p>Ein führendes {@code \} vor dem Text wird weggeworfen und macht das nächste Zeichen
+     * literal. Nötig ist das nur ohne Rolle ({@code \-40°} = Füller „-40°") und im Fall oben.</p>
      *
      * <p>Ein führendes {@code =} hält die geschriebene Reihenfolge als {@code orderHint} fest.</p>
      *
@@ -370,7 +385,9 @@ public class Card {
         Set<String> seen = new HashSet<>();
         for (String part : rest.split("\\|", -1)) {
             String p = part.trim();
-            if (hasRolePrefix(p))
+            if (hasDoubleRole(p))
+                addOption(options, seen, unescape(p.substring(2)), Role.TOLERATED_ALWAYS_SHOWN);
+            else if (hasRolePrefix(p))
                 addOption(options, seen, unescape(p.substring(1)), roleOf(p));
             else
                 addOption(options, seen, unescape(p), Role.DISTRACTOR_OPTIONAL);
@@ -398,6 +415,11 @@ public class Card {
         if (!seen.add(text))
             throw new RuntimeException("MC: Antwort '" + text + "' kommt doppelt vor");
         options.add(new AnswerOption(text, role));
+    }
+
+    /** Die eine Doppelrolle: {@code -~} oder {@code ~-} heißt toleriert und immer sichtbar. */
+    private static boolean hasDoubleRole(String part) {
+        return part.startsWith("-~") || part.startsWith("~-");
     }
 
     private static boolean hasRolePrefix(String part) {

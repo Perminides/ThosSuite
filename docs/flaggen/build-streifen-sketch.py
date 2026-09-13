@@ -48,6 +48,10 @@ VERTEILUNG = {
     # 3W = 3, "oberster breiter": 2:1:1. Hier muss nichts gemittelt werden -- Ecuador, Kolumbien
     # und Ruanda, die einzigen drei mit diesem Wert, haben alle genau dieses Verhaeltnis.
     ("waagerecht", 3, 3): [2, 1, 1],
+
+    # S-Anordnung = 1, "mittlerer breiter": 1:2:1. Kanada und St. Vincent, die einzigen beiden mit
+    # diesem Wert, haben genau dieses Verhaeltnis.
+    ("senkrecht", 3, 1): [1, 2, 1],
 }
 
 
