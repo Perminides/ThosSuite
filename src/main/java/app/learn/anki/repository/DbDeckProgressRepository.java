@@ -49,7 +49,7 @@ class DbDeckProgressRepository {
 	    }
 		
 		void saveLearned(Deck type, List<PlayedCardData> rows) {
-		    String logSQL = "INSERT INTO card_log (deck, card_id, played_timestamp, correct_flag) VALUES (?, ?, ?, ?)";
+		    String logSQL = "INSERT INTO card_log (deck, card_id, played_timestamp, correct_flag, new_level, played_day) VALUES (?, ?, ?, ?, ?, ?)";
 		    String learnStatSQL = "INSERT INTO card_learn_stat (deck, card_id, first_played, last_played, level, wrong_count) "
 		            + "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (deck, card_id) DO UPDATE SET "
 		            + "last_played = excluded.last_played, "
@@ -71,6 +71,8 @@ class DbDeckProgressRepository {
 		            psLog.setInt(2, row.cardId());
 		            psLog.setString(3, row.playedTimestamp().truncatedTo(ChronoUnit.SECONDS).toString());
 		            psLog.setBoolean(4, row.correctFlag());
+		            psLog.setInt(5, row.level());
+		            psLog.setString(6, AppClock.TODAY.toString()); // Der Suite-Tag, nicht das Datum aus dem Zeitstempel
 		            psLog.execute();
 		        }
 		        conn.commit();
