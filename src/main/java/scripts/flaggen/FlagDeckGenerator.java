@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -93,8 +94,8 @@ public class FlagDeckGenerator {
 
 	/**
 	 * Die Breiten-Abfolgen der fünf waagerechten Streifen, von oben nach unten. Der Wert der Spalte
-	 * {@code 5W} steht 1:1 als Antwort und im Sketch-Namen; die Zahlen sind das Verhältnis, schematisch,
-	 * nicht maßstabsgetreu. Der Pool ist eindeutig — gleiche Abfolgen stehen nur einmal.
+	 * {@code 5W} steht 1:1 als Antwort und im Sketch-Namen; die Zahlen sind nur eine Rangfolge (3 > 2 > 1),
+	 * gezeichnet wird nach Aussehen, siehe {@code GEZEICHNET} in build-streifen-sketch.py. Der Pool ist eindeutig — gleiche Abfolgen stehen nur einmal.
 	 */
 	private static final List<String> FIVE_WIDTHS = List.of(
 			"3-1-2-1-3", "3-1-1-1-2", "1-1-2-1-1", "1-1-1-1-1", "1-2-3-2-1", "2-1-2-1-2", "2-1-3-1-2");
@@ -132,8 +133,7 @@ public class FlagDeckGenerator {
 				{"Gebäude", new String[] {"das Gebäude", "die Gebäude"}},
 				{"Blatt", new String[] {"das Blatt", "die Blätter"}},
 				{"Zweig", new String[] {"der Zweig", "die Zweige"}},
-				{"Machete", new String[] {"die Machete", "die Macheten"}},
-				{"Hacke", new String[] {"die Hacke", "die Hacken"}},
+				{"Ackergerät", new String[] {"das Ackergerät", "die Ackergeräte"}},
 				{"Hand", new String[] {"die Hand", "die Hände"}},
 				{"Zahnrad", new String[] {"das Zahnrad", "die Zahnräder"}},
 				{"Dreizack", new String[] {"der Dreizack", "die Dreizacke"}},
@@ -144,18 +144,21 @@ public class FlagDeckGenerator {
 				{"Hut", new String[] {"der Hut", "die Hüte"}},
 				{"Löwe", new String[] {"der Löwe", "die Löwen"}},
 				{"Schwert", new String[] {"das Schwert", "die Schwerter"}},
+				{"Gewehr", new String[] {"das Gewehr", "die Gewehre"}},
+				{"Buch", new String[] {"das Buch", "die Bücher"}},
 			});
 
 	// ---- Skizze ---------------------------------------------------------------
 
 	/** Elementname → Datei. Der Stern hängt zusätzlich an der Anzahl, siehe {@link #sketchOf}. */
 	private static final Map<String, String> ELEMENT_FILES = ordered(
-			"Kreis", "kreis", "Raute", "raute", "Schrift", "schrift-t", "Mond", "sichel",
-			"Hand", "hand", "Machete", "machete", "Zahnrad", "cog", "Emblem", "emblem",
+			"Kreis", "kreis", "Raute", "raute", "Schrift", "schrift", "Mond", "mond",
+			"Hand", "hand", "Ackergerät", "ackergeraet", "Zahnrad", "zahnrad", "Emblem", "emblem",
 			"Vogel", "vogel", "Sonne", "sonne", "Union Jack", "union-jack",
 			"Dreizack", "dreizack", "Muster", "muster", "Drache", "drache", "Zweig",
 			"zweig", "Kreuz", "kreuz", "Nuss", "nuss", "Blume", "blume",
-			"Gebäude", "gebaeude", "Blatt", "blatt", "Landumriss", "landumriss");
+			"Gebäude", "gebaeude", "Blatt", "blatt", "Landumriss", "landumriss",
+			"Hut", "hut", "Baum", "baum", "Krone", "krone", "Gewehr", "gewehr", "Buch", "buch");
 
 	/** Das Rasterfeld als Behälter — der äußerste, den jedes Element durchläuft. */
 	private static final String SEGMENT = "Segment";
@@ -249,7 +252,7 @@ public class FlagDeckGenerator {
 		// Sortiert nach Id — in dieser Reihenfolge entsteht die Deck-Datei.
 		Map<Integer, String> generated = new TreeMap<>();
 		for (List<String> row : sheet.flags())
-			if (sheet.value(row, "Generieren").equals("1"))
+			if (generator.strict(row, "Generieren").equals("1"))
 				generator.generate(generated, row);
 		System.out.println(generated.size() + " Karten erzeugt und geprüft");
 		generator.missing.forEach(file -> System.out.println("  ! Flaggenbild fehlt: " + file));
@@ -289,7 +292,9 @@ public class FlagDeckGenerator {
 				"Mark:" + shape(row)));
 
 		ask(steps, "Welche Form hat die Flagge?",
-				answer(rectangular(row), "Rechteckig", "Nicht rechteckig", "Quadratisch"));
+				answer(rectangular(plain(row, "Rechtwinklig?")),
+						tolerated(sheet.value(row, "Rechtwinklig?"), FlagDeckGenerator::rectangular),
+						"Rechteckig", "Nicht rechteckig", "Quadratisch"));
 
 		// Kreuz und Diagonale vorweg — sonst würde ihr linker Arm mit einem Dreieck von links verwechselt.
 		String typeCell = sheet.value(row, "Hintergrundtyp");
@@ -325,8 +330,9 @@ public class FlagDeckGenerator {
 		// Bild, im Blatt steht trotzdem 0. Wer richtig hinsieht, bekäme falsch. Also nicht fragen.
 		if (!type.equals("7")) {
 			// Gösch nach der Göschfrage auflegen (Leinwand-Silhouette, cell = -1).
-			boolean goesch = sheet.value(row, "Gösch?").equals("1");
-			ask(steps, "Hat die Flagge eine Gösch?", answer(goesch ? "Ja, sie hat einen Gösch" : "Kein Gösch", "Ja, sie hat einen Gösch", "Kein Gösch"));
+			boolean goesch = plain(row, "Gösch?").equals("1");
+			ask(steps, "Hat die Flagge eine Gösch?", answer(goesch(plain(row, "Gösch?")),
+					tolerated(sheet.value(row, "Gösch?"), FlagDeckGenerator::goesch), "Ja, sie hat einen Gösch", "Kein Gösch"));
 			if (goesch)
 				paint("goesch", fills, canvas.overlay("goesch", "-1"), colors(sheet.value(row, "Gösch Farbe")));
 
@@ -339,16 +345,17 @@ public class FlagDeckGenerator {
 							+ " Frage entfällt hier, das Dreieck würde also still verschwinden");
 			} else {
 				// Dreieck nach der Dreieckfrage auflegen.
-				String dreieck = sheet.value(row, "Dreieck von links?");
+				String dreieck = plain(row, "Dreieck von links?");
 				int dreieckForm = FlagSheet.isSet(dreieck) ? Integer.parseInt(dreieck) : 0;
 				ask(steps, "Schiebt sich eine dreiecksähnliche Form von ganz links in die Flagge?",
-						fixedOrder(DREIECK_FORMEN.get(dreieckForm), DREIECK_ANZEIGE.toArray(new String[0])));
+						fixedOrder(DREIECK_FORMEN.get(dreieckForm), tolerated(sheet.value(row, "Dreieck von links?"),
+								code -> DREIECK_FORMEN.get(Integer.parseInt(code))), DREIECK_ANZEIGE.toArray(new String[0])));
 				if (dreieckForm != 0) {
+					String farbenSpalte = "Die Dreiecksform(en) bestehen aus wie vielen Farben?";
+					String anzahl = plain(row, farbenSpalte);
 					ask(steps, "Die Dreiecksform(en) bestehen aus wie vielen Farben?",
-							fixedOrder(sheet.value(row, "Die Dreiecksform(en) bestehen aus wie vielen Farben?"),
-									"1", "2", "3", "4"));
+							fixedOrder(anzahl, tolerated(sheet.value(row, farbenSpalte), code -> code), "1", "2", "3", "4"));
 					// Mehr als eine Farbe heißt eigene Datei mit einer Fläche je Farbe: dreieck-3-4.
-					String anzahl = sheet.value(row, "Die Dreiecksform(en) bestehen aus wie vielen Farben?");
 					String dreieckSketch = "dreieck-" + dreieckForm + (anzahl.equals("1") ? "" : "-" + anzahl);
 					paint(dreieckSketch, fills, canvas.overlay(dreieckSketch, "-1"),
 							colors(sheet.value(row, "Dreieck Farbe")));
@@ -357,8 +364,8 @@ public class FlagDeckGenerator {
 
 			// Rahmen nach dem Dreieck fragen und auflegen: Er umfasst die Flagge und liegt am Rand obenauf.
 			boolean rahmen = frame(row);
-			ask(steps, "Hat die Flagge einen Rahmen?", answer(rahmen ? "Ja, sie hat einen Rahmen" : "Kein Rahmen",
-					"Ja, sie hat einen Rahmen", "Kein Rahmen"));
+			ask(steps, "Hat die Flagge einen Rahmen?", answer(rahmen(plain(row, "Rahmen?")),
+					tolerated(sheet.value(row, "Rahmen?"), FlagDeckGenerator::rahmen), "Ja, sie hat einen Rahmen", "Kein Rahmen"));
 			if (rahmen)
 				paint("rahmen", fills, canvas.overlay("rahmen", "-1"), colors(sheet.value(row, "Rahmen Farbe")));
 		}
@@ -389,19 +396,21 @@ public class FlagDeckGenerator {
 	private void branchQuestions(List<String> steps, List<String> row, String type) {
 		switch (type) {
 			case "0" -> {
-				ask(steps, "Wie viele waagerechte Streifen?",
-						fixedOrder(sheet.value(row, "W-Streifen"), STRIPE_COUNTS.toArray(new String[0])));
-				if (sheet.value(row, "W-Streifen").equals("3"))
+				ask(steps, "Wie viele waagerechte Streifen?", fixedOrder(plain(row, "W-Streifen"),
+						tolerated(sheet.value(row, "W-Streifen"), code -> code), STRIPE_COUNTS.toArray(new String[0])));
+				if (plain(row, "W-Streifen").equals("3"))
 					ask(steps, "Wie sind die Streifen verteilt?", coded(sheet.value(row, "3W"),
 							"alle gleich breit", "mittlerer breiter", "mittlerer schmaler",
 							"oberster breiter", "unterster breiter"));
-				if (sheet.value(row, "W-Streifen").equals("5"))
+				if (plain(row, "W-Streifen").equals("5"))
 					ask(steps, "Welche Abfolge beschreibt die Breite der Streifen von oben nach unten am besten?",
-							answer(sheet.value(row, "5W"), FIVE_WIDTHS.toArray(new String[0])));
+							answer(plain(row, "5W"), tolerated(sheet.value(row, "5W"), code -> code),
+									FIVE_WIDTHS.toArray(new String[0])));
 			}
 			case "1" -> {
 				ask(steps, "Wie viele senkrechte Streifen?",
-						fixedOrder(sheet.value(row, "S-Streifen"), "2", "3", "4", "5"));
+						fixedOrder(plain(row, "S-Streifen"), tolerated(sheet.value(row, "S-Streifen"), code -> code),
+								"2", "3", "4", "5"));
 				ask(steps, "Wie sind sie verteilt?", coded(sheet.value(row, "S-Anordnung"),
 						"gleichmäßig breit", "mittlerer breiter", "rechter breiter", "linker breiter"));
 			}
@@ -412,14 +421,21 @@ public class FlagDeckGenerator {
 						"uni", "drei parallele Farben", "fimbriert", "nicht sichtbar"));
 			}
 			case "3" -> {
-				ask(steps, "Wie läuft die Diagonale?", coded(sheet.value(row, "Diagonal Richtung"),
-						"steigend", "fallend", "strahlenförmig aus einer Ecke"));
-				ask(steps, "Wie viele diagonale Bänder laufen durch?",
-						coded(sheet.value(row, "Diagonal Anzahl Streifen"),
-								"kein Band, die Flächen stoßen aneinander", "1", "2", "3", "4"));
+				// Der Richtungscode traegt zwei Achsen: 0/1 parallel steigend/fallend, 2 strahlenfoermig steigend.
+				String richtung = sheet.value(row, "Diagonal Richtung");
+				ask(steps, "Wie läuft die Diagonale bzw. laufen die Diagonalen?",
+						coded(richtung, "steigend", "fallend", "steigend"));
+				String baender = sheet.value(row, "Diagonal Anzahl Streifen");
+				ask(steps, "Wie viele diagonale Bänder laufen durch?", coded(baender,
+						"kein Band, die Flächen stoßen aneinander", "1", "2", "3", "4", "5"));
+				// Ein einzelnes Band ist im Blatt nie keilfoermig, die Frage unterschiede dort nichts.
+				if (Integer.parseInt(untolerated(baender)) >= 2)
+					ask(steps, "Wie laufen die Bänder?", coded(richtung,
+							"parallel zueinander", "parallel zueinander", "strahlenförmig aus einer Ecke"));
 			}
 			case "5" -> ask(steps, "Wie viele waagerechte Streifen liegen neben dem Band?",
-					fixedOrder(sheet.value(row, "SW Streifen"), "2", "3", "4", "5"));
+					fixedOrder(plain(row, "SW Streifen"), tolerated(sheet.value(row, "SW Streifen"), code -> code),
+							"2", "3", "4", "5"));
 			default -> { }
 		}
 	}
@@ -543,7 +559,8 @@ public class FlagDeckGenerator {
 		shuffled(steps, withAttribute, element -> {
 			if (FlagSheet.isSet(element.count()))
 				ask(steps, "Wie viele " + WORDS.get(element.name())[1].substring(4) + "?",
-						fixedOrder(element.count(), COUNTS.toArray(new String[0])));
+						fixedOrder(untolerated(element.count()), tolerated(element.count(), code -> code),
+								COUNTS.toArray(new String[0])));
 			// Bei jedem Kreis gleich gefragt — die konstante Frage leakt nichts und stoppt die stille
 			// Annahme "ungeteilt". Geteilt ist er genau dann, wenn zwei Farben im Blatt stehen.
 			if (element.name().equals("Kreis"))
@@ -847,8 +864,7 @@ public class FlagDeckGenerator {
 		if (element.name().equals("Stern")) {
 			if (einzeln)
 				return "stern";
-			int count = element.count().isEmpty() || element.count().equals("x")
-					? 1 : Integer.parseInt(element.count());
+			int count = FlagSheet.isSet(element.count()) ? Integer.parseInt(untolerated(element.count())) : 1;
 			// Bis fuenf zeigt die Skizze die echte Anzahl -- so weit erfasst man sie auf einen Blick.
 			// Darueber liest man ohnehin nur "viele", und der Haufen sagt genau das.
 			return switch (count) {
@@ -881,17 +897,17 @@ public class FlagDeckGenerator {
 			// Die Verteilung gehoert in den Namen: Sie veraendert die Breiten, und eine Skizze mit
 			// gleichen Streifen widerspraeche der Antwort "Mitte breiter". Gefragt wird sie nur bei
 			// drei und fuenf waagerechten Streifen -- sonst gibt es keinen Wert und keinen Zusatz.
-			case "0" -> "waagerecht-" + sheet.value(row, "W-Streifen")
-					+ (sheet.value(row, "W-Streifen").equals("3") ? "-" + sheet.value(row, "3W") : "")
-					+ (sheet.value(row, "W-Streifen").equals("5") ? "-" + sheet.value(row, "5W") : "");
-			case "1" -> "senkrecht-" + sheet.value(row, "S-Streifen") + "-" + sheet.value(row, "S-Anordnung");
-			case "2" -> "kreuz-" + word(sheet.value(row, "Kreuzausrichtung"), "senkrecht", "diagonal", "beides")
-					+ "-" + word(sheet.value(row, "Kreuzarme"), "uni", "dreifarbig", "fimbriert", "unsichtbar");
-			case "3" -> "diagonal-" + word(sheet.value(row, "Diagonal Richtung"), "steigend", "fallend", "faecher")
-					+ "-" + sheet.value(row, "Diagonal Anzahl Streifen");
+			case "0" -> "waagerecht-" + plain(row, "W-Streifen")
+					+ (plain(row, "W-Streifen").equals("3") ? "-" + plain(row, "3W") : "")
+					+ (plain(row, "W-Streifen").equals("5") ? "-" + plain(row, "5W") : "");
+			case "1" -> "senkrecht-" + plain(row, "S-Streifen") + "-" + plain(row, "S-Anordnung");
+			case "2" -> "kreuz-" + word(plain(row, "Kreuzausrichtung"), "senkrecht", "diagonal", "beides")
+					+ "-" + word(plain(row, "Kreuzarme"), "uni", "dreifarbig", "fimbriert", "unsichtbar");
+			case "3" -> "diagonal-" + word(plain(row, "Diagonal Richtung"), "steigend", "fallend", "faecher")
+					+ "-" + plain(row, "Diagonal Anzahl Streifen");
 			case "4" -> "uni";
-			case "5" -> "sw-" + sheet.value(row, "SW Streifen");
-			case "7" -> "spezial-" + sheet.value(row, "Spezial");
+			case "5" -> "sw-" + plain(row, "SW Streifen");
+			case "7" -> "spezial-" + strict(row, "Spezial");
 			default -> throw new RuntimeException("Kein Sketch-Name für Hintergrundtyp " + type);
 		};
 	}
@@ -925,8 +941,8 @@ public class FlagDeckGenerator {
 	// ---- Ableitungen ----------------------------------------------------------
 
 	/** Nepal ist weder das eine noch das andere, die Schweiz und der Vatikan sind quadratisch. */
-	private String rectangular(List<String> row) {
-		return switch (sheet.value(row, "Rechtwinklig?")) {
+	private static String rectangular(String code) {
+		return switch (code) {
 			case "1" -> "Rechteckig";
 			case "2" -> "Quadratisch";
 			default -> "Nicht rechteckig";
@@ -934,7 +950,15 @@ public class FlagDeckGenerator {
 	}
 
 	private boolean frame(List<String> row) {
-		return sheet.value(row, "Rahmen?").equals("1");
+		return plain(row, "Rahmen?").equals("1");
+	}
+
+	private static String goesch(String code) {
+		return code.equals("1") ? "Ja, sie hat einen Gösch" : "Kein Gösch";
+	}
+
+	private static String rahmen(String code) {
+		return code.equals("1") ? "Ja, sie hat einen Rahmen" : "Kein Rahmen";
 	}
 
 	/**
@@ -942,7 +966,7 @@ public class FlagDeckGenerator {
 	 * die Karte ihn nicht kennt, steht in {@code ShapeId} eine Ausnahme (Abchasien, Singapur).
 	 */
 	private String shape(List<String> row) {
-		String value = sheet.value(row, "ShapeId");
+		String value = strict(row, "ShapeId");
 		return FlagSheet.isSet(value) ? value : sheet.country(row);
 	}
 
@@ -966,7 +990,7 @@ public class FlagDeckGenerator {
 
 	/** Die wievielte Flagge dieses Landes. Leer und {@code x} heißen beide: die erste. */
 	private int version(List<String> row) {
-		String value = sheet.value(row, "Version");
+		String value = strict(row, "Version");
 		return FlagSheet.isSet(value) ? Integer.parseInt(value) : 1;
 	}
 
@@ -1367,10 +1391,19 @@ public class FlagDeckGenerator {
 
 	/**
 	 * Eine kodierte Spalte: Der Wert ist der Index seiner Antwort. Die Ziffer darf niemals in die
-	 * Frage geraten — sie steht im Blatt, weil dort alle Attribute Zahlen sind.
+	 * Frage geraten — sie steht im Blatt, weil dort alle Attribute Zahlen sind. Eine Klammer dahinter
+	 * trägt tolerierte Codes, {@code 3 (5)} lässt die 5 durchgehen. Mehrere Codes dürfen denselben
+	 * Antworttext haben, er steht dann nur einmal in der Frage.
 	 */
 	private static String coded(String value, String... options) {
-		return answer(word(value, options), options);
+		String correct = word(untolerated(value), options);
+		List<String> tolerated = new ArrayList<>();
+		for (String code : bracket(value)) {
+			String text = word(code, options);
+			if (!text.equals(correct) && !tolerated.contains(text))
+				tolerated.add(text);
+		}
+		return answer(correct, tolerated, new LinkedHashSet<>(List.of(options)).toArray(String[]::new));
 	}
 
 	/** Ein Wert der Spalte, übersetzt in seinen Antworttext. */
@@ -1390,7 +1423,28 @@ public class FlagDeckGenerator {
 	}
 
 	private static boolean plural(Element element) {
-		return FlagSheet.isSet(element.count()) && !element.count().equals("1");
+		return FlagSheet.isSet(element.count()) && !untolerated(element.count()).equals("1");
+	}
+
+	/** Der gewertete Wert einer Zelle: alles vor ihrer Toleranzklammer. */
+	private String plain(List<String> row, String column) {
+		return untolerated(sheet.value(row, column));
+	}
+
+	/** Die tolerierten Werte einer Zelle, übersetzt in ihre Antworttexte. */
+	private static List<String> tolerated(String cell, Function<String, String> text) {
+		List<String> result = new ArrayList<>();
+		for (String code : bracket(cell))
+			result.add(text.apply(code));
+		return result;
+	}
+
+	/** Eine Zelle ohne Frage: Eine Toleranzklammer hat dort keine Bedeutung und wäre ein Versehen. */
+	private String strict(List<String> row, String column) {
+		String value = sheet.value(row, column);
+		if (value.contains("("))
+			throw new RuntimeException("In '" + column + "' gibt es keine Toleranzklammer: " + value);
+		return value;
 	}
 
 	/** Alles vor einer Toleranzklammer: {@code 4(9|5)} ist die 4. */

@@ -99,7 +99,7 @@ public class FlagSheetCheck {
 		for (int slot = 1; slot <= 4; slot++) {
 			int n = slot;
 			report("E" + n + " gesetzt <-> E" + n + " Position gesetzt",
-					row -> FlagSheet.isSet(sheet.value(row, "E" + n))
+					row -> (FlagSheet.isSet(sheet.value(row, "E" + n)) && !hauptwert(sheet.value(row, "E" + n)).equals("Keine"))
 							!= FlagSheet.isSet(sheet.value(row, "E" + n + " Position")),
 					row -> "E" + n + "=" + orEmpty(sheet.value(row, "E" + n))
 							+ ", Position=" + orEmpty(sheet.value(row, "E" + n + " Position")));
@@ -118,7 +118,7 @@ public class FlagSheetCheck {
 					row -> "Farbe=" + sheet.value(row, "E" + n + " Farbe"));
 			report("E" + n + " Anzahl ist eine Zahl",
 					row -> FlagSheet.isSet(sheet.value(row, "E" + n + " Anzahl"))
-							&& !sheet.value(row, "E" + n + " Anzahl").matches("\\d+"),
+							&& !positionValues(sheet.value(row, "E" + n + " Anzahl")).stream().allMatch(v -> v.matches("\\d+")),
 					row -> "Anzahl=" + sheet.value(row, "E" + n + " Anzahl"));
 		}
 		report("Hintergrundfarben aus der Farbliste",
@@ -134,6 +134,14 @@ public class FlagSheetCheck {
 			if (!POSITIONS.contains(part))
 				return false;
 		return true;
+	}
+
+	/** Der Union Jack deckt die Gösch ganz ab, ihre eigene Farbe sähe man nie. */
+	private boolean hasUnionJack(List<String> row) {
+		for (int slot = 1; slot <= 4; slot++)
+			if (hauptwert(sheet.value(row, "E" + slot)).equals("Union Jack"))
+				return true;
+		return false;
 	}
 
 	/**
@@ -199,8 +207,9 @@ public class FlagSheetCheck {
 				row -> "Hintergrundfarben fehlen");
 		report("Generieren=1 und Gösch -> Gösch Farbe gesetzt",
 				row -> sheet.value(row, "Generieren").equals("1")
-						&& sheet.value(row, "Gösch?").equals("1")
-						&& !FlagSheet.isSet(sheet.value(row, "Gösch Farbe")),
+						&& hauptwert(sheet.value(row, "Gösch?")).equals("1")
+						&& !FlagSheet.isSet(sheet.value(row, "Gösch Farbe"))
+						&& !hasUnionJack(row),
 				row -> "Gösch Farbe fehlt");
 		report("Generieren=1 und Dreieck -> Dreieck Farbe gesetzt",
 				row -> sheet.value(row, "Generieren").equals("1")

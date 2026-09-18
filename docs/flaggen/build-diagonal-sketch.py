@@ -12,7 +12,8 @@ Die Baender liegen mittig auf der Eckdiagonalen und nehmen zusammen ein Drittel 
 dieselbe Zahl wie das Rasterdrittel beim Goesch. Die echte Neigung einer Flagge ist flacher (Brunei
 laeuft ueber 300 von 720), aber danach wird nicht gefragt; die Skizze zeigt die kanonische Diagonale.
 
-Der Faecher fehlt noch -- eigene Geometrie, kommt wenn die erste Flagge ihn braucht.
+Der Faecher ist eigene Geometrie, siehe `faecher`: Die Baender laufen nicht parallel, sondern
+strahlen aus der Ecke links unten.
 
 Konvention (siehe Flaggen-Deck.md):
   * Leinwand IMMER 180 x 120, x von 0 bis 180, y von -120 bis 0.
@@ -21,6 +22,7 @@ Konvention (siehe Flaggen-Deck.md):
     im Blatt mit `Gelb|Orange`, und sein Gelb ist die obere Flaeche.
 """
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -38,10 +40,11 @@ def runde(wert):
     return int(wert) if float(wert).is_integer() else round(float(wert), STELLEN)
 
 
-def flaeche(nummer, punkte):
-    ring = [[runde(x), runde(-h)] for x, h in punkte]
+def flaeche(nummer, *teile):
+    """Eine Flaeche aus einem oder mehreren getrennten Stuecken."""
+    ringe = [[[runde(x), runde(-h)] for x, h in punkte] for punkte in teile]
     return {"type": "Feature", "properties": {"id": nummer},
-            "geometry": {"type": "MultiPolygon", "coordinates": [[ring + [ring[0]]]]}}
+            "geometry": {"type": "MultiPolygon", "coordinates": [[r + [r[0]]] for r in ringe]}}
 
 
 def halbebene(zelle, a, b, c):
@@ -94,16 +97,75 @@ def gebaendert(richtung, baender):
     return [flaeche(i, t) for i, t in enumerate(teile)]
 
 
+def faecher(baender):
+    """Marshallinseln und Seychellen: Baender, die aus der Ecke links unten strahlen.
+
+    Der Faecher liegt symmetrisch um die Eckdiagonale, wie die parallelen Baender auch. Bei zwei
+    Baendern ist die Grenze zwischen ihnen also genau die Diagonale, bei drei laeuft sie mitten durch
+    das mittlere. Jedes Band ist ein fester Winkel: so gross, dass bei zwei Baendern das untere am
+    rechten Rand ein Rasterdrittel breit endet. Der Faecher wird also mit jedem Band weiter.
+
+    Bis zwei Baender ist das Feld **eine** Flaeche in zwei Stuecken ueber und unter dem Faecher, die
+    Marshallinseln stehen so mit `Blau|Orange|Weiss` im Blatt. Die Stuecke beruehren sich nur im
+    Punkt der Ecke. Ab drei Baendern sind es zwei Flaechen, oben die erste und unten die letzte, weil
+    die Seychellen dort zwei Farben haben. Dazwischen kommen immer die Baender von oben.
+    """
+    if baender < 1:
+        raise SystemExit("Ein Faecher ohne Band waere nur die Diagonale -- dafuer gibt es diagonal-steigend-0")
+    ecke = (0.0, HOEHE)
+    diagonale = math.atan2(HOEHE, BREITE)
+    band = diagonale - math.atan2(HOEHE - HOEHE / 3, BREITE)
+    halb = band * baender / 2
+    if halb >= diagonale:
+        raise SystemExit("So viele Baender passen nicht in den Faecher: %d" % baender)
+
+    def randpunkt(winkel):
+        """Wo ein Strahl aus der Ecke den Rand trifft, als Weg entlang des Randes."""
+        tiefe = HOEHE - BREITE * math.tan(winkel)
+        if tiefe >= 0:
+            return BREITE + (HOEHE - tiefe)                  # rechter Rand
+        return BREITE + HOEHE + (BREITE - HOEHE / math.tan(winkel))   # Oberkante
+
+    def punkt(weg):
+        """Der Punkt auf dem Rand zu einem Weg, gezaehlt ab der Ecke links unten im Uhrzeigersinn."""
+        if weg <= BREITE:
+            return (weg, HOEHE)
+        if weg <= BREITE + HOEHE:
+            return (BREITE, HOEHE - (weg - BREITE))
+        if weg <= 2 * BREITE + HOEHE:
+            return (BREITE - (weg - BREITE - HOEHE), 0.0)
+        return (0.0, weg - 2 * BREITE - HOEHE)
+
+    ecken_wege = [BREITE, BREITE + HOEHE, 2 * BREITE + HOEHE]    # rechts unten, rechts oben, links oben
+
+    def stueck(von, bis):
+        punkte = [ecke]
+        if von > 0:
+            punkte.append(punkt(von))
+        punkte += [punkt(w) for w in ecken_wege if von < w < bis]
+        if bis < 2 * (BREITE + HOEHE):
+            punkte.append(punkt(bis))
+        return punkte
+
+    wege = [randpunkt(diagonale - halb + i * 2 * halb / baender) for i in range(baender + 1)]
+    umfang = 2 * (BREITE + HOEHE)
+    oben, unten = stueck(wege[-1], umfang), stueck(0.0, wege[0])
+    teile = [flaeche(0, oben, unten)] if baender < 3 else [flaeche(0, oben)]
+    for nummer, i in enumerate(reversed(range(baender)), start=1):
+        teile.append(flaeche(nummer, stueck(wege[i], wege[i + 1])))
+    if baender >= 3:
+        teile.append(flaeche(baender + 1, unten))
+    return teile
+
+
 def schreibe(zielordner, name):
     teile = name.split("-")
     if len(teile) != 3 or teile[0] != "diagonal" or teile[1] not in RICHTUNGEN:
         raise SystemExit("Erwartet wird diagonal-<%s>-<baender>, nicht: %s"
                          % ("|".join(RICHTUNGEN), name))
     richtung, baender = teile[1], int(teile[2])
-    if richtung == "faecher":
-        raise SystemExit("Der Faecher ist noch nicht gebaut: " + name)
-
-    features = [json.dumps(f) for f in gebaendert(richtung, baender)]
+    teile = faecher(baender) if richtung == "faecher" else gebaendert(richtung, baender)
+    features = [json.dumps(f) for f in teile]
     kopf = ['{',
             '"type": "FeatureCollection",',
             '"name": "%s",' % name,
