@@ -105,7 +105,7 @@ public abstract class SkinProperties {
 	// Die Skizzen (SketchPane). Die acht Füllfarben tragen Vorgaben, damit kein Skin sie kennen muss —
 	// sie beschreiben eine Flagge und nicht das Aussehen der Suite. Strich und Markierung dagegen
 	// gehören zum Skin und leiten sich in buildCss() aus dessen eigenen Farben ab.
-	protected Double sketchStrokeWidth = 1.8;
+	protected Double sketchStrokeWidth = 1.5;
 	protected Color sketchStrokeColor;  // default = borderShapeColor
 	protected Color sketchMarkedColor;  // default = markedColor
 	protected Color sketchUnmarkedColor; // default = disabledComponentBgColor

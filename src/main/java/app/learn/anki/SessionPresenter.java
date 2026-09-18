@@ -87,7 +87,7 @@ public class SessionPresenter {
 
 	/** Lädt die Struktur und zeigt sie leer — eine zuvor gezeigte Skizze ist damit weg. */
 	void showSketch(String structure) {
-		view.setSketch(sketchSource.load("backgrounds", structure));
+		view.setSketch(sketchSource.loadBackground(structure));
 	}
 
 	/** Hängt eine weitere Struktur an, ohne die bisherigen Füllungen zu verlieren. */

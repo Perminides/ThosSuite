@@ -7,6 +7,7 @@ import java.util.Set;
 import app.shared.model.ScreenView;
 import app.shared.model.ShapeGeometry;
 import app.shared.model.SketchColor;
+import app.shared.model.SketchStructure;
 import app.shared.model.AnkiCallbacks;
 import app.shared.skin.LearnComponent;
 import app.shared.skin.Skin;
@@ -183,7 +184,7 @@ public abstract class AnkiLearnView {
 	// Sie sitzt im Bilderrahmen und teilt sich dessen Feld mit dem Bild — wer das eine zeigt,
 	// verdrängt das andere.
 
-	public void setSketch(List<ShapeGeometry> areas)        { imageComponent.setSketch(areas); }
+	public void setSketch(SketchStructure sketch)           { imageComponent.setSketch(sketch); }
 	public void addSketch(List<ShapeGeometry> areas, int cell, double size, double offsetX,
 			double offsetY) { imageComponent.addSketch(areas, cell, size, offsetX, offsetY); }
 	public void markSketchAreas(List<Integer> areas)                    { imageComponent.markSketchAreas(areas); }

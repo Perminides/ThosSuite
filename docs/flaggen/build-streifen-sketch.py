@@ -16,8 +16,8 @@ Band und belegt die linke Rasterspalte, danach folgen die Streifen von oben. Ein
 dort ausgeschlossen -- er saesse im Band.
 
 Konvention (siehe Flaggen-Deck.md):
-  * Das Seitenverhaeltnis ist immer 3:2 -- die Skizze wird in ein 3:2-Feld eingepasst,
-    ein anderes Verhaeltnis wuerde gestaucht.
+  * Das Seitenverhaeltnis ist immer 3:2. SketchPane passt mit EINEM Massstab ein, verzerrt wird
+    nichts: Ein anderes Verhaeltnis -- der Skizze oder des Feldes im Skin -- gibt nur leere Raender.
   * Die Leinwand ist IMMER 180 x 120. Sie ist keine Kosmetik: SketchPane rechnet das
     3x3-Raster als Drittel der zuerst geladenen Skizze, und die Groesse eines angehaengten
     Elements ergibt sich aus diesem Raster. Eine abweichende Leinwand verzieht jedes

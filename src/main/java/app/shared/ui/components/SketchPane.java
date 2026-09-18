@@ -8,9 +8,12 @@ import java.util.Map;
 import app.shared.model.ShapeGeometry;
 import app.shared.model.ShapeGeometry.Point;
 import app.shared.model.SketchColor;
+import app.shared.model.SketchStructure;
+import app.shared.model.SketchStructure.Canvas;
 import app.shared.skin.SkinService;
 import javafx.css.PseudoClass;
 import javafx.scene.Group;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.ClosePath;
@@ -25,7 +28,7 @@ import javafx.scene.shape.Shape;
  * Eine schematische Skizze aus nummerierten Teilflächen, die sich Fläche für Fläche einfärben lässt.
  *
  * <p>Sie kennt <b>keinen Lern-Typ</b> und nichts von dem, was sie zeigt: die Flächen kommen als
- * {@link ShapeGeometry}-Liste herein, jede mit ihrer Nummer als id. Wer sie füllt und in welcher
+ * {@link SketchStructure} herein, jede mit ihrer Nummer als id. Wer sie füllt und in welcher
  * Reihenfolge, entscheidet der Aufrufer.</p>
  *
  * <p>Sie <b>ist</b> der sichtbare Node — eine StackPane, die ihren Inhalt zentriert. Ihre Größe
@@ -35,7 +38,8 @@ import javafx.scene.shape.Shape;
  * <p><b>Eine Fläche hat drei Zustände.</b> Frisch ist sie umrandet und ungefüllt, markiert bekommt
  * sie zusätzlich eine Füllung, gefüllt trägt sie ihre Farbe und <b>keinen</b> Strich mehr: So
  * verschmelzen zwei benachbarte Flächen derselben Farbe am Ende nahtlos, statt eine Naht zu zeigen,
- * die es auf dem Original nicht gibt.</p>
+ * die es auf dem Original nicht gibt. Füllung und Umriss sind zwei Knoten, die Umrisse einer
+ * Struktur liegen über ihren Füllungen ({@link #addAreas}).</p>
  *
  * <p><b>Den ersten Zustand setzt der Skin ausdrücklich</b>, statt ihn vom JavaFX-Standard zu erben.
  * Der teilt seine Formen nämlich in zwei Familien: Flächen ({@code Polygon}, {@code Circle}) starten
@@ -56,24 +60,46 @@ import javafx.scene.shape.Shape;
 class SketchPane extends StackPane {
 
 	private static final PseudoClass MARKED = PseudoClass.getPseudoClass("marked");
+	private static final PseudoClass FILLED = PseudoClass.getPseudoClass("filled");
 
-	private final Map<Integer, Shape> areas = new HashMap<>();
+	/** Wohin {@link #snapped} achsparallele Kanten legt: 0.5 Pixelmitte (mittiger Strich), 0.0 Pixelgrenze (inside). */
+	private static final double PIXEL = 0.5;
+
+	/** Eine Fläche aus zwei Knoten: die Füllung unten, der Umriss darüber — siehe {@link #addAreas}. */
+	private record Area(Shape fill, Shape outline) {}
+
+	private final Map<Integer, Area> areas = new HashMap<>();
 	private final Group contentGroup = new Group();
 	private final double factor;
 	private final double cellWidth;
 	private final double cellHeight;
 
 	/**
-	 * @param geometries die Teilflächen, jede mit ihrer Nummer als id
+	 * Die Leinwand kommt aus der Struktur, wenn sie eine angibt, sonst ist sie die Box der Flächen.
+	 * Sie liegt als unsichtbare {@code Region} ganz unten in der Gruppe: Die StackPane zentriert
+	 * nach dem, was in der Gruppe liegt — ohne Leinwand rückte eine Flagge, die sie nicht füllt,
+	 * samt allem Aufgelegten in die Mitte, und jedes überstehende Element verschöbe alles.
+	 *
+	 * @param structure die Teilflächen, jede mit ihrer Nummer als id, und ihre Leinwand
 	 * @param width     Breite des Feldes, in das die Skizze eingepasst wird
 	 * @param height      Höhe des Feldes
 	 */
-	public SketchPane(List<ShapeGeometry> geometries, double width, double height) {
-		double[] box = bounds(geometries);
+	public SketchPane(SketchStructure structure, double width, double height) {
+		List<ShapeGeometry> geometries = structure.areas();
+		Canvas canvas = structure.canvas();
+		double[] box = canvas != null
+				? new double[] { canvas.minX(), canvas.minY(), canvas.maxX(), canvas.maxY() }
+				: bounds(geometries);
 		factor = scaleFactor(box, width, height);
 		cellWidth = (box[2] - box[0]) / 3;
 		cellHeight = (box[3] - box[1]) / 3;
 
+		Region leinwand = new Region();
+		// Wunschgröße statt resize: Die Gruppe setzt ihre Kinder beim Layout auf genau diese Größe.
+		leinwand.setPrefSize((box[2] - box[0]) * factor, (box[3] - box[1]) * factor);
+		leinwand.relocate(box[0] * factor, box[1] * factor);
+		leinwand.setMouseTransparent(true);
+		contentGroup.getChildren().add(leinwand);
 		addAreas(geometries, 0, 1);
 
 		getChildren().add(contentGroup); // StackPane zentriert.
@@ -105,8 +131,11 @@ class SketchPane extends StackPane {
 		// cell < 0: Leinwand-Modus — die Silhouette liegt in ihren eigenen Leinwand-Koordinaten
 		// (Gösch, Dreieck), oben auf, ohne Feld-Zentrierung. Wie der Hintergrund im Konstruktor.
 		if (cell >= 0)
-			for (int nummer = basis; nummer < areas.size(); nummer++)
-				place(shapeFor(nummer), cell, offsetX, offsetY);
+			for (int nummer = basis; nummer < areas.size(); nummer++) {
+				Area area = areaFor(nummer);
+				place(area.fill(), cell, offsetX, offsetY);
+				place(area.outline(), cell, offsetX, offsetY);
+			}
 	}
 
 	/**
@@ -120,24 +149,82 @@ class SketchPane extends StackPane {
 		// Auf die Feldmitte, nicht auf die Feldecke: Elementdateien sind um ihren Nullpunkt
 		// zentriert, damit sie beim Verkleinern stehen bleiben statt zur Ecke zu wandern.
 		// Der Versatz rechnet in Dateikoordinaten (y nach oben positiv) und skaliert mit.
-		shape.setTranslateX(cellWidth * factor * (cell % 3 + 0.5) + offsetX * factor);
-		shape.setTranslateY(cellHeight * factor * (cell / 3 + 0.5) - offsetY * factor);
+		// Ganze Pixel, sonst schöbe die Verschiebung die eingerasteten Kanten wieder aus dem Raster.
+		shape.setTranslateX(Math.round(cellWidth * factor * (cell % 3 + 0.5) + offsetX * factor));
+		shape.setTranslateY(Math.round(cellHeight * factor * (cell / 3 + 0.5) - offsetY * factor));
 	}
 
+	/**
+	 * Legt eine Struktur an: erst alle ihre Füllungen, dann alle ihre Umrisse.
+	 *
+	 * <p>Hätte jede Fläche Füllung und Strich in einem Knoten, übermalte die Füllung einer später
+	 * gezeichneten Fläche die halbe Grenzlinie ihres Vorgängers — eine gefärbte Mitte verlöre ihre
+	 * obere Linie zur Hälfte, die untere nicht, je nach Reihenfolge in der Datei. Die Ebenen gelten
+	 * je Struktur und nicht für die ganze Skizze: Sonst liefen die Streifengrenzen über jeden Stern.</p>
+	 */
 	private void addAreas(List<ShapeGeometry> geometries, int basis, double size) {
+		List<Shape> outlines = new ArrayList<>();
 		for (ShapeGeometry geometry : geometries) {
-			Shape area = build(geometry.scaled(factor * size));
-			areas.put(basis + Integer.parseInt(geometry.id()), area);
-			contentGroup.getChildren().add(area);
+			ShapeGeometry geo = snapped(geometry.scaled(factor * size));
+			Shape fill = build(geo, "my-sketch-area");
+			Shape outline = build(geo, "my-sketch-outline");
+			areas.put(basis + Integer.parseInt(geometry.id()), new Area(fill, outline));
+			contentGroup.getChildren().add(fill);
+			outlines.add(outline);
 		}
+		contentGroup.getChildren().addAll(outlines);
+	}
+
+	/**
+	 * Legt waagerechte und senkrechte Kanten auf das Pixelraster, wie das Hinting einer Schrift.
+	 *
+	 * <p>JavaFX glättet exakt und rastet Formen nicht ein (JDK-8087928, offen seit 2010): Ein Strich
+	 * von 1 px, der zwischen zwei Pixelreihen liegt, wird zu zwei blassen Reihen, einer auf einer
+	 * Pixelreihe bleibt scharf. Welche Grenze wie getroffen wird, entschiede sonst der Zufall des
+	 * Maßstabs. Gerundet wird deshalb nur, was auf einer achsparallelen Kante liegt; schräge Kanten
+	 * und Kurven behalten ihre Lage, sonst würden dicht liegende Punkte zur Treppe.</p>
+	 *
+	 * <p>{@link #PIXEL} und {@code -fx-stroke-type} im Skin gehören zusammen: {@code 0.5} legt die
+	 * Kante auf die Pixelmitte, passend zum mittigen Strich; {@code 0.0} auf die Pixelgrenze, passend
+	 * zu {@code inside}.</p>
+	 */
+	private static ShapeGeometry snapped(ShapeGeometry geometry) {
+		if (geometry.kind() != ShapeGeometry.Kind.POLYGON)
+			return geometry;
+		List<List<Point>> rings = new ArrayList<>();
+		for (List<Point> ring : geometry.paths())
+			rings.add(snapped(ring));
+		return ShapeGeometry.polygon(geometry.id(), rings);
+	}
+
+	private static List<Point> snapped(List<Point> ring) {
+		boolean closed = ring.size() > 1 && ring.get(0).equals(ring.get(ring.size() - 1));
+		int n = closed ? ring.size() - 1 : ring.size();
+		List<Point> result = new ArrayList<>();
+		for (int i = 0; i < n; i++) {
+			Point p = ring.get(i);
+			Point prev = ring.get((i - 1 + n) % n);
+			Point next = ring.get((i + 1) % n);
+			boolean senkrecht = p.x() == prev.x() || p.x() == next.x();
+			boolean waagerecht = p.y() == prev.y() || p.y() == next.y();
+			result.add(new Point(senkrecht ? snap(p.x()) : p.x(), waagerecht ? snap(p.y()) : p.y()));
+		}
+		if (closed)
+			result.add(result.get(0));
+		return result;
+	}
+
+	/** Der nächste Wert, der um {@link #PIXEL} neben einer ganzen Zahl liegt. */
+	private static double snap(double value) {
+		return Math.floor(value - PIXEL + 0.5) + PIXEL;
 	}
 
 	/** Polygon oder Kreis — beide tragen dieselbe Style-Klasse und kennen dieselben drei Zustände. */
-	private static Shape build(ShapeGeometry geometry) {
+	private static Shape build(ShapeGeometry geometry, String styleClass) {
 		Shape shape = geometry.kind() == ShapeGeometry.Kind.CIRCLE
 				? buildCircle(geometry)
 				: buildPath(geometry);
-		shape.getStyleClass().add("my-sketch-area");
+		shape.getStyleClass().add(styleClass);
 		shape.setMouseTransparent(true); // Die Skizze zeigt nur an, sie nimmt keine Klicks.
 		return shape;
 	}
@@ -162,17 +249,18 @@ class SketchPane extends StackPane {
 	 * zusammen und werden gemeinsam gefragt, also müssen sie auch gemeinsam leuchten.</p>
 	 */
 	public void mark(List<Integer> marked) {
-		for (Shape shape : areas.values())
-			shape.pseudoClassStateChanged(MARKED, false);
+		for (Area area : areas.values())
+			area.fill().pseudoClassStateChanged(MARKED, false);
 		for (int area : marked)
-			shapeFor(area).pseudoClassStateChanged(MARKED, true);
+			areaFor(area).fill().pseudoClassStateChanged(MARKED, true);
 	}
 
 	/** Färbt Flächen. Markierte verlieren dabei ihre Markierung — gefüllt sticht markiert. */
 	public void fill(List<Integer> filled, SketchColor color) {
 		for (int area : filled) {
-			Shape shape = shapeFor(area);
+			Shape shape = areaFor(area).fill();
 			shape.pseudoClassStateChanged(MARKED, false);
+			areaFor(area).outline().pseudoClassStateChanged(FILLED, true);
 			// Exklusiv: eine Fläche trägt genau eine Farbe, sonst entschiede die Reihenfolge im Stylesheet.
 			for (SketchColor other : SketchColor.values())
 				shape.getStyleClass().remove(other.styleClass());
@@ -180,11 +268,11 @@ class SketchPane extends StackPane {
 		}
 	}
 
-	private Shape shapeFor(int number) {
-		Shape shape = areas.get(number);
-		if (shape == null)
+	private Area areaFor(int number) {
+		Area area = areas.get(number);
+		if (area == null)
 			throw new RuntimeException("Die Skizze hat keine Fläche " + number + ", sondern " + areas.size());
-		return shape;
+		return area;
 	}
 
 	/**
