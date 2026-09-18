@@ -7,8 +7,9 @@ Der Name ist `dreieck-<form>` oder `dreieck-<form>-<farbanzahl>`, genau wie der 
 ableitet. Die Form ist der Wert der Spalte "Dreieck von links?", die Farbanzahl der Wert von
 "Die Dreiecksform(en) bestehen aus wie vielen Farben?". Bei einer Farbe faellt der Zusatz weg.
 
-Gebaut sind Form 1 (Dreieck nur in der linken Haelfte, Spitze bei 72) und Form 3 (bis zum
-rechten Rand, Spitze bei 180). Trapez und Uebergang in eine Spur sind eigene Geometrie und kommen,
+Gebaut sind Form 1 (Dreieck nur in der linken Haelfte, Spitze bei 72), Form 2 (Trapez, siehe
+`trapez`) und Form 3 (bis zum rechten Rand, Spitze bei 180). Der Uebergang in eine Spur ist eigene
+Geometrie und kommt,
 wenn die erste Flagge sie braucht. `dreieck-1` und `dreieck-3` kommen byteweise so heraus, wie sie
 von Hand angelegt wurden.
 
@@ -51,15 +52,33 @@ def dreiecke(form, anzahl):
     return teile
 
 
+def trapez(anzahl):
+    """Kuwait: eher ein Trapez als ein Dreieck.
+
+    Die lange Seite ist der ganze linke Rand, die kurze Seite steht bei 60 und reicht von 40 bis 80.
+    Beide Zahlen sind das Raster: eine Feldbreite nach rechts, genau die mittlere Zeile hoch.
+
+    Nur einfarbig. Mehrere Farben waeren ineinanderliegende Trapeze, und wie die sich verjuengen,
+    entscheidet die erste Flagge, die sie braucht.
+    """
+    if anzahl != 1:
+        raise SystemExit("Das Trapez gibt es bisher nur einfarbig, nicht mit %d Farben" % anzahl)
+    return [flaeche(0, [(0, 0), (BREITE / 3, HOEHE / 3), (BREITE / 3, 2 * HOEHE / 3), (0, HOEHE)])]
+
+
 def schreibe(zielordner, name):
     teile = name.split("-")
     if teile[0] != "dreieck" or len(teile) not in (2, 3):
         raise SystemExit("Erwartet wird dreieck-<form>[-<farbanzahl>], nicht: " + name)
     form = int(teile[1])
     anzahl = int(teile[2]) if len(teile) == 3 else 1
-    if form not in SPITZE:
+    if form == 2:
+        teile = trapez(anzahl)
+    elif form in SPITZE:
+        teile = dreiecke(form, anzahl)
+    else:
         raise SystemExit("Form %d ist noch nicht gebaut: %s" % (form, name))
-    features = [json.dumps(f) for f in dreiecke(form, anzahl)]
+    features = [json.dumps(f) for f in teile]
     kopf = ['{',
             '"type": "FeatureCollection",',
             '"name": "%s",' % name,

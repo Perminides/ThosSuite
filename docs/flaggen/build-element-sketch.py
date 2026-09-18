@@ -328,7 +328,7 @@ def landumriss():
     return [flaeche(0, [ring(punkte)])]
 
 
-ELEMENTE = {"kreis": kreis, "sichel": sichel, "stern": einzelstern, "raute": raute, "schrift-t": schrift_t,
+ELEMENTE = {"kreis": kreis, "mond": sichel, "stern": einzelstern, "raute": raute, "schrift": schrift_t,
             "stern-haufen": sternhaufen, "stern-zwei": zweisterne, "muster": muster, "kreuz": kreuz, "landumriss": landumriss,
             "stern-drei": dreisterne, "stern-vier": viersterne, "stern-fuenf": fuenfsterne}
 

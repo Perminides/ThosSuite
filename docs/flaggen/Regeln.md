@@ -140,8 +140,12 @@ uni                                sw-<n>            spezial-<n>
 Wörter statt Ziffern in den Zweignamen. Gösch und Dreieck stehen nicht im Namen, sie werden aufgelegt.
 
 Wo nach der **Verteilung** gefragt wird, steht sie im Namen. Bei fünf waagerechten Streifen ist es die
-**ganze Abfolge** der Breiten: `waagerecht-5-3-1-2-1-3` — die Zahlen sind das Verhältnis selbst,
-`build-streifen-sketch.py` liest sie direkt, keine Tabelle. Drei waagerechte (`waagerecht-3-<3W>`) und
+**ganze Abfolge** der Breiten: `waagerecht-5-3-1-2-1-3`. Die Zahlen sind eine **Rangfolge**, kein
+Maß: 3 ist breiter als 2, 2 breiter als 1 — mehr sagen sie nicht. Eine 3 wird nicht dreimal so breit
+gezeichnet wie eine 1. Die tatsächlichen Breiten in der Skizze werden nach Aussehen gewählt, so
+wird `waagerecht-5-2-1-3-1-2` mit 2 : 1 : 4 : 1 : 2 gezeichnet. Die Zuordnung steht in der Tabelle
+`GEZEICHNET` in `build-streifen-sketch.py`, ohne Eintrag zeichnet das Skript die Rangfolge wörtlich.
+Derselbe Name ergibt so immer dieselbe Datei. Drei waagerechte (`waagerecht-3-<3W>`) und
 senkrechte (`senkrecht-<n>-<S-Anordnung>`) tragen weiter den **Index**; er schlägt in einer Fallback-
 Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenzahlen kein Zusatz.
 
@@ -151,6 +155,9 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
   Dreieck → Rahmen → Zusatzelemente → je Element Anzahl und Ort → zeichnen → **alle Farben** → echte
   Flagge. Gösch, Dreieck und Rahmen werden jeweils direkt nach ihrer Frage aufgelegt; bei
   Sonderhintergründen entfallen alle drei.
+- **Eine Frage entfällt nur, wenn eine früher beantwortete sie überflüssig macht.** Nie, weil eine
+  spätere Antwort sie überflüssig machen wird — sonst verrät schon ihr Fehlen, was kommt. Gösch,
+  Dreieck und Rahmen entfallen bei Sonderhintergründen, weil „Anderes" vorher beantwortet ist.
 - Gefärbt wird gesammelt am Ende, Hintergrundflächen und Elemente zusammen.
 - Zwei Shuffle-Blöcke: erst alle **Attribut-Fragen** (Anzahl, geteilt) gemischt, dann alle **Ortsfragen**
   gemischt. So steht die Anzahl vor dem Ort, und in keinem Block leakt die Reihenfolge das Blatt.
@@ -163,6 +170,11 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 - Tolerierte Zweitantworten stehen als Klammer in der Zelle: `4(9)`, mehrere mit `|` getrennt:
   `4(9|5)`. Kein Komma — das trennt im Blatt die Spalten. Der Generator macht daraus `~`-Optionen:
   falsch, aber ohne Abbruch.
+- Die Klammer gilt in **jeder Spalte, zu der eine Frage gehört** — Streifenzahlen, `5W`, Gösch,
+  Rahmen, Dreieck, Anzahlen, alle kodierten Spalten. Gezeichnet und weitergefragt wird immer mit dem
+  Wert vor der Klammer: Wer die tolerierte Antwort klickt, geht den Weg der richtigen weiter.
+  Verboten ist sie in Spalten ohne Frage (`Generieren`, `Version`, `ShapeId`, `Spezial`) und beim
+  Hintergrundtyp für Kreuz und Diagonale; dort bricht der Generator ab.
 - Dieselbe Klammer gilt für **Elementnamen**: `Vogel (Emblem)` heißt „richtig ist Vogel, wer Emblem
   klickt, wird nicht bestraft". Überall sonst — Artikel, Ortsfrage, Elementdatei — zählt nur der
   Name vor der Klammer.

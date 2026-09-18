@@ -3,9 +3,13 @@
 Aufruf:
     python build-streifen-sketch.py <zielordner> waagerecht-3 senkrecht-4 sw-2 waagerecht-5-3-1-2-1-3 ...
 
-Der Name traegt die Streifenzahl und wahlweise die Verteilung: so viele Zahlen wie Streifen sind das
-Breitenverhaeltnis selbst (waagerecht-5-3-1-2-1-3), eine einzelne Zahl ist ein Index in die
+Der Name traegt die Streifenzahl und wahlweise die Verteilung: so viele Zahlen wie Streifen sind eine
+Rangfolge der Breiten (waagerecht-5-3-1-2-1-3), eine einzelne Zahl ist ein Index in die
 Fallback-Tabelle VERTEILUNG (3W, senkrecht), keine Zusatzzahl heisst gleich breit.
+
+Die Rangfolge ist kein Mass: 3 > 2 > 1, mehr nicht. Die gezeichneten Breiten werden nach Aussehen
+gewaehlt und stehen in GEZEICHNET; ohne Eintrag wird die Rangfolge woertlich gezeichnet. So erzeugt
+derselbe Name immer dieselbe Datei.
 
 `sw-<n>` ist das senkrechte Band am Mast mit waagerechten Streifen daneben: Flaeche 0 ist das
 Band und belegt die linke Rasterspalte, danach folgen die Streifen von oben. Ein Goesch ist
@@ -53,6 +57,17 @@ VERTEILUNG = {
     # diesem Wert, haben genau dieses Verhaeltnis.
     ("senkrecht", 3, 1): [1, 2, 1],
 }
+
+# Rangfolge aus dem Namen -> gezeichnete Breiten. Die Zahlen im Namen ordnen nur (3 > 2 > 1), wie breit
+# es aussieht, entscheidet das Auge. Ohne Eintrag wird die Rangfolge woertlich gezeichnet.
+GEZEICHNET = {
+    (2, 1, 3, 1, 2): [2, 1, 4, 1, 2],     # Eswatini, Nordkorea, Suriname: woertlich war die Mitte zu schmal
+}
+
+# Waagerechte Streifenzahlen, deren Streifen abwechselnd zwei Farben tragen. Dort gibt es nur zwei
+# Flaechen: 0 sind die Streifen 0, 2, 4 ..., 1 die dazwischen, jede in mehreren Stuecken. Elf Streifen
+# einzeln zu faerben waere nur Fleissarbeit -- Liberia ist die einzige Flagge damit.
+ABWECHSELND = [11]
 
 
 def masse(anzahl):
@@ -118,20 +133,29 @@ def flaechen(richtung, anzahl, goesch, gewichte):
         return
 
     kanten = grenzen(gewichte, hoehe if richtung == "waagerecht" else breite)
+    streifen = []
     for i in range(anzahl):
         if richtung == "waagerecht":
             x0, y0, x1, y1 = 0, -kanten[i], breite, -kanten[i + 1]
         else:
             x0, y0, x1, y1 = kanten[i], 0, kanten[i + 1], -hoehe
-        yield flaeche(i, ohne_goesch(x0, y0, x1, y1, gx, gy) if goesch else ring(x0, y0, x1, y1))
+        streifen.append(ohne_goesch(x0, y0, x1, y1, gx, gy) if goesch else ring(x0, y0, x1, y1))
+    if richtung == "waagerecht" and anzahl in ABWECHSELND:
+        yield flaeche(0, *streifen[0::2])
+        yield flaeche(1, *streifen[1::2])
+        naechste = 2
+    else:
+        for i, r in enumerate(streifen):
+            yield flaeche(i, r)
+        naechste = anzahl
     if goesch:
-        yield flaeche(anzahl, ring(0, 0, gx, gy))
+        yield flaeche(naechste, ring(0, 0, gx, gy))
 
 
-def flaeche(nummer, r):
+def flaeche(nummer, *ringe):
     return {"type": "Feature",
             "properties": {"id": nummer},
-            "geometry": {"type": "MultiPolygon", "coordinates": [[r]]}}
+            "geometry": {"type": "MultiPolygon", "coordinates": [[r] for r in ringe]}}
 
 
 def schreibe(zielordner, name):
@@ -144,12 +168,13 @@ def schreibe(zielordner, name):
         raise SystemExit("Ein Goesch belegt Rasterfeld 0 -- da steht bei sw schon das Band: " + name)
     anzahl = int(teile[1])
 
-    # Die Streifenbreiten: stehen so viele Zahlen im Namen wie es Streifen gibt, sind sie das
-    # Verhaeltnis direkt (waagerecht-5-3-1-2-1-3). Eine einzelne Zahl ist der alte Index in die
+    # Die Streifenbreiten: stehen so viele Zahlen im Namen wie es Streifen gibt, sind sie eine Rangfolge
+    # (waagerecht-5-3-1-2-1-3), gezeichnet nach GEZEICHNET. Eine einzelne Zahl ist der alte Index in die
     # Fallback-Tabelle (3W, senkrecht); gar keine Zusatzzahl heisst gleich breit.
     rest = teile[2:]
     if len(rest) == anzahl:
-        gewichte = [int(x) for x in rest]
+        rang = tuple(int(x) for x in rest)
+        gewichte = GEZEICHNET.get(rang, list(rang))
     elif len(rest) == 1:
         gewichte = VERTEILUNG.get((richtung, anzahl, int(rest[0])), [1] * anzahl)
     else:

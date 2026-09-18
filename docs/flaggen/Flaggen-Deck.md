@@ -2,7 +2,7 @@
 
 **Stand:** 28.08.2026 — **Beide Fragenstaffeln stehen, alle 206 Flaggen sind danach attributiert**,
 und **der Skizzen-Mechanismus ist entschieden.** Siebzehn Spalten für den Hintergrund, elf im
-Zusatzelemente-Blatt, geprüft durch `pruefe-attribute.py`, null Widersprüche. Der **Durchstich
+Zusatzelemente-Blatt, geprüft durch `FlagSheetCheck`, null Widersprüche. Der **Durchstich
 läuft**: Deutschland und Dänemark sind ein Proof of Concept in der Suite, mit aufbauender Skizze.
 
 Am 26.08. ist geklärt worden, **was in eine Sketch-Datei gehört und was zur Laufzeit dazukommt**
@@ -154,7 +154,7 @@ Anzahl, und die fängt bei 2 an. `Diagonal Anzahl Streifen` ist die Ausnahme unt
 dort bedeutet die 0 „Teilung vorhanden, aber kein eigenes Band", so wie Bhutan und
 Papua-Neuguinea.
 
-Genau daran hängen die Prüfregeln in `pruefe-attribute.py`: Eine Spalte trägt **genau dann** einen
+Genau daran hängen die Prüfregeln in `FlagSheetCheck`: Eine Spalte trägt **genau dann** einen
 Wert statt `x`, wenn die Frage davor hierher geführt hat.
 
 Die Werte entsprechen den Antwortoptionen ihrer Frage, nullbasiert:
@@ -174,7 +174,7 @@ S-Anordnung  0 gleichmäßig breit    Kreuzausrichtung  0 senkrecht     Kreuzarm
 
 Diagonal Richtung  0 steigend                        Diagonal Anzahl  0 kein Band, Flächen stoßen an
                    1 fallend                          Streifen         1 · 2 · 3 · 4 Bänder
-                   2 strahlenförmig aus einer Ecke
+                   2 strahlenförmig steigend (Fächer)
 
 Dreieck von links  1 einzelnes echtes Dreieck        Dreiecksflächen  1 äußere als Umrandung
                    2 abgeschnittenes Dreieck                          2 zwei verschiedene Tiefen
@@ -283,16 +283,27 @@ die Farbe des Kreuzes nicht zu sehen.
 
 | Spalte | Frage | Optionen |
 |---|---|---|
-| `Diagonal Richtung` | Wie läuft die Diagonale? | steigend · fallend · strahlenförmig aus einer Ecke |
-| `Diagonal Anzahl Streifen` | Wie viele diagonale Bänder laufen durch? | kein Band, die Flächen stoßen aneinander · 1 · 2 · 3 · 4 |
+| `Diagonal Richtung` | Wie läuft die Diagonale bzw. laufen die Diagonalen? | steigend · fallend |
+| `Diagonal Anzahl Streifen` | Wie viele diagonale Bänder laufen durch? | kein Band, die Flächen stoßen aneinander · 1 · 2 · 3 · 4 · 5 |
+| `Diagonal Richtung` | Wie laufen die Bänder? (ab zwei Bändern) | parallel zueinander · strahlenförmig aus einer Ecke |
+
+Der Richtungscode trägt zwei Achsen: 0 und 1 sind parallel steigend und fallend, 2 ist der Fächer,
+der immer steigt. Die Frage nach der Form kommt erst ab zwei Bändern: Ohne Band ist sie sinnlos, und
+ein einzelnes Band ist im Blatt nie keilförmig (Republik Kongo, Salomonen), die Frage unterschiede dort
+nichts. Kommt ein einzelner Keil dazu, braucht es eine eigene Fassung — „parallel zueinander" passt
+bei einem Band nicht. Einen fallenden Fächer hat keine Flagge im Blatt, er bräuchte einen neuen Code.
 
 Gezählt werden **Bänder**, nicht Flächen — derselbe Begriff wie überall sonst im Dokument. Die
 Flächenzahl folgt daraus: `Bänder + 2`, bei „kein Band" sind es 2. Das rechnet der Generator.
+Ausnahme ist der Fächer mit ein oder zwei Bändern: Dort ist das Feld über und unter dem Fächer eine
+Fläche, die Marshallinseln haben also `Bänder + 1`.
 
-Die beiden Fragen zerlegen den Zweig in acht Sketches. Bhutan und Papua-Neuguinea haben beide zwei
+Beide Spalten dürfen eine Toleranzklammer tragen, wie jede kodierte Spalte: `3 (5)` lässt bei den
+Seychellen die 5 durchgehen, deren Fächer man auch als fünf Bänder lesen kann.
+
+Richtung und Anzahl zerlegen den Zweig in acht Sketches. Bhutan und Papua-Neuguinea haben beide zwei
 Flächen ohne Band, sind aber gespiegelt und teilen sich deshalb keinen. Der dritte Richtungswert trägt
-die Seychellen, deren Fächer weder steigt noch fällt — ohne ihn wären sie als „steigend" falsch
-beschrieben.
+die Marshallinseln und die Seychellen: Ihre Bänder steigen, laufen aber nicht parallel.
 
 Dieser Zweig hat lange gefehlt: Alle zwölf trugen dieselbe Signatur, und damit konnte der Generator
 für keine von ihnen einen Sketch-Namen ableiten. Aufgefallen ist es beim Durchspielen von
@@ -788,7 +799,7 @@ Elementdatei liegt kanonisch in Feld 0, mit etwas Luft ringsum. Platzieren ist d
 ganzzahlige Verschiebung, keine Skalierung und keine Figur.
 
 Drei Dinge fallen dadurch weg oder werden billig: Aus dem Produkt „63 Hintergründe × Elemente" wird
-eine **Summe** — `kreis`, `stern`, `sichel` werden von allen Hintergründen benutzt, so wie
+eine **Summe** — `kreis`, `stern`, `mond` werden von allen Hintergründen benutzt, so wie
 `waagerecht-3` von Deutschland und Österreich. Die Reihenfolge der Auflagen **steht in der Zeile**
 statt in einer Rangfolge-Konvention. Und ein neuer Elementtyp ist eine neue kleine Datei.
 
@@ -804,7 +815,7 @@ Skalierung schon.
 **Dass die Fragen dafür je Zweig anders geordnet sind, ist kein Problem** — das Blatt war nie die
 Fragenreihenfolge. §2 sagt es ausdrücklich: Zwischen Attribut und Frage liegt eine Ableitung, und die
 wohnt im Generator. Er darf `Wo?` im Kreis-Zweig früh und im Figuren-Zweig spät stellen; die Spalte
-bleibt im Blatt da stehen, wo sie sich am besten liest. Weder `pruefe-attribute.py` noch die
+bleibt im Blatt da stehen, wo sie sich am besten liest. Weder `FlagSheetCheck` noch die
 HTML-Seite hängen an der Spaltenreihenfolge.
 
 Gezeichnet wird in den Szenengraph, nicht in ein fertiges Bild: `SketchPane` (paketprivat, Innenleben
@@ -1062,7 +1073,7 @@ einen **Trockenlauf** — jede erzeugte Zeile wird durchgespielt, der Flächenst
 geprüft, dass jeder `Mark`- und `Fill`-Index zu diesem Zeitpunkt existiert. Das ist der Preis dafür,
 dass die gültige Flächennummer mit `Add` eine Summe über alles bisher Geladene ist: Ein Rechenfehler
 fiele sonst nicht beim Parsen auf, sondern mitten in der Lern-Session. Die Prüfung gehört neben
-`pruefe-attribute.py`, nicht in den Bau.
+`FlagSheetCheck`, nicht in den Bau.
 
 **Pro neuer Sketch-Familie eine handgeschriebene Karte.** So wie Deutschland: eine Zeile, ein Sketch,
 einmal durchspielen. Nicht pro Zweig — allein waagerecht hat drei Familien (nur Streifen, mit
@@ -1093,7 +1104,7 @@ Daneben gibt es eine HTML-Seite, die dieses Sheet beim
 lässt sich in Sekunden prüfen, ob ein Cluster wirklich mit *einem* Sketch auskommt. Aktueller Stand:
 **206 Flaggen, 63 Signaturen, 34 Einzelgänger.**
 
-Daneben liegt **`pruefe-attribute.py`**, das findet, was man am Bild nicht sieht: Spalten, die gesetzt
+Daneben liegt **`FlagSheetCheck`** (anfangs `pruefe-attribute.py`), das findet, was man am Bild nicht sieht: Spalten, die gesetzt
 sein müssten, weil die Frage davor hingeführt hat, und umgekehrt. Es hat unter anderem Burundi und
 Grenada ohne Kreuzantworten gefunden, Nepal mit Werten hinter seinem Ausstieg und eine Signatur-Formel,
 die beim Einfügen einer Spalte nicht mitgewachsen war. Eine neue Frage ist dort eine Zeile in `REGELN`.
@@ -1174,6 +1185,23 @@ reine Dateneingabe ohne Entwurfsrisiko.
   welche Fassung gilt.
 - **Zwilling Nicaragua / El Salvador** — beide blau-weiß-blau mit mittigem Dreieck im Kranz. Löst
   keine Struktur, nur eine gezielte Stichfrage.
+- **Frage 2 und das Dreieck von links** — drei Karten knirschen an Stellen, an denen man sich etwas
+  Unsichtbares denken muss. *Eritrea:* Das Dreieck reicht bis zum rechten Rand und verdeckt die
+  Grenze zwischen Grün und Blau vollständig. Nimmt man es weg, bleibt kein Bild, nach dessen
+  Hintergrund man fragen könnte (dasselbe bei Guyana, Südafrika, Vanuatu). *Grenada:* Man sieht vier
+  Dreiecke, die sich in der Mitte treffen. Kreuz und Diagonale sind beide vertretbar, gewertet wird
+  nur das Kreuz. *Bhutan:* „Diagonale" klingt nach Linie oder Band, zu sehen ist nur ein Farbwechsel.
+  Dazu kommt, dass Frage 2 nach Begriffen fragt, die man erst übersetzen muss.
+  Idee: Das Dreieck wird eine vierte Antwort auf Frage 2 — „Kreuz · Diagonale · Dreieck von links ·
+  Nichts davon". Flaggen ohne Dreieck verlieren dadurch die spätere Frage „Kein Dreieck" und werden
+  eine Frage kürzer. Bei „bis zum rechten Rand" entfällt die Hintergrundfrage ganz, die Skizze ist
+  `waagerecht-2`, oben und unten werden eingefärbt. Die Malreihenfolge bleibt für alle anderen
+  erhalten, weil das Dreieck dort nur früher benannt und später aufgelegt wird.
+  Offen: Frage 2 wird damit noch schwerer. Möglicher Ausweg sind beschreibende Antworten statt
+  Begriffe („Ein Kreuz, gerade oder schräg" · „Eine schräge Teilung, von Ecke zu Ecke" · „Eine Form,
+  die von links hineinragt" · „Nichts davon"). Grenada bräuchte dann eine Toleranz in Frage 2, und die
+  gibt es heute nicht — die Klammer beim Hintergrundtyp sperrt Kreuz und Diagonale. Antigua könnte
+  neu „von links" angeklickt werden, das ließe sich im Blatt tolerieren.
 - **Ob überhaupt gebaut wird.** Der Aufwand aus Expander und Renderer ist für ein Deck mit Decke
   beträchtlich. Die zwei Gründe, die dafür sprechen: die aufbauende Skizze geht handgeschrieben nicht,
   und nur ein Generator garantiert, dass ähnliche Flaggen denselben Pfad nehmen und exakt dort
