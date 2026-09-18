@@ -12,7 +12,10 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 - Y in der Datei nach oben positiv, beim Einlesen invertiert.
 - **3×3-Raster**, ein Feld 60 × 40, Felder zeilenweise nummeriert 0…8.
 - Hintergrunddateien füllen die Leinwand exakt. `SketchPane` nimmt den Maßstab aus der Bounding Box
-  des zuerst geladenen Sketches — eine abweichende Leinwand verzieht jedes angehängte Element.
+  des zuerst geladenen Sketches — bei einer abweichenden Leinwand stimmen Größe und Versatz jedes
+  angehängten Elements nicht mehr, denn die rechnen in festen Einheiten der Leinwand.
+- Ein Feld im Skin, das nicht 3:2 ist, schadet nicht: Eingepasst wird mit **einem** Maßstab, die
+  Skizze bleibt unverzerrt und bekommt leere Ränder.
 - Die Skizze wird um `2 × Strichbreite` zu groß gerechnet, damit ihre Außenkante im Clip des
   Bilderrahmens verschwindet.
 - Streifengrenzen dürfen Dezimalstellen haben.
@@ -220,8 +223,8 @@ Jeder erzeugte Fragetyp bekommt einen eigenen Block von zehntausend, die handges
 Zusatzfragen liegen ab einer Million.
 
 ```
-        1 …  9214   Flaggenkarte              generiert
-    10001 … 19214   Flagge zu Karte           generiert
+        1 …  9214   Flagge skizzieren         generiert
+    10001 … 19214   Flagge auf Karte finden   generiert
     20001 … 29214   der nächste Typ           generiert
   k·10000 + Id      Block k, bis k = 99       generiert
 1000000 + Land·1000 + n                       von Hand, 1000 je Land

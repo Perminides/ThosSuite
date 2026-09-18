@@ -288,7 +288,7 @@ public class FlagDeckGenerator {
 
 	/** Die vollständige Zeile: Id, Bemerkung, Label, dann die Schritte. */
 	private List<String> card(List<String> row) {
-		List<String> steps = new ArrayList<>(List.of(String.valueOf(id(row)), remark(row), "Flagge",
+		List<String> steps = new ArrayList<>(List.of(String.valueOf(id(row)), remark(row), "Flagge skizzieren",
 				"Mark:" + shape(row)));
 
 		ask(steps, "Welche Form hat die Flagge?",
@@ -388,7 +388,7 @@ public class FlagDeckGenerator {
 	 * Flaggenkarte — {@link #image} für die Datei, {@link #shape} für die Fläche auf der Weltkarte.</p>
 	 */
 	private List<String> mapCard(List<String> row) {
-		return List.of(String.valueOf(MAP_CARD_BASE + id(row)), remark(row), "Flagge zu Karte",
+		return List.of(String.valueOf(MAP_CARD_BASE + id(row)), remark(row), "Flagge auf Karte finden",
 				"Image:" + image(row), "Click:" + shape(row));
 	}
 

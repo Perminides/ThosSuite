@@ -13,6 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import app.shared.Config;
 import app.shared.model.ShapeGeometry;
 import app.shared.model.ShapeGeometry.Point;
+import app.shared.model.SketchStructure;
+import app.shared.model.SketchStructure.Canvas;
 
 /**
  * Liest eine Strukturdatei und gibt ihre Teilflächen als {@link ShapeGeometry} zurück.
@@ -37,16 +39,45 @@ public class SketchFileSource {
 	 * @param structure der Name der Struktur, ohne Endung (etwa {@code waagerecht-3})
 	 */
 	public List<ShapeGeometry> load(String subfolder, String structure) {
+		return parseAreas(read(subfolder, structure), structure);
+	}
+
+	/**
+	 * Ein Hintergrund samt seiner Leinwand. Die steht nur in der Datei, wenn die Flächen sie nicht
+	 * füllen — als GeoJSON-{@code bbox}, sonst ist sie {@code null}.
+	 */
+	public SketchStructure loadBackground(String structure) {
+		JsonNode root = read("backgrounds", structure);
+		return new SketchStructure(parseAreas(root, structure), parseCanvas(root, structure));
+	}
+
+	private JsonNode read(String subfolder, String structure) {
 		Path file = Config.getPath("sketchFolder").resolve(subfolder).resolve(structure + ".geojson");
 		try {
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode root = mapper.readTree(file.toFile());
-			List<ShapeGeometry> areas = parseFeatures(root, structure);
-			checkAreaNumbers(areas, structure);
-			return areas;
+			return new ObjectMapper().readTree(file.toFile());
 		} catch (IOException e) {
 			throw new RuntimeException("Fehler beim Laden der Struktur: " + file, e);
 		}
+	}
+
+	private List<ShapeGeometry> parseAreas(JsonNode root, String structure) {
+		List<ShapeGeometry> areas = parseFeatures(root, structure);
+		checkAreaNumbers(areas, structure);
+		return areas;
+	}
+
+	/** {@code bbox} ist {@code [minX, minY, maxX, maxY]} mit Y nach oben — invertiert wie die Flächen. */
+	private Canvas parseCanvas(JsonNode root, String structure) {
+		JsonNode bbox = root.path("bbox");
+		if (bbox.isMissingNode())
+			return null;
+		if (!bbox.isArray() || bbox.size() != 4)
+			throw new RuntimeException("bbox braucht vier Zahlen [minX, minY, maxX, maxY] (Struktur " + structure + ")");
+		for (JsonNode value : bbox)
+			if (!value.isNumber())
+				throw new RuntimeException("bbox enthält etwas anderes als Zahlen (Struktur " + structure + ")");
+		return new Canvas(bbox.get(0).asDouble(), -bbox.get(3).asDouble(), bbox.get(2).asDouble(),
+				-bbox.get(1).asDouble());
 	}
 
 	private List<ShapeGeometry> parseFeatures(JsonNode root, String structure) {

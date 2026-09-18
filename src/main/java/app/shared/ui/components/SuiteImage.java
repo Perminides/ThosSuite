@@ -18,6 +18,7 @@ import app.shared.Config;
 import app.shared.model.BigComponentStyle;
 import app.shared.model.ShapeGeometry;
 import app.shared.model.SketchColor;
+import app.shared.model.SketchStructure;
 import app.shared.skin.SkinService;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Rectangle2D;
@@ -293,9 +294,9 @@ public class SuiteImage extends StackPane {
      * <p>Die Skizze wird an den Ecken beschnitten wie das Bild. Sie fällt dabei eine Spur größer aus
      * als die Ebene, damit ihre äußere Kontur ganz im Clip verschwindet; siehe {@link SketchPane}.</p>
      */
-    public void setSketch(List<ShapeGeometry> areas) {
+    public void setSketch(SketchStructure structure) {
         clearImageLayer();
-        sketch = new SketchPane(areas, contentPane.getPrefWidth(), contentPane.getPrefHeight());
+        sketch = new SketchPane(structure, contentPane.getPrefWidth(), contentPane.getPrefHeight());
         contentPane.getChildren().setAll(sketch);
     }
 
