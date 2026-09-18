@@ -647,8 +647,19 @@ public abstract class Skin extends SkinProperties {
 	       // jede Form aus derselben Regel kommen. Die Farbregeln stehen als Zwei-Klassen-Selektoren
 	       // darueber und koennen damit nicht kollidieren.
 	       .add("-fx-fill", sketchUnmarkedColor)
+	       .add("-fx-stroke", "transparent") // Ein Path hat sonst einen schwarzen Strich; der Umriss ist ein eigener Knoten.
+	       .end();
+
+	    // Der Umriss liegt als eigener Knoten ueber den Fuellungen seiner Struktur (SketchPane.addAreas),
+	    // sonst uebermalte eine spaeter gezeichnete Fuellung die halbe Linie ihres Nachbarn.
+	    builder.start(".my-sketch-outline")
+	       .add("-fx-fill", "transparent")
 	       .add("-fx-stroke", sketchStrokeColor)
 	       .add("-fx-stroke-width", sketchStrokeWidth + "px")
+	       .end();
+
+	    builder.start(".my-sketch-outline:filled")
+	       .add("-fx-stroke", "transparent")
 	       .end();
 
 	    // Die gefragte Flaeche wird SCHRAFFIERT statt eingefaerbt. Ein Farbton kaeme immer einer der
@@ -691,7 +702,6 @@ public abstract class Skin extends SkinProperties {
 	private void addSketchColorRule(CssBuilder builder, SketchColor color, Color value) {
 	    builder.start(".my-sketch-area." + color.styleClass())
 	       .add("-fx-fill", value)
-	       .add("-fx-stroke", "transparent")
 	       .end();
 	}
 
