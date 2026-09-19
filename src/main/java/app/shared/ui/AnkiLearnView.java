@@ -203,6 +203,7 @@ public abstract class AnkiLearnView {
 	 * ansprechbar — er ist damit der erste Hinweis, dass gesammelt geantwortet wird.
 	 */
 	public void setSubmitActive(boolean active) { if (submitButton != null) submitButton.setDisable(!active); }
+	public void setBackActive(boolean active) { if (backButton != null) backButton.setDisable(!active); }
 
 	/** Schaltet die Antwortauswahl ab. {@code McLearnView} überschreibt das leer — dort wäre es sinnlos. */
 	public void disableMcPanel() { mcPane.clearAndSetInactive(); }

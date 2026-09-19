@@ -146,6 +146,10 @@ class SessionProgress {
 		return getCurrentProgress().isPaused();
 	}
 
+	boolean canGoBack() {
+		return currentIndex > 0;
+	}
+
 	public void goBack() {
 		if (currentIndex > 0) {
 			presenter.cardFinished(null);

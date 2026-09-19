@@ -311,6 +311,7 @@ public class CardProgress {
 	    	else
 	    		clickedMcAnswers.add(index);
 	    	presenter.mcMarked(index, !wasMarked);
+	    	presenter.setSubmitActive(!clickedMcAnswers.isEmpty());
 	    	return;
 	    }
 
