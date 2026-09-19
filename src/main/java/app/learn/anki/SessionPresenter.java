@@ -113,7 +113,6 @@ public class SessionPresenter {
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);
 		view.setMultipleChoice(answers);
-		view.setSubmitActive(true);
 	}
 
 	void waitForClick(Set<String> idsInQuestion) {
@@ -122,13 +121,11 @@ public class SessionPresenter {
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);
 		view.disableMcPanel();
-		view.setSubmitActive(false);
 	}
 	void waitForText() {
 		view.setTextFieldActive(true);
 		view.setMapActive(false);
 		view.disableMcPanel();
-		view.setSubmitActive(false);
 	}
 
 	// ========================================
@@ -228,7 +225,11 @@ public class SessionPresenter {
 	
 	void setCorrectMc(Set<Integer> correctIds) {
 		view.setMcSolution(correctIds);
-		view.setSubmitActive(false);
+	}
+
+	/** Vom Progress gesteuert: Submit ist aktiv, sobald in einem MC+ etwas ausgewählt ist. */
+	void setSubmitActive(boolean active) {
+		view.setSubmitActive(active);
 	}
 	
 	// ========================================
@@ -251,8 +252,10 @@ public class SessionPresenter {
 	}
 
 	void clickedSubmit() {
-		if (!sessionProgress.isPaused())
+		if (!sessionProgress.isPaused()) {
+			view.setSubmitActive(false);
 			sessionProgress.submitClicked();
+		}
 	}
 	
 	void clickedMCAnswer(int index) {
@@ -278,6 +281,9 @@ public class SessionPresenter {
 	}
 
 	void newCardIncoming(LearnStat stats) {
+		// Kartenstart: Submit aus (bei MC und MC+ gleich, verrät den Modus nicht), Back nur ab Karte 2.
+		view.setSubmitActive(false);
+		view.setBackActive(sessionProgress.canGoBack());
 		String text = "";
 		if (stats != null) {
 			text = "Zuletzt gespielt: " + stats.getLastPlayed()
@@ -296,7 +302,6 @@ public class SessionPresenter {
 		view.setImage(null);
 		view.setTextInTextField("");
 		view.setQuestion("");
-		view.setSubmitActive(false);
 		if (fastView != null) {
 			fastView.stopClock(); // auch beim Zurückspringen, sonst tickt sie in die nächste Karte
 			fastView.clearSlots();
@@ -307,7 +312,6 @@ public class SessionPresenter {
 		view.setMapActive(false);
 		view.setTextFieldActive(false);
 		view.disableMcPanel();
-		view.setSubmitActive(false);
 	}
 
 }
