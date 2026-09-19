@@ -8,9 +8,8 @@ ableitet. Die Form ist der Wert der Spalte "Dreieck von links?", die Farbanzahl 
 "Die Dreiecksform(en) bestehen aus wie vielen Farben?". Bei einer Farbe faellt der Zusatz weg.
 
 Gebaut sind Form 1 (Dreieck nur in der linken Haelfte, Spitze bei 72), Form 2 (Trapez, siehe
-`trapez`) und Form 3 (bis zum rechten Rand, Spitze bei 180). Der Uebergang in eine Spur ist eigene
-Geometrie und kommt,
-wenn die erste Flagge sie braucht. `dreieck-1` und `dreieck-3` kommen byteweise so heraus, wie sie
+`trapez`), Form 3 (bis zum rechten Rand, Spitze bei 180) und Form 4 (Uebergang in eine Spur, siehe
+`spur`). `dreieck-1` und `dreieck-3` kommen byteweise so heraus, wie sie
 von Hand angelegt wurden.
 
 Konvention (siehe Regeln.md):
@@ -22,6 +21,7 @@ Konvention (siehe Regeln.md):
     steht so mit `Rot|Schwarz|Gelb|Weiss` im Blatt, wie man die Flagge beschreibt.
 """
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -29,6 +29,7 @@ NL = chr(10)
 
 BREITE, HOEHE = 180.0, 120.0
 SPITZE = {1: 72.0, 3: BREITE}          # wie weit die Form nach rechts reicht
+SAUM = 6.0                             # Breite eines Saums bei Form 4, senkrecht zur Kante
 
 
 def runde(wert):
@@ -36,10 +37,10 @@ def runde(wert):
     return int(wert) if float(wert).is_integer() else round(float(wert), 3)
 
 
-def flaeche(nummer, punkte):
-    ring = [[runde(x), runde(-h)] for x, h in punkte]
+def flaeche(nummer, *stuecke):
+    ringe = [[[runde(x), runde(-h)] for x, h in punkte] for punkte in stuecke]
     return {"type": "Feature", "properties": {"id": nummer},
-            "geometry": {"type": "MultiPolygon", "coordinates": [[ring + [ring[0]]]]}}
+            "geometry": {"type": "MultiPolygon", "coordinates": [[ring + [ring[0]]] for ring in ringe]}}
 
 
 def dreiecke(form, anzahl):
@@ -66,6 +67,44 @@ def trapez(anzahl):
     return [flaeche(0, [(0, 0), (BREITE / 3, HOEHE / 3), (BREITE / 3, 2 * HOEHE / 3), (0, HOEHE)])]
 
 
+def spur(anzahl):
+    """Vanuatu, Suedafrika: ein Dreieck, dessen Saeume als liegendes Y bis zum rechten Rand laufen.
+
+    Innen das Dreieck wie bei Form 1, Spitze bei 72. Jede weitere Farbe ist ein Saum darum, und
+    anders als bei den Pfeilbaendern der Dreiecke laufen die Saeume PARALLEL: Jeder liegt im
+    Abstand SAUM zur Kante des vorigen, senkrecht gemessen, trifft oben und unten mit voller Breite
+    auf den Rand und laeuft als Arm bis zum rechten Rand -- so sieht das Y auf den echten Flaggen
+    aus. Gezaehlt wird von innen nach aussen wie bei den Dreiecken. Jeder Saum laeuft mit dem Arm
+    mit; Suedafrikas gelber Saum sitzt in Wahrheit nur am Dreieck.
+    """
+    mitte = HOEHE / 2
+    spitze = SPITZE[1]
+    steigung = mitte / spitze                        # der Kante von oben links zur Spitze
+    schraeg = math.hypot(1, steigung)                # senkrechter Abstand -> Versatz in y
+
+    def kante(k, y):
+        """Wo die obere Kante der k-ten Form die Hoehe y erreicht; k = 0 ist das Dreieck selbst."""
+        return (y + k * SAUM * schraeg) / steigung
+
+    def oben(k):
+        """Der obere Umriss der k-ten Form (k >= 1): Rand, Schraege, Arm."""
+        arm = mitte - k * SAUM
+        return [(kante(k, 0), 0), (kante(k, arm), arm), (BREITE, arm)]
+
+    def spiegel(punkte):
+        return [(x, HOEHE - y) for x, y in punkte]
+
+    teile = [flaeche(0, [(0, 0), (spitze, mitte), (0, HOEHE)])]
+    if anzahl > 1:                                   # der erste Saum umlaeuft die Spitze, ein Stueck
+        o = oben(1)
+        teile.append(flaeche(1, [(0, 0)] + o + spiegel(o)[::-1] + [(0, HOEHE), (spitze, mitte)]))
+    for k in range(2, anzahl):
+        # Ab hier trennt der Arm des inneren Saums den aeusseren in ein Stueck oben und eins unten.
+        stueck = oben(k) + oben(k - 1)[::-1]
+        teile.append(flaeche(k, stueck, spiegel(stueck)[::-1]))
+    return teile
+
+
 def schreibe(zielordner, name):
     teile = name.split("-")
     if teile[0] != "dreieck" or len(teile) not in (2, 3):
@@ -74,6 +113,8 @@ def schreibe(zielordner, name):
     anzahl = int(teile[2]) if len(teile) == 3 else 1
     if form == 2:
         teile = trapez(anzahl)
+    elif form == 4:
+        teile = spur(anzahl)
     elif form in SPITZE:
         teile = dreiecke(form, anzahl)
     else:

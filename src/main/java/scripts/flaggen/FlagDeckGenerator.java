@@ -59,7 +59,9 @@ public class FlagDeckGenerator {
 
 	/** Index = Wert der Spalte „Dreieck von links?". Wert 0 heißt „kein Dreieck". */
 	/** Die dritte Antwort der Kreuz-und-Diagonale-Frage. Steht dreimal, deshalb als Konstante. */
-	private static final String KEIN_KREUZ = "Keine Diagonale oder Kreuz";
+	// Das „nur" trägt die Rangfolge: Wer Diagonale oder Kreuz und darin ein Dreieck sieht, sieht nicht nur eins.
+	private static final String DREIECK_VON_LINKS = "Nur ein Dreieck von links";
+	private static final String NICHTS_DAVON = "Nichts davon";
 
 	private static final List<String> DREIECK_FORMEN = List.of(
 			"Kein Dreieck",
@@ -202,6 +204,27 @@ public class FlagDeckGenerator {
 	 * Wo die Geschwister im Kasten ihres Behälters sitzen, je nach Anzahl. Keine Größen — Orte.
 	 * Sie skalieren mit dem Kasten, also mit dem Faktor des Behälters.
 	 */
+	/**
+	 * Anhang an den Hintergrund einer quadratischen Flagge. Die Rasterfelder bleiben die der
+	 * Leinwand; die linke und rechte Spalte hätten ihre Mitte auf der Kante des Quadrats und rücken
+	 * deshalb auf dessen Drittel ({@link #imQuadrat}).
+	 */
+	private static final String QUADRATISCH = "-quadratisch";
+
+	/** Die Skizze für alles, was kein Rechteck ist — heute nur Nepal. */
+	private static final String NICHT_RECHTECKIG = "nicht-rechteckig";
+
+	/**
+	 * Wo Elemente auf einer Skizze liegen, die ihre Leinwand nicht füllt: je Rasterfeld Größe und
+	 * Versatz zur Feldmitte, in Leinwand-Einheiten, y nach oben positiv. Die Mitte von Feld 1 läge
+	 * neben dem schmalen oberen Wimpel. Die Punkte hängen an der Skizze und der Antwort, nicht am
+	 * Land: Es ist jeweils die Mitte des größten Kreises, der in den Wimpel passt.
+	 */
+	private static final Map<String, Map<Integer, double[]>> ANKER = Map.of(
+			NICHT_RECHTECKIG, Map.of(
+					1, new double[] {0.7, -27.6, -18.4},
+					7, new double[] {0.7, -21.7, 7.5}));
+
 	private static final Map<Integer, double[]> OFFSETS = Map.of(
 			1, new double[] {0},
 			2, new double[] {-10, 10},
@@ -296,25 +319,76 @@ public class FlagDeckGenerator {
 						tolerated(sheet.value(row, "Rechtwinklig?"), FlagDeckGenerator::rectangular),
 						"Rechteckig", "Nicht rechteckig", "Quadratisch"));
 
-		// Kreuz und Diagonale vorweg — sonst würde ihr linker Arm mit einem Dreieck von links verwechselt.
+		// Frage 2 ist eine Weiche: Kreuz, Diagonale und Dreieck von links gliedern die Flagge, ihre
+		// Einzelheiten fragen erst die Folgefragen. Kreuz und Diagonale vorweg, sonst würde ihr linker
+		// Arm mit einem Dreieck von links verwechselt.
+		boolean nichtRechteckig = rectangular(plain(row, "Rechtwinklig?")).equals("Nicht rechteckig");
+		boolean quadratisch = rectangular(plain(row, "Rechtwinklig?")).equals("Quadratisch");
 		String typeCell = sheet.value(row, "Hintergrundtyp");
 		String type = untolerated(typeCell);
 		// Der Zweig haengt am Typ, nicht am Antworttext: Sonst bricht ein Umbenennen der Option
 		// still den Ablauf, statt nur die Anzeige zu aendern.
 		boolean geteilt = type.equals("2") || type.equals("3");
-		String vorweg = type.equals("2") ? "Kreuz" : type.equals("3") ? "Diagonale" : KEIN_KREUZ;
-		ask(steps, "Teilt ein Kreuz oder eine Diagonale die Flagge, wenn Du Zusatzelemente und Rahmen ignorierst?",
-				answer(vorweg, "Kreuz", "Diagonale", KEIN_KREUZ));
-		if (!geteilt)
-			ask(steps, "Entferne gedanklich eine Dreiecksstruktur von links, eine Gösch, alle "
-					+ "Zusatzelemente und einen Rahmen. Was beschreibt nun den Hintergrund am besten?",
-					answer(BACKGROUNDS.get(type), backgroundTolerated(typeCell),
-							FILL_BACKGROUNDS.toArray(new String[0])));
-		branchQuestions(steps, row, type);
+		String dreieck = plain(row, "Dreieck von links?");
+		int dreieckForm = FlagSheet.isSet(dreieck) ? Integer.parseInt(dreieck) : 0;
+		// Bei einer Schräge ist die untere linke Hälfte selbst ein Dreieck von links. Ein
+		// Sonderhintergrund bringt alles Dreieckige in seiner Datei mit, siehe unten.
+		if (dreieckForm != 0 && (geteilt || type.equals("7")))
+			throw new RuntimeException("Kreuz, Diagonale oder Sonderhintergrund mit einem Dreieck von links — "
+					+ "Frage 2 kennt nur eins davon, das Dreieck würde still verschwinden");
+		String dreieckSketch = null;
+		String background;
+		if (nichtRechteckig) {
+			// Jede weitere Frage setzt ein Rechteck voraus: Bänder von Rand zu Rand, Ecken für die
+			// Gösch, ein Dreieck vom ganzen linken Rand. Die Formfrage davor macht sie überflüssig.
+			background = NICHT_RECHTECKIG;
+		} else {
+			String weiche = type.equals("2") ? "Kreuz" : type.equals("3") ? "Diagonale"
+					: dreieckForm != 0 ? DREIECK_VON_LINKS : NICHTS_DAVON;
+			ask(steps, "Was gliedert die Flagge, wenn Du Zusatzelemente und Rahmen ignorierst?",
+					answer(weiche, "Kreuz", "Diagonale", DREIECK_VON_LINKS, NICHTS_DAVON));
+
+			if (dreieckForm != 0) {
+				// „Kein Dreieck" hat Frage 2 schon ausgeschlossen.
+				ask(steps, "Welche Form hat das Dreieck?",
+						fixedOrder(DREIECK_FORMEN.get(dreieckForm), tolerated(sheet.value(row, "Dreieck von links?"),
+								code -> DREIECK_FORMEN.get(Integer.parseInt(code))),
+								DREIECK_ANZEIGE.subList(1, DREIECK_ANZEIGE.size()).toArray(new String[0])));
+				String farbenSpalte = "Die Dreiecksform(en) bestehen aus wie vielen Farben?";
+				String anzahl = plain(row, farbenSpalte);
+				ask(steps, "Die Dreiecksform(en) bestehen aus wie vielen Farben?",
+						fixedOrder(anzahl, tolerated(sheet.value(row, farbenSpalte), code -> code), "1", "2", "3", "4"));
+				// Mehr als eine Farbe heißt eigene Datei mit einer Fläche je Farbe: dreieck-3-4.
+				dreieckSketch = "dreieck-" + dreieckForm + (anzahl.equals("1") ? "" : "-" + anzahl);
+			}
+
+			// Reicht das Dreieck bis zum rechten Rand, verdeckt es jede Grenze des Hintergrunds — übrig
+			// bleiben ein Feld oben und eins unten. Nach dem, was darunter läge, wird nicht gefragt.
+			boolean bisZumRand = dreieckForm == 3 || dreieckForm == 4;
+			if (bisZumRand) {
+				background = "waagerecht-2";
+			} else {
+				if (!geteilt)
+					ask(steps, "Entferne gedanklich " + (dreieckForm != 0 ? "das Dreieck, " : "") + "eine Gösch, alle "
+							+ "Zusatzelemente und einen Rahmen. Was beschreibt nun den Hintergrund am besten?",
+							answer(BACKGROUNDS.get(type), backgroundTolerated(typeCell),
+									FILL_BACKGROUNDS.toArray(new String[0])));
+				branchQuestions(steps, row, type);
+				background = branchSketch(row, type);
+			}
+		}
+
+		// Ein Quadrat ist die rechteckige Skizze, in x auf die Mitte der Leinwand gestaucht. Gösch,
+		// Dreieck und Rahmen liegen in Leinwand-Koordinaten und passten nicht darauf.
+		if (quadratisch) {
+			if (dreieckSketch != null || plain(row, "Gösch?").equals("1") || frame(row))
+				throw new RuntimeException("Eine quadratische Flagge mit Dreieck, Gösch oder Rahmen — dafür gibt es "
+						+ "noch keine Skizze, die Overlays lägen neben dem Quadrat");
+			background += QUADRATISCH;
+		}
 
 		Canvas canvas = new Canvas(steps);
 		List<Fill> fills = new ArrayList<>();
-		String background = branchSketch(row, type);
 		List<Integer> hintergrund = canvas.background(background);
 		Farben hintergrundFarben = colors(sheet.value(row, "Hintergrundfarben"));
 		// Ein Hintergrund wird immer ganz gefärbt; eine graue Fläche wäre ein Versehen im Blatt.
@@ -323,12 +397,14 @@ public class FlagDeckGenerator {
 					+ String.join("|", hintergrundFarben.liste()) + "), aber " + hintergrund.size()
 					+ " Flächen — ein Hintergrund braucht für jede Fläche eine Farbe");
 		paint(background, fills, hintergrund, hintergrundFarben);
+		// Gefragt ist das Dreieck schon, aufgelegt wird es erst auf den fertigen Hintergrund.
+		if (dreieckSketch != null)
+			paint(dreieckSketch, fills, canvas.overlay(dreieckSketch, "-1"), colors(sheet.value(row, "Dreieck Farbe")));
 
 		// Ein Sonderhintergrund ist eine handgemachte Datei, die alles enthalten kann — auch eine
-		// Gösch, etwas Dreiecksartiges oder einen Rahmen. Ihn zusätzlich nach diesen Attributen zu fragen, führt
-		// zwangsläufig in Widersprüche: Bei Antigua schiebt sich von links sichtbar eine Spitze ins
-		// Bild, im Blatt steht trotzdem 0. Wer richtig hinsieht, bekäme falsch. Also nicht fragen.
-		if (!type.equals("7")) {
+		// Gösch oder einen Rahmen. Ihn zusätzlich nach diesen Attributen zu fragen, führt
+		// zwangsläufig in Widersprüche: Wer richtig hinsieht, bekäme falsch. Also nicht fragen.
+		if (!nichtRechteckig && !type.equals("7")) {
 			// Gösch nach der Göschfrage auflegen (Leinwand-Silhouette, cell = -1).
 			boolean goesch = plain(row, "Gösch?").equals("1");
 			ask(steps, "Hat die Flagge eine Gösch?", answer(goesch(plain(row, "Gösch?")),
@@ -336,33 +412,7 @@ public class FlagDeckGenerator {
 			if (goesch)
 				paint("goesch", fills, canvas.overlay("goesch", "-1"), colors(sheet.value(row, "Gösch Farbe")));
 
-			// Bei einer Schräge ist die untere linke Hälfte selbst ein Dreieck von links; wer richtig
-			// hinsieht, bekäme falsch. Beim senkrechten Kreuz gilt das nicht — dort trägt aber keine
-			// Flagge ein Dreieck, und das Blatt sagt im ganzen Zweig `x`. Also überall nicht fragen.
-			if (type.equals("2") || type.equals("3")) {
-				if (FlagSheet.isSet(sheet.value(row, "Dreieck von links?")))
-					throw new RuntimeException("Kreuz oder Diagonale mit einem Dreieck von links — die"
-							+ " Frage entfällt hier, das Dreieck würde also still verschwinden");
-			} else {
-				// Dreieck nach der Dreieckfrage auflegen.
-				String dreieck = plain(row, "Dreieck von links?");
-				int dreieckForm = FlagSheet.isSet(dreieck) ? Integer.parseInt(dreieck) : 0;
-				ask(steps, "Schiebt sich eine dreiecksähnliche Form von ganz links in die Flagge?",
-						fixedOrder(DREIECK_FORMEN.get(dreieckForm), tolerated(sheet.value(row, "Dreieck von links?"),
-								code -> DREIECK_FORMEN.get(Integer.parseInt(code))), DREIECK_ANZEIGE.toArray(new String[0])));
-				if (dreieckForm != 0) {
-					String farbenSpalte = "Die Dreiecksform(en) bestehen aus wie vielen Farben?";
-					String anzahl = plain(row, farbenSpalte);
-					ask(steps, "Die Dreiecksform(en) bestehen aus wie vielen Farben?",
-							fixedOrder(anzahl, tolerated(sheet.value(row, farbenSpalte), code -> code), "1", "2", "3", "4"));
-					// Mehr als eine Farbe heißt eigene Datei mit einer Fläche je Farbe: dreieck-3-4.
-					String dreieckSketch = "dreieck-" + dreieckForm + (anzahl.equals("1") ? "" : "-" + anzahl);
-					paint(dreieckSketch, fills, canvas.overlay(dreieckSketch, "-1"),
-							colors(sheet.value(row, "Dreieck Farbe")));
-				}
-			}
-
-			// Rahmen nach dem Dreieck fragen und auflegen: Er umfasst die Flagge und liegt am Rand obenauf.
+			// Rahmen zuletzt fragen und auflegen: Er umfasst die Flagge und liegt am Rand obenauf.
 			boolean rahmen = frame(row);
 			ask(steps, "Hat die Flagge einen Rahmen?", answer(rahmen(plain(row, "Rahmen?")),
 					tolerated(sheet.value(row, "Rahmen?"), FlagDeckGenerator::rahmen), "Ja, sie hat einen Rahmen", "Kein Rahmen"));
@@ -370,7 +420,7 @@ public class FlagDeckGenerator {
 				paint("rahmen", fills, canvas.overlay("rahmen", "-1"), colors(sheet.value(row, "Rahmen Farbe")));
 		}
 
-		elementFills(steps, canvas, elements(row), fills, id(row));
+		elementFills(steps, canvas, elements(row), fills, id(row), background);
 		fillAreas(steps, fills);
 		add(steps, "Image:" + image(row));
 		add(steps, "Pause:"); // Zeit, die echte Flagge anzusehen
@@ -399,8 +449,8 @@ public class FlagDeckGenerator {
 				ask(steps, "Wie viele waagerechte Streifen?", fixedOrder(plain(row, "W-Streifen"),
 						tolerated(sheet.value(row, "W-Streifen"), code -> code), STRIPE_COUNTS.toArray(new String[0])));
 				if (plain(row, "W-Streifen").equals("3"))
-					ask(steps, "Wie sind die Streifen verteilt?", coded(sheet.value(row, "3W"),
-							"alle gleich breit", "mittlerer breiter", "mittlerer schmaler",
+					ask(steps, "Wie breit sind die Streifen?", coded(sheet.value(row, "3W"),
+							"gleich breit", "mittlerer breiter", "mittlerer schmaler",
 							"oberster breiter", "unterster breiter"));
 				if (plain(row, "W-Streifen").equals("5"))
 					ask(steps, "Welche Abfolge beschreibt die Breite der Streifen von oben nach unten am besten?",
@@ -411,8 +461,9 @@ public class FlagDeckGenerator {
 				ask(steps, "Wie viele senkrechte Streifen?",
 						fixedOrder(plain(row, "S-Streifen"), tolerated(sheet.value(row, "S-Streifen"), code -> code),
 								"2", "3", "4", "5"));
-				ask(steps, "Wie sind sie verteilt?", coded(sheet.value(row, "S-Anordnung"),
-						"gleichmäßig breit", "mittlerer breiter", "rechter breiter", "linker breiter"));
+				ask(steps, "Wie breit sind die Streifen?", coded(sheet.value(row, "S-Anordnung"),
+						plain(row, "S-Streifen").equals("2") ? List.of("mittlerer breiter") : List.of(),
+						"gleich breit", "mittlerer breiter", "rechter breiter", "linker breiter"));
 			}
 			case "2" -> {
 				ask(steps, "Welche Form hat das Kreuz?", coded(sheet.value(row, "Kreuzausrichtung"),
@@ -506,7 +557,8 @@ public class FlagDeckGenerator {
 	 * Farbe dasteht. Ein Element mit weniger Farben als Flächen (das ungefärbte Emblem) lässt seine
 	 * überzähligen Flächen aus — sie bleiben grau —, rückt die Flächennummer aber trotzdem vor.</p>
 	 */
-	private void elementFills(List<String> steps, Canvas canvas, Elemente elemente, List<Fill> fills, int id) {
+	private void elementFills(List<String> steps, Canvas canvas, Elemente elemente, List<Fill> fills, int id,
+			String background) {
 		List<Element> elements = elemente.liste();
 		List<String> names = new ArrayList<>();
 		for (Element element : elements)
@@ -572,7 +624,7 @@ public class FlagDeckGenerator {
 		shuffled(steps, elements, element ->
 				ask(steps, "Wo " + verb(element) + " " + word(element) + "?", position(element)));
 
-		for (Layout layout : layout(elements, id)) {
+		for (Layout layout : layout(elements, id, background)) {
 			List<Integer> areas = new ArrayList<>();
 			for (String placement : layout.placements())
 				areas.addAll(canvas.overlay(layout.sketch(), placement));
@@ -750,8 +802,9 @@ public class FlagDeckGenerator {
 	 * liegt, erbt dessen Faktor. Geschwister werden nebeneinandergelegt und dabei zur Mitte hin
 	 * zusammengeschoben — im Behälter stärker als im freien Feld.
 	 */
-	private List<Layout> layout(List<Element> elements, int id) {
+	private List<Layout> layout(List<Element> elements, int id, String background) {
 		List<Layout> result = new ArrayList<>();
+		Map<Integer, double[]> anker = ANKER.get(background);
 
 		// Jedes Element haengt am letzten Behaelter davor, der im selben Feld liegt.
 		int[] parent = new int[elements.size()];
@@ -782,6 +835,16 @@ public class FlagDeckGenerator {
 			double size = faktor[i];
 			double offset = OFFSETS.get(Math.min(group.size(), 4))[group.indexOf(i)] * kasten[i];
 
+			if (anker != null) {
+				String ort = untolerated(element.position());
+				double[] a = ort.matches("\\d") ? anker.get(Integer.parseInt(ort)) : null;
+				if (a == null || group.size() > 1 || parent[i] >= 0)
+					throw new RuntimeException(background + " kennt für " + element.name() + " auf " + ort
+							+ " keinen Platz — ANKER hat nur einzelne Figuren auf " + anker.keySet());
+				result.add(new Layout(element, sketchOf(element, false),
+						List.of(ort + "," + number(a[0]) + "," + number(a[1]) + "," + number(a[2]))));
+				continue;
+			}
 			if (untolerated(element.position()).equals(VERSTREUT_ORT)) {
 				List<String> placements = new ArrayList<>();
 				for (int cell : streufelder(id, belegteFelder(elements)))
@@ -808,7 +871,27 @@ public class FlagDeckGenerator {
 				placement += "," + number(offset) + ",0";
 			result.add(new Layout(element, sketchOf(element, false), List.of(placement)));
 		}
-		return result;
+		if (!background.endsWith(QUADRATISCH))
+			return result;
+		List<Layout> verschoben = new ArrayList<>();
+		for (Layout layout : result)
+			verschoben.add(new Layout(layout.element(), layout.sketch(),
+					layout.placements().stream().map(FlagDeckGenerator::imQuadrat).toList()));
+		return verschoben;
+	}
+
+	/**
+	 * Eine Platzierung {@code feld,größe[,dx,dy]} auf dem Quadrat: Die äußeren Spalten rücken um ein
+	 * Sechstel der Quadratbreite nach innen, auf die Mitte seiner Drittel (30+20 = 50, 150−20 = 130).
+	 */
+	private static String imQuadrat(String placement) {
+		String[] teile = placement.split(",");
+		int spalte = Integer.parseInt(teile[0]) % 3;
+		double dx = (teile.length > 2 ? Double.parseDouble(teile[2]) : 0) + (spalte == 0 ? 20 : spalte == 2 ? -20 : 0);
+		double dy = teile.length > 3 ? Double.parseDouble(teile[3]) : 0;
+		if (dx == 0 && dy == 0)
+			return teile[0] + "," + teile[1];
+		return teile[0] + "," + teile[1] + "," + number(dx) + "," + number(dy);
 	}
 
 	/** Die Figuren, die sich denselben Kasten teilen: gleicher Behälter, gleiches Rasterfeld. */
@@ -1396,6 +1479,15 @@ public class FlagDeckGenerator {
 	 * Antworttext haben, er steht dann nur einmal in der Frage.
 	 */
 	private static String coded(String value, String... options) {
+		return coded(value, List.of(), options);
+	}
+
+	/**
+	 * Wie {@link #coded(String, String...)}, aber ohne die Antworten in {@code hidden}: Die Codes
+	 * bleiben Indizes in {@code options}, gezeigt wird nur der Rest. Für Antworten, die eine frühere
+	 * Antwort ausschließt — bei zwei Streifen gibt es keinen mittleren.
+	 */
+	private static String coded(String value, List<String> hidden, String... options) {
 		String correct = word(untolerated(value), options);
 		List<String> tolerated = new ArrayList<>();
 		for (String code : bracket(value)) {
@@ -1403,7 +1495,11 @@ public class FlagDeckGenerator {
 			if (!text.equals(correct) && !tolerated.contains(text))
 				tolerated.add(text);
 		}
-		return answer(correct, tolerated, new LinkedHashSet<>(List.of(options)).toArray(String[]::new));
+		if (hidden.contains(correct) || tolerated.stream().anyMatch(hidden::contains))
+			throw new RuntimeException("'" + value + "' zeigt auf eine Antwort, die hier ausgeschlossen ist: " + hidden);
+		Set<String> shown = new LinkedHashSet<>(List.of(options));
+		shown.removeAll(hidden);
+		return answer(correct, tolerated, shown.toArray(String[]::new));
 	}
 
 	/** Ein Wert der Spalte, übersetzt in seinen Antworttext. */

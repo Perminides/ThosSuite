@@ -11,7 +11,9 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
 - Leinwand immer **180 × 120**, Verhältnis 3:2.
 - Y in der Datei nach oben positiv, beim Einlesen invertiert.
 - **3×3-Raster**, ein Feld 60 × 40, Felder zeilenweise nummeriert 0…8.
-- Hintergrunddateien füllen die Leinwand exakt. `SketchPane` nimmt den Maßstab aus der Bounding Box
+- Hintergrunddateien füllen die Leinwand exakt. Wo die Flächen das nicht tun (Nepal, `nicht-rechteckig`),
+  steht die Leinwand als GeoJSON-`bbox` in der Datei: `[0, -120, 180, 0]`. `SketchPane` nimmt den Maßstab
+  dann aus ihr, sonst aus der Bounding Box
   des zuerst geladenen Sketches — bei einer abweichenden Leinwand stimmen Größe und Versatz jedes
   angehängten Elements nicht mehr, denn die rechnen in festen Einheiten der Leinwand.
 - Ein Feld im Skin, das nicht 3:2 ist, schadet nicht: Eingepasst wird mit **einem** Maßstab, die
@@ -154,13 +156,27 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 
 ## Fragen
 
-- Aufbau einer Karte: Form → Kreuz oder Diagonale → Hintergrund → Zweigfragen → Skizze → Gösch →
-  Dreieck → Rahmen → Zusatzelemente → je Element Anzahl und Ort → zeichnen → **alle Farben** → echte
-  Flagge. Gösch, Dreieck und Rahmen werden jeweils direkt nach ihrer Frage aufgelegt; bei
-  Sonderhintergründen entfallen alle drei.
+- Aufbau einer Karte: Form → **Weiche** (Kreuz · Diagonale · Nur ein Dreieck von links · Nichts davon) →
+  beim Dreieck Form und Farbenzahl → Hintergrund → Zweigfragen → Skizze, Dreieck darauf → Gösch →
+  Rahmen → Zusatzelemente → je Element Anzahl und Ort → zeichnen → **alle Farben** → echte Flagge.
+  Das Dreieck wird früh benannt und erst auf den fertigen Hintergrund gelegt, Gösch und Rahmen direkt
+  nach ihrer Frage. Bei Sonderhintergründen entfallen Gösch und Rahmen.
+- Nach „Nicht rechteckig" entfallen Weiche, Dreieck, Hintergrund, Gösch und Rahmen — sie alle setzen ein
+  Rechteck voraus. Die Skizze ist `nicht-rechteckig` (Feld und Rand), weiter geht es mit den Elementen.
+  Weil die Feldmitten dort teils neben der Flagge lägen, legt `ANKER` im Generator je Feld Größe und
+  Versatz fest — abgeleitet aus der Skizze, nicht aus dem Land.
+- Nach „Quadratisch" geht alles weiter wie beim Rechteck, gezeichnet wird aber `<hintergrund>-quadratisch`:
+  die rechteckige Skizze, von `build-form-sketch.py` in x auf das Quadrat 30…150 gestaucht, mit `bbox`.
+  Die äußeren Rasterspalten rücken dort auf die Drittel des Quadrats (x 50 und 130). Gösch, Dreieck und
+  Rahmen gibt es auf dem Quadrat noch nicht, der Generator bricht dann ab.
+- Die Weiche entscheidet nur den Zweig; Einzelheiten fragen die Folgefragen. Reicht das Dreieck bis
+  zum rechten Rand (Form 3 oder 4), entfallen Hintergrund- und Streifenfrage: Es verdeckt jede Grenze,
+  die Skizze ist `waagerecht-2`, oben und unten werden gefärbt. Das Blatt braucht dort zwei
+  Hintergrundfarben.
 - **Eine Frage entfällt nur, wenn eine früher beantwortete sie überflüssig macht.** Nie, weil eine
-  spätere Antwort sie überflüssig machen wird — sonst verrät schon ihr Fehlen, was kommt. Gösch,
-  Dreieck und Rahmen entfallen bei Sonderhintergründen, weil „Anderes" vorher beantwortet ist.
+  spätere Antwort sie überflüssig machen wird — sonst verrät schon ihr Fehlen, was kommt. Gösch und
+  Rahmen entfallen bei Sonderhintergründen, weil „Anderes" vorher beantwortet ist; die Formfrage
+  des Dreiecks gibt es nur nach „Nur ein Dreieck von links".
 - Gefärbt wird gesammelt am Ende, Hintergrundflächen und Elemente zusammen.
 - Zwei Shuffle-Blöcke: erst alle **Attribut-Fragen** (Anzahl, geteilt) gemischt, dann alle **Ortsfragen**
   gemischt. So steht die Anzahl vor dem Ort, und in keinem Block leakt die Reihenfolge das Blatt.
