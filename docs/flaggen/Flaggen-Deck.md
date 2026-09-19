@@ -148,7 +148,7 @@ jeder seiner Werte zieht seine eigenen Folgespalten nach sich:
 Die **6 bleibt bewusst frei** — Platz für einen Fall, der noch kommen kann.
 
 **`x` heißt „diese Frage wird hier nicht gestellt"**, und das ist etwas anderes als eine 0. Die 0 ist
-ein regulärer Antwortwert — „nein", „waagerecht", „alle gleich breit", „uni", „steigend". Nur die
+ein regulärer Antwortwert — „nein", „waagerecht", „gleich breit", „uni", „steigend". Nur die
 Zählspalten `W-Streifen`, `S-Streifen` und `SW Streifen` kennen sie nicht: Dort *ist* der Wert die
 Anzahl, und die fängt bei 2 an. `Diagonal Anzahl Streifen` ist die Ausnahme unter den Zählspalten —
 dort bedeutet die 0 „Teilung vorhanden, aber kein eigenes Band", so wie Bhutan und
@@ -160,14 +160,13 @@ Wert statt `x`, wenn die Frage davor hierher geführt hat.
 Die Werte entsprechen den Antwortoptionen ihrer Frage, nullbasiert:
 
 ```
-3W  0 alle gleich breit          5W  0 2 und 4 dünn, Mitte nicht breiter
-    1 mittlerer breiter              1 alle gleich
-    2 mittlerer schmaler             2 Mitte breiter, 2 und 4 nicht dünn
-    3 oberster breiter               3 Mitte breiter und 2 und 4 dünn
-    (4 unterster breiter)            4 oberster am breitesten
-                                     (5 unterster am breitesten)
+3W  0 gleich breit              5W  kein Code, sondern die Folge selbst, von oben:
+    1 mittlerer breiter              3-1-2-1-3 · 3-1-1-1-2 · 1-1-2-1-1 · 1-1-1-1-1
+    2 mittlerer schmaler             1-2-3-2-1 · 2-1-2-1-2 · 2-1-3-1-2
+    3 oberster breiter               Rangfolge, kein Maß (Regeln.md, GEZEICHNET)
+    (4 unterster breiter)
 
-S-Anordnung  0 gleichmäßig breit    Kreuzausrichtung  0 senkrecht     Kreuzarme  0 uni
+S-Anordnung  0 gleich breit         Kreuzausrichtung  0 senkrecht     Kreuzarme  0 uni
              1 mittlerer breiter                      1 diagonal                 1 drei parallele Farben
              2 rechter breiter                        2 beides                   2 fimbriert
              (3 linker breiter)                                                  3 nicht sichtbar
@@ -234,14 +233,14 @@ reine Distraktoren und kommen bei keiner Flagge vor.
 | Spalte | Frage | Optionen |
 |---|---|---|
 | `W-Streifen` | Wie viele waagerechte Streifen? | 2 · 3 · 4 · 5 · 6 · 7 · 8 · 9, aus einem Bereich gezogen |
-| `3W` | Wie sind die Streifen verteilt? *(nur bei 3)* | alle gleich breit · mittlerer breiter · mittlerer schmaler · oberster breiter · *(unterster breiter)* |
-| `5W` | Wie sind die Streifen verteilt? *(nur bei 5)* | 2 und 4 dünn, Mitte nicht breiter · alle gleich · Mitte breiter, 2 und 4 nicht dünn · Mitte breiter **und** 2 und 4 dünn · oberster am breitesten · *(unterster am breitesten)* |
+| `3W` | Wie breit sind die Streifen? *(nur bei 3)* | gleich breit · mittlerer breiter · mittlerer schmaler · oberster breiter · *(unterster breiter)* |
+| `5W` | Welche Abfolge beschreibt die Breite der Streifen von oben nach unten am besten? *(nur bei 5)* | 3-1-2-1-3 · 3-1-1-1-2 · 1-1-2-1-1 · 1-1-1-1-1 · 1-2-3-2-1 · 2-1-2-1-2 · 2-1-3-1-2 — die Zahlen sind eine Rangfolge, der Wert steht im Blatt als Folge, nicht als Code |
 
 Bei den anderen Anzahlen gibt es nur ein oder zwei Flaggen, alle gleichmäßig — dort entfällt die
 Verteilungsfrage. Bei zwei Streifen wäre es eine *andere* Frage („oben oder unten" statt „Mitte oder
 Rand"); der Preis ist bekannt und akzeptiert.
 
-Lesotho (etwa 3:4:3) ist der Grenzfall bei `3W`: „alle gleich breit" wird dort **nicht als falsch
+Lesotho (etwa 3:4:3) ist der Grenzfall bei `3W`: „gleich breit" wird dort **nicht als falsch
 gewertet**. Israel steht bei `5W` in der dritten Zeile, nicht in der vierten — seine Streifen sind
 15 : 25 : 80 : 25 : 15, die **äußeren** sind die dünnsten. Kap Verde greift auf „oberster am
 breitesten", weil seine drei mittleren Bänder gleich breit sind.
@@ -256,7 +255,7 @@ Nordkorea, Suriname und Eswatini zwei Optionen zutreffen. Die Auflösung sind di
 | Spalte | Frage | Optionen |
 |---|---|---|
 | `S-Streifen` | Wie viele senkrechte Streifen? | 2 (4 Flaggen) · 3 (23) · 4 (1) |
-| `S-Anordnung` | Wie sind sie verteilt? | gleichmäßig · mittlerer breiter · rechter breiter · *(linker breiter)* |
+| `S-Anordnung` | Wie breit sind die Streifen? | gleich breit · mittlerer breiter · rechter breiter · *(linker breiter)* — bei 2 Streifen ohne „mittlerer breiter" |
 
 Anders als waagerecht wird die Verteilungsfrage **bei jeder Streifenzahl** gestellt. Der Grund ist die
 Verteilung: Bei den senkrechten Zweiern weicht die Hälfte ab (Pakistan und Portugal gegen Algerien und
@@ -1192,16 +1191,17 @@ reine Dateneingabe ohne Entwurfsrisiko.
   Dreiecke, die sich in der Mitte treffen. Kreuz und Diagonale sind beide vertretbar, gewertet wird
   nur das Kreuz. *Bhutan:* „Diagonale" klingt nach Linie oder Band, zu sehen ist nur ein Farbwechsel.
   Dazu kommt, dass Frage 2 nach Begriffen fragt, die man erst übersetzen muss.
-  Idee: Das Dreieck wird eine vierte Antwort auf Frage 2 — „Kreuz · Diagonale · Dreieck von links ·
-  Nichts davon". Flaggen ohne Dreieck verlieren dadurch die spätere Frage „Kein Dreieck" und werden
-  eine Frage kürzer. Bei „bis zum rechten Rand" entfällt die Hintergrundfrage ganz, die Skizze ist
-  `waagerecht-2`, oben und unten werden eingefärbt. Die Malreihenfolge bleibt für alle anderen
-  erhalten, weil das Dreieck dort nur früher benannt und später aufgelegt wird.
-  Offen: Frage 2 wird damit noch schwerer. Möglicher Ausweg sind beschreibende Antworten statt
-  Begriffe („Ein Kreuz, gerade oder schräg" · „Eine schräge Teilung, von Ecke zu Ecke" · „Eine Form,
-  die von links hineinragt" · „Nichts davon"). Grenada bräuchte dann eine Toleranz in Frage 2, und die
-  gibt es heute nicht — die Klammer beim Hintergrundtyp sperrt Kreuz und Diagonale. Antigua könnte
-  neu „von links" angeklickt werden, das ließe sich im Blatt tolerieren.
+  **Umgesetzt (19.09.2026, zur Probe):** Das Dreieck ist die vierte Antwort der Weiche — „Was
+  gliedert die Flagge …? Kreuz · Diagonale · Nur ein Dreieck von links · Nichts davon". Das
+  „nur" trägt die Rangfolge: Diagonale und schräges Kreuz enthalten selbst Dreiecke von links. Flaggen ohne Dreieck
+  verlieren die spätere Frage „Kein Dreieck". Bei „bis zum rechten Rand" entfällt die
+  Hintergrundfrage, siehe Regeln.md.
+  Verworfen: beschreibende Antworten statt Begriffe — längere Antworten liest man schlechter, die
+  Weiche soll nur den Zweig wählen, die Einzelheiten fragen die Folgefragen. Ebenso eine feste
+  Reihenfolge aller Antworten: Über eine ganze Karte merkt sich die Hand sonst ein Muster wie eine
+  PIN statt der Flagge. Fest bleibt nur, was selbst eine Ordnung hat (Anzahlen, Orte, Dreiecksformen).
+  Offen: Grenada bräuchte eine Toleranz in der Weiche, die gibt es nicht — die Klammer beim
+  Hintergrundtyp sperrt Kreuz und Diagonale.
 - **Ob überhaupt gebaut wird.** Der Aufwand aus Expander und Renderer ist für ein Deck mit Decke
   beträchtlich. Die zwei Gründe, die dafür sprechen: die aufbauende Skizze geht handgeschrieben nicht,
   und nur ein Generator garantiert, dass ähnliche Flaggen denselben Pfad nehmen und exakt dort

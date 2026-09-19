@@ -64,10 +64,11 @@ GEZEICHNET = {
     (2, 1, 3, 1, 2): [2, 1, 4, 1, 2],     # Eswatini, Nordkorea, Suriname: woertlich war die Mitte zu schmal
 }
 
-# Waagerechte Streifenzahlen, deren Streifen abwechselnd zwei Farben tragen. Dort gibt es nur zwei
-# Flaechen: 0 sind die Streifen 0, 2, 4 ..., 1 die dazwischen, jede in mehreren Stuecken. Elf Streifen
-# einzeln zu faerben waere nur Fleissarbeit -- Liberia ist die einzige Flagge damit.
-ABWECHSELND = [11]
+# Ab so vielen waagerechten Streifen tragen sie abwechselnd zwei Farben, und es gibt nur zwei
+# Flaechen: 0 sind die Streifen 0, 2, 4 ..., 1 die dazwischen, jede in mehreren Stuecken. Neun bis
+# vierzehn Streifen einzeln zu faerben waere nur Fleissarbeit -- Griechenland, Uruguay, Liberia, die
+# USA und Malaysia wechseln alle nur zwischen zwei Farben.
+ABWECHSELND_AB = 9
 
 
 def masse(anzahl):
@@ -140,7 +141,7 @@ def flaechen(richtung, anzahl, goesch, gewichte):
         else:
             x0, y0, x1, y1 = kanten[i], 0, kanten[i + 1], -hoehe
         streifen.append(ohne_goesch(x0, y0, x1, y1, gx, gy) if goesch else ring(x0, y0, x1, y1))
-    if richtung == "waagerecht" and anzahl in ABWECHSELND:
+    if richtung == "waagerecht" and anzahl >= ABWECHSELND_AB:
         yield flaeche(0, *streifen[0::2])
         yield flaeche(1, *streifen[1::2])
         naechste = 2
