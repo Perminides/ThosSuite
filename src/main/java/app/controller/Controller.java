@@ -80,28 +80,7 @@ public class Controller{
     
     public Controller(MainWindow mainWindow) throws InterruptedException {
     	this.mainWindow = mainWindow;
-    	//Wenn sich herausstellt, dass eh nur der Controller die ganzen Menü-Events erhält,
-    	//dann darf das MainWindow auch den Controller kennen und die Methoden direkt aufrufen.
-    	//Außer Claude erklärt mir, was an dieser zirkulären Beziehung nun so gefährlich sein soll...
-    	//Claude meinte raus damit, aber ich habe mich mittlerweile so dran gewöhnt *lol*
-    	mainWindow.setEscPressedRunnable(this::escPressed);
-    	mainWindow.setPausePressedRunnable(this::pausePressed);
-    	mainWindow.setEnterPressedRunnable(this::enterPressed);
-    	mainWindow.setCloseRunnable(this::closeSelected);
-    	mainWindow.setQuitRunnable(() -> requestSessionSwitch(Platform::exit));
-    	mainWindow.setLearnSessionConsumer(this::onLearnMenuItemSelected);
-    	mainWindow.setSortChangedRunnable(this::sortOrderChanged);
-    	mainWindow.setSkinChangeConsumer(this::newSkinSelected);
-    	mainWindow.setReloadSkinRunnable(this::triggerSkinRefresh);
-    	mainWindow.setStatisticsConsumer(this::onStatisticsMenuItemSelected);
-    	mainWindow.setDiaryCreateRunnable(this::diaryCreateSelected);
-    	mainWindow.setDiaryViewRunnable(this::diaryViewSelected);
-    	mainWindow.setWeekdayRunnable(this::weekdaySelected);
-    	mainWindow.setMattressRunnable(this::mattressSelected);
-    	mainWindow.setExportRunnable(this::exportSelected);
-    	mainWindow.setMovieRunnable(this::movieSelected);
-    	mainWindow.setExtraTmdbImportRunnable(this::additionalTmdbImportSelected);
-    	mainWindow.setPlayItemConsumer(this::onPlayMenuItemSelected);	
+    	mainWindow.setController(this);
     	showStartScreen();
     	
     	ankiDeckService = new AnkiDeckService();
@@ -263,6 +242,11 @@ public class Controller{
 		currentScreen.closeLoud();
 	}
 	
+	/** Das Fenster schließen — erst wenn der laufende Screen den Wechsel zulässt. */
+	public void quitSelected() {
+		requestSessionSwitch(Platform::exit);
+	}
+	
 	public void escPressed() {
 		currentScreen.escClicked();
 	}
@@ -283,7 +267,7 @@ public class Controller{
 	    requestSessionSwitch(this::showStartScreen);
 	}
 	
-    private void triggerSkinRefresh() {
+    public void triggerSkinRefresh() {
         SkinService.refresh();
         updateUiAfterSkinChange();
     }

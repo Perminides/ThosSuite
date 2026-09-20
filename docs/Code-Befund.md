@@ -220,7 +220,7 @@ laufen die beiden auseinander.
 | 10.1 | Zwei neue Felder sind in eine Falle gelaufen, die schon aufgeschrieben war | eine halbe Stunde | offen |
 | 10.2 | Die Beschreibung der Staffelung stimmt in drei Punkten nicht mehr | zehn Minuten | offen |
 | 10.3 | Kleinkram | zehn Minuten | offen |
-| Szenario B | Ein weiterer Screen | zwei bis drei Stunden | offen |
+| Szenario B | Ein weiterer Screen | zwei bis drei Stunden | erledigt — anders gelöst als vorgeschlagen |
 
 ---
 
@@ -2356,7 +2356,23 @@ Spielen-Menü genau so.
 **Aufwand:** zwei bis drei Stunden. Der einzige größere Umbau, den dieser Bericht vorschlägt —
 und der einzige, der beim nächsten Screen sofort etwas zurückgibt.
 
-**Stand:** offen
+**Stand:** erledigt — anders gelöst als vorgeschlagen. Statt eines `enum MenuAction` mit einem
+`Consumer` hält `MainWindow` jetzt den `Controller` selbst und ruft dessen Methoden direkt. Die 18
+Callback-Felder, die 18 Setter und 17 der 18 Registrierungszeilen sind damit weg; übrig bleibt
+`mainWindow.setController(this)`.
+
+Der Enum-Vorschlag hätte nur einen Teil getragen: Drei der 18 sind Tastatur- und keine
+Menüereignisse, vier tragen eine Nutzlast (`LearnSessionInfo`, `Skin`, `PlayMenuNode`,
+`StatisticsItem`) und passen in kein argumentloses Enum. Die direkte Referenz nimmt alle 18.
+
+Ein neuer Menüpunkt kostet jetzt zwei Stellen statt fünf — eine `MenuItem`-Zeile im Fenster, eine
+Methode im Controller —, und die Fehlerart „Registrierung vergessen → NPE beim Klick“ gibt es nicht
+mehr, weil nichts mehr zu registrieren ist.
+
+Voraussetzung dafür ist, dass beide Klassen in `app.controller` liegen: Wächter 4 und Wächter 8 sehen
+eine Beziehung innerhalb eines Pakets nicht. Ein Umzug von `MainWindow` nach `shared.ui` würde
+diese Lösung verbieten — und scheitert ohnehin daran, dass die Menüleiste die Features aufzählt,
+was `shared` nicht wissen darf.
 
 ### Szenario C · Eine zweite Datenquelle neben Fitbit
 
