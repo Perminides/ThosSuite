@@ -1202,6 +1202,9 @@ reine Dateneingabe ohne Entwurfsrisiko.
   PIN statt der Flagge. Fest bleibt nur, was selbst eine Ordnung hat (Anzahlen, Orte, Dreiecksformen).
   Offen: Grenada bräuchte eine Toleranz in der Weiche, die gibt es nicht — die Klammer beim
   Hintergrundtyp sperrt Kreuz und Diagonale.
+- **Zentralafrikanische Republik** — heute `spezial-3`, die Datei fehlt noch. Offen, ob sie wirklich ein
+  Sonderfall ist: Die vier waagerechten Streifen wären der Hintergrund, der senkrechte rote Streifen in
+  der Mitte ließe sich als Element sehen, das darüberliegt.
 - **Ob überhaupt gebaut wird.** Der Aufwand aus Expander und Renderer ist für ein Deck mit Decke
   beträchtlich. Die zwei Gründe, die dafür sprechen: die aufbauende Skizze geht handgeschrieben nicht,
   und nur ein Generator garantiert, dass ähnliche Flaggen denselben Pfad nehmen und exakt dort
