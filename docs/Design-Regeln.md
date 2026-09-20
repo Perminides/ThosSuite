@@ -549,6 +549,10 @@ Keine Vorsätze, sondern ArchUnit-Regeln, die den Build brechen. **Was** bewacht
  9  Keine Optional-Rückgaben
 10  Keine Streams
 11  Features sind framework-frei          javafx nur in shared, controller, app-Wurzel
+12  Bausteine greifen nicht zurück        shared.ui.components → shared.ui
+13  Keine eigenen Threads                 Thread, java.util.concurrent, javafx.concurrent
+14  SQL steht nur in Repositories         Statement/PreparedStatement nur dort
+15  Logging nur über die Fassade          java.util.logging nur in shared.Log
 ```
 
 Geprüft wird Bytecode, nicht Quelltext.

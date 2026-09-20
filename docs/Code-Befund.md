@@ -184,7 +184,7 @@ laufen die beiden auseinander.
 | 4.7 | Zwei Schreibweisen für denselben Konfigurationswert | fünf Minuten | offen |
 | 4.8 | Ein stumm verschlucktes Problem im Entschlüsseler | fünf Minuten | offen |
 | 4.9 | Kleinkram | zwanzig Minuten | offen |
-| 5.1 | Der Tagebuch-Screen baut SQL | dreiviertel Stunde | offen |
+| 5.1 | Der Tagebuch-Screen baut SQL | dreiviertel Stunde | erledigt |
 | 5.2 | „Ist die Matratze fällig" wird zweimal beantwortet, in zwei Einheiten | eine halbe Stunde | offen |
 | 5.3 | `PointsCalculator` rechnet nicht nur, er fragt | dreiviertel Stunde | offen |
 | 5.4 | „Welches Wochenziel galt in Woche X" — zwei Mechanismen im selben Paket | eine halbe Stunde | offen |
@@ -1264,7 +1264,12 @@ fliegt dann von dort und der Screen fängt sie wie bisher für `setQueryValid(fa
 Dateiumzug, zwei geänderte Signaturen — die Abfragesprache selbst bleibt unangetastet.
 **Aufwand:** dreiviertel Stunde.
 
-**Stand:** offen
+**Stand:** erledigt — `QueryParser` liegt paketprivat in `diary.repository`, und
+`Repository.search` nimmt jetzt die Rohabfrage und übersetzt sie selbst. Tabellen-, Spalten- und
+Aliasnamen stehen damit nur noch auf einer Seite. Statt einer öffentlichen
+`InvalidQueryException` liefert `search` bei unlesbarer Abfrage `null` — der Screen setzte schon
+vorher nur `setQueryValid(false)` und warf die Meldung weg, und eine unfertige Eingabe ist kein
+Fehler im FailFast-Sinn.
 
 ### 5.2 „Ist die Matratze fällig" wird zweimal beantwortet, in zwei Einheiten
 
