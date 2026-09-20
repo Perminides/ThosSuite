@@ -12,6 +12,7 @@ import app.alc.StartupService;
 import app.controller.model.AnkiPlayItem;
 import app.controller.model.PlayMenuNode;
 import app.controller.model.RegionPlayItem;
+import app.controller.model.StatisticsItem;
 import app.diary.DiaryEditorPresenter;
 import app.diary.DiaryScreen;
 import app.learn.ImageScaler;
@@ -246,17 +247,15 @@ public class Controller{
 	    }
 	}
 
-	public void onStatisticsMenuItemSelected(String item) {
+	public void onStatisticsMenuItemSelected(StatisticsItem item) {
 	    requestSessionSwitch(() -> {
-	        if ("Dashboard".equals(item)) {
-	            currentScreen = new DashboardScreen();
-	        } else if ("Aktivität".equals(item)) {
-	            currentScreen = new ActivityStatisticsScreen();
-	        }  else if ("Alkohol".equals(item)) {
-	            currentScreen = new AlcStatisticsScreen();
-	        }
-            mainWindow.showScreenView(currentScreen.getView());
-            currentScreen.start();
+	        currentScreen = switch (item) {
+	            case DASHBOARD -> new DashboardScreen();
+	            case ACTIVITY  -> new ActivityStatisticsScreen();
+	            case ALCOHOL   -> new AlcStatisticsScreen();
+	        };
+	        mainWindow.showScreenView(currentScreen.getView());
+	        currentScreen.start();
 	    });
 	}
 	

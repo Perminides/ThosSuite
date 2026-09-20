@@ -148,14 +148,14 @@ laufen die beiden auseinander.
 | 1.4 | Die Grammatik der Deck-Dateien wohnt in der Datenklasse | eine gute Stunde | erledigt |
 | 1.5 | „Hint" heißt in diesem Zweig zweierlei | zehn Minuten | erledigt |
 | 1.6 | Das `Deck`-Enum trägt zwei disjunkte Formen | eine Viertelstunde | erledigt |
-| 1.7 | Fünf Kommentare beschreiben Code, den es nicht gibt | zwanzig Minuten | teilweise |
+| 1.7 | Fünf Kommentare beschreiben Code, den es nicht gibt | zwanzig Minuten | erledigt |
 | 1.8 | Drei Namen für denselben Vorgang in `learn.repository` | zehn Minuten | erledigt |
 | 1.9 | Zwei GeoJSON-Leser mit wortgleichen Geometrie-Methoden | zwanzig Minuten | erledigt |
-| 1.10 | Zwei Wege, SQL zu schreiben, in einer Klasse | eine Viertelstunde | offen |
+| 1.10 | Ein Statement gibt sich als parametrisiert aus | ein paar Minuten | erledigt |
 | 1.11 | Die Anzeigetexte der Anki-Session entstehen auf der Feature-Seite | eine halbe Stunde | offen |
 | 1.12 | Toter Code | zwanzig Minuten | offen |
 | 1.13 | Ablaufverfolgung landet im Dateilog | zehn Minuten | offen |
-| 2.1 | Ein neu angelegtes Region-Deck wird nie fällig | eine halbe Stunde (gemeinsam mit 1.3) | offen |
+| 2.1 | Ein neu angelegtes Region-Deck wird nie fällig | eine halbe Stunde (gemeinsam mit 1.3) | verworfen — der erste Stand wird bewusst von Hand gesetzt |
 | 2.2 | „Welcher Name gilt in diesem Modus" wird fünfmal beantwortet, auf zwei Arten | dreiviertel Stunde | offen |
 | 2.3 | Die Fehlerliste am Sessionende steht dreimal | eine halbe Stunde (mit 2.2) | offen |
 | 2.4 | `RegionDeckRepository` ist eine Attrappe | eine Viertelstunde | offen |
@@ -192,14 +192,14 @@ laufen die beiden auseinander.
 | 5.6 | `logApiResponse` loggt keine API-Antwort | zehn Minuten bis eine halbe Stunde | offen |
 | 5.7 | Ein Übergangsgerüst, dessen Termin verstrichen ist | Entscheidung, keine Arbeit | offen |
 | 5.8 | Kleinkram | eine halbe Stunde | offen |
-| 6.1 | Das Statistik-Menü wird über seinen Anzeigetext angesteuert — und erzeugt dabei einen toten Screen | eine halbe Stunde | offen |
-| 6.2 | Die Suite kann sich nicht selbst einrichten | eine halbe Stunde (Dashboard) | offen |
+| 6.1 | Das Statistik-Menü wird über seinen Anzeigetext angesteuert — und erzeugt dabei einen toten Screen | eine halbe Stunde | erledigt |
+| 6.2 | Die Suite kann sich nicht selbst einrichten | eine halbe Stunde (Dashboard) | verworfen — die Suite wird nicht neu aufgesetzt |
 | 6.3 | Der Exporter fängt genau den Fehler ab, den `Config` bewusst wirft | eine Viertelstunde | offen |
 | 6.4 | Vier öffentliche Methoden am `MainWindow` ohne Aufrufer — samt der Mechanik dahinter | eine Viertelstunde | offen |
 | 6.5 | Vier Kommentare, die etwas anderes sagen als der Code | zwanzig Minuten | offen |
 | 6.6 | Das Übergangsgerüst `app.tmp` ist fällig | Entscheidung, keine Arbeit | offen |
 | 6.7 | Kleinkram | zwanzig Minuten | offen |
-| 7.1 | Die Suite hat zwei Antworten auf „welcher Tag ist heute" | eine halbe Stunde + zwei Stunden Durchsicht | offen |
+| 7.1 | Die Suite hat zwei Antworten auf „welcher Tag ist heute" | eine halbe Stunde + zwei Stunden Durchsicht | verworfen — AppClock ist kein zweiter Kalender, sondern der Arbeitstag der Startdaten |
 | 7.2 | `Config.getString` ist ein zweiter Name für `Config.get` | fünf Minuten | offen |
 | 7.3 | `DB` baut viermal dieselbe Verbindung auf | zwanzig Minuten | offen |
 | 7.4 | `FilenIgnoreSource`: zweimal dieselben vier Zeilen, und die zweite wirft beim Herunterfahren | eine Viertelstunde | offen |
@@ -384,7 +384,7 @@ behaupten etwas, das man erst durch Nachlesen im Code widerlegt.
 ungenutzten Parameter gleich mit entfernen.
 **Aufwand:** zwanzig Minuten.
 
-**Stand:** SessionProgress Runnable noch offen
+**Stand:** erledigt
 
 ### 1.8 Drei Namen für denselben Vorgang in `learn.repository`
 
@@ -420,26 +420,30 @@ zweimal da. Wer sie einmal ändert, merkt am zweiten Ort nichts.
 
 **Stand:** erledigt
 
-### 1.10 Zwei Wege, SQL zu schreiben, in einer Klasse
+### 1.10 Ein Statement gibt sich als parametrisiert aus
 
-**Beleg:** `DbDeckProgressRepository.java:33`, `:95`, `:110` (Deck-Id und `AppClock.TODAY` in den
-String konkateniert) gegen `:51-57` (`saveLearned`, durchgängig mit `?`)
+**Beleg:** `DbDeckProgressRepository.java:33` — `prepareStatement` auf einem String, in dem der
+Deck-Wert schon konkateniert steht
 
-`loadAll` ist der unangenehmste Fall: Es benutzt `prepareStatement` auf einem String, in dem der
-Wert schon drinsteht — die Form eines Parameters ohne seinen Nutzen. Nebenbei ist das Datumsformat
-damit an drei Stellen implizit auf `LocalDate.toString()` festgenagelt.
+Die Klasse benutzt zwei Mittel, und das ist richtig so: `saveLearned` bereitet vor, weil dasselbe
+Statement in einer Schleife mit wechselnden Werten läuft; die Lese- und Zählmethoden laufen je
+Aufruf einmal und nehmen ein schlichtes `Statement`. Injection ist kein Thema — eingesetzt werden
+`Deck.getId()` und `AppClock.TODAY`, beides Code-Konstanten.
 
-Ein Sicherheitsproblem ist das nicht, die Werte sind Code-Konstanten. Ein Lesbarkeitsproblem
-schon: Die Klasse zeigt zwei Muster für eine Sache, und das schwächere steht dreimal.
+`loadAll` ist weder das eine noch das andere: Es nimmt die Form des Vorbereitens ohne dessen
+Nutzen. Wer darüberfliegt, hält die Abfrage für parametrisiert.
 
-**Kleinster Schnitt:** drei Statements auf `?` umstellen.
-**Aufwand:** eine Viertelstunde.
+Zwei Kleinigkeiten in derselben Klasse dazu: `getNewLearnedToday` und `getInitialDue` setzen ihr
+SQL ohne Leerzeichen vor dem `and` zusammen (`deck = 'germany'and date(…)` — legal, aber
+unlesbar), und `loadAll` liefert `Map<String, LearnStat>`, obwohl Karten-Ids `int` sind;
+`DeckRepository` überbrückt das mit `String.valueOf`.
 
-Im selben Zug: `loadAll` liefert `Map<String, LearnStat>`, obwohl Karten-Ids `int` sind;
-`DeckRepository.java:30` überbrückt das mit `String.valueOf(h.getId())`. Ein `Map<Integer, …>`
-spart die Umwandlung und die Frage, warum sie dasteht.
+**Kleinster Schnitt:** `loadAll` auf `Statement`, die zwei Leerzeichen, `Map<Integer, LearnStat>`.
+Die Regel gehört als Satz ins Klassen-Javadoc — sonst wird sie beim nächsten Durchsehen
+„repariert", weil `PreparedStatement` allgemein als das Bessere gilt.
+**Aufwand:** ein paar Minuten.
 
-**Stand:** offen
+**Stand:** erledigt
 
 ### 1.11 Die Anzeigetexte der Anki-Session entstehen auf der Feature-Seite
 
@@ -543,7 +547,12 @@ behandeln und in `save()` den Stand anlegen, wenn keiner da ist — dieselbe Fab
 Befund 1.3 braucht (`LearnStat.forFirstPlay`).
 **Aufwand:** eine halbe Stunde, gemeinsam mit 1.3.
 
-**Stand:** offen
+**Stand:** verworfen — kein Fehler, sondern der gewünschte Ablauf. Wann ein neues Deck ins
+Lernen aufgenommen wird, entscheidet Perminides; die erste Zeile in `region_learn_stat` von Hand
+zu setzen ist dafür der Schalter, nicht eine Hürde. Bis dahin ist das Deck über das freie Spiel
+voll nutzbar — `RegionPlaySetup` baut seine Auswahl aus `Deck.values()`, unabhängig vom
+`statCache`, und `saveAndEndSession` ruft `save()` im Spielmodus gar nicht auf. Die im Befund
+genannte Folge „bevor es überhaupt sichtbar wird“ trifft also nicht zu.
 
 ### 2.2 „Welcher Name gilt in diesem Modus" wird fünfmal beantwortet, auf zwei Arten
 
@@ -655,6 +664,21 @@ unterscheiden — das ist die Wurzel von Befund 2.1.
 `Map<Deck, Map<Mode, LearnStat>>` liest; der Service füllt daraus und weiß danach, dass ein
 fehlender Eintrag „noch nie gespielt" heißt.
 **Aufwand:** eine halbe Stunde.
+
+**Dasselbe, kleiner, auf der Anki-Seite.** `AnkiDeckService.java:106-112` schleift im Konstruktor
+über die acht Anki-Decks und ruft je Deck `loadAll`, `getInitialDue` und `getNewLearnedToday` —
+24 Abfragen, wo drei reichen würden. `card_learn_stat` wird ohnehin komplett gebraucht.
+
+Anders als bei region hängt hier kein zweiter Befund daran; es ist reine Form und Laufzeit, und
+die Laufzeit ist bei acht Decks egal. Der Grund, es trotzdem zusammen zu entscheiden: Es ist
+dieselbe Frage — eine Abfrage statt N — und wenn nur eine Seite umgebaut wird, stehen die beiden
+Repositories danach auf zwei verschiedenen Mustern.
+
+Was *nicht* der Weg dorthin ist: die acht Aufrufe per im Konstruktor vorbereitetem
+`PreparedStatement` billiger machen. Ein Statement im Feld bräuchte ein Lebensende, das die Klasse
+nicht hat, und `DashboardScreen.java:88` legt bei jedem Dashboard-Aufbau ein frisches
+`DeckRepository` an — die Statements würden sich auf der geteilten Connection ansammeln.
+**Aufwand Anki-Seite:** eine Viertelstunde, zusammen mit region.
 
 **Stand:** offen
 
@@ -1445,7 +1469,11 @@ Enum — dann ist der fehlende Zweig ein Übersetzungsfehler. Der `default`-Fall
 ersatzlos.
 **Aufwand:** eine halbe Stunde.
 
-**Stand:** offen
+**Stand:** erledigt — `StatisticsItem` in `app.controller.model`, `Consumer<StatisticsItem>` statt
+`Consumer<String>`, und im Controller ein `switch`-Ausdruck ohne `default`. Das Menü baut seine
+Einträge jetzt aus `values()`, der Anzeigetext steht also nur noch einmal da. Der tote Screen ist
+damit kein abgefangener Fall, sondern ein Pfad, den es nicht mehr gibt: `currentScreen` bekommt in
+jedem Zweig einen Wert, und ein vierter Eintrag ohne Zweig ist ein Übersetzungsfehler.
 
 ### 6.2 Die Suite kann sich nicht selbst einrichten
 
@@ -1476,7 +1504,16 @@ ganze Seite zu reißen. Die eigentliche Frage („legt ein Feature seine erste Z
 gehört pro Feature entschieden; für die Region-Decks steht sie schon als Befund 2.1.
 **Aufwand:** eine halbe Stunde fürs Dashboard; die Feature-Frage je nach Antwort.
 
-**Stand:** offen
+**Stand:** verworfen — der Fall tritt nicht ein. Die Suite wird nicht neu aufgesetzt, und die
+leeren Tabellen von damals sind seit Jahren gefüllt. Ein zweiter Nutzer wäre der einzige Anlass,
+und der brächte so viele größere Folgefragen mit sich — die Suite ist durchgängig auf einen
+Menschen zugeschnitten —, dass dieser Punkt darin ein Nebenschauplatz wäre.
+
+Zur Einordnung, falls der Punkt je wieder aufschlägt: Die Tabelle oben mischt zwei Sorten. Das
+Dashboard, das an einer leeren Tabelle als Ganzes stirbt, ist ein Robustheitsproblem der Anzeige;
+dass ein Feature seine erste Zeile nicht selbst anlegt, ist je Feature eine eigene Fachfrage. Und
+das Dashboard hängt am Statistik-Menü (`Controller.java:252`), ist also nicht der Startbildschirm
+— eine leere Tabelle hält die Suite nicht vom Starten ab.
 
 ### 6.3 Der Exporter fängt genau den Fehler ab, den `Config` bewusst wirft
 
@@ -1644,7 +1681,14 @@ Zeitstempel dazubekommen, sonst bleibt die Unterscheidung eine Konvention ohne H
 
 Dies ist der einzige Befund des Berichts, der quer durch **alle** Gruppen reicht.
 
-**Stand:** offen
+**Stand:** verworfen — die Diagnose trägt nicht. `AppClock.TODAY` ist kein zweiter Kalender,
+sondern der Arbeitstag für Daten, die beim Suite-Start feststehen: Fälligkeit von Karten und
+Regionen samt Fortschreiben, dazu die beim Start importierten Activity- und Alkoholdaten. Wer
+solche Daten auswertet, **muss** denselben Tag nehmen, mit dem sie geholt wurden — sonst
+beantwortet er eine Frage zu einem Tag, für den nichts importiert ist (der Streak am Montag um
+00:30 kann den Sonntag nicht kennen, er wurde noch nicht geholt). Alles andere fragt die
+Systemuhr. Nach dieser Regel wurde keine Stelle gefunden, die den Tag falsch bestimmt; die Regel
+steht jetzt im Javadoc von `AppClock`.
 
 ### 7.2 `Config.getString` ist ein zweiter Name für `Config.get`
 

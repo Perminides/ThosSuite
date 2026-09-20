@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import app.controller.model.PlayMenuNode;
+import app.controller.model.StatisticsItem;
 import app.learn.anki.model.CardSortOrder;
 import app.learn.model.LearnSessionInfo;
 import app.shared.Config;
@@ -62,7 +63,7 @@ public class MainWindow {
     private Runnable onEnterPressed = null;
     private Consumer<PlayMenuNode> onPlayItemSelected = null;
     private Runnable onReloadSkin = null;
-    private Consumer<String> onStatisticsSelected = null;
+    private Consumer<StatisticsItem> onStatisticsSelected = null;
     
     private Stage stage;
     private HeaderBar headerBar;
@@ -177,15 +178,11 @@ public class MainWindow {
         
         // STATISTIK-MENÜ
         Menu menuStatistics = new Menu("Statistik");
-        MenuItem itemDashboard = new MenuItem("Dashboard");
-        itemDashboard.setOnAction(_ -> onStatisticsSelected.accept("Dashboard"));
-        menuStatistics.getItems().add(itemDashboard);
-        MenuItem itemActivity = new MenuItem("Aktivität");
-        itemActivity.setOnAction(_ -> onStatisticsSelected.accept("Aktivität"));
-        menuStatistics.getItems().add(itemActivity);
-        MenuItem itemAlc = new MenuItem("Alkohol");
-        itemAlc.setOnAction(_ -> onStatisticsSelected.accept("Alkohol"));
-        menuStatistics.getItems().add(itemAlc);
+        for (StatisticsItem statisticsItem : StatisticsItem.values()) {
+            MenuItem menuItem = new MenuItem(statisticsItem.label());
+            menuItem.setOnAction(_ -> onStatisticsSelected.accept(statisticsItem));
+            menuStatistics.getItems().add(menuItem);
+        }
         
         // MODULE-MENÜ
         Menu menuModule = new Menu("Module");
@@ -373,7 +370,7 @@ public class MainWindow {
         this.onReloadSkin = action;
     }
     
-    public void setStatisticsConsumer(Consumer<String> consumer) {
+    public void setStatisticsConsumer(Consumer<StatisticsItem> consumer) {
         this.onStatisticsSelected = consumer;
     }
     

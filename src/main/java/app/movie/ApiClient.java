@@ -411,7 +411,10 @@ public class ApiClient {
                 return response.toString();
             }
         } catch (Exception e) {
-            throw new RuntimeException("[FAILFAST] TMDB API request failed for URL: " + urlString, e);
+            // Ohne Query-String: der trägt bei v3 den api_key und die session_id.
+            int query = urlString.indexOf('?');
+            throw new RuntimeException("[FAILFAST] TMDB API request failed for URL: "
+                    + (query < 0 ? urlString : urlString.substring(0, query)), e);
         }
     }
 }
