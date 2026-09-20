@@ -1,4 +1,4 @@
-package app.fitbit;
+package app.activity;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -6,9 +6,10 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 
-import app.fitbit.model.GoalHistoryEntry;
-import app.fitbit.model.WeekData;
-import app.fitbit.repository.Repository;
+import app.activity.model.GoalHistoryEntry;
+import app.activity.model.WeekData;
+import app.activity.repository.Repository;
+import app.shared.AppClock;
 import app.shared.Log;
 import app.shared.model.BarChartData;
 import app.shared.model.BarChartData.Bar;
@@ -18,11 +19,11 @@ import app.shared.model.BarChartData.YAxis;
 import app.shared.model.BarChartDataProvider;
 
 /**
- * Framework-freie Hälfte des Fitbit-Statistik-Screens: Datenbeschaffung und Fachlogik.
+ * Framework-freie Hälfte des Aktivitäts-Statistik-Screens: Datenbeschaffung und Fachlogik.
  * Rundet den Zeitraum auf ganze Wochen, entscheidet je Woche Ziel und Zustand und
  * liefert eine reine Datenbeschreibung. Kein JavaFX, kein CSS.
  */
-public class FitbitStatisticsPresenter implements BarChartDataProvider {
+public class ActivityStatisticsPresenter implements BarChartDataProvider {
 
     private final Repository repository = new Repository();
 
@@ -35,11 +36,11 @@ public class FitbitStatisticsPresenter implements BarChartDataProvider {
         List<GoalHistoryEntry> goalHistory = repository.getAllGoalHistory();
 
         if (weeks.isEmpty()) {
-            Log.warn(this, "Keine Fitbit-Daten im gewählten Zeitraum");
+            Log.warn(this, "Keine Aktivitätsdaten im gewählten Zeitraum");
             return new BarChartData(List.of(), null, YAxis.fixed(5000, 500));
         }
 
-        LocalDate currentWeekStart = roundToMonday(LocalDate.now());
+        LocalDate currentWeekStart = roundToMonday(AppClock.TODAY);
 
         List<Bar> bars = new ArrayList<>();
         List<Double> targetY = new ArrayList<>();
@@ -78,7 +79,7 @@ public class FitbitStatisticsPresenter implements BarChartDataProvider {
                 lastValid = entry; // die Liste ist chronologisch — das letzte Treffer gewinnt
 
         if (lastValid == null)
-            throw new RuntimeException("Kein Fitbit-Ziel gefunden für " + date);
+            throw new RuntimeException("Kein Wochenziel gefunden für " + date);
         return lastValid.weeklyGoal();
     }
 

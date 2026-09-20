@@ -76,6 +76,12 @@ def spur(anzahl):
     auf den Rand und laeuft als Arm bis zum rechten Rand -- so sieht das Y auf den echten Flaggen
     aus. Gezaehlt wird von innen nach aussen wie bei den Dreiecken. Jeder Saum laeuft mit dem Arm
     mit; Suedafrikas gelber Saum sitzt in Wahrheit nur am Dreieck.
+
+    Bei GENAU zwei Farben schliesst aussen noch ein Saum in der Farbe des Dreiecks an: Vanuatus
+    gelbes Y ist schwarz eingefasst. Er gehoert deshalb zu Flaeche 0 und ist kein eigener Wert --
+    sonst stuenden drei Farben im Blatt, von denen zwei dieselbe waeren. Die Stuecke von Flaeche 0
+    beruehren sich nur in den beiden linken Ecken der Leinwand. Ab drei Farben faellt er weg:
+    Suedafrikas aeusserster Saum ist weiss und damit eine eigene Farbe.
     """
     mitte = HOEHE / 2
     spitze = SPITZE[1]
@@ -94,7 +100,12 @@ def spur(anzahl):
     def spiegel(punkte):
         return [(x, HOEHE - y) for x, y in punkte]
 
-    teile = [flaeche(0, [(0, 0), (spitze, mitte), (0, HOEHE)])]
+    dreieck = [(0, 0), (spitze, mitte), (0, HOEHE)]
+    if anzahl == 2:
+        aussen = oben(2) + oben(1)[::-1]
+        teile = [flaeche(0, dreieck, aussen, spiegel(aussen)[::-1])]
+    else:
+        teile = [flaeche(0, dreieck)]
     if anzahl > 1:                                   # der erste Saum umlaeuft die Spitze, ein Stueck
         o = oben(1)
         teile.append(flaeche(1, [(0, 0)] + o + spiegel(o)[::-1] + [(0, HOEHE), (spitze, mitte)]))

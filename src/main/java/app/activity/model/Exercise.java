@@ -2,13 +2,14 @@ package app.activity.model;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 /**
  * Unveränderliches Abbild einer aufgezeichneten Aktivität aus der Google-Health-API
  * (Datentyp {@code exercise}, Methode {@code list}) — exakt in Googles Einheiten und Form.
  *
- * <p>Trägt nur, was die Punkteberechnung und der Vergleich brauchen. Kein displayName
+ * <p>Trägt nur, was die Punkteberechnung braucht. Kein displayName
  * (lokalisiert, mehrdeutig), keine Splits, keine Herzfrequenz.</p>
  *
  * @param exerciseType          stabiler Enum-Wert (z.B. WALKING, BIKING, SPINNING) — das
@@ -33,7 +34,15 @@ public record Exercise(
      * Der Offset wird auf die UTC-Zeit angewendet.
      */
     public LocalDate localDate() {
-        return startTimeUtc.atOffset(ZoneOffset.ofTotalSeconds(startUtcOffsetSeconds)).toLocalDate();
+        return localDateTime().toLocalDate();
+    }
+
+    /**
+     * Lokaler Startzeitpunkt. Der Offset ist der, der zum Aufzeichnungszeitpunkt am Ort galt —
+     * im Urlaub also der dortige, nicht der heimische.
+     */
+    public LocalDateTime localDateTime() {
+        return startTimeUtc.atOffset(ZoneOffset.ofTotalSeconds(startUtcOffsetSeconds)).toLocalDateTime();
     }
 
     /**

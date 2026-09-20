@@ -31,7 +31,7 @@ Welche Aktionen die Suite dabei erwartet und woraus eine Frage besteht, steht im
 Feature-Details-Dokument (Lern-Kern).
 
 **Gesundheit & Tracking:**
-- Fitbit-Integration (Schritte, Wochenpunkte, Streak)
+- Aktivitäts-Integration über Google Health (Schritte, Wochenpunkte, Streak)
 - Alkohol-Tracker mit Kontostand-System
 - Erinnerung zum Wenden der Matratze
 
@@ -44,7 +44,7 @@ Feature-Details-Dokument (Lern-Kern).
 - Signal- und WhatsApp-Nachrichten werden inkrementell beim Start in die Suite-DB importiert.
 
 **Dashboard:**
-- Key-Metrics auf einen Blick (Fitbit-Streak, Restschritte, Alkohol-Kontostand, etc.)
+- Key-Metrics auf einen Blick (Wochen-Streak, Restschritte, Alkohol-Kontostand, etc.)
 
 ## 🗝️ Technische Basis
 
@@ -52,7 +52,7 @@ Feature-Details-Dokument (Lern-Kern).
 
 Alles liegt unter dem Wurzelpaket `app`. Darunter ist die Suite in **Sorten** von Paketen
 gegliedert (Details und Begründung im Regel-Dokument): die **Features** (`app.alc`, `app.diary`,
-`app.fitbit`, `app.learn`, `app.mattress`, `app.messaging`, `app.movie`, `app.weekday`), das
+`app.activity`, `app.learn`, `app.mattress`, `app.messaging`, `app.movie`, `app.weekday`), das
 **Fundament** (`app.shared`) und die **Orchestrierung** (`app.controller`). Daneben liegt `scripts`
 als eigenes Wurzelpaket — abtrennbare Einmal-Klassen, die nicht zur Suite gehören.
 `controller` darf auf jede Sprosse (außer shared.ui.component); **ein Feature greift nie ins Skin-Paket**. Diese Zusagen sind
@@ -63,7 +63,7 @@ Der Abhängigkeitsgraph der Pakete liegt separat als `docs/Paketabhängigkeiten.
 
 ### Framework & Tools
 - **JavaFX 25**, **Java 25 LTS**
-- **Jackson** für JSON-Parsing (GeoJSON, TMDB, Fitbit)
+- **Jackson** für JSON-Parsing (GeoJSON, TMDB, Google Health)
 - **SQLite** für strukturierte Daten. Die Suite besitzt zwei eigene DBs (Suite-DB, Film-DB);
   beim Import wird zusätzlich lesend auf die fremden DBs von Signal und WhatsApp zugegriffen.
 - **ArchUnit + JUnit 5 + Surefire** — ausschließlich für die Architekturregeln, siehe unten. Es gibt
@@ -79,7 +79,7 @@ ist eine Einzelfallentscheidung an der jeweiligen Stelle.
 Keine Threads; alles läuft auf dem JavaFX Application Thread. Einzige Ausnahme: die
 Startup-Initialisierung (ein Hintergrund-Thread für Config, Logging, Font-Loading sowie das
 Setzen der DB auf `.filen.ignore`) mit Splash-Screen-Pattern. Auch die PreTasks mit externen
-API-Calls (Fitbit) laufen nicht in eigenen Threads, sondern über `Platform.runLater` auf dem
+API-Calls (Google Health) laufen nicht in eigenen Threads, sondern über `Platform.runLater` auf dem
 FX-Thread.
 
 ### Logging
@@ -113,20 +113,20 @@ main() → launch()
           → Platform.runLater():
               → initializeMainWindow() (opacity=0 gegen White-Flash)
               → new Controller(mainWindow)
-              → controller.runPreTasks()     // externe APIs: Fitbit-Fetch, Film-Import (TMDB)
+              → controller.runPreTasks()     // externe APIs: Aktivitäts-Fetch, Film-Import (TMDB)
               → mainWindow.show()
               → PauseTransition (CSS-Settle) → splashStage.close()
               → controller.runPostTasks()    // lokale Tasks, MainWindow noch unsichtbar
               → primaryStage.setOpacity(1)   // MainWindow erst jetzt sichtbar
 ```
 
-**PreTasks** laufen während des Splashscreens und sprechen externe Quellen an: Fitbit-Fetch
+**PreTasks** laufen während des Splashscreens und sprechen externe Quellen an: Aktivitäts-Fetch
 und der Film-Import (TMDB). Beide nur, wenn die Suite nicht im Offline-Modus läuft
 (Config-Flag `offline`).
 
 **PostTasks** laufen nach geschlossenem Splash, aber noch bei unsichtbarem Hauptfenster
 (opacity=0) — die Startup-Dialoge erscheinen also *vor* dem Fenster. Erst danach wird das
-MainWindow sichtbar. PostTasks: Fitbit-Review-Dialoge, Alkohol-Tagesabfrage, Tagebuch-Prompt,
+MainWindow sichtbar. PostTasks: Aktivitäts-Review-Dialoge, Alkohol-Tagesabfrage, Tagebuch-Prompt,
 Wochentagsberechnung, Matratzen-Erinnerung, Film-Cleanup, die inkrementellen
 Signal-/WhatsApp-Importe sowie das Verkleinern der Lern-Bilder.
 

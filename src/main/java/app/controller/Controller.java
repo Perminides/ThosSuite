@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import app.activity.ActivityDataFetcher;
+import app.activity.ActivityDataReviewService;
+import app.activity.ActivityStatisticsScreen;
 import app.alc.AlcStatisticsScreen;
 import app.alc.StartupService;
 import app.controller.model.AnkiPlayItem;
@@ -11,9 +14,6 @@ import app.controller.model.PlayMenuNode;
 import app.controller.model.RegionPlayItem;
 import app.diary.DiaryEditorPresenter;
 import app.diary.DiaryScreen;
-import app.fitbit.DataFetcher;
-import app.fitbit.DataReviewService;
-import app.fitbit.FitbitStatisticsScreen;
 import app.learn.ImageScaler;
 import app.learn.anki.AnkiDeckService;
 import app.learn.anki.AnkiDeckSession;
@@ -45,7 +45,6 @@ import app.shared.skin.Skin;
 import app.shared.skin.SkinImageCache;
 import app.shared.skin.SkinService;
 import app.shared.ui.Alerts;
-import app.tmp.Comparison;
 import app.weekday.WeekdayDialog;
 import javafx.application.Platform;
 
@@ -64,14 +63,12 @@ public class Controller{
 	
     private MainWindow mainWindow;
     private Screen currentScreen;
-    private DataFetcher fitbitDataFetcher;
+    private ActivityDataFetcher activityDataFetcher;
     // Fehler der drei Start-Importe. Sie werden im PreTask nur gemerkt und erst im PostTask
     // gemeldet — während des Splashs gibt es kein Hauptfenster, und über den Splash gehört kein
     // Dialog. Siehe runPreTasks.
-    private Exception fitbitError;
+    private Exception activityError;
     private Exception movieImportError;
-    private Comparison comparison;        // !tmp
-    private Exception comparisonError;    // !tmp
 
     
     public enum SessionSwitchAction {
@@ -120,10 +117,10 @@ public class Controller{
     /**
      * Wird VOR initializeMainWindow aufgerufen (Splash noch sichtbar). Holt Daten im UI-Thread, blockiert aber die App - Splash bleibt sichtbar.
      *
-     * <p><b>Ein toter Dienst darf den Start nicht reißen.</b> Fitbit, TMDB und Health sind fremde
+     * <p><b>Ein toter Dienst darf den Start nicht reißen.</b> Health und TMDB sind fremde
      * Server; dass einer gerade nicht erreichbar ist, ist ein alltäglicher Zustand und kein
      * Programmierfehler — dieselbe Begründung wie beim fehlenden Attachment im Architekturdokument.
-     * Alle drei werfen deshalb ehrlich, und hier, an der Orchestrierungs-Grenze, wird einmal
+     * Beide werfen deshalb ehrlich, und hier, an der Orchestrierungs-Grenze, wird einmal
      * entschieden, das auszuhalten. Die bewusste Ausnahme von FailFast steht also sichtbar dort, wo
      * die Regel gemacht wird, statt in den Datenklassen vergraben zu sein.</p>
      *
@@ -131,13 +128,13 @@ public class Controller{
      * gemerkt und in {@link #runPostTasks()} zu <b>einer</b> Meldung zusammengefasst.</p>
      */
     public void runPreTasks() {
-        fitbitDataFetcher = new DataFetcher(); // Muss Instanzvariable sein, weil wir Daten für den PostTask übergeben. Das macht tmdb sauberer, wie ich finde...
+        activityDataFetcher = new ActivityDataFetcher(); // Muss Instanzvariable sein, weil wir Daten für den PostTask übergeben. Das macht tmdb sauberer, wie ich finde...
         if (Config.get("offline", "false").equals("false")) {
             try {
-                fitbitDataFetcher.fetch();
+                activityDataFetcher.fetch();
             } catch (Exception e) {
-                fitbitError = e;
-                Log.error(this.getClass(), "Fitbit-Abruf fehlgeschlagen", e);
+                activityError = e;
+                Log.error(this.getClass(), "Aktivitäts-Abruf fehlgeschlagen", e);
             }
 
             try {
@@ -145,15 +142,6 @@ public class Controller{
             } catch (Exception e) {
                 movieImportError = e;
                 Log.error(this.getClass(), "TMDB-Import fehlgeschlagen", e);
-            }
-
-            // !tmp: Health-Vergleich mitlaufen lassen (Übergang bis Fitbit-Abschaltung).
-            try {
-                comparison = new Comparison();
-                comparison.fetch(fitbitDataFetcher.getProjection());
-            } catch (Exception e) {
-                comparisonError = e;
-                Log.error(this.getClass(), "Health-Vergleich fehlgeschlagen", e);
             }
         }
     }
@@ -167,27 +155,20 @@ public class Controller{
         // Owner-Stage registrieren VOR allen Dialogen
     	UiUtils.setOwnerWindow(mainWindow.getStage());
 
-        // Die Fehler der drei Start-Importe in EINER Meldung. An einem Tag ohne Netz wären es sonst
-        // drei Alerts hintereinander, die alle dasselbe sagen.
+        // Die Fehler der Start-Importe in EINER Meldung. An einem Tag ohne Netz wären es sonst
+        // mehrere Alerts hintereinander, die alle dasselbe sagen.
         List<String> failed = new ArrayList<>();
-        if (fitbitError != null)
-            failed.add("Fitbit: " + fitbitError.getMessage());
+        if (activityError != null)
+            failed.add("Aktivität: " + activityError.getMessage());
         if (movieImportError != null)
             failed.add("TMDB: " + movieImportError.getMessage());
-        if (comparisonError != null)
-            failed.add("Health-Vergleich: " + comparisonError.getMessage());
 
         if (!failed.isEmpty())
             Alerts.show("Importe fehlgeschlagen", String.join("\n\n", failed), ButtonEnum.OK);
 
         // Jeder Folgeschritt hängt daran, ob SEIN Import geklappt hat.
-        if (fitbitError == null && fitbitDataFetcher.hasData())
-            new DataReviewService(fitbitDataFetcher).showDialogsAndSave();
-
-        // !tmp: Bei Fehler kein Popup — comparison wäre nur teilbefüllt.
-        if (comparisonError == null && comparison != null) {
-            comparison.showPopup();
-        }
+        if (activityError == null && activityDataFetcher.hasData())
+            new ActivityDataReviewService(activityDataFetcher).showDialogsAndSave();
      
         StartupService alcoholService = new StartupService();
         alcoholService.checkAndPrompt();
@@ -269,8 +250,8 @@ public class Controller{
 	    requestSessionSwitch(() -> {
 	        if ("Dashboard".equals(item)) {
 	            currentScreen = new DashboardScreen();
-	        } else if ("Fitbit".equals(item)) {
-	            currentScreen = new FitbitStatisticsScreen();
+	        } else if ("Aktivität".equals(item)) {
+	            currentScreen = new ActivityStatisticsScreen();
 	        }  else if ("Alkohol".equals(item)) {
 	            currentScreen = new AlcStatisticsScreen();
 	        }

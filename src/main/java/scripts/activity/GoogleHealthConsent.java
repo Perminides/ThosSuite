@@ -1,4 +1,4 @@
-package scripts.fitbit;
+package scripts.activity;
 
 import java.awt.Desktop;
 import java.io.OutputStream;

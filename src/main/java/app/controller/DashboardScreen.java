@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Locale;
 
 import app.alc.repository.AlcRepository;
-import app.fitbit.DashboardService;
+import app.activity.ActivityDashboardService;
 import app.learn.anki.repository.DeckRepository;
 import app.mattress.repository.MattressRepository;
 import app.messaging.repository.MessageRepository;
@@ -33,8 +33,8 @@ public class DashboardScreen implements Screen {
     private void buildContent() {
         List<DashboardTileData> tiles = new ArrayList<>();
 
-        DashboardService fitbitService = new DashboardService();
-        int stepsNeeded = fitbitService.calculateRemainingDailySteps(AppClock.TODAY);
+        ActivityDashboardService activityService = new ActivityDashboardService();
+        int stepsNeeded = activityService.calculateRemainingDailySteps(AppClock.TODAY);
         if (stepsNeeded < 0)
         	stepsNeeded = 0;
         String formattedSteps = NumberFormat.getInstance(Locale.GERMANY).format(stepsNeeded);
@@ -44,8 +44,8 @@ public class DashboardScreen implements Screen {
             ));
 
         tiles.add(new DashboardTileData(
-            	"" + fitbitService.calculateCurrentStreak(AppClock.TODAY),
-                "Aktueller Fitbit-Streak in Wochen (Rekord: " + fitbitService.calculateRecordStreak() + ")"
+            	"" + activityService.calculateCurrentStreak(AppClock.TODAY),
+                "Aktueller Aktivitäts-Streak in Wochen (Rekord: " + activityService.calculateRecordStreak() + ")"
             ));
 
         AlcRepository alcoholRepo = new AlcRepository();
