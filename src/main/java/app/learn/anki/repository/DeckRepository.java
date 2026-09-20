@@ -23,11 +23,11 @@ public class DeckRepository {
 
 	public List<Card> getAllCards(Deck type) {
 
-		Map<String, LearnStat> statsById = db.loadAll(type);
-		List<Card> cards = csv.loadAll(type);  // liefert fertige Hints
+		Map<Integer, LearnStat> statsById = db.loadAll(type);
+		List<Card> cards = csv.loadAll(type);  // liefert fertige Cards
 
 	    for (Card c : cards) {
-	        c.setLearnStat(statsById.get(String.valueOf(c.getId())));  // darf null sein = „nie gespielt“
+	        c.setLearnStat(statsById.get(c.getId()));  // darf null sein = „nie gespielt“
 	    }
 
 	    return cards;

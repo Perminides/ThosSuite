@@ -22,20 +22,25 @@ import app.shared.DB;
  * <p><b>Schlüssel ist die Deck-Id.</b> In der Spalte {@code deck} steht {@code Deck.getId()} — ein
  * Wert, den nur eine Code-Änderung ändert. Der Anzeigename bleibt damit frei: „Welt" darf jederzeit
  * „Weltkarte" werden, ohne dass die Historie verwaist. Der Region-Zweig schlüsselt genauso.</p>
+ *
+ * <p><b>Statement oder PreparedStatement.</b> Vorbereitet wird, wo dasselbe Statement mit
+ * wechselnden Werten läuft — das ist allein {@code saveLearned} mit seiner Schleife über die
+ * Zeilen. Die übrigen laufen je Aufruf einmal und nehmen ein schlichtes {@code Statement}; die
+ * eingesetzten Werte sind Code-Konstanten, keine Benutzereingabe.</p>
  */
 class DbDeckProgressRepository {
 
 		DbDeckProgressRepository() {
 		}
 
-		Map<String, LearnStat> loadAll(Deck type) {
+		Map<Integer, LearnStat> loadAll(Deck type) {
 			Connection conn = DB.getConnection();
 	        String sql = "SELECT * FROM card_learn_stat where deck = '" + type.getId() + "'";
-	        Map<String, LearnStat> result = new HashMap<>();
-	        try (PreparedStatement ps = conn.prepareStatement(sql);
-	             ResultSet rs = ps.executeQuery()) {
+	        Map<Integer, LearnStat> result = new HashMap<>();
+	        try (Statement statement = conn.createStatement();
+	             ResultSet rs = statement.executeQuery(sql)) {
 	            while (rs.next()) {
-	                String id = rs.getString("card_id");
+	                int id = rs.getInt("card_id");
 	                LocalDate firstPlayed = LocalDate.parse(rs.getString("first_played"));
 	                LocalDate lastPlayed = LocalDate.parse(rs.getString("last_played"));
 	                int level = rs.getInt("level");
@@ -43,7 +48,7 @@ class DbDeckProgressRepository {
 	                result.put(id, new LearnStat(firstPlayed, lastPlayed, level, wrongCount));
 	            }
 	        } catch (SQLException e) {
-	            throw new RuntimeException("Fehler beim Lesen der Hint-Progress-Daten", e);
+	            throw new RuntimeException("Fehler beim Lesen der Card-Progress-Daten", e);
 	        }
 	        return result;
 	    }
@@ -92,7 +97,7 @@ class DbDeckProgressRepository {
 		    Connection conn = DB.getConnection();
 		    String sql = "select count(*) "
 		            + "from card_learn_stat "
-		            + "where deck = '" + type.getId() + "'"
+		            + "where deck = '" + type.getId() + "' "
 		            + "and date(first_played) = '" + AppClock.TODAY + "'";
 		    try (Statement statement = conn.createStatement();
 		         ResultSet rs = statement.executeQuery(sql)) {
@@ -107,7 +112,7 @@ class DbDeckProgressRepository {
 		    Connection conn = DB.getConnection();
 		    String sql = "select count(*) "
 		            + "from card_learn_stat "
-		            + "where deck = '" + type.getId() + "'"
+		            + "where deck = '" + type.getId() + "' "
 		            + "and (date(last_played, '+' || level || ' days') <= '" + AppClock.TODAY + "' "
 		            + "or date(last_played) = '" + AppClock.TODAY + "')";
 		    try (Statement statement = conn.createStatement();
