@@ -1,7 +1,10 @@
 """Macht aus einem heruntergeladenen SVG-Piktogramm eine Strukturdatei.
 
 Aufruf:
-    python svg-zu-sketch.py <zielordner> <datei.svg> [name]
+    python svg-zu-sketch.py <zielordner> <datei.svg> [name] [--teil N]
+
+`--teil N` nimmt nur den N-ten Teilpfad (0-basiert, in der Reihenfolge der Datei) und normiert ihn
+neu -- fuer Piktogramme, von denen nur ein Stueck gebraucht wird, etwa einer von zwei Stosszaehnen.
 
 Der Weg dahin ist bewusst zweistufig: Hier draussen wird die unangenehme Welt erledigt --
 Kurven, Boegen, relative Befehle, Y nach unten, beliebige viewBox --, und in den Ordner faellt
@@ -334,6 +337,17 @@ def schreibe(zielordner, name, alle):
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         raise SystemExit(__doc__)
-    quelle = Path(sys.argv[2])
-    name = sys.argv[3] if len(sys.argv) > 3 else quelle.stem
-    schreibe(sys.argv[1], name, normiere(lade(quelle, TOLERANZ)))
+    args = sys.argv[1:]
+    teil = None
+    if "--teil" in args:
+        i = args.index("--teil")
+        teil = int(args[i + 1])
+        args = args[:i] + args[i + 2:]
+    quelle = Path(args[1])
+    name = args[2] if len(args) > 2 else quelle.stem
+    ringe = lade(quelle, TOLERANZ)
+    if teil is not None:
+        if not 0 <= teil < len(ringe):
+            raise SystemExit("Die Datei hat %d Teile, --teil %d gibt es nicht" % (len(ringe), teil))
+        ringe = [ringe[teil]]
+    schreibe(args[0], name, normiere(ringe))
