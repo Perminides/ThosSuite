@@ -137,13 +137,6 @@ public class ArchitekturRegelnTest {
 	 *
 	 * <p>{@code ThosSuiteApp} liegt direkt in {@code app} und fällt aus dem Schnitt
 	 * {@code app.(*)..} heraus — es braucht keine Ausnahme.</p>
-	 *
-	 * <p><b>Eine befristete Ausnahme: {@code app.tmp}.</b> Das Wegwerf-Gerüst des
-	 * Fitbit-/Health-Vergleichs steht über beiden Seiten und greift deshalb in {@code fitbit} und
-	 * {@code activity}. Die Ausnahme steht hier sichtbar, statt dass die Regel fehlt. Fällt
-	 * {@code app.tmp} weg, fällt diese Zeile mit — greift dann noch etwas seitwärts, bricht der
-	 * Build, und das ist richtig so. Umgekehrt bleibt {@code app.tmp} als <i>Ziel</i> geschützt:
-	 * ein Feature darf es weiterhin nicht anfassen, nur {@code controller} darf das.</p>
 	 */
 	@ArchTest
 	static final ArchRule keinSeitwaertsgriffAufObersterEbene = slices()
@@ -151,7 +144,6 @@ public class ArchitekturRegelnTest {
 			.should().notDependOnEachOther()
 			.ignoreDependency(resideInAPackage("app.controller.."), alwaysTrue())
 			.ignoreDependency(alwaysTrue(), resideInAPackage("app.shared.."))
-			.ignoreDependency(resideInAPackage("app.tmp.."), alwaysTrue()) // !tmp — siehe Javadoc
 			.because("auf oberster Ebene geht es nur nach unten: controller hinab, alle nach shared");
 
 	/**

@@ -156,54 +156,66 @@ Fachlichkeit mehr hergibt:
 Was daraus im Einzelnen folgt — welcher Dialog in welcher Konstellation erscheint —, steht als
 Tabelle im Javadoc von `RegionSession.closeLoud()`, wo es beim Lesen des Codes gebraucht wird.
 
-## 💪 Fitbit-Integration (`fitbit`)
+## 💪 Aktivitäts-Integration (`activity`)
 
-Holt Aktivitätsdaten aus dem Fitbit-Account — Schritte wie auch Aktivitäten (z. B. Radfahren) —
+Holt Aktivitätsdaten aus der Google-Health-API — Schritte wie auch Aktivitäten (z. B. Radfahren) —
 und rechnet sie nach einem Schlüssel in Tagespunkte um. Daraus entstehen Wochenpunkte und ein
 Streak erfüllter Wochen. Eine Woche gilt als **erfüllt**, wenn ihre Punkte das zum Zeitpunkt
-gültige Wochenziel (`fitbit_goal_history`) erreichen — darauf beruhen Streak und Diagramm-Färbung.
+gültige Wochenziel (`activity_goal_history`) erreichen — darauf beruhen Streak und
+Diagramm-Färbung.
 
-> **Health-Migration ausstehend.** Die Fitbit-Web-API wird abgeschaltet; der Datenabruf muss auf
-> Google Health umgestellt werden. Noch komplett offen — Abruf und Persistenz unten beschreiben
-> den *aktuellen*, Fitbit-basierten Stand.
+> **Die Schrittzahl ist nicht die Zahl auf der Uhr.** Die API filtert "off-wrist" erkannte
+> Schritte weg, die Consumer-Oberflächen zählen sie mit; die Differenz schwankt täglich. Alle
+> Lesemethoden liefern dieselbe gefilterte Zahl, ein Schalter dagegen existiert nicht. Die Suite
+> richtet sich deshalb nach der Health-App, mit der die API seit dem 03.09.2026 übereinstimmt.
+> Die vollständige Begründung steht im Javadoc von `activity.ApiClient` — dort, wo sie beim
+> Lesen des Codes gebraucht wird.
 
-**Datenabruf (`DataFetcher` / `ApiClient`):** holen die Daten in `runPreTasks()` — blockierend
-auf dem FX-Thread, während der Splash sichtbar ist (externer API-Call, siehe Architektur →
-Startup-Flow).
+**Datenabruf (`ActivityDataFetcher` / `ApiClient`):** holen die Daten in `runPreTasks()` —
+blockierend auf dem FX-Thread, während der Splash sichtbar ist (externer API-Call, siehe
+Architektur → Startup-Flow). Der gesamte fehlende Zeitraum geht in zwei Aufrufe: Schritte über
+`dailyRollUp`, Aktivitäten über `list`.
 
-**Review (`DataReviewService`):** zeigt in `runPostTasks()` die Review-/Bestätigungsdialoge und
-speichert.
+**Review (`ActivityDataReviewService`):** zeigt in `runPostTasks()` die Review-/Bestätigungsdialoge
+und speichert. Ein Tag wird erst nach dem Review geschrieben. Führt Health für einen Tag keine
+Schritte (Uhr nicht getragen oder nicht synchronisiert), hält das den Import der übrigen Tage
+nicht auf: Ein Alert nennt den Tag, und in der Summenzeile steht eine 0, die sich füllen lässt.
 
 **Punkte (`PointsCalculator`):** rechnet Schritte und Aktivitäten nach einem Schlüssel in
-Tagespunkte um.
+Tagespunkte um. Geschaltet wird über Googles `exerciseType`-Enum; unbekannte Typen landen im
+`default`-Zweig und melden sich, statt still zu verschwinden.
 
-**Dashboard-Metriken (`DashboardService`):** `calculateRemainingDailySteps(today)`,
+**Dashboard-Metriken (`ActivityDashboardService`):** `calculateRemainingDailySteps(today)`,
 `calculateCurrentStreak(today)` (erfüllte Wochen ohne die laufende), `calculateRecordStreak()` —
 konsumiert vom DashboardScreen (`controller`).
 
-**DB-Schema:** Tagespunkte liegen in `fitbit`; Wochenpunkte werden **nicht** gespeichert, sondern
-im View `fitbit_weekly_points` täglich zu Wochen (ab Montag) aggregiert.
+**DB-Schema:** Tagespunkte liegen in `activity`; Wochenpunkte werden **nicht** gespeichert, sondern
+im View `activity_weekly_points` täglich zu Wochen (ab Montag) aggregiert. `raw_data` hält die
+Rohwerte der API, `adjusted_data` die im Dialog korrigierten — letzteres bleibt leer, wenn nichts
+korrigiert wurde, und heißt deshalb nie "noch nicht reviewt".
 ```sql
-CREATE TABLE fitbit (
-    date   TEXT PRIMARY KEY,
-    points INTEGER,
-    remark TEXT
+CREATE TABLE activity (
+    date          TEXT PRIMARY KEY,
+    points        INTEGER,
+    remark        TEXT,
+    raw_data      TEXT,
+    adjusted_data TEXT
 );
-CREATE TABLE fitbit_goal_history (
+CREATE TABLE activity_goal_history (
     valid_from  DATE PRIMARY KEY,
     weekly_goal INTEGER NOT NULL
 );
-CREATE VIEW fitbit_weekly_points AS
+CREATE VIEW activity_weekly_points AS
     SELECT DATE(date, '-' || ((CAST(strftime('%w', date) AS INTEGER) + 6) % 7) || ' days')
                AS week_start,
            SUM(points)          AS points,
            group_concat(remark) AS remark
-      FROM fitbit
+      FROM activity
      GROUP BY week_start
      ORDER BY week_start DESC;
 ```
 
-### FitbitStatisticsScreen
+### ActivityStatisticsScreen
 
 BarChart + LineChart in einem `StackPane`. BarChart: Wochenpunkte pro Woche
 (`:achieved` / `:failed` / `:in-progress` für die laufende Woche). LineChart (maus-transparent):
@@ -446,8 +458,8 @@ beim Wert *vor* dem gewählten Zeitraum, nicht bei 0.
 Der einzige Screen, der keinem Feature gehört: Er zieht Kennzahlen quer durch die Suite auf einen
 Blick zusammen. `FlowPane` aus Kacheln (`createDashboardTile()` des Skins), in fester Reihenfolge:
 
-- Restschritte des Tages (`fitbit.DashboardService`, mit Tausenderpunkt)
-- aktueller Fitbit-Streak in Wochen samt Rekord
+- Restschritte des Tages (`activity.ActivityDashboardService`, mit Tausenderpunkt)
+- aktueller Wochen-Streak samt Rekord
 - aktueller Alkohol-Kontostand
 - aktueller Wochentags-Streak in Tagen samt Rekord
 - Tage bis zum Wenden der Matratze

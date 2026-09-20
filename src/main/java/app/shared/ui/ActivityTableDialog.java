@@ -183,7 +183,7 @@ public final class ActivityTableDialog {
         tableView.setMaxHeight(Region.USE_PREF_SIZE);
         tableView.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         tableView.setEditable(true);
-        tableView.getStyleClass().add("fitbit-activity-table");
+        tableView.getStyleClass().add("activity-table");
 
         TableColumn<Row, String> startTimeCol = new TableColumn<>("StartTime");
         startTimeCol.setCellValueFactory(cd -> cd.getValue().startTime);

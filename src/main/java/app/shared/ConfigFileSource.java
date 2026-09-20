@@ -63,7 +63,6 @@ class ConfigFileSource {
         props.put("soundFolder",      folderPath + "data/sound");
         props.put("dbFolder",         folderPath + "data");
         props.put("configFolder",     folderPath + "config");
-        props.put("fitbitFolder",     folderPath + "fitbit");
         props.put("logFolder",        folderPath + "log");
 
         // Kein computed Unterordner je Feature: unter attachments.folder liegt ein Ordner pro Nutzer

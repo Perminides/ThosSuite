@@ -3,6 +3,11 @@
 Aufruf:
     python build-union-jack.py <zielordner> element
     python build-union-jack.py <zielordner> hintergrund
+    python build-union-jack.py <zielordner> kreuz-beides-fimbriert
+
+`kreuz-beides-fimbriert` ist derselbe Hintergrund unter dem Namen, den der Generator aus dem
+Kreuz-Zweig ableitet (Ausrichtung "beides", Arme "fimbriert"). Die Flaechen passen zur Reihenfolge
+der Kreuze -- Feld, Saum, Kreuz --, das Vereinigte Koenigreich steht so mit `Blau|Weiss|Rot` im Blatt.
 
 Warum ein eigenes Skript: Der Union Jack ist das einzige Element mit **mehreren Flaechen in
 festen Farben**, und dieselbe Zeichnung wird zweimal gebraucht -- einmal auf ein Rasterfeld
@@ -39,7 +44,7 @@ RASTER = 4                  # Nachkommastellen, auf die zum Kantenvergleich geru
 STELLEN = 3                 # Nachkommastellen in der Datei
 WINZIG = 1e-9
 
-MASSE = {"element": (60.0, 40.0), "hintergrund": (180.0, 120.0)}
+MASSE = {"element": (60.0, 40.0), "hintergrund": (180.0, 120.0), "kreuz-beides-fimbriert": (180.0, 120.0)}
 FARBEN = ["Blau", "Weiß", "Rot"]
 
 
@@ -193,21 +198,22 @@ def zeichne(w, h, art):
 
 def schreibe(zielordner, art):
     if art not in MASSE:
-        raise SystemExit("Nur element oder hintergrund, nicht: " + art)
+        raise SystemExit("Nur element, hintergrund oder kreuz-beides-fimbriert, nicht: " + art)
     w, h = MASSE[art]
+    datei = art if art.startswith("kreuz-") else "union-jack"
     hinweis = ("Elementdatei: um den Nullpunkt zentriert, ein Rasterfeld gross (60 x 40)."
                " Die Farben stehen in properties.farbe fest und werden nicht gefragt."
                if art == "element" else "Hintergrunddatei: fuellt die Leinwand 180 x 120.")
     features = [json.dumps(f, ensure_ascii=False) for f in zeichne(w, h, art)]
     kopf = ['{',
             '"type": "FeatureCollection",',
-            '"name": "union-jack",',
+            '"name": "%s",' % datei,
             '"comment": "%s",' % hinweis,
             '"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },',
             '"features": [']
     text = NL.join(kopf) + NL + ("," + NL).join(features) + NL + "]" + NL + "}" + NL
 
-    ziel = Path(zielordner) / "union-jack.geojson"
+    ziel = Path(zielordner) / (datei + ".geojson")
     ziel.parent.mkdir(parents=True, exist_ok=True)
     ziel.write_text(text, encoding="utf-8")
     print("%s  (%d x %d, %d Flaechen)" % (ziel, w, h, len(features)))

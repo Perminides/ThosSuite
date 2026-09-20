@@ -7,8 +7,9 @@ Der Name ist `kreuz-<ausrichtung>-<arme>`, genau wie der Generator ihn ableitet:
 `diagonal` oder `beides`, dahinter `uni`, `dreifarbig`, `fimbriert` oder `unsichtbar`.
 
 Gebaut werden hier `diagonal-uni`, `diagonal-unsichtbar`, `senkrecht-dreifarbig` und `senkrecht-fimbriert`. `senkrecht-uni`
-liegt als handgemachte Datei daneben und bleibt es; die uebrigen Armformen sind eigene Geometrie und
-kommen, wenn die erste Flagge sie braucht.
+liegt als handgemachte Datei daneben und bleibt es; `beides-fimbriert` ist der Union Jack und kommt aus
+build-union-jack.py. Die uebrigen Armformen sind eigene Geometrie und kommen, wenn die erste Flagge sie
+braucht.
 
 Konvention (siehe Flaggen-Deck.md und die vorhandene Datei kreuz-senkrecht-uni):
   * Leinwand IMMER 180 x 120, x von 0 bis 180, y von -120 bis 0.

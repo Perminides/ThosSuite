@@ -39,10 +39,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 public class ThosSuiteApp extends Application {
-	
-	// !Sofort: Eine Ankikarte endet hart bei falscher Beantwortung eines Steps. Es wäre nice, wenn man noch AfterCorrectSteps
-	// einführen könnte. Bei Flaggen z. B. bei falscher Beantwortung, noch die echte Flagge zeigen könnte. Andererseits hat es dich
-	// bisher auch nie so richtig gestört
+
     private MainWindow mainWindow;
     private Controller controller;
 

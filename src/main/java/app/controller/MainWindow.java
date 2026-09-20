@@ -180,9 +180,9 @@ public class MainWindow {
         MenuItem itemDashboard = new MenuItem("Dashboard");
         itemDashboard.setOnAction(_ -> onStatisticsSelected.accept("Dashboard"));
         menuStatistics.getItems().add(itemDashboard);
-        MenuItem itemFitbit = new MenuItem("Fitbit");
-        itemFitbit.setOnAction(_ -> onStatisticsSelected.accept("Fitbit"));
-        menuStatistics.getItems().add(itemFitbit);
+        MenuItem itemActivity = new MenuItem("Aktivität");
+        itemActivity.setOnAction(_ -> onStatisticsSelected.accept("Aktivität"));
+        menuStatistics.getItems().add(itemActivity);
         MenuItem itemAlc = new MenuItem("Alkohol");
         itemAlc.setOnAction(_ -> onStatisticsSelected.accept("Alkohol"));
         menuStatistics.getItems().add(itemAlc);

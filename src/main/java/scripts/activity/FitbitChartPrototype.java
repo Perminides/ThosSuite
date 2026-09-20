@@ -1,4 +1,4 @@
-package scripts.fitbit;
+package scripts.activity;
 
 import app.shared.Config;
 import app.shared.skin.SkinService;

@@ -1,4 +1,4 @@
-package scripts.fitbit;
+package scripts.activity;
 
 import java.net.URI;
 import java.net.URLEncoder;

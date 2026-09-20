@@ -23,12 +23,51 @@ import app.shared.Config;
 /**
  * Kommunikation mit der Google-Health-API für den Aktivitäts-/Fitness-Bereich.
  *
- * <p>Statisches OAuth2-Modell (anders als Fitbit): Das Refresh-Token ist dauerhaft und
- * rotiert NICHT. Der Client refresht beim Erzeugen einmal ein Access-Token; das genügt,
- * weil der Import einmal täglich läuft. Es wird nichts persistiert.</p>
+ * <h3>Die Schrittzahl hier ist nicht die Zahl auf der Uhr</h3>
+ *
+ * <p>Die API liefert systematisch weniger Schritte, als die Uhr anzeigt, und die Differenz
+ * schwankt von Tag zu Tag. Das ist kein Fehler in dieser Klasse und lässt sich von hier aus
+ * auch nicht beheben — <b>bitte nicht erneut danach suchen.</b></p>
+ *
+ * <p>Die Ursache ist eine Filterung: Die Consumer-Oberflächen zählen Schritte mit, die das Gerät
+ * als "off-wrist" erkannt hat (in der Tasche, in der Hand, Vibration von außen); die API-Pipeline
+ * verlangt dagegen per Default "on-wrist"-Gültigkeit und wirft genau diese weg. Weil der Anteil
+ * off-wrist täglich schwankt, schwankt auch die Differenz. Google beziffert sie mit 0,3 % bis
+ * 15 %, hier gemessen wurden 0,1 % bis 1,8 %.</p>
+ *
+ * <p><b>Alle Lesemethoden liefern dieselbe gefilterte Zahl</b> — {@code list},
+ * {@code dailyRollUp} und {@code reconcile} greifen auf denselben rekonziliierten Speicher zu,
+ * in dem der Filter bereits angewendet ist. Die Methode zu wechseln bringt deshalb nichts; das
+ * ist gemessen. Ein Schalter, der die off-wrist-Schritte einschließt, existiert nicht. Google
+ * hat einen angekündigt, aber ohne Termin.</p>
+ *
+ * <p><b>Wonach sich die Suite richtet:</b> nach der Health-App. Deren Anzeige und diese API
+ * stimmen seit dem 03.09.2026 überein. Die Uhr weicht weiterhin ab — und weil App und Uhr
+ * selbst auseinanderliegen, ist "mit beidem synchron" gar nicht erreichbar. Die App zu treffen
+ * ist das Beste, was von hier aus geht.</p>
+ *
+ * <h3>Methodenwahl</h3>
+ *
+ * <p><b>Schritte über {@code dailyRollUp}:</b> Google zieht die Tagesgrenze selbst, zeitzonen-
+ * und DST-fest, und näht den lokalen Tag über Zeitzonensprünge zusammen — im Urlaub also ohne
+ * eigenes Zutun korrekt. Keine eigene Grenzberechnung, keine Paginierung, und an sauberen Tagen
+ * ohnehin derselbe Wert wie {@code reconcile}.</p>
+ *
+ * <p><b>Aktivitäten über {@code list}:</b> die einzige Methode, die {@code exerciseType} und
+ * Distanz je Aktivität einzeln liefert — {@code reconcile} fasst zusammen. Der Preis ist, dass
+ * {@code list} pro Quelle liest und nicht dedupliziert: Zeichnen zwei Geräte dieselbe Aktivität
+ * gleichzeitig auf, steht sie zweimal da. Das setzt voraus, dass nie zwei Geräte parallel
+ * schreiben.</p>
+ *
+ * <h3>OAuth</h3>
+ *
+ * <p>Statisches Modell: Das Refresh-Token ist dauerhaft und rotiert NICHT. Der Client refresht
+ * beim Erzeugen einmal ein Access-Token; das genügt, weil der Import einmal täglich läuft. Es
+ * wird nichts persistiert.</p>
  *
  * <p>Credentials liegen statisch in der Config: {@code healthClientId},
- * {@code healthClientSecret}, {@code healthRefreshToken}.</p>
+ * {@code healthClientSecret}, {@code healthRefreshToken}. Neu erteilt wird die Einwilligung mit
+ * {@code scripts.fitbit.GoogleHealthConsent}.</p>
  */
 public class ApiClient {
 
@@ -66,7 +105,7 @@ public class ApiClient {
                         from.getYear(), from.getMonthValue(), from.getDayOfMonth(),
                         to.getYear(),   to.getMonthValue(),   to.getDayOfMonth());
 
-        JsonNode root = MAPPER_readTree(postJson(STEPS_BASE + ":dailyRollUp", body));
+        JsonNode root = parse(postJson(STEPS_BASE + ":dailyRollUp", body));
 
         Map<LocalDate, Integer> byDay = new HashMap<>();
         for (JsonNode point : root.path("rollupDataPoints")) {
@@ -94,7 +133,7 @@ public class ApiClient {
                 url += "&pageToken=" + enc(pageToken);
             }
 
-            JsonNode root = MAPPER_readTree(get(url));
+            JsonNode root = parse(get(url));
             for (JsonNode point : root.path("dataPoints")) {
                 activities.add(toExercise(point.path("exercise")));
             }
@@ -127,7 +166,7 @@ public class ApiClient {
                 + "&refresh_token=" + enc(Config.get("healthRefreshToken"))
                 + "&grant_type=refresh_token";
 
-        JsonNode root = MAPPER_readTree(postForm(TOKEN_ENDPOINT, body));
+        JsonNode root = parse(postForm(TOKEN_ENDPOINT, body));
         return root.get("access_token").asText();
     }
 
@@ -178,7 +217,7 @@ public class ApiClient {
 
     // --- Hilfsmittel ---
 
-    private static JsonNode MAPPER_readTree(String json) {
+    private static JsonNode parse(String json) {
         try {
             return MAPPER.readTree(json);
         } catch (IOException e) {

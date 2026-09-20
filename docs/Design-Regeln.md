@@ -82,7 +82,7 @@ Vier Sorten. Übersicht — die genauen Regeln je Sorte folgen in den nächsten 
 
 - **Orchestrierung (`controller`)** — startet die Suite und hält den Querschnitt übers Ganze
   (Dashboard). Darf als Einzige nach unten in alle Features greifen.
-- **Features** (`alc`, `diary`, `fitbit`, `learn`, `mattress`, `messaging`, `movie`, `weekday`)
+- **Features** (`activity`, `alc`, `diary`, `learn`, `mattress`, `messaging`, `movie`, `weekday`)
   — je ein abgeschlossenes, eingestöpseltes Feature. Manche teilen sich innen in Zweige
   (`messaging`, `learn`; siehe „Wann ein Feature sich aufteilt").
 - **Fundament** — trägt nur das Gerüst, kennt kein einzelnes Feature und wird von mehreren
@@ -101,7 +101,7 @@ Vier Sorten. Übersicht — die genauen Regeln je Sorte folgen in den nächsten 
                     ▼
 ┌─────────────────────────────────────────────┐
 │  FEATURES                                    │
-│  alc · diary · fitbit · learn · mattress ·   │
+│  activity · alc · diary · learn · mattress · │
 │  messaging · movie · weekday                 │
 │            (nebeneinander, kein Zugriff      │
 │             aufeinander)                     │
@@ -218,7 +218,7 @@ Feature tragen (Scene-Graph-Navigation, ein JavaFX-Objekt opak durchreichen).
 ### Pfad-Wissen: Struktur gehört der Suite, Dateien dem Feature
 
 Die Ordner-Struktur der Suite ist Suite-Wissen und liegt in `Config` — als computed Pfade,
-feature-benannte Ordner eingeschlossen (`fitbitFolder`, `learnImageFolder`).
+feature-benannte Ordner eingeschlossen (`learnImageFolder`, `signal.externalPath`).
 Dass ein Ordner nur einem Feature dient, macht ihn nicht zu
 Feature-Wissen; die *Hierarchie* kennt die Suite. Zwei scharfe Kanten halten die Regel davon ab,
 mit der Zeit zum Dateinamen-Sammelbecken zu verrotten:
@@ -252,7 +252,7 @@ Klassen werden **ohne** Domänenpräfix benannt. Der Präfix (der Name des Featu
 Zweigen der des Zweigs) kommt erst dazu, wenn die Klasse zum ersten Mal von **außerhalb** ihres
 Feature-Pakets importiert wird — fast immer aus der Orchestrierung.
 
-- Nur intern genutzt → kein Präfix: `diary.repository.Repository`, `fitbit.repository.Repository`.
+- Nur intern genutzt → kein Präfix: `diary.repository.Repository`, `activity.repository.Repository`.
 - **Ausnahme:** Namen, die genauso heißen würden wie ihr Paket oder zu allgemein wären (`Dialog`,
   `Screen`), behalten auch intern einen eigenen Namen — sonst ist `new Dialog()` nicht von
   JavaFX' eigenem `Dialog` zu unterscheiden.

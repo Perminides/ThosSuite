@@ -1,17 +1,16 @@
-package app.fitbit;
+package app.activity;
 
-import java.time.LocalDate;
-
+import app.shared.AppClock;
 import app.shared.model.Screen;
 import app.shared.model.ScreenView;
 import app.shared.model.SessionSwitchStrategy;
 import app.shared.ui.BarChartScreenView;
 
-public class FitbitStatisticsScreen implements Screen {
+public class ActivityStatisticsScreen implements Screen {
 
-    private final BarChartScreenView view = new BarChartScreenView(new FitbitStatisticsPresenter(), LocalDate.now().minusYears(2), LocalDate.now());
+    private final BarChartScreenView view = new BarChartScreenView(new ActivityStatisticsPresenter(), AppClock.TODAY.minusYears(2), AppClock.TODAY);
 
-    public FitbitStatisticsScreen() {
+    public ActivityStatisticsScreen() {
         view.rebuild();
     }
 

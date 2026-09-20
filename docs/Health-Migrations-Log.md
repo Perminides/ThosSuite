@@ -25,9 +25,10 @@ API 16836, Δ 177). Empirisch bewiesen mit `StepsListSum` (eine Quelle, Charge 6
 
 Wichtige Konsequenzen, damit das September-Ich nicht dieselben Sackgassen erneut abläuft:
 
-- **Die Lücke ist NICHT die Nicht-getragen-Kürzung.** `reconcile` hat keine solche Klausel und
-  liefert trotzdem denselben Wert wie `dailyRollUp`. Die Ursache sitzt tiefer, in dem, *was die
-  öffentliche API als Schrittwert überhaupt führt*. Von außen nicht weiter bestimmbar.
+- ~~**Die Lücke ist NICHT die Nicht-getragen-Kürzung.**~~ **WIDERLEGT, siehe Abschnitt 13.**
+  Der Schluss lautete: `reconcile` hat keine solche Klausel und liefert trotzdem denselben Wert wie
+  `dailyRollUp`, also kann es die Kürzung nicht sein. Der Schluss war falsch — die Kürzung sitzt
+  nicht in der Methode, sondern im gemeinsamen Datenspeicher, aus dem alle drei Methoden lesen.
 - **Die App liest nicht über die öffentliche API**, sondern über einen internen Erstanbieter-Kanal
   (mutmaßlich). Cache wurde ausgeschlossen (App-Daten gelöscht, neu geladen → weiterhin 17013).
 - **Health Connect** ist eine *separate*, gerätelokale Quelle und liegt **über** der Uhr (zählt
@@ -259,8 +260,44 @@ separate Audit-Tabelle (kein Mehrzeilen-Verlauf nötig, same key, same row). Das
 - Keine API-Methode erreicht die App-/Uhr-Zahl. Nicht erneut testen. → Anmerkung Perminides: Das
 ist falsch. Wir müssen das sogar testen. Vielleicht wurde an den anderen API-Punkten mittlerweile
 etwas geändert und neuerdings gibt es doch einen Weg an die echten Zahlen zu kommen!
-- Die ~1 % sind **nicht** die Nicht-getragen-Kürzung.
+  → **Beantwortet in Abschnitt 13:** einen solchen Weg gibt es laut Google derzeit nicht, die API
+  trifft seit dem 03.09. aber die App.
+- ~~Die ~1 % sind **nicht** die Nicht-getragen-Kürzung.~~ **Falsch, siehe Abschnitt 13.**
 - Health Connect liegt **über** der Uhr — nicht die Antwort.
 - Refresh-Token in Production-unverifiziert **dauerhaft** (Eigengebrauch <100 Nutzer).
 - Die App = die Uhr = die Live-Zahl, nach der Perminides am letzten Wochentag steuert (empirisch
   bestätigt: Live-Uhr = spätere App-Tagessumme).
+
+---
+
+## 13. Nachtrag 20.09.2026 — Googles Antwort, und was sie umstößt
+
+**Quelle:** Google-Health-Community, Thread 451666573, Antwort von „Doris @ Google Health"
+(Community Specialist) vom 26.08.2026.
+
+**Die Ursache ist doch die Nicht-getragen-Kürzung.** Abschnitt 1 hat das ausgeschlossen, und zwar
+mit einem Fehlschluss: aus „`reconcile` kennt keine Nicht-getragen-Klausel" wurde geschlossen, die
+Kürzung könne es nicht sein. Google sagt, warum das nicht trägt — die Kürzung sitzt nicht in der
+Lesemethode, sondern im **gemeinsamen rekonziliierten Datenspeicher**, aus dem `list`,
+`dailyRollUp` und `reconcile` alle drei lesen. Genau deshalb waren die drei untereinander immer
+identisch. Die Beobachtung war richtig, der Schluss daraus falsch.
+
+Im Einzelnen:
+
+- **Consumer-Apps** (Fitbit-App, Health-App) zählen Schritte mit, die das Gerät als „off-wrist"
+  erkannt hat — in der Tasche, in der Hand, Vibration von außen.
+- **Die Health-API** erzwingt in ihrer Pipeline per Default „on-wrist"-Gültigkeit und filtert
+  genau diese Schritte weg.
+- Weil der Anteil off-wrist täglich schwankt, schwankt auch die Lücke (Googles eigene Angabe:
+  0,3 % bis ~15 %). Das deckt sich mit den hier gemessenen 0,1–1,8 %.
+- **Es gibt derzeit kein API-Flag**, um die off-wrist-Schritte mitzunehmen. Google arbeitet an
+  einer Lösung (Query-Parameter oder eigene Datenoption) mit dem erklärten Ziel, 1:1-Parität zur
+  App-Oberfläche zu erreichen. Kein Termin genannt.
+
+**Was sich seit dem 03.09. geändert hat:** Die API trifft die Anzeige der **Health-App** exakt.
+Die **Uhr** weicht weiterhin ab. Welche der beiden Seiten sich bewegt hat, ist von außen nicht
+feststellbar.
+
+**Damit ist Abschnitt 11, Schritt 1 entschieden:** beides gleichzeitig zu treffen ist unmöglich,
+weil App und Uhr selbst auseinanderliegen. Die Suite richtet sich nach der **Health-App**, weil
+das der Wert ist, den die API liefert — und einen anderen gibt es nicht.
