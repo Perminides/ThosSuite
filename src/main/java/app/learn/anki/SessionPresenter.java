@@ -73,7 +73,7 @@ public class SessionPresenter {
                 fastView = new FastWriteLearnView(id, mapName, category, Card.MAX_FAST_SLOTS, callbacks);
                 yield fastView;
             }
-            default -> null; // oder throw new IllegalArgumentException?
+            default -> throw new RuntimeException("Kein View-Typ für Deck " + type);
         };
     }
 
