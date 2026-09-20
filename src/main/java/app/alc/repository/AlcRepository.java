@@ -83,13 +83,6 @@ public class AlcRepository {
     }
     
     /**
-     * Holt die aktuell gültige Ratio (für heute).
-     */
-    public RatioEntry getCurrentRatio() {
-        return getRatioForDate(LocalDate.now(), getAllRatios());
-    }
-    
-    /**
      * Lädt alle Ratios aus der DB (sortiert nach valid_from).
      */
     public List<RatioEntry> getAllRatios() {
