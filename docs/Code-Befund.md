@@ -166,10 +166,10 @@ laufen die beiden auseinander.
 | 2.9 | Enum-`toString()` trägt Last | zwanzig Minuten | offen |
 | 2.10 | Kleinkram | eine halbe Stunde | offen |
 | 3.1 | API-Key und Session-ID landen in der Logdatei und im Fehler-Alert | zehn Minuten | offen |
-| 3.2 | Zwei Methoden gleichen Namens mit entgegengesetztem Verhalten | dreiviertel Stunde | offen |
+| 3.2 | Zwei Methoden gleichen Namens mit entgegengesetztem Verhalten | dreiviertel Stunde | erledigt |
 | 3.3 | Der Serien-Import steht zweimal | dreiviertel Stunde | offen |
 | 3.4 | Der Import, der nicht fragen kann, fragt zweimal | zehn Minuten | offen |
-| 3.5 | Der Lücken-Check verschluckt jeden Fehler und meldet trotzdem Erfolg | eine halbe Stunde | offen |
+| 3.5 | Der Lücken-Check verschluckt jeden Fehler und meldet trotzdem Erfolg | eine halbe Stunde | erledigt |
 | 3.6 | Das Klassen-Javadoc nennt einen Config-Schlüssel, den es nicht gibt | zwei Minuten | offen |
 | 3.7 | Zehnmal derselbe Parse-Block | eine halbe Stunde | offen |
 | 3.8 | Jede bewertete Serie wird bei jedem Lauf zusätzlich zweimal vollständig geholt | zwanzig Minuten | offen |
@@ -217,7 +217,7 @@ laufen die beiden auseinander.
 | 9.3 | Die Thumbnail-Höhe steht ein drittes Mal — Erweiterung zu Befund 8.3 | mit 8.3 erledigt | offen |
 | 9.4 | Ein Rückblick zu viel — und zwei, die bleiben dürfen | fünf Minuten | offen |
 | 9.5 | Kleinkram | zehn Minuten | offen |
-| 10.1 | Zwei neue Felder sind in eine Falle gelaufen, die schon aufgeschrieben war | eine halbe Stunde | offen |
+| 10.1 | Zwei neue Felder sind in eine Falle gelaufen, die schon aufgeschrieben war | eine halbe Stunde | erledigt — anders gelöst als vorgeschlagen |
 | 10.2 | Die Beschreibung der Staffelung stimmt in drei Punkten nicht mehr | zehn Minuten | offen |
 | 10.3 | Kleinkram | zehn Minuten | offen |
 | Szenario B | Ein weiterer Screen | zwei bis drei Stunden | erledigt — anders gelöst als vorgeschlagen |
@@ -828,7 +828,18 @@ Klasse man steht.
 dann als Argument an der Aufrufstelle, wo man ihn liest.
 **Aufwand:** dreiviertel Stunde.
 
-**Stand:** offen
+**Stand:** erledigt — paketprivate `PosterFiles` in `app.movie` mit `buildFilename`, `save`,
+`saveIfAbsent` und `delete`. Statt des vorgeschlagenen Schalters
+(`save(…, boolean darfSchonDaSein)`) zwei benannte Methoden: `save` besteht darauf, dass die Datei
+noch nicht da ist, `saveIfAbsent` lässt eine vorhandene stehen. An der Aufrufstelle steht damit,
+was gemeint ist, statt eines `true`.
+
+Die beiden Verhalten waren nie ein Versehen — der neue Titel darf kein Poster vorfinden, die
+Staffel teilt sich eins mit ihrer Serie. Das steht jetzt im Javadoc der beiden Methoden statt in
+einem Kommentar in einem der Importer.
+
+Mitgenommen: `deletePoster` aus `MovieImporter` wurde zu `PosterFiles.delete` — damit steht der
+Pfad `imageFolder/tmdb/<name>` einmal im Quelltext statt dreimal.
 
 ### 3.3 Der Serien-Import steht zweimal
 
@@ -900,7 +911,15 @@ man den Grund fände.
 die Robustheit der Schleife und nimmt ihr das Schweigen.
 **Aufwand:** eine halbe Stunde.
 
-**Stand:** offen
+**Stand:** erledigt — Zähler `gapChecksFailed`, in allen fünf `catch`-Blöcken hochgezählt und in
+`showSummary()` als eigene Zeile. Er geht auch in die Null-Prüfung ein: Sonst stünde bei einem
+Lauf ohne einen einzigen Treffer „Fehlgeschlagene Nachholversuche: 214“ und darunter weiter
+„Nichts Neues gefunden."
+
+Der vorgeschlagene `Log.warn(…, e)` gab es nicht — `Log` kannte eine Exception nur bei `error`.
+`warn(Class<?>, String, Throwable)` ist jetzt ergänzt, symmetrisch zu `error` gebaut (Stacktrace
+von Hand in die Message) und für genau diesen Fall gedacht: Der Ablauf läuft weiter, der Grund
+bleibt nachlesbar.
 
 ### 3.6 Das Klassen-Javadoc nennt einen Config-Schlüssel, den es nicht gibt
 
@@ -2203,7 +2222,18 @@ Schlüssel setzt, ließ sich hier nicht feststellen — die Dateien liegen im Da
 Repo. Falls ja, weicht das sichtbare Ergebnis seit dem jeweiligen Eintrag von dem ab, was dort
 steht.
 
-**Stand:** offen
+**Stand:** erledigt — anders gelöst als vorgeschlagen. Kein `Double`-Zweig und kein
+`Dimension2D`-Zweig: Der Parser wird erweitert, wenn ein Skin eine Kommazahl braucht, nicht auf
+Verdacht. Gesetzt ist nur die `else`-Klausel am Ende der Typ-Kette — ein Feld, für das eine Datei
+einen Wert trägt und das keinen Zweig hat, bricht jetzt den Start ab und nennt Feldname und Typ.
+
+Die Stille ist damit weg, die fehlende Fähigkeit bleibt bewusst stehen. Beides zusammen macht sie
+harmlos: Wer `sketchStrokeWidth=2.5` schreibt, bekommt beim nächsten Start eine Meldung statt
+eines unveränderten Strichs.
+
+**Die offene Frage des Befunds ist damit beantwortet:** Der erste Start nach der Änderung lief
+durch. Keine der ausgelieferten properties-Dateien setzt einen der fünf betroffenen Schlüssel —
+das sichtbare Ergebnis weicht also nirgends von dem ab, was in einer Datei steht.
 
 ### 10.2 Die Beschreibung der Staffelung stimmt in drei Punkten nicht mehr
 

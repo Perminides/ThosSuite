@@ -642,6 +642,9 @@ public abstract class SkinProperties {
 	                    field.set(this, parseRectangle(value));
 	                } else if (field.getType() == String.class) {
 	                    field.set(this, value);
+	                } else {
+	                    throw new RuntimeException("Feldtyp ohne Loader-Zweig: " + field.getName()
+	                            + " (" + field.getType().getSimpleName() + ")");
 	                }
 	            }
 	        }

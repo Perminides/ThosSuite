@@ -1,6 +1,5 @@
 package app.movie;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -157,7 +156,7 @@ public class MovieImporter {
         // Die Poster liegen im Dateisystem, nicht in der Transaktion — ein rollback() erwischt sie
         // nicht. Bliebe eine Datei liegen, scheiterte derselbe Film beim nächsten Start erneut, und
         // zwar an "Bild existiert bereits". Deshalb merken und im catch mit aufräumen. Die harte
-        // Prüfung in saveImageToFileSystem bleibt so erhalten: sie meldet dann echte Namenskollisionen
+        // Prüfung in PosterFiles.save bleibt so erhalten: sie meldet dann echte Namenskollisionen
         // und nicht mehr die Trümmer des eigenen Vorlaufs.
         List<String> writtenPosters = new ArrayList<>();
 
@@ -166,8 +165,8 @@ public class MovieImporter {
                 movieRepo.insertMovie(movie, conn);
                 if (posterW92 != null) {
                     int[] dimensions = ImageUtils.dimensions(posterW92);
-                    String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
-                    saveImageToFileSystem(filename, posterW92);
+                    String filename = PosterFiles.buildFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
+                    PosterFiles.save(filename, posterW92);
                     writtenPosters.add(filename);
                     movieRepo.insertMovieImage(movie, 92, dimensions[1], filename, conn);
                 } else {
@@ -175,8 +174,8 @@ public class MovieImporter {
                 }
                 if (posterW154 != null) {
                     int[] dimensions = ImageUtils.dimensions(posterW154);
-                    String filename = buildImageFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
-                    saveImageToFileSystem(filename, posterW154);
+                    String filename = PosterFiles.buildFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
+                    PosterFiles.save(filename, posterW154);
                     writtenPosters.add(filename);
                     movieRepo.insertMovieImage(movie, 154, dimensions[1], filename, conn);
                 } else {
@@ -191,7 +190,7 @@ public class MovieImporter {
                 Log.info(MovieImporter.class, "Film erfolgreich importiert: " + movie.title);
             } catch (Exception e) {
                 conn.rollback();
-                deletePoster(writtenPosters);
+                PosterFiles.delete(writtenPosters);
                 throw new RuntimeException("Import fehlgeschlagen für Film: " + rating.title + " (id=" + rating.id + ")", e);
             }
         } catch (SQLException e) {
@@ -232,43 +231,4 @@ public class MovieImporter {
      * Speichert ein Bild im Dateisystem. Wirft Exception wenn bereits vorhanden —
      * das sollte nie passieren.
      */
-    /**
-     * Das Dateisystem-Gegenstück zum {@code rollback()}. Wirft bewusst nicht weiter — hier wird ein
-     * bereits gescheiterter Import aufgeräumt, und ein Problem beim Aufräumen darf die eigentliche
-     * Ursache nicht verdecken. Es wird geloggt, mehr nicht.
-     */
-    private static void deletePoster(List<String> filenames) {
-        for (String filename : filenames) {
-            try {
-                java.nio.file.Files.deleteIfExists(
-                        Config.getPath("imageFolder").resolve("tmdb").resolve(filename));
-                Log.info(MovieImporter.class, "Poster nach Rollback entfernt: " + filename);
-            } catch (Exception e) {
-                Log.warn(MovieImporter.class, "Poster konnte nach Rollback nicht entfernt werden: " + filename + " (" + e + ")");
-            }
-        }
-    }
-
-    private static void saveImageToFileSystem(String filename, byte[] image) {
-    	File file = Config.getPath("imageFolder").resolve("tmdb").resolve(filename).toFile();
-        if (file.exists())
-            throw new RuntimeException("Bild existiert bereits, das sollte nicht passieren: " + filename);
-        try {
-            file.getParentFile().mkdirs();
-            java.nio.file.Files.write(file.toPath(), image);
-            Log.debug(MovieImporter.class, "Bild gespeichert: " + filename);
-        } catch (Exception e) {
-            throw new RuntimeException("saveImageToFileSystem fehlgeschlagen. filename: " + filename, e);
-        }
-    }
-
-    /**
-     * Baut den Dateinamen für ein Bild zusammen.
-     * Format: originalname_language_width_height.jpg
-     */
-    private static String buildImageFilename(String posterPath, String language, int width, int height) {
-        String base = posterPath.startsWith("/") ? posterPath.substring(1) : posterPath;
-        base = base.substring(0, base.lastIndexOf('.'));
-        return base + "_" + language + "_" + width + "_" + height + ".jpg";
-    }
 }

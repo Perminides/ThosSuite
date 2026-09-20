@@ -342,6 +342,24 @@ public class Log {
     }
     
     /**
+     * Loggt eine WARNING-Message mit Exception (Level.WARNING).
+     * 
+     * <p>Für den handhabbaren Fall, bei dem der Ablauf weiterläuft, der Grund aber nachlesbar
+     * bleiben soll — ein übersprungener Eintrag in einer langen Schleife etwa. Der StackTrace
+     * wird wie bei {@link #error(Class, String, Throwable)} von Hand in die Message gebaut.
+     * 
+     * @param callerClass Aufrufende Klasse (MyClass.class)
+     * @param message Warning-Message (Kontext)
+     * @param ex Exception mit StackTrace
+     */
+    public static void warn(Class<?> callerClass, String message, Throwable ex) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        ex.printStackTrace(pw);
+        Logger.getLogger(callerClass.getName()).log(Level.WARNING, message + "\n" + sw.toString());
+    }
+    
+    /**
      * Loggt eine ERROR-Message mit Exception (Level.SEVERE).
      * 
      * <p>Error-Logs sind für kritische Fehler gedacht die zum Abbruch führen oder

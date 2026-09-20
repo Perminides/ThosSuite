@@ -1,6 +1,5 @@
 package app.movie;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -136,6 +135,8 @@ public class SeriesImporter {
     private int reRatedEpisodes;
     private int postersFound;
     private int overviewsFound;
+    /** Gescheiterte Nachholversuche — sonst sähe ein Lauf ohne einen einzigen Treffer aus wie ein Lauf ohne Lücken. */
+    private int gapChecksFailed;
 
     public SeriesImporter() {
         this.api = new ApiClient();
@@ -151,7 +152,7 @@ public class SeriesImporter {
         crewFilterRepo.load();
         newShows = 0; reRatedShows = 0; updatedShowData = 0;
         newEpisodes = 0; reRatedEpisodes = 0;
-        postersFound = 0; overviewsFound = 0;
+        postersFound = 0; overviewsFound = 0; gapChecksFailed = 0;
 
         // Step 1: Serien
         showStepAlert("Wir schauen mal, ob sich bei den Serien was getan hat.");
@@ -516,7 +517,8 @@ public class SeriesImporter {
                     Log.info(SeriesImporter.class, "Overview nachgeholt für Film id=" + id);
                 }
             } catch (Exception e) {
-                Log.warn(SeriesImporter.class, "Overview-Check fehlgeschlagen für Film id=" + id + ": " + e.getMessage());
+                gapChecksFailed++;
+                Log.warn(SeriesImporter.class, "Overview-Check fehlgeschlagen für Film id=" + id, e);
             }
         }
     }
@@ -531,16 +533,16 @@ public class SeriesImporter {
                     byte[] posterW154 = api.getImage(movieDetails.poster_path, "w154");
                     if (posterW92 != null) {
                         int[] dim = ImageUtils.dimensions(posterW92);
-                        String filename = buildImageFilename(movieDetails.poster_path, "en-US",
+                        String filename = PosterFiles.buildFilename(movieDetails.poster_path, "en-US",
                                 dim[0], dim[1]);
-                        saveImageToFileSystem(filename, posterW92);
+                        PosterFiles.saveIfAbsent(filename, posterW92);
                         movieRepo.updateMoviePoster(id, dim[0], dim[1], "en-US", movieDetails.poster_path.substring(1), filename);
                     }
                     if (posterW154 != null) {
                         int[] dim = ImageUtils.dimensions(posterW154);
-                        String filename = buildImageFilename(movieDetails.poster_path, "en-US",
+                        String filename = PosterFiles.buildFilename(movieDetails.poster_path, "en-US",
                                 dim[0], dim[1]);
-                        saveImageToFileSystem(filename, posterW154);
+                        PosterFiles.saveIfAbsent(filename, posterW154);
                         movieRepo.updateMoviePoster(id, dim[0], dim[1], "en-US", movieDetails.poster_path.substring(1), filename);
                     }
                     postersFound++;
@@ -548,7 +550,8 @@ public class SeriesImporter {
                     Log.info(SeriesImporter.class, "Poster nachgeholt für Film id=" + id);
                 }
             } catch (Exception e) {
-                Log.warn(SeriesImporter.class, "Poster-Check fehlgeschlagen für Film id=" + id + ": " + e.getMessage());
+                gapChecksFailed++;
+                Log.warn(SeriesImporter.class, "Poster-Check fehlgeschlagen für Film id=" + id, e);
             }
         }
     }
@@ -564,7 +567,8 @@ public class SeriesImporter {
                     Log.info(SeriesImporter.class, "Overview nachgeholt für Serie id=" + id);
                 }
             } catch (Exception e) {
-                Log.warn(SeriesImporter.class, "Overview-Check fehlgeschlagen für Serie id=" + id + ": " + e.getMessage());
+                gapChecksFailed++;
+                Log.warn(SeriesImporter.class, "Overview-Check fehlgeschlagen für Serie id=" + id, e);
             }
         }
     }
@@ -579,14 +583,14 @@ public class SeriesImporter {
                     byte[] posterW154 = api.getImage(showDetails.poster_path, "w154");
                     if (posterW92 != null) {
                         int[] dim = ImageUtils.dimensions(posterW92);
-                        String filename = buildImageFilename(showDetails.poster_path, "en-US", dim[0], dim[1]);
-                        saveImageToFileSystem(filename, posterW92);
+                        String filename = PosterFiles.buildFilename(showDetails.poster_path, "en-US", dim[0], dim[1]);
+                        PosterFiles.saveIfAbsent(filename, posterW92);
                         tvShowRepo.insertTvShowImage(id, showDetails.poster_path, dim[0], dim[1], "en-US", filename);
                     }
                     if (posterW154 != null) {
                         int[] dim = ImageUtils.dimensions(posterW154);
-                        String filename = buildImageFilename(showDetails.poster_path, "en-US", dim[0], dim[1]);
-                        saveImageToFileSystem(filename, posterW154);
+                        String filename = PosterFiles.buildFilename(showDetails.poster_path, "en-US", dim[0], dim[1]);
+                        PosterFiles.saveIfAbsent(filename, posterW154);
                         tvShowRepo.insertTvShowImage(id, showDetails.poster_path, dim[0], dim[1], "en-US", filename);
                     }
                     postersFound++;
@@ -594,7 +598,8 @@ public class SeriesImporter {
                     Log.info(SeriesImporter.class, "Poster nachgeholt für Serie id=" + id);
                 }
             } catch (Exception e) {
-                Log.warn(SeriesImporter.class, "Poster-Check fehlgeschlagen für Serie id=" + id + ": " + e.getMessage());
+                gapChecksFailed++;
+                Log.warn(SeriesImporter.class, "Poster-Check fehlgeschlagen für Serie id=" + id, e);
             }
         }
     }
@@ -611,8 +616,9 @@ public class SeriesImporter {
                             + " S" + ep.seasonNumber() + "E" + ep.episodeNumber());
                 }
             } catch (Exception e) {
+                gapChecksFailed++;
                 Log.warn(SeriesImporter.class, "Overview-Check fehlgeschlagen für Episode showId=" + ep.tvShowId()
-                        + " S" + ep.seasonNumber() + "E" + ep.episodeNumber() + ": " + e.getMessage());
+                        + " S" + ep.seasonNumber() + "E" + ep.episodeNumber(), e);
             }
         }
     }
@@ -707,8 +713,9 @@ public class SeriesImporter {
         if (reRatedEpisodes > 0) sb.append("Umbewertete Episoden: ").append(reRatedEpisodes).append("\n");
         if (postersFound > 0) sb.append("Nachgeholte Poster: ").append(postersFound).append("\n");
         if (overviewsFound > 0) sb.append("Nachgeholte Zusammenfassungen: ").append(overviewsFound).append("\n");
+        if (gapChecksFailed > 0) sb.append("Fehlgeschlagene Nachholversuche: ").append(gapChecksFailed).append("\n");
         if (newShows + reRatedShows + updatedShowData + newEpisodes + reRatedEpisodes
-                + postersFound + overviewsFound == 0)
+                + postersFound + overviewsFound + gapChecksFailed == 0)
             sb.append("Nichts Neues gefunden.");
 
         Log.info(SeriesImporter.class, "Zusammenfassung: " + sb.toString());
@@ -762,31 +769,12 @@ public class SeriesImporter {
         }
         try {
             int[] dim = ImageUtils.dimensions(imageData);
-            String filename = buildImageFilename(posterPath, "en-US", dim[0], dim[1]);
-            saveImageToFileSystem(filename, imageData);
+            String filename = PosterFiles.buildFilename(posterPath, "en-US", dim[0], dim[1]);
+            PosterFiles.saveIfAbsent(filename, imageData);
             dbInsert.insert(filename);
         } catch (Exception e) {
             throw new RuntimeException("savePoster fehlgeschlagen. contextName=" + contextName, e);
         }
     }
 
-    private static void saveImageToFileSystem(String filename, byte[] image) {
-    	File file = Config.getPath("imageFolder").resolve("tmdb").resolve(filename).toFile();
-        if (file.exists())
-            return; // Bei Seasons kann dasselbe Bild schon durch die Show existieren
-        try {
-            file.getParentFile().mkdirs();
-            java.nio.file.Files.write(file.toPath(), image);
-            Log.debug(SeriesImporter.class, "Bild gespeichert: " + filename);
-        } catch (Exception e) {
-            throw new RuntimeException("saveImageToFileSystem fehlgeschlagen. filename: " + filename, e);
-        }
-    }
-
-    private static String buildImageFilename(String posterPath, String language,
-            int width, int height) {
-        String base = posterPath.startsWith("/") ? posterPath.substring(1) : posterPath;
-        base = base.substring(0, base.lastIndexOf('.'));
-        return base + "_" + language + "_" + width + "_" + height + ".jpg";
-    }
 }

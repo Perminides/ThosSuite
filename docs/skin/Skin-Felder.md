@@ -92,12 +92,16 @@ Kurzform mit drei Werten: `Breite, Farbe, Eckradius`.
 dich selbst": die Komponente errechnet ihre Größe dann aus ihrem Inhalt. So machen es die
 Zurück-Knöpfe und die Eingabefelder.
 
-**Kommazahlen gibt es nicht.** Der Loader kennt Farbe, Schrift, Rahmen, Rechteck, ganze Zahl und
-Text — **keinen Zweig für `Double`**. Die beiden Felder dieses Typs, `shapeMapStandardBorderWidth`
-und `shapeMapFederalStateBorderWidth`, lassen sich aus einer properties-Datei deshalb **gar nicht
-setzen**: Der Schlüssel käme durch die FailFast-Prüfung, weil das Feld existiert, und der Wert würde
-danach stillschweigend verschluckt. Wer die Strichbreiten der Shape-Karte ändern will, ändert die
-Vorgabe im Feld selbst. Dieselbe Falle wie bei `contentSize`.
+**Kommazahlen kann der Loader nicht.** Er kennt Farbe, Schrift, Rahmen, Rechteck, ganze Zahl
+und Text — **keinen Zweig für `Double`**. Die vier Felder dieses Typs
+(`shapeMapStandardBorderWidth`, `shapeMapFederalStateBorderWidth`, `sketchStrokeWidth`,
+`sketchMarkedHatchWidth`) lassen sich aus einer properties-Datei deshalb nicht setzen — wer
+sie ändern will, ändert die Vorgabe im Feld selbst.
+
+**Still ist das nicht mehr.** Ein Schlüssel, dessen Feld keinen Loader-Zweig hat, bricht seit
+der `else`-Klausel am Kettenende den Start ab und nennt Feldname und Typ. Das gilt genauso für
+`contentSize` (`Dimension2D`). Wer einen dieser Typen wirklich braucht, erweitert den Parser —
+und erfährt durch den Abbruch, welches Feld gemeint ist.
 
 Ein neues Feld für einen Bruchteil wird deshalb als **Prozentzahl** angelegt, nicht als Kommazahl —
 so wie `mcResultTintPercent`.
