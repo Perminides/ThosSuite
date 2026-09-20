@@ -21,16 +21,16 @@ public class DeckRepository {
     	db = new DbDeckProgressRepository();
     }
 
-	public List<Card> getAllHints(Deck type) {
+	public List<Card> getAllCards(Deck type) {
 
 		Map<String, LearnStat> statsById = db.loadAll(type);
-		List<Card> hints = csv.loadAll(type);  // liefert fertige Hints
+		List<Card> cards = csv.loadAll(type);  // liefert fertige Hints
 
-	    for (Card h : hints) {
-	        h.setLearnStat(statsById.get(String.valueOf(h.getId())));  // darf null sein = „nie gespielt“
+	    for (Card c : cards) {
+	        c.setLearnStat(statsById.get(String.valueOf(c.getId())));  // darf null sein = „nie gespielt“
 	    }
 
-	    return hints;
+	    return cards;
 	}
 
 	public void savePlayedCards(Deck type, List<PlayedCardData> rows){

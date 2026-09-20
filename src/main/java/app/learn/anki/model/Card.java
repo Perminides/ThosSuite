@@ -177,7 +177,7 @@ public class Card {
 						cur.add(step);
 				}
 			} catch (Exception e) {
-				throw new RuntimeException("Problem beim parsen des Hints " + id + " in Step" + raw + " in " + csvTokens, e);
+				throw new RuntimeException("Problem beim parsen der Ankikarte " + id + " in Step" + raw + " in " + csvTokens, e);
 			}
 		}
 		// Ein <ShuffleStart> ohne <ShuffleEnd> verlöre sonst alles, was seitdem gesammelt wurde:

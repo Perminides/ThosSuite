@@ -103,7 +103,7 @@ public class AnkiDeckService {
 			}
 						
 			dueCards.put(type, new HashMap<>());
-			allCards.put(type, repo.getAllHints(type));
+			allCards.put(type, repo.getAllCards(type));
 			initialDueCounts.put(type, repo.getInitialDue(type));
 			// Das Tagesbudget für neue Karten, abzüglich dessen, was heute schon verbraucht ist.
 			// Dadurch rutschen neue Karten auch dann noch nach, wenn der heutige Stapel längst

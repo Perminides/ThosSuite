@@ -209,8 +209,7 @@ class SessionProgress {
 			LearnStat learnStat = card.getLearnStat();
 			if (learnStat == null) {
 				// Es ist eine neue Karte
-				card.setLearnStat(new LearnStat(AppClock.TODAY, AppClock.TODAY,
-						cp.isCorrectlyAnswered() ? 1 : 0, cp.isCorrectlyAnswered() ? 0 : 1));
+				card.setLearnStat(LearnStat.forFirstPlay(cp.isCorrectlyAnswered()));
 			} else {
 				if (!learnStat.isDueToday())
 					throw new RuntimeException("Sicherheitsnetz eingebaut. Diese Karte war gar nicht dran. Und ich soll den Fortschritt überschreiben? Mache ich ungern!");

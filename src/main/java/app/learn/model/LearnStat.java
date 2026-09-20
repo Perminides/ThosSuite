@@ -12,6 +12,10 @@ import app.shared.AppClock;
 public class LearnStat {
 	private final static Random random = new Random();
 	
+	public static LearnStat forFirstPlay(boolean correct) {
+		return new LearnStat(AppClock.TODAY, AppClock.TODAY, correct ? 1 : 0, correct ? 0 : 1);
+	}
+	
 	private LocalDate lastPlayed, firstPlayed;
 	private int level;
 	private int wrongCount;
