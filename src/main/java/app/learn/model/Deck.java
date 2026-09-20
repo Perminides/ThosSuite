@@ -51,7 +51,7 @@ public enum Deck {
     private final DeckCategory category;
     private final String deckFileName; // Only needed for Anki
     private final MapMetadata mapDef; 
-    private final String configValueNewCards;
+    private final String configValueNewCards; // Only needed for Anki
     private final boolean hasCapital;
 
     Deck(String id, String displayName, String mapName, DeckCategory category, String deckFileName, MapMetadata mapDef, String configValueNewCards, boolean hasCapital) {
@@ -78,10 +78,14 @@ public enum Deck {
     }
     
     public String getConfigValueNewCards() {
+    	if (category != DeckCategory.ANKI_DECK)
+    		throw new RuntimeException("Der Config-Wert newCardsPerDay ist nur für Anki-Decks definiert.");
         return configValueNewCards;
     }
     
     public String getDeckFileName() {
+    	if (category != DeckCategory.ANKI_DECK)
+    		throw new RuntimeException("Eine Deck-Datei gibt es nur für Anki-Decks.");
         return deckFileName;
     }
     
@@ -94,6 +98,8 @@ public enum Deck {
     }
     
     public String getMapName() {
+    	if (mapName == null)
+    		throw new RuntimeException(displayName + " hat keine Map...");
     	return mapName;
     }
 }

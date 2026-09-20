@@ -132,6 +132,96 @@ Zuständigkeit ist über fünf Pakete verteilt" — die Schichtung hält.
 Alle elf Gruppen sind durch. Die beiden zusammenfassenden Abschnitte stehen oben, die offenen
 Fragen am Ende der Datei.
 
+### Entscheidungen je Befund
+
+Die Untersuchung ist abgeschlossen; diese Tabelle führt die Arbeit danach. Jeder Befund trägt
+unten in seinem Abschnitt dieselbe Zeile — wer dort etwas ändert, ändert es auch hier, sonst
+laufen die beiden auseinander.
+
+**Stände:** `offen` · `erledigt` · `verworfen` (mit Grund in einem Halbsatz dahinter)
+
+| Nr | Befund | Aufwand | Stand |
+|---|---|---|---|
+| 1.1 | Ein unbekanntes Deck bekommt eine `null`-View statt eines Fehlers | eine Minute | erledigt |
+| 1.2 | Vier Eingänge, vier Antworten auf „sind wir in Pause?" | eine halbe Stunde | erledigt |
+| 1.3 | Die Spaced-Repetition-Formel steht an zwei Stellen | eine Viertelstunde | erledigt |
+| 1.4 | Die Grammatik der Deck-Dateien wohnt in der Datenklasse | eine gute Stunde | offen |
+| 1.5 | „Hint" heißt in diesem Zweig zweierlei | zehn Minuten | erledigt |
+| 1.6 | Das `Deck`-Enum trägt zwei disjunkte Formen | eine Viertelstunde | offen |
+| 1.7 | Fünf Kommentare beschreiben Code, den es nicht gibt | zwanzig Minuten | offen |
+| 1.8 | Drei Namen für denselben Vorgang in `learn.repository` | zehn Minuten | offen |
+| 1.9 | Zwei GeoJSON-Leser mit wortgleichen Geometrie-Methoden | zwanzig Minuten | offen |
+| 1.10 | Zwei Wege, SQL zu schreiben, in einer Klasse | eine Viertelstunde | offen |
+| 1.11 | Die Anzeigetexte der Anki-Session entstehen auf der Feature-Seite | eine halbe Stunde | offen |
+| 1.12 | Toter Code | zwanzig Minuten | offen |
+| 1.13 | Ablaufverfolgung landet im Dateilog | zehn Minuten | offen |
+| 2.1 | Ein neu angelegtes Region-Deck wird nie fällig | eine halbe Stunde (gemeinsam mit 1.3) | offen |
+| 2.2 | „Welcher Name gilt in diesem Modus" wird fünfmal beantwortet, auf zwei Arten | dreiviertel Stunde | offen |
+| 2.3 | Die Fehlerliste am Sessionende steht dreimal | eine halbe Stunde (mit 2.2) | offen |
+| 2.4 | `RegionDeckRepository` ist eine Attrappe | eine Viertelstunde | offen |
+| 2.5 | Ein verschluckter Fehler | eine Minute | offen |
+| 2.6 | Der Progress sagt dem Presenter etwas, das der Presenter schon weiß | eine Viertelstunde | offen |
+| 2.7 | 270 Einzelabfragen beim Start | eine halbe Stunde | offen |
+| 2.8 | Welches Deck bei einer kombinierten Spielsession das primäre ist, hängt am Hashwert | zehn Minuten | offen |
+| 2.9 | Enum-`toString()` trägt Last | zwanzig Minuten | offen |
+| 2.10 | Kleinkram | eine halbe Stunde | offen |
+| 3.1 | API-Key und Session-ID landen in der Logdatei und im Fehler-Alert | zehn Minuten | offen |
+| 3.2 | Zwei Methoden gleichen Namens mit entgegengesetztem Verhalten | dreiviertel Stunde | offen |
+| 3.3 | Der Serien-Import steht zweimal | dreiviertel Stunde | offen |
+| 3.4 | Der Import, der nicht fragen kann, fragt zweimal | zehn Minuten | offen |
+| 3.5 | Der Lücken-Check verschluckt jeden Fehler und meldet trotzdem Erfolg | eine halbe Stunde | offen |
+| 3.6 | Das Klassen-Javadoc nennt einen Config-Schlüssel, den es nicht gibt | zwei Minuten | offen |
+| 3.7 | Zehnmal derselbe Parse-Block | eine halbe Stunde | offen |
+| 3.8 | Jede bewertete Serie wird bei jedem Lauf zusätzlich zweimal vollständig geholt | zwanzig Minuten | offen |
+| 3.9 | Toter Code | zehn Minuten | offen |
+| 3.10 | Kleinkram | eine halbe Stunde | offen |
+| 4.1 | Die eigene Signal-Kennung steht im Quelltext | zehn Minuten | offen |
+| 4.2 | Die Kontakt-Auflösung steht in beiden Zweigen | eine Stunde | offen |
+| 4.3 | Der WhatsApp-Import merkt sich „heute geprüft", bevor er geprüft hat | zehn Minuten | offen |
+| 4.4 | Die zwei Wächter in `run()` stehen in der falschen Reihenfolge | zehn Minuten | offen |
+| 4.5 | Die Attachments heißen „move", werden aber kopiert | fünf Minuten | offen |
+| 4.6 | Eine quellenspezifische Methode in der quellenneutralen Klasse | eine Viertelstunde | offen |
+| 4.7 | Zwei Schreibweisen für denselben Konfigurationswert | fünf Minuten | offen |
+| 4.8 | Ein stumm verschlucktes Problem im Entschlüsseler | fünf Minuten | offen |
+| 4.9 | Kleinkram | zwanzig Minuten | offen |
+| 5.1 | Der Tagebuch-Screen baut SQL | dreiviertel Stunde | offen |
+| 5.2 | „Ist die Matratze fällig" wird zweimal beantwortet, in zwei Einheiten | eine halbe Stunde | offen |
+| 5.3 | `PointsCalculator` rechnet nicht nur, er fragt | dreiviertel Stunde | offen |
+| 5.4 | „Welches Wochenziel galt in Woche X" — zwei Mechanismen im selben Paket | eine halbe Stunde | offen |
+| 5.5 | `DashboardService` bekommt „heute" übergeben und benutzt es dann nicht | eine Viertelstunde | offen |
+| 5.6 | `logApiResponse` loggt keine API-Antwort | zehn Minuten bis eine halbe Stunde | offen |
+| 5.7 | Ein Übergangsgerüst, dessen Termin verstrichen ist | Entscheidung, keine Arbeit | offen |
+| 5.8 | Kleinkram | eine halbe Stunde | offen |
+| 6.1 | Das Statistik-Menü wird über seinen Anzeigetext angesteuert — und erzeugt dabei einen toten Screen | eine halbe Stunde | offen |
+| 6.2 | Die Suite kann sich nicht selbst einrichten | eine halbe Stunde (Dashboard) | offen |
+| 6.3 | Der Exporter fängt genau den Fehler ab, den `Config` bewusst wirft | eine Viertelstunde | offen |
+| 6.4 | Vier öffentliche Methoden am `MainWindow` ohne Aufrufer — samt der Mechanik dahinter | eine Viertelstunde | offen |
+| 6.5 | Vier Kommentare, die etwas anderes sagen als der Code | zwanzig Minuten | offen |
+| 6.6 | Das Übergangsgerüst `app.tmp` ist fällig | Entscheidung, keine Arbeit | offen |
+| 6.7 | Kleinkram | zwanzig Minuten | offen |
+| 7.1 | Die Suite hat zwei Antworten auf „welcher Tag ist heute" | eine halbe Stunde + zwei Stunden Durchsicht | offen |
+| 7.2 | `Config.getString` ist ein zweiter Name für `Config.get` | fünf Minuten | offen |
+| 7.3 | `DB` baut viermal dieselbe Verbindung auf | zwanzig Minuten | offen |
+| 7.4 | `FilenIgnoreSource`: zweimal dieselben vier Zeilen, und die zweite wirft beim Herunterfahren | eine Viertelstunde | offen |
+| 7.5 | Zwei Stellen werfen ohne Ursache, eine reduziert sie auf den Text | fünf Minuten | offen |
+| 7.6 | `UiUtils` trägt drei unverwandte Dinge, eines davon globalen Zustand | zwanzig Minuten | offen |
+| 7.7 | Der Screen-Vertrag verweist auf Methoden, die es nicht gibt | zwei Minuten | offen |
+| 7.8 | Kleinkram | eine Viertelstunde | offen |
+| 8.1 | Regel 6 beschreibt nicht den Code, und der Architekturtest sagt das bereits | eine Viertelstunde Doku | offen |
+| 8.2 | Der Erweiterungsvertrag von `AnkiLearnView` ist an drei Stellen überholt | eine halbe Stunde | offen |
+| 8.3 | Die Thumbnail-Höhe steht in beiden Hälften des Tagebuch-Splits | eine Viertelstunde | offen |
+| 8.4 | „Die einzige Stelle der Suite, die `ButtonType` kennt" — das sind 14 Stellen | fünf Minuten | offen |
+| 8.5 | Ein bekannter Mangel steht als Fließtext statt als Marker | zwei Minuten | offen |
+| 9.1 | `SuiteImage` reicht zwei Innen-Nodes nach außen — und niemand nimmt sie | zwei Minuten | offen |
+| 9.2 | `ImageMapPane` bietet zwei Vokabulare an, von denen eines nur nach innen zeigt | zwei Minuten | offen |
+| 9.3 | Die Thumbnail-Höhe steht ein drittes Mal — Erweiterung zu Befund 8.3 | mit 8.3 erledigt | offen |
+| 9.4 | Ein Rückblick zu viel — und zwei, die bleiben dürfen | fünf Minuten | offen |
+| 9.5 | Kleinkram | zehn Minuten | offen |
+| 10.1 | Zwei neue Felder sind in eine Falle gelaufen, die schon aufgeschrieben war | eine halbe Stunde | offen |
+| 10.2 | Die Beschreibung der Staffelung stimmt in drei Punkten nicht mehr | zehn Minuten | offen |
+| 10.3 | Kleinkram | zehn Minuten | offen |
+| Szenario B | Ein weiterer Screen | zwei bis drei Stunden | offen |
+
 ---
 
 ## 1 · Lernen — Anki und gemeinsame Lernbasis
@@ -151,6 +241,8 @@ genau die Frage, die die Grundhaltung schon beantwortet.
 
 **Kleinster Schnitt:** `default -> throw new RuntimeException("Kein View-Typ für Deck " + type);`
 **Aufwand:** eine Minute.
+
+**Stand:** erledigt
 
 ### 1.2 Vier Eingänge, vier Antworten auf „sind wir in Pause?"
 
@@ -180,6 +272,10 @@ und in `elementClicked` den Typtest vor das `add`. Die vier Pause-Antworten auf 
 schon im Presenter (`SessionPresenter.java:243`), nicht hier.
 **Aufwand:** eine halbe Stunde.
 
+**Stand:** erledigt — die vier gleichartigen `clickedMcAnswers.clear()` in `mcClicked` und
+`mcSubmitted` sind aus demselben Grund mit weggefallen: `process` leert die Menge beim Betreten
+jedes `ChoiceStep`.
+
 ### 1.3 Die Spaced-Repetition-Formel steht an zwei Stellen
 
 **Beleg:** `LearnStat.java:76` (`calculateNewLevel`) und `SessionProgress.java:210-213`
@@ -193,6 +289,8 @@ muss beide finden; die Suchhilfe „die Formel steht in LearnStat" führt nur zu
 **Kleinster Schnitt:** eine statische Fabrik `LearnStat.forFirstPlay(boolean correct)` in
 `LearnStat`, aufgerufen von `SessionProgress`.
 **Aufwand:** eine Viertelstunde.
+
+**Stand:** erledigt
 
 ### 1.4 Die Grammatik der Deck-Dateien wohnt in der Datenklasse
 
@@ -215,6 +313,8 @@ Paket** `learn.anki.model`, die `Chunk`/`Step` weiter sieht und `Card` als Halte
 Chunks, OnFail und LearnStat zurücklässt. Reines Verschieben, keine Sichtbarkeitsfragen.
 **Aufwand:** eine gute Stunde.
 
+**Stand:** offen
+
 ### 1.5 „Hint" heißt in diesem Zweig zweierlei
 
 **Beleg:** `DeckRepository.java:24` (`getAllHints` liefert `List<Card>`), `Card.java:180`
@@ -229,6 +329,8 @@ plausibel.
 **Kleinster Schnitt:** `getAllHints` → `getAllCards`, die lokalen `hints`/`h` mit, und die
 Fehlermeldung in `Card`. Vier Dateien, keine Verhaltensänderung.
 **Aufwand:** zehn Minuten.
+
+**Stand:** erledigt
 
 ### 1.6 Das `Deck`-Enum trägt zwei disjunkte Formen
 
@@ -249,6 +351,8 @@ Ein Aufteilen in zwei Enums scheidet aus: `Deck` ist zugleich der Schlüssel in 
 `getDeckFileName()` und `getConfigValueNewCards()` werfen, wenn die Kategorie nicht `ANKI_DECK`
 ist. Aus „irgendwo eine NPE" wird „dieses Deck hat keine CSV".
 **Aufwand:** eine Viertelstunde.
+
+**Stand:** offen
 
 ### 1.7 Fünf Kommentare beschreiben Code, den es nicht gibt
 
@@ -275,6 +379,8 @@ behaupten etwas, das man erst durch Nachlesen im Code widerlegt.
 ungenutzten Parameter gleich mit entfernen.
 **Aufwand:** zwanzig Minuten.
 
+**Stand:** offen
+
 ### 1.8 Drei Namen für denselben Vorgang in `learn.repository`
 
 **Beleg:** `MapRepository` (liest `.geojson`), `GeoJsonLoader` (liest `.geojson`),
@@ -291,6 +397,8 @@ zu befolgen wäre.
 `GeoJsonLoader` ist paketprivates Innenleben und darf heißen, wie er heißt.
 **Aufwand:** zehn Minuten.
 
+**Stand:** offen
+
 ### 1.9 Zwei GeoJSON-Leser mit wortgleichen Geometrie-Methoden
 
 **Beleg:** `GeoJsonLoader.java:68-99` und `SketchFileSource.java:147-167` —
@@ -304,6 +412,8 @@ zweimal da. Wer sie einmal ändert, merkt am zweiten Ort nichts.
 **Kleinster Schnitt:** die drei Methoden in eine paketprivate Klasse `GeoJsonGeometry` in
 `learn.repository`; beide Leser rufen sie.
 **Aufwand:** zwanzig Minuten.
+
+**Stand:** offen
 
 ### 1.10 Zwei Wege, SQL zu schreiben, in einer Klasse
 
@@ -323,6 +433,8 @@ schon: Die Klasse zeigt zwei Muster für eine Sache, und das schwächere steht d
 Im selben Zug: `loadAll` liefert `Map<String, LearnStat>`, obwohl Karten-Ids `int` sind;
 `DeckRepository.java:30` überbrückt das mit `String.valueOf(h.getId())`. Ein `Map<Integer, …>`
 spart die Umwandlung und die Frage, warum sie dasteht.
+
+**Stand:** offen
 
 ### 1.11 Die Anzeigetexte der Anki-Session entstehen auf der Feature-Seite
 
@@ -344,6 +456,8 @@ unverändert überqueren.
 `AnkiLearnView`.
 **Aufwand:** eine halbe Stunde. Gegenprüfung in Gruppe 2 und 8, ob das ein Muster ist.
 
+**Stand:** offen
+
 ### 1.12 Toter Code
 
 Jedes Stück davon muss beim Durchlesen einmal bewertet werden und liefert dabei nichts:
@@ -360,6 +474,8 @@ Jedes Stück davon muss beim Durchlesen einmal bewertet werden und liefert dabei
 
 **Aufwand:** zwanzig Minuten, inklusive Nachsehen, ob wirklich niemand ruft.
 
+**Stand:** offen
+
 ### 1.13 Ablaufverfolgung landet im Dateilog
 
 **Beleg:** `AnkiDeckSession.java:50,60,82`, `SessionProgress.java:46,67,175,199,228`,
@@ -374,6 +490,8 @@ in der man sonst nach Importfehlern sucht.
 **Kleinster Schnitt:** die `=== … ===`-Zeilen und „Los geht es mit Karte" auf `Log.debug`;
 „Starte AnkiSession" und „SAVE END" dürfen `info` bleiben, die sagen etwas über den Lauf aus.
 **Aufwand:** zehn Minuten.
+
+**Stand:** offen
 
 ### Was in dieser Gruppe trägt
 
@@ -420,6 +538,8 @@ behandeln und in `save()` den Stand anlegen, wenn keiner da ist — dieselbe Fab
 Befund 1.3 braucht (`LearnStat.forFirstPlay`).
 **Aufwand:** eine halbe Stunde, gemeinsam mit 1.3.
 
+**Stand:** offen
+
 ### 2.2 „Welcher Name gilt in diesem Modus" wird fünfmal beantwortet, auf zwei Arten
 
 **Beleg:** `ClickSessionProgress.java:48` gegen `WriteSessionProgress.java:70-75` und `:124-129`
@@ -442,6 +562,8 @@ neuer Modus ist automatisch abgedeckt, sobald er seine Achse angibt. In `learn.r
 `learn.model`: `MapShape` gehört dem Kern und darf den Zweig nicht kennen.
 **Aufwand:** dreiviertel Stunde.
 
+**Stand:** offen
+
 ### 2.3 Die Fehlerliste am Sessionende steht dreimal
 
 **Beleg:** `ClickSessionProgress.java:132-137`, `WriteSessionProgress.java:113-117`,
@@ -458,6 +580,8 @@ alle drei teilen". Das hier teilen alle drei und steht trotzdem draußen.
 **Kleinster Schnitt:** `protected void finishWithMisses(String einleitung, List<String> namen)`
 in `SessionProgress`, die den Wächter gleich mit übernimmt.
 **Aufwand:** eine halbe Stunde. Zusammen mit 2.2 erledigt, denn die Namen kommen von dort.
+
+**Stand:** offen
 
 ### 2.4 `RegionDeckRepository` ist eine Attrappe
 
@@ -476,6 +600,8 @@ mit dem Anki-Zweig vergleicht, sucht die zweite Quelle, die es nicht gibt.
 umbenennen. Ein Aufrufer (`RegionDeckService`).
 **Aufwand:** eine Viertelstunde.
 
+**Stand:** offen
+
 ### 2.5 Ein verschluckter Fehler
 
 **Beleg:** `DbRegionDeckProgressRepository.java:34-38` — `throw new RuntimeException("Ui, ich
@@ -487,6 +613,8 @@ an. Genau das, was FailFast verhindern soll: Der Fehler fliegt, aber er sagt nic
 
 **Kleinster Schnitt:** `, e` ergänzen.
 **Aufwand:** eine Minute.
+
+**Stand:** offen
 
 ### 2.6 Der Progress sagt dem Presenter etwas, das der Presenter schon weiß
 
@@ -502,6 +630,8 @@ sondern auch auf der falschen Seite abgelegt.
 **Kleinster Schnitt:** Enum und Parameter streichen, der Presenter fragt `spec.isPlaySession()`.
 Der Import von `SessionPresenter.WrongClickResolution` in `ClickSessionProgress` fällt mit weg.
 **Aufwand:** eine Viertelstunde.
+
+**Stand:** offen
 
 ### 2.7 270 Einzelabfragen beim Start
 
@@ -521,6 +651,8 @@ unterscheiden — das ist die Wurzel von Befund 2.1.
 fehlender Eintrag „noch nie gespielt" heißt.
 **Aufwand:** eine halbe Stunde.
 
+**Stand:** offen
+
 ### 2.8 Welches Deck bei einer kombinierten Spielsession das primäre ist, hängt am Hashwert
 
 **Beleg:** `RegionPlaySetup.java:234` — `Deck primaryDeck = selectedDecks.iterator().next();` auf
@@ -536,6 +668,8 @@ sich schlecht reproduzieren lässt.
 **Kleinster Schnitt:** das primäre Deck festlegen statt ziehen, etwa das mit der kleinsten
 `getId()`.
 **Aufwand:** zehn Minuten.
+
+**Stand:** offen
 
 ### 2.9 Enum-`toString()` trägt Last
 
@@ -556,6 +690,8 @@ sich ändert.
 `toString()`-Overrides weg.
 **Aufwand:** zwanzig Minuten.
 
+**Stand:** offen
+
 ### 2.10 Kleinkram
 
 | Stelle | Was |
@@ -570,6 +706,8 @@ sich ändert.
 | Sichtbarkeit | Der Region-Presenter ist durchgehend `public`, der Anki-Presenter paketprivat. Gleiche Rolle, zwei Konventionen — und im Region-Fall steht damit das ganze Presenter-Vokabular auch dem Controller offen. |
 
 **Aufwand:** zusammen eine halbe Stunde.
+
+**Stand:** offen
 
 ### Gegenprüfung zu Befund 1.11
 
@@ -626,6 +764,8 @@ mitgesichert und beim Suchen nach ganz anderen Fehlern geöffnet wird. Ein Fehls
 Diagnose-Information bleibt erhalten — welcher Endpunkt, ist alles, was man braucht.
 **Aufwand:** zehn Minuten.
 
+**Stand:** offen
+
 ### 3.2 Zwei Methoden gleichen Namens mit entgegengesetztem Verhalten
 
 **Beleg:** `MovieImporter.java:252-263` gegen `SeriesImporter.java:773-784`
@@ -659,6 +799,8 @@ Klasse man steht.
 dann als Argument an der Aufrufstelle, wo man ihn liest.
 **Aufwand:** dreiviertel Stunde.
 
+**Stand:** offen
+
 ### 3.3 Der Serien-Import steht zweimal
 
 **Beleg:** `SeriesImporter.java:211-256` (`importNewTvShow`) und `:321-357` (`ensureShowExists`)
@@ -679,6 +821,8 @@ man anfassen würde.
 TvShowRatingJSON ratingOrNull, String commentOrNull)`; `importNewTvShow` und `ensureShowExists`
 werden zu je vier Zeilen davor.
 **Aufwand:** dreiviertel Stunde.
+
+**Stand:** offen
 
 ### 3.4 Der Import, der nicht fragen kann, fragt zweimal
 
@@ -704,6 +848,8 @@ Lücken-Check in Schritt 3 des Serien-Imports.
 Poster beim nächsten manuellen Lauf ohnehin nach.
 **Aufwand:** zehn Minuten.
 
+**Stand:** offen
+
 ### 3.5 Der Lücken-Check verschluckt jeden Fehler und meldet trotzdem Erfolg
 
 **Beleg:** `SeriesImporter.java:519`, `:551`, `:567`, `:597`, `:614` — fünfmal
@@ -725,6 +871,8 @@ man den Grund fände.
 die Robustheit der Schleife und nimmt ihr das Schweigen.
 **Aufwand:** eine halbe Stunde.
 
+**Stand:** offen
+
 ### 3.6 Das Klassen-Javadoc nennt einen Config-Schlüssel, den es nicht gibt
 
 **Beleg:** `MovieImporter.java:39` — „Bilder landen im Dateisystem unter
@@ -743,6 +891,8 @@ der Änderung einlädt, gegen die sich die Suite bewusst entschieden hat.
 **Kleinster Schnitt:** die Zeile im Javadoc auf den tatsächlichen Weg umschreiben.
 **Aufwand:** zwei Minuten.
 
+**Stand:** offen
+
 ### 3.7 Zehnmal derselbe Parse-Block
 
 **Beleg:** `ApiClient.java:69-73`, `89-93`, `110-114`, `244-248`, `264-268`, `283-287`,
@@ -758,6 +908,8 @@ Namen darin fällt nirgends auf.
 Methoden werden zu zwei Zeilen. Vier Methoden brauchen danach weiterhin ihren EN/DE-Nachbau, aber
 auch der schrumpft.
 **Aufwand:** eine halbe Stunde.
+
+**Stand:** offen
 
 ### 3.8 Jede bewertete Serie wird bei jedem Lauf zusätzlich zweimal vollständig geholt
 
@@ -780,6 +932,8 @@ DE-Ersparnis wäre ein zweiter Schritt (`getTvShowDetailsEnOnly`) und lohnt erst
 ohnehin angefasst wird.
 **Aufwand:** zwanzig Minuten für den ersten Teil.
 
+**Stand:** offen
+
 ### 3.9 Toter Code
 
 | Stelle | Zustand |
@@ -789,6 +943,8 @@ ohnehin angefasst wird.
 | `EpisodeRepository.updateEpisodeFlags(int, Boolean, Boolean, Boolean)` (`:221-240`) | kein Aufrufer; schreibt `actors_from_show`/`directors_from_show` — genau die Flag-Struktur, die die Wunschliste als veraltet führt |
 
 **Aufwand:** zehn Minuten.
+
+**Stand:** offen
 
 ### 3.10 Kleinkram
 
@@ -802,6 +958,8 @@ ohnehin angefasst wird.
 | `SeriesImporter.java:222` | `// !MagicNumber -> tmdb.posterWidths=92,154 in config?` — der Marker steht dort zu Recht; die Breiten 92 und 154 stehen an acht Stellen als Literal. |
 
 **Aufwand:** zusammen eine halbe Stunde, ohne den Marker.
+
+**Stand:** offen
 
 ### Was in dieser Gruppe trägt
 
@@ -847,6 +1005,8 @@ Ausnahme, die man nicht sieht, weil sie wie eine UUID aussieht.
 einen Stelle.
 **Aufwand:** zehn Minuten.
 
+**Stand:** offen
+
 ### 4.2 Die Kontakt-Auflösung steht in beiden Zweigen
 
 **Beleg:** `SignalIncrementalImport.java:312-336` (`ensureContact`) und
@@ -879,6 +1039,8 @@ Cache als `Set<String>` mit zusammengesetzten Schlüsseln `"chatId:contactId"`,
 `WhatsAppIncrementalImport.java:458-463` als `Map<Integer, Set<Integer>>`. Eine Sache, zwei
 Datenstrukturen, und die eine baut Schlüssel aus Zahlen zusammen.
 
+**Stand:** offen
+
 ### 4.3 Der WhatsApp-Import merkt sich „heute geprüft", bevor er geprüft hat
 
 **Beleg:** `WhatsAppIncrementalImport.java:135` — `Config.setTime(KV_LAST_CHECK,
@@ -895,6 +1057,8 @@ Suite startet danach wortlos durch und meldet nichts, weil `checkWarning()` nur 
 **Kleinster Schnitt:** `Config.setTime(KV_LAST_CHECK, …)` ans Ende von `run()` beziehungsweise in
 den Zweig, der ohne Arbeit zurückkehrt.
 **Aufwand:** zehn Minuten.
+
+**Stand:** offen
 
 ### 4.4 Die zwei Wächter in `run()` stehen in der falschen Reihenfolge
 
@@ -914,6 +1078,8 @@ verschiedenen Stellen; der Signal-Zweig hat die richtige.
 Feld `configured` im Konstruktor setzen, dann steht die halbe Konstruktion nicht mehr offen.
 **Aufwand:** zehn Minuten.
 
+**Stand:** offen
+
 ### 4.5 Die Attachments heißen „move", werden aber kopiert
 
 **Beleg:** `WhatsAppIncrementalImport.java:99` (`pendingMoves`), `:488`, `:512`
@@ -926,6 +1092,8 @@ die Quelldatei danach weg ist — und das ist der Punkt, an dem die ganze Begrü
 
 **Kleinster Schnitt:** `AttachmentCopy` und `pendingCopies`. Drei Umbenennungen in einer Datei.
 **Aufwand:** fünf Minuten.
+
+**Stand:** offen
 
 ### 4.6 Eine quellenspezifische Methode in der quellenneutralen Klasse
 
@@ -946,6 +1114,8 @@ stirbt an einer NPE ohne Kontext.
 Null-Check, der sagt, was fehlt. Ein Aufrufer (`DashboardScreen.java:78`).
 **Aufwand:** eine Viertelstunde.
 
+**Stand:** offen
+
 ### 4.7 Zwei Schreibweisen für denselben Konfigurationswert
 
 **Beleg:** `SignalIncrementalImport.java:142` —
@@ -961,6 +1131,8 @@ hier still eine kaputte JDBC-URL.
 **Kleinster Schnitt:** `Config.getPath("signal.externalPath").resolve("sql").resolve("db.sqlite")`
 und das Ergebnis in die URL.
 **Aufwand:** fünf Minuten.
+
+**Stand:** offen
 
 ### 4.8 Ein stumm verschlucktes Problem im Entschlüsseler
 
@@ -979,6 +1151,8 @@ man untersuchen müsste.
 kein Wert an sich, und der Architekturtest verlangt ohnehin, dass geloggt nur über `Log` wird.
 **Aufwand:** fünf Minuten.
 
+**Stand:** offen
+
 ### 4.9 Kleinkram
 
 | Stelle | Was |
@@ -989,6 +1163,8 @@ kein Wert an sich, und der Architekturtest verlangt ohnehin, dass geloggt nur ü
 | `WhatsAppIncrementalImport.java:105-114` | Der Konstruktor kehrt bei fehlender Konfiguration mitten in der Feldbelegung zurück und lässt sechs Felder leer. Siehe 4.4. |
 
 **Aufwand:** zusammen zwanzig Minuten.
+
+**Stand:** offen
 
 ### Ein Punkt, der hält, aber im Auge bleiben sollte
 
@@ -1059,6 +1235,8 @@ fliegt dann von dort und der Screen fängt sie wie bisher für `setQueryValid(fa
 Dateiumzug, zwei geänderte Signaturen — die Abfragesprache selbst bleibt unangetastet.
 **Aufwand:** dreiviertel Stunde.
 
+**Stand:** offen
+
 ### 5.2 „Ist die Matratze fällig" wird zweimal beantwortet, in zwei Einheiten
 
 **Beleg:** `MattressTurnDialog.java:28-29` (`ChronoUnit.WEEKS.between(...) <
@@ -1080,6 +1258,8 @@ falschen.
 `MattressTurnDialog` (oder eine kleine `MattressService`-Klasse); `showIfDue()` fragt
 `getDaysUntilNextTurn() <= 0`. Der Vorgabewert steht dann einmal.
 **Aufwand:** eine halbe Stunde.
+
+**Stand:** offen
 
 ### 5.3 `PointsCalculator` rechnet nicht nur, er fragt
 
@@ -1114,6 +1294,8 @@ Liste in seinem ohnehin vorhandenen Abschluss-Dialog. Die zwei `throw`-Fälle bl
 sind — das sind echte FailFast-Fälle.
 **Aufwand:** dreiviertel Stunde. Lohnt vor allem, weil die Health-Migration genau hier ansetzt.
 
+**Stand:** offen
+
 ### 5.4 „Welches Wochenziel galt in Woche X" — zwei Mechanismen im selben Paket
 
 **Beleg:** `DashboardService.java:95` und `:124` rufen `repository.getWeeklyGoalForDate(...)`
@@ -1131,6 +1313,8 @@ Wichtiger als die Laufzeit ist, dass es zwei Wege gibt: Wer die Ziel-Historie ei
 Zuordnung wie der Presenter — die sich dabei anbietet, in eine kleine gemeinsame Methode zu
 ziehen.
 **Aufwand:** eine halbe Stunde.
+
+**Stand:** offen
 
 ### 5.5 `DashboardService` bekommt „heute" übergeben und benutzt es dann nicht
 
@@ -1151,6 +1335,8 @@ stimmt, weil sie groß genug ist.
 denselben Parameter geben. Gehört zum übergreifenden Uhr-Befund in Gruppe 7.
 **Aufwand:** eine Viertelstunde.
 
+**Stand:** offen
+
 ### 5.6 `logApiResponse` loggt keine API-Antwort
 
 **Beleg:** `Repository.java:238` (`logApiResponse(LocalDate date, String jsonResponse)`) gegen
@@ -1167,6 +1353,8 @@ drinsteht. Wer wirklich die Rohantwort will, bekommt sie als zweite Zeile; `ApiC
 trägt das `originalJson` bereits mit sich und niemand liest es heute aus.
 **Aufwand:** zehn Minuten für den Namen, eine halbe Stunde mit der Rohantwort.
 
+**Stand:** offen
+
 ### 5.7 Ein Übergangsgerüst, dessen Termin verstrichen ist
 
 **Beleg:** `DataFetcher.java:102-117` (`!tmp: … Fällt mit dem Vergleicher im September weg`),
@@ -1182,6 +1370,8 @@ Das ist kein Konstruktionsfehler — es ist ein bewusst befristetes Gerüst, des
 ist. Es steht hier, damit es beim Aufräumen nicht übersehen wird; der eigentliche Abriss gehört
 zu Gruppe 6 (`app.tmp`).
 
+**Stand:** offen
+
 ### 5.8 Kleinkram
 
 | Stelle | Was |
@@ -1194,6 +1384,8 @@ zu Gruppe 6 (`app.tmp`).
 | `StartupService.java:27`, `DiaryEditorPresenter.java:49`, `MattressTurnDialog.java:28,50,51` | `LocalDate.now()` / `LocalDateTime.now()` statt `AppClock.TODAY`; siehe Gruppe 7. |
 
 **Aufwand:** zusammen eine halbe Stunde.
+
+**Stand:** offen
 
 ### Was in dieser Gruppe trägt
 
@@ -1248,6 +1440,8 @@ Enum — dann ist der fehlende Zweig ein Übersetzungsfehler. Der `default`-Fall
 ersatzlos.
 **Aufwand:** eine halbe Stunde.
 
+**Stand:** offen
+
 ### 6.2 Die Suite kann sich nicht selbst einrichten
 
 Das ist kein Befund an einer Stelle, sondern ein Muster, das erst hier sichtbar wird, weil hier
@@ -1277,6 +1471,8 @@ ganze Seite zu reißen. Die eigentliche Frage („legt ein Feature seine erste Z
 gehört pro Feature entschieden; für die Region-Decks steht sie schon als Befund 2.1.
 **Aufwand:** eine halbe Stunde fürs Dashboard; die Feature-Frage je nach Antwort.
 
+**Stand:** offen
+
 ### 6.3 Der Exporter fängt genau den Fehler ab, den `Config` bewusst wirft
 
 **Beleg:** `SuiteExporter.java:53-61` — vier `Config`-Zugriffe in einem `try`, im `catch` ein
@@ -1298,6 +1494,8 @@ Zwei weitere Stellen derselben Datei:
 den Alert nehmen), bei `:81` das `e` durchreichen, bei `:104` den Text auf „abgebrochen" ändern.
 **Aufwand:** eine Viertelstunde.
 
+**Stand:** offen
+
 ### 6.4 Vier öffentliche Methoden am `MainWindow` ohne Aufrufer — samt der Mechanik dahinter
 
 **Beleg:** `MainWindow.java:294` (`updateLearnItems`), `:412` (`setWidth`), `:416` (`setHeight`),
@@ -1318,6 +1516,8 @@ fehlt (dann vom Controller rufen — das Menü markiert die aktive Reihenfolge b
 den Umweg `lastSortOrderString` in `:148`) oder überflüssig ist (dann auch `setUserData` mit weg).
 **Aufwand:** eine Viertelstunde, plus die eine Entscheidung.
 
+**Stand:** offen
+
 ### 6.5 Vier Kommentare, die etwas anderes sagen als der Code
 
 - `MainWindow.java:315-316` — „Ignoriere wenn weniger als **300ms** seit letztem ESC", darunter
@@ -1336,6 +1536,8 @@ den Umweg `lastSortOrderString` in `:148`) oder überflüssig ist (dann auch `se
 **Kleinster Schnitt:** Zahl angleichen, Texte richtigstellen, die ScenicView-Prüfung vor den
 Alert ziehen, den Entwurfs-Dialog durch einen Satz ersetzen, der die Richtung benennt.
 **Aufwand:** zwanzig Minuten.
+
+**Stand:** offen
 
 ### 6.6 Das Übergangsgerüst `app.tmp` ist fällig
 
@@ -1356,6 +1558,8 @@ Der Abriss selbst ist nicht der Punkt — die Frage, die er offenlässt, schon: 
 Fitbit-Health-Vergleich ist die Vorarbeit für den Datenquellen-Wechsel, und der steht in
 `Feature-Details.md` als „noch komplett offen". Siehe Szenario 3 in Gruppe 11.
 
+**Stand:** offen
+
 ### 6.7 Kleinkram
 
 | Stelle | Was |
@@ -1366,6 +1570,8 @@ Fitbit-Health-Vergleich ist die Vorarbeit für den Datenquellen-Wechsel, und der
 | `ThosSuiteApp.java:198,281,346` | `e.printStackTrace()` und `System.err.println` statt `Log`. Alle drei liegen im Fenster **vor** der Log-Initialisierung; dort geht es nicht anders. Kein Befund, aber der Grund gehört als halber Satz daneben, sonst sieht es beim Lesen wie ein Versehen aus. |
 
 **Aufwand:** zusammen zwanzig Minuten.
+
+**Stand:** offen
 
 ### Was in dieser Gruppe trägt
 
@@ -1433,6 +1639,8 @@ Zeitstempel dazubekommen, sonst bleibt die Unterscheidung eine Konvention ohne H
 
 Dies ist der einzige Befund des Berichts, der quer durch **alle** Gruppen reicht.
 
+**Stand:** offen
+
 ### 7.2 `Config.getString` ist ein zweiter Name für `Config.get`
 
 **Beleg:** `Config.java:78-80` — `public static String getString(String key) { return get(key); }`;
@@ -1447,6 +1655,8 @@ gelesen wird.
 
 **Kleinster Schnitt:** `getString` löschen, drei Aufrufstellen umstellen.
 **Aufwand:** fünf Minuten.
+
+**Stand:** offen
 
 ### 7.3 `DB` baut viermal dieselbe Verbindung auf
 
@@ -1467,6 +1677,8 @@ SQLITE_BUSY-Regel der ganzen Suite erklärt und das man deshalb wirklich liest.
 **Kleinster Schnitt:** ein privates `open(Path path, boolean autoCommit)`; die vier öffentlichen
 Methoden werden zu je zwei Zeilen. Den toten Link richtigstellen.
 **Aufwand:** zwanzig Minuten.
+
+**Stand:** offen
 
 ### 7.4 `FilenIgnoreSource`: zweimal dieselben vier Zeilen, und die zweite wirft beim Herunterfahren
 
@@ -1495,6 +1707,8 @@ zurückgibt, wenn eines fehlt; beide Methoden rufen es. Die Klasse in `FilenIgno
 `FilenIgnore` umbenennen.
 **Aufwand:** eine Viertelstunde.
 
+**Stand:** offen
+
 ### 7.5 Zwei Stellen werfen ohne Ursache, eine reduziert sie auf den Text
 
 **Beleg:** `SingleInstanceGuard.java:32` und `DbRegionDeckProgressRepository.java:34` werfen eine
@@ -1511,6 +1725,8 @@ es je zu sehen gibt.
 
 **Kleinster Schnitt:** `, e` an drei Stellen.
 **Aufwand:** fünf Minuten.
+
+**Stand:** offen
 
 ### 7.6 `UiUtils` trägt drei unverwandte Dinge, eines davon globalen Zustand
 
@@ -1533,6 +1749,8 @@ Methoden), samt dem vorhandenen Javadoc. `UiUtils` bleibt, was sein Name sagt: F
 Sechs Aufrufstellen.
 **Aufwand:** zwanzig Minuten.
 
+**Stand:** offen
+
 ### 7.7 Der Screen-Vertrag verweist auf Methoden, die es nicht gibt
 
 **Beleg:** `Screen.java:18` — `{@code currentScreen.sort(...)}`; die Methode heißt
@@ -1547,6 +1765,8 @@ eine Methode, die es nicht gibt.
 **Kleinster Schnitt:** zwei Zeilen.
 **Aufwand:** zwei Minuten.
 
+**Stand:** offen
+
 ### 7.8 Kleinkram
 
 | Stelle | Was |
@@ -1557,6 +1777,8 @@ eine Methode, die es nicht gibt.
 | `SingleInstanceGuard.java:9` | `@SuppressWarnings("resource")` — hier zu Recht (Channel und Lock leben bis zum Shutdown-Hook), aber ohne den Satz, der das sagt. |
 
 **Aufwand:** zusammen eine Viertelstunde.
+
+**Stand:** offen
 
 ### Was in dieser Gruppe trägt
 
@@ -1625,6 +1847,8 @@ Lern-Oberflächen und alles, was über `ComponentHost` läuft, sind Null-Layout;
 Listen-/Diagramm-Screens layouten selbst.
 **Aufwand:** eine Viertelstunde Doku.
 
+**Stand:** offen
+
 ### 8.2 Der Erweiterungsvertrag von `AnkiLearnView` ist an drei Stellen überholt
 
 `AnkiLearnView` ist die einzige Klasse der Suite mit einem ausdrücklichen „Achtung beim
@@ -1656,6 +1880,8 @@ einer MC-Session niemals deaktiviert werden") bleibt als Sonderfall erhalten —
 `hasMcPane()` ja `true`.
 **Aufwand:** eine halbe Stunde.
 
+**Stand:** offen
+
 ### 8.3 Die Thumbnail-Höhe steht in beiden Hälften des Tagebuch-Splits
 
 **Beleg:** `DiaryEditor.java:59` und `:208` gegen `DiaryEditorPresenter.java:41` und `:175` —
@@ -1675,6 +1901,8 @@ Invasiv-Schwellen (`InvasiveConfig`) — und bei der Thumbnail-Höhe nicht.
 sie dem Editor mit. Dann steht die Zahl einmal und der Vertrag ist sichtbar.
 **Aufwand:** eine Viertelstunde.
 
+**Stand:** offen
+
 ### 8.4 „Die einzige Stelle der Suite, die `ButtonType` kennt" — das sind 14 Stellen
 
 **Beleg:** `Alerts.java:42-44`; tatsächlich taucht `ButtonType` in 14 Dateien auf, darunter
@@ -1692,6 +1920,8 @@ baut und ihn liest, hält `ButtonType` für verboten und sucht einen Weg, der ni
 Ergebnis als Record zurückgeben.
 **Aufwand:** fünf Minuten.
 
+**Stand:** offen
+
 ### 8.5 Ein bekannter Mangel steht als Fließtext statt als Marker
 
 **Beleg:** `Alerts.java:55-59` — „Das ist sehr speziell für den Matratze wenden Dialog gebaut und
@@ -1705,6 +1935,8 @@ Suite hat für genau diesen Fall eine Konvention.
 **Kleinster Schnitt:** als `// !Später:` formulieren, dann steht sie bei den anderen offenen
 Punkten.
 **Aufwand:** zwei Minuten.
+
+**Stand:** offen
 
 ### Was in dieser Gruppe trägt
 
@@ -1759,6 +1991,8 @@ niemand tut, ist Glück, nicht Konstruktion.
 **Kleinster Schnitt:** beide löschen. Zwei Zeilen.
 **Aufwand:** zwei Minuten.
 
+**Stand:** offen
+
 ### 9.2 `ImageMapPane` bietet zwei Vokabulare an, von denen eines nur nach innen zeigt
 
 **Beleg:** `ImageMapPane.java:350` (`public void addToCorrect(List<ShapeGeometry>)`), `:359`
@@ -1776,6 +2010,8 @@ sie einen zweiten Zugang an, der mit Geometrien statt mit Ids spricht und den Ve
 
 Im selben Zug: `SuiteInfoLabel.setFixedWidth()` und `setFixedHeight()` (`:102`, `:109`) werden
 nur aus dem eigenen Konstruktor gerufen (`:52-53`) und sind ebenfalls `public`.
+
+**Stand:** offen
 
 ### 9.3 Die Thumbnail-Höhe steht ein drittes Mal — Erweiterung zu Befund 8.3
 
@@ -1795,6 +2031,8 @@ selbst auch.
 **Kleinster Schnitt:** wie in 8.3 — der Presenter liest die Höhe einmal und reicht sie weiter;
 `DiaryCard` bekommt sie als Parameter.
 **Aufwand:** zusammen mit 8.3 eine Viertelstunde.
+
+**Stand:** offen
 
 ### 9.4 Ein Rückblick zu viel — und zwei, die bleiben dürfen
 
@@ -1818,6 +2056,8 @@ drei Kandidaten gefunden. Nur einer ist wirklich einer:
 
 **Aufwand:** fünf Minuten.
 
+**Stand:** offen
+
 ### 9.5 Kleinkram
 
 | Stelle | Was |
@@ -1827,6 +2067,8 @@ drei Kandidaten gefunden. Nur einer ist wirklich einer:
 | `MovieCard.java:85` | Der Platzhalter-Dateiname `None_available_en-US_154_231.jpg` steht als Literal — nach der Pfad-Regel richtig (Dateinamen gehören der Aufrufstelle), aber die Zahlen darin sind die Bildmaße und damit stumm an die 154er-Variante gekoppelt. |
 
 **Aufwand:** zehn Minuten.
+
+**Stand:** offen
 
 ### Was in dieser Gruppe trägt
 
@@ -1907,6 +2149,8 @@ Schlüssel setzt, ließ sich hier nicht feststellen — die Dateien liegen im Da
 Repo. Falls ja, weicht das sichtbare Ergebnis seit dem jeweiligen Eintrag von dem ab, was dort
 steht.
 
+**Stand:** offen
+
 ### 10.2 Die Beschreibung der Staffelung stimmt in drei Punkten nicht mehr
 
 **Beleg:** `Architektur-Dokumentation.md:336-346` gegen `SkinProperties.java:369-380`
@@ -1934,6 +2178,8 @@ an der Methode erklärt sie gut. Nachzuziehen ist die Architekturdoku.
 Wallpaper-Satz auf „derselbe Dreischritt, statt `null` das leere Wallpaper" ändern.
 **Aufwand:** zehn Minuten.
 
+**Stand:** offen
+
 ### 10.3 Kleinkram
 
 | Stelle | Was |
@@ -1943,6 +2189,8 @@ Wallpaper-Satz auf „derselbe Dreischritt, statt `null` das leere Wallpaper" ä
 | `Skin.java:1347` | Ein Kommentar im Skin verweist auf `createCard`, eine Methode in `MovieCard` (`shared.ui.components`). Inhaltlich harmlos, aber es ist die einzige Stelle, an der der Skin auf die Anzeige-Schicht zeigt — und genau das bewacht Wächter 1. Im Bytecode fällt ein Kommentar nicht auf. |
 
 **Aufwand:** zehn Minuten.
+
+**Stand:** offen
 
 ### Was in dieser Gruppe trägt
 
@@ -2053,6 +2301,8 @@ Felder und 17 Setter, der Controller 18 Registrierungszeilen, und ein vergessene
 Spielen-Menü genau so.
 **Aufwand:** zwei bis drei Stunden. Der einzige größere Umbau, den dieser Bericht vorschlägt —
 und der einzige, der beim nächsten Screen sofort etwas zurückgibt.
+
+**Stand:** offen
 
 ### Szenario C · Eine zweite Datenquelle neben Fitbit
 
