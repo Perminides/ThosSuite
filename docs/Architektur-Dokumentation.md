@@ -220,10 +220,12 @@ zu diesem Zeitpunkt bereits initialisiert ist.
 ## 🧭 Orchestrierung (`controller`) — Mechanik
 
 ### Rolle des Controllers
-Der `Controller` ist die zentrale Event-Drehscheibe: Beim Aufbau registriert er sich für
-sämtliche Menü- und Tastatur-Events des MainWindow (Lernen starten, Play, Statistiken, Skin
-wechseln, Sortierung, Tagebuch, Export …). Das MainWindow kennt den Controller nicht direkt — es
-ruft die hinterlegten Callbacks.
+Der `Controller` ist die zentrale Event-Drehscheibe: Sämtliche Menü- und Tastatur-Events des
+MainWindow (Lernen starten, Play, Statistiken, Skin wechseln, Sortierung, Tagebuch, Export …)
+landen bei ihm. Das MainWindow kennt ihn direkt und ruft seine Methoden — es gibt keinen anderen
+Empfänger dieser Ereignisse, und beide wohnen im selben Paket, der Paketgraph bleibt zyklenfrei.
+Gesetzt wird die Referenz im Controller-Konstruktor (`mainWindow.setController(this)`), bevor das
+Fenster sichtbar wird.
 
 Er hält **genau einen aktiven Screen** (`currentScreen`) und routet die laufenden Events dorthin:
 ESC, Pause, Sortier-Wechsel gehen an den aktuellen Screen, der entscheidet selbst, ob er reagiert.

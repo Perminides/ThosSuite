@@ -1,7 +1,6 @@
 package app.controller;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import app.controller.model.PlayMenuNode;
 import app.controller.model.StatisticsItem;
@@ -46,24 +45,13 @@ public class MainWindow {
     private List<PlayMenuNode> playMenuNodes;
     private List<LearnSessionInfo> todaysLearnSessions;
     
-    private Consumer<LearnSessionInfo> onSessionSelected = null;
-    private Runnable onSortSelected = null;
-    private Consumer<Skin> onNewSkinSelected = null;
-    private Runnable onDiaryCreateSelected = null;
-    private Runnable onDiaryViewSelected = null;
-    private Runnable onWeekdaySelected = null;
-    private Runnable onMattressSelected = null;
-    private Runnable onExportSelected = null;
-    private Runnable onMovieSelected = null;
-    private Runnable onMovieAdditionalRunSelected = null;
-    private Runnable onCloseSelected = null;
-    private Runnable onQuitSelected = null;
-    private Runnable onEscPressed = null;
-    private Runnable onPausePressed = null;
-    private Runnable onEnterPressed = null;
-    private Consumer<PlayMenuNode> onPlayItemSelected = null;
-    private Runnable onReloadSkin = null;
-    private Consumer<StatisticsItem> onStatisticsSelected = null;
+    /**
+     * Der Controller bekommt alle Menü- und Tastenereignisse dieses Fensters — und nur er.
+     * Deshalb ruft das Fenster ihn direkt, statt 18 einzelne Callbacks zu halten, die ohnehin
+     * alle aus demselben Konstruktor kommen. Gesetzt wird er dort, bevor das Fenster sichtbar
+     * ist; beide wohnen im selben Paket, der Paketgraph bleibt davon unberührt.
+     */
+    private Controller controller;
     
     private Stage stage;
     private HeaderBar headerBar;
@@ -135,10 +123,10 @@ public class MainWindow {
         // DATEI-MENÜ
         Menu menuFile = new Menu("Datei");
         MenuItem item = new MenuItem("Schließen");
-        item.setOnAction(_ -> onCloseSelected.run());
+        item.setOnAction(_ -> controller.closeSelected());
         menuFile.getItems().add(item);
         item = new MenuItem("Suite beenden");
-        item.setOnAction(_ -> onQuitSelected.run());
+        item.setOnAction(_ -> controller.quitSelected());
         menuFile.getItems().add(item);
         
         
@@ -152,7 +140,7 @@ public class MainWindow {
             item.setUserData(order); // damit setCurrentSortOrder den Eintrag nicht über seinen Text suchen muss
             item.setOnAction(e -> {
             	Config.set("pref.sortOrder", order.name());
-                onSortSelected.run();
+                controller.sortOrderChanged();
                 // Alle anderen enablen, dieses disablen
                 for (MenuItem menuItem : menuSort.getItems()) {
                     menuItem.setDisable(menuItem == e.getSource());
@@ -180,32 +168,32 @@ public class MainWindow {
         Menu menuStatistics = new Menu("Statistik");
         for (StatisticsItem statisticsItem : StatisticsItem.values()) {
             MenuItem menuItem = new MenuItem(statisticsItem.label());
-            menuItem.setOnAction(_ -> onStatisticsSelected.accept(statisticsItem));
+            menuItem.setOnAction(_ -> controller.onStatisticsMenuItemSelected(statisticsItem));
             menuStatistics.getItems().add(menuItem);
         }
         
         // MODULE-MENÜ
         Menu menuModule = new Menu("Module");
         MenuItem exportItem = new MenuItem("Export");
-        exportItem.setOnAction(_ -> onExportSelected.run());
+        exportItem.setOnAction(_ -> controller.exportSelected());
         menuModule.getItems().add(exportItem);
         MenuItem movieItem = new MenuItem("Filme");
-        movieItem.setOnAction(_ -> onMovieSelected.run());
+        movieItem.setOnAction(_ -> controller.movieSelected());
         menuModule.getItems().add(movieItem);
         MenuItem diaryViewItem = new MenuItem("Tagebuch lesen");
-        diaryViewItem.setOnAction(_ -> onDiaryViewSelected.run());
+        diaryViewItem.setOnAction(_ -> controller.diaryViewSelected());
         menuModule.getItems().add(diaryViewItem);
         MenuItem diaryItem = new MenuItem("Tagebucheintrag erstellen");
-        diaryItem.setOnAction(_ -> onDiaryCreateSelected.run());
+        diaryItem.setOnAction(_ -> controller.diaryCreateSelected());
         menuModule.getItems().add(diaryItem);
         MenuItem additionalMovieItem = new MenuItem("Erweiterter TMDB-Import");
-        additionalMovieItem.setOnAction(_ -> onMovieAdditionalRunSelected.run());
+        additionalMovieItem.setOnAction(_ -> controller.additionalTmdbImportSelected());
         menuModule.getItems().add(additionalMovieItem);
         MenuItem weekdayItem = new MenuItem("Wochentagsberechnung");
-        weekdayItem.setOnAction(_ -> onWeekdaySelected.run());
+        weekdayItem.setOnAction(_ -> controller.weekdaySelected());
         menuModule.getItems().add(weekdayItem);
         MenuItem mattressItem = new MenuItem("Matratze");
-        mattressItem.setOnAction(_ -> onMattressSelected.run());
+        mattressItem.setOnAction(_ -> controller.mattressSelected());
         menuModule.getItems().add(mattressItem);
 
         
@@ -221,7 +209,7 @@ public class MainWindow {
             item = new MenuItem(menuText);
             item.setOnAction(_ -> {
                 if (availableSkin == currentSkin) return;
-                onNewSkinSelected.accept(availableSkin);
+                controller.newSkinSelected(availableSkin);
             });
             menuView.getItems().add(item);
         }
@@ -238,9 +226,7 @@ public class MainWindow {
         spacer2.getStyleClass().add("my-spacer");
         menuView.getItems().add(spacer2);
         MenuItem itemReload = new MenuItem("Aktualisieren");
-        itemReload.setOnAction(_ -> {
-            if (onReloadSkin != null) onReloadSkin.run();
-        });
+        itemReload.setOnAction(_ -> controller.triggerSkinRefresh());
         menuView.getItems().add(itemReload);
         
         // Menüs zur MenuBar hinzufügen
@@ -255,7 +241,7 @@ public class MainWindow {
             if (!info.isStillDueToday()) {
                 item.setDisable(true);
             } else {
-                item.setOnAction(_ -> onSessionSelected.accept(info));
+                item.setOnAction(_ -> controller.onLearnMenuItemSelected(info));
             }
             menuLearn.getItems().add(item);
         }
@@ -273,7 +259,7 @@ public class MainWindow {
         menuPlay.getItems().clear();
         for (PlayMenuNode node : playMenuNodes) {
             MenuItem menuItem = new MenuItem(node.label());
-            menuItem.setOnAction(_ -> onPlayItemSelected.accept(node));
+            menuItem.setOnAction(_ -> controller.onPlayMenuItemSelected(node));
             menuPlay.getItems().add(menuItem);
         }
     }
@@ -300,8 +286,8 @@ public class MainWindow {
     private void initKeyBindings() {
         // Filter, weil Pause keinem Bedienelement gehört: so kommt sie auch an, wenn ein Eingabefeld sie schluckt.
         stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.PAUSE && onPausePressed != null)
-                onPausePressed.run();
+            if (event.getCode() == KeyCode.PAUSE)
+                controller.pausePressed();
         });
 
         // Handler, weil ESC ein Bedienelement legitim für sich beanspruchen darf (Vorschlags-Popup schließen).
@@ -316,11 +302,11 @@ public class MainWindow {
                         return;
                     }
                     lastEscapeTime = now;
-                    if (onEscPressed != null) onEscPressed.run();
+                    controller.escPressed();
                     break;
                 }
                 case ENTER: {
-                    if (onEnterPressed != null) onEnterPressed.run();
+                    controller.enterPressed();
                     break;
                 }
                 default:
@@ -329,77 +315,9 @@ public class MainWindow {
         });
     }
     
-    public void setCloseRunnable(Runnable action) {
-        this.onCloseSelected = action;
-    }
-    
-    public void setQuitRunnable(Runnable action) {
-    	this.onQuitSelected = action;
-    }
-    
-    public void setLearnSessionConsumer(Consumer<LearnSessionInfo> consumer) {
-        this.onSessionSelected = consumer;
-    }
-    
-
-    public void setPlayItemConsumer(Consumer<PlayMenuNode> consumer) {
-        this.onPlayItemSelected = consumer;
-    }
-    
-    public void setSkinChangeConsumer(Consumer<Skin> consumer) {
-        this.onNewSkinSelected = consumer;
-    }
-    
-    public void setSortChangedRunnable(Runnable action) {
-        this.onSortSelected = action;
-    }
-    
-    public void setEscPressedRunnable(Runnable action) {
-        this.onEscPressed = action;
-    }
-
-    public void setPausePressedRunnable(Runnable action) {
-        this.onPausePressed = action;
-    }
-
-    public void setEnterPressedRunnable(Runnable action) {
-        this.onEnterPressed = action;
-    }
-    
-    public void setReloadSkinRunnable(Runnable action) {
-        this.onReloadSkin = action;
-    }
-    
-    public void setStatisticsConsumer(Consumer<StatisticsItem> consumer) {
-        this.onStatisticsSelected = consumer;
-    }
-    
-    public void setDiaryCreateRunnable(Runnable runner) {
-    	this.onDiaryCreateSelected = runner;
-    }
-    
-    public void setDiaryViewRunnable(Runnable runner) {
-    	this.onDiaryViewSelected = runner;
-    }
-    
-    public void setWeekdayRunnable(Runnable runner) {
-    	this.onWeekdaySelected = runner;
-    }
-    
-    public void setMattressRunnable(Runnable runner) {
-    	this.onMattressSelected = runner;
-    }
-    
-    public void setExportRunnable(Runnable runner) {
-    	this.onExportSelected = runner;
-    }
-    
-    public void setMovieRunnable(Runnable runner) {
-    	this.onMovieSelected = runner;
-    }
-    
-    public void setExtraTmdbImportRunnable(Runnable runner) {
-    	this.onMovieAdditionalRunSelected = runner;
+    /** Setzt der Controller in seinem Konstruktor, bevor das Fenster sichtbar wird. */
+    public void setController(Controller controller) {
+        this.controller = controller;
     }
 
 	public void show() {
