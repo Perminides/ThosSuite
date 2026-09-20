@@ -245,21 +245,23 @@ public class CardProgress {
 	// ========================================
 
 	public void elementClicked(String id) {
-	    clickedIds.add(id);
+	    if (isPaused)
+	        return;
+
 	    Step step = steps.get(currentIndex);
-	    
-	    // Wir reagieren auf alle Klicks. Wenn wir im Pause-Modus sind, bleiben sie im Presenter hängen.
-	    // Wenn nicht, dann müssen wir sie hier ignorieren.
+
+	    // Klicks außerhalb eines Klick-Steps laufen ins Leere.
 	    if (!(step instanceof ClickMapElements input)) {
 	        return;
 	    }
-	    
+
+	    clickedIds.add(id);
+
 	    boolean correct = input.mandatory().contains(id) 
 	                   || input.optional().contains(id);
 	    
 	    if (!correct) {
 	        // ----- FALSCH -----
-	    	clickedIds.clear();
 	    	playedTimestamp = LocalDateTime.now();
 	        correctlyAnswered = false;
 	        presenter.mapClickChecked(id, correct, input.mandatory());
@@ -268,7 +270,6 @@ public class CardProgress {
 	        presenter.mapClickChecked(id, true, null);
 	        if (clickedIds.containsAll(input.mandatory())) {
 	            // ----- VOLLSTÄNDIG -----
-	            clickedIds.clear();
 	            currentIndex++;
 	            runSteps();
 	        }
@@ -281,12 +282,12 @@ public class CardProgress {
 	// ========================================
 
 	public void mcClicked(int index) {
-		if (isPaused)
-	        throw new RuntimeException("Aha, das kann also passieren. Na dann hier lieber einfach return machen :-)");
-		
+	    if (isPaused)
+	        return;
+
 	    Step step = steps.get(currentIndex);
-	     // Wir reagieren auf alle Klicks. Wenn wir im Pause-Modus sind, bleiben sie im Presenter hängen.
-	     // Wenn nicht, dann müssen wir sie hier ignorieren.
+
+	    // Klicks außerhalb eines MC-Steps laufen ins Leere.
 	    if (!(step instanceof ChoiceStep)) {
 	        return;
 	    }
@@ -333,7 +334,6 @@ public class CardProgress {
 	        presenter.mcClickChecked(index, true);
 	        if (activeSessionMC.isFinallyCorrect(clickedMcAnswers)) {
 	            // ----- VOLLSTÄNDIG -----
-	            clickedMcAnswers.clear();
 	            currentIndex++;
 	            runSteps();
 	        }
@@ -343,7 +343,6 @@ public class CardProgress {
 	        presenter.mcClickChecked(index, false);
 	    	playedTimestamp = LocalDateTime.now();
 	    	correctlyAnswered = false;
-	    	clickedMcAnswers.clear();
 	    	// Lösung für die aktuell angezeigten Optionen anzeigen
 	        presenter.setCorrectMc(activeSessionMC.getCorrectIndexes());
 	        isPaused = true;
@@ -355,14 +354,15 @@ public class CardProgress {
 	 * Antwort fehlt — aufgedeckt werden die falsch gewählten rot und alle richtigen grün.
 	 */
 	public void mcSubmitted() {
-		if (isPaused || activeSessionMC == null || !(steps.get(currentIndex) instanceof MCPlus))
+		if (isPaused)
+			return;
+		if (activeSessionMC == null || !(steps.get(currentIndex) instanceof MCPlus))
 			return;
 		if (clickedMcAnswers.isEmpty())
 			return;
 
 		if (activeSessionMC.isFinallyCorrect(clickedMcAnswers)) {
 			// ----- RICHTIG -----
-			clickedMcAnswers.clear();
 			currentIndex++;
 			runSteps();
 		} else {
@@ -374,7 +374,6 @@ public class CardProgress {
 			presenter.setCorrectMc(correctIndexes);
 			playedTimestamp = LocalDateTime.now();
 			correctlyAnswered = false;
-			clickedMcAnswers.clear();
 			isPaused = true;
 		}
 	}
@@ -480,6 +479,7 @@ public class CardProgress {
 		switch (step) {
 			case Output output -> presenter.showQuestion(output.text());
 			case ClickMapElements x -> {
+			    clickedIds.clear(); // sonst zählen die Klicks des vorigen Steps weiter mit
 			    Set<String> allShapes = new HashSet<>(x.mandatory());
 			    allShapes.addAll(x.optional());
 			    presenter.waitForClick(allShapes);
