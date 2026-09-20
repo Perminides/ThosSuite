@@ -117,7 +117,23 @@ public class Repository {
 		}
 	}
 
-	public List<Entry> search(String whereFragment, LocalDate from, LocalDate to, int limit) {
+	/**
+	 * Sucht im Tagebuch. {@code rawQuery} ist die Suchsprache der Oberfläche; leer oder blank
+	 * heißt „alles“.
+	 *
+	 * @return die Treffer, oder {@code null}, wenn {@code rawQuery} syntaktisch nicht aufgeht
+	 */
+	public List<Entry> search(String rawQuery, LocalDate from, LocalDate to, int limit) {
+		String whereFragment;
+		if (rawQuery == null || rawQuery.isBlank()) {
+			whereFragment = "1=1";
+		} else {
+			try {
+				whereFragment = new QueryParser().parse(rawQuery);
+			} catch (QueryParser.InvalidQueryException e) {
+				return null; // keine Ausnahme nach außen: eine unfertige Eingabe ist kein Fehler
+			}
+		}
 		String sql = """
 				SELECT de.created_at, de.entry_date, de.text,
 				       GROUP_CONCAT(DISTINCT det.tag_name ORDER BY det.tag_name) AS tags,

@@ -74,11 +74,11 @@ public class CardProgress {
 		final List<String> order = new ArrayList<>();
 	}
 	
-	public CardProgress(Card card, SessionPresenter presenter, SessionProgress sessionProgress) {
-		this.card = card;
+	public CardProgress(Card hint, SessionPresenter presenter, SessionProgress sessionProgress) {
+		this.card = hint;
 		this.presenter = presenter;
 		this.sessionProgress = sessionProgress;
-		this.steps = card.getSteps();
+		this.steps = hint.getSteps();
 	}
 	
 	public void start() {
