@@ -32,6 +32,9 @@ public class AnkiDeckService {
 	private final Map<Deck,Integer> initialDueCounts;
 	private final Map<Deck, Set<String>> allLabels;
 	
+	/** Kartennamen der Bild-Decks — der Controller lässt die Skin-Seite deren Bilder vorwärmen. */
+	private final List<String> imageMapNames = new ArrayList<>();
+
 	/**
 	 * <p>
 	 * Erstellt einen neuen AnkiDeckService mit Listen von allen und heute fälligen Cards.
@@ -81,9 +84,6 @@ public class AnkiDeckService {
 	 * </p>
 	 * 
 	 */
-	/** Kartennamen der Bild-Decks — der Controller lässt die Skin-Seite deren Bilder vorwärmen. */
-	private final List<String> imageMapNames = new ArrayList<>();
-
 	public AnkiDeckService() {
 		repo = new DeckRepository();
 		allCards = new EnumMap<>(Deck.class);

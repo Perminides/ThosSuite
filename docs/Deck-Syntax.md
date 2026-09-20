@@ -1,7 +1,7 @@
 # ThosSuite — Deck-Syntax
 
 Das Format der Anki-Deck-CSVs: eine Zeile je Karte, zerlegt in Steps. Nachschlagewerk — im besten
-Fall reicht die Beispielsammlung. Maßgeblich ist `Card.parseStep`; ändert der sich, ändert sich das hier.
+Fall reicht die Beispielsammlung. Maßgeblich ist `CardParser.parseStep`; ändert der sich, ändert sich das hier.
 
 ## Zeile
 

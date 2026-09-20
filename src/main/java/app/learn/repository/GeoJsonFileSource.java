@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import app.learn.model.MapShape;
 import app.shared.model.ShapeGeometry;
-import app.shared.model.ShapeGeometry.Point;
 
 /**
  * Diese Klasse kennt nur das MapRepository!
@@ -18,7 +17,7 @@ import app.shared.model.ShapeGeometry.Point;
  * <p>Baut keine JavaFX-Nodes mehr — nur noch framework-freie {@link ShapeGeometry}. Die Y-Invertierung
  * (Bildschirm-Koordinaten) bleibt hier als reine Arithmetik; den Path/Group-Bau macht der MapNodeBuilder.</p>
  */
-class GeoJsonLoader {
+class GeoJsonFileSource {
 
 	public List<MapShape> load(java.nio.file.Path filePath, boolean isShapeMap) {
 		try {
@@ -48,13 +47,13 @@ class GeoJsonLoader {
 
 			ShapeGeometry geo;
 			if (isShapeMap) {
-				geo = ShapeGeometry.shapePolygon(id, parseMultiPolygon(geometry), shapeType);
+				geo = ShapeGeometry.shapePolygon(id, GeoJsonGeometry.parseMultiPolygon(geometry), shapeType);
 			} else  if ("MultiPolygon".equals(geometryType)) {
-				geo = ShapeGeometry.polygon(id, parseMultiPolygon(geometry));
+				geo = ShapeGeometry.polygon(id, GeoJsonGeometry.parseMultiPolygon(geometry));
 			} else if ("Polygon".equals(geometryType)) {
-				geo = ShapeGeometry.polygon(id, parsePolygon(geometry));
+				geo = ShapeGeometry.polygon(id, GeoJsonGeometry.parsePolygon(geometry));
 			} else if ("MultiLineString".equals(geometryType)) {
-				geo = ShapeGeometry.line(id, parseMultiLineString(geometry));
+				geo = ShapeGeometry.line(id, GeoJsonGeometry.parseMultiLineString(geometry));
 			} else {
 				throw new RuntimeException("Unerwarteter Typ: " + geometryType);
 			}
@@ -63,38 +62,5 @@ class GeoJsonLoader {
 					altRegionNames, altCapitalNames));
 		}
 		return shapes;
-	}
-
-	private List<List<Point>> parsePolygon(JsonNode geometry) {
-		List<List<Point>> rings = new ArrayList<>();
-		for (JsonNode ring : geometry.get("coordinates"))
-			rings.add(parsePoints(ring));
-		return rings;
-	}
-
-	private List<List<Point>> parseMultiPolygon(JsonNode geometry) {
-		List<List<Point>> rings = new ArrayList<>();
-		for (JsonNode polygon : geometry.get("coordinates"))
-			for (JsonNode ring : polygon)
-				rings.add(parsePoints(ring));
-		return rings;
-	}
-
-	private List<List<Point>> parseMultiLineString(JsonNode geometry) {
-		List<List<Point>> lines = new ArrayList<>();
-		for (JsonNode coords : geometry.get("coordinates")) {
-			if (coords.size() == 0)
-				continue;
-			lines.add(parsePoints(coords));
-		}
-		return lines;
-	}
-
-	// Y-Invertierung wie zuvor (der Screen wächst nach unten, die geoJSON-Y nach oben).
-	private List<Point> parsePoints(JsonNode ring) {
-		List<Point> points = new ArrayList<>();
-		for (JsonNode pt : ring)
-			points.add(new Point(pt.get(0).asDouble(), -pt.get(1).asDouble()));
-		return points;
 	}
 }

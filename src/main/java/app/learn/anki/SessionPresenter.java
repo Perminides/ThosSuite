@@ -295,9 +295,8 @@ public class SessionPresenter {
 	
 	/**
 	 * Remove the image, clean the textfield, question and markers.
-	 * @param correct can be null in case of back button!
 	 */
-	void cardFinished(Boolean correct) {
+	void cardFinished() {
 		view.resetMarkers();
 		view.setImage(null);
 		view.setTextInTextField("");

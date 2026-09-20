@@ -18,7 +18,7 @@ import java.util.function.Function;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import app.learn.anki.model.Card;
+import app.learn.anki.repository.CardParser;
 
 /**
  * Erzeugt aus dem Systematik-Blatt die Zeilen des Flaggen-Decks.
@@ -34,7 +34,7 @@ import app.learn.anki.model.Card;
  * Zusatzfragen gehören deshalb in die zweite Deck-Datei. Mit {@code --trocken} wird nur geprüft und
  * nichts geschrieben.</p>
  *
- * <p>Jede erzeugte Zeile läuft durch zwei Prüfungen: durch den echten {@link Card}-Parser, und
+ * <p>Jede erzeugte Zeile läuft durch zwei Prüfungen: durch den echten {@link CardParser}, und
  * durch einen Flächenlauf, der mitzählt, wie viele Flächen die Skizze zu jedem Zeitpunkt hat —
  * ein {@code Mark} oder {@code Fill} auf eine Fläche, die es noch nicht gibt, fiele sonst erst
  * mitten in einer Lern-Session auf.</p>
@@ -148,6 +148,7 @@ public class FlagDeckGenerator {
 				{"Schwert", new String[] {"das Schwert", "die Schwerter"}},
 				{"Gewehr", new String[] {"das Gewehr", "die Gewehre"}},
 				{"Buch", new String[] {"das Buch", "die Bücher"}},
+				{"Stoßzahn", new String[] {"der Stoßzahn", "die Stoßzähne"}},
 			});
 
 	// ---- Skizze ---------------------------------------------------------------
@@ -160,7 +161,8 @@ public class FlagDeckGenerator {
 			"Dreizack", "dreizack", "Muster", "muster", "Drache", "drache", "Zweig",
 			"zweig", "Kreuz", "kreuz", "Nuss", "nuss", "Blume", "blume",
 			"Gebäude", "gebaeude", "Blatt", "blatt", "Landumriss", "landumriss",
-			"Hut", "hut", "Baum", "baum", "Krone", "krone", "Gewehr", "gewehr", "Buch", "buch");
+			"Hut", "hut", "Baum", "baum", "Krone", "krone", "Gewehr", "gewehr", "Buch", "buch",
+			"Stoßzahn", "stosszahn");
 
 	/** Das Rasterfeld als Behälter — der äußerste, den jedes Element durchläuft. */
 	private static final String SEGMENT = "Segment";
@@ -428,6 +430,7 @@ public class FlagDeckGenerator {
 		add(steps, "<OnFail>Image:" + image(row));
 		add(steps, "Pause:");
 		prependHint(steps, row);
+		hinweisVorweg(steps, row);
 		return steps;
 	}
 
@@ -1094,6 +1097,22 @@ public class FlagDeckGenerator {
 	}
 
 	/**
+	 * Der Hinweis als eigener erster Schritt, mit einem Knopf zum Weitergehen.
+	 *
+	 * <p>Über den Fragen steht er weiter (siehe {@link #prependHint}), aber wer die Fragen auswendig
+	 * kennt, liest sie nicht mehr und übersieht ihn dort. Als eigener Schritt muss er einmal
+	 * weggeklickt werden. Läuft nach {@code prependHint}, sonst stünde der Hinweis doppelt da.</p>
+	 */
+	private void hinweisVorweg(List<String> steps, List<String> row) {
+		String hinweis = hint(row);
+		if (hinweis.isEmpty())
+			return;
+		int stelle = steps.get(3).startsWith("Mark:") ? 4 : 3;   // erst das Land markieren, dann der Hinweis
+		steps.add(stelle, "MC:+Okay");             // ohne '+' wäre Okay ein Füller und damit falsch
+		steps.add(stelle, "Output:" + hinweis.replace("<br /><br />", ""));
+	}
+
+	/**
 	 * Stellt den Hinweis <b>jeder</b> Frage der Karte voran, nicht nur der ersten.
 	 *
 	 * <p>Er sagt, welche der Flaggen eines Landes gemeint ist. Stünde er nur einmal, müsste man ihn
@@ -1140,7 +1159,7 @@ public class FlagDeckGenerator {
 	/** Der echte Parser und ein Flächenlauf — beide finden anderes. */
 	private void check(List<String> steps) {
 		try {
-			new Card(steps);
+			CardParser.parse(steps);
 		} catch (RuntimeException e) {
 			throw new RuntimeException("die erzeugte Zeile ist nicht lesbar", e);
 		}
