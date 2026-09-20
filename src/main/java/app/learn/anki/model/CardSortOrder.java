@@ -3,14 +3,6 @@ package app.learn.anki.model;
 /**
  * Anki-spezifische Sortierreihenfolgen für Lernkarten (z.B. nach Fehlerhäufigkeit
  * oder Datum der letzten Wiederholung).
- * <p>
- * Liegt in {@code shared} statt in {@code learn.anki}, obwohl der Typ inhaltlich
- * dorthin gehört. Grund: {@link Screen#sortOrderChanged(CardSortOrder)} lebt im neutralen
- * {@code Screen}-Vertrag, weil der Controller die Sortierung über eine
- * {@code Screen}-Referenz durchreicht (siehe {@code Controller.cardSortOrderSelected}).
- * Läge dieser Typ in {@code learn.anki}, müsste {@code shared} dorthin importieren –
- * verbotene Abhängigkeitsrichtung. Der Typ ist hier also bewusst eine Etage zu niedrig
- * angesiedelt; ein akzeptierter Schönheitsfehler, kein struktureller Defekt.
  */
 
 public enum CardSortOrder {

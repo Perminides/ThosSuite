@@ -54,7 +54,7 @@ class CsvDeckCardSource {
 	                String[] tokens = line.split(";");
 
 	                // 1. Wir bauen erst das Karten-Objekt (dabei wird die ID geparst)
-	                Card card = new Card(Arrays.asList(tokens));
+	                Card card = CardParser.parse(Arrays.asList(tokens));
 
 	                // 2. add() liefert 'false', wenn die ID schon drin war!
 	                if (!seenIds.add(card.getId())) {

@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import app.shared.Config;
 import app.shared.model.ShapeGeometry;
-import app.shared.model.ShapeGeometry.Point;
 import app.shared.model.SketchStructure;
 import app.shared.model.SketchStructure.Canvas;
 
@@ -90,9 +89,9 @@ public class SketchFileSource {
 			JsonNode geometry = feature.get("geometry");
 			String geometryType = geometry.get("type").asText();
 			if ("MultiPolygon".equals(geometryType))
-				areas.add(ShapeGeometry.polygon(number, parseMultiPolygon(geometry)));
+				areas.add(ShapeGeometry.polygon(number, GeoJsonGeometry.parseMultiPolygon(geometry)));
 			else if ("Polygon".equals(geometryType))
-				areas.add(ShapeGeometry.polygon(number, parsePolygon(geometry)));
+				areas.add(ShapeGeometry.polygon(number, GeoJsonGeometry.parsePolygon(geometry)));
 			else if ("Point".equals(geometryType))
 				areas.add(parseCircle(number, feature, geometry, structure));
 			else
@@ -142,27 +141,5 @@ public class SketchFileSource {
 				-coordinates.get(1).asDouble(), radius.asDouble(),
 				new ShapeGeometry.Cutout(cutout.get("x").asDouble(), -cutout.get("y").asDouble(),
 						cutout.get("radius").asDouble()));
-	}
-
-	private List<List<Point>> parsePolygon(JsonNode geometry) {
-		List<List<Point>> rings = new ArrayList<>();
-		for (JsonNode ring : geometry.get("coordinates"))
-			rings.add(parsePoints(ring));
-		return rings;
-	}
-
-	private List<List<Point>> parseMultiPolygon(JsonNode geometry) {
-		List<List<Point>> rings = new ArrayList<>();
-		for (JsonNode polygon : geometry.get("coordinates"))
-			for (JsonNode ring : polygon)
-				rings.add(parsePoints(ring));
-		return rings;
-	}
-
-	private List<Point> parsePoints(JsonNode ring) {
-		List<Point> points = new ArrayList<>();
-		for (JsonNode pt : ring)
-			points.add(new Point(pt.get(0).asDouble(), -pt.get(1).asDouble()));
-		return points;
 	}
 }

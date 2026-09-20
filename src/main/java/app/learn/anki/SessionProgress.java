@@ -101,7 +101,7 @@ class SessionProgress {
 	public void cardFinished(boolean correct) {
 		currentIndex++;
 		if (currentIndex < cards.size()) {
-			presenter.cardFinished(correct);
+			presenter.cardFinished();
 			presenter.sessionProgressChanged(createSessionProgress());
 			presenter.newCardIncoming(cards.get(currentIndex).getLearnStat());
 			getCurrentProgress().start();
@@ -152,7 +152,7 @@ class SessionProgress {
 
 	public void goBack() {
 		if (currentIndex > 0) {
-			presenter.cardFinished(null);
+			presenter.cardFinished();
 			Card cur = cards.get(currentIndex);
 			cardProgressById.put(cur.getId(), new CardProgress(cur, presenter, this));
 			currentIndex--;
@@ -173,7 +173,7 @@ class SessionProgress {
 	 */
 	public void refresh() {
 		Log.info(this, "=== REFRESH === Progress@" + System.identityHashCode(this) + ", currentIndex=" + currentIndex);
-		presenter.cardFinished(null);
+		presenter.cardFinished();
 		presenter.refresh();
 		Card cur = cards.get(currentIndex);
 		cardProgressById.put(cur.getId(), new CardProgress(cur, presenter, this));

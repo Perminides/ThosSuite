@@ -9,7 +9,7 @@ import app.learn.model.Deck;
 import app.learn.model.GeoMap;
 import app.learn.model.MapMetadata;
 import app.learn.model.MapShape;
-import app.learn.repository.MapRepository;
+import app.learn.repository.MapFileSource;
 
 /**
  * Singleton wegen des Shape-Cachings — da darf es nur einen geben.
@@ -18,11 +18,11 @@ import app.learn.repository.MapRepository;
 public class MapService {
 	private static MapService instance;
 
-	private final MapRepository repository;
+	private final MapFileSource repository;
 	private final Map<MapMetadata, GeoMap> shapeMapCache = new HashMap<>();
 
 	private MapService() {
-		this.repository = new MapRepository();
+		this.repository = new MapFileSource();
 	}
 
 	public static MapService getInstance() {

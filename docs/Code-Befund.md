@@ -145,12 +145,12 @@ laufen die beiden auseinander.
 | 1.1 | Ein unbekanntes Deck bekommt eine `null`-View statt eines Fehlers | eine Minute | erledigt |
 | 1.2 | Vier Eingänge, vier Antworten auf „sind wir in Pause?" | eine halbe Stunde | erledigt |
 | 1.3 | Die Spaced-Repetition-Formel steht an zwei Stellen | eine Viertelstunde | erledigt |
-| 1.4 | Die Grammatik der Deck-Dateien wohnt in der Datenklasse | eine gute Stunde | offen |
+| 1.4 | Die Grammatik der Deck-Dateien wohnt in der Datenklasse | eine gute Stunde | erledigt |
 | 1.5 | „Hint" heißt in diesem Zweig zweierlei | zehn Minuten | erledigt |
-| 1.6 | Das `Deck`-Enum trägt zwei disjunkte Formen | eine Viertelstunde | offen |
-| 1.7 | Fünf Kommentare beschreiben Code, den es nicht gibt | zwanzig Minuten | offen |
-| 1.8 | Drei Namen für denselben Vorgang in `learn.repository` | zehn Minuten | offen |
-| 1.9 | Zwei GeoJSON-Leser mit wortgleichen Geometrie-Methoden | zwanzig Minuten | offen |
+| 1.6 | Das `Deck`-Enum trägt zwei disjunkte Formen | eine Viertelstunde | erledigt |
+| 1.7 | Fünf Kommentare beschreiben Code, den es nicht gibt | zwanzig Minuten | teilweise |
+| 1.8 | Drei Namen für denselben Vorgang in `learn.repository` | zehn Minuten | erledigt |
+| 1.9 | Zwei GeoJSON-Leser mit wortgleichen Geometrie-Methoden | zwanzig Minuten | erledigt |
 | 1.10 | Zwei Wege, SQL zu schreiben, in einer Klasse | eine Viertelstunde | offen |
 | 1.11 | Die Anzeigetexte der Anki-Session entstehen auf der Feature-Seite | eine halbe Stunde | offen |
 | 1.12 | Toter Code | zwanzig Minuten | offen |
@@ -304,20 +304,25 @@ Zeile an `;` und reicht die Tokens weiter — das gesamte Dateiformat steckt in 
 `Deck-Syntax.md` in Zeile 4 ausdrücklich auf `Card.parseStep` zeigen muss, ist das Symptom: Die
 Regel über die Suffixe trägt hier nicht mehr, die Doku muss einspringen.
 
-Der Preis ist zweierlei: Man kann keine Karte bauen, ohne CSV-Tokens zu erfinden, und die
-Syntaxprüfung läuft nur beim Deck-Laden — eine kaputte Zeile in einem beliebigen Deck nimmt den
-Start der ganzen Suite mit, nicht nur ihr Deck.
+Der Preis: Man kann keine Karte bauen, ohne CSV-Tokens zu erfinden. `Card` hat nur Konstruktoren,
+die `List<String> csvTokens` nehmen — wer eine Karte will, muss erst Strings in CSV-Grammatik
+erzeugen und sie von der Karte wieder auseinandernehmen lassen. Der Flaggen-Generator tut genau
+das: Er baut eine ganze Karte, wirft sie weg und benutzt nur die Exception, weil der Parser der
+Konstruktor ist und es keine Tür zu ihm gibt.
 
-**Kleinster Schnitt:** kein Paketwechsel — eine paketprivate `CardParser`-Klasse **im selben
-Paket** `learn.anki.model`, die `Chunk`/`Step` weiter sieht und `Card` als Halter von id, Labels,
-Chunks, OnFail und LearnStat zurücklässt. Reines Verschieben, keine Sichtbarkeitsfragen.
+**Kleinster Schnitt:** `CardParser` in `learn.anki.repository`, neben `CsvDeckCardSource` — dort
+steht das Dateiformat laut Namensrolle hin. Er bekommt die Token-Grammatik und die Marker
+(`<ShuffleStart>`, `<OnFail>` …) samt der vier Grammatik-Würfe; `Card` behält `expectsInput` und
+die drei Sinn-Prüfungen, die sich an der fertigen Struktur ablesen. Der Parser sagt, ob die Zeile
+lesbar ist — `Card` sagt, ob die Karte Sinn ergibt. `Chunk`/`FixedStep`/`ShuffleBlock` werden dazu
+öffentlich.
 **Aufwand:** eine gute Stunde.
 
-**Stand:** offen
+**Stand:** erledigt
 
 ### 1.5 „Hint" heißt in diesem Zweig zweierlei
 
-**Beleg:** `DeckRepository.java:24` (`getAllHints` liefert `List<Card>`), `Card.java:180`
+**Beleg:** `DeckRepository.java:24` (`getAllHints` liefert `List<Card>`), `CardParser.java:120`
 („Problem beim parsen des Hints") gegen `Card.Answer(hint, variants)` und
 `FastAnswers.slotHints()`
 
@@ -327,7 +332,7 @@ Aufrufkette. Das ist der teuerste Namensfehler, weil er beim Lesen nicht auffäl
 plausibel.
 
 **Kleinster Schnitt:** `getAllHints` → `getAllCards`, die lokalen `hints`/`h` mit, und die
-Fehlermeldung in `Card`. Vier Dateien, keine Verhaltensänderung.
+Fehlermeldung in `CardParser`. Vier Dateien, keine Verhaltensänderung.
 **Aufwand:** zehn Minuten.
 
 **Stand:** erledigt
@@ -352,7 +357,7 @@ Ein Aufteilen in zwei Enums scheidet aus: `Deck` ist zugleich der Schlüssel in 
 ist. Aus „irgendwo eine NPE" wird „dieses Deck hat keine CSV".
 **Aufwand:** eine Viertelstunde.
 
-**Stand:** offen
+**Stand:** erledigt
 
 ### 1.7 Fünf Kommentare beschreiben Code, den es nicht gibt
 
@@ -379,7 +384,7 @@ behaupten etwas, das man erst durch Nachlesen im Code widerlegt.
 ungenutzten Parameter gleich mit entfernen.
 **Aufwand:** zwanzig Minuten.
 
-**Stand:** offen
+**Stand:** SessionProgress Runnable noch offen
 
 ### 1.8 Drei Namen für denselben Vorgang in `learn.repository`
 
@@ -397,7 +402,7 @@ zu befolgen wäre.
 `GeoJsonLoader` ist paketprivates Innenleben und darf heißen, wie er heißt.
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** erledigt
 
 ### 1.9 Zwei GeoJSON-Leser mit wortgleichen Geometrie-Methoden
 
@@ -413,7 +418,7 @@ zweimal da. Wer sie einmal ändert, merkt am zweiten Ort nichts.
 `learn.repository`; beide Leser rufen sie.
 **Aufwand:** zwanzig Minuten.
 
-**Stand:** offen
+**Stand:** erledigt
 
 ### 1.10 Zwei Wege, SQL zu schreiben, in einer Klasse
 
@@ -467,8 +472,8 @@ Jedes Stück davon muss beim Durchlesen einmal bewertet werden und liefert dabei
 | `model/MapElementListener.java` | ganze Datei, kein Nutzer in `app` |
 | `GeoMap.java:93` `setShapes` | kein Aufrufer |
 | `MapMetadata.java:23,29` `bgImageFile` | gesetzt, nie gelesen — Hintergrundbilder kommen aus dem Skin |
-| `Card.java:84,96` `remark` | aus der CSV geparst, gespeichert, nie gelesen |
-| `Card.java:38` `MarkMapElements.right` | gefüllt, nie gelesen; der Kommentar daneben sagt es selbst |
+| `Card.java:81,93` `remark` | aus der CSV geparst, gespeichert, nie gelesen |
+| `Card.java:35` `MarkMapElements.right` | gefüllt, nie gelesen; der Kommentar daneben sagt es selbst |
 | `LearnSessionInfo.java:8` | auskommentierte Methodensignatur |
 | `SessionPresenter.java:300` Parameter | siehe 1.7 |
 
@@ -2425,7 +2430,7 @@ zurückgenommen, und `tmdb.v3.apiKey` und `whatsapp.key` müssten mit.
 mitnimmt, ist das derselbe Fall wie Befund 3.1, nur für den Datenbankschlüssel.
 
 **6 · Soll `MarkMapElements.right` (die optionalen Shapes) noch kommen?**
-`Card.java:38` führt das Feld samt Kommentar „Momentan ist right immer leer. Vielleicht will ich
+`Card.java:35` führt das Feld samt Kommentar „Momentan ist right immer leer. Vielleicht will ich
 später aber auch mal die optionalen Shapes berücksichtigen…". Es wird gefüllt und nie gelesen.
 Als Platzhalter für eine geplante Erweiterung ist es in Ordnung — dann gehört ein Marker dran.
 Als Überbleibsel gehört es weg (Befund 1.12).

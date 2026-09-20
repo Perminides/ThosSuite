@@ -16,11 +16,11 @@ import app.shared.Config;
  * <p>Lädt die Shapes aus den GeoJSON-Dateien und gibt Sie als GeoMap zurück</p>
  * <p>Dünner Wrapper um den GeoJsonLoader</p>
  */
-public class MapRepository {
-	private final GeoJsonLoader loader;
+public class MapFileSource {
+	private final GeoJsonFileSource loader;
 
-	public MapRepository() {
-		this.loader = new GeoJsonLoader();
+	public MapFileSource() {
+		this.loader = new GeoJsonFileSource();
 	}
 
 	public GeoMap load(Deck type) {

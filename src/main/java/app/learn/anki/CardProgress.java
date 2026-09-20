@@ -445,7 +445,6 @@ public class CardProgress {
 	 * Ich kann die LearnStats hier noch nicht setzen, weil vielleicht gibt es ja noch ein UNDO.
 	 * correctlyAnswered must be set before calling!
 	 * 
-	 * @param correctlyAnswered
 	 */
 	private void cardFinished() {
 		if (correctlyAnswered == null)
