@@ -42,3 +42,6 @@ __pycache__/
 # Skin-Entwuerfe. Arbeitsstand mit Screenshots und Fotos, mehrere Megabyte Bilder —
 # das gehoert nicht in die Historie, aus der man es nicht mehr herausbekommt.
 docs/skin/mockups/
+
+# Kratzflaeche von Claude: Probebauten, kompilierte Klassen, Zwischenstaende.
+scratchpad/
