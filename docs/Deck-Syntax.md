@@ -25,7 +25,7 @@ Aufbau: `<id>;<remark>;<label,label,…>;<step>;<step>;…`
 | `Input:Rom` | Tippen; „Rom" (ohne Groß/klein, getrimmt) ist richtig. |
 | `Input:1998\|MCMXCVIII` | Tippen; beide Schreibweisen gelten. |
 | `Click:hannover` | Die Form „hannover" auf der Karte anklicken. |
-| `Click:berlin,potsdam-brandenburg` | Pflicht: berlin + potsdam; optional: brandenburg. |
+| `Click:berlin,potsdam>brandenburg` | Pflicht: berlin + potsdam; optional: brandenburg. Getrennt wird an `>`, weil Namen Bindestriche tragen (Theodor-Heuss-Platz). |
 | `Mark:bayern,sachsen` | Markiert die zwei Formen (nur Anzeige). |
 | `MC:+Paris\|Lyon\|Marseille` | Auswahl, Einzelklick: Paris richtig, Rest falsch. |
 | `MC:+Rot\|+Blau\|Grün` | Rot **und** Blau richtig, Grün falsch. |
@@ -44,6 +44,12 @@ Reicht das, bist du durch. Der Rest sind die Feinheiten von MC, Fast, Sketch und
 
 `MC` wertet jeden Klick **sofort** (ein Fehlklick bricht ab). `MC+` lässt **markieren und absenden**
 (alles oder nichts). Beide teilen sich dieselbe Optionssyntax, und es gibt nur eine:
+
+**Warum es `MC+` gibt:** Bei `MC` kann Teilwissen nicht falsch sein. Wer bei mehreren richtigen Antworten
+nur eine kennt, klickt sie, merkt an der Karte, dass noch etwas fehlt — sie geht nicht weiter —, und
+sucht weiter. Die Vollständigkeit prüft die Karte. Bei `MC+` muss man selbst wissen, dass man fertig
+ist: Wer nur einen Teil anhakt und absendet, liegt falsch. Deshalb `MC+` überall dort, wo aufgezählt
+werden soll, was man weiß, und nicht erkannt, was man sieht.
 
 Optionen trennt `|`. Ein führendes `+ - ~ ?` gibt die Rolle, nackt heißt `?`. Die Rolle frisst nur ihr
 Zeichen, der Rest ist Text. Einzige Doppelrolle: `-~` oder `~-` heißt toleriert und immer sichtbar.

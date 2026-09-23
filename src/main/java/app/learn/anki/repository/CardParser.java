@@ -370,8 +370,9 @@ public class CardParser {
 	}
 
 	// --- Click/Mark
+	/** Getrennt wird an {@code >}, nicht am Bindestrich: Der steckt in Namen wie Theodor-Heuss-Platz. */
 	private static Step parseClickOrMark(String body, boolean isClick) {
-		String[] g = body.split("-");
+		String[] g = body.split(">");
 		Set<String> left = splitAndTrim(g[0]);
 		Set<String> right = g.length > 1 ? splitAndTrim(g[1]) : new HashSet<>();
 		return isClick ? new ClickMapElements(left, right) : new MarkMapElements(left, right);
