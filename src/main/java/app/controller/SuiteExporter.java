@@ -54,7 +54,7 @@ public class SuiteExporter {
 			this.rootFolder = Config.getPath(KEY_ROOT_FOLDER);
 			this.ignoreFile = Config.getPath(KEY_CONFIG_FOLDER).resolve(IGNORE_FILE_NAME);
 			this.oneDriveFolder = Config.getPath(KEY_ONEDRIVE_FOLDER);
-			this.zipPassword = Config.getString(KEY_ZIP_PASSWORD);
+			this.zipPassword = Config.get(KEY_ZIP_PASSWORD);
 		} catch (Exception e) {
 			Alerts.show("Kein Export möglich", "Ich kann vermutlich einen Ordner nicht finden.", ButtonEnum.OK);
 			return;
@@ -78,7 +78,7 @@ public class SuiteExporter {
             Log.info(this.getClass(), "SuiteExporter: " + files.size() + " Dateien exportiert nach " + zipPath);
             Alerts.show("Suite Export", files.size() + " Dateien exportiert:\n" + zipPath.getFileName(), ButtonEnum.OK);
         } catch (Exception e) {
-            throw new RuntimeException("Export fehlgeschlagen: " + e.getMessage());
+            throw new RuntimeException("Export fehlgeschlagen", e);
         }
     }
 

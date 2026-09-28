@@ -75,10 +75,6 @@ public class Config {
         return keyValues.get(key);
     }
 
-    public static String getString(String key) {
-        return get(key);
-    }
-
     /**
      * Optionaler Config-Wert mit Default. Bewusst nur auf der unveraenderlichen Menge:
      * Tabellenwerte sind vorab angelegt und kennen keinen Default.

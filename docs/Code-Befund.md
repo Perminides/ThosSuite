@@ -200,10 +200,10 @@ laufen die beiden auseinander.
 | 6.6 | Das Übergangsgerüst `app.tmp` ist fällig | Entscheidung, keine Arbeit | erledigt — das Paket existiert nicht mehr |
 | 6.7 | Kleinkram | zwanzig Minuten | offen |
 | 7.1 | Die Suite hat zwei Antworten auf „welcher Tag ist heute" | eine halbe Stunde + zwei Stunden Durchsicht | verworfen — AppClock ist kein zweiter Kalender, sondern der Arbeitstag der Startdaten |
-| 7.2 | `Config.getString` ist ein zweiter Name für `Config.get` | fünf Minuten | offen |
+| 7.2 | `Config.getString` ist ein zweiter Name für `Config.get` | fünf Minuten | erledigt |
 | 7.3 | `DB` baut viermal dieselbe Verbindung auf | zwanzig Minuten | offen |
 | 7.4 | `FilenIgnoreSource`: zweimal dieselben vier Zeilen, und die zweite wirft beim Herunterfahren | eine Viertelstunde | offen |
-| 7.5 | Zwei Stellen werfen ohne Ursache, eine reduziert sie auf den Text | fünf Minuten | offen |
+| 7.5 | Zwei Stellen werfen ohne Ursache, eine reduziert sie auf den Text | fünf Minuten | erledigt |
 | 7.6 | `UiUtils` trägt drei unverwandte Dinge, eines davon globalen Zustand | zwanzig Minuten | offen |
 | 7.7 | Der Screen-Vertrag verweist auf Methoden, die es nicht gibt | zwei Minuten | erledigt |
 | 7.8 | Kleinkram | eine Viertelstunde | offen |
@@ -1774,7 +1774,14 @@ gelesen wird.
 **Kleinster Schnitt:** `getString` löschen, drei Aufrufstellen umstellen.
 **Aufwand:** fünf Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — `getString` gelöscht, die eine verbliebene Aufrufstelle
+(`SuiteExporter.java:57`) auf `get` umgestellt; die zweite war schon mit Befund 4.7 gefallen.
+
+Die Richtung war nicht offensichtlich: `getString` nennt seinen Typ wie `getInt`, `getPath` und
+`getTime` und sieht damit wie der konsequentere Name aus. Den Ausschlag geben die **Setter** —
+`set` schreibt einen String, `setInt` und `setTime` nennen ihren Typ. Die Konvention der Fassade
+lautet also nicht „jeder nennt seinen Typ“, sondern „String ist der Normalfall und bleibt
+unmarkiert“. Nach der ist `get` richtig und `getString` der zweite Name.
 
 ### 7.3 `DB` baut viermal dieselbe Verbindung auf
 
@@ -1844,7 +1851,10 @@ es je zu sehen gibt.
 **Kleinster Schnitt:** `, e` an drei Stellen.
 **Aufwand:** fünf Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — `, e` an den beiden verbliebenen Stellen; die dritte
+(`DbRegionDeckProgressRepository.java:34`) war schon mit Befund 2.5 gefallen. Bei `SuiteExporter`
+ist aus `"Export fehlgeschlagen: " + e.getMessage()` ein `"Export fehlgeschlagen", e` geworden —
+die Meldung steht damit nicht mehr doppelt im Text und in der Ursache.
 
 ### 7.6 `UiUtils` trägt drei unverwandte Dinge, eines davon globalen Zustand
 

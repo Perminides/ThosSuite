@@ -30,7 +30,7 @@ public class SingleInstanceGuard {
             return true;
 
         } catch (Exception e) {
-            throw new RuntimeException("Oops. Probleme beim Versuch sicherzustellen, dass die App nicht bereits läuft.");
+            throw new RuntimeException("Oops. Probleme beim Versuch sicherzustellen, dass die App nicht bereits läuft.", e);
         }
     }
 }

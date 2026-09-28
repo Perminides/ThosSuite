@@ -26,7 +26,7 @@ public class DB {
 	 *
 	 * Achtung: Da immer dieselbe Connection-Instanz zurückgegeben wird, darf diese
 	 * Methode nicht während einer laufenden Transaktion genutzt werden. Für
-	 * transaktionale Operationen stattdessen {@link #getNonAutoCommitConnection()} verwenden.
+	 * transaktionale Operationen stattdessen {@link #getNewConnection()} verwenden.
 	 *
 	 * <p><strong>Wichtig: Diese Connection braucht niemals geschlossen werden.</strong>
 	 * Sie ist für die gesamte Laufzeit der Suite offen und wird von allen Repositories
@@ -48,12 +48,10 @@ public class DB {
 				throw new IllegalStateException("[FAILFAST] Die Suite-Connection ist geschlossen. "
 						+ "Sie bleibt die gesamte Laufzeit offen und wird nur beim Shutdown geschlossen — "
 						+ "hier hat sie also jemand geschlossen, der es nicht durfte.");
-			if (connection == null) {
-				connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath.toString());
-				connection.createStatement().execute("PRAGMA foreign_keys = ON");
-			}
+			if (connection == null)
+				connection = open(dbPath, true);
 		} catch (SQLException e) {
-			throw new RuntimeException("SQL error while getting connection", e);
+			throw new RuntimeException("Suite-Connection: Zustand nicht prüfbar", e);
 		}
 		return connection;
 	}
@@ -73,15 +71,7 @@ public class DB {
 	 * Alle Statements und ResultSets müssen daher vor dem Commit geschlossen sein.
 	 */
 	public static Connection getNewConnection() {
-		Connection connection = null;
-		try {
-				connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath.toString());
-				connection.setAutoCommit(false);
-				connection.createStatement().execute("PRAGMA foreign_keys = ON");
-		} catch (Exception e) {
-			throw new RuntimeException("SQL error while getting connection", e);
-		}
-		return connection;
+		return open(dbPath, false);
 	}
 	
 	/**
@@ -94,12 +84,10 @@ public class DB {
 				throw new IllegalStateException("[FAILFAST] Die Film-Connection ist geschlossen. "
 						+ "Sie bleibt die gesamte Laufzeit offen und wird nur beim Shutdown geschlossen — "
 						+ "hier hat sie also jemand geschlossen, der es nicht durfte.");
-			if (tmdbConnection == null) {
-				tmdbConnection = DriverManager.getConnection("jdbc:sqlite:" + tmdbDbPath.toString());
-				tmdbConnection.createStatement().execute("PRAGMA foreign_keys = ON");
-			}
+			if (tmdbConnection == null)
+				tmdbConnection = open(tmdbDbPath, true);
 		} catch (SQLException e) {
-			throw new RuntimeException("SQL error while getting connection", e);
+			throw new RuntimeException("Film-Connection: Zustand nicht prüfbar", e);
 		}
 		return tmdbConnection;
 	}
@@ -108,15 +96,26 @@ public class DB {
 	 * Öffnet eine neue, dedizierte Verbindung zur Film-Datenbank mit AutoCommit=false.
 	 */
 	public static Connection getNewTmdbConnection() {
-		Connection connection = null;
+		return open(tmdbDbPath, false);
+	}
+
+	/**
+	 * Die einzige Stelle, an der eine Verbindung entsteht — damit {@code PRAGMA foreign_keys = ON}
+	 * nicht viermal dasteht und eine fünfte Verbindungsart sie nicht vergessen kann. Ein fehlendes
+	 * PRAGMA meldet sich nämlich nicht, es schaltet still die Fremdschlüsselprüfung ab.
+	 *
+	 * <p>Das {@code Statement} für das PRAGMA bleibt bewusst ungeschlossen — die Begründung steht
+	 * bei {@link #getConnection()}.</p>
+	 */
+	private static Connection open(Path path, boolean autoCommit) {
 		try {
-				connection = DriverManager.getConnection("jdbc:sqlite:" + tmdbDbPath.toString());
-				connection.setAutoCommit(false);
-				connection.createStatement().execute("PRAGMA foreign_keys = ON");
-		} catch (Exception e) {
-			throw new RuntimeException("SQL error while getting connection", e);
+			Connection c = DriverManager.getConnection("jdbc:sqlite:" + path);
+			c.setAutoCommit(autoCommit);
+			c.createStatement().execute("PRAGMA foreign_keys = ON");
+			return c;
+		} catch (SQLException e) {
+			throw new RuntimeException("Verbindung zu " + path + " fehlgeschlagen", e);
 		}
-		return connection;
 	}
 	
 	public static void closeConnection() {
