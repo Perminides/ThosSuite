@@ -1,6 +1,6 @@
 package app.shared.ui.components;
 
-import app.shared.UiUtils;
+import app.shared.DialogOwner;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.layout.HeaderBar;
@@ -27,9 +27,9 @@ public class SuiteDialog<R> extends Dialog<R> {
 	private final SuiteHeaderBar headerBar;
 
 	public SuiteDialog(String title) {
-		Window owner = UiUtils.getOwnerWindow();
+		Window owner = DialogOwner.window();
 		if (owner != null)
-			initOwner(owner); // Pflicht — ohne Owner bleibt der Dialog ungestylt, siehe UiUtils.setOwnerWindow
+			initOwner(owner); // Pflicht — ohne Owner bleibt der Dialog ungestylt, siehe DialogOwner
 
 		initStyle(StageStyle.EXTENDED);
 

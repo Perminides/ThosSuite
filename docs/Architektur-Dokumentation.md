@@ -77,8 +77,8 @@ ist eine Einzelfallentscheidung an der jeweiligen Stelle.
 
 ### Nebenläufigkeit
 Keine Threads; alles läuft auf dem JavaFX Application Thread. Einzige Ausnahme: die
-Startup-Initialisierung (ein Hintergrund-Thread für Config, Logging, Font-Loading sowie das
-Setzen der DB auf `.filen.ignore`) mit Splash-Screen-Pattern. Auch die PreTasks mit externen
+Startup-Initialisierung (ein Hintergrund-Thread für Config, Logging und Font-Loading) mit
+Splash-Screen-Pattern. Auch die PreTasks mit externen
 API-Calls (Google Health) laufen nicht in eigenen Threads, sondern über `Platform.runLater` auf dem
 FX-Thread.
 
@@ -109,7 +109,7 @@ main() → launch()
       → getDataFolderFromArgs() oder showDirectoryChooser()
       → SingleInstanceGuard (suite.lock); alte .lck-Locks entfernen
       → Background-Thread:
-          → Config.init(), Log.initLog(), FilenIgnoreSource.addToIgnore(), loadFonts()
+          → Config.init(), Log.initLog(), loadFonts()
           → Platform.runLater():
               → initializeMainWindow() (opacity=0 gegen White-Flash)
               → new Controller(mainWindow)
@@ -388,6 +388,7 @@ statt eines Verstoßes.
 
 ## 🧰 Externes
 Einmalige, abtrennbare Standalone-Klassen im Paket `scripts` (Migrationen, Fixes, Prototypen,
-manuelle Tests) — sie laufen einmal und gehören nicht zum Produktivcode: nicht mitgebaut, nicht
-im Build-Ergebnis. Das konkrete Inventar steht nicht hier, sondern ergibt sich aus dem
+manuelle Tests) — sie laufen einmal und gehören nicht zum Produktivcode. Sie werden
+**mitkompiliert**, landen aber nicht in der ausgelieferten JAR (`maven-jar-plugin`). Wer eine
+API in der Suite ändert, muss `scripts` also mitziehen. Das konkrete Inventar steht nicht hier, sondern ergibt sich aus dem
 `scripts`-Paket bzw. `docs/Paketabhängigkeiten.dot`.

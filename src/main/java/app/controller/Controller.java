@@ -38,6 +38,7 @@ import app.movie.MovieImporter;
 import app.movie.MovieViewerScreen;
 import app.movie.SeriesImporter;
 import app.shared.Config;
+import app.shared.DialogOwner;
 import app.shared.Log;
 import app.shared.UiUtils;
 import app.shared.model.ButtonEnum;
@@ -133,7 +134,7 @@ public class Controller{
      */
     public void runPostTasks() {
         // Owner-Stage registrieren VOR allen Dialogen
-    	UiUtils.setOwnerWindow(mainWindow.getStage());
+    	DialogOwner.set(mainWindow.getStage());
 
         // Die Fehler der Start-Importe in EINER Meldung. An einem Tag ohne Netz wären es sonst
         // mehrere Alerts hintereinander, die alle dasselbe sagen.

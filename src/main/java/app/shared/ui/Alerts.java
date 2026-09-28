@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import app.shared.UiUtils;
 import app.shared.model.AlertOptions;
+import app.shared.DialogOwner;
 import app.shared.model.ButtonEnum;
 import app.shared.model.DialogStyle;
 import app.shared.model.DismissEnum;
@@ -76,7 +77,7 @@ public class Alerts {
 		if (options.dismiss() == DismissEnum.MANDATORY)
 			installCloseBlocker(alert);
 
-		alert.initOwner(UiUtils.getOwnerWindow()); // Pflicht — sonst bleibt der Alert ungestylt
+		alert.initOwner(DialogOwner.window()); // Pflicht — sonst bleibt der Alert ungestylt
 		alert.initStyle(StageStyle.EXTENDED);
 
 		SuiteHeaderBar headerBar = new SuiteHeaderBar(title);

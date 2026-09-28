@@ -201,10 +201,10 @@ laufen die beiden auseinander.
 | 6.7 | Kleinkram | zwanzig Minuten | offen |
 | 7.1 | Die Suite hat zwei Antworten auf „welcher Tag ist heute" | eine halbe Stunde + zwei Stunden Durchsicht | verworfen — AppClock ist kein zweiter Kalender, sondern der Arbeitstag der Startdaten |
 | 7.2 | `Config.getString` ist ein zweiter Name für `Config.get` | fünf Minuten | erledigt |
-| 7.3 | `DB` baut viermal dieselbe Verbindung auf | zwanzig Minuten | offen |
-| 7.4 | `FilenIgnoreSource`: zweimal dieselben vier Zeilen, und die zweite wirft beim Herunterfahren | eine Viertelstunde | offen |
+| 7.3 | `DB` baut viermal dieselbe Verbindung auf | zwanzig Minuten | erledigt |
+| 7.4 | `FilenIgnoreSource`: zweimal dieselben vier Zeilen, und die zweite wirft beim Herunterfahren | eine Viertelstunde | erledigt — Mechanismus ersatzlos entfallen |
 | 7.5 | Zwei Stellen werfen ohne Ursache, eine reduziert sie auf den Text | fünf Minuten | erledigt |
-| 7.6 | `UiUtils` trägt drei unverwandte Dinge, eines davon globalen Zustand | zwanzig Minuten | offen |
+| 7.6 | `UiUtils` trägt drei unverwandte Dinge, eines davon globalen Zustand | zwanzig Minuten | erledigt |
 | 7.7 | Der Screen-Vertrag verweist auf Methoden, die es nicht gibt | zwei Minuten | erledigt |
 | 7.8 | Kleinkram | eine Viertelstunde | offen |
 | 8.1 | Regel 6 beschreibt nicht den Code, und der Architekturtest sagt das bereits | eine Viertelstunde Doku | erledigt |
@@ -1803,7 +1803,22 @@ SQLITE_BUSY-Regel der ganzen Suite erklärt und das man deshalb wirklich liest.
 Methoden werden zu je zwei Zeilen. Den toten Link richtigstellen.
 **Aufwand:** zwanzig Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — ein privates `open(Path, boolean autoCommit)` ist jetzt die einzige Stelle,
+an der eine Verbindung entsteht. `DriverManager.getConnection` und `PRAGMA foreign_keys = ON`
+stehen damit je einmal statt viermal; die beiden „Neu“-Methoden sind auf eine Zeile
+geschrumpft, die zwei Singleton-Getter behalten ihren FailFast-Wächter. Der tote
+`{@link #getNonAutoCommitConnection()}` zeigt auf `getNewConnection()`.
+
+Zwei Dinge kamen beim Lesen dazu, die der Befund nicht nennt:
+
+1. **Eine Verdeckung.** `getNewConnection` und `getNewTmdbConnection` hielten je eine lokale
+   Variable `connection`, gleichnamig mit dem statischen Feld für die Suite-Verbindung — in
+   `getNewTmdbConnection` also eine Variable namens `connection` mit einer *Film*-Verbindung
+   darin. Mit dem Umbau fällt beides weg.
+2. **Vier gleichlautende Meldungen.** `"SQL error while getting connection"` stand viermal da
+   und sagte nicht, welche Datenbank. Jetzt nennt der Öffner den Pfad, und die Wächter sagen,
+   dass es um den *Zustand* einer bestehenden Verbindung geht — ein anderer Fehler als ein
+   fehlgeschlagener Aufbau.
 
 ### 7.4 `FilenIgnoreSource`: zweimal dieselben vier Zeilen, und die zweite wirft beim Herunterfahren
 
@@ -1832,7 +1847,15 @@ zurückgibt, wenn eines fehlt; beide Methoden rufen es. Die Klasse in `FilenIgno
 `FilenIgnore` umbenennen.
 **Aufwand:** eine Viertelstunde.
 
-**Stand:** offen
+**Stand:** erledigt — anders als vorgeschlagen: Der Mechanismus ist ersatzlos weg. Die
+Filen-Sicherung läuft inzwischen zeitgesteuert über rclone, die `.filenignore` wird nicht mehr
+gelesen. Gelöscht sind `FilenIgnoreSource` samt beider Aufrufe in `ThosSuiteApp` (Start und
+`stop()`); die Config-Schlüssel `filenIgnore.path` und `filenIgnore.lineToAdd` sind gegenstandslos.
+
+Damit fällt auch ein Punkt weg, der beim Lesen dazukam: In `stop()` standen zwei Aufräumschritte
+in einem `try`, und das stille `catch` darüber hätte einen Ausfall der Cloud-Sicherung nur ins
+Log geschrieben — dorthin, wo niemand hinsieht. Übrig bleibt `DB.closeConnection()`; die
+Fehlermeldung hat ihre zweite Hälfte („oder beim Zurückkopieren“) verloren.
 
 ### 7.5 Zwei Stellen werfen ohne Ursache, eine reduziert sie auf den Text
 
@@ -1877,7 +1900,16 @@ Methoden), samt dem vorhandenen Javadoc. `UiUtils` bleibt, was sein Name sagt: F
 Sechs Aufrufstellen.
 **Aufwand:** zwanzig Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — `DialogOwner` in `app.shared`: ein Feld, `set(Window)`, `window()`.
+`UiUtils` ist 22 Zeilen und den `javafx.stage.Window`-Import leichter und trägt nur noch, was sein
+Name sagt — Farbe und Bild. Fünf Aufrufstellen in der Suite, eine in `scripts`.
+
+**Der Schummel ist damit nicht weg, nur benannt.** Das Javadoc sagt jetzt, worin er besteht:
+nicht darin, dass der Wert in dieser statt in jener Klasse liegt, sondern dass ein JavaFX-Fenster
+im Fundament abgelegt wird, damit jeder Dialog es sich von dort holen kann, statt es
+durchgereicht zu bekommen. Dazu der Grund, warum der Preis bewusst gezahlt ist: Durchreichen
+hieße, jeden Dialog-Aufruf der Suite um einen Parameter zu erweitern, den niemand je anders
+befüllen würde. Der Gewinn des Umzugs ist Auffindbarkeit, nicht weniger globaler Zustand.
 
 ### 7.7 Der Screen-Vertrag verweist auf Methoden, die es nicht gibt
 

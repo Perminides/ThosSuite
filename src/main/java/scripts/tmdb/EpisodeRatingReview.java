@@ -4,7 +4,7 @@ import java.util.List;
 
 import app.movie.repository.MovieViewerRepository;
 import app.shared.Config;
-import app.shared.UiUtils;
+import app.shared.DialogOwner;
 import app.shared.model.CardData;
 import app.shared.skin.SkinService;
 import app.shared.ui.components.MovieCard;
@@ -30,7 +30,7 @@ public class EpisodeRatingReview extends Application {
     @Override
     public void start(Stage stage) {
     	Config.init("C:/Users/permi/Documents/Gedächtnis Lernen und so/ThosSuite/");
-    	UiUtils.setOwnerWindow(stage);
+    	DialogOwner.set(stage);
 
         List<CardData> cards = repository.loadAllEpisodes();
 

@@ -1040,7 +1040,7 @@ Enthält den JavaFX-Einstiegspunkt der Suite: Startsequenz, Splashscreen, Fehler
   - `void init() throws Exception`
   - `void start(Stage primaryStage)`
   - `void stop() throws Exception`
-- **Kennt:** `app.controller` (`Controller`, `MainWindow`), `app.shared` (`AppClock`, `Config`, `DB`, `FilenIgnoreSource`, `Log`, `SingleInstanceGuard`), JavaFX-`Application`/`Stage`-API.
+- **Kennt:** `app.controller` (`Controller`, `MainWindow`), `app.shared` (`AppClock`, `Config`, `DB`, `Log`, `SingleInstanceGuard`), JavaFX-`Application`/`Stage`-API.
 - **Art:** Sitzung/Ablauf
 
 ## Paket app.controller
@@ -1155,7 +1155,7 @@ Datentypen für das "Spielen"-Menü: welche Einträge es gibt und was sie beim A
 3. `ThosSuiteApp.start()` prüft die Systemzeitzone gegen Europe/Berlin (Warn-Alert bei Abweichung, Abbruchmöglichkeit).
 4. `ThosSuiteApp` zeigt einen transparenten Splashscreen (eigene Stage) an.
 5. `ThosSuiteApp` ermittelt den Datenordner (Programmargument oder `DirectoryChooser`), prüft die Single-Instance-Sperre und entfernt verwaiste Log-Locks.
-6. `ThosSuiteApp` initialisiert in einem Hintergrundthread Log, Config, DB-Vorbereitung, `FilenIgnoreSource` und lädt die Fonts.
+6. `ThosSuiteApp` initialisiert in einem Hintergrundthread Log, Config und DB-Vorbereitung und lädt die Fonts.
 7. Zurück im UI-Thread baut `ThosSuiteApp.initializeMainWindow` das `MainWindow` auf (Icons, `buildStyledUi()` inkl. Skin-Laden); die Stage bleibt zunächst über Opacity 0 unsichtbar.
 8. `Controller`-Konstruktor läuft: registriert alle Callback-Runnables/Consumer am `MainWindow`, zeigt den `StartScreen`, erstellt `AnkiDeckService` und `RegionDeckService`, wärmt Kartenbilder vor und setzt die Lern-/Spielen-Menü-Beschriftungen.
 9. `Controller.runPreTasks()` läuft noch vor dem sichtbaren Hauptfenster (Splash steht): Fitbit-Abruf, TMDB-Movie-Import und (Paket `app.tmp`) `Comparison.fetch`; Fehler der drei werden nur gemerkt, nicht gemeldet.
@@ -1216,14 +1216,6 @@ Basisdienste der Suite: Konfiguration, Datenbankverbindungen, Logging, Single-In
   - `static Connection getNewTmdbConnection()`
   - `static void closeConnection()`
 - **Kennt:** SQLite/JDBC über `DriverManager`.
-- **Art:** Dienst.
-
-### FilenIgnoreSource
-- **Rolle:** Pflegt einen Eintrag in einer `.filenignore`-Datei für den Cloud-Sync, gesteuert über zwei Config-Werte (Pfad, einzutragende Zeile). Ohne gesetzte Werte passiert nichts.
-- **Öffentlich:**
-  - `static void addToIgnore() throws Exception`
-  - `static void removeFromIgnore() throws Exception`
-- **Kennt:** `Config`, Dateisystem.
 - **Art:** Dienst.
 
 ### ImageUtils

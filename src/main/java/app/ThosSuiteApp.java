@@ -16,7 +16,6 @@ import app.controller.MainWindow;
 import app.shared.AppClock;
 import app.shared.Config;
 import app.shared.DB;
-import app.shared.FilenIgnoreSource;
 import app.shared.Log;
 import app.shared.SingleInstanceGuard;
 import javafx.application.Application;
@@ -138,8 +137,6 @@ public class ThosSuiteApp extends Application {
                 Config.init(finalDataFolder);
                 Log.initLog(finalDataFolder, getParameters());
                 Log.info(ThosSuiteApp.class, "Start Suite (Async Init via Splash)");
-
-                FilenIgnoreSource.addToIgnore();
 
                 // B) Fonts laden
                 loadFonts();
@@ -330,9 +327,8 @@ public class ThosSuiteApp extends Application {
         // DB schließen
         try {
             DB.closeConnection(); // Sicherstellen, dass DB geschlossen wird (auch wenn Controller evtl. null ist bei Fehler)
-            FilenIgnoreSource.removeFromIgnore();
         } catch (Exception e) {
-        	Log.error(this, "Fehler beim Schließen der DB-Connection oder beim Zurückkopieren", e);
+        	Log.error(this, "Fehler beim Schließen der DB-Connection", e);
         }
         
         super.stop();

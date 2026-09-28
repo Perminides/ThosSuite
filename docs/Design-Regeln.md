@@ -94,7 +94,9 @@ Vier Sorten. Übersicht — die genauen Regeln je Sorte folgen in den nächsten 
   Paketen darüber gebraucht (DB, Config, Log, Screen, Skin, generische Bausteine). Kennt
   niemanden über sich.
 - **`scripts`** — einmalige Standalone-Klassen (Migrationen, Fixes, Prototypen, manuelle Tests),
-  komplett vom Produktivcode abtrennbar. Wird nicht mitgebaut und landet nicht im Build-Ergebnis.
+  komplett vom Produktivcode abtrennbar. Wird **mitkompiliert** — eine API-Änderung in der Suite
+  muss `scripts` also mitziehen, sonst bricht der Build. Nur aus der ausgelieferten JAR ist es
+  ausgeschlossen (`maven-jar-plugin`, `pom.xml`).
 
 ### Richtungen
 

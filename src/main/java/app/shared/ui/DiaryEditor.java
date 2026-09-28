@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import app.shared.Config;
-import app.shared.UiUtils;
+import app.shared.DialogOwner;
 import app.shared.model.DiaryAttachment;
 import app.shared.model.DiaryCardData;
 import app.shared.model.InvasiveConfig;
@@ -245,7 +245,7 @@ public class DiaryEditor {
         chooser.setTitle("Bild auswählen");
         chooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Bilder", "*.jpg", "*.jpeg", "*.png", "*.gif", "*.webp"));
-        File chosen = chooser.showOpenDialog(UiUtils.getOwnerWindow());
+        File chosen = chooser.showOpenDialog(DialogOwner.window());
         if (chosen == null)
             return;
 
