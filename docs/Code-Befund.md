@@ -175,13 +175,13 @@ laufen die beiden auseinander.
 | 3.8 | Jede bewertete Serie wird bei jedem Lauf zusätzlich zweimal vollständig geholt | zwanzig Minuten | offen |
 | 3.9 | Toter Code | zehn Minuten | offen |
 | 3.10 | Kleinkram | eine halbe Stunde | offen |
-| 4.1 | Die eigene Signal-Kennung steht im Quelltext | zehn Minuten | offen |
+| 4.1 | Die eigene Signal-Kennung steht im Quelltext | zehn Minuten | erledigt |
 | 4.2 | Die Kontakt-Auflösung steht in beiden Zweigen | eine Stunde | offen |
-| 4.3 | Der WhatsApp-Import merkt sich „heute geprüft", bevor er geprüft hat | zehn Minuten | offen |
-| 4.4 | Die zwei Wächter in `run()` stehen in der falschen Reihenfolge | zehn Minuten | offen |
+| 4.3 | Der WhatsApp-Import merkt sich „heute geprüft", bevor er geprüft hat | zehn Minuten | erledigt |
+| 4.4 | Die zwei Wächter in `run()` stehen in der falschen Reihenfolge | zehn Minuten | erledigt |
 | 4.5 | Die Attachments heißen „move", werden aber kopiert | fünf Minuten | offen |
 | 4.6 | Eine quellenspezifische Methode in der quellenneutralen Klasse | eine Viertelstunde | offen |
-| 4.7 | Zwei Schreibweisen für denselben Konfigurationswert | fünf Minuten | offen |
+| 4.7 | Zwei Schreibweisen für denselben Konfigurationswert | fünf Minuten | erledigt |
 | 4.8 | Ein stumm verschlucktes Problem im Entschlüsseler | fünf Minuten | erledigt — anders gelöst als vorgeschlagen |
 | 4.9 | Kleinkram | zwanzig Minuten | offen |
 | 5.1 | Der Tagebuch-Screen baut SQL | dreiviertel Stunde | erledigt |
@@ -1043,7 +1043,7 @@ Gelesen: `app.messaging` mit `repository`, `signal` und `whatsapp` samt deren Un
 ### 4.1 Die eigene Signal-Kennung steht im Quelltext
 
 **Beleg:** `SignalIncrementalImport.java:87` — `private static final String MY_SERVICE_ID =
-"00000000-…"`, benutzt in `:229`
+"<UUID>"`, benutzt in `:229`
 
 Der Wert identifiziert genau eine Person: den Nutzer der Suite. Er steht eingecheckt im Code,
 während die beiden anderen signal-spezifischen Werte derselben Klasse — `signal.externalPath`
@@ -1058,7 +1058,12 @@ Ausnahme, die man nicht sieht, weil sie wie eine UUID aussieht.
 einen Stelle.
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — die Kennung kommt aus `signal.myServiceId`. Sie wird **nicht** als
+`static final` gelesen: Ein statischer Initialisierer liefe beim Laden der Klasse, also vor
+Schritt 0 in `run()` — auf einem Rechner ohne Signal gäbe das einen
+`ExceptionInInitializerError` beim Start. Stattdessen ein Instanzfeld, gesetzt direkt hinter dem
+Wächter. Damit gilt: Ist Signal eingerichtet, muss die Kennung da sein (`Config.get` ohne
+Vorgabewert wirft); ist es nicht eingerichtet, wird der Schlüssel nie gefragt.
 
 ### 4.2 Die Kontakt-Auflösung steht in beiden Zweigen
 
@@ -1111,7 +1116,12 @@ Suite startet danach wortlos durch und meldet nichts, weil `checkWarning()` nur 
 den Zweig, der ohne Arbeit zurückkehrt.
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — `Config.setTime(KV_LAST_CHECK, …)` steht jetzt als letzte Zeile von
+`run()`, und aus dem frühen `return` im Zweig „Hash unverändert“ wurde ein `if/else`. Damit gibt
+es genau eine Stelle, die „heute geprüft“ schreibt, und sie wird nur erreicht, wenn nichts davor
+geworfen hat. Vorher widersprachen sich die Merker: `KV_LAST_HASH` und `KV_LAST_IMPORT` stehen
+am Ende von `runImport` und blieben bei einem Absturz ungeschrieben — `KV_LAST_CHECK` stand
+trotzdem und sperrte die Wiederholung bis zum nächsten Tag.
 
 ### 4.4 Die zwei Wächter in `run()` stehen in der falschen Reihenfolge
 
@@ -1131,7 +1141,10 @@ verschiedenen Stellen; der Signal-Zweig hat die richtige.
 Feld `configured` im Konstruktor setzen, dann steht die halbe Konstruktion nicht mehr offen.
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — die Konfigurationsprüfung steht am Anfang von `run()`, wie im Signal-Zweig.
+Damit rechnet `isCheckDue()` nicht mehr mit dem uninitialisierten `dayStartHour = 0`. Ein
+`configured`-Feld braucht es dafür nicht: Die eine Frage wird jetzt an einer Stelle und als
+Erstes gestellt.
 
 ### 4.5 Die Attachments heißen „move", werden aber kopiert
 
@@ -1185,7 +1198,10 @@ hier still eine kaputte JDBC-URL.
 und das Ergebnis in die URL.
 **Aufwand:** fünf Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — `Config.getPath("signal.externalPath").resolve("sql").resolve("db.sqlite")`,
+das Ergebnis in die JDBC-URL. Die beiden `Config.getString` in derselben Zeile sind zu
+`Config.get` geworden, damit ist Befund 7.2 hier schon mit abgetragen — es bleibt eine einzige
+`getString`-Aufrufstelle in der Suite (`SuiteExporter.java:57`).
 
 ### 4.8 Ein stumm verschlucktes Problem im Entschlüsseler
 

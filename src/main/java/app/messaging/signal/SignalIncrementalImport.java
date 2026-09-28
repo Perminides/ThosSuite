@@ -84,7 +84,6 @@ import app.shared.ui.MessageContactDialog;
  */
 public class SignalIncrementalImport {
 
-    private static final String MY_SERVICE_ID = "00000000-0000-0000-0000-000000000000";
     private static final String signalId = "signal";
 
     /** Puffer am oberen Ende des Importfensters: Nachrichten jünger als dieser Wert werden ignoriert. */
@@ -123,6 +122,9 @@ public class SignalIncrementalImport {
     // signalMsgId -> laufende Attachment-Nummer für eindeutige Dateinamen
     private final Map<String, Integer> attachSeqPerMsg = new HashMap<>();
 
+    /** Die eigene Signal-Kennung; steht unter ausgehenden Nachrichten, wenn Signal keinen Absender führt. */
+    private String myServiceId;
+
     // -------------------------------------------------------------------------
 
     public void run() {
@@ -131,6 +133,8 @@ public class SignalIncrementalImport {
     		Log.info(this.getClass(), "Signal nicht konfiguriert.");
     		return;
     	}
+    	// Erst hinter dem Wächter: Wer Signal eingerichtet hat, muss auch die Kennung hinterlegen.
+    	myServiceId = Config.get("signal.myServiceId");
     	
         // Schritt 1: Caches laden
         blacklistedChats.addAll(repo.loadBlacklistedChatIds(signalId));
@@ -139,8 +143,9 @@ public class SignalIncrementalImport {
 
         long cutoffMs = System.currentTimeMillis() - CUTOFF_BUFFER_MS;
 
-        String signalUrl = "jdbc:sqlite:" + Config.getString("signal.externalPath") + "/sql/db.sqlite"
-            + "?cipher=sqlcipher&key=x'" + Config.getString("signal.key") + "'&legacy=4";
+        Path signalDb = Config.getPath("signal.externalPath").resolve("sql").resolve("db.sqlite");
+        String signalUrl = "jdbc:sqlite:" + signalDb
+            + "?cipher=sqlcipher&key=x'" + Config.get("signal.key") + "'&legacy=4";
 
         try (Connection signalConnection = DriverManager.getConnection(signalUrl);
              Connection suiteConnection   = DB.getNewConnection()) {
@@ -226,7 +231,7 @@ public class SignalIncrementalImport {
             }
 
             String effectiveServiceId = (outgoing && isBlank(sourceServiceId))
-                ? MY_SERVICE_ID : sourceServiceId;
+                ? myServiceId : sourceServiceId;
             if (isBlank(effectiveServiceId))
                 throw new IllegalStateException("[FAILFAST] effectiveServiceId blank für signalMsgId=" + signalMsgId);
 
