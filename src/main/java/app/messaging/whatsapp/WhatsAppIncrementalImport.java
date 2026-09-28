@@ -122,30 +122,29 @@ public class WhatsAppIncrementalImport {
      * Wird vom Controller beim Start der Suite aufgerufen.
      */
     public void run() throws Exception {
-        if (!isCheckDue()) {
-        	Log.info(this.getClass(), "Kein WhatsApp-Import fällig.");
-        	return;
-        }
-        
         if (whatsAppExternalDir == null) {
         	Log.info(this.getClass(), "WhatsApp nicht konfiguriert.");
         	return;
         }
         
-        Config.setTime(KV_LAST_CHECK, LocalDateTime.now());
+        if (!isCheckDue()) {
+        	Log.info(this.getClass(), "Kein WhatsApp-Import fällig.");
+        	return;
+        }
+        
         String currentHash = computeHash(crypt15Path);
         String storedHash  = Config.get(KV_LAST_HASH);
 
         if (Objects.equals(currentHash, storedHash)) {
             checkWarning();
             Log.info(this.getClass(), "WhatsApp: Hash der Datei hat sich nicht geändert.");
-            return;
+        } else {
+            validateAttachmentDir();
+            runImport(decryptToTemp());
         }
 
-        validateAttachmentDir();
-        
-        Path tempDb = decryptToTemp();
-        runImport(tempDb);
+        // Erst hier: wirft etwas davor, bleibt der Tag offen und der nächste Start versucht es erneut.
+        Config.setTime(KV_LAST_CHECK, LocalDateTime.now());
     }
 
     // -------------------------------------------------------------------------
