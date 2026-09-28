@@ -32,11 +32,21 @@ import java.util.function.Predicate;
  */
 public class FlagSheetCheck {
 
-	/** Bedingungsspalte, die Werte die hinführen, und die Spalte die dann gesetzt sein muss. */
-	private record Chain(String column, Set<String> values, String required) {}
+	/**
+	 * Bedingungsspalte, die Werte die hinführen, und die Spalte die dann gesetzt sein muss. Trägt
+	 * {@code exceptColumn} einen der {@code exceptValues}, gilt die Regel für diese Zeile nicht.
+	 */
+	private record Chain(String column, Set<String> values, String required,
+			String exceptColumn, Set<String> exceptValues) {
+
+		Chain(String column, Set<String> values, String required) {
+			this(column, values, required, null, Set.of());
+		}
+	}
 
 	private static final List<Chain> CHAINS = List.of(
-			new Chain("Hintergrundtyp", Set.of("0"), "W-Streifen"),
+			// Form 3 und 4 reichen bis zum rechten Rand: Der Hintergrund wird nie gefragt und nie gezeichnet.
+			new Chain("Hintergrundtyp", Set.of("0"), "W-Streifen", "Form?", Set.of("3", "4")),
 			new Chain("W-Streifen", Set.of("3"), "3W"),
 			new Chain("W-Streifen", Set.of("5"), "5W"),
 			new Chain("Hintergrundtyp", Set.of("1"), "S-Streifen"),
@@ -45,10 +55,9 @@ public class FlagSheetCheck {
 			new Chain("Hintergrundtyp", Set.of("2"), "Kreuzarme"),
 			new Chain("Hintergrundtyp", Set.of("3"), "Diagonal Richtung"),
 			new Chain("Hintergrundtyp", Set.of("3"), "Diagonal Anzahl Streifen"),
-			new Chain("Hintergrundtyp", Set.of("5"), "SW Streifen"),
 			new Chain("Hintergrundtyp", Set.of("7"), "Spezial"),
-			new Chain("Dreieck von links?", Set.of("1", "2", "3", "4", "5"),
-					"Die Dreiecksform(en) bestehen aus wie vielen Farben?"));
+			new Chain("Form?", Set.of("1", "2", "3", "4", "5", "6", "7"),
+					"Form aus wie vielen Farben?"));
 
 	/** Die acht Farben. Für Elemente dürfen mehrere in einer Zelle stehen, mit {@code |} getrennt. */
 	private static final Set<String> COLORS = new LinkedHashSet<>(
@@ -85,8 +94,9 @@ public class FlagSheetCheck {
 		for (Chain chain : CHAINS) {
 			String title = chain.column() + "=" + String.join("/", new java.util.TreeSet<>(chain.values()))
 					+ " -> " + chain.required();
-			report(title, row -> chain.values().contains(hauptwert(sheet.value(row, chain.column())))
-					!= FlagSheet.isSet(sheet.value(row, chain.required())),
+			report(title, row -> !ausgenommen(chain, row)
+					&& chain.values().contains(hauptwert(sheet.value(row, chain.column())))
+							!= FlagSheet.isSet(sheet.value(row, chain.required())),
 					row -> chain.required() + "=" + orEmpty(sheet.value(row, chain.required())));
 		}
 		System.out.println();
@@ -144,6 +154,12 @@ public class FlagSheetCheck {
 		return false;
 	}
 
+	/** Ob die Ausnahme einer Kettenregel für diese Zeile greift. */
+	private boolean ausgenommen(Chain chain, List<String> row) {
+		return chain.exceptColumn() != null
+				&& chain.exceptValues().contains(hauptwert(sheet.value(row, chain.exceptColumn())));
+	}
+
 	/**
 	 * Der Wert einer Zelle ohne ihre Toleranzklammer. Die Kettenregeln fragen danach, ob eine Frage
 	 * hierher geführt hat — und das entscheidet die gegebene Antwort, nicht die geduldete.
@@ -189,7 +205,7 @@ public class FlagSheetCheck {
 		report("einfarbig, ohne Gösch, ohne Dreieck, ohne Element (gibt es nicht)",
 				row -> hauptwert(sheet.value(row, "Hintergrundtyp")).equals("4")
 						&& sheet.value(row, "Gösch?").equals("0")
-						&& sheet.value(row, "Dreieck von links?").equals("0")
+						&& sheet.value(row, "Form?").equals("0")
 						&& !FlagSheet.isSet(sheet.value(row, "E1")),
 				row -> "keine Fläche zum Einfärben");
 		// Die Land-Id ist absichtlich mehrfach vorhanden — jede Flagge eines Landes trägt sie. Was
@@ -211,12 +227,12 @@ public class FlagSheetCheck {
 						&& !FlagSheet.isSet(sheet.value(row, "Gösch Farbe"))
 						&& !hasUnionJack(row),
 				row -> "Gösch Farbe fehlt");
-		report("Generieren=1 und Dreieck -> Dreieck Farbe gesetzt",
+		report("Generieren=1 und Dreieck -> Form Farbe gesetzt",
 				row -> sheet.value(row, "Generieren").equals("1")
-						&& !sheet.value(row, "Dreieck von links?").equals("0")
-						&& FlagSheet.isSet(sheet.value(row, "Dreieck von links?"))
-						&& !FlagSheet.isSet(sheet.value(row, "Dreieck Farbe")),
-				row -> "Dreieck Farbe fehlt");
+						&& !sheet.value(row, "Form?").equals("0")
+						&& FlagSheet.isSet(sheet.value(row, "Form?"))
+						&& !FlagSheet.isSet(sheet.value(row, "Form Farbe")),
+				row -> "Form Farbe fehlt");
 		// Die Version hängt am Namen der SVG-Datei und trennt zwei Flaggen desselben Landes.
 		report("Version ist eine Zahl ab 1",
 				row -> FlagSheet.isSet(sheet.value(row, "Version"))

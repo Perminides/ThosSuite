@@ -57,34 +57,54 @@ public class FlagDeckGenerator {
 			"Links vom Zentrum", "Zentriert", "Rechts vom Zentrum",
 			"Links unten vom Zentrum", "Unten vom Zentrum", "Rechts unten vom Zentrum", "Verstreut");
 
-	/** Index = Wert der Spalte „Dreieck von links?". Wert 0 heißt „kein Dreieck". */
+	/** Index = Wert der Spalte „Form?". Wert 0 heißt „kein Dreieck". */
 	/** Die dritte Antwort der Kreuz-und-Diagonale-Frage. Steht dreimal, deshalb als Konstante. */
 	// Das „nur" trägt die Rangfolge: Wer Diagonale oder Kreuz und darin ein Dreieck sieht, sieht nicht nur eins.
-	private static final String DREIECK_VON_LINKS = "Nur ein Dreieck von links";
+	// „Form" statt „Dreieck": Kuwaits Trapez und das Band der VAE gehören genauso hierher.
+	private static final String FORM_VON_LINKS = "Nur eine Form von links";
 	private static final String NICHTS_DAVON = "Nichts davon";
+	// „Durchgehend": Das Kreuz in Griechenlands Gösch ist keins, das die Flagge teilt.
+	private static final String KREUZ_DURCHGEHEND = "Durchgehendes Kreuz";
+	private static final String DIAGONALE_DURCHGEHEND = "Durchgehende Diagonale";
+	private static final String GOESCH = "Gösch";
+	// Eigene Antwort der Weiche statt einer Form von links: Der Streifen der ZAR kommt aus der Mitte.
+	private static final String STREIFEN_MITTE = "Senkrechter Streifen in der Mitte";
 
 	private static final List<String> DREIECK_FORMEN = List.of(
 			"Kein Dreieck",
 			"Dreieck nur in der linken Hälfte",
-			"Eher ein Trapez als ein Dreieck",
+			"Trapez",
 			"Dreieck bis zum rechten Rand",
-			"Das Dreiecksgebilde geht in eine waagerechte Spur bis zum rechten Rand über");
+			"Liegendes Y",
+			"Einfarbiger Streifen am Mast",
+			"Gemusterter Streifen am Mast",
+			STREIFEN_MITTE);
 
-	/** Feste Anzeige-Reihenfolge der Dreiecksfrage: Werte 0, 1, 3, 2, 4. */
+	/** Wie die Folgefragen die gewählte Form nennen, Index wie DREIECK_FORMEN: Werfall, dann Wenfall. */
+	private static final String[] FORM_WER = {null, "das Dreieck", "das Trapez", "das Dreieck", "das Y",
+			"der Streifen", "der gemusterte Streifen", "der senkrechte Streifen"};
+	private static final String[] FORM_WEN = {null, "das Dreieck", "das Trapez", "das Dreieck", "das Y",
+			"den Streifen", "den gemusterten Streifen", "den senkrechten Streifen"};
+
+	/**
+	 * Feste Anzeige-Reihenfolge der Formfrage: Werte 0, 1, 3, 2, 4, 5, 6. Die 7 fehlt, weil die
+	 * Weiche sie selbst beantwortet — als Option wäre sie hier nie richtig.
+	 */
 	private static final List<String> DREIECK_ANZEIGE = List.of(
 			DREIECK_FORMEN.get(0), DREIECK_FORMEN.get(1), DREIECK_FORMEN.get(3),
-			DREIECK_FORMEN.get(2), DREIECK_FORMEN.get(4));
+			DREIECK_FORMEN.get(2), DREIECK_FORMEN.get(4), DREIECK_FORMEN.get(5), DREIECK_FORMEN.get(6));
 
-	/** Index = Wert der Spalte Hintergrundtyp. Die 6 ist bewusst frei. */
+	/**
+	 * Index = Wert der Spalte Hintergrundtyp. Die 6 ist bewusst frei, die 5 gibt es nicht mehr: Das
+	 * Band am Mast ist eine Form von links ("Form?" = 5) über waagerechten Streifen.
+	 */
 	private static final Map<String, String> BACKGROUNDS = ordered(
 			"0", "Waagerechte Streifen", "1", "Senkrechte Streifen", "2", "Kreuz mit vier Quadranten",
-			"3", "Diagonale Teilung", "4", "Einfarbige Fläche",
-			"5", "Senkrechtes Band mit waagerechten Streifen", "7", "Anderes");
+			"3", "Diagonale Teilung", "4", "Einfarbige Fläche", "7", "Anderes");
 
 	/** Die Optionen der Fill-Frage — ohne Kreuz und Diagonale, die vorweg geklärt sind. */
 	private static final List<String> FILL_BACKGROUNDS = List.of(
-			"Waagerechte Streifen", "Senkrechte Streifen", "Einfarbige Fläche",
-			"Senkrechtes Band mit waagerechten Streifen", "Anderes");
+			"Waagerechte Streifen", "Senkrechte Streifen", "Einfarbige Fläche", "Anderes");
 
 	/**
 	 * Der Pool der Streifenzahlen: 2 bis 9 als Bereich — die 8 kommt nie vor und ist ein reiner
@@ -213,6 +233,16 @@ public class FlagDeckGenerator {
 	 */
 	private static final String QUADRATISCH = "-quadratisch";
 
+	/** Index = Wert der Spalte Spezial. Kurz, weil man sie auf einen Blick lesen muss. */
+	private static final String SPEZIAL_OFFEN = "(noch keine Beschreibung)";
+	private static final String[] SPEZIAL_BESCHREIBUNGEN = {
+			"2 Dreiecke, in der Mitte Meer",        // 0 Antigua und Barbuda
+			"Gezackte senkrechte Linie",            // 1 Bahrain, Katar
+			"Dreieck von oben",                     // 2 Bosnien und Herzegowina
+			SPEZIAL_OFFEN,                          // 3 Zentralafrikanische Republik, noch offen
+			"Wellen",                               // 4 Kiribati
+			"Strahlen vom Mittelpunkt"};            // 5 Nordmazedonien
+
 	/** Die Skizze für alles, was kein Rechteck ist — heute nur Nepal. */
 	private static final String NICHT_RECHTECKIG = "nicht-rechteckig";
 
@@ -330,14 +360,23 @@ public class FlagDeckGenerator {
 		String type = untolerated(typeCell);
 		// Der Zweig haengt am Typ, nicht am Antworttext: Sonst bricht ein Umbenennen der Option
 		// still den Ablauf, statt nur die Anzeige zu aendern.
+		if (type.equals("5"))
+			throw new RuntimeException("Hintergrundtyp 5 gibt es nicht mehr: Das Band am Mast ist "
+					+ "'Form?' = 5 über waagerechten Streifen (Typ 0)");
 		boolean geteilt = type.equals("2") || type.equals("3");
-		String dreieck = plain(row, "Dreieck von links?");
+		String dreieck = plain(row, "Form?");
 		int dreieckForm = FlagSheet.isSet(dreieck) ? Integer.parseInt(dreieck) : 0;
 		// Bei einer Schräge ist die untere linke Hälfte selbst ein Dreieck von links. Ein
 		// Sonderhintergrund bringt alles Dreieckige in seiner Datei mit, siehe unten.
 		if (dreieckForm != 0 && (geteilt || type.equals("7")))
 			throw new RuntimeException("Kreuz, Diagonale oder Sonderhintergrund mit einem Dreieck von links — "
 					+ "Frage 2 kennt nur eins davon, das Dreieck würde still verschwinden");
+		// Die Gösch ist die fünfte Antwort der Weiche: Sie kommt nie zusammen mit den anderen vor,
+		// deshalb ersetzt die Weiche die eigene Göschfrage. Eine Toleranz hätte hier keinen Ort.
+		boolean goesch = strict(row, "Gösch?").equals("1");
+		if (goesch && (geteilt || dreieckForm != 0 || type.equals("7")))
+			throw new RuntimeException("Eine Gösch zusammen mit Kreuz, Diagonale, einer Form von links oder "
+					+ "einem Sonderhintergrund — die Weiche kennt nur eins davon");
 		String dreieckSketch = null;
 		String background;
 		if (nichtRechteckig) {
@@ -345,21 +384,35 @@ public class FlagDeckGenerator {
 			// Gösch, ein Dreieck vom ganzen linken Rand. Die Formfrage davor macht sie überflüssig.
 			background = NICHT_RECHTECKIG;
 		} else {
-			String weiche = type.equals("2") ? "Kreuz" : type.equals("3") ? "Diagonale"
-					: dreieckForm != 0 ? DREIECK_VON_LINKS : NICHTS_DAVON;
-			ask(steps, "Was gliedert die Flagge, wenn Du Zusatzelemente und Rahmen ignorierst?",
-					answer(weiche, "Kreuz", "Diagonale", DREIECK_VON_LINKS, NICHTS_DAVON));
+			String weiche = type.equals("2") ? KREUZ_DURCHGEHEND : type.equals("3") ? DIAGONALE_DURCHGEHEND
+					: dreieckForm == 7 ? STREIFEN_MITTE : dreieckForm != 0 ? FORM_VON_LINKS
+					: goesch ? GOESCH : NICHTS_DAVON;
+			ask(steps, "Welche dieser Formen hat die Flagge?", answer(weiche, KREUZ_DURCHGEHEND,
+					DIAGONALE_DURCHGEHEND, FORM_VON_LINKS, STREIFEN_MITTE, GOESCH, NICHTS_DAVON));
 
-			if (dreieckForm != 0) {
+			// Form 7 hat nichts nachzufragen: Es gibt nur einen Streifen in der Mitte, die Weiche nennt ihn.
+			if (dreieckForm == 7) {
+				if (!plain(row, "Form aus wie vielen Farben?").equals("1"))
+					throw new RuntimeException("Der senkrechte Streifen in der Mitte hat eine Farbe — dafür gibt "
+							+ "es weder Frage noch Skizze");
+				dreieckSketch = "dreieck-7";
+			} else if (dreieckForm != 0) {
 				// „Kein Dreieck" hat Frage 2 schon ausgeschlossen.
-				ask(steps, "Welche Form hat das Dreieck?",
-						fixedOrder(DREIECK_FORMEN.get(dreieckForm), tolerated(sheet.value(row, "Dreieck von links?"),
+				ask(steps, "Welche Form kommt von links?",
+						fixedOrder(DREIECK_FORMEN.get(dreieckForm), tolerated(sheet.value(row, "Form?"),
 								code -> DREIECK_FORMEN.get(Integer.parseInt(code))),
 								DREIECK_ANZEIGE.subList(1, DREIECK_ANZEIGE.size()).toArray(new String[0])));
-				String farbenSpalte = "Die Dreiecksform(en) bestehen aus wie vielen Farben?";
+				String farbenSpalte = "Form aus wie vielen Farben?";
 				String anzahl = plain(row, farbenSpalte);
-				ask(steps, "Die Dreiecksform(en) bestehen aus wie vielen Farben?",
-						fixedOrder(anzahl, tolerated(sheet.value(row, farbenSpalte), code -> code), "1", "2", "3", "4"));
+				// Beide Streifen am Mast sind einfarbig; beim gemusterten trägt die eine Fläche das Muster
+				// als Umriss, das Rot der Ornamente ist dasselbe wie im Hintergrund.
+				if (dreieckForm == 5 || dreieckForm == 6) {
+					if (!anzahl.equals("1"))
+						throw new RuntimeException("Ein Streifen am Mast mit mehr als einer Farbe — dafür gibt es "
+								+ "weder Frage noch Skizze");
+				} else
+					ask(steps, "Aus wie vielen Farben besteht " + FORM_WER[dreieckForm] + "?",
+							fixedOrder(anzahl, tolerated(sheet.value(row, farbenSpalte), code -> code), "1", "2", "3", "4"));
 				// Mehr als eine Farbe heißt eigene Datei mit einer Fläche je Farbe: dreieck-3-4.
 				dreieckSketch = "dreieck-" + dreieckForm + (anzahl.equals("1") ? "" : "-" + anzahl);
 			}
@@ -371,8 +424,9 @@ public class FlagDeckGenerator {
 				background = "waagerecht-2";
 			} else {
 				if (!geteilt)
-					ask(steps, "Entferne gedanklich " + (dreieckForm != 0 ? "das Dreieck, " : "") + "eine Gösch, alle "
-							+ "Zusatzelemente und einen Rahmen. Was beschreibt nun den Hintergrund am besten?",
+					ask(steps, "Entferne gedanklich " + (dreieckForm != 0 ? FORM_WEN[dreieckForm] + ", "
+							: goesch ? "die Gösch, " : "") + "alle Zusatzelemente und einen Rahmen. "
+							+ "Was beschreibt nun den Hintergrund am besten?",
 							answer(BACKGROUNDS.get(type), backgroundTolerated(typeCell),
 									FILL_BACKGROUNDS.toArray(new String[0])));
 				branchQuestions(steps, row, type);
@@ -401,16 +455,13 @@ public class FlagDeckGenerator {
 		paint(background, fills, hintergrund, hintergrundFarben);
 		// Gefragt ist das Dreieck schon, aufgelegt wird es erst auf den fertigen Hintergrund.
 		if (dreieckSketch != null)
-			paint(dreieckSketch, fills, canvas.overlay(dreieckSketch, "-1"), colors(sheet.value(row, "Dreieck Farbe")));
+			paint(dreieckSketch, fills, canvas.overlay(dreieckSketch, "-1"), colors(sheet.value(row, "Form Farbe")));
 
 		// Ein Sonderhintergrund ist eine handgemachte Datei, die alles enthalten kann — auch eine
 		// Gösch oder einen Rahmen. Ihn zusätzlich nach diesen Attributen zu fragen, führt
 		// zwangsläufig in Widersprüche: Wer richtig hinsieht, bekäme falsch. Also nicht fragen.
 		if (!nichtRechteckig && !type.equals("7")) {
-			// Gösch nach der Göschfrage auflegen (Leinwand-Silhouette, cell = -1).
-			boolean goesch = plain(row, "Gösch?").equals("1");
-			ask(steps, "Hat die Flagge eine Gösch?", answer(goesch(plain(row, "Gösch?")),
-					tolerated(sheet.value(row, "Gösch?"), FlagDeckGenerator::goesch), "Ja, sie hat einen Gösch", "Kein Gösch"));
+			// Gösch auflegen (Leinwand-Silhouette, cell = -1); gefragt hat die Weiche.
 			if (goesch)
 				paint("goesch", fills, canvas.overlay("goesch", "-1"), colors(sheet.value(row, "Gösch Farbe")));
 
@@ -487,9 +538,10 @@ public class FlagDeckGenerator {
 					ask(steps, "Wie laufen die Bänder?", coded(richtung,
 							"parallel zueinander", "parallel zueinander", "strahlenförmig aus einer Ecke"));
 			}
-			case "5" -> ask(steps, "Wie viele waagerechte Streifen liegen neben dem Band?",
-					fixedOrder(plain(row, "SW Streifen"), tolerated(sheet.value(row, "SW Streifen"), code -> code),
-							"2", "3", "4", "5"));
+			// Ein Sonderhintergrund hat keine Folgefragen wie Streifenzahl oder Kreuzform — also eine
+			// Beschreibung. Der Code ist die Nummer der Skizze, Bahrain und Katar teilen sich eine.
+			case "7" -> ask(steps, "Was beschreibt den Hintergrund am besten?",
+					coded(sheet.value(row, "Spezial"), List.of(SPEZIAL_OFFEN), SPEZIAL_BESCHREIBUNGEN));
 			default -> { }
 		}
 	}
@@ -607,12 +659,28 @@ public class FlagDeckGenerator {
 		// zweiten. So steht die Anzahl immer vor dem Ort (Numerus), und in keinem der Blöcke verrät die
 		// Reihenfolge, welches Element im Blatt zuerst steht. Ein Element ohne Attributfrage taucht im
 		// ersten Block gar nicht auf — ein leeres Segment würde die Input-Prüfung reißen.
-		List<Element> withAttribute = new ArrayList<>();
+		// Steht dasselbe Element mehrfach im Blatt (Panama: ein blauer und ein roter Stern), wird es
+		// gefragt wie eine Figur mit Anzahl — eine Anzahl, ein Ort als Mehrfachauswahl. Sonst verrieten
+		// die fehlende Anzahlfrage und die doppelte Ortsfrage, dass hier etwas anders ist. Gezeichnet
+		// und gefärbt wird weiter jeder Eintrag für sich.
+		Map<String, List<Element>> gleiche = new LinkedHashMap<>();
 		for (Element element : elements)
-			if (FlagSheet.isSet(element.count()) || element.name().equals("Kreis"))
-				withAttribute.add(element);
-		shuffled(steps, withAttribute, element -> {
-			if (FlagSheet.isSet(element.count()))
+			gleiche.computeIfAbsent(element.name(), name -> new ArrayList<>()).add(element);
+		List<List<Element>> figuren = new ArrayList<>(gleiche.values());
+		for (List<Element> figur : figuren)
+			if (figur.size() > 1)
+				pruefeMehrfach(figur);
+
+		List<List<Element>> withAttribute = new ArrayList<>();
+		for (List<Element> figur : figuren)
+			if (figur.size() > 1 || FlagSheet.isSet(figur.get(0).count()) || figur.get(0).name().equals("Kreis"))
+				withAttribute.add(figur);
+		shuffled(steps, withAttribute, figur -> {
+			Element element = figur.get(0);
+			if (figur.size() > 1)
+				ask(steps, "Wie viele " + WORDS.get(element.name())[1].substring(4) + "?",
+						fixedOrder(String.valueOf(figur.size()), COUNTS.toArray(new String[0])));
+			else if (FlagSheet.isSet(element.count()))
 				ask(steps, "Wie viele " + WORDS.get(element.name())[1].substring(4) + "?",
 						fixedOrder(untolerated(element.count()), tolerated(element.count(), code -> code),
 								COUNTS.toArray(new String[0])));
@@ -624,8 +692,13 @@ public class FlagDeckGenerator {
 						"Ja, der Kreis ist geteilt", "Ungeteilter Kreis"));
 		});
 
-		shuffled(steps, elements, element ->
-				ask(steps, "Wo " + verb(element) + " " + word(element) + "?", position(element)));
+		shuffled(steps, figuren, figur -> {
+			Element element = figur.get(0);
+			if (figur.size() > 1)
+				ask(steps, "Wo liegen " + WORDS.get(element.name())[1] + "?", positionen(figur));
+			else
+				ask(steps, "Wo " + verb(element) + " " + word(element) + "?", position(element));
+		});
 
 		for (Layout layout : layout(elements, id, background)) {
 			List<Integer> areas = new ArrayList<>();
@@ -705,6 +778,40 @@ public class FlagDeckGenerator {
 			tolerated.add(POSITIONS.get(Integer.parseInt(value)));
 		return fixedOrder(POSITIONS.get(Integer.parseInt(untolerated(element.position()))), tolerated,
 				POSITIONS.toArray(new String[0]));
+	}
+
+	/**
+	 * Die Ortsfrage für dasselbe Element an mehreren Stellen: eine Mehrfachauswahl in fester
+	 * Reihenfolge, jede Stelle ist richtig, ihre Toleranzklammern gelten gemeinsam.
+	 */
+	private static String positionen(List<Element> figur) {
+		List<String> richtig = new ArrayList<>();
+		List<String> geduldet = new ArrayList<>();
+		for (Element element : figur) {
+			richtig.add(POSITIONS.get(Integer.parseInt(untolerated(element.position()))));
+			for (String value : bracket(element.position()))
+				geduldet.add(POSITIONS.get(Integer.parseInt(value)));
+		}
+		List<String> parts = new ArrayList<>();
+		for (String ort : POSITIONS)
+			parts.add(richtig.contains(ort) ? "+" + ort : geduldet.contains(ort) ? "~" + ort : ort);
+		return "MC+:=" + String.join("|", parts);
+	}
+
+	/**
+	 * Mehrfach dasselbe Element geht nur als einzelne Figuren an verschiedenen Orten: ohne eigene
+	 * Anzahl, nicht verstreut, kein Behälter. Alles andere hätte keine eindeutige Frage.
+	 */
+	private static void pruefeMehrfach(List<Element> figur) {
+		Set<String> orte = new HashSet<>();
+		for (Element element : figur) {
+			String ort = untolerated(element.position());
+			if (CONTAINERS.containsKey(element.name()) || ort.equals(VERSTREUT_ORT)
+					|| (FlagSheet.isSet(element.count()) && !untolerated(element.count()).equals("1"))
+					|| !orte.add(ort))
+				throw new RuntimeException(element.name() + " steht mehrfach im Blatt — das geht nur als einzelne "
+						+ "Figuren an verschiedenen Orten, ohne Anzahl, nicht verstreut und nicht als Behälter");
+		}
 	}
 
 	/**
@@ -992,7 +1099,6 @@ public class FlagDeckGenerator {
 			case "3" -> "diagonal-" + word(plain(row, "Diagonal Richtung"), "steigend", "fallend", "faecher")
 					+ "-" + plain(row, "Diagonal Anzahl Streifen");
 			case "4" -> "uni";
-			case "5" -> "sw-" + plain(row, "SW Streifen");
 			case "7" -> "spezial-" + strict(row, "Spezial");
 			default -> throw new RuntimeException("Kein Sketch-Name für Hintergrundtyp " + type);
 		};
@@ -1037,10 +1143,6 @@ public class FlagDeckGenerator {
 
 	private boolean frame(List<String> row) {
 		return plain(row, "Rahmen?").equals("1");
-	}
-
-	private static String goesch(String code) {
-		return code.equals("1") ? "Ja, sie hat einen Gösch" : "Kein Gösch";
 	}
 
 	private static String rahmen(String code) {

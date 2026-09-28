@@ -6,7 +6,8 @@ Aufruf:
 Der Name ist `kreuz-<ausrichtung>-<arme>`, genau wie der Generator ihn ableitet: `senkrecht`,
 `diagonal` oder `beides`, dahinter `uni`, `dreifarbig`, `fimbriert` oder `unsichtbar`.
 
-Gebaut werden hier `diagonal-uni`, `diagonal-unsichtbar`, `senkrecht-dreifarbig` und `senkrecht-fimbriert`. `senkrecht-uni`
+Gebaut werden hier `diagonal-uni`, `diagonal-unsichtbar`, `senkrecht-dreifarbig`, `senkrecht-fimbriert` und
+`senkrecht-unsichtbar`. `senkrecht-uni`
 liegt als handgemachte Datei daneben und bleibt es; `beides-fimbriert` ist der Union Jack und kommt aus
 build-union-jack.py. Die uebrigen Armformen sind eigene Geometrie und kommen, wenn die erste Flagge sie
 braucht.
@@ -92,6 +93,18 @@ def diagonal_unsichtbar():
     unten = [(BREITE, HOEHE), (0, HOEHE), mitte]
     links = [(0, HOEHE), (0, 0), mitte]
     return [flaeche(0, oben), flaeche(1, rechts), flaeche(2, unten), flaeche(3, links)]
+
+
+def senkrecht_unsichtbar():
+    """Panama: die Flaeche durch ein senkrechtes Kreuz in vier Felder geteilt, ohne eigenes Band.
+
+    Das Gegenstueck zu `diagonal_unsichtbar`: vier Felder, keine fuenfte Flaeche fuers Kreuz. Die
+    Grenzen liegen auf der Mitte des einfarbigen Kreuzes (x 90, y 60), die Felder laufen wie dort
+    im Uhrzeigersinn ab oben links. Panama steht damit als `Weiss|Rot|Weiss|Blau` im Blatt.
+    """
+    mx, mh = BREITE / 2, HOEHE / 2
+    return [flaeche(0, rechteck(0, 0, mx, mh)), flaeche(1, rechteck(mx, 0, BREITE, mh)),
+            flaeche(2, rechteck(mx, mh, BREITE, HOEHE)), flaeche(3, rechteck(0, mh, mx, HOEHE))]
 
 
 def plus(links, rechts, oben, unten):
@@ -183,7 +196,8 @@ def dreifarbiges_kreuz():
 KREUZE = {"kreuz-diagonal-uni": andreaskreuz,
           "kreuz-diagonal-unsichtbar": diagonal_unsichtbar,
           "kreuz-senkrecht-dreifarbig": dreifarbiges_kreuz,
-          "kreuz-senkrecht-fimbriert": fimbriertes_kreuz}
+          "kreuz-senkrecht-fimbriert": fimbriertes_kreuz,
+          "kreuz-senkrecht-unsichtbar": senkrecht_unsichtbar}
 
 
 def schreibe(zielordner, name):

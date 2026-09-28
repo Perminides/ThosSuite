@@ -13,7 +13,6 @@ import app.shared.model.SketchStructure.Canvas;
 import app.shared.skin.SkinService;
 import javafx.css.PseudoClass;
 import javafx.scene.Group;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.ClosePath;
@@ -31,7 +30,7 @@ import javafx.scene.shape.Shape;
  * {@link SketchStructure} herein, jede mit ihrer Nummer als id. Wer sie füllt und in welcher
  * Reihenfolge, entscheidet der Aufrufer.</p>
  *
- * <p>Sie <b>ist</b> der sichtbare Node — eine StackPane, die ihren Inhalt zentriert. Ihre Größe
+ * <p>Sie <b>ist</b> der sichtbare Node — eine StackPane, die ihre Leinwand mittig setzt. Ihre Größe
  * bekommt sie übergeben; eine Lage nicht, denn sie wird in eine other Komponente gehängt und nicht
  * auf ein Spielfeld gesetzt. Paketprivat: Sie ist Innenleben von {@link SuiteImage}, kein Angebot.</p>
  *
@@ -73,12 +72,12 @@ class SketchPane extends StackPane {
 	private final double factor;
 	private final double cellWidth;
 	private final double cellHeight;
+	private final double[] box;       // die Leinwand: minX, minY, maxX, maxY in Dateikoordinaten
 
 	/**
 	 * Die Leinwand kommt aus der Struktur, wenn sie eine angibt, sonst ist sie die Box der Flächen.
-	 * Sie liegt als unsichtbare {@code Region} ganz unten in der Gruppe: Die StackPane zentriert
-	 * nach dem, was in der Gruppe liegt — ohne Leinwand rückte eine Flagge, die sie nicht füllt,
-	 * samt allem Aufgelegten in die Mitte, und jedes überstehende Element verschöbe alles.
+	 * Nach ihr wird die Skizze ausgerichtet ({@link #layoutChildren}), nicht nach dem, was
+	 * tatsächlich gezeichnet ist.
 	 *
 	 * @param structure die Teilflächen, jede mit ihrer Nummer als id, und ihre Leinwand
 	 * @param width     Breite des Feldes, in das die Skizze eingepasst wird
@@ -87,26 +86,38 @@ class SketchPane extends StackPane {
 	public SketchPane(SketchStructure structure, double width, double height) {
 		List<ShapeGeometry> geometries = structure.areas();
 		Canvas canvas = structure.canvas();
-		double[] box = canvas != null
+		box = canvas != null
 				? new double[] { canvas.minX(), canvas.minY(), canvas.maxX(), canvas.maxY() }
 				: bounds(geometries);
 		factor = scaleFactor(box, width, height);
 		cellWidth = (box[2] - box[0]) / 3;
 		cellHeight = (box[3] - box[1]) / 3;
 
-		Region leinwand = new Region();
-		// Wunschgröße statt resize: Die Gruppe setzt ihre Kinder beim Layout auf genau diese Größe.
-		leinwand.setPrefSize((box[2] - box[0]) * factor, (box[3] - box[1]) * factor);
-		leinwand.relocate(box[0] * factor, box[1] * factor);
-		leinwand.setMouseTransparent(true);
-		contentGroup.getChildren().add(leinwand);
 		addAreas(geometries, 0, 1);
 
-		getChildren().add(contentGroup); // StackPane zentriert.
+		contentGroup.setManaged(false);    // die Lage setzt layoutChildren, nicht die StackPane
+		getChildren().add(contentGroup);
 		getStyleClass().add("my-sketch-pane");
 		setPrefSize(width, height);
 		setMinSize(width, height);
 		setMaxSize(width, height);
+	}
+
+	/**
+	 * Legt die <b>Leinwand</b> mittig ins Feld, mit dem Nullpunkt auf ganzen Pixeln.
+	 *
+	 * <p>Die StackPane zentrierte nach allem, was in der Gruppe liegt: Ragte ein Element über die
+	 * Leinwand hinaus (Niue, drei Figuren auf Feld 0), rutschte die ganze Skizze um die Hälfte des
+	 * Überstands zur Seite, und neben ihr schien der Hintergrund durch. Jetzt bestimmt nur die
+	 * Leinwand die Lage; was übersteht, schneidet der Clip von {@link SuiteImage} ab. Ganze Pixel,
+	 * weil sonst die eingerasteten Kanten ({@link #snapped}) wieder zwischen zwei Reihen lägen.</p>
+	 */
+	@Override
+	protected void layoutChildren() {
+		double breite = (box[2] - box[0]) * factor;
+		double hoehe = (box[3] - box[1]) * factor;
+		contentGroup.setLayoutX(Math.round((getWidth() - breite) / 2 - box[0] * factor));
+		contentGroup.setLayoutY(Math.round((getHeight() - hoehe) / 2 - box[1] * factor));
 	}
 
 	/**

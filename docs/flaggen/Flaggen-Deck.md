@@ -124,12 +124,12 @@ Cookinseln, England, Grönland, Guam, Hongkong, Neukaledonien, Palästina, Puert
 Taiwan, Wales). Nicht drin: Vatikan und Kosovo. Die Reihenfolge ist die der Signatur:
 
 ```
- 1  Rechtwinklig?            7  W-Streifen           13  Kreuzarme
- 2  Rahmen?                  8  3W                   14  Diagonal Richtung
- 3  Gösch?                   9  5W                   15  Diagonal Anzahl Streifen
- 4  Dreieck von links?      10  S-Streifen           16  SW Streifen
- 5  Dreiecksflächen         11  S-Anordnung          17  Spezial
- 6  Hintergrundtyp          12  Kreuzausrichtung
+ 1  Rechtwinklig?             7  W-Streifen          13  Kreuzarme
+ 2  Rahmen?                   8  3W                  14  Diagonal Richtung
+ 3  Gösch?                    9  5W                  15  Diagonal Anzahl Streifen
+ 4  Form?                    10  S-Streifen          16  Spezial
+ 5  Form aus wie vielen Farben?  11  S-Anordnung
+ 6  Hintergrundtyp           12  Kreuzausrichtung
 ```
 
 **Die ersten fünf gelten für alle**, die übrigen hängen am `Hintergrundtyp` — er ist die Weiche, und
@@ -142,7 +142,7 @@ jeder seiner Werte zieht seine eigenen Folgespalten nach sich:
 | 2 Kreuz | 15 | `Kreuzausrichtung`, `Kreuzarme` |
 | 3 diagonal | 12 | `Diagonal Richtung`, `Diagonal Anzahl Streifen` |
 | 4 einfarbig | 35 | — |
-| 5 senkrechtes Band mit waagerechten Streifen | 6 | `SW Streifen` |
+| ~~5 senkrechtes Band mit waagerechten Streifen~~ | — | entfallen: Band = Form von links 5 über Typ 0 |
 | 7 speziell | 7 | `Spezial` |
 
 Die **6 bleibt bewusst frei** — Platz für einen Fall, der noch kommen kann.
@@ -175,11 +175,13 @@ Diagonal Richtung  0 steigend                        Diagonal Anzahl  0 kein Ban
                    1 fallend                          Streifen         1 · 2 · 3 · 4 Bänder
                    2 strahlenförmig steigend (Fächer)
 
-Dreieck von links  1 einzelnes echtes Dreieck        Dreiecksflächen  1 äußere als Umrandung
-                   2 abgeschnittenes Dreieck                          2 zwei verschiedene Tiefen
-                   3 waagerecht zum Flugteil verlängert               3 gestaffelt und umrandet
-                   4 echtes Dreieck, mehr als eine Farbe
-                   5 einzeln, reicht bis zur Flugseite
+Dreieck von links  1 Dreieck nur in der linken Hälfte  Farbanzahl  1 · 2 · 3 · 4
+(Form von links)   2 eher ein Trapez (Kuwait)
+                   3 Dreieck bis zum rechten Rand
+                   4 Liegendes Y (Vanuatu, Südafrika)
+                   5 Einfarbiger Streifen am Mast (VAE, Benin)
+                   6 Gemusterter Streifen am Mast (Belarus)
+                   7 Senkrechter Streifen in der Mitte (ZAR) — eigene Antwort der Weiche
 ```
 
 Die eingeklammerten Werte sind reine Distraktoren und kommen bei keiner Flagge vor.
@@ -312,8 +314,17 @@ Papua-Neuguinea, dessen Karte nach Frage 5 endete.
 Spalte eine durchnummerierte Kennung, aus der der Sketch-Name folgt; Antigua und Barbuda etwa bekommt
 einen fertigen Sketch nur zum Einfärben.
 
-**Senkrechtes Band mit waagerechten Streifen** (6) fragt nur `SW Streifen` — wie viele waagerechte
-Streifen neben dem Band liegen.
+**Senkrechtes Band mit waagerechten Streifen** gibt es nicht mehr als eigenen Hintergrund: Das Band am
+Mast ist eine Form von links (`Form?` = 5, Overlay `dreieck-5`) über waagerechten Streifen.
+Belarus' gemusterter Streifen ist dieselbe Figur (6, `dreieck-6`): eine Fläche aus Ornamentumrissen, in
+einer Farbe gefüllt. Das Rot der Ornamente ist dasselbe Rot wie im Hintergrund, es fehlt also keins.
+`SW Streifen` wird nicht mehr gelesen.
+
+**Anderes** (7) fragt „Was beschreibt den Hintergrund am besten?" mit einer kurzen Beschreibung je
+Sonderskizze, kodiert in `Spezial`: 2 Dreiecke, in der Mitte Meer (0, Antigua) · Gezackte senkrechte
+Linie (1, Bahrain und Katar) · Dreieck von oben (2, Bosnien) · Wellen (4, Kiribati) · Strahlen vom
+Mittelpunkt (5, Nordmazedonien). Die 3 (Zentralafrikanische Republik) hat noch keine; die Liste steht
+als `SPEZIAL_BESCHREIBUNGEN` im Generator.
 
 ### Farben
 
@@ -1060,7 +1071,7 @@ ist:
 | **Australien** | Gösch-Inhalt und „über die ganze Flagge verteilt", dazu die längste Karte des Decks. |
 
 **Die unbequemen Fälle** — beim Generator die Kandidaten, die man zuletzt anfasst. Sie stehen
-nirgends als Liste, sie ergeben sich: `Hintergrundtyp = 7`, dazu `Dreieck von links? ∈ {2, 3}`
+nirgends als Liste, sie ergeben sich: `Hintergrundtyp = 7`, dazu `Form? ∈ {2, 3}`
 (Kuwaits Trapez, das liegende Y von Südafrika und Vanuatu), `Rechtwinklig? = 0` (Nepal) und Grenada
 mit seinen Symbolen auf dem Rahmen.
 
@@ -1191,11 +1202,16 @@ reine Dateneingabe ohne Entwurfsrisiko.
   Dreiecke, die sich in der Mitte treffen. Kreuz und Diagonale sind beide vertretbar, gewertet wird
   nur das Kreuz. *Bhutan:* „Diagonale" klingt nach Linie oder Band, zu sehen ist nur ein Farbwechsel.
   Dazu kommt, dass Frage 2 nach Begriffen fragt, die man erst übersetzen muss.
-  **Umgesetzt (19.09.2026, zur Probe):** Das Dreieck ist die vierte Antwort der Weiche — „Was
-  gliedert die Flagge …? Kreuz · Diagonale · Nur ein Dreieck von links · Nichts davon". Das
+  **Umgesetzt (19.09.2026, zur Probe):** Das Dreieck ist die vierte Antwort der Weiche — „Welche
+  den Rand berührende Form prägt die Flagge? Kreuz · Diagonale · Nur eine Form von links · Nichts davon" (anfangs „Nur ein
+  Dreieck von links", seit dem Band der VAE allgemeiner; die Frage hieß anfangs „Was gliedert die Flagge, wenn Du Zusatzelemente und Rahmen ignorierst?"). Das
   „nur" trägt die Rangfolge: Diagonale und schräges Kreuz enthalten selbst Dreiecke von links. Flaggen ohne Dreieck
   verlieren die spätere Frage „Kein Dreieck". Bei „bis zum rechten Rand" entfällt die
   Hintergrundfrage, siehe Regeln.md.
+  **Seit 22.09.2026** heißt sie „Welche dieser Formen hat die Flagge? Durchgehendes Kreuz ·
+  Durchgehende Diagonale · Nur eine Form von links · Gösch · Nichts davon". Die Gösch ist die fünfte
+  Antwort, weil sie nie zusammen mit den anderen vorkommt; ihre eigene Ja/Nein-Frage entfällt.
+  „Durchgehend" trennt das teilende Kreuz vom Kreuz in Griechenlands Gösch.
   Verworfen: beschreibende Antworten statt Begriffe — längere Antworten liest man schlechter, die
   Weiche soll nur den Zweig wählen, die Einzelheiten fragen die Folgefragen. Ebenso eine feste
   Reihenfolge aller Antworten: Über eine ganze Karte merkt sich die Hand sonst ein Muster wie eine

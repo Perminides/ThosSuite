@@ -16,6 +16,8 @@ Offene Punkte: `ToDo.md`. Ausführliche Herleitung: `Flaggen-Deck.md`.
   dann aus ihr, sonst aus der Bounding Box
   des zuerst geladenen Sketches — bei einer abweichenden Leinwand stimmen Größe und Versatz jedes
   angehängten Elements nicht mehr, denn die rechnen in festen Einheiten der Leinwand.
+- Ausgerichtet wird nach der Leinwand, nicht nach dem Gezeichneten: Ein Element, das über den Rand
+  ragt, wird vom Bilderrahmen abgeschnitten und verschiebt nichts.
 - Ein Feld im Skin, das nicht 3:2 ist, schadet nicht: Eingepasst wird mit **einem** Maßstab, die
   Skizze bleibt unverzerrt und bekommt leere Ränder.
 - Die Skizze wird um `2 × Strichbreite` zu groß gerechnet, damit ihre Außenkante im Clip des
@@ -139,7 +141,7 @@ Aus den Attributen abgeleitet, keine eigene Spalte:
 ```
 waagerecht-<n>                     senkrecht-<n>
 kreuz-<ausrichtung>-<arme>         diagonal-<richtung>-<bänder>
-uni                                sw-<n>            spezial-<n>
+uni                                spezial-<n>       nicht-rechteckig, <hintergrund>-quadratisch
 ```
 
 Wörter statt Ziffern in den Zweignamen. Gösch und Dreieck stehen nicht im Namen, sie werden aufgelegt.
@@ -156,11 +158,26 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 
 ## Fragen
 
-- Aufbau einer Karte: Form → **Weiche** (Kreuz · Diagonale · Nur ein Dreieck von links · Nichts davon) →
-  beim Dreieck Form und Farbenzahl → Hintergrund → Zweigfragen → Skizze, Dreieck darauf → Gösch →
-  Rahmen → Zusatzelemente → je Element Anzahl und Ort → zeichnen → **alle Farben** → echte Flagge.
-  Das Dreieck wird früh benannt und erst auf den fertigen Hintergrund gelegt, Gösch und Rahmen direkt
-  nach ihrer Frage. Bei Sonderhintergründen entfallen Gösch und Rahmen.
+- Aufbau einer Karte: Form → **Weiche** „Welche dieser Formen hat die Flagge?" (Durchgehendes Kreuz ·
+  Durchgehende Diagonale · Nur eine Form von links · Senkrechter Streifen in der Mitte · Gösch ·
+  Nichts davon) → bei der Form von links Form und Farbenzahl → Hintergrund → Zweigfragen → Skizze, Form oder Gösch darauf → Rahmen → Zusatzelemente
+  → je Element Anzahl und Ort → zeichnen → **alle Farben** → echte Flagge. Die Gösch hat keine eigene
+  Frage mehr: Sie kommt nie zusammen mit Kreuz, Diagonale oder einer Form von links vor, also ist sie
+  eine Antwort der Weiche. Dasselbe gilt für den senkrechten Streifen in der Mitte (`Form?` = 7, nur
+  die Zentralafrikanische Republik): Es gibt nur einen, also hat er nichts nachzufragen. Bei
+  Sonderhintergründen entfällt der Rahmen.
+- **Wohin etwas gehört:** Zerfällt die Flagge lückenlos in Rechtecke und Bänder, die sich bei mehreren
+  Flaggen wiederholen, ist es **Hintergrund** (Streifen, Kreuz, Diagonale). Kommt eine Form **vom Mast**
+  und liegt über dem Hintergrund, ist es eine **Form von links** (Dreiecke, Kuwaits Trapez, das Y, das
+  Band der VAE und Benins: Form 5, das gemusterte von Belarus: Form 6 — beide über waagerechten
+  Streifen). Alles andere, das nur einmal vorkommt und sich **nicht zerlegen lässt**, ist ein
+  **Sonderhintergrund**. Den Hintergrundtyp 5 („Band mit Streifen") gibt es nicht mehr.
+- **Streifen oder aufgelegte Form?** Entschieden wird an den Grenzen: **Enden am Streifen andere
+  Grenzen, ist er eine Form** — die vier waagerechten Streifen der Zentralafrikanischen Republik
+  enden am roten, der Hintergrund der VAE an ihrem Band. Endet nichts, gehört er zum Hintergrund:
+  Barbados, Kanada, Peru und Algerien sind ganz aus Streifen gebaut, da schneidet keiner keinen. Das
+  kann man sehen, ohne die Einteilung zu kennen — nach der Breite geht es nicht, Pakistans Streifen
+  ist so schmal wie das Band der VAE.
 - Nach „Nicht rechteckig" entfallen Weiche, Dreieck, Hintergrund, Gösch und Rahmen — sie alle setzen ein
   Rechteck voraus. Die Skizze ist `nicht-rechteckig` (Feld und Rand), weiter geht es mit den Elementen.
   Weil die Feldmitten dort teils neben der Flagge lägen, legt `ANKER` im Generator je Feld Größe und
@@ -174,9 +191,9 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
   die Skizze ist `waagerecht-2`, oben und unten werden gefärbt. Das Blatt braucht dort zwei
   Hintergrundfarben.
 - **Eine Frage entfällt nur, wenn eine früher beantwortete sie überflüssig macht.** Nie, weil eine
-  spätere Antwort sie überflüssig machen wird — sonst verrät schon ihr Fehlen, was kommt. Gösch und
-  Rahmen entfallen bei Sonderhintergründen, weil „Anderes" vorher beantwortet ist; die Formfrage
-  des Dreiecks gibt es nur nach „Nur ein Dreieck von links".
+  spätere Antwort sie überflüssig machen wird — sonst verrät schon ihr Fehlen, was kommt. Der
+  Rahmen entfällt bei Sonderhintergründen, weil „Anderes" vorher beantwortet ist; die Formfrage
+  von links gibt es nur nach „Nur eine Form von links".
 - Gefärbt wird gesammelt am Ende, Hintergrundflächen und Elemente zusammen.
 - Zwei Shuffle-Blöcke: erst alle **Attribut-Fragen** (Anzahl, geteilt) gemischt, dann alle **Ortsfragen**
   gemischt. So steht die Anzahl vor dem Ort, und in keinem Block leakt die Reihenfolge das Blatt.
@@ -194,6 +211,10 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
   Wert vor der Klammer: Wer die tolerierte Antwort klickt, geht den Weg der richtigen weiter.
   Verboten ist sie in Spalten ohne Frage (`Generieren`, `Version`, `ShapeId`, `Spezial`) und beim
   Hintergrundtyp für Kreuz und Diagonale; dort bricht der Generator ab.
+- **Dasselbe Element mehrfach** (Panama: `E1 = Stern` auf 0 in Blau, `E2 = Stern` auf 8 in Rot) wird
+  gefragt wie eine Figur: „Wie viele Sterne?" mit der Zahl der Einträge, dann „Wo liegen die Sterne?"
+  als Mehrfachauswahl mit allen Orten. Gezeichnet und gefärbt wird jeder Eintrag für sich. Erlaubt nur
+  als einzelne Figuren an verschiedenen Orten — ohne Anzahl, nicht verstreut, kein Behälter.
 - Dieselbe Klammer gilt für **Elementnamen**: `Vogel (Emblem)` heißt „richtig ist Vogel, wer Emblem
   klickt, wird nicht bestraft". Überall sonst — Artikel, Ortsfrage, Elementdatei — zählt nur der
   Name vor der Klammer.

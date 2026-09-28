@@ -1,7 +1,7 @@
 """Erzeugt Strukturdateien fuer reine Streifen-Skizzen.
 
 Aufruf:
-    python build-streifen-sketch.py <zielordner> waagerecht-3 senkrecht-4 sw-2 waagerecht-5-3-1-2-1-3 ...
+    python build-streifen-sketch.py <zielordner> waagerecht-3 senkrecht-4 waagerecht-5-3-1-2-1-3 ...
 
 Der Name traegt die Streifenzahl und wahlweise die Verteilung: so viele Zahlen wie Streifen sind eine
 Rangfolge der Breiten (waagerecht-5-3-1-2-1-3), eine einzelne Zahl ist ein Index in die
@@ -11,9 +11,8 @@ Die Rangfolge ist kein Mass: 3 > 2 > 1, mehr nicht. Die gezeichneten Breiten wer
 gewaehlt und stehen in GEZEICHNET; ohne Eintrag wird die Rangfolge woertlich gezeichnet. So erzeugt
 derselbe Name immer dieselbe Datei.
 
-`sw-<n>` ist das senkrechte Band am Mast mit waagerechten Streifen daneben: Flaeche 0 ist das
-Band und belegt die linke Rasterspalte, danach folgen die Streifen von oben. Ein Goesch ist
-dort ausgeschlossen -- er saesse im Band.
+Das senkrechte Band am Mast mit waagerechten Streifen daneben (VAE, Benin) ist keine eigene Skizze
+mehr: Es ist eine Form von links (`dreieck-5` aus build-dreieck-sketch.py) ueber `waagerecht-<n>`.
 
 Konvention (siehe Flaggen-Deck.md):
   * Das Seitenverhaeltnis ist immer 3:2. SketchPane passt mit EINEM Massstab ein, verzerrt wird
@@ -53,9 +52,17 @@ VERTEILUNG = {
     # und Ruanda, die einzigen drei mit diesem Wert, haben alle genau dieses Verhaeltnis.
     ("waagerecht", 3, 3): [2, 1, 1],
 
+    # 3W = 2, "mittlerer schmaler": 2:1:2. Lettland hat genau das, Nauru und Transnistrien sind
+    # schmaler bzw. breiter in der Mitte -- dieselbe Zahl fuer alle.
+    ("waagerecht", 3, 2): [2, 1, 2],
+
     # S-Anordnung = 1, "mittlerer breiter": 1:2:1. Kanada und St. Vincent, die einzigen beiden mit
     # diesem Wert, haben genau dieses Verhaeltnis.
     ("senkrecht", 3, 1): [1, 2, 1],
+
+    # S-Anordnung = 2 bei zwei Streifen, "rechter breiter": 1:2. Der linke Streifen ist genau eine
+    # Rasterspalte breit. Pakistan hat eher 1:3, Portugal 2:3 -- schematisch liegt 1:2 dazwischen.
+    ("senkrecht", 2, 2): [1, 2],
 }
 
 # Rangfolge aus dem Namen -> gezeichnete Breiten. Die Zahlen im Namen ordnen nur (3 > 2 > 1), wie breit
@@ -124,15 +131,6 @@ def flaechen(richtung, anzahl, goesch, gewichte):
     breite, hoehe = masse(anzahl)
     gx, gy = breite / 3, -hoehe / 3
 
-    # Band am Mast: erst das Band, dann die Streifen daneben von oben. Die Reihenfolge steht so im
-    # Blatt -- Benin traegt "Gruen|Gelb|Rot" fuer Band, oben, unten.
-    if richtung == "sw":
-        yield flaeche(0, ring(0, 0, gx, -hoehe))
-        kanten = grenzen(gewichte, hoehe)
-        for i in range(anzahl):
-            yield flaeche(i + 1, ring(gx, -kanten[i], breite, -kanten[i + 1]))
-        return
-
     kanten = grenzen(gewichte, hoehe if richtung == "waagerecht" else breite)
     streifen = []
     for i in range(anzahl):
@@ -163,10 +161,8 @@ def schreibe(zielordner, name):
     goesch = name.endswith(GOESCH)
     teile = (name[:-len(GOESCH)] if goesch else name).split("-")
     richtung = teile[0]
-    if richtung not in ("waagerecht", "senkrecht", "sw"):
-        raise SystemExit("Nur waagerecht-<n>, senkrecht-<n>, sw-<n>, wahlweise mit -goesch, nicht: " + name)
-    if richtung == "sw" and goesch:
-        raise SystemExit("Ein Goesch belegt Rasterfeld 0 -- da steht bei sw schon das Band: " + name)
+    if richtung not in ("waagerecht", "senkrecht"):
+        raise SystemExit("Nur waagerecht-<n> oder senkrecht-<n>, wahlweise mit -goesch, nicht: " + name)
     anzahl = int(teile[1])
 
     # Die Streifenbreiten: stehen so viele Zahlen im Namen wie es Streifen gibt, sind sie eine Rangfolge

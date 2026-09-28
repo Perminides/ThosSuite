@@ -4,12 +4,13 @@ Aufruf:
     python build-dreieck-sketch.py <elementordner> dreieck-3-4 [dreieck-1 ...]
 
 Der Name ist `dreieck-<form>` oder `dreieck-<form>-<farbanzahl>`, genau wie der Generator ihn
-ableitet. Die Form ist der Wert der Spalte "Dreieck von links?", die Farbanzahl der Wert von
-"Die Dreiecksform(en) bestehen aus wie vielen Farben?". Bei einer Farbe faellt der Zusatz weg.
+ableitet. Die Form ist der Wert der Spalte "Form?", die Farbanzahl der Wert von
+"Form aus wie vielen Farben?". Bei einer Farbe faellt der Zusatz weg.
 
 Gebaut sind Form 1 (Dreieck nur in der linken Haelfte, Spitze bei 72), Form 2 (Trapez, siehe
-`trapez`), Form 3 (bis zum rechten Rand, Spitze bei 180) und Form 4 (Uebergang in eine Spur, siehe
-`spur`). `dreieck-1` und `dreieck-3` kommen byteweise so heraus, wie sie
+`trapez`), Form 3 (bis zum rechten Rand, Spitze bei 180), Form 4 (Uebergang in eine Spur, siehe
+`spur`), Form 5 (Band ueber die volle Hoehe, siehe `band`), Form 6 (dasselbe Band als
+Mustersilhouette, siehe `band_muster`) und Form 7 (dasselbe Band mittig und halb so breit). `dreieck-1` und `dreieck-3` kommen byteweise so heraus, wie sie
 von Hand angelegt wurden.
 
 Konvention (siehe Regeln.md):
@@ -116,6 +117,43 @@ def spur(anzahl):
     return teile
 
 
+def band(anzahl, von=0.0, breite=BREITE / 3):
+    """VAE, Benin, Oman, Madagaskar, Guinea-Bissau: ein Band am Mast ueber die volle Hoehe.
+
+    `von` ist der linke Rand, `breite` die Breite. Am Mast ist es eine Rasterspalte breit (60),
+    dieselbe Breite wie frueher bei `sw-2` und `sw-3`. Die Zentralafrikanische Republik bekommt es
+    mittig und halb so breit (Form 7) -- ihr roter Streifen ist echt etwa ein Fuenftel der Flagge,
+    und so sehen die beiden Formen in der Skizze verschieden aus. Nur einfarbig; mehrere Farben
+    kommen, wenn die erste Flagge sie braucht.
+    """
+    if anzahl != 1:
+        raise SystemExit("Das Band gibt es bisher nur einfarbig, nicht mit %d Farben" % anzahl)
+    return [flaeche(0, [(von, 0), (von + breite, 0), (von + breite, HOEHE), (von, HOEHE)])]
+
+
+def band_muster(anzahl, quelle):
+    """Belarus: der gemusterte Streifen am Mast, eine Flaeche aus vielen Umrissen.
+
+    Gezeichnet wird nicht das Band, sondern die Musterfigur selbst: `muster.geojson` aus dem
+    Elementordner, ein Block aus neun Motiven ueber 40 x 40. Auf 60 breit skaliert (Faktor 1.5)
+    ergibt er 60 x 60, zweimal uebereinander also die volle Hoehe. Hinter den Zacken laeuft der
+    Hintergrund durch; gefuellt wird alles zusammen in einer Farbe, denn das Rot der Ornamente ist
+    dasselbe Rot wie im Hintergrund.
+    """
+    if anzahl != 1:
+        raise SystemExit("Der gemusterte Streifen hat eine Farbe, nicht %d" % anzahl)
+    datei = Path(quelle) / "muster.geojson"
+    if not datei.exists():
+        raise SystemExit("Fuer Form 6 wird %s gebraucht" % datei)
+    motiv = json.loads(datei.read_text(encoding="utf-8"))["features"][0]["geometry"]["coordinates"]
+    stuecke = []
+    for mitte in (HOEHE / 4, 3 * HOEHE / 4):        # zwei Bloecke, ihre Mitten bei 30 und 90 tief
+        for polygon in motiv:
+            for ring in polygon:
+                stuecke.append([(BREITE / 6 + 1.5 * x, mitte - 1.5 * y) for x, y in ring])
+    return [flaeche(0, *stuecke)]
+
+
 def schreibe(zielordner, name):
     teile = name.split("-")
     if teile[0] != "dreieck" or len(teile) not in (2, 3):
@@ -126,6 +164,12 @@ def schreibe(zielordner, name):
         teile = trapez(anzahl)
     elif form == 4:
         teile = spur(anzahl)
+    elif form == 5:
+        teile = band(anzahl)
+    elif form == 6:
+        teile = band_muster(anzahl, zielordner)
+    elif form == 7:
+        teile = band(anzahl, (BREITE - BREITE / 6) / 2, BREITE / 6)
     elif form in SPITZE:
         teile = dreiecke(form, anzahl)
     else:
