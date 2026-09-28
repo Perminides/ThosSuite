@@ -19,7 +19,7 @@ import java.util.zip.InflaterOutputStream;
  * <ol>
  *   <li>Hex-Schlüssel (64 Zeichen) → 32-Byte Root-Key</li>
  *   <li>AES-Schlüssel via zwei HMAC-SHA256-Runden ableiten ("backup encryption")</li>
- *   <li>16-Byte-IV aus dem Protobuf-Header der crypt15-Datei lesen (Fallback: fester Offset)</li>
+ *   <li>16-Byte-IV aus dem Protobuf-Header der crypt15-Datei lesen</li>
  *   <li>AES-256-GCM entschlüsseln</li>
  *   <li>zlib-Dekomprimierung</li>
  *   <li>SQLite-Header validieren</li>
@@ -66,9 +66,9 @@ import java.util.zip.InflaterOutputStream;
  * <p><i>Problem 4 – Header-Parsing:</i>
  * Die crypt15-Datei beginnt mit einem Protobuf-Header, der u.a. den
  * 16-Byte-IV enthält. Statt einer vollständigen Protobuf-Library wird
- * der Header manuell geparst (minimaler Varint-Walker). Als Fallback
- * dienen die dokumentierten festen Offsets (IV bei Byte 8,
- * Datenbeginn bei Byte 122).</p>
+ * der Header manuell geparst (minimaler Varint-Walker). Seine Länge steht
+ * in seinem ersten Byte und wird gelesen, nicht angenommen — sie ändert
+ * sich mit der WhatsApp-Version.</p>
  *
  * <p><i>Problem 5 – Auth-Tag-Position (der letzte Stolperstein):</i>
  * Java's AES/GCM erwartet den Authentication-Tag direkt am Ende des
@@ -89,8 +89,6 @@ import java.util.zip.InflaterOutputStream;
  */
 public class WhatsAppCrypt15Decryptor {
 
-    private static final int    FALLBACK_IV_OFFSET   = 8;
-    private static final int    FALLBACK_DATA_OFFSET = 122;
     private static final byte[] BACKUP_ENCRYPTION    = "backup encryption".getBytes();
 
     // -------------------------------------------------------------------------
@@ -163,33 +161,35 @@ public class WhatsAppCrypt15Decryptor {
 
     /**
      * Extrahiert IV und Daten-Offset aus dem crypt15-Header.
-     * Versucht zuerst einen minimalen manuellen Protobuf-Parse,
-     * fällt bei Fehler auf feste Offsets zurück.
+     *
+     * <p>Die Länge des Präfixes steht in seinem ersten Byte; der Datenbeginn ergibt sich daraus
+     * und wird nicht angenommen. Die IV liegt als 16-Byte-Feld im Protobuf, verschachtelt.</p>
      */
     private HeaderInfo parseHeader(byte[] file) {
-        HeaderInfo info = new HeaderInfo();
+        int    dataOffset;
+        byte[] iv;
         try {
             int pos          = 0;
             int protobufSize = file[pos++] & 0xFF;
             if (file[pos] == 0x01) pos++;
 
-            byte[] protobuf    = new byte[protobufSize];
+            byte[] protobuf = new byte[protobufSize];
             System.arraycopy(file, pos, protobuf, 0, protobufSize);
-            int dataOffset = pos + protobufSize;
+            dataOffset = pos + protobufSize;
 
-            byte[] iv = extractIvFromProtobuf(protobuf);
-            if (iv != null && iv.length == 16) {
-                info.iv         = iv;
-                info.dataOffset = dataOffset;
-                return info;
-            }
+            iv = extractIvFromProtobuf(protobuf);
         } catch (Exception e) {
-            // Fallback auf feste Offsets
+            throw new RuntimeException("[FAILFAST] crypt15: Header nicht lesbar — das "
+                    + "Präfix-Format hat sich vermutlich geändert.", e);
         }
 
-        info.iv = new byte[16];
-        System.arraycopy(file, FALLBACK_IV_OFFSET, info.iv, 0, 16);
-        info.dataOffset = FALLBACK_DATA_OFFSET;
+        if (iv == null)
+            throw new RuntimeException("[FAILFAST] crypt15: Im Header steht kein 16-Byte-Feld, "
+                    + "also keine IV. Das Präfix-Format hat sich vermutlich geändert.");
+
+        HeaderInfo info = new HeaderInfo();
+        info.iv         = iv;
+        info.dataOffset = dataOffset;
         return info;
     }
 

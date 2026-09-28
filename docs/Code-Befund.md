@@ -159,7 +159,7 @@ laufen die beiden auseinander.
 | 2.2 | „Welcher Name gilt in diesem Modus" wird fünfmal beantwortet, auf zwei Arten | dreiviertel Stunde | offen |
 | 2.3 | Die Fehlerliste am Sessionende steht dreimal | eine halbe Stunde (mit 2.2) | offen |
 | 2.4 | `RegionDeckRepository` ist eine Attrappe | eine Viertelstunde | offen |
-| 2.5 | Ein verschluckter Fehler | eine Minute | offen |
+| 2.5 | Ein verschluckter Fehler | eine Minute | erledigt |
 | 2.6 | Der Progress sagt dem Presenter etwas, das der Presenter schon weiß | eine Viertelstunde | offen |
 | 2.7 | 270 Einzelabfragen beim Start | eine halbe Stunde | offen |
 | 2.8 | Welches Deck bei einer kombinierten Spielsession das primäre ist, hängt am Hashwert | zehn Minuten | offen |
@@ -182,7 +182,7 @@ laufen die beiden auseinander.
 | 4.5 | Die Attachments heißen „move", werden aber kopiert | fünf Minuten | offen |
 | 4.6 | Eine quellenspezifische Methode in der quellenneutralen Klasse | eine Viertelstunde | offen |
 | 4.7 | Zwei Schreibweisen für denselben Konfigurationswert | fünf Minuten | offen |
-| 4.8 | Ein stumm verschlucktes Problem im Entschlüsseler | fünf Minuten | offen |
+| 4.8 | Ein stumm verschlucktes Problem im Entschlüsseler | fünf Minuten | erledigt — anders gelöst als vorgeschlagen |
 | 4.9 | Kleinkram | zwanzig Minuten | offen |
 | 5.1 | Der Tagebuch-Screen baut SQL | dreiviertel Stunde | erledigt |
 | 5.2 | „Ist die Matratze fällig" wird zweimal beantwortet, in zwei Einheiten | eine halbe Stunde | offen |
@@ -190,14 +190,14 @@ laufen die beiden auseinander.
 | 5.4 | „Welches Wochenziel galt in Woche X" — zwei Mechanismen im selben Paket | eine halbe Stunde | offen |
 | 5.5 | `DashboardService` bekommt „heute" übergeben und benutzt es dann nicht | eine Viertelstunde | offen |
 | 5.6 | `logApiResponse` loggt keine API-Antwort | zehn Minuten bis eine halbe Stunde | offen |
-| 5.7 | Ein Übergangsgerüst, dessen Termin verstrichen ist | Entscheidung, keine Arbeit | offen |
+| 5.7 | Ein Übergangsgerüst, dessen Termin verstrichen ist | Entscheidung, keine Arbeit | erledigt — mit der Health-Migration abgerissen |
 | 5.8 | Kleinkram | eine halbe Stunde | offen |
 | 6.1 | Das Statistik-Menü wird über seinen Anzeigetext angesteuert — und erzeugt dabei einen toten Screen | eine halbe Stunde | erledigt |
 | 6.2 | Die Suite kann sich nicht selbst einrichten | eine halbe Stunde (Dashboard) | verworfen — die Suite wird nicht neu aufgesetzt |
 | 6.3 | Der Exporter fängt genau den Fehler ab, den `Config` bewusst wirft | eine Viertelstunde | offen |
 | 6.4 | Vier öffentliche Methoden am `MainWindow` ohne Aufrufer — samt der Mechanik dahinter | eine Viertelstunde | offen |
 | 6.5 | Vier Kommentare, die etwas anderes sagen als der Code | zwanzig Minuten | offen |
-| 6.6 | Das Übergangsgerüst `app.tmp` ist fällig | Entscheidung, keine Arbeit | offen |
+| 6.6 | Das Übergangsgerüst `app.tmp` ist fällig | Entscheidung, keine Arbeit | erledigt — das Paket existiert nicht mehr |
 | 6.7 | Kleinkram | zwanzig Minuten | offen |
 | 7.1 | Die Suite hat zwei Antworten auf „welcher Tag ist heute" | eine halbe Stunde + zwei Stunden Durchsicht | verworfen — AppClock ist kein zweiter Kalender, sondern der Arbeitstag der Startdaten |
 | 7.2 | `Config.getString` ist ein zweiter Name für `Config.get` | fünf Minuten | offen |
@@ -221,6 +221,7 @@ laufen die beiden auseinander.
 | 10.2 | Die Beschreibung der Staffelung stimmt in drei Punkten nicht mehr | zehn Minuten | erledigt |
 | 10.3 | Kleinkram | zehn Minuten | offen |
 | Szenario B | Ein weiterer Screen | zwei bis drei Stunden | erledigt — anders gelöst als vorgeschlagen |
+| Szenario C | Eine zweite Datenquelle neben Fitbit | ein halber Tag | erledigt — durchgeführt, nicht nur vorbereitet |
 
 ---
 
@@ -628,7 +629,7 @@ an. Genau das, was FailFast verhindern soll: Der Fehler fliegt, aber er sagt nic
 **Kleinster Schnitt:** `, e` ergänzen.
 **Aufwand:** eine Minute.
 
-**Stand:** offen
+**Stand:** erledigt — `, e` ergänzt, die Ursache kommt jetzt mit.
 
 ### 2.6 Der Progress sagt dem Presenter etwas, das der Presenter schon weiß
 
@@ -1203,7 +1204,20 @@ man untersuchen müsste.
 kein Wert an sich, und der Architekturtest verlangt ohnehin, dass geloggt nur über `Log` wird.
 **Aufwand:** fünf Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — anders gelöst als vorgeschlagen. Statt einer Log-Zeile ist der Fallback
+ersatzlos entfallen, samt `FALLBACK_IV_OFFSET` und `FALLBACK_DATA_OFFSET`. Der Grund kam beim
+Nachmessen am echten Backup heraus: Das Präfix ist heute 135 Bytes lang, der Datenbeginn liegt
+also bei 137 — die Konstante sagte 122. Der Fallback hätte die richtige IV genommen und 15 Bytes
+zu früh entschlüsselt; bei AES-GCM heißt das sofort `AEADBadTagException`. Er war kein
+ungenutzter Notausgang, sondern ein zugemauerter.
+
+Die Länge des Präfixes steht in seinem ersten Byte und ändert sich mit der WhatsApp-Version —
+genau deshalb liest der Parser sie, statt sie anzunehmen. Er trägt: Am geprüften Backup findet er
+die IV korrekt, verschachtelt in Feld 3 → Feld 1.
+
+An die Stelle des Fallbacks treten zwei Würfe — Header nicht lesbar, und kein 16-Byte-Feld darin.
+Beide nennen das Präfix-Format als Ursache, statt wie bisher über `validateSqliteHeader` auf
+„Schlüssel oder IV vermutlich falsch“ zu zeigen.
 
 ### 4.9 Kleinkram
 
@@ -1427,7 +1441,14 @@ Das ist kein Konstruktionsfehler — es ist ein bewusst befristetes Gerüst, des
 ist. Es steht hier, damit es beim Aufräumen nicht übersehen wird; der eigentliche Abriss gehört
 zu Gruppe 6 (`app.tmp`).
 
-**Stand:** offen
+**Stand:** erledigt — mit der Health-Migration abgerissen, nicht als Aufräumen danach.
+`DataFetcher` und `FitbitDayProjection` gibt es nicht mehr, `!tmp` hat keinen Treffer mehr im
+Quellbaum, und `app.activity` hält keine öffentliche Projektion für einen einzigen Abnehmer
+offen.
+
+Zur Formulierung in der Überschrift: „Termin“ war das falsche Wort. Die Notiz „fällt im
+September weg“ war eine Erinnerung an sich selbst, keine Frist — in diesem Projekt gibt es
+keine Termine.
 
 ### 5.8 Kleinkram
 
@@ -1628,7 +1649,11 @@ Der Abriss selbst ist nicht der Punkt — die Frage, die er offenlässt, schon: 
 Fitbit-Health-Vergleich ist die Vorarbeit für den Datenquellen-Wechsel, und der steht in
 `Feature-Details.md` als „noch komplett offen". Siehe Szenario 3 in Gruppe 11.
 
-**Stand:** offen
+**Stand:** erledigt — das Paket `app.tmp` existiert nicht mehr. Nachgeprüft sind alle sechs
+Stellen: `Comparison`, `HealthImportLog`, `DataFetcher.getProjection` und `FitbitDayProjection`
+sind weg, die vier `!tmp`-Marker im Controller ebenso, und die namentliche Ausnahme für
+`app.tmp` in `keinSeitwaertsgriffAufObersterEbene` ist aus dem Architekturtest verschwunden —
+der Wächter bewacht die oberste Ebene jetzt ohne Ausnahme.
 
 ### 6.7 Kleinkram
 
@@ -2478,6 +2503,22 @@ Dialog ist dieser Schnitt bereits einmal gemacht worden, und er hat gehalten.
    nach der Umstellung eine Abweichung untersucht, vergleicht zwei Dateien, die Verschiedenes
    enthalten und Verschiedenes heißen. Beim Abriss von `app.tmp` (Befund 5.7 / 6.6) fällt die
    zweite weg — dann ist der Moment, das Format der ersten festzulegen.
+
+**Stand:** erledigt — durchgeführt, nicht nur vorbereitet. Und anders, als der Titel annimmt:
+Fitbit steht nicht mehr *neben* Health, es wurde ersetzt.
+
+Der vorgeschlagene Schnitt ist genau so gebaut worden. An die Stelle der Fitbit-Drahtformate
+`ActivityLogList` und `ActivityDaySummary` — beide im Quellbaum ohne Treffer — ist
+`app.activity.model.DayData(LocalDate date, Integer steps, List<Exercise> activities)` getreten,
+mit der Falle „fehlende Schritte sind keine Null“ im Javadoc festgehalten. Punkt 2 (das Paket
+hieß nach der Quelle) ist mit der Umbenennung auf `app.activity` erledigt, Punkt 3 (zwei
+Logdateien mit zwei Formaten) mit dem Wegfall von `health_import`.
+
+**Offen bleibt allein Punkt 1:** `PointsCalculator` öffnet weiter Dialoge mitten in der Rechnung
+(`PointsCalculator.java:65`, `:77`, `:94`). Das ist Befund 5.3. Seine hier genannte Begründung —
+„sonst kann man die Punkte nicht zweimal rechnen, um sie zu vergleichen“ — ist mit dem
+Vergleicher weggefallen; der Befund selbst gilt weiter, nur aus dem einfacheren Grund, dass eine
+Rechenklasse nicht fragen sollte.
 
 ### Was die drei Szenarien zusammen zeigen
 
