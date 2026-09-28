@@ -17,11 +17,10 @@ import javafx.scene.shape.PathElement;
 
 /**
  * Baut aus framework-freier {@link ShapeGeometry} den sichtbaren JavaFX-Node. Die <b>einzige</b> Stelle, an der
- * Karten-Nodes entstehen — vorher verstreut über GeoJsonLoader, ShapeMap-Konstruktor und GeoMap.createCircle.
+ * Karten-Nodes entstehen.
  *
  * <p>Kennt keinen Lern-Typ. Alles, was er wissen muss, kommt als Geometrie (inkl. id und — bei Shape-Karten —
- * type) rein. Beide Karten-Seiten haben jetzt dieselbe Signatur: eine Geometrie rein, ein Node raus. Die frühere
- * id/styleClass-Asymmetrie auf der Shape-Seite ist weg.</p>
+ * type) rein. Beide Karten-Seiten haben dieselbe Signatur: eine Geometrie rein, ein Node raus.</p>
  *
  * <p>Struktur je Form:
  * <ul>

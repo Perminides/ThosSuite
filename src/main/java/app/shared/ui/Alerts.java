@@ -39,8 +39,10 @@ import javafx.stage.WindowEvent;
  * <p>Keine Fabrik: sie baut nichts zusammen, das der Aufrufer weiterverwendet. Sie führt eine
  * modale Interaktion und gibt deren Ergebnis zurück.</p>
  *
- * <p>Die einzige Stelle der Suite, die {@code javafx.scene.control.ButtonType} kennt — nach außen
- * gibt es nur {@link ButtonEnum}. Dismiss und X bedeuten immer {@link ButtonEnum#CANCEL}; der
+ * <p>Die einzige Stelle, die zwischen {@link ButtonEnum} und
+ * {@code javafx.scene.control.ButtonType} übersetzt — aus einem Alert kommt nur ein
+ * {@link ButtonEnum} heraus. Bespoke-Dialoge bauen ihre Knöpfe selbst und geben ihr Ergebnis
+ * als Record, Enum oder {@code null} zurück. Dismiss und X bedeuten immer {@link ButtonEnum#CANCEL}; der
  * Aufrufer interpretiert das (etwa als „später").</p>
  */
 public class Alerts {
@@ -55,8 +57,9 @@ public class Alerts {
 	/**
 	 * 
 	 * Wenn ein ImagePath mitgegeben wird, so werden die nicht transparenten Teile mit der Textfarbe eingefärbt.
-	 * Das ist sehr speziell für den Matratze wenden Dialog gebaut und gehört verbessert, wenn auch andere Bilder
-	 * angezeigt werden sollen.
+	 * 
+	 * !Später: Das Einfärben taugt nur für monochrome Symbole — gebaut für den Matratzen-Dialog.
+	 * Sobald ein anderes Bild angezeigt werden soll, braucht es einen Weg ohne Tönung.
 	 * 
 	 * @param title
 	 * @param message

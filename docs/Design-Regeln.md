@@ -55,9 +55,14 @@ Gebrauch auf" —, trägt hier nämlich **nicht**: ein Strukturverstoß fällt n
 4. **`null` statt `Optional` bei Rückgaben.** Fehlt ein Rückgabewert, wird `null` zurückgegeben, nicht `Optional`. Ausnahme: Der Wert stammt direkt aus einer `Optional`-liefernden JDK-API (Streams) — dann wird das `Optional` sofort am Entstehungsort ausgepackt (`orElse(null)`), nicht durch eigene Signaturen weitergereicht. `null`-Rückgaben gehören im Javadoc vermerkt.
 5. **Keine Streams, außer sie sind unbedingt nötig.** Eine Schleife liest sich nach Monaten
    ohne Anlauf und ist leichte zu debuggen, eine Kette aus `filter`/`map`/`collect` nicht.
-6. **Null-Layout:** keine LayoutManager, feste Positionen (Desktop-App mit fester Auflösung;
-  präzise Kontrolle wichtiger als Flexibilität). Die Rechtecke stehen im Skin, gesetzt werden sie
-  von der Oberfläche in `shared.ui` — der Skin fasst keine Komponente an.
+6. **Null-Layout dort, wo der Skin die Rechtecke besitzt.** Lern-Oberflächen und alles, was über
+  `ComponentHost` läuft, wird absolut positioniert: Die Rechtecke stehen im Skin, gesetzt werden
+  sie von der Oberfläche in `shared.ui` — der Skin fasst keine Komponente an (Desktop-App mit
+  fester Auflösung; präzise Kontrolle wichtiger als Flexibilität). Dialoge, Listen- und
+  Diagramm-Screens layouten dagegen selbst, mit `VBox`/`HBox` und Verwandten — ein Dialog mit
+  drei Feldern übereinander braucht keine Rechtecke. Der Maßstab steht unten unter „Zwei
+  Bauformen“: *wer positioniert*. Eine Layout-Pane sich selbst → sie ist der View; Rechtecke aus
+  dem Skin → `ComponentHost`.
 7. **Kommentare und Javadoc beschreiben, was ist — nie, was war.** Kein „heißt nicht mehr",
   „tut nicht mehr", „lag früher woanders", „ist jetzt umgekehrt". Wer eine Klasse aufschlägt,
   will wissen, was sie tut; der Weg dahin beantwortet ihm keine Frage und verwirrt nach Monaten

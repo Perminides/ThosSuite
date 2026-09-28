@@ -331,21 +331,28 @@ die deklarierten Felder ab und sucht zu jedem Feldnamen einen gleichlautenden Sc
 Spätere gewinnt.
 
 Achtung: der Loader kennt nur `Color`, `Font`, `BorderParams`, `Integer`, `Rectangle2D` und
-`String`. Ein Schlüssel für einen anderen Feldtyp würde **still ignoriert**.
+`String`. Ein Schlüssel für einen Feldtyp ohne Zweig — `Double`, `Dimension2D` — bricht den Start
+ab und nennt Feldname und Typ.
 
 #### Fallback-System für Layouts
 
 Decks sollen sich ein Layout teilen können. Die Staffelung steht genau einmal, in
-`SkinProperties.staffelung(…)`:
+`SkinProperties.cascadingValue(…)`, und hat drei Stufen:
 
 ```
-1. spezifisch:   esSessionQuestionPanel        (mapName des Decks)
-2. Kategorie:    regionSessionQuestionPanel    (anki | region)
-3. sonst:        null
+1. Deck:       <deckId>SessionQuestionPanel      (nur dieses eine Deck)
+2. Karte:      esSessionQuestionPanel            (mapName — mehrere Decks teilen sich eine)
+3. Kategorie:  regionSessionQuestionPanel        (anki | region)
+4. sonst:      null
 ```
 
-Dieselbe Staffelung gilt für die Hintergrundbilder, dort mit einer dritten Stufe:
-`<mapName>WallpaperName` → `<kategorie>WallpaperName` → `emptyWallpaperName`.
+Der mittlere Schritt ist der, über den sich Decks ein Layout teilen: Die vier Berlin-Decks tragen
+denselben `mapName` und damit dieselben Maße; die vierzehn Landkreis-Decks lassen auch den offen
+und landen bei ihrer Kategorie.
+
+Für die Hintergrundbilder gilt derselbe Dreischritt — keine zusätzliche Stufe. Nur steht am Ende
+statt `null` ein Vorgabewert: `<deckId>WallpaperName` → `<mapName>WallpaperName` →
+`<kategorie>WallpaperName` → `emptyWallpaperName`.
 
 Die Property-Namen (`…SessionQuestionPanel`) bleiben unverändert und verlassen das Skin-Paket nie —
 nach außen heißt der Bestandteil `LearnComponent.QUESTION`.

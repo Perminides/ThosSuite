@@ -35,7 +35,8 @@ import app.shared.ui.Alerts;
  * Serien und Episoden werden nicht hier behandelt — die laufen über einen
  * separaten manuellen Menüpunkt.
  *
- * Bilder landen im Dateisystem unter Config.getPath("tmdb.imageFolder").
+ * Bilder landen im Dateisystem unter Config.getPath("imageFolder") im Unterordner "tmdb" —
+ * den letzten Schritt resolved die Aufrufstelle, nicht Config.
  * Bild-Metadaten landen in der DB.
  *
  * Alle Fehler sind fatal — kein stiller Fallback.

@@ -68,7 +68,7 @@ public class ImageMapPane extends StackPane implements LearnMap {
 	private static final PseudoClass INCORRECT = PseudoClass.getPseudoClass("incorrect");
 	private static final PseudoClass MARKED = PseudoClass.getPseudoClass("marked");
 
-	// Radius des Falsch-Klick-Markers (früher CircleSizes.SMALL).
+	// Radius des Falsch-Klick-Markers.
 	private static final int MARKER_RADIUS = 10;
 
 	private final Image background;

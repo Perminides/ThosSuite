@@ -165,12 +165,12 @@ laufen die beiden auseinander.
 | 2.8 | Welches Deck bei einer kombinierten Spielsession das primäre ist, hängt am Hashwert | zehn Minuten | offen |
 | 2.9 | Enum-`toString()` trägt Last | zwanzig Minuten | offen |
 | 2.10 | Kleinkram | eine halbe Stunde | offen |
-| 3.1 | API-Key und Session-ID landen in der Logdatei und im Fehler-Alert | zehn Minuten | offen |
+| 3.1 | API-Key und Session-ID landen in der Logdatei und im Fehler-Alert | zehn Minuten | erledigt |
 | 3.2 | Zwei Methoden gleichen Namens mit entgegengesetztem Verhalten | dreiviertel Stunde | erledigt |
 | 3.3 | Der Serien-Import steht zweimal | dreiviertel Stunde | offen |
 | 3.4 | Der Import, der nicht fragen kann, fragt zweimal | zehn Minuten | offen |
 | 3.5 | Der Lücken-Check verschluckt jeden Fehler und meldet trotzdem Erfolg | eine halbe Stunde | erledigt |
-| 3.6 | Das Klassen-Javadoc nennt einen Config-Schlüssel, den es nicht gibt | zwei Minuten | offen |
+| 3.6 | Das Klassen-Javadoc nennt einen Config-Schlüssel, den es nicht gibt | zwei Minuten | erledigt |
 | 3.7 | Zehnmal derselbe Parse-Block | eine halbe Stunde | offen |
 | 3.8 | Jede bewertete Serie wird bei jedem Lauf zusätzlich zweimal vollständig geholt | zwanzig Minuten | offen |
 | 3.9 | Toter Code | zehn Minuten | offen |
@@ -205,20 +205,20 @@ laufen die beiden auseinander.
 | 7.4 | `FilenIgnoreSource`: zweimal dieselben vier Zeilen, und die zweite wirft beim Herunterfahren | eine Viertelstunde | offen |
 | 7.5 | Zwei Stellen werfen ohne Ursache, eine reduziert sie auf den Text | fünf Minuten | offen |
 | 7.6 | `UiUtils` trägt drei unverwandte Dinge, eines davon globalen Zustand | zwanzig Minuten | offen |
-| 7.7 | Der Screen-Vertrag verweist auf Methoden, die es nicht gibt | zwei Minuten | offen |
+| 7.7 | Der Screen-Vertrag verweist auf Methoden, die es nicht gibt | zwei Minuten | erledigt |
 | 7.8 | Kleinkram | eine Viertelstunde | offen |
-| 8.1 | Regel 6 beschreibt nicht den Code, und der Architekturtest sagt das bereits | eine Viertelstunde Doku | offen |
+| 8.1 | Regel 6 beschreibt nicht den Code, und der Architekturtest sagt das bereits | eine Viertelstunde Doku | erledigt |
 | 8.2 | Der Erweiterungsvertrag von `AnkiLearnView` ist an drei Stellen überholt | eine halbe Stunde | offen |
 | 8.3 | Die Thumbnail-Höhe steht in beiden Hälften des Tagebuch-Splits | eine Viertelstunde | offen |
-| 8.4 | „Die einzige Stelle der Suite, die `ButtonType` kennt" — das sind 14 Stellen | fünf Minuten | offen |
-| 8.5 | Ein bekannter Mangel steht als Fließtext statt als Marker | zwei Minuten | offen |
+| 8.4 | „Die einzige Stelle der Suite, die `ButtonType` kennt" — das sind 14 Stellen | fünf Minuten | erledigt |
+| 8.5 | Ein bekannter Mangel steht als Fließtext statt als Marker | zwei Minuten | erledigt |
 | 9.1 | `SuiteImage` reicht zwei Innen-Nodes nach außen — und niemand nimmt sie | zwei Minuten | offen |
 | 9.2 | `ImageMapPane` bietet zwei Vokabulare an, von denen eines nur nach innen zeigt | zwei Minuten | offen |
 | 9.3 | Die Thumbnail-Höhe steht ein drittes Mal — Erweiterung zu Befund 8.3 | mit 8.3 erledigt | offen |
-| 9.4 | Ein Rückblick zu viel — und zwei, die bleiben dürfen | fünf Minuten | offen |
+| 9.4 | Ein Rückblick zu viel — und zwei, die bleiben dürfen | fünf Minuten | erledigt |
 | 9.5 | Kleinkram | zehn Minuten | offen |
 | 10.1 | Zwei neue Felder sind in eine Falle gelaufen, die schon aufgeschrieben war | eine halbe Stunde | erledigt — anders gelöst als vorgeschlagen |
-| 10.2 | Die Beschreibung der Staffelung stimmt in drei Punkten nicht mehr | zehn Minuten | offen |
+| 10.2 | Die Beschreibung der Staffelung stimmt in drei Punkten nicht mehr | zehn Minuten | erledigt |
 | 10.3 | Kleinkram | zehn Minuten | offen |
 | Szenario B | Ein weiterer Screen | zwei bis drei Stunden | erledigt — anders gelöst als vorgeschlagen |
 
@@ -793,7 +793,10 @@ mitgesichert und beim Suchen nach ganz anderen Fehlern geöffnet wird. Ein Fehls
 Diagnose-Information bleibt erhalten — welcher Endpunkt, ist alles, was man braucht.
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — `sendGet` nimmt nur noch den Pfad in die Meldung. Der `-1`-Fall ist
+abgefangen: Eine v4-URL ohne Parameter trägt kein `?`, und `substring(0, -1)` hätte im
+catch-Block die echte Ursache verdeckt. Die Account-Id steht weiter im Pfad — sie ist kein
+Schlüssel, kommt aber aus derselben Datei.
 
 ### 3.2 Zwei Methoden gleichen Namens mit entgegengesetztem Verhalten
 
@@ -939,7 +942,8 @@ der Änderung einlädt, gegen die sich die Suite bewusst entschieden hat.
 **Kleinster Schnitt:** die Zeile im Javadoc auf den tatsächlichen Weg umschreiben.
 **Aufwand:** zwei Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — das Javadoc nennt jetzt `imageFolder` und den Unterordner, den die
+Aufrufstelle selbst resolved.
 
 ### 3.7 Zehnmal derselbe Parse-Block
 
@@ -1838,7 +1842,8 @@ eine Methode, die es nicht gibt.
 **Kleinster Schnitt:** zwei Zeilen.
 **Aufwand:** zwei Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — `currentScreen.sortOrderChanged()` im Klassen-Javadoc, das `@param order`
+an der parameterlosen Methode ist weg.
 
 ### 7.8 Kleinkram
 
@@ -1920,7 +1925,9 @@ Lern-Oberflächen und alles, was über `ComponentHost` läuft, sind Null-Layout;
 Listen-/Diagramm-Screens layouten selbst.
 **Aufwand:** eine Viertelstunde Doku.
 
-**Stand:** offen
+**Stand:** erledigt — Regel 6 heißt jetzt „Null-Layout dort, wo der Skin die Rechtecke besitzt“
+und verweist auf den Maßstab, der weiter unten ohnehin stand: *wer positioniert*. Lern-Oberflächen
+und `ComponentHost` absolut, Dialoge und Listen-/Diagramm-Screens mit eigenen Layout-Panes.
 
 ### 8.2 Der Erweiterungsvertrag von `AnkiLearnView` ist an drei Stellen überholt
 
@@ -1993,7 +2000,9 @@ baut und ihn liest, hält `ButtonType` für verboten und sucht einen Weg, der ni
 Ergebnis als Record zurückgeben.
 **Aufwand:** fünf Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — aus „die einzige Stelle, die `ButtonType` kennt“ wurde „die einzige Stelle,
+die zwischen `ButtonEnum` und `ButtonType` übersetzt“, plus dem Halbsatz, dass Bespoke-Dialoge ihre
+Knöpfe selbst bauen und ein Record, Enum oder `null` liefern.
 
 ### 8.5 Ein bekannter Mangel steht als Fließtext statt als Marker
 
@@ -2009,7 +2018,7 @@ Suite hat für genau diesen Fall eine Konvention.
 Punkten.
 **Aufwand:** zwei Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — steht jetzt als `!Später:` und taucht damit in der Marker-Übersicht auf.
 
 ### Was in dieser Gruppe trägt
 
@@ -2129,7 +2138,9 @@ drei Kandidaten gefunden. Nur einer ist wirklich einer:
 
 **Aufwand:** fünf Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — die zwei Rückblicke in `MapNodeBuilder` und die Klammer in `ImageMapPane`
+sind weg. Der Hinweis in `ShapeLayer` bleibt, wie im Befund begründet: Er sagt, warum die zwei
+Ableitungen getrennt bleiben müssen, und ist damit eine verworfene Alternative, kein Rückblick.
 
 ### 9.5 Kleinkram
 
@@ -2262,7 +2273,12 @@ an der Methode erklärt sie gut. Nachzuziehen ist die Architekturdoku.
 Wallpaper-Satz auf „derselbe Dreischritt, statt `null` das leere Wallpaper" ändern.
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — Methodenname auf `cascadingValue`, der Kasten auf drei Stufen (Deck → Karte →
+Kategorie), und der Wallpaper-Satz sagt jetzt „derselbe Dreischritt, statt `null` das leere
+Wallpaper“ statt einer vierten Stufe.
+
+Im selben Abschnitt mitgenommen: Der Satz „Ein Schlüssel für einen anderen Feldtyp würde still
+ignoriert“ stimmte seit dem `else`-Wurf aus Befund 10.1 nicht mehr.
 
 ### 10.3 Kleinkram
 

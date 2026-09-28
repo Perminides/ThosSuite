@@ -15,7 +15,7 @@ package app.shared.model;
  * anki-spezifisch aus und könnten theoretisch in eine {@code LearnScreen}/
  * {@code AnkiScreen}-Hierarchie wandern. Das scheitert aber daran, dass der
  * Controller sie über eine {@code Screen}-Referenz aufruft
- * ({@code currentScreen.sort(...)}, {@code currentScreen.reactOnPausePressed()}) –
+ * ({@code currentScreen.sortOrderChanged()}, {@code currentScreen.reactOnPausePressed()}) –
  * der konkrete Typ ist dort bewusst vergessen. Solange der Aufruf über {@code Screen}
  * läuft, müssen die Methoden hier liegen. Eine Trennung würde erst möglich, wenn der
  * Controller vor dem Aufruf die Screen-Art prüfte; dieser Umbau lohnt den Gewinn
@@ -90,7 +90,6 @@ public interface Screen {
 	
 	/**
 	 * Der User hat die Sortierreihenfolge geändert.
-	 * @param order
 	 */
 	default void sortOrderChanged() {};
 }
