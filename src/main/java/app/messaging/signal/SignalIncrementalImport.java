@@ -84,7 +84,7 @@ import app.shared.ui.Alerts;
  */
 public class SignalIncrementalImport {
 
-    private static final String signalId = "signal";
+    private static final String SOURCE = "signal";
 
     /** Puffer am oberen Ende des Importfensters: Nachrichten jünger als dieser Wert werden ignoriert. */
     private static final long CUTOFF_BUFFER_MS = 5 * 60 * 1000L;
@@ -136,9 +136,9 @@ public class SignalIncrementalImport {
     	myServiceId = Config.get("signal.myServiceId");
     	
         // Schritt 1: Caches laden
-        blacklistedChats.addAll(repo.loadBlacklistedChatIds(signalId));
-        chatByConversationId.putAll(repo.loadKnownChats(signalId));
-        contacts = new ContactResolver(signalId, "Signal", repo);
+        blacklistedChats.addAll(repo.loadBlacklistedChatIds(SOURCE));
+        chatByConversationId.putAll(repo.loadKnownChats(SOURCE));
+        contacts = new ContactResolver(SOURCE, "Signal", repo);
 
         long cutoffMs = System.currentTimeMillis() - CUTOFF_BUFFER_MS;
 
@@ -150,7 +150,7 @@ public class SignalIncrementalImport {
              Connection suiteConnection   = DB.getNewConnection()) {
 
             // Schritt 2: Letzte importierte source_id aus Suite-DB — Signal-DB macht den Rest
-            String lastSourceId = repo.getLastImportedSourceId(signalId);
+            String lastSourceId = repo.getLastImportedSourceId(SOURCE);
 
             Log.info(this, "[signal] Importiere Nachrichten ab source_id=" + lastSourceId
                 + " bis " + LocalDateTime.ofInstant(Instant.ofEpochMilli(cutoffMs), ZoneId.systemDefault()));
@@ -213,7 +213,7 @@ public class SignalIncrementalImport {
 
             if (!"incoming".equals(msgType) && !"outgoing".equals(msgType)) return;
             if (isErased == 1) return;
-            if (repo.isAlreadyImported(suiteConnection, signalId, signalMsgId)) return;
+            if (repo.isAlreadyImported(suiteConnection, SOURCE, signalMsgId)) return;
 
             if (!chatByConversationId.containsKey(conversationId)
                     && !blacklistedChats.contains(conversationId)) {
@@ -260,13 +260,13 @@ public class SignalIncrementalImport {
             String resolvedQuoteMsgId = resolveQuote(signalConnection, msg.signalMsgId(),
                 msg.quoteJson(), msg.quoteMsgId(), msg.quoteId());
 
-            repo.insertMessage(suiteConnection, signalId, msg.signalMsgId(),
+            repo.insertMessage(suiteConnection, SOURCE, msg.signalMsgId(),
             	    LocalDateTime.ofInstant(Instant.ofEpochMilli(msg.sentAtMs()), ZoneId.systemDefault()),
             	    fromContact, chatId, msg.body(), resolvedQuoteMsgId);
             msgCount[0]++;
 
             for (AttachmentResult att : msg.attachments()) {
-                repo.insertAttachment(suiteConnection, signalId, msg.signalMsgId(), att.relativePath(), att.available());
+                repo.insertAttachment(suiteConnection, SOURCE, msg.signalMsgId(), att.relativePath(), att.available());
                 attachCount[0]++;
             }
         });
@@ -293,7 +293,7 @@ public class SignalIncrementalImport {
         ButtonEnum result = Alerts.show("Neuer Signal-Chat", info, ButtonEnum.IMPORT, ButtonEnum.BLACKLIST);
 
         boolean doImport = result == ButtonEnum.IMPORT;
-        int chatId = repo.insertChat(suiteConnection, signalId, conversationId, conv.isGroup(), displayName, !doImport);
+        int chatId = repo.insertChat(suiteConnection, SOURCE, conversationId, conv.isGroup(), displayName, !doImport);
 
         if (doImport)
             chatByConversationId.put(conversationId, chatId);
@@ -326,15 +326,20 @@ public class SignalIncrementalImport {
      * <li>+ "_"</li>
      * <li>+ originale Message-Id aus der SignalDB. Message-Id nicht Attachment-Id!</li>
      * <li>+ "_"</li>
-     * <li>+ Hochzählendes int bei mehreren Attachments pro Nachricht. Dass wir hier nicht einfach das Feld orderInMessage aus der Signal-DB genommen haben, war ein fehler, aber es funktioniert anscheinend.</li>
+     * <li>+ Hochzählendes int bei mehreren Attachments pro Nachricht.</li>
      * <li>+ "."</li>
-     * <li>+ Dateiendung aus dem Mapping. Da es ja manchmal keins gab und wir eh nur bekannte importieren wollen, ignorieren wir hier die Endung aus dem filename, falls der bekannt sein sollte. Wir nehmen stattdessen den aus unserer internen Mapping-Tabelle. Ja, die liegt nur im Code vor. Ob das clever ist, da sind sich Claude ("super") und Perminides ("Mist") uneins.</li></ul> 
+     * <li>+ Dateiendung aus der internen Mapping-Tabelle, nicht aus dem filename — der fehlt
+     *     manchmal, und importiert werden ohnehin nur bekannte Typen.</li></ul>
      * 
      * @param signalConnection
      * @param signalMsgId
      * @return
      * @throws Exception
      */
+    // !Später: Die laufende Nummer wird hochgezählt, statt orderInMessage aus der Signal-DB zu
+    // nehmen. Funktioniert, ist aber die zweitbeste Lösung.
+    // !Idee: Die Extension-Tabelle steht nur im Code. Ob sie dorthin gehört oder in die Config,
+    // ist offen.
     private List<AttachmentResult> resolveAttachments(Connection signalConnection,
                                                        String signalMsgId) throws Exception {
         List<AttachmentResult> results = new ArrayList<>();
@@ -436,11 +441,11 @@ public class SignalIncrementalImport {
         addIfNotBlank(candidates, stripBidiControls(name));
         addIfNotBlank(candidates, buildFullName(profileName, profileFamilyName));
         addIfNotBlank(candidates, stripBidiControls(profileFullName));
-        String longest = fallback;
+        String longest = null;
         for (String candidate : candidates)
-            if (longest == fallback || candidate.length() > longest.length())
+            if (longest == null || candidate.length() > longest.length())
                 longest = candidate;
-        return longest;
+        return longest != null ? longest : fallback;
     }
 
     private String buildFullName(String first, String last) {

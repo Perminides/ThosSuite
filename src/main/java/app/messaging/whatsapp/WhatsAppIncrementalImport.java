@@ -101,11 +101,13 @@ public class WhatsAppIncrementalImport {
     private int importedMessages    = 0;
     private int importedAttachments = 0;
 
-    public WhatsAppIncrementalImport() {
-    	if (Config.get("whatsapp.externalPath", null) == null)
-    		return;
-    	this.whatsAppExternalDir      = Config.getPath("whatsapp.externalPath");
-        this.crypt15Path      = Config.getPath("whatsapp.externalPath").resolve("Databases").resolve(CRYPT15_FILENAME);
+    /**
+     * Läuft erst hinter dem Wächter in {@link #run()}: Auf einem Rechner ohne WhatsApp bliebe das
+     * Objekt sonst halb gebaut stehen, mit sechs leeren Feldern.
+     */
+    private void ladeKonfiguration() {
+        this.whatsAppExternalDir = Config.getPath("whatsapp.externalPath");
+        this.crypt15Path      = whatsAppExternalDir.resolve("Databases").resolve(CRYPT15_FILENAME);
         this.attachmentDir    = Config.getPath("attachments.folder").resolve("whatsapp");
         this.hexKey           = Config.get("whatsapp.key");
         this.dayStartHour     = Config.getInt("whatsapp.daystartHour");
@@ -121,10 +123,12 @@ public class WhatsAppIncrementalImport {
      * Wird vom Controller beim Start der Suite aufgerufen.
      */
     public void run() throws Exception {
-        if (whatsAppExternalDir == null) {
+        // Schritt 0: Ist WhatsApp auf diesem Rechner überhaupt eingerichtet?
+        if (Config.get("whatsapp.externalPath", null) == null) {
         	Log.info(this.getClass(), "WhatsApp nicht konfiguriert.");
         	return;
         }
+        ladeKonfiguration();
         
         if (!isCheckDue()) {
         	Log.info(this.getClass(), "Kein WhatsApp-Import fällig.");
