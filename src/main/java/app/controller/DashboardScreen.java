@@ -74,7 +74,7 @@ public class DashboardScreen implements Screen {
             	"" + messagesToday,
                 "Heute importierte Nachrichten"));
         
-        LocalDate lastWhatsApp = sr.getLastWhatsAppMessageDate();
+        LocalDate lastWhatsApp = sr.getLastMessageDate("whatsapp");
         tiles.add(new DashboardTileData(
             	lastWhatsApp.format(DateTimeFormatter.ofPattern("dd.MM.")),
                 "Letzte WhatsApp-Nachricht"));

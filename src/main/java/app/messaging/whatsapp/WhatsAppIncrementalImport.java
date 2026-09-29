@@ -49,7 +49,7 @@ import app.shared.ui.WhatsAppChatDialog;
  *   <li>crypt15 entschlüsseln in Temp-Verzeichnis</li>
  *   <li>Transaktion öffnen, Nachrichten sequenziell importieren</li>
  *   <li>Commit, Hash und letzten Check-Zeitpunkt speichern</li>
- *   <li>Attachments verschieben (PostTask)</li>
+ *   <li>Attachments kopieren (PostTask)</li>
  *   <li>Temp-Datei löschen</li>
  * </ol>
  * </p>
@@ -95,7 +95,7 @@ public class WhatsAppIncrementalImport {
     private final Map<String, long[]> openAlbumByKey = new LinkedHashMap<>();
 
     // Für den PostTask: Attachments die nach erfolgreichem Commit verschoben werden
-    private final List<AttachmentMove> pendingMoves = new ArrayList<>();
+    private final List<AttachmentCopy> pendingCopies = new ArrayList<>();
 
     // Zähler für das Abschluss-Alert
     private int importedMessages    = 0;
@@ -421,7 +421,7 @@ public class WhatsAppIncrementalImport {
 
     /**
      * Löst einen Attachment-Pfad auf: prüft Existenz im Quell- und Zielverzeichnis,
-     * trägt ggf. einen PendingMove ein und gibt den relativen Pfad und Verfügbarkeit zurück.
+     * trägt sie ggf. in `pendingCopies` ein und gibt den relativen Pfad und Verfügbarkeit zurück.
      * Schreibt nichts in die DB — Insert liegt beim Aufrufer (FK-Constraint: Message zuerst).
      *
      * @param filePath  Pfad wie er in der WhatsApp-DB steht (beginnt mit "Media/")
@@ -438,7 +438,7 @@ public class WhatsAppIncrementalImport {
         Path   target       = attachmentDir.resolve(relativePath);
 
         if (Files.exists(source)) {
-            pendingMoves.add(new AttachmentMove(source, target));
+            pendingCopies.add(new AttachmentCopy(source, target));
             return new AttachmentResolution(relativePath, true);
         } else if (Files.exists(target)) {
             return new AttachmentResolution(relativePath, true);
@@ -453,7 +453,7 @@ public class WhatsAppIncrementalImport {
     private record AttachmentResolution(String relativePath, boolean available) {}
 
     // -------------------------------------------------------------------------
-    // PostTask: Attachments verschieben
+    // PostTask: Attachments kopieren
     // -------------------------------------------------------------------------
 
     /**
@@ -463,20 +463,20 @@ public class WhatsAppIncrementalImport {
      * bleiben lokal. Was ja iwie auch verständlich ist für ne Backup / Sicherungslösung. Aber für mich gerade etwas doof.
      */
     private void copyAttachments() {
-        for (AttachmentMove move : pendingMoves) {
+        for (AttachmentCopy copy : pendingCopies) {
             try {
-                Files.createDirectories(move.target().getParent());
-                Files.copy(move.source(), move.target(), StandardCopyOption.REPLACE_EXISTING);
+                Files.createDirectories(copy.target().getParent());
+                Files.copy(copy.source(), copy.target(), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 throw new IllegalStateException(
-                    "Attachment-Verschiebung fehlgeschlagen — das hätte nie passieren dürfen. " +
-                    "Bitte Konsistenz-Check durchführen. Quelle: " + move.source() +
-                    " Ziel: " + move.target(), e);
+                    "Attachment-Kopie fehlgeschlagen — das hätte nie passieren dürfen. " +
+                    "Bitte Konsistenz-Check durchführen. Quelle: " + copy.source() +
+                    " Ziel: " + copy.target(), e);
             }
         }
     }
 
-    private record AttachmentMove(Path source, Path target) {}
+    private record AttachmentCopy(Path source, Path target) {}
 
     // -------------------------------------------------------------------------
     // Abschluss-Alert

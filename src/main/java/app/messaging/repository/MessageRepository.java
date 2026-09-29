@@ -364,14 +364,21 @@ public class MessageRepository {
         }
     }
     
-	public LocalDate getLastWhatsAppMessageDate() {
-		String sql = "select max (sent_at) from msg_messages where source = 'whatsapp'";
+	/** Wann zuletzt eine Nachricht dieser Quelle gesendet wurde — für die Dashboard-Kachel. */
+	public LocalDate getLastMessageDate(String source) {
+		String sql = "select max(sent_at) from msg_messages where source = ?";
 		Connection con = DB.getConnection();
-		try (Statement statement = con.createStatement(); ResultSet rs = statement.executeQuery(sql)) {
-			rs.next();
-			return LocalDateTime.parse(rs.getString(1), DB_FORMAT).toLocalDate();
-		} catch (Exception e) {
-			throw new RuntimeException("Problem beim Holen des letzten WhatsApp-Imports", e);
+		try (PreparedStatement ps = con.prepareStatement(sql)) {
+			ps.setString(1, source);
+			try (ResultSet rs = ps.executeQuery()) {
+				String letzte = rs.next() ? rs.getString(1) : null;
+				if (letzte == null)
+					throw new IllegalStateException(
+							"[FAILFAST] Noch keine Nachricht aus '" + source + "' importiert.");
+				return LocalDateTime.parse(letzte, DB_FORMAT).toLocalDate();
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException("Problem beim Holen der letzten Nachricht aus '" + source + "'", e);
 		}
 	}
 }
