@@ -27,6 +27,7 @@ public class TextPromptDialog {
         content.getChildren().addAll(new Label(headerText), textArea);
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.setOnShown(_ -> textArea.requestFocus());
 
         Optional<?> result = dialog.showAndWait();
         if (result.isEmpty() || result.get().equals(ButtonType.CANCEL))
