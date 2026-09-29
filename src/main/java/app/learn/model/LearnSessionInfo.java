@@ -5,6 +5,5 @@ package app.learn.model;
  */
 public abstract class LearnSessionInfo {
     public abstract String formatForMenu();
-    //public abstract DeckCategory getCategory();
     public abstract boolean isStillDueToday();
 }

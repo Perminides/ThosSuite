@@ -217,28 +217,6 @@ public class EpisodeRepository {
             throw new RuntimeException("updateEpisodeFlags fehlgeschlagen. episodeId: " + episodeId, e);
         }
     }
-
-    /**
-     * Aktualisiert die Flags einer Episodenbewertung.
-     */
-    public void updateEpisodeFlags(int episodeId, Boolean ratedSeason,
-            Boolean actorsFromShow, Boolean directorsFromShow) {
-        Log.debug(EpisodeRepository.class, "updateEpisodeFlags, episodeId " + episodeId);
-        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "UPDATE episode_rating SET rated_season = ?, actors_from_show = ?, " +
-                "directors_from_show = ? WHERE episode_id = ?")) {
-            if (ratedSeason == null) ps.setNull(1, java.sql.Types.INTEGER);
-            else ps.setInt(1, ratedSeason ? 1 : 0);
-            if (actorsFromShow == null) ps.setNull(2, java.sql.Types.INTEGER);
-            else ps.setInt(2, actorsFromShow ? 1 : 0);
-            if (directorsFromShow == null) ps.setNull(3, java.sql.Types.INTEGER);
-            else ps.setInt(3, directorsFromShow ? 1 : 0);
-            ps.setInt(4, episodeId);
-            ps.execute();
-        } catch (Exception e) {
-            throw new RuntimeException("updateEpisodeFlags fehlgeschlagen. episodeId: " + episodeId, e);
-        }
-    }
     
     public void updateOverview(int episodeId, String overview) {
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(

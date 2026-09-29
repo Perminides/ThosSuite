@@ -46,11 +46,10 @@ import app.shared.model.SketchColor;
 public class CardParser {
 
 	/**
-	 * Eine an {@code ;} zerlegte Zeile: id, remark, Labels, danach die Steps.
+	 * Eine an {@code ;} zerlegte Zeile: id, Bemerkung (wird nicht gelesen), Labels, danach die Steps.
 	 */
 	public static Card parse(List<String> csvTokens) {
 		int id = Integer.parseInt(csvTokens.get(0));
-		String remark = csvTokens.get(1);
 		Set<String> labels = splitAndTrim(csvTokens.get(2));
 
 		List<Chunk> out = new ArrayList<>(); // Ergebnisliste: feste Schritte und Bloecke
@@ -125,7 +124,7 @@ public class CardParser {
 		if (segments != null)
 			throw new RuntimeException("<ShuffleStart> ohne <ShuffleEnd>\n" + String.join("\n", csvTokens));
 
-		return new Card(id, remark, labels, out, onFail);
+		return new Card(id, labels, out, onFail);
 	}
 
     // --- Parsing eines einzelnen Step-Strings (ohne Marker) ---

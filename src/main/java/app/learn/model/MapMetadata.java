@@ -1,32 +1,30 @@
 package app.learn.model;
 
 public enum MapMetadata {
-	GERMANY(MapType.SHAPE, "germany.geojson;germany states.geojson", null),
-	ITALY(MapType.SHAPE, "italy.geojson", null),
-	SPAIN(MapType.SHAPE, "spain.geojson", null),
-	USA(MapType.SHAPE, "usa states.geojson", null),
-	CARIBBEAN(MapType.SHAPE, "carribean.geojson", null),
-	ENGLAND(MapType.SHAPE, "england.geojson", null),
-	BERLIN(MapType.SHAPE, "berlin.geojson", null), // !Idee: Willste in Berlin nicht noch die Bezirksgrenzen hinzufügen? Wäre flott gemacht :)
-	SCHWEIZ(MapType.SHAPE, "schweiz.geojson", null),
-	HANNOVER_STADTTEILE(MapType.SHAPE, "hannover_stadtteile.geojson", null),
-	OZEANIEN(MapType.SHAPE, "ozeanien.geojson", null),
-	AUSTRIA(MapType.SHAPE, "austria.geojson", null),
-	BAVARIA(MapType.SHAPE, "bayern_reg.geojson", null),
-	HANNOVER_REGION(MapType.SHAPE, "hannover_region.geojson", null),
+	GERMANY(MapType.SHAPE, "germany.geojson;germany states.geojson"),
+	ITALY(MapType.SHAPE, "italy.geojson"),
+	SPAIN(MapType.SHAPE, "spain.geojson"),
+	USA(MapType.SHAPE, "usa states.geojson"),
+	CARIBBEAN(MapType.SHAPE, "carribean.geojson"),
+	ENGLAND(MapType.SHAPE, "england.geojson"),
+	BERLIN(MapType.SHAPE, "berlin.geojson"), // !Idee: Willste in Berlin nicht noch die Bezirksgrenzen hinzufügen? Wäre flott gemacht :)
+	SCHWEIZ(MapType.SHAPE, "schweiz.geojson"),
+	HANNOVER_STADTTEILE(MapType.SHAPE, "hannover_stadtteile.geojson"),
+	OZEANIEN(MapType.SHAPE, "ozeanien.geojson"),
+	AUSTRIA(MapType.SHAPE, "austria.geojson"),
+	BAVARIA(MapType.SHAPE, "bayern_reg.geojson"),
+	HANNOVER_REGION(MapType.SHAPE, "hannover_region.geojson"),
 	
-	WORLD(MapType.IMAGE, "worldAreas.geojson;worldCountries.geojson;worldLines.geojson", "world.png"),
-	HANNOVER(MapType.IMAGE, "hannoverAreas.geojson", "");
+	WORLD(MapType.IMAGE, "worldAreas.geojson;worldCountries.geojson;worldLines.geojson"),
+	HANNOVER(MapType.IMAGE, "hannoverAreas.geojson");
 
 	private final MapType mapType;
 	private final String[] geoJsonFile;
-	private final String bgImageFile;
 	
 
-	MapMetadata(MapType type, String geoJsonFile, String bgImage) {
+	MapMetadata(MapType type, String geoJsonFile) {
 		this.mapType = type;
 		this.geoJsonFile = geoJsonFile.split(";");
-		this.bgImageFile = bgImage;
 	}
 
 	public MapType getMapType() {

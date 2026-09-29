@@ -98,21 +98,4 @@ public class CrewFilterRepository {
     public void addToBlacklist(String job) {
         addToBlacklist(job, DB.getTmdbConnection());
     }
-
-    /**
-     * Liefert alle Jobs die noch nicht eingeordnet wurden — also in crew_pending
-     * stehen aber weder in Whitelist noch Blacklist.
-     */
-    public java.util.List<String> getPendingJobs() {
-        java.util.List<String> jobs = new java.util.ArrayList<>();
-        try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "SELECT DISTINCT job FROM crew_pending");
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next())
-                jobs.add(rs.getString("job"));
-        } catch (Exception e) {
-            throw new RuntimeException("getPendingJobs fehlgeschlagen", e);
-        }
-        return jobs;
-    }
 }

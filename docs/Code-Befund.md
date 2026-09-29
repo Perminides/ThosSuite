@@ -153,7 +153,7 @@ laufen die beiden auseinander.
 | 1.9 | Zwei GeoJSON-Leser mit wortgleichen Geometrie-Methoden | zwanzig Minuten | erledigt |
 | 1.10 | Ein Statement gibt sich als parametrisiert aus | ein paar Minuten | erledigt |
 | 1.11 | Die Anzeigetexte der Anki-Session entstehen auf der Feature-Seite | eine halbe Stunde | offen |
-| 1.12 | Toter Code | zwanzig Minuten | offen |
+| 1.12 | Toter Code | zwanzig Minuten | erledigt |
 | 1.13 | Ablaufverfolgung landet im Dateilog | zehn Minuten | offen |
 | 2.1 | Ein neu angelegtes Region-Deck wird nie fällig | eine halbe Stunde (gemeinsam mit 1.3) | verworfen — der erste Stand wird bewusst von Hand gesetzt |
 | 2.2 | „Welcher Name gilt in diesem Modus" wird fünfmal beantwortet, auf zwei Arten | dreiviertel Stunde | offen |
@@ -173,7 +173,7 @@ laufen die beiden auseinander.
 | 3.6 | Das Klassen-Javadoc nennt einen Config-Schlüssel, den es nicht gibt | zwei Minuten | erledigt |
 | 3.7 | Zehnmal derselbe Parse-Block | eine halbe Stunde | offen |
 | 3.8 | Jede bewertete Serie wird bei jedem Lauf zusätzlich zweimal vollständig geholt | zwanzig Minuten | offen |
-| 3.9 | Toter Code | zehn Minuten | offen |
+| 3.9 | Toter Code | zehn Minuten | erledigt |
 | 3.10 | Kleinkram | eine halbe Stunde | offen |
 | 4.1 | Die eigene Signal-Kennung steht im Quelltext | zehn Minuten | erledigt |
 | 4.2 | Die Kontakt-Auflösung steht in beiden Zweigen | eine Stunde | offen |
@@ -484,7 +484,17 @@ Jedes Stück davon muss beim Durchlesen einmal bewertet werden und liefert dabei
 
 **Aufwand:** zwanzig Minuten, inklusive Nachsehen, ob wirklich niemand ruft.
 
-**Stand:** offen
+**Stand:** erledigt. `MapElementListener.java` gelöscht, `GeoMap.setShapes` gelöscht,
+`MapMetadata.bgImageFile` samt Konstruktor-Parameter und dem dritten Argument in allen 15
+Enum-Konstanten gelöscht, die auskommentierte Zeile in `LearnSessionInfo` gelöscht.
+`SessionPresenter:300` war mit 1.7 gefallen.
+
+`Card.remark` ist ebenfalls weg — Feld und Konstruktor-Parameter. Die CSV-Spalte bleibt natürlich
+an ihrem Platz, `CardParser` überspringt sie nur; das Javadoc dort sagt das jetzt.
+
+`MarkMapElements.right` **bleibt** und hat statt des Nebensatzes einen `!Idee:`-Marker bekommen,
+damit die Frage in der Übersicht auftaucht statt am Zeilenende zu verschwinden. Damit ist auch die
+offene Frage 6 am Berichtsende beantwortet: Platzhalter, nicht Überbleibsel.
 
 ### 1.13 Ablaufverfolgung landet im Dateilog
 
@@ -997,7 +1007,16 @@ ohnehin angefasst wird.
 
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — mit zwei Korrekturen am Befund.
+
+`CrewFilterRepository.getPendingJobs()` ist gelöscht. Bei `updateEpisodeFlags` gibt es **zwei**
+Überladungen: Die zweiargumentige ruft `SeriesImporter:695`, die vierargumentige niemand — nur
+die ist gefallen.
+
+`MovieViewerRepository.loadAllEpisodes()` ist **nicht** tot: `scripts/tmdb/EpisodeRatingReview`
+ruft es. Es bleibt samt der privaten Überladung `loadEpisodes(String)` und hat jetzt einen
+Kommentar, der den einzigen Aufrufer nennt — sonst landet es beim nächsten Durchsehen wieder auf
+dieser Liste. (Und `scripts` wird mitkompiliert, ein Löschen hätte den Build gebrochen.)
 
 ### 3.10 Kleinkram
 

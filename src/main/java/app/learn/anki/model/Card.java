@@ -32,7 +32,9 @@ public class Card {
     public record Input(List<String> parts) implements Step {}
     public record MC(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
     public record MCPlus(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
-    public record MarkMapElements(Set<String> left, Set<String> right) implements Step {} // Momentan ist right immer leer. Vielleicht will ich später aber auch mal die optionalen Shapes berücksichtigen...
+    // !Idee: right ist immer leer und wird nie gelesen — gedacht für optionale Shapes, die beim
+    // Markieren mitgehen sollen. Bleibt, bis entschieden ist, ob das kommt.
+    public record MarkMapElements(Set<String> left, Set<String> right) implements Step {}
     public record Pause() implements Step {}
     public record Fast(int seconds, boolean ordered, int slots, List<Answer> answers) implements Step {}
 
@@ -78,7 +80,6 @@ public class Card {
     private final List<Chunk> chunks;
 	private final List<Step> onFailSteps;
 	private final int id;
-	private final String remark;
 	private final Set<String> labels;
 	
 	private LearnStat learnStat;
@@ -88,9 +89,8 @@ public class Card {
 	 * an der Struktur ab und hängen nicht daran, wie die Zeile geschrieben war. Die Grammatik der
 	 * Zeile selbst prüft der Parser.
 	 */
-	public Card(int id, String remark, Set<String> labels, List<Chunk> chunks, List<Step> onFailSteps) {
+	public Card(int id, Set<String> labels, List<Chunk> chunks, List<Step> onFailSteps) {
 		this.id = id;
-		this.remark = remark;
 		this.labels = Set.copyOf(labels);
 		this.chunks = List.copyOf(chunks);
 		this.onFailSteps = List.copyOf(onFailSteps);

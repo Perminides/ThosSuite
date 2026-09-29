@@ -181,6 +181,7 @@ public class MovieViewerRepository {
     // Alle Episoden
     // -------------------------------------------------------------------------
     
+    /** Einziger Aufrufer ist {@code scripts.tmdb.EpisodeRatingReview} — in der Suite selbst nicht gebraucht. */
     public List<CardData> loadAllEpisodes() {
         String sql = "SELECT edet.* FROM episode_details edet "
                 + "ORDER BY edet.episode_release_date DESC";

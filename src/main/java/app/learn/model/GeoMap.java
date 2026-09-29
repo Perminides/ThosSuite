@@ -90,9 +90,4 @@ public class GeoMap {
 		return getShape(id).geometry();
 	}
 
-	public void setShapes(List<MapShape> transformed) {
-		this.shapes.clear();
-		for (MapShape ms : transformed)
-			this.shapes.put(ms.id(), ms);
-	}
 }
