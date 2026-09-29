@@ -347,7 +347,7 @@ public class ImageMapPane extends StackPane implements LearnMap {
 		}
 	}
 
-	public void addToCorrect(List<ShapeGeometry> shapes) {
+	private void addToCorrect(List<ShapeGeometry> shapes) {
 		for (ShapeGeometry geometry : shapes) {
 			Node node = place(geometry);
 			if (node != null)
@@ -356,7 +356,7 @@ public class ImageMapPane extends StackPane implements LearnMap {
 		recenterIfNeeded(shapes);
 	}
 
-	public void setMarked(List<ShapeGeometry> shapes) {
+	private void setMarked(List<ShapeGeometry> shapes) {
 		for (ShapeGeometry geometry : shapes) {
 			Node node = place(geometry);
 			if (node != null)
@@ -365,7 +365,7 @@ public class ImageMapPane extends StackPane implements LearnMap {
 		recenterIfNeeded(shapes);
 	}
 
-	public void markLastClickAsIncorrect() {
+	private void markLastClickAsIncorrect() {
 		int x = (int) lastClick.getX();
 		int y = (int) lastClick.getY();
 

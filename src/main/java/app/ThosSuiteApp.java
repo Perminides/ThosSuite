@@ -39,6 +39,9 @@ import javafx.stage.StageStyle;
 
 public class ThosSuiteApp extends Application {
 
+    /** Das Paket, unter dem ScenicView läuft — siehe den globalen Fehler-Handler. */
+    private static final String SCENIC_VIEW_PAKET = "org.fxconnector";
+
     private MainWindow mainWindow;
     private Controller controller;
 
@@ -343,6 +346,18 @@ public class ThosSuiteApp extends Application {
                 ex.printStackTrace(System.err);
             }
             
+            // ScenicView ist ein Werkzeug, kein Teil der Suite: seine Aussetzer beenden sie nicht
+            // und zeigen keinen Dialog. Gesucht wird in der Ursachenkette und in den Stackframes —
+            // der häufige Fall ist eine NullPointerException aus fxconnector-Code, die selbst nicht
+            // danach heißt. Geloggt ist sie oben trotzdem.
+            for (Throwable t = ex; t != null; t = t.getCause()) {
+                if (t.toString().contains(SCENIC_VIEW_PAKET))
+                    return;
+                for (StackTraceElement frame : t.getStackTrace())
+                    if (frame.getClassName().startsWith(SCENIC_VIEW_PAKET))
+                        return;
+            }
+
             javafx.application.Platform.runLater(() -> {
                 Alert alert = new Alert(AlertType.ERROR);
                 alert.setTitle("ThosSuite Fehler");
@@ -359,11 +374,6 @@ public class ThosSuiteApp extends Application {
                 
                 alert.getDialogPane().setContent(textArea);
                 alert.showAndWait();
-                
-                // ScenicView-Exceptions ignorieren (externe Library, kein App-Fehler)
-                if (ex.toString().contains("org.fxconnector") || ex.toString().contains("ScenicView")) {
-                    return; // Nicht crashen für externes Tool
-                }
                 
                 Platform.exit();
             });

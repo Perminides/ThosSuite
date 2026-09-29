@@ -9,9 +9,9 @@ import app.learn.model.LearnSessionInfo;
 import app.shared.Config;
 import app.shared.Log;
 import app.shared.model.ScreenView;
-import app.shared.ui.MainWindowHeaderBar;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
+import app.shared.ui.MainWindowHeaderBar;
 import javafx.collections.ObservableList;
 import javafx.geometry.Dimension2D;
 import javafx.scene.Scene;
@@ -274,11 +274,6 @@ public class MainWindow {
         updateLearnMenuItems();
     }
     
-    public void updateLearnItems(List<LearnSessionInfo> infoList) {
-        todaysLearnSessions = infoList;
-        updateLearnMenuItems();
-    }
-    
     public void showScreenView(ScreenView view) {
     	contentPane.getChildren().setAll(view.getPane());
     }
@@ -295,7 +290,7 @@ public class MainWindow {
             switch (event.getCode()) {
                 case ESCAPE: {
                 	long now = System.currentTimeMillis();
-                    // Ignoriere wenn weniger als 300ms seit letztem ESC
+                    // Ignoriere wenn letzter ESC gerade eben gedrückt wurde
                     if (now - lastEscapeTime < 500) {
                     	Log.debug(this, "Oha, wohl ein Tastatur-Glitsch, so schnell hintereinander 2x ESC...");
                         event.consume();
@@ -322,28 +317,6 @@ public class MainWindow {
 
 	public void show() {
 		stage.show();		
-	}
-
-	public void setWidth(int width) {
-		stage.setWidth(width);
-	}
-
-	public void setHeight(int height) {
-		stage.setHeight(height);
-	}
-	
-	/**
-	 * Setzt die aktuelle SortOrder und disabled das entsprechende MenuItem
-	 * Wird initial ein Mal vom Controller nach Lesen der config aufgerufen
-	 */
-	public void setCurrentSortOrder(CardSortOrder sortOrder) {
-	    if (menuSort == null) return; // Noch nicht initialisiert
-	    
-	    for (MenuItem item : menuSort.getItems()) {
-	        // Über userData, nicht über den Anzeigetext — sonst bräche eine Umbenennung in
-	        // CardSortOrder.getDisplayName() die Zuordnung still.
-	        item.setDisable(item.getUserData() == sortOrder);
-	    }
 	}
 
 	public ObservableList<Image> getIcons() {

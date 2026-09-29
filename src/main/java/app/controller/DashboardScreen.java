@@ -7,12 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import app.alc.repository.AlcRepository;
 import app.activity.ActivityDashboardService;
+import app.alc.repository.AlcRepository;
 import app.learn.anki.repository.DeckRepository;
 import app.mattress.repository.MattressRepository;
 import app.messaging.repository.MessageRepository;
-import app.shared.AppClock;
 import app.shared.Config;
 import app.shared.model.DashboardTileData;
 import app.shared.model.Screen;
@@ -34,7 +33,7 @@ public class DashboardScreen implements Screen {
         List<DashboardTileData> tiles = new ArrayList<>();
 
         ActivityDashboardService activityService = new ActivityDashboardService();
-        int stepsNeeded = activityService.calculateRemainingDailySteps(AppClock.TODAY);
+        int stepsNeeded = activityService.calculateRemainingDailySteps();
         if (stepsNeeded < 0)
         	stepsNeeded = 0;
         String formattedSteps = NumberFormat.getInstance(Locale.GERMANY).format(stepsNeeded);
@@ -44,7 +43,7 @@ public class DashboardScreen implements Screen {
             ));
 
         tiles.add(new DashboardTileData(
-            	"" + activityService.calculateCurrentStreak(AppClock.TODAY),
+            	"" + activityService.calculateCurrentStreak(),
                 "Aktueller Aktivitäts-Streak in Wochen (Rekord: " + activityService.calculateRecordStreak() + ")"
             ));
 

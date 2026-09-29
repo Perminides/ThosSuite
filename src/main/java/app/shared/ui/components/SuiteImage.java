@@ -324,10 +324,4 @@ public class SuiteImage extends StackPane {
             throw new IllegalStateException("Im Bilderrahmen liegt keine Skizze — fehlt ein SketchImage-Schritt?");
         return sketch;
     }
-
-    // Getter: Falls jemand Zugriff auf den Hintergrund braucht
-    public Rectangle getBackgroundRect() { return backgroundRect; }
-    
-    // Falls du später mal Zugriff auf den Rahmen brauchst, könntest du das hier ergänzen:
-    public Rectangle getBorderRect() { return borderRect; }
 }

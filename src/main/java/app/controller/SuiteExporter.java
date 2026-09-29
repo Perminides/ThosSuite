@@ -101,7 +101,7 @@ public class SuiteExporter {
             } else if (line.startsWith("file:")) {
                 rules.add(new IgnoreRule(false, Pattern.compile(line.substring(5).strip())));
             } else {
-                throw new RuntimeException("SuiteExporter: unbekannte Ignore-Zeile ignoriert: " + line);
+                throw new RuntimeException("SuiteExporter: unbekannte Ignore-Zeile: " + line);
             }
         }
         return rules;

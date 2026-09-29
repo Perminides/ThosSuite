@@ -22,9 +22,9 @@ public class ActivityDashboardService {
      * Die Schritte, die an jedem verbleibenden Tag dieser Woche im Schnitt nötig sind, um das
      * Wochenziel noch zu erreichen.
      */
-    public int calculateRemainingDailySteps(LocalDate today) {
-        LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate sunday = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+    public int calculateRemainingDailySteps() {
+        LocalDate monday = AppClock.TODAY.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate sunday = AppClock.TODAY.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 
         LocalDate lastDay = repository.getLastImportedDate() == null ? monday.minusDays(1) : repository.getLastImportedDate();
 
@@ -35,7 +35,7 @@ public class ActivityDashboardService {
         // Math.max, weil between negativ wird, sobald nextDay hinter dem Sonntag liegt
         int t = (int) Math.max(0, ChronoUnit.DAYS.between(nextDay, sunday.plusDays(1)));
 
-        int p = repository.getPointsForWeek(today);
+        int p = repository.getPointsForWeek(AppClock.TODAY);
         int z = repository.getWeeklyGoalForDate(monday);
         double s = PointsCalculator.POINTS_FOR_STEP;
 
@@ -50,17 +50,17 @@ public class ActivityDashboardService {
      * Der aktuelle Streak in vollständigen grünen Wochen. Eine Woche ist grün, wenn ihre Punkte
      * das Wochenziel erreichen; die laufende, unvollständige Woche zählt nicht mit.
      */
-    public int calculateCurrentStreak(LocalDate today) {
+    public int calculateCurrentStreak() {
         List<WeekData> weeks = allWeeks();
 
         if (weeks.isEmpty())
             return 0;
 
-        LocalDate currentMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate currentMonday = AppClock.TODAY.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         WeekData newestWeek = weeks.get(weeks.size() - 1);
 
         int startIndex = weeks.size() - 1;
-        if (newestWeek.weekStart().equals(currentMonday) && today.getDayOfWeek() != DayOfWeek.MONDAY)
+        if (newestWeek.weekStart().equals(currentMonday) && AppClock.TODAY.getDayOfWeek() != DayOfWeek.MONDAY)
             startIndex = weeks.size() - 2;
 
         if (startIndex < 0)

@@ -188,15 +188,15 @@ laufen die beiden auseinander.
 | 5.2 | „Ist die Matratze fällig" wird zweimal beantwortet, in zwei Einheiten | eine halbe Stunde | offen |
 | 5.3 | `PointsCalculator` rechnet nicht nur, er fragt | dreiviertel Stunde | offen |
 | 5.4 | „Welches Wochenziel galt in Woche X" — zwei Mechanismen im selben Paket | eine halbe Stunde | offen |
-| 5.5 | `DashboardService` bekommt „heute" übergeben und benutzt es dann nicht | eine Viertelstunde | offen |
+| 5.5 | `DashboardService` bekommt „heute" übergeben und benutzt es dann nicht | eine Viertelstunde | erledigt |
 | 5.6 | `logApiResponse` loggt keine API-Antwort | zehn Minuten bis eine halbe Stunde | offen |
 | 5.7 | Ein Übergangsgerüst, dessen Termin verstrichen ist | Entscheidung, keine Arbeit | erledigt — mit der Health-Migration abgerissen |
 | 5.8 | Kleinkram | eine halbe Stunde | offen |
 | 6.1 | Das Statistik-Menü wird über seinen Anzeigetext angesteuert — und erzeugt dabei einen toten Screen | eine halbe Stunde | erledigt |
 | 6.2 | Die Suite kann sich nicht selbst einrichten | eine halbe Stunde (Dashboard) | verworfen — die Suite wird nicht neu aufgesetzt |
 | 6.3 | Der Exporter fängt genau den Fehler ab, den `Config` bewusst wirft | eine Viertelstunde | offen |
-| 6.4 | Vier öffentliche Methoden am `MainWindow` ohne Aufrufer — samt der Mechanik dahinter | eine Viertelstunde | offen |
-| 6.5 | Vier Kommentare, die etwas anderes sagen als der Code | zwanzig Minuten | offen |
+| 6.4 | Vier öffentliche Methoden am `MainWindow` ohne Aufrufer — samt der Mechanik dahinter | eine Viertelstunde | erledigt |
+| 6.5 | Vier Kommentare, die etwas anderes sagen als der Code | zwanzig Minuten | erledigt |
 | 6.6 | Das Übergangsgerüst `app.tmp` ist fällig | Entscheidung, keine Arbeit | erledigt — das Paket existiert nicht mehr |
 | 6.7 | Kleinkram | zwanzig Minuten | offen |
 | 7.1 | Die Suite hat zwei Antworten auf „welcher Tag ist heute" | eine halbe Stunde + zwei Stunden Durchsicht | verworfen — AppClock ist kein zweiter Kalender, sondern der Arbeitstag der Startdaten |
@@ -209,12 +209,12 @@ laufen die beiden auseinander.
 | 7.8 | Kleinkram | eine Viertelstunde | offen |
 | 8.1 | Regel 6 beschreibt nicht den Code, und der Architekturtest sagt das bereits | eine Viertelstunde Doku | erledigt |
 | 8.2 | Der Erweiterungsvertrag von `AnkiLearnView` ist an drei Stellen überholt | eine halbe Stunde | offen |
-| 8.3 | Die Thumbnail-Höhe steht in beiden Hälften des Tagebuch-Splits | eine Viertelstunde | offen — Entscheidung vorbereitet, siehe Abschnitt |
+| 8.3 | Die Thumbnail-Höhe steht in beiden Hälften des Tagebuch-Splits | eine Viertelstunde | erledigt — Thumbnail-Dateien ersatzlos entfallen |
 | 8.4 | „Die einzige Stelle der Suite, die `ButtonType` kennt" — das sind 14 Stellen | fünf Minuten | erledigt |
 | 8.5 | Ein bekannter Mangel steht als Fließtext statt als Marker | zwei Minuten | erledigt |
-| 9.1 | `SuiteImage` reicht zwei Innen-Nodes nach außen — und niemand nimmt sie | zwei Minuten | offen |
-| 9.2 | `ImageMapPane` bietet zwei Vokabulare an, von denen eines nur nach innen zeigt | zwei Minuten | offen |
-| 9.3 | Die Thumbnail-Höhe steht ein drittes Mal — Erweiterung zu Befund 8.3 | mit 8.3 erledigt | offen — hängt an 8.3 |
+| 9.1 | `SuiteImage` reicht zwei Innen-Nodes nach außen — und niemand nimmt sie | zwei Minuten | erledigt |
+| 9.2 | `ImageMapPane` bietet zwei Vokabulare an, von denen eines nur nach innen zeigt | zwei Minuten | erledigt |
+| 9.3 | Die Thumbnail-Höhe steht ein drittes Mal — Erweiterung zu Befund 8.3 | mit 8.3 erledigt | erledigt — mit 8.3 |
 | 9.4 | Ein Rückblick zu viel — und zwei, die bleiben dürfen | fünf Minuten | erledigt |
 | 9.5 | Kleinkram | zehn Minuten | offen |
 | 10.1 | Zwei neue Felder sind in eine Falle gelaufen, die schon aufgeschrieben war | eine halbe Stunde | erledigt — anders gelöst als vorgeschlagen |
@@ -1422,7 +1422,20 @@ stimmt, weil sie groß genug ist.
 denselben Parameter geben. Gehört zum übergreifenden Uhr-Befund in Gruppe 7.
 **Aufwand:** eine Viertelstunde.
 
-**Stand:** offen
+**Stand:** erledigt — aber anders begründet als im Befund. Die beschriebene Stelle gab es zum
+Zeitpunkt des Abhakens schon nicht mehr: Die Klasse heißt seit der Health-Migration
+`ActivityDashboardService`, und ihr einziger Datenzugriff steht in `allWeeks()` und nimmt
+`AppClock.TODAY`. Zwei Uhren in einer Methode gibt es also nicht.
+
+Geblieben war das Gegenteil des Befundtitels: Der Parameter wurde übergeben **und** benutzt — nur
+konnte er nie etwas anderes tragen als das, was die Klasse sich daneben selbst holte. Ein einziger
+Aufrufer (`DashboardScreen`) gab zweimal `AppClock.TODAY` hinein, und `calculateRecordStreak()`
+hatte gar keinen Parameter. Drei öffentliche Methoden, zwei Bauarten.
+
+Jetzt nimmt keine der drei mehr einen Tag entgegen; die Klasse arbeitet auf dem Arbeitstag der
+Suite, und `DashboardScreen` fragt nur noch nach Zahlen. Offen bleibt nur die Kosmetik aus dem
+Nachsatz: `minus(9999, WEEKS)` als Schreibweise für „alles“ — steht seit der Zusammenfassung in
+`allWeeks()` immerhin nur noch einmal.
 
 ### 5.6 `logApiResponse` loggt keine API-Antwort
 
@@ -1623,7 +1636,9 @@ fehlt (dann vom Controller rufen — das Menü markiert die aktive Reihenfolge b
 den Umweg `lastSortOrderString` in `:148`) oder überflüssig ist (dann auch `setUserData` mit weg).
 **Aufwand:** eine Viertelstunde, plus die eine Entscheidung.
 
-**Stand:** offen
+**Stand:** erledigt — alle vier Methoden gelöscht, `setUserData` samt Kommentar mit. Die
+Markierung der aktiven Sortierung beim Start läuft weiter über `lastSortOrderString`, also über
+`order.name()` und nicht über den Anzeigetext.
 
 ### 6.5 Vier Kommentare, die etwas anderes sagen als der Code
 
@@ -1644,7 +1659,19 @@ den Umweg `lastSortOrderString` in `:148`) oder überflüssig ist (dann auch `se
 Alert ziehen, den Entwurfs-Dialog durch einen Satz ersetzen, der die Richtung benennt.
 **Aufwand:** zwanzig Minuten.
 
-**Stand:** offen
+**Stand:** erledigt. Der vierte Punkt (`Controller.java:85-88`, der Entwurfs-Dialog über das
+MainWindow) war schon vorher gefallen — mit dem `DialogOwner`-Umbau, der die Frage beantwortet
+hat, die der Kommentar offenließ.
+
+Beim dritten Punkt steckte mehr als ein Kommentar. Die ScenicView-Prüfung stand hinter
+`alert.showAndWait()`, der Fehlerdialog kam also trotzdem — sie ist jetzt davor. Und sie suchte in
+`ex.toString()`, was nur greift, wenn die Exception-Klasse selbst aus dem Paket stammt; der
+häufige Fall ist eine `NullPointerException` aus fxconnector-Code, die dort nicht vorkommt.
+Gesucht wird jetzt in der Ursachenkette **und** in den Stackframes.
+
+Der zweite Suchbegriff `"ScenicView"` ist dabei entfallen — das Paket `org.fxconnector` steht als
+Konstante an der Klasse und reicht. ScenicView bleibt als Werkzeug in Gebrauch, die namentliche
+Ausnahme im Produktivpfad und die `javafx-swing`-Abhängigkeit im `pom` also auch.
 
 ### 6.6 Das Übergangsgerüst `app.tmp` ist fällig
 
@@ -2064,8 +2091,30 @@ Invasiv-Schwellen (`InvasiveConfig`) — und bei der Thumbnail-Höhe nicht.
 sie dem Editor mit. Dann steht die Zahl einmal und der Vertrag ist sichtbar.
 **Aufwand:** eine Viertelstunde.
 
-**Stand:** offen — die Doppelung ist nur das Symptom. Darunter steht eine Entscheidung, die
-zuerst fällt. Stand der Überlegung (29.09.2026):
+**Stand:** erledigt — Weg 1: Die vorab erzeugten Thumbnail-Dateien gibt es nicht mehr. Die
+Vorschau entsteht beim Laden, indem JavaFX direkt auf die Zielhöhe dekodiert; die Höhe ist ein
+Skin-Wert (`diaryThumbnailHeight`, Vorgabe 120), den `DiaryCard` und `DiaryEditor` sich selbst
+holen — ohne Schlüssel, wie `popupMonitorMargin` nebenan.
+
+Damit überquert nichts mehr die Grenze: kein Supplier, kein Platzhalter im Pfad, kein Vertrag
+zwischen Feature und View. Die drei `120` sind weg, der Config-Schlüssel `diary.thumbnailHeight`
+ist gegenstandslos, und der Ordner `thumbnails/` ist tot.
+
+Netto −40 Zeilen. Mitgefallen sind Dinge, die nicht im Befund standen:
+
+- `generateThumbnail` samt imgscalr- und ImageIO-Block (43 Zeilen in `DiaryEditorPresenter`)
+- `DiaryAttachment` trägt einen Pfad statt zweier
+- `SuiteThumbnail` nimmt einen Pfad statt zweier — klein und groß kommen aus derselben Datei
+- `DiaryEditor` führte zwei Listen (`existing` mit Thumbnail, `pendingOriginals` ohne) und zeichnete
+  sie in zwei Schleifen; jetzt eine Liste, eine Schleife, und kein `new DiaryAttachment(pfad, null)`
+
+**Der Preis:** Die Trefferliste braucht beim Öffnen rund eine Sekunde für 74 Einträge, und der
+Speicher steigt kurz um ein Viertelgigabyte, das der nächste GC abräumt. Die Messung, die dazu
+geführt hat, steht unten.
+
+---
+
+Wie die Entscheidung zustande kam:
 
 #### Die eigentliche Frage
 
@@ -2224,7 +2273,7 @@ niemand tut, ist Glück, nicht Konstruktion.
 **Kleinster Schnitt:** beide löschen. Zwei Zeilen.
 **Aufwand:** zwei Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — `getBackgroundRect()` und `getBorderRect()` sind gelöscht.
 
 ### 9.2 `ImageMapPane` bietet zwei Vokabulare an, von denen eines nur nach innen zeigt
 
@@ -2244,7 +2293,9 @@ sie einen zweiten Zugang an, der mit Geometrien statt mit Ids spricht und den Ve
 Im selben Zug: `SuiteInfoLabel.setFixedWidth()` und `setFixedHeight()` (`:102`, `:109`) werden
 nur aus dem eigenen Konstruktor gerufen (`:52-53`) und sind ebenfalls `public`.
 
-**Stand:** offen
+**Stand:** erledigt — `addToCorrect`, `setMarked` und `markLastClickAsIncorrect` in
+`ImageMapPane` sind `private`, ebenso `SuiteInfoLabel.setFixedWidth` und `setFixedHeight`. Der
+`LearnMap`-Vertrag ist damit der einzige Zugang von außen.
 
 ### 9.3 Die Thumbnail-Höhe steht ein drittes Mal — Erweiterung zu Befund 8.3
 
@@ -2265,7 +2316,8 @@ selbst auch.
 `DiaryCard` bekommt sie als Parameter.
 **Aufwand:** zusammen mit 8.3 eine Viertelstunde.
 
-**Stand:** offen — hängt an 8.3; die Entscheidung dort trägt beide.
+**Stand:** erledigt — mit 8.3. `DiaryCard` liest kein `Config` mehr, sondern holt die Höhe
+beim Skin; die dritte `120` ist damit ebenfalls weg.
 
 ### 9.4 Ein Rückblick zu viel — und zwei, die bleiben dürfen
 

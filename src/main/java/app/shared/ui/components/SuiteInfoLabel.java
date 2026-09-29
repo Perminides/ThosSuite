@@ -99,14 +99,14 @@ public class SuiteInfoLabel extends StackPane {
         return rawText;
     }
 
-    public void setFixedWidth(double width) {
+    private void setFixedWidth(double width) {
         setPrefWidth(width);
         setMaxWidth(width);
         textFlow.setPrefWidth(width);
         textFlow.setMaxWidth(width);
     }
 
-    public void setFixedHeight(double height) {
+    private void setFixedHeight(double height) {
         setPrefHeight(height);
         setMaxHeight(height);
     }
