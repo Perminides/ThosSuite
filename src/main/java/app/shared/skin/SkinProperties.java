@@ -105,6 +105,8 @@ public abstract class SkinProperties {
 	// Die Skizzen (SketchPane). Die acht Füllfarben tragen Vorgaben, damit kein Skin sie kennen muss —
 	// sie beschreiben eine Flagge und nicht das Aussehen der Suite. Strich und Markierung dagegen
 	// gehören zum Skin und leiten sich in buildCss() aus dessen eigenen Farben ab.
+	/** Wie hoch ein Tagebuch-Thumbnail gezeichnet wird. Das Bild wird beim Laden darauf verkleinert. */
+	protected Integer diaryThumbnailHeight = 120;
 	protected Double sketchStrokeWidth = 1.5;
 	protected Color sketchStrokeColor;  // default = borderShapeColor
 	protected Color sketchMarkedColor;  // default = markedColor
@@ -330,6 +332,14 @@ public abstract class SkinProperties {
 	 */
 	public double popupMonitorMargin() {
 		return popupMonitorMargin;
+	}
+
+	/**
+	 * Die Höhe eines Tagebuch-Thumbnails. Ohne Schlüssel — für jede Verwendung dieselbe, der
+	 * Baustein holt sie sich also selbst.
+	 */
+	public int diaryThumbnailHeight() {
+		return diaryThumbnailHeight;
 	}
 
 	/** Die Werte, die die Film-Oberfläche braucht. */

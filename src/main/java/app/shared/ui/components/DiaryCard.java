@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import app.shared.Config;
+import app.shared.skin.SkinService;
 import app.shared.model.DiaryAttachment;
 import app.shared.model.DiaryCardData;
 import javafx.scene.control.Label;
@@ -45,14 +45,13 @@ public class DiaryCard extends VBox implements Card {
 
 	/** Nur noch das Anordnen — das Bild samt Vergrößerung kann {@link SuiteThumbnail}. */
 	private FlowPane buildThumbnails(List<DiaryAttachment> attachments) {
-		int thumbHeight = Config.getInt("diary.thumbnailHeight", 120);
+		int thumbHeight = SkinService.get().diaryThumbnailHeight();
 
 		FlowPane thumbPane = new FlowPane(8, 8);
 		thumbPane.getStyleClass().add("diary-card-thumbs");
 
 		for (DiaryAttachment attachment : attachments)
 			thumbPane.getChildren().add(new SuiteThumbnail(
-					Path.of(attachment.thumbnailPath()),
 					Path.of(attachment.imagePath()),
 					thumbHeight));
 

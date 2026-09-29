@@ -12,7 +12,6 @@ import java.util.List;
 
 import app.diary.repository.Repository;
 import app.shared.Config;
-import app.shared.ImageUtils;
 import app.shared.model.DiaryAttachment;
 import app.shared.model.DiaryCardData;
 import app.shared.model.InvasiveConfig;
@@ -21,7 +20,7 @@ import app.shared.ui.DiaryEditor;
 /**
  * Framework-freie Hälfte des Tagebuch-Editors. Öffnet die modale {@link DiaryEditor}-View
  * (shared) für genau einen Eintrag, verdrahtet Speichern/Löschen als Callbacks und macht
- * die Domäne: Anlegen/Updaten, Attachment-Kopieren/Thumbnail/Diff, Invasiv-Regel. Kein JavaFX.
+ * die Domäne: Anlegen/Updaten, Attachment-Kopieren/Diff, Invasiv-Regel. Kein JavaFX.
  *
  * Erwartete DiaryEditor-API (gebaut in Schicht 2):
  *   new DiaryEditor(DiaryCardData initialEntry,   // createdAt==null => neuer Eintrag
@@ -38,7 +37,6 @@ public class DiaryEditorPresenter {
     private static final int DEFAULT_INVASIVE_SECONDS = 120;
     private static final int DEFAULT_MIN_CHARS = 20;
     private static final int DEFAULT_MIN_TAGS = 1;
-    private static final int DEFAULT_THUMBNAIL_HEIGHT = 120;
 
     private final Repository repository = new Repository();
 
@@ -102,7 +100,7 @@ public class DiaryEditorPresenter {
             linkOrCopy(createdAt, att.imagePath());   // INSERT OR IGNORE => idempotent
     }
 
-    /** Liegt das Bild schon im diaryFolder (inkl. Quelle==Ziel) => nur verknüpfen; sonst kopieren + Thumbnail. */
+    /** Liegt das Bild schon im diaryFolder (inkl. Quelle==Ziel) => nur verknüpfen; sonst kopieren. */
     private void linkOrCopy(LocalDateTime createdAt, String absoluteImagePath) {
         Path diaryFolder = diaryFolder();
         Path source = Path.of(absoluteImagePath);
@@ -119,23 +117,17 @@ public class DiaryEditorPresenter {
         } catch (IOException ex) {
             throw new RuntimeException("Failed to copy image", ex);
         }
-        generateThumbnail(target, diaryFolder.resolve("thumbnails").resolve(cleanName));
         repository.saveAttachment(createdAt, cleanName);
     }
 
     // ---- Laden / Invasiv ----------------------------------------------------
 
-    /** Ergänzt die geklickte Karte um ihre Attachments (frisch aus DB, absolute Paare). */
+    /** Ergänzt die geklickte Karte um ihre Attachments (frisch aus DB, absolute Pfade). */
     private DiaryCardData withAttachments(DiaryCardData clicked) {
         Path diaryFolder = diaryFolder();
-        Path thumbs = diaryFolder.resolve("thumbnails");
         List<DiaryAttachment> attachments = new ArrayList<>();
-        for (String rel : repository.loadAttachments(clicked.createdAt())) {
-            String fileName = Path.of(rel).getFileName().toString();
-            attachments.add(new DiaryAttachment(
-                    diaryFolder.resolve(rel).toString(),
-                    thumbs.resolve(fileName).toString()));
-        }
+        for (String rel : repository.loadAttachments(clicked.createdAt()))
+            attachments.add(new DiaryAttachment(diaryFolder.resolve(rel).toString()));
         return new DiaryCardData(clicked.createdAt(), clicked.entryDate(), clicked.text(),
                 clicked.tags(), attachments);
     }
@@ -153,14 +145,13 @@ public class DiaryEditorPresenter {
                 Config.getInt("diary.invasiveSeconds", DEFAULT_INVASIVE_SECONDS));
     }
 
-    // ---- Attachment-Löschen / Thumbnail / Pfade ----------------------------
+    // ---- Attachment-Löschen / Pfade ----------------------------------------
 
     private void deleteAttachmentWithFile(LocalDateTime createdAt, String relativePath) {
         repository.deleteAttachment(createdAt, relativePath);
         if (!repository.isPathReferencedElsewhere(relativePath)) {
             Path diaryFolder = diaryFolder();
             diaryFolder.resolve(relativePath).toFile().delete();
-            diaryFolder.resolve("thumbnails").resolve(Path.of(relativePath).getFileName()).toFile().delete();
         }
     }
 
@@ -171,28 +162,6 @@ public class DiaryEditorPresenter {
         return source.getFileName().toString().replace(",", "_");
     }
 
-    private void generateThumbnail(Path sourcePath, Path thumbPath) {
-        int thumbHeight = Config.getInt("diary.thumbnailHeight", DEFAULT_THUMBNAIL_HEIGHT);
-        try {
-            java.awt.image.BufferedImage original = javax.imageio.ImageIO.read(sourcePath.toFile());
-            double ratio = (double) thumbHeight / original.getHeight();
-            int thumbWidth = (int) (original.getWidth() * ratio);
-            java.awt.image.BufferedImage scaled = ImageUtils.scaleSmooth(
-                    original, thumbWidth, thumbHeight, org.imgscalr.Scalr.Method.QUALITY);
-
-            String filename = thumbPath.getFileName().toString().toLowerCase();
-            String format;
-            if (filename.endsWith(".png")) format = "png";
-            else if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) format = "jpg";
-            else throw new RuntimeException("Unsupported thumbnail format for: " + thumbPath);
-
-            boolean written = javax.imageio.ImageIO.write(scaled, format, thumbPath.toFile());
-            if (!written)
-                throw new RuntimeException("ImageIO.write returned false for " + thumbPath);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to generate thumbnail for " + sourcePath, e);
-        }
-    }
 
     private Path diaryFolder() {
         return Config.getPath("attachments.folder").resolve("diary");

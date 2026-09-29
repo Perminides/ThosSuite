@@ -13,9 +13,9 @@ import javafx.util.Duration;
 /**
  * Ein Miniaturbild, das beim Überfahren das Original in voller Größe zeigt.
  *
- * <p>Kennt kein Feature — es bekommt zwei Pfade und eine Höhe und macht daraus ein Bild mit
- * Vergrößerung. Genutzt wird es heute vom Tagebuch; die Filmkacheln haben denselben Bedarf,
- * dort liegen die Poster ebenfalls klein und groß nebeneinander.</p>
+ * <p>Kennt kein Feature — es bekommt einen Pfad und eine Höhe und macht daraus ein Bild mit
+ * Vergrößerung. Klein und groß kommen aus derselben Datei: JavaFX dekodiert beim Laden direkt
+ * auf die gewünschte Höhe, das Original wird erst beim Überfahren geholt.</p>
  *
  * <p>Die Höhe kommt von außen — sie hängt davon ab, wo das Bild eingebaut wird. Den Abstand, den
  * das Popup zum Bildschirmrand hält, holt sich der Baustein dagegen selbst beim Skin: der ist für
@@ -28,13 +28,12 @@ public class SuiteThumbnail extends ImageView {
 	private final Path original;
 
 	/**
-	 * @param thumbnail Pfad des kleinen Bildes, das in der Fläche steht.
-	 * @param original  Pfad des Originals, das beim Überfahren erscheint.
-	 * @param height    Höhe des Miniaturbildes; die Breite folgt dem Seitenverhältnis.
+	 * @param bild   Pfad des Bildes — verkleinert in der Fläche, in voller Größe im Popup.
+	 * @param height Höhe des Miniaturbildes; die Breite folgt dem Seitenverhältnis.
 	 */
-	public SuiteThumbnail(Path thumbnail, Path original, double height) {
-		super(new Image(thumbnail.toUri().toString(), -1, height, true, true));
-		this.original = original;
+	public SuiteThumbnail(Path bild, double height) {
+		super(new Image(bild.toUri().toString(), -1, height, true, true));
+		this.original = bild;
 
 		popup.setShowDelay(Duration.millis(300));
 		popup.setShowDuration(Duration.INDEFINITE);

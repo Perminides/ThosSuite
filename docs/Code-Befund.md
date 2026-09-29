@@ -209,12 +209,12 @@ laufen die beiden auseinander.
 | 7.8 | Kleinkram | eine Viertelstunde | offen |
 | 8.1 | Regel 6 beschreibt nicht den Code, und der Architekturtest sagt das bereits | eine Viertelstunde Doku | erledigt |
 | 8.2 | Der Erweiterungsvertrag von `AnkiLearnView` ist an drei Stellen überholt | eine halbe Stunde | offen |
-| 8.3 | Die Thumbnail-Höhe steht in beiden Hälften des Tagebuch-Splits | eine Viertelstunde | offen |
+| 8.3 | Die Thumbnail-Höhe steht in beiden Hälften des Tagebuch-Splits | eine Viertelstunde | offen — Entscheidung vorbereitet, siehe Abschnitt |
 | 8.4 | „Die einzige Stelle der Suite, die `ButtonType` kennt" — das sind 14 Stellen | fünf Minuten | erledigt |
 | 8.5 | Ein bekannter Mangel steht als Fließtext statt als Marker | zwei Minuten | erledigt |
 | 9.1 | `SuiteImage` reicht zwei Innen-Nodes nach außen — und niemand nimmt sie | zwei Minuten | offen |
 | 9.2 | `ImageMapPane` bietet zwei Vokabulare an, von denen eines nur nach innen zeigt | zwei Minuten | offen |
-| 9.3 | Die Thumbnail-Höhe steht ein drittes Mal — Erweiterung zu Befund 8.3 | mit 8.3 erledigt | offen |
+| 9.3 | Die Thumbnail-Höhe steht ein drittes Mal — Erweiterung zu Befund 8.3 | mit 8.3 erledigt | offen — hängt an 8.3 |
 | 9.4 | Ein Rückblick zu viel — und zwei, die bleiben dürfen | fünf Minuten | erledigt |
 | 9.5 | Kleinkram | zehn Minuten | offen |
 | 10.1 | Zwei neue Felder sind in eine Falle gelaufen, die schon aufgeschrieben war | eine halbe Stunde | erledigt — anders gelöst als vorgeschlagen |
@@ -2064,7 +2064,75 @@ Invasiv-Schwellen (`InvasiveConfig`) — und bei der Thumbnail-Höhe nicht.
 sie dem Editor mit. Dann steht die Zahl einmal und der Vertrag ist sichtbar.
 **Aufwand:** eine Viertelstunde.
 
-**Stand:** offen
+**Stand:** offen — die Doppelung ist nur das Symptom. Darunter steht eine Entscheidung, die
+zuerst fällt. Stand der Überlegung (29.09.2026):
+
+#### Die eigentliche Frage
+
+> **Soll die gespeicherte Größe eines Thumbnails eine Anzeigeentscheidung sein?**
+
+Daran hängt alles andere. Heute ist sie es faktisch — und genau das erzeugt den Konflikt: Eine
+Datei auf der Platte soll eine Höhe haben, die der Skin bestimmt. Damit müssen sich zwei
+Schichten auf eine Zahl einigen, die laut Wächter 2 nichts voneinander wissen dürfen. Jede
+Lösung, die die Höhe aus dem Skin ins Feature bringt, schmuggelt — ob per Konstruktor, per
+Supplier oder per Rückfrage bei der View. Das Vehikel ist austauschbar, der Schmuggel bleibt.
+
+#### Gemessene Grundlage
+
+`scripts/diary/ThumbnailBenchmark.java`, 50 Bilder, 74 MB Originaldaten, Zielhöhe 120:
+
+```
+Thumbnails laden       20–39 ms    Speicherspitze  +4 MB
+Originale skalieren   676–701 ms   Speicherspitze  +80 bis +241 MB
+```
+
+Der Dateisystem-Cache ändert fast nichts (701 gegen 676 ms) — es ist das Dekodieren, nicht das
+Lesen. Bei den tatsächlichen 74 Bildern wäre on-the-fly also rund **eine Sekunde** beim Öffnen der
+Trefferliste.
+
+#### Die drei Wege
+
+**1. On-the-fly erzeugen, Thumbnail-Ordner abschaffen.** Der einzige Weg, bei dem das Problem
+vollständig verschwindet: Es gibt keine gespeicherte Größe mehr, also auch keinen Konflikt mit dem
+Skin. Die View dekodiert auf die Höhe, die sie gerade braucht, und holt sie sich wie jeden anderen
+Maßwert selbst. Keine Ordner, kein Batch, kein FailFast, keine Durchreichung.
+
+Preis: eine Sekunde beim Öffnen und ein Viertelgigabyte kurzlebiger Müll. Perminides hält das
+für vertretbar, solange der nächste GC ihn abräumt — und die Messung stützt das eher, als sie
+dagegen spricht: Dass die Spitze im einen Lauf +80 und im anderen +241 MB betrug, zeigt, dass der
+GC ohnehin dazwischenräumt.
+
+**2. Datei je Anzeigehöhe, Platzhalter im Pfad.** Thumbnails liegen in `thumbnails/<höhe>/`; das
+Feature baut den Pfad mit einer Lücke, die View setzt beim Zeichnen ihre Höhe ein. Löst die
+Veraltung elegant — nach einem Skinwechsel stimmt der Pfad von selbst, ohne dass jemand etwas
+nachreichen muss.
+
+Preis: höhenabhängige Ordner, Erzeugen für **alle** Skin-Höhen beim Anlegen eines Eintrags
+(`SkinService.getAllSkins()` liefert sie), FailFast beim Anzeigen, und eine Batchklasse, sobald
+erstmals ein Skin mit neuer Höhe dazukommt — vorher nicht. Der Vertrag zwischen Feature und View
+bleibt in jeder Form bestehen; eine typsichere `forHeight(int)`-Funktion statt einer Marke im
+String verschiebt ihn nur.
+
+**3. Eine großzügige Datei, Skin bestimmt nur das Zeichnen.** Die gespeicherte Höhe wird eine
+reine Dateneigenschaft in Config, groß genug für jeden denkbaren Skin; gezeichnet wird kleiner.
+Nichts überquert die Grenze. Verworfen — größere Dateien gefallen Perminides nicht.
+
+#### Was dabei an Fakten feststeht
+
+- Der Thumbnail-Pfad steht **nicht** in der Datenbank. Gespeichert wird nur der relative Pfad des
+  Originals; `thumbs.resolve(fileName)` wird an zwei Stellen gerechnet
+  (`DiaryEditorPresenter:131`, `DiaryScreen:66`). Ein Layoutwechsel kostet zwei Zeilen, keine
+  Migration.
+- Weder ein Feature (Wächter 2) noch `app.shared` (Wächter 7) darf den Skin fragen. `shared.ui`
+  und `shared.ui.components` dürfen — `SuiteThumbnail` holt sich so schon `popupMonitorMargin()`.
+- `SuiteThumbnail` nimmt die Höhe bewusst als Parameter, mit Begründung im Javadoc: Sie hängt
+  davon ab, wo das Bild eingebaut wird. Der Baustein, der das Bild malt, macht es also schon
+  richtig; `DiaryCard` bricht die Regel, indem es selbst `Config` liest.
+- `SkinService.getAllSkins()` existiert, alle sieben Skins liegen ohnehin instanziiert vor.
+- Alle sieben Skins würden heute dieselbe Höhe tragen — es gibt nur 120.
+
+**Zu entscheiden:** Weg 1 oder Weg 2. Erst danach löst sich die Doppelung von selbst; sie
+einzeln wegzuräumen wäre Arbeit, die der nächste Umbau wieder anfässt.
 
 ### 8.4 „Die einzige Stelle der Suite, die `ButtonType` kennt" — das sind 14 Stellen
 
@@ -2197,7 +2265,7 @@ selbst auch.
 `DiaryCard` bekommt sie als Parameter.
 **Aufwand:** zusammen mit 8.3 eine Viertelstunde.
 
-**Stand:** offen
+**Stand:** offen — hängt an 8.3; die Entscheidung dort trägt beide.
 
 ### 9.4 Ein Rückblick zu viel — und zwei, die bleiben dürfen
 

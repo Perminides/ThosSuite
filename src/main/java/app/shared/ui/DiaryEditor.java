@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import app.shared.Config;
 import app.shared.DialogOwner;
+import app.shared.skin.SkinService;
 import app.shared.model.DiaryAttachment;
 import app.shared.model.DiaryCardData;
 import app.shared.model.InvasiveConfig;
@@ -56,8 +56,6 @@ import javafx.util.Duration;
  */
 public class DiaryEditor {
 
-    private static final int DEFAULT_THUMBNAIL_HEIGHT = 120;
-
     private final DiaryCardData initialEntry;
     private final List<String> allTags;
     private final InvasiveConfig invasive;              // null => nicht invasiv
@@ -66,9 +64,10 @@ public class DiaryEditor {
 
     private final DiaryTagInputComponent tagInput = new DiaryTagInputComponent();
 
-    // UI-Zustand während des Bearbeitens — die View besitzt ihn.
-    private final List<DiaryAttachment> existing = new ArrayList<>();  // bestehende (haben Thumbnail)
-    private final List<File> pendingOriginals = new ArrayList<>();     // neu hinzugefügt (kein Thumbnail)
+    // UI-Zustand während des Bearbeitens — die View besitzt ihn. Bestehende und neu
+    // hinzugefügte Bilder unterscheiden sich hier nicht mehr; wer kopiert werden muss,
+    // entscheidet die Feature-Seite am Pfad.
+    private final List<DiaryAttachment> attachments = new ArrayList<>();
 
     private TextArea textArea;
     private SuiteDatePicker datePicker;
@@ -167,9 +166,8 @@ public class DiaryEditor {
         for (String tag : initialEntry.tags())
             tagInput.addTag(tag);
 
-        existing.clear();
-        existing.addAll(initialEntry.attachments());   // bestehende: haben Thumbnail
-        pendingOriginals.clear();
+        attachments.clear();
+        attachments.addAll(initialEntry.attachments());
 
         datePicker = new SuiteDatePicker(initialEntry.entryDate());
 
@@ -205,24 +203,13 @@ public class DiaryEditor {
 
     private void rebuildAttachmentPane() {
         attachmentPane.getChildren().clear();
-        int thumbHeight = Config.getInt("diary.thumbnailHeight", DEFAULT_THUMBNAIL_HEIGHT);
+        int thumbHeight = SkinService.get().diaryThumbnailHeight();
 
-        // Bestehende: Vorschau aus dem Thumbnail (Performance).
-        for (DiaryAttachment att : existing) {
+        for (DiaryAttachment att : attachments) {
             ImageView iv = new ImageView(new Image(
-                    Path.of(att.thumbnailPath()).toUri().toString(), -1, thumbHeight, true, true));
+                    Path.of(att.imagePath()).toUri().toString(), -1, thumbHeight, true, true));
             attachmentPane.getChildren().add(buildTile(iv, () -> {
-                existing.remove(att);
-                rebuildAttachmentPane();
-            }));
-        }
-
-        // Neu hinzugefügte: Vorschau aus dem skalierten Original (noch kein Thumbnail).
-        for (File original : pendingOriginals) {
-            ImageView iv = new ImageView(new Image(
-                    original.toURI().toString(), -1, thumbHeight, true, true));
-            attachmentPane.getChildren().add(buildTile(iv, () -> {
-                pendingOriginals.remove(original);
+                attachments.remove(att);
                 rebuildAttachmentPane();
             }));
         }
@@ -250,28 +237,19 @@ public class DiaryEditor {
             return;
 
         String abs = chosen.getAbsolutePath();
-        boolean alreadyThere = false;
-        for (var attachment : existing)
+        for (DiaryAttachment attachment : attachments)
             if (attachment.imagePath().equals(abs))
-                alreadyThere = true;
-        for (File file : pendingOriginals)
-            if (file.getAbsolutePath().equals(abs))
-                alreadyThere = true;
-        if (!alreadyThere) {
-            pendingOriginals.add(chosen);
-            rebuildAttachmentPane();
-        }
+                return;
+        attachments.add(new DiaryAttachment(abs));
+        rebuildAttachmentPane();
     }
 
     // ---- aktueller UI-Zustand -> Grenzobjekt --------------------------------
 
     private DiaryCardData collect(LocalDateTime createdAt) {
-        List<DiaryAttachment> attachments = new ArrayList<>(existing);
-        for (File original : pendingOriginals)
-            attachments.add(new DiaryAttachment(original.getAbsolutePath(), null)); // kein Thumbnail
         return new DiaryCardData(
                 createdAt, datePicker.getValue(), textArea.getText().trim(),
-                new ArrayList<>(tagInput.getSelectedTags()), attachments);
+                new ArrayList<>(tagInput.getSelectedTags()), new ArrayList<>(attachments));
     }
 
     // ---- Invasiv-Mechanik (nur showNew) ------------------------------------
@@ -310,8 +288,7 @@ public class DiaryEditor {
     private void clearForNext(Dialog<?> dialog) {
         textArea.clear();
         tagInput.reset();
-        existing.clear();
-        pendingOriginals.clear();
+        attachments.clear();
         rebuildAttachmentPane();
         makeNonInvasive(dialog);
     }

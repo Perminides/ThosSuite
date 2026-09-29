@@ -12,7 +12,7 @@ import java.util.List;
  * @param entryDate   das vom Nutzer gewählte Eintragsdatum
  * @param text        Eintragstext
  * @param tags        Tags
- * @param attachments Anhänge mit absoluten Original- und Thumbnail-Pfaden
+ * @param attachments Anhänge mit absoluten Bildpfaden
  */
 public record DiaryCardData(
         LocalDateTime createdAt,
