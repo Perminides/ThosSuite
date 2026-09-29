@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import app.messaging.ContactResolver;
 import app.messaging.repository.MessageRepository;
 import app.messaging.whatsapp.repository.WhatsAppSourceRepository;
 import app.shared.Config;
@@ -30,7 +31,6 @@ import app.shared.Log;
 import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
 import app.shared.ui.WhatsAppChatDialog;
-import app.shared.ui.MessageContactDialog;
 
 /**
  * 
@@ -89,8 +89,7 @@ public class WhatsAppIncrementalImport {
     // Laufzeit-State
     private final Map<String, Integer>       knownChats    = new LinkedHashMap<>();
     private final Map<String, Boolean>       blacklisted   = new LinkedHashMap<>();
-    private final Map<String, Integer>       knownContacts = new LinkedHashMap<>();
-    private final Map<Integer, Set<Integer>> chatMembers   = new LinkedHashMap<>();
+    private ContactResolver contacts;
 
     /** Album-State: albumKey → [sourceId, timestamp] des offenen Openers. */
     private final Map<String, long[]> openAlbumByKey = new LinkedHashMap<>();
@@ -251,8 +250,7 @@ public class WhatsAppIncrementalImport {
             knownChats.put(id, -1);
             blacklisted.put(id, true);
         }
-        knownContacts.putAll(msgRepo.loadKnownContacts(SOURCE));
-        chatMembers.putAll(msgRepo.loadChatMembers());
+        contacts = new ContactResolver(SOURCE, "WhatsApp", msgRepo);
     }
 
     // -------------------------------------------------------------------------
@@ -350,8 +348,8 @@ public class WhatsAppIncrementalImport {
         if (type == 99) openAlbumByKey.put(albumKey, new long[]{sourceId, timestamp});
 
         // Kontakt auflösen
-        int fromContactId = resolveContact(thos, fromContactRaw);
-        insertChatMember(thos, chatId, fromContactId);
+        int fromContactId = contacts.resolve(thos, fromContactRaw, () -> null); // WhatsApp kennt keinen Namen zur JID
+        contacts.ensureChatMember(thos, chatId, fromContactId);
 
         // Quote auflösen
         // Bekanntes WhatsApp-Phänomen: Quotes auf bearbeitete Nachrichten können nicht
@@ -415,50 +413,6 @@ public class WhatsAppIncrementalImport {
         knownChats.put(rawIdentifier, chatId);
         blacklisted.put(rawIdentifier, !doImport);
         return doImport ? chatId : -1;
-    }
-
-    // -------------------------------------------------------------------------
-    // Kontakt-Auflösung
-    // -------------------------------------------------------------------------
-
-    private int resolveContact(Connection thos, String rawIdentifier) throws Exception {
-        if (knownContacts.containsKey(rawIdentifier))
-            return knownContacts.get(rawIdentifier);
-
-        MessageContactDialog.Result result = MessageContactDialog.show(
-            "WhatsApp",
-            rawIdentifier,
-            null,                                   // WhatsApp kennt keinen Namen zur JID
-            msgRepo.loadAllContactsByDisplayName()
-        );
-        
-        if (result == null) {
-        	throw new IllegalStateException(
-                    "[FAILFAST] WhatsApp-Import abgebrochen: Kein Name im Kontakt-Dialog eingegeben. " +
-                    "rawIdentifier=" + rawIdentifier);
-        }
-
-        int contactId;
-        if (result.existingContactId() != null) {
-            contactId = result.existingContactId();
-        } else {
-            contactId = msgRepo.insertContact(thos, result.newDisplayName());
-        }
-
-        msgRepo.insertContactMapping(thos, SOURCE, rawIdentifier, contactId);
-        knownContacts.put(rawIdentifier, contactId);
-        return contactId;
-    }
-
-    // -------------------------------------------------------------------------
-    // Chat-Member
-    // -------------------------------------------------------------------------
-
-    private void insertChatMember(Connection thos, int chatId, int contactId) throws SQLException {
-        Set<Integer> members = chatMembers.computeIfAbsent(chatId, _ -> new HashSet<>());
-        if (members.contains(contactId)) return;
-        msgRepo.insertChatMemberIfAbsent(thos, chatId, contactId);
-        members.add(contactId);
     }
 
     // -------------------------------------------------------------------------

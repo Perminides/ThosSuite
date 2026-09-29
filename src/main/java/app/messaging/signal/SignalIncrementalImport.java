@@ -22,6 +22,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import app.messaging.ContactResolver;
 import app.messaging.repository.MessageRepository;
 import app.messaging.signal.model.AttachmentInfo;
 import app.messaging.signal.model.ContactInfo;
@@ -33,7 +34,6 @@ import app.shared.Log;
 import app.shared.model.ButtonEnum;
 import app.shared.model.ThrowingConsumer;
 import app.shared.ui.Alerts;
-import app.shared.ui.MessageContactDialog;
 
 /**
  * Importiert neue Signal-Nachrichten seit dem letzten erfolgreichen Import-Run in die ThosSuite-DB.
@@ -70,7 +70,7 @@ import app.shared.ui.MessageContactDialog;
  * an der Filterlogik müssen nur hier vorgenommen werden.
  * 
  * <h2>Neuer Kontakt</h2>
- * Blockierender Dialog im FX-Thread, gemeinsam mit dem WhatsApp-Import ({@code MessageContactDialog}).
+ * Blockierender Dialog im FX-Thread, gemeinsam mit dem WhatsApp-Import (über {@code ContactResolver}).
  * Der aus der Signal-DB abgeleitete Name ist nur ein Vorschlag — der Nutzer kann stattdessen einen
  * bestehenden Kontakt wählen, auch einen aus einer anderen Quelle.
  *
@@ -115,9 +115,8 @@ public class SignalIncrementalImport {
 
     // Caches — zu Beginn aus der Suite-DB geladen
     private final Map<String, Integer> chatByConversationId = new LinkedHashMap<>();
-    private final Map<String, Integer> contactByServiceId   = new LinkedHashMap<>();
+    private ContactResolver contacts;
     private final Set<String>          blacklistedChats     = new HashSet<>();
-    private final Set<String>          chatMemberCache      = new HashSet<>();
 
     // signalMsgId -> laufende Attachment-Nummer für eindeutige Dateinamen
     private final Map<String, Integer> attachSeqPerMsg = new HashMap<>();
@@ -139,7 +138,7 @@ public class SignalIncrementalImport {
         // Schritt 1: Caches laden
         blacklistedChats.addAll(repo.loadBlacklistedChatIds(signalId));
         chatByConversationId.putAll(repo.loadKnownChats(signalId));
-        contactByServiceId.putAll(repo.loadKnownContacts(signalId));
+        contacts = new ContactResolver(signalId, "Signal", repo);
 
         long cutoffMs = System.currentTimeMillis() - CUTOFF_BUFFER_MS;
 
@@ -253,12 +252,10 @@ public class SignalIncrementalImport {
 
         forEachImportableMessage(signalConnection, lastSourceId, cutoffMs, suiteConnection, msg -> {
 
-            if (!contactByServiceId.containsKey(msg.effectiveServiceId()))
-                ensureContact(signalConnection, suiteConnection, msg.effectiveServiceId());
-
-            int fromContact = contactByServiceId.get(msg.effectiveServiceId());
+            int fromContact = contacts.resolve(suiteConnection, msg.effectiveServiceId(),
+                    () -> vorschlagFuer(signalConnection, msg.effectiveServiceId()));
             int chatId      = chatByConversationId.get(msg.conversationId());
-            ensureChatMember(suiteConnection, chatId, fromContact);
+            contacts.ensureChatMember(suiteConnection, chatId, fromContact);
 
             String resolvedQuoteMsgId = resolveQuote(signalConnection, msg.signalMsgId(),
                 msg.quoteJson(), msg.quoteMsgId(), msg.quoteId());
@@ -309,46 +306,14 @@ public class SignalIncrementalImport {
     // -------------------------------------------------------------------------
 
     /**
-     * Löst eine unbekannte serviceId zu einem Kontakt auf — über die Rückfrage beim Nutzer, damit
-     * dieselbe Person nicht ein zweites Mal entsteht, nur weil sie bisher nur aus WhatsApp bekannt
-     * war. Der aus der Signal-DB abgeleitete Name geht als Vorschlag in den Dialog; angelegt wird
-     * er erst, wenn der Nutzer keinen bestehenden Kontakt wählt.
+     * Der Name, mit dem der Kontakt-Dialog vorbelegt wird: aus der Signal-DB abgeleitet, damit man
+     * nicht raten muss, wer sich hinter einer serviceId verbirgt. Angelegt wird daraus erst etwas,
+     * wenn im Dialog kein bestehender Kontakt gewählt wird.
      */
-    private void ensureContact(Connection signalConnection, Connection suiteConnection, String serviceId) throws SQLException {
+    private String vorschlagFuer(Connection signalConnection, String serviceId) throws SQLException {
         ContactInfo contact = source.loadContact(signalConnection, serviceId);
-        String suggestion = resolveDisplayName(contact.name(), contact.profileName(),
+        return resolveDisplayName(contact.name(), contact.profileName(),
             contact.profileFamilyName(), contact.profileFullName(), serviceId);
-
-        MessageContactDialog.Result result = MessageContactDialog.show(
-            "Signal", serviceId, suggestion, repo.loadAllContactsByDisplayName());
-
-        if (result == null)
-            throw new IllegalStateException(
-                    "[FAILFAST] Signal-Import abgebrochen: Kein Name im Kontakt-Dialog eingegeben. "
-                    + "serviceId=" + serviceId);
-
-        int cid;
-        if (result.existingContactId() != null) {
-            cid = result.existingContactId();
-            Log.info(this, "[signal] Kontakt zugeordnet: contactId=" + cid);
-        } else {
-            cid = repo.insertContact(suiteConnection, result.newDisplayName());
-            Log.info(this, "[signal] Kontakt angelegt: '" + result.newDisplayName() + "'");
-        }
-
-        repo.insertContactMapping(suiteConnection, signalId, serviceId, cid);
-        contactByServiceId.put(serviceId, cid);
-    }
-
-    // -------------------------------------------------------------------------
-    // Chat-Member
-    // -------------------------------------------------------------------------
-
-    private void ensureChatMember(Connection suiteConnection, int chatId, int contactId) throws SQLException {
-        String key = chatId + ":" + contactId;
-        if (chatMemberCache.contains(key)) return;
-        chatMemberCache.add(key);
-        repo.insertChatMemberIfAbsent(suiteConnection, chatId, contactId);
     }
 
     // -------------------------------------------------------------------------
