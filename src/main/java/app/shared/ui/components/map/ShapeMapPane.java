@@ -52,9 +52,14 @@ import app.shared.model.ShapeMapState;
  *
  * <p>Für die greift dann nur {@code .my-map-shape}, und das setzt ausschließlich den Strich. Ihre
  * Füllung bleibt auf der Voreinstellung eines {@code Path}: keine. Sie zeigen damit den
- * Spielfeldhintergrund und nehmen im Inneren keine Klicks an — man trifft nur ihre Umrisslinie.
- * Genau so ist es gemeint: „gehört zur Karte, aber nicht zu diesem Spiel" wird durch das
- * <em>Fehlen</em> einer Füllung ausgedrückt, nicht durch eine Farbe.</p>
+ * Spielfeldhintergrund. Genau so ist es gemeint: „gehört zur Karte, aber nicht zu diesem Spiel"
+ * wird durch das <em>Fehlen</em> einer Füllung ausgedrückt, nicht durch eine Farbe.</p>
+ *
+ * <p><b>Und sie nehmen keine Klicks an.</b> Das folgt derselben Auskunft: wer keine Pseudoklasse
+ * trägt, ist {@code mouseTransparent}. Die fehlende Füllung allein reicht dafür nicht — sie macht
+ * nur das <em>Innere</em> durchlässig, weil die Trefferprüfung dort nichts findet, und die
+ * Umrisslinie bliebe anklickbar. Das ist eine Nebenwirkung, keine Zusage, und CSS kann es nicht
+ * tragen: {@code mouseTransparent} ist keine stilisierbare Eigenschaft.</p>
  */
 public class ShapeMapPane extends StackPane implements LearnMap {
 
@@ -65,7 +70,8 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 	private static final PseudoClass PAUSED = PseudoClass.getPseudoClass("paused");
 
 	// Visuelle Zustands-Vokabel der Shapes.
-	// Achtung!!! Alle müssen in resetShapeState() zurückgesetzt werden. Wenn du hier eine hinzufügst, dann denk daran!
+	// Achtung!!! Alle müssen in resetShapeState() zurückgesetzt und in isInGame() gefragt werden.
+	// Wenn du hier eine hinzufügst, dann denk an beide!
 	private static final PseudoClass CORRECT = PseudoClass.getPseudoClass("correct");
 	private static final PseudoClass INCORRECT = PseudoClass.getPseudoClass("incorrect");
 	private static final PseudoClass MARKED = PseudoClass.getPseudoClass("marked");
@@ -159,13 +165,17 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 
 	// --- Das gemeinsame Vokabular (LearnMap) ---
 
-	/** Alle interaktiven Shapes zurück auf Anfang und wieder aktiv. */
+	/**
+	 * Alle interaktiven Shapes zurück auf Anfang und wieder aktiv — und damit die ganze Karte zum
+	 * Spielfeld erklärt. Richtig für die Anki-Karte, wo jede Form dazugehört; eine Region-Session
+	 * nimmt dafür {@link #resetGameToActive()}.
+	 */
 	@Override
 	public void reset() {
 		shapes.values().forEach(shape -> {
-			resetShapeState(shape.node());
+			resetShapeState(shape);
 			if (shape.interactive())
-				shape.node().pseudoClassStateChanged(ACTIVE, true);
+				activate(shape);
 		});
 	}
 
@@ -193,14 +203,35 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 	}
 
 	/**
-	 * Leer: hier liegen alle Formen von Anfang an im Szenengraphen, und ob eine klickbar ist, hängt
-	 * an ihrem Typ. Es gibt also nichts zu platzieren und nichts umzuschalten.
+	 * Leer, und das ist der ganze Zweck. Gefragt wird pro Frage, klickbar ist hier aber das ganze
+	 * Spielfeld — sonst käme ein Fehlklick nirgends an: auf dieser Karte <em>ist</em> er ein Klick
+	 * auf eine Form.
+	 *
+	 * <p>Die Bild-Karte, für die diese Methode gebaut ist, hat dafür einen Fänger: dort geht ein
+	 * Fehlklick am Node vorbei zum Viewport, und die Pane merkt sich den letzten Klick selbst. Sie
+	 * darf ihre Formen deshalb auf die gefragten eingrenzen, diese nicht.</p>
 	 */
 	@Override
 	public void setClickTargets(Set<String> ids) {
 	}
 
 	// --- Darüber hinaus: was nur die Region-Session braucht ---
+
+	/**
+	 * Alles Abgehakte verschwindet, das Spielfeld ist wieder vollständig aktiv — und zwar nur das
+	 * Spielfeld. Wer keine Pseudoklasse trägt, gehört nicht zu diesem Spiel (siehe Klassen-Javadoc)
+	 * und bleibt außen vor: eine Karte trägt alle Formen ihrer Datei, nicht nur die des Decks.
+	 *
+	 * <p>Die Auskunft muss vor dem Abräumen eingeholt werden, danach ist sie weg.</p>
+	 */
+	public void resetGameToActive() {
+		for (ShapeNode shape : shapes.values()) {
+			if (!isInGame(shape))
+				continue;
+			resetShapeState(shape);
+			activate(shape);
+		}
+	}
 
 	public void markActive(Set<String> ids) {
 		for (String id : ids)
@@ -224,7 +255,7 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 			if (states.contains(CORRECT) || states.contains(INCORRECT)) {
 				node.pseudoClassStateChanged(CORRECT, false);
 				node.pseudoClassStateChanged(INCORRECT, false);
-				node.pseudoClassStateChanged(ACTIVE, true);
+				activate(shape);
 			}
 		});
 	}
@@ -235,21 +266,48 @@ public class ShapeMapPane extends StackPane implements LearnMap {
 		ShapeNode shape = shapes.get(id);
 		if (shape != null) {
 			// Exklusiv-Logik: ein Shape hat idealerweise nur einen dominanten State. Sicherheitshalber die anderen resetten.
-			resetShapeState(shape.node());
+			resetShapeState(shape);
 			shape.node().pseudoClassStateChanged(state, true);
+			setClickable(shape, true);
 		}
 	}
 
 	protected void resetAllStates() {
-		shapes.values().forEach(shape -> resetShapeState(shape.node()));
+		for (ShapeNode shape : shapes.values())
+			resetShapeState(shape);
 	}
 
-	private void resetShapeState(Node node) {
+	private void resetShapeState(ShapeNode shape) {
+		Node node = shape.node();
 		node.pseudoClassStateChanged(CORRECT, false);
 		node.pseudoClassStateChanged(INCORRECT, false);
 		node.pseudoClassStateChanged(MARKED, false);
 		node.pseudoClassStateChanged(ACTIVE, false);
 		node.pseudoClassStateChanged(INACTIVE, false);
+		setClickable(shape, false);
+	}
+
+	/** {@code :active} und Klickbarkeit gehören zusammen, deshalb an einer Stelle. */
+	private void activate(ShapeNode shape) {
+		shape.node().pseudoClassStateChanged(ACTIVE, true);
+		setClickable(shape, true);
+	}
+
+	/** Ob diese Form zu diesem Spiel gehört — das sagt sie dadurch, dass sie überhaupt einen Zustand trägt. */
+	private boolean isInGame(ShapeNode shape) {
+		Set<PseudoClass> states = shape.node().getPseudoClassStates();
+		return states.contains(CORRECT) || states.contains(INCORRECT) || states.contains(MARKED)
+				|| states.contains(ACTIVE) || states.contains(INACTIVE);
+	}
+
+	/**
+	 * Klicks nimmt nur an, was zum Spiel gehört. Nicht-interaktive Layer bleiben unangetastet — die
+	 * hat der {@code MapNodeBuilder} schon durchlässig gemacht, und Wasser liegt über den Regionen:
+	 * würde es Klicks annehmen, käme darunter keiner mehr an.
+	 */
+	private void setClickable(ShapeNode shape, boolean clickable) {
+		if (shape.interactive())
+			shape.node().setMouseTransparent(!clickable);
 	}
 
 	// Für Resume/Restore State (ShapeMapState Record)

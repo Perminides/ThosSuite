@@ -87,7 +87,7 @@ public class RegionLearnView {
 
 	public void addIdsToActive(Set<String> ids)       { map.markActive(ids); }
 	public void addIdsToMarked(Set<String> ids)       { map.mark(ids); }
-	public void moveAllToActive()                     { map.reset(); }
+	public void moveAllToActive()                     { map.resetGameToActive(); }
 	public void moveResolvedToActive()                { map.moveResolvedToActive(); }
 	public void addIdsToCorrect(Set<String> elements) { map.markCorrect(elements); }
 	public void addIdsToInactive(Set<String> elements){ map.markInactive(elements); }
