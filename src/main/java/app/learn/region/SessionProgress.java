@@ -153,6 +153,37 @@ public abstract class SessionProgress {
 	// Hilfe
 	// ========================================
 
+	/**
+	 * Der Name eines Elements, wie ihn dieser Modus meint — der Hauptort, die Region, oder bei
+	 * {@code BOTH} beide als {@code Region (Hauptort)}.
+	 *
+	 * <p>Dieselbe Form in jedem Modus, der beide Namen meint: {@code WRITE_BOTH} zeigt sie per ESC
+	 * im Eingabefeld, {@code ELIMINATION_BOTH} in der Liste beim Abbruch.</p>
+	 */
+	protected String nameOf(MapShape shape) {
+		return switch (spec.getMode().getCapitalOrRegion()) {
+		case CAPITAL -> shape.capitalName();
+		case REGION -> shape.regionName();
+		case BOTH -> shape.regionName() + " (" + shape.capitalName() + ")";
+		};
+	}
+
+	/**
+	 * Ob der eingegebene Text das gesuchte Element trifft — je nach Achse des Modus der Name des
+	 * Hauptorts, der Name der Region oder beides.
+	 *
+	 * <p>Geschaltet über {@code getCapitalOrRegion()} und nicht über die Modus-Konstante: so deckt
+	 * ein neuer Modus sich selbst ab, sobald er seine Achse angibt. Alle drei Achsenwerte stehen
+	 * hier, deshalb braucht es kein {@code default} — ein vierter wäre ein Compilerfehler.</p>
+	 */
+	protected boolean matches(MapShape shape, String text) {
+		return switch (spec.getMode().getCapitalOrRegion()) {
+		case CAPITAL -> shape.isMatchingCapital(text);
+		case REGION -> shape.isMatchingRegion(text);
+		case BOTH -> shape.isMatching(text);
+		};
+	}
+
 	protected Set<String> getIds(Set<MapShape> regions) {
 		Set<String> result = new HashSet<>();
 		for (MapShape region : regions)

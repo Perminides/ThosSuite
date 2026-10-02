@@ -156,8 +156,8 @@ laufen die beiden auseinander.
 | 1.12 | Toter Code | zwanzig Minuten | erledigt |
 | 1.13 | Ablaufverfolgung landet im Dateilog | zehn Minuten | offen |
 | 2.1 | Ein neu angelegtes Region-Deck wird nie fällig | eine halbe Stunde (gemeinsam mit 1.3) | verworfen — der erste Stand wird bewusst von Hand gesetzt |
-| 2.2 | „Welcher Name gilt in diesem Modus" wird fünfmal beantwortet, auf zwei Arten | dreiviertel Stunde | offen |
-| 2.3 | Die Fehlerliste am Sessionende steht dreimal | eine halbe Stunde (mit 2.2) | offen |
+| 2.2 | „Welcher Name gilt in diesem Modus" wird fünfmal beantwortet, auf zwei Arten | dreiviertel Stunde | erledigt |
+| 2.3 | Die Fehlerliste am Sessionende steht dreimal | eine halbe Stunde | offen |
 | 2.4 | `RegionDeckRepository` ist eine Attrappe | eine Viertelstunde | erledigt |
 | 2.5 | Ein verschluckter Fehler | eine Minute | erledigt |
 | 2.6 | Der Progress sagt dem Presenter etwas, das der Presenter schon weiß | eine Viertelstunde | erledigt |
@@ -572,9 +572,10 @@ sowie `EliminationSessionProgress.java:29-34` und `:44-49`
 
 `Mode` trägt die Achse `CapitalOrRegion` ausdrücklich als eigenes Unter-Enum, und zwei Stellen
 nutzen sie auch so: `ClickSessionProgress` fragt `getCapitalOrRegion()`, `RegionPlaySetup.needsCapital`
-ebenfalls. Die anderen vier schalten stattdessen über die Modus-Konstante selbst, jedes Mal mit
+ebenfalls. Die anderen vier schalten stattdessen über die Modus-Konstante selbst, drei davon mit
 `default -> throw new RuntimeException("Das kommt jetzt einigermaßen unerwartet :)")` —
-derselbe Satz dreimal.
+derselbe Satz dreimal. Die vierte, `WriteSessionProgress.nameOf`, hat keinen Wächter: sie
+schreibt zwei `if`s hin und fällt sonst auf `regionName()` durch.
 
 **Was es kostet:** Ein zehnter Modus übersetzt sich anstandslos und fällt erst zur Laufzeit um,
 an bis zu vier Stellen nacheinander. Und die eine Frage („nehme ich Regionsnamen, Hauptortnamen
@@ -587,24 +588,40 @@ neuer Modus ist automatisch abgedeckt, sobald er seine Achse angibt. In `learn.r
 `learn.model`: `MapShape` gehört dem Kern und darf den Zweig nicht kennen.
 **Aufwand:** dreiviertel Stunde.
 
-**Stand:** offen
+**Stand:** erledigt — beide Fragen stehen jetzt einmal in `SessionProgress`:
+`nameOf(MapShape)` und `matches(MapShape, String)`, beide als `switch` über die Achse mit allen
+drei Werten und ohne `default`. Ein vierter Achsenwert wäre ein Compilerfehler, ein zehnter Modus
+ist abgedeckt, sobald er seine Achse angibt.
+
+Alle fünf Stellen sind Aufrufe geworden, die drei gleichlautenden Würfe sind weg — im ganzen
+Zweig steht keine Aufzählung von Modus-Konstanten mehr. Dazu fällt in `WriteSessionProgress` das
+Feld `mode` samt Import weg, und in `EliminationSessionProgress.textInputChanged` heißt die lokale
+Menge `hits`, weil `matches` jetzt der Methodenname ist.
+
+Eine Anzeige ändert sich, nach Entscheidung von Perminides: die Abbruchliste bei
+`ELIMINATION_BOTH` schreibt `Bayern (München)` statt `Bayern - München`. Damit gilt dieselbe Form
+wie bei `WRITE_BOTH`, wo sie per ESC im Eingabefeld steht.
 
 ### 2.3 Die Fehlerliste am Sessionende steht dreimal
 
-**Beleg:** `ClickSessionProgress.java:132-137`, `WriteSessionProgress.java:113-117`,
+**Beleg:** `ClickSessionProgress.java:128-132`, `WriteSessionProgress.java:113-117`,
 `EliminationSessionProgress.java:27-36`
 
 Dreimal dasselbe Muster: Einleitungssatz, Schleife über die verpassten Elemente, jede Zeile
-angehängt, dann `finishIncorrect(result, false, null)`. Dazu steht der Wächter
-`else throw new RuntimeException("… Untersuchen!")` wortgleich in zwei der drei
-`nextStep`-Methoden.
+angehängt, dann `finishIncorrect(result, false, null)`. Dazu steht in beiden `nextStep`-Methoden
+ein `else throw` als Wächter — nicht wortgleich, sondern zwei verschiedene Sätze zum selben
+Sachverhalt: Click nennt den Rücknahme-Pfad, Write das Ende beim ersten Fehler. Elimination hat
+gar kein `nextStep`.
 
 `SessionProgress` ist als abstrakte Klasse genau deshalb da — sein Javadoc sagt: „Hier steht, was
 alle drei teilen". Das hier teilen alle drei und steht trotzdem draußen.
 
 **Kleinster Schnitt:** `protected void finishWithMisses(String einleitung, List<String> namen)`
 in `SessionProgress`, die den Wächter gleich mit übernimmt.
-**Aufwand:** eine halbe Stunde. Zusammen mit 2.2 erledigt, denn die Namen kommen von dort.
+**Aufwand:** eine halbe Stunde. Unabhängig von 2.2 — der Helfer bekommt fertige Namen
+übergeben, jeder Modus löst seine selbst auf, Click über seine eigene Suche in `quizElements`.
+Einziger Überlapp: in `EliminationSessionProgress.cancel()` wählt derselbe `switch` den Namen und
+hängt ihn an, diese sechs Zeilen fände man zweimal an.
 
 **Stand:** offen
 

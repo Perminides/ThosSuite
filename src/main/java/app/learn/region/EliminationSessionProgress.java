@@ -25,39 +25,25 @@ public class EliminationSessionProgress extends SessionProgress {
 	@Override
 	public void cancel() {
 		String result = "Folgende Elemente wurden nicht eliminiert: \n\n";
-		for (MapShape mapShape : sessionRegions) {
-			switch (spec.getMode()) {
-            	case ELIMINATION_BOTH -> result = result + mapShape.regionName() + " - " + mapShape.capitalName() + "\n";
-            	case ELIMINATION_CITY -> result = result + mapShape.capitalName() + "\n";
-            	case ELIMINATION_REGION -> result = result + mapShape.regionName() + "\n";
-            	default -> throw new RuntimeException("Das kommt jetzt einigermaßen unerwartet :)");
-			};
-		}
+		for (MapShape mapShape : sessionRegions)
+			result = result + nameOf(mapShape) + "\n";
 		finishIncorrect(result, false, null);
 	}
 
 	@Override
 	public void textInputChanged(String text) {
-	    Set<MapShape> matches = new HashSet<>();
+	    Set<MapShape> hits = new HashSet<>();
 	    
 	    for (MapShape region : sessionRegions) {
-	        boolean isMatch = switch (spec.getMode()) {
-	            case ELIMINATION_BOTH -> region.isMatching(text);
-	            case ELIMINATION_CITY -> region.isMatchingCapital(text);
-	            case ELIMINATION_REGION -> region.isMatchingRegion(text);
-	            default -> throw new RuntimeException("Das kommt jetzt einigermaßen unerwartet :)");
-	        };
-	        
-	        if (isMatch) {
-	            matches.add(region);
-	        }
+	        if (matches(region, text))
+	            hits.add(region);
 	    }
 	    
-	    if (matches.isEmpty())
+	    if (hits.isEmpty())
 	        return;
 	    
-	    sessionRegions.removeAll(matches);
-	    presenter.handleCorrectAnswers(getIds(matches));
+	    sessionRegions.removeAll(hits);
+	    presenter.handleCorrectAnswers(getIds(hits));
 	    hasProgressed = true;
 	    
 	    if (sessionRegions.isEmpty())

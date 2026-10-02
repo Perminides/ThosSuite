@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import app.learn.model.MapShape;
-import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
 
 /**
@@ -33,7 +32,6 @@ public class WriteSessionProgress extends SessionProgress {
 	/** Nur im freien Spiel gefüllt: was per ESC aufgegeben wurde, in der Reihenfolge des Fragens. */
 	private final List<MapShape> notFound = new ArrayList<>();
 
-	private Mode mode;
 	private int currentIndex = -1;
 	private boolean paused = false;
 
@@ -41,7 +39,6 @@ public class WriteSessionProgress extends SessionProgress {
 			Runnable onFinished) {
 		super(spec, service, onFinished);
 		this.sessionRegions = regions;
-		this.mode = spec.getMode();
 		toLearnRegions = new ArrayList<>(sessionRegions);
 		Collections.shuffle(toLearnRegions);
 	}
@@ -67,14 +64,7 @@ public class WriteSessionProgress extends SessionProgress {
 	public void textInputChanged(String text) {
 		MapShape currentRegion = toLearnRegions.get(currentIndex);
 
-		boolean isMatch = switch (mode) {
-		case WRITE_BOTH -> currentRegion.isMatching(text);
-		case WRITE_CAPITAL -> currentRegion.isMatchingCapital(text);
-		case WRITE_REGION -> currentRegion.isMatchingRegion(text);
-		default -> throw new RuntimeException("Das kommt jetzt einigermaßen unerwartet :)");
-		};
-
-		if (!isMatch)
+		if (!matches(currentRegion, text))
 			return;
 
 		presenter.handleCorrectAnswers(Set.of(currentRegion.id()));
@@ -118,14 +108,5 @@ public class WriteSessionProgress extends SessionProgress {
 		} else {
 			throw new RuntimeException("Im Lernmodus endet die Session beim ersten Fehler — notFound kann hier gar nicht gefüllt sein. Untersuchen!");
 		}
-	}
-
-	/** Der gesuchte Text zu einem Element — je nach Modus Region, Hauptstadt oder beides. */
-	private String nameOf(MapShape region) {
-		if (mode == Mode.WRITE_BOTH)
-			return region.regionName() + " (" + region.capitalName() + ")";
-		if (mode == Mode.WRITE_CAPITAL)
-			return region.capitalName();
-		return region.regionName();
 	}
 }

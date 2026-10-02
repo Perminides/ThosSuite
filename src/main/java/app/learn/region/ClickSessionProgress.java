@@ -44,8 +44,7 @@ public class ClickSessionProgress extends SessionProgress {
 			if (!region.isPlayable())
 				continue;
 			
-			String name = spec.getMode().getCapitalOrRegion() == Mode.CapitalOrRegion.CAPITAL ? region.capitalName() : region.regionName();
-			quizElements.add(new QuizElement(name, region.id()));
+			quizElements.add(new QuizElement(nameOf(region), region.id()));
 		}
 		Collections.shuffle(quizElements);
 	}
