@@ -218,6 +218,13 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 - Dieselbe Klammer gilt für **Elementnamen**: `Vogel (Emblem)` heißt „richtig ist Vogel, wer Emblem
   klickt, wird nicht bestraft". Überall sonst — Artikel, Ortsfrage, Elementdatei — zählt nur der
   Name vor der Klammer.
+- **Ein Oberbegriff, wo mehrere Dinge dieselbe Silhouette haben.** `Klingenwaffe` deckt Schwert,
+  Machete und Dolch ab, wie `Vogel` den Adler und den Fregattvogel. Die `Hacke` bleibt daneben
+  stehen: Ihr Querbalken ist zu sehen. Gezeichnet wird je ein Vertreter, nicht ein Mischding.
+- **Ein Name, wo der Unterschied nicht zu sehen ist.** `Blatt / Zweig` ist ein einziger Wert, weil
+  Kanadas Ahornblatt und Zyperns Ölzweige in der Skizze dasselbe Grün sind. Eine Toleranzklammer
+  taugt dafür nicht: Sie wertet die zweite Lesart weiter als Fehler und müsste in jeder künftigen
+  Zeile mitgepflegt werden. `Baum` und `Blume` bleiben getrennt — ganze Pflanzen erkennt man.
 - Und für **Farben**: `Hellblau (Blau)` in der Farbliste. Gemalt wird die Farbe vor der Klammer.
   Gemessen sind die Grenzfälle in `blautoene.csv`; sieben Flaggen liegen im Mittelband, für die
   taugt genau diese Schreibweise.

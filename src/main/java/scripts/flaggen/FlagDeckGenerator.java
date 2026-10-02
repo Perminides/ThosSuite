@@ -126,10 +126,6 @@ public class FlagDeckGenerator {
 	private static final List<String> COUNTS =
 			List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "15", "27", "50");
 
-	/** Der Ablenkerpool der Elementfrage. {@link #ELEMENT_PINNED} steht davon immer sichtbar dabei. */
-	private static final List<String> ELEMENT_POOL = List.of("Keine", "Stern", "Mond", "Sonne",
-			"Kreis", "Vogel", "Emblem", "Kreuz", "Krone", "Landumriss");
-
 	/** Immer sichtbare Ablenker der Elementfrage — außer sie sind selbst die richtige Antwort. */
 	private static final List<String> ELEMENT_PINNED = List.of("Keine", "Stern", "Emblem");
 
@@ -153,9 +149,10 @@ public class FlagDeckGenerator {
 				{"Muster", new String[] {"das Muster", "die Muster"}},
 				{"Drache", new String[] {"der Drache", "die Drachen"}},
 				{"Gebäude", new String[] {"das Gebäude", "die Gebäude"}},
-				{"Blatt", new String[] {"das Blatt", "die Blätter"}},
-				{"Zweig", new String[] {"der Zweig", "die Zweige"}},
-				{"Ackergerät", new String[] {"das Ackergerät", "die Ackergeräte"}},
+				// Ein Name für beides: Zyperns Ölzweige und Kanadas Ahornblatt sind in der Skizze
+				// dasselbe Grün, die Unterscheidung wäre an der Flagge nicht zu sehen.
+				{"Blatt / Zweig", new String[] {"das Blatt oder der Zweig", "die Blätter oder Zweige"}},
+				{"Hacke", new String[] {"die Hacke", "die Hacken"}},
 				{"Hand", new String[] {"die Hand", "die Hände"}},
 				{"Zahnrad", new String[] {"das Zahnrad", "die Zahnräder"}},
 				{"Dreizack", new String[] {"der Dreizack", "die Dreizacke"}},
@@ -165,7 +162,8 @@ public class FlagDeckGenerator {
 				{"Baum", new String[] {"der Baum", "die Bäume"}},
 				{"Hut", new String[] {"der Hut", "die Hüte"}},
 				{"Löwe", new String[] {"der Löwe", "die Löwen"}},
-				{"Schwert", new String[] {"das Schwert", "die Schwerter"}},
+				// Schwert, Machete, Dolch: in Skizzengröße alles eine Klinge mit Griff.
+				{"Klingenwaffe", new String[] {"die Klingenwaffe", "die Klingenwaffen"}},
 				{"Gewehr", new String[] {"das Gewehr", "die Gewehre"}},
 				{"Buch", new String[] {"das Buch", "die Bücher"}},
 				{"Stoßzahn", new String[] {"der Stoßzahn", "die Stoßzähne"}},
@@ -176,13 +174,13 @@ public class FlagDeckGenerator {
 	/** Elementname → Datei. Der Stern hängt zusätzlich an der Anzahl, siehe {@link #sketchOf}. */
 	private static final Map<String, String> ELEMENT_FILES = ordered(
 			"Kreis", "kreis", "Raute", "raute", "Schrift", "schrift", "Mond", "mond",
-			"Hand", "hand", "Ackergerät", "ackergeraet", "Zahnrad", "zahnrad", "Emblem", "emblem",
+			"Hand", "hand", "Hacke", "hacke", "Klingenwaffe", "machete", "Zahnrad", "zahnrad", "Emblem", "emblem",
 			"Vogel", "vogel", "Sonne", "sonne", "Union Jack", "union-jack",
-			"Dreizack", "dreizack", "Muster", "muster", "Drache", "drache", "Zweig",
+			"Dreizack", "dreizack", "Muster", "muster", "Drache", "drache", "Blatt / Zweig",
 			"zweig", "Kreuz", "kreuz", "Nuss", "nuss", "Blume", "blume",
-			"Gebäude", "gebaeude", "Blatt", "blatt", "Landumriss", "landumriss",
+			"Gebäude", "gebaeude", "Landumriss", "landumriss",
 			"Hut", "hut", "Baum", "baum", "Krone", "krone", "Gewehr", "gewehr", "Buch", "buch",
-			"Stoßzahn", "stosszahn");
+			"Stoßzahn", "stosszahn", "Löwe", "loewe", "Chakra", "chakra");
 
 	/** Das Rasterfeld als Behälter — der äußerste, den jedes Element durchläuft. */
 	private static final String SEGMENT = "Segment";
@@ -234,12 +232,11 @@ public class FlagDeckGenerator {
 	private static final String QUADRATISCH = "-quadratisch";
 
 	/** Index = Wert der Spalte Spezial. Kurz, weil man sie auf einen Blick lesen muss. */
-	private static final String SPEZIAL_OFFEN = "(noch keine Beschreibung)";
 	private static final String[] SPEZIAL_BESCHREIBUNGEN = {
 			"2 Dreiecke, in der Mitte Meer",        // 0 Antigua und Barbuda
 			"Gezackte senkrechte Linie",            // 1 Bahrain, Katar
 			"Dreieck von oben",                     // 2 Bosnien und Herzegowina
-			SPEZIAL_OFFEN,                          // 3 Zentralafrikanische Republik, noch offen
+			"Zwei Kästen. Der linke schmaler, der rechte breiter",   // 3 Sri Lanka
 			"Wellen",                               // 4 Kiribati
 			"Strahlen vom Mittelpunkt"};            // 5 Nordmazedonien
 
@@ -541,7 +538,7 @@ public class FlagDeckGenerator {
 			// Ein Sonderhintergrund hat keine Folgefragen wie Streifenzahl oder Kreuzform — also eine
 			// Beschreibung. Der Code ist die Nummer der Skizze, Bahrain und Katar teilen sich eine.
 			case "7" -> ask(steps, "Was beschreibt den Hintergrund am besten?",
-					coded(sheet.value(row, "Spezial"), List.of(SPEZIAL_OFFEN), SPEZIAL_BESCHREIBUNGEN));
+					coded(sheet.value(row, "Spezial"), List.of(), SPEZIAL_BESCHREIBUNGEN));
 			default -> { }
 		}
 	}
@@ -631,7 +628,7 @@ public class FlagDeckGenerator {
 			quellen.add(element.tolerated());
 		for (List<String> quelle : quellen)
 			for (String name : quelle) {
-				if (!ELEMENT_POOL.contains(name))
+				if (!WORDS.containsKey(name) && !name.equals(KEINE))
 					throw new RuntimeException("Kein Elementname in der Toleranzklammer: " + name);
 				if (!correct.contains(name) && !tolerated.contains(name))
 					tolerated.add(name);
@@ -650,9 +647,14 @@ public class FlagDeckGenerator {
 		// Ein fester Ablenker bleibt fest, auch wenn er toleriert ist: Doppelrolle -~.
 		for (String name : tolerated)
 			options.add((ELEMENT_PINNED.contains(name) ? "-~" : "~") + name);
-		for (String pool : ELEMENT_POOL)
-			if (!ELEMENT_PINNED.contains(pool) && !vergeben.contains(pool))
-				options.add(pool);
+		// Jeder vorkommende Elementname ist ein möglicher Ablenker, sonst verrät schon seine Anwesenheit
+		// die Antwort. WORDS kennt sie alle — ohne Artikel gäbe es keine Anzahl- und keine Ortsfrage.
+		List<String> pool = new ArrayList<>();
+		pool.add(KEINE);
+		pool.addAll(WORDS.keySet());
+		for (String name : pool)
+			if (!ELEMENT_PINNED.contains(name) && !vergeben.contains(name))
+				options.add(name);
 		add(steps, "MC+:" + String.join("|", options));
 
 		// Erst alle Attribut-Fragen (Anzahl, geteilt) in einem Shuffle, dann alle Ortsfragen in einem
