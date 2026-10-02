@@ -32,7 +32,7 @@ public class SessionPresenter {
 		view = new RegionLearnView(
 				spec.getDeckType().getId(),
 				spec.getDeckType().getMapName(),
-				spec.getDeckType().getCategory().toString(),
+				spec.getDeckType().getCategory().getSkinKey(),
 				MapService.getInstance().getMap(spec.getDeckType()).getShapeGeometries(),
 				spec.getMode().getSubCategory() == Mode.SubCategory.CLICK,
 				new RegionCallbacks(this::clickedMapElement, this::typedText));

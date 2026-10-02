@@ -36,8 +36,9 @@ public enum Mode {
     	EASY, HARD
     }
     
-    @Override
-    public String toString() {
+    /** Der Name für die Oberfläche. Kein {@code toString()} — sonst nimmt eine beiläufige
+     *  Konkatenation still den Anzeigenamen, wo die Konstante gemeint war. */
+    public String getDisplayName() {
     	return displayName;
     }
 

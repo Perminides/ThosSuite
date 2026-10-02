@@ -57,7 +57,7 @@ public class SessionPresenter {
         GeoMap map = type.getMapMetadata() != null ? MapService.getInstance().getMap(type) : null;
         String id = type.getId();
         String mapName = type.getMapName();
-        String category = type.getCategory().toString();
+        String category = type.getCategory().getSkinKey();
 
         AnkiCallbacks callbacks = new AnkiCallbacks(
                 this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack,

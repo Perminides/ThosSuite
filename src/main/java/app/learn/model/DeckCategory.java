@@ -3,14 +3,18 @@ public enum DeckCategory {
     ANKI_DECK ("anki"),
     REGION_DECK ("region");
 
-	private final String name;
+	private final String skinKey;
 
-	DeckCategory(String name) {
-		this.name = name;
+	DeckCategory(String skinKey) {
+		this.skinKey = skinKey;
 	}
 
-	@Override
-	public String toString() {
-		return name;
+	/**
+	 * Der Schlüssel, über den der Skin seine Staffelung auflöst — ein tragender Wert, kein
+	 * Anzeigetext. Kein {@code toString()}: Wer die Konstante in eine Meldung schreibt, soll
+	 * {@code ANKI_DECK} lesen und nicht {@code anki}.
+	 */
+	public String getSkinKey() {
+		return skinKey;
 	}
 }

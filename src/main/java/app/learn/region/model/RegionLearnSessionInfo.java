@@ -16,7 +16,7 @@ public class RegionLearnSessionInfo extends LearnSessionInfo {
 	// getter für spec
 	@Override
 	public String formatForMenu() {
-		return spec.getDeckType().getDisplayName() + ": " + spec.getMode().toString() + " (" + level + ")";
+		return spec.getDeckType().getDisplayName() + ": " + spec.getMode().getDisplayName() + " (" + level + ")";
 	}
 
 	@Override

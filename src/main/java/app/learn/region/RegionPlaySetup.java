@@ -117,7 +117,7 @@ public final class RegionPlaySetup {
 
         List<Choice> modes = new ArrayList<>();
         for (Mode m : compatible)
-            modes.add(new Choice(m.toString(), m == effective));
+            modes.add(new Choice(m.getDisplayName(), m == effective));
 
         // Deck-Spalten mit disabled neu aufbauen — Struktur bleibt gleich
         List<List<Toggle>> deckColumns = new ArrayList<>();
@@ -143,7 +143,7 @@ public final class RegionPlaySetup {
     private static RegionDialogState getInitialState() {
         List<Choice> modes = new ArrayList<>();
         for (Mode m : Mode.values())
-            modes.add(new Choice(m.toString(), m == Mode.ELIMINATION_REGION));
+            modes.add(new Choice(m.getDisplayName(), m == Mode.ELIMINATION_REGION));
         return new RegionDialogState(modes, buildDeckColumns());
     }
 
@@ -208,7 +208,7 @@ public final class RegionPlaySetup {
 
     private static Mode modeByLabel(String label) {
         for (Mode m : Mode.values())
-            if (m.toString().equals(label)) return m;
+            if (m.getDisplayName().equals(label)) return m;
         throw new IllegalStateException("Kein Mode zum Label: " + label);
     }
 

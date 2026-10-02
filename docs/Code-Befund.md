@@ -162,8 +162,8 @@ laufen die beiden auseinander.
 | 2.5 | Ein verschluckter Fehler | eine Minute | erledigt |
 | 2.6 | Der Progress sagt dem Presenter etwas, das der Presenter schon weiß | eine Viertelstunde | erledigt |
 | 2.7 | 270 Einzelabfragen beim Start | eine halbe Stunde | offen |
-| 2.8 | Welches Deck bei einer kombinierten Spielsession das primäre ist, hängt am Hashwert | zehn Minuten | offen |
-| 2.9 | Enum-`toString()` trägt Last | zwanzig Minuten | offen |
+| 2.8 | Welches Deck bei einer kombinierten Spielsession das primäre ist, hängt am Hashwert | zehn Minuten | verworfen — die Reihenfolge spielt keine Rolle |
+| 2.9 | Enum-`toString()` trägt Last | zwanzig Minuten | erledigt |
 | 2.10 | Kleinkram | eine halbe Stunde | offen |
 | 3.1 | API-Key und Session-ID landen in der Logdatei und im Fehler-Alert | zehn Minuten | erledigt |
 | 3.2 | Zwei Methoden gleichen Namens mit entgegengesetztem Verhalten | dreiviertel Stunde | erledigt |
@@ -722,7 +722,13 @@ sich schlecht reproduzieren lässt.
 `getId()`.
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** verworfen — die Reihenfolge spielt keine Rolle. Perminides sieht keinen Fall, in dem
+das auffiele, und entscheidet damit über den eigenen Gebrauch.
+
+Zur Einordnung, falls es je anders würde: Sichtbar würde es erst, wenn für **eines** von mehreren
+gemeinsam gespielten Geschwister-Decks ein eigener Skin-Wert gesetzt wäre — dann griffe die
+Staffelung bei gleicher Auswahl mal auf der Deck-Stufe und mal erst auf der Karten-Stufe. Solange
+Geschwister sich ihren `mapName` teilen und keine Deck-Werte tragen, kommt dasselbe heraus.
 
 ### 2.9 Enum-`toString()` trägt Last
 
@@ -743,7 +749,17 @@ sich ändert.
 `toString()`-Overrides weg.
 **Aufwand:** zwanzig Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — `Mode.getDisplayName()` und `DeckCategory.getSkinKey()`, beide
+`toString()`-Overrides weg. Sieben Aufrufstellen gezogen.
+
+Eine davon belegte den Befund wörtlich:
+`DbRegionDeckProgressRepository:34` hängte den Modus beiläufig an eine Fehlermeldung und nahm
+damit still den Anzeigenamen — in einer Meldung über eine fehlgeschlagene Abfrage auf
+`region_learn_stat`, wo in der Spalte `mode` die Konstante steht. Sie sagt jetzt `WRITE_REGION`
+statt „Name der Region“, und zwar ausgeschrieben per `.name()`, damit sie nicht wieder an einem
+`toString()` hängt.
+
+An beiden Gettern steht im Javadoc, warum es kein `toString()` ist.
 
 ### 2.10 Kleinkram
 

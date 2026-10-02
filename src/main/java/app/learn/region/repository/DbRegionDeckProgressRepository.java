@@ -31,7 +31,7 @@ public class DbRegionDeckProgressRepository {
 	    } catch (Exception e) {
 	        throw new RuntimeException(
 	            "Ui, ich bekomme die Stats für die RegionsSession nicht: "
-	            + sessionSpec.getDeckType().getDisplayName() + " - " + sessionSpec.getMode(), e);
+	            + sessionSpec.getDeckType().getDisplayName() + " - " + sessionSpec.getMode().name(), e);
 	    }
 	}
 	
