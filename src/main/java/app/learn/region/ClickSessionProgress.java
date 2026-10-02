@@ -3,9 +3,9 @@ package app.learn.region;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import app.learn.model.MapShape;
 import app.learn.region.model.Mode;
@@ -13,19 +13,9 @@ import app.learn.region.model.SessionSpec;
 
 public class ClickSessionProgress extends SessionProgress {
 	
-	public record QuizElement(String toFind, String shapeId) {
-		String getToFind() {
-			return toFind;
-		}
-		
-		String getShapeId() {
-			return shapeId;
-		}
-	};
-	
 	private final Set<String> sessionRegions;
-	private final List<QuizElement> quizElements;
-	private final Set<String> notFound = new TreeSet<>();
+	private final List<MapShape> quizElements;
+	private final Set<MapShape> notFound = new LinkedHashSet<>();
 	private final boolean easy;
 	private boolean isPaused = false;
 	private int currentIndex = -1;
@@ -44,7 +34,7 @@ public class ClickSessionProgress extends SessionProgress {
 			if (!region.isPlayable())
 				continue;
 			
-			quizElements.add(new QuizElement(nameOf(region), region.id()));
+			quizElements.add(region);
 		}
 		Collections.shuffle(quizElements);
 	}
@@ -57,7 +47,7 @@ public class ClickSessionProgress extends SessionProgress {
 	@Override
 	public void resume() {
 		if (spec.isPlaySession()) {
-			sessionRegions.removeAll(notFound);
+			sessionRegions.removeAll(getIds(notFound));
 		} else {
 			notFound.clear();
 		}
@@ -95,14 +85,14 @@ public class ClickSessionProgress extends SessionProgress {
 				return;
 
 			lastClickedId = id;
-			if (quizElements.get(currentIndex).getShapeId().equals(id)) {
+			if (quizElements.get(currentIndex).id().equals(id)) {
 				presenter.handleClickResult(id, true, null);
 				sessionRegions.remove(id);
 				nextStep();
 			} else {
-				notFound.add(quizElements.get(currentIndex).getShapeId());
+				notFound.add(quizElements.get(currentIndex));
 				isPaused = true;
-				presenter.handleClickResult(id, false, quizElements.get(currentIndex).getShapeId());
+				presenter.handleClickResult(id, false, quizElements.get(currentIndex).id());
 			}
 		}
 	}
@@ -113,8 +103,8 @@ public class ClickSessionProgress extends SessionProgress {
 			isPaused = false;
 			resume();
 		} else if (isPaused) {
-			finishIncorrect("Statt " + quizElements.get(currentIndex).toFind() + " wurde " + getNameForId(lastClickedId) + " geklickt.",
-					true, quizElements.get(currentIndex).shapeId());
+			finishIncorrect("Statt " + nameOf(quizElements.get(currentIndex)) + " wurde " + getNameForId(lastClickedId) + " geklickt.",
+					true, quizElements.get(currentIndex).id());
 		}
 	}
 	
@@ -124,33 +114,22 @@ public class ClickSessionProgress extends SessionProgress {
 			if (notFound.isEmpty()) {           // alles gefunden — im Lernmodus der einzige Weg hierher
 				finishCorrect();
 			} else if (spec.isPlaySession()) {  // freies Spiel mit Fehlern: die listen wir auf
-				String result = "Folgende Elemente wurden nicht erkannt: \n\n";
-				for (String wrongId : notFound) {
-					result = result + getNameForId(wrongId) + "\n";
-				}
-				finishIncorrect(result, false, null);
+				finishWithMisses("Folgende Elemente wurden nicht erkannt:", notFound);
 			} else {
 				throw new RuntimeException("Moment. Entweder wird ein falscher Klick zurückgenommen oder es wird ohne nextStep beendet. Hierhin dürfte der Code nie kommen. Untersuchen!");
 			}
 		}
 		else {
-			presenter.showQuestion(quizElements.get(currentIndex).getToFind());
+			presenter.showQuestion(nameOf(quizElements.get(currentIndex)));
 			presenter.weWaitForClick(sessionRegions);
 		}
 	}
 	
-	private String getNameForId(String wrongClicked) {
-		return getNameForId (Set.of(wrongClicked));
-	}
-
-	
-	private String getNameForId(Set<String> wrongClicked) {
-		if (wrongClicked.size() != 1)
-			throw new RuntimeException("Moment. Wieso gibt es mehr als einen flaschen Klick hier?");
-		for (QuizElement element : quizElements) {
-			if (wrongClicked.contains(element.shapeId))
-				return element.toFind();
-		}
+	/** Der Name zu einer angeklickten Form. Leer, wenn sie in dieser Session nicht gefragt wurde. */
+	private String getNameForId(String clickedId) {
+		for (MapShape shape : quizElements)
+			if (shape.id().equals(clickedId))
+				return nameOf(shape);
 		return "";
 	}
 

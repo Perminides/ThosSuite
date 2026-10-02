@@ -157,7 +157,7 @@ laufen die beiden auseinander.
 | 1.13 | Ablaufverfolgung landet im Dateilog | zehn Minuten | offen |
 | 2.1 | Ein neu angelegtes Region-Deck wird nie fällig | eine halbe Stunde (gemeinsam mit 1.3) | verworfen — der erste Stand wird bewusst von Hand gesetzt |
 | 2.2 | „Welcher Name gilt in diesem Modus" wird fünfmal beantwortet, auf zwei Arten | dreiviertel Stunde | erledigt |
-| 2.3 | Die Fehlerliste am Sessionende steht dreimal | eine halbe Stunde | offen |
+| 2.3 | Die Fehlerliste am Sessionende steht dreimal | eine halbe Stunde | erledigt |
 | 2.4 | `RegionDeckRepository` ist eine Attrappe | eine Viertelstunde | erledigt |
 | 2.5 | Ein verschluckter Fehler | eine Minute | erledigt |
 | 2.6 | Der Progress sagt dem Presenter etwas, das der Presenter schon weiß | eine Viertelstunde | erledigt |
@@ -623,7 +623,29 @@ in `SessionProgress`, die den Wächter gleich mit übernimmt.
 Einziger Überlapp: in `EliminationSessionProgress.cancel()` wählt derselbe `switch` den Namen und
 hängt ihn an, diese sechs Zeilen fände man zweimal an.
 
-**Stand:** offen
+**Stand:** erledigt — `SessionProgress.finishWithMisses(String, Collection<MapShape>)` baut
+die Liste und beendet die Session. Alle drei Modi rufen sie mit einer Zeile.
+
+Zwei Dinge aus dem Befund sind nicht so eingebaut:
+
+Der Wächter bleibt, wo er ist. Er ist nicht wortgleich, und mitnehmen könnte ihn der Helfer
+ohnehin nicht: `EliminationSessionProgress.cancel()` hat keinen und darf keinen bekommen —
+`RegionSession.escClicked()` ruft `cancel()` ohne Unterschied zwischen Lernen und Spielen, ESC in
+einer Elimination-Lernsession beendet sie legitim als falsch.
+
+Die Signatur nimmt Formen statt fertiger Namen. Mit `List<String>` hätte jeder Aufrufer seine
+Sammlung erst abbilden müssen, ohne Streams also je eine Schleife an der Aufrufstelle — unterm
+Strich keine Zeile gespart. Mit `Collection<MapShape>` löst der Helfer die Namen über das `nameOf`
+aus 2.2 selbst auf.
+
+Dafür lag `ClickSessionProgress` quer: sein `notFound` hielt Ids, nicht Formen. Die kamen aus dem
+Record `QuizElement(toFind, shapeId)` — beides Ableitungen der `MapShape`, die es wegwarf.
+`quizElements` ist jetzt `List<MapShape>`, `notFound` ein `Set<MapShape>`, das Record samt seiner
+zwei Getter ist weg, und `getNameForId` hat seine zweite Fassung verloren: die nahm ein `Set`, um
+dessen Größe zu prüfen, und hatte nur noch einen Aufrufer.
+
+Nebenbei richtiggestellt: das Javadoc an `SessionProgress.cancel()` sagte „Nicht bei Elimination".
+Genau umgekehrt — Elimination und Write überschreiben `cancel()`, der Klick-Modus nicht.
 
 ### 2.4 `RegionDeckRepository` ist eine Attrappe
 

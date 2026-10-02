@@ -24,10 +24,7 @@ public class EliminationSessionProgress extends SessionProgress {
 
 	@Override
 	public void cancel() {
-		String result = "Folgende Elemente wurden nicht eliminiert: \n\n";
-		for (MapShape mapShape : sessionRegions)
-			result = result + nameOf(mapShape) + "\n";
-		finishIncorrect(result, false, null);
+		finishWithMisses("Folgende Elemente wurden nicht eliminiert:", sessionRegions);
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package app.learn.region;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -81,6 +82,19 @@ public abstract class SessionProgress {
 		finish(new SessionResult(false, incorrectText, allowResume), wrongId);
 	}
 
+	/**
+	 * Nicht geschafft, und zwar an mehreren Elementen — die Liste dessen, was verpasst wurde.
+	 *
+	 * <p>Alle drei Modi enden so: der Klick-Modus und der Schreib-Modus im freien Spiel, die
+	 * Elimination bei ESC. Fortgeschrieben wird dabei nichts, deshalb ohne {@code wrongId}.</p>
+	 */
+	protected void finishWithMisses(String einleitung, Collection<MapShape> misses) {
+		String text = einleitung + "\n\n";
+		for (MapShape miss : misses)
+			text = text + nameOf(miss) + "\n";
+		finishIncorrect(text, false, null);
+	}
+
 	private void finish(SessionResult result, String wrongId) {
 		this.result = result;
 		this.wrongId = wrongId;
@@ -112,7 +126,8 @@ public abstract class SessionProgress {
 	/** Die Pause nach einem Fehlgriff beenden. Nicht bei Elimination. */
 	void endPause() {}
 
-	/** ESC. Nicht bei Elimination — dort gibt es nichts abzubrechen außer der Session selbst. */
+	/** ESC. Nicht im Klick-Modus. Bei Elimination endet damit die Session selbst, samt Liste
+	 *  dessen, was nicht eliminiert wurde. */
 	void cancel() {}
 
 	/** Klick auf die Karte. Nur Click. */

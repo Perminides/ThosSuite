@@ -101,10 +101,7 @@ public class WriteSessionProgress extends SessionProgress {
 		} else if (notFound.isEmpty()) {    // alles erkannt — im Lernmodus der einzige Weg hierher
 			finishCorrect();
 		} else if (spec.isPlaySession()) {  // freies Spiel mit Fehlern: die listen wir auf
-			String result = "Folgende Elemente wurden nicht erkannt: \n\n";
-			for (MapShape miss : notFound)
-				result += nameOf(miss) + "\n";
-			finishIncorrect(result, false, null);
+			finishWithMisses("Folgende Elemente wurden nicht erkannt:", notFound);
 		} else {
 			throw new RuntimeException("Im Lernmodus endet die Session beim ersten Fehler — notFound kann hier gar nicht gefüllt sein. Untersuchen!");
 		}
