@@ -18,10 +18,6 @@ public class SessionPresenter {
 	// Wir speichern auch die Frage für Skinwechsel
 	private record SavedState (ShapeMapState mapState, String text) {};
 	private record WrongClickSnapshot(ShapeMapState beforeMap, String beforeText, String expectedId) {}
-	public enum WrongClickResolution {
-	    ROLLBACK_FOR_RETRY,          // Learning "Fortsetzen"
-	    COMMIT_MISS_AND_CONTINUE     // FreePlay
-	}
 	
 	private final RegionLearnView view;
 	private final SessionSpec spec; // Benötigt für den Neuaufbau eines Panels bei skinChanged
@@ -138,12 +134,17 @@ public class SessionPresenter {
 	 * <p>Bei „leicht" ist genau das Gegenteil gewollt: der Stand von vorher lebt weiter, und der
 	 * verpasste Kreis bleibt im freien Spiel rot markiert.</p>
 	 */
-	public void undoWrongClick(WrongClickResolution resolution) {
+	/**
+	 * Nimmt einen Fehlklick zurück. Im freien Spiel bleibt die verfehlte Form rot stehen und es
+	 * geht weiter; im Lernmodus wird der Stand davor wiederhergestellt, damit man es nochmal
+	 * versuchen kann.
+	 */
+	public void undoWrongClick() {
 	    if (hard) {
 	        view.moveAllToActive();
 	    } else {
 	        ShapeMapState base = wrongClickSnapshot.beforeMap();
-	        if (resolution == WrongClickResolution.COMMIT_MISS_AND_CONTINUE) {
+	        if (spec.isPlaySession()) {
 	        	base.incorrectShapes().add(wrongClickSnapshot.expectedId());
 	        	base.activeShapes().remove(wrongClickSnapshot.expectedId());
 	        }

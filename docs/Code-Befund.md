@@ -158,9 +158,9 @@ laufen die beiden auseinander.
 | 2.1 | Ein neu angelegtes Region-Deck wird nie fällig | eine halbe Stunde (gemeinsam mit 1.3) | verworfen — der erste Stand wird bewusst von Hand gesetzt |
 | 2.2 | „Welcher Name gilt in diesem Modus" wird fünfmal beantwortet, auf zwei Arten | dreiviertel Stunde | offen |
 | 2.3 | Die Fehlerliste am Sessionende steht dreimal | eine halbe Stunde (mit 2.2) | offen |
-| 2.4 | `RegionDeckRepository` ist eine Attrappe | eine Viertelstunde | offen |
+| 2.4 | `RegionDeckRepository` ist eine Attrappe | eine Viertelstunde | erledigt |
 | 2.5 | Ein verschluckter Fehler | eine Minute | erledigt |
-| 2.6 | Der Progress sagt dem Presenter etwas, das der Presenter schon weiß | eine Viertelstunde | offen |
+| 2.6 | Der Progress sagt dem Presenter etwas, das der Presenter schon weiß | eine Viertelstunde | erledigt |
 | 2.7 | 270 Einzelabfragen beim Start | eine halbe Stunde | offen |
 | 2.8 | Welches Deck bei einer kombinierten Spielsession das primäre ist, hängt am Hashwert | zehn Minuten | offen |
 | 2.9 | Enum-`toString()` trägt Last | zwanzig Minuten | offen |
@@ -176,14 +176,14 @@ laufen die beiden auseinander.
 | 3.9 | Toter Code | zehn Minuten | erledigt |
 | 3.10 | Kleinkram | eine halbe Stunde | offen |
 | 4.1 | Die eigene Signal-Kennung steht im Quelltext | zehn Minuten | erledigt |
-| 4.2 | Die Kontakt-Auflösung steht in beiden Zweigen | eine Stunde | offen |
+| 4.2 | Die Kontakt-Auflösung steht in beiden Zweigen | eine Stunde | erledigt |
 | 4.3 | Der WhatsApp-Import merkt sich „heute geprüft", bevor er geprüft hat | zehn Minuten | erledigt |
 | 4.4 | Die zwei Wächter in `run()` stehen in der falschen Reihenfolge | zehn Minuten | erledigt |
-| 4.5 | Die Attachments heißen „move", werden aber kopiert | fünf Minuten | offen |
-| 4.6 | Eine quellenspezifische Methode in der quellenneutralen Klasse | eine Viertelstunde | offen |
+| 4.5 | Die Attachments heißen „move", werden aber kopiert | fünf Minuten | erledigt |
+| 4.6 | Eine quellenspezifische Methode in der quellenneutralen Klasse | eine Viertelstunde | erledigt |
 | 4.7 | Zwei Schreibweisen für denselben Konfigurationswert | fünf Minuten | erledigt |
 | 4.8 | Ein stumm verschlucktes Problem im Entschlüsseler | fünf Minuten | erledigt — anders gelöst als vorgeschlagen |
-| 4.9 | Kleinkram | zwanzig Minuten | offen |
+| 4.9 | Kleinkram | zwanzig Minuten | erledigt |
 | 5.1 | Der Tagebuch-Screen baut SQL | dreiviertel Stunde | erledigt |
 | 5.2 | „Ist die Matratze fällig" wird zweimal beantwortet, in zwei Einheiten | eine halbe Stunde | offen |
 | 5.3 | `PointsCalculator` rechnet nicht nur, er fragt | dreiviertel Stunde | offen |
@@ -625,7 +625,14 @@ mit dem Anki-Zweig vergleicht, sucht die zweite Quelle, die es nicht gibt.
 umbenennen. Ein Aufrufer (`RegionDeckService`).
 **Aufwand:** eine Viertelstunde.
 
-**Stand:** offen
+**Stand:** erledigt — `RegionDeckRepository` ist gelöscht, `load` und `save` in
+`DbRegionDeckProgressRepository` sind öffentlich, `RegionDeckService` ruft sie direkt. Der
+Klassenname bleibt — er sagt, was die Klasse ist.
+
+Der Wrapper schützte übrigens nichts: `DbRegionDeckProgressRepository` war schon `public`, nur
+seine zwei Methoden waren paketprivat. Er benannte also lediglich um
+(`load` → `getLearnStat`, `save` → `saveRegionSession`), und die kurzen Namen sind an einer Klasse
+namens `…Repository` ohnehin die besseren.
 
 ### 2.5 Ein verschluckter Fehler
 
@@ -656,7 +663,13 @@ sondern auch auf der falschen Seite abgelegt.
 Der Import von `SessionPresenter.WrongClickResolution` in `ClickSessionProgress` fällt mit weg.
 **Aufwand:** eine Viertelstunde.
 
-**Stand:** offen
+**Stand:** erledigt — `WrongClickResolution` und der Parameter sind weg, `undoWrongClick()` fragt
+`spec.isPlaySession()` selbst. Der Import in `ClickSessionProgress` fällt mit, und die Aufrufstelle
+schrumpft von fünf Zeilen auf eine.
+
+Die Methode hat dafür ein Javadoc bekommen, das die zwei Fälle benennt — im freien Spiel bleibt
+die verfehlte Form rot stehen, im Lernmodus wird der Stand davor wiederhergestellt. Vorher stand
+das nur in den Enum-Konstanten, also auf der falschen Seite.
 
 ### 2.7 270 Einzelabfragen beim Start
 
@@ -1116,7 +1129,29 @@ Cache als `Set<String>` mit zusammengesetzten Schlüsseln `"chatId:contactId"`,
 `WhatsAppIncrementalImport.java:458-463` als `Map<Integer, Set<Integer>>`. Eine Sache, zwei
 Datenstrukturen, und die eine baut Schlüssel aus Zahlen zusammen.
 
-**Stand:** offen
+**Stand:** erledigt — `ContactResolver` in `app.messaging`, mit `resolve(…)` für die
+Identitätsfrage und `ensureChatMember(…)` für die Mitgliedschaft. Beide Caches liegen darin und
+werden beim Bauen gefüllt. Die Zweige verlieren zusammen 91 Zeilen und behalten nur, was sie
+wirklich unterscheidet: Signal leitet einen Namensvorschlag aus der Fremd-DB ab, WhatsApp hat
+keinen.
+
+**Der Vorschlag wird als Lieferant übergeben, nicht als Wert** (`ThrowingSupplier<String>`, neu in
+`app.shared.model` als Gegenstück zum vorhandenen `ThrowingConsumer`). Grund: `vorschlagFuer(…)`
+fragt die Signal-Datenbank. Als gewöhnliches Argument liefe die Abfrage bei *jeder* Nachricht,
+auch bei einem Cache-Treffer — vorher nur bei unbekannten Kennungen. Das steht im Javadoc von
+`resolve`, damit es niemand versehentlich zurückdreht.
+
+**Zwei Verhaltensänderungen** aus dem Zusammenlegen, beide in die bessere Richtung:
+
+1. Signal füllt den Chat-Mitglieder-Cache jetzt beim Start vor (`loadChatMembers()`), wie WhatsApp
+   es schon tat. Bisher fing er leer an, und jeder bekannte Sprecher löste einmal ein überflüssiges
+   `insertChatMemberIfAbsent` aus.
+2. WhatsApp loggt jetzt ebenfalls „Kontakt zugeordnet“ bzw. „Kontakt angelegt“ — vorher tat das nur
+   Signal.
+
+Der Nachsatz des Befunds ist damit mit erledigt: Signals `Set<String>` mit zusammengesetzten
+Schlüsseln `"chatId:contactId"` ist weg, es bleibt die `Map<Integer, Set<Integer>>` — die Zahlen
+bleiben Zahlen.
 
 ### 4.3 Der WhatsApp-Import merkt sich „heute geprüft", bevor er geprüft hat
 
@@ -1178,7 +1213,13 @@ die Quelldatei danach weg ist — und das ist der Punkt, an dem die ganze Begrü
 **Kleinster Schnitt:** `AttachmentCopy` und `pendingCopies`. Drei Umbenennungen in einer Datei.
 **Aufwand:** fünf Minuten.
 
-**Stand:** offen
+**Stand:** erledigt — `AttachmentCopy`, `pendingCopies`, und die Schleifenvariable heißt `copy`
+statt `move`. Mit umbenannt sind drei Stellen, die der Befund nicht nennt: der
+Abschnitts-Kommentar „PostTask: Attachments verschieben“, der Punkt in der Ablauf-Liste des
+Klassen-Javadoc, und die Fehlermeldung „Attachment-Verschiebung fehlgeschlagen“.
+
+Der Javadoc über `copyAttachments` bleibt unverändert — er begründet, warum *nicht* verschoben
+wird, und das war ja der Grund, warum die Namen teuer waren.
 
 ### 4.6 Eine quellenspezifische Methode in der quellenneutralen Klasse
 
@@ -1199,7 +1240,15 @@ stirbt an einer NPE ohne Kontext.
 Null-Check, der sagt, was fehlt. Ein Aufrufer (`DashboardScreen.java:78`).
 **Aufwand:** eine Viertelstunde.
 
-**Stand:** offen
+**Stand:** erledigt — `getLastMessageDate(String source)` mit Parameter und `?` im SQL. Damit
+fällt auch das einzige `createStatement` der Klasse weg; es stehen jetzt 16 `prepareStatement` und
+keines mehr daneben.
+
+Zum Nachsatz eine Richtigstellung: Es stirbt **nicht** an einer nackten NPE. `max()` auf leerer
+Menge liefert NULL, `LocalDateTime.parse(null)` wirft, und das `catch` verpackt es in „Problem
+beim Holen des letzten WhatsApp-Imports“ — Kontext ist also da, er sagt nur nicht, was fehlt.
+Jetzt wirft die Methode selbst mit „Noch keine Nachricht aus '<quelle>' importiert“, bevor der
+Parser sie sieht.
 
 ### 4.7 Zwei Schreibweisen für denselben Konfigurationswert
 
@@ -1265,7 +1314,22 @@ Beide nennen das Präfix-Format als Ursache, statt wie bisher über `validateSql
 
 **Aufwand:** zusammen zwanzig Minuten.
 
-**Stand:** offen
+**Stand:** erledigt, alle vier.
+
+`signalId` heißt `SOURCE`, wie im WhatsApp-Zweig — neun Vorkommen.
+
+Der Referenzvergleich in `resolveDisplayName` sagt jetzt, was gemeint ist: `longest` startet auf
+`null`, und der Fallback wird am Ende eingesetzt. Nebenbei robuster — täuchte `fallback` je als
+Kandidat auf, hätte die alte Fassung ihn überschrieben statt behalten.
+
+Aus dem Attachment-Javadoc sind der Rückblick („war ein fehler, aber es funktioniert
+anscheinend“) und die offene Meinungsverschiedenheit über die Extension-Tabelle verschwunden. Die
+Beschreibung sagt jetzt nur noch, wie der Name entsteht; die zwei offenen Punkte stehen als
+`!Später:` und `!Idee:` vor der Methode und tauchen damit in der Marker-Übersicht auf.
+
+Der Konstruktor ist ganz entfallen. Die Feldbelegung steckt in `ladeKonfiguration()` und läuft
+hinter dem Wächter in `run()`, der wie im Signal-Zweig `Config` direkt fragt statt ein Feld. Damit
+gibt es kein halb gebautes Objekt mehr — das war der Rest, den Befund 4.4 offengelassen hatte.
 
 ### Ein Punkt, der hält, aber im Auge bleiben sollte
 

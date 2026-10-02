@@ -16,7 +16,7 @@ import app.learn.model.MapShape;
 import app.learn.region.model.RegionLearnSessionInfo;
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
-import app.learn.region.repository.RegionDeckRepository;
+import app.learn.region.repository.DbRegionDeckProgressRepository;
 import app.shared.AppClock;
 
 /**
@@ -24,7 +24,7 @@ import app.shared.AppClock;
  */
 public class RegionDeckService {
 	
-	private final RegionDeckRepository repo;
+	private final DbRegionDeckProgressRepository repo;
 	
     private final Map<Deck, Set<MapShape>> regionCache = new HashMap<>();
     private final Map<Deck, Map<Mode, LearnStat>> statCache = new HashMap<>();
@@ -34,7 +34,7 @@ public class RegionDeckService {
 	 */
 	public RegionDeckService() {
 		MapService mapService = MapService.getInstance();
-		this.repo = new RegionDeckRepository();
+		this.repo = new DbRegionDeckProgressRepository();
 		for (Deck type : Deck.values()) {
 			if (type.getCategory() != DeckCategory.REGION_DECK)
 				continue;
@@ -46,7 +46,7 @@ public class RegionDeckService {
 			
 			for (Mode mode : Mode.values()) {
 				SessionSpec spec = new SessionSpec(type, mode);
-				LearnStat stat = repo.getLearnStat(spec);
+				LearnStat stat = repo.load(spec);
 				if (stat != null)
 					statCache.computeIfAbsent(type, _ -> new HashMap<>())
 			         .put(mode, stat);
@@ -89,7 +89,7 @@ public class RegionDeckService {
 	
 	public void savePlayedSession(SessionSpec spec, LearnStat stats, boolean correct, String incorrectId) {
 		// Die Learnstats sind bereits aktualisiert.
-		repo.saveRegionSession(spec, stats, correct, incorrectId);
+		repo.save(spec, stats, correct, incorrectId);
 		statCache.get(spec.getDeckType()).put(spec.getMode(), stats);
 	}
 }

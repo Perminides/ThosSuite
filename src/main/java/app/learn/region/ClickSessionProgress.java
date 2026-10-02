@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import app.learn.model.MapShape;
-import app.learn.region.SessionPresenter.WrongClickResolution;
 import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
 
@@ -66,11 +65,7 @@ public class ClickSessionProgress extends SessionProgress {
 			
 		isPaused = false;
 
-		presenter.undoWrongClick(
-			    spec.isPlaySession()
-			        ? WrongClickResolution.COMMIT_MISS_AND_CONTINUE
-			        : WrongClickResolution.ROLLBACK_FOR_RETRY
-			);
+		presenter.undoWrongClick();
 		
 		if (!spec.isPlaySession()) {
 		    // In einer Lernsession ist das hier ein starker Eingriff in die Logik. 

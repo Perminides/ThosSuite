@@ -14,10 +14,7 @@ import app.shared.DB;
 
 public class DbRegionDeckProgressRepository {
 
-	public DbRegionDeckProgressRepository() {
-	}
-
-	LearnStat load(SessionSpec sessionSpec) {
+	public LearnStat load(SessionSpec sessionSpec) {
 	    Connection conn = DB.getConnection();
 	    String sql = "SELECT * FROM region_learn_stat where deck = ? and mode = ?";
 	    try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -38,7 +35,7 @@ public class DbRegionDeckProgressRepository {
 	    }
 	}
 	
-	void save(SessionSpec spec, LearnStat stats, boolean correct, String wrongId) {
+	public void save(SessionSpec spec, LearnStat stats, boolean correct, String wrongId) {
 	    String logSQL = "INSERT INTO region_log (played_timestamp, deck, mode, correct_flag, wrong_region_id) VALUES (?, ?, ?, ?, ?)";
 	    String learnStatSQL = "INSERT INTO region_learn_stat (deck, mode, first_played, last_played, level, wrong_count) "
 	            + "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (deck, mode) DO UPDATE SET "
