@@ -132,7 +132,7 @@ public class RegionSession implements Screen {
 	 * schließt, bekommt von {@link Alerts} ebenfalls {@code CANCEL} zurück.</p>
 	 */
 	private ButtonEnum showMistakeAlert(SessionResult result) {
-		Log.info(this, "Alert wird erstellt. correct=false");
+		Log.debug(this, "Alert wird erstellt. correct=false");
 
 		List<ButtonEnum> buttons = new ArrayList<>();
 		buttons.add(ButtonEnum.OK);

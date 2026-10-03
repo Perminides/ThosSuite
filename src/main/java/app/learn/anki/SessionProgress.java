@@ -42,7 +42,7 @@ class SessionProgress {
 	private int currentIndex = -1;
 
 	public SessionProgress(List<Card> cards, AnkiDeckService service, Deck type, CardSortOrder sortOrder, Runnable onLastCardDone) {
-		Log.info(this, "=== PROGRESS CONSTRUCTOR === Progress@" + System.identityHashCode(this));
+		Log.debug(this, "=== PROGRESS CONSTRUCTOR === Progress@" + System.identityHashCode(this));
 		this.cards = cards;
 		this.service = service;
 		this.type = type;
@@ -63,7 +63,7 @@ class SessionProgress {
 	}
 
 	public void start() {
-		Log.info(this, "=== PROGRESS START === Progress@" + System.identityHashCode(this));
+		Log.debug(this, "=== PROGRESS START === Progress@" + System.identityHashCode(this));
 		// Neue Karten immer zuerst
 		List<Card> newCards = new ArrayList<>();
 		Iterator<Card> iter = cards.listIterator();
@@ -171,7 +171,7 @@ class SessionProgress {
 	 * bei meinen mächtigen Skins nicht herum...
 	 */
 	public void refresh() {
-		Log.info(this, "=== REFRESH === Progress@" + System.identityHashCode(this) + ", currentIndex=" + currentIndex);
+		Log.debug(this, "=== REFRESH === Progress@" + System.identityHashCode(this) + ", currentIndex=" + currentIndex);
 		presenter.cardFinished();
 		presenter.refresh();
 		Card cur = cards.get(currentIndex);
@@ -195,7 +195,7 @@ class SessionProgress {
 	 * an der Quelle, die Persistenz muss sie nicht mehr kennen.
 	 */
 	public void save() {
-		Log.info(this, "=== SAVE START === Progress@" + System.identityHashCode(this)
+		Log.debug(this, "=== SAVE START === Progress@" + System.identityHashCode(this)
 				+ ", cards.size=" + cards.size() + ", currentIndex=" + currentIndex);
 		List<PlayedCardData> rows = new ArrayList<>();
 		for (Card card : cards) {
@@ -223,7 +223,7 @@ class SessionProgress {
 					cp.isCorrectlyAnswered(), cp.getPlayedTimestamp()));
 		}
 		service.savePlayedCards(type, rows);
-		Log.info(this, "=== SAVE END === " + rows.size() + " Karten gespeichert");
+		Log.info(this, "SAVE: " + rows.size() + " Karten gespeichert");
 	}
 
 	// ========================================

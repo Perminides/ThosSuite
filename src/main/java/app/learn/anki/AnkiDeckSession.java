@@ -28,6 +28,7 @@ public class AnkiDeckSession implements Screen {
 	private final SessionProgress progress;
 	private final SessionPresenter presenter;
 	private final Runnable onSessionEnded;
+	private final Deck type;
 	private final boolean isFreePlay;
 
 	/**
@@ -47,9 +48,10 @@ public class AnkiDeckSession implements Screen {
 	}
 
 	private AnkiDeckSession(List<Card> cards, Runnable onSessionEnded, AnkiDeckService service, Deck type, boolean isFreePlay) {
-		Log.info(this, "=== SESSION CONSTRUCTOR === Session@" + System.identityHashCode(this));
+		Log.debug(this, "=== SESSION CONSTRUCTOR === Session@" + System.identityHashCode(this));
 		this.onSessionEnded = onSessionEnded;
 		this.isFreePlay = isFreePlay;
+		this.type = type;
 		CardSortOrder sortOrder = isFreePlay ? CardSortOrder.RANDOM : CardSortOrder.valueOf(Config.get("pref.sortOrder"));
 		this.progress = new SessionProgress(cards, service, type, sortOrder, this::closeLoud);
 		this.presenter = new SessionPresenter(type, progress); // registriert sich selbst am Progress via setPresenter(this)
@@ -57,7 +59,7 @@ public class AnkiDeckSession implements Screen {
 
 	@Override
 	public void start() {
-		Log.info(this, "=== SESSION START === Session@" + System.identityHashCode(this));
+		Log.debug(this, "=== SESSION START === Session@" + System.identityHashCode(this));
 		progress.start();
 	}
 
@@ -79,7 +81,7 @@ public class AnkiDeckSession implements Screen {
 	 */
 	@Override
 	public void closeSilent(boolean save) {
-		Log.info(this, "=== CLOSE === Session@" + System.identityHashCode(this) + ", save=" + save);
+		Log.debug(this, "=== CLOSE === Session@" + System.identityHashCode(this) + ", save=" + save);
 		presenter.stopClock();
 		if (save)
 			progress.save();
@@ -99,6 +101,7 @@ public class AnkiDeckSession implements Screen {
 		Alerts.show("Zusammenfassung", createSummary(), ButtonEnum.OK);
 		if (!isFreePlay)     // im freien Spiel wird nichts fortgeschrieben
 			progress.save();
+		Log.info(this, "AnkiSession " + type.getDisplayName() + " beendet.");
 		onSessionEnded.run();
 	}
 

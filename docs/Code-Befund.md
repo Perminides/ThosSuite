@@ -154,7 +154,7 @@ laufen die beiden auseinander.
 | 1.10 | Ein Statement gibt sich als parametrisiert aus | ein paar Minuten | erledigt |
 | 1.11 | Die Anzeigetexte der Anki-Session entstehen auf der Feature-Seite | eine halbe Stunde | offen |
 | 1.12 | Toter Code | zwanzig Minuten | erledigt |
-| 1.13 | Ablaufverfolgung landet im Dateilog | zehn Minuten | offen |
+| 1.13 | Ablaufverfolgung landet im Dateilog | zehn Minuten | erledigt |
 | 2.1 | Ein neu angelegtes Region-Deck wird nie fällig | eine halbe Stunde (gemeinsam mit 1.3) | verworfen — der erste Stand wird bewusst von Hand gesetzt |
 | 2.2 | „Welcher Name gilt in diesem Modus" wird fünfmal beantwortet, auf zwei Arten | dreiviertel Stunde | erledigt |
 | 2.3 | Die Fehlerliste am Sessionende steht dreimal | eine halbe Stunde | erledigt |
@@ -511,7 +511,25 @@ in der man sonst nach Importfehlern sucht.
 „Starte AnkiSession" und „SAVE END" dürfen `info` bleiben, die sagen etwas über den Lauf aus.
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** erledigt, mit einer Abweichung vom Vorschlag.
+
+Acht Zeilen stehen jetzt auf `Log.debug`: die sieben mit `identityHashCode`
+(`AnkiDeckSession:50,60,82`, `SessionProgress:45,66,174,198`) und
+`RegionSession:135` „Alert wird erstellt. correct=false", die nur sagt, dass der Dialog gebaut
+wird — dass er falsch war, steht im Dialog selbst.
+
+**Die Kartenzeile bleibt auf `info`.** `CardProgress:85` war im Befund als Erstes zum Abstufen
+vorgesehen; Perminides braucht sie regelmäßig in der Datei. Damit schreibt eine Session mit 60
+Karten weiter rund 60 Zeilen, aber keine Entwicklungsspuren mehr.
+
+`=== SAVE END ===` heißt `SAVE:` — die `=== ===`-Verzierung war ein Spurenmarker, und die Spur
+liegt jetzt auf debug.
+
+Dazu hat Anki eine Endzeile bekommen, die ihm gegenüber Region fehlte:
+`AnkiDeckSession.closeLoud()` meldet „AnkiSession <Deck> beendet.". Die Schale hält dafür `type`
+als Feld. Der Weg über `closeSilent` — vier Aufrufe im Controller beim Sessionwechsel — bleibt
+ungeloggt: wenn man den sehen will, ist das eine Aussage des Controllers über den Wechsel, nicht
+eine der Session über ihr Ende.
 
 ### Was in dieser Gruppe trägt
 
