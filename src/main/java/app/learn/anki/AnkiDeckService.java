@@ -21,7 +21,7 @@ import app.learn.model.LearnSessionInfo;
 import app.shared.Config;
 
 /**
- * Lädt im Konstruktor alle Maps, Anki-Karten sowie deren Fortschritte 
+ * Lädt im Konstruktor die Karten-Shapes, die Anki-Karten und deren Fortschritte.
  * Hält alle Karten aus allen Decks sowie die heute fälligen.
  */
 public class AnkiDeckService {
@@ -36,53 +36,14 @@ public class AnkiDeckService {
 	private final List<String> imageMapNames = new ArrayList<>();
 
 	/**
-	 * <p>
-	 * Erstellt einen neuen AnkiDeckService mit Listen von allen und heute fälligen Cards.
-	 * </p>
-	 * 
-	 * <p>
-	 * Wir setzen erst einmal mehr auf Performance und laden deswegen alle Bilder hier sofort und halten sie. Ja, auch das fette Hannover-Bild. Wir haben
-	 * gesehen, dass beim Laden des Bildes, was gute 400 MB benötigt, noch ein "Schatten" in den Heap geladen wird, der nochmal sogar etwas größer ist, dann
-	 * aber nach dem Laden nicht mehr benötigt wird und freigegeben werden könnte. Wenn man hart System.gc(); aufruft, dann sinkt der Used um 600 MB. Was dieser
-	 * Schatten ist, wissen wir nicht, aber ist vielleicht nicht so entscheidend. Hier nochmal die beiden relevanten Outputs meiner Speichermessung. Den Code
-	 * dafür findest Du im MemoryTestHelloWorld...
-	 * 
-	 * </p>
-	 * 
-	 * <p>
-	 * <ul>
-	 * <li><b>Direkt nach der Initialisierung des AnkiDeckService</b></li>
-	 * <li>12:18:11</li>
-	 * <li>Heap</li>
-	 * <li>Init: 536 MB</li>
-	 * <li><b>Used: 1,3 GB</b></li>
-	 * <li><b>Commited: 1,5 GB</b></li>
-	 * <li>Max: 4,3 GB</li>
-	 * <li>Non Heap</li>
-	 * <li>Init: 7 MB</li>
-	 * <li>Used: 30 MB</li>
-	 * <li>Commited: 32 MB</li>
-	 * <li>Max: -1 B</li>
-	 * </ul>
-	 * </p>
-	 * 
-	 * <p>
-	 * <ul>
-	 * <li><b>1 Sekunde nach Aufruf von System.gc();</b></li>
-	 * <li>12:18:12</li>
-	 * <li>Heap</li>
-	 * <li>Init: 536 MB</li>
-	 * <li><b>Used: 697 MB</b></li>
-	 * <li><b>Commited: 1,5 GB</b></li>
-	 * <li>Max: 4,3 GB</li>
-	 * <li>Non Heap</li>
-	 * <li>Init: 7 MB</li>
-	 * <li>Used: 28 MB</li>
-	 * <li>Commited: 32 MB</li>
-	 * <li>Max: -1 B</li>
-	 * </ul>
-	 * </p>
-	 * 
+	 * Lädt alle Karten aller Anki-Decks samt Fortschritt und hält sie — nicht nur die heute
+	 * fälligen. Bewusst alles im Voraus, damit später nichts nachgeladen werden muss.
+	 *
+	 * <p>Je Deck steht danach fest, was heute dran ist: die fälligen Karten plus so viele neue, wie
+	 * das Tagesbudget aus der Config noch zulässt.</p>
+	 *
+	 * <p>Bilder fasst er nicht an. Die Bild-Decks nennt er nur beim Namen — sie vorzuwärmen ist
+	 * Sache der Skin-Seite, angestoßen vom Controller.</p>
 	 */
 	public AnkiDeckService() {
 		repo = new DeckRepository();
@@ -94,42 +55,50 @@ public class AnkiDeckService {
 			if (type.getCategory() != DeckCategory.ANKI_DECK)
 				continue;
 			
-			// Preload der Karten-Shapes: bewusst für *alle* Anki-Decks mit Karte, nicht nur die heute
-			// fälligen — ein Fälligkeitsfilter lohnt bei vier Decks nicht.
-			if (type.getMapMetadata() != null) {
-				MapService.getInstance().preloadShapes(type);
-				if (type.getMapMetadata().getMapType() == MapType.IMAGE)
-					imageMapNames.add(type.getMapName());
-			}
-						
+			preloadMap(type);
+
 			dueCards.put(type, new HashMap<>());
 			allCards.put(type, repo.getAllCards(type));
 			initialDueCounts.put(type, repo.getInitialDue(type));
 			// Das Tagesbudget für neue Karten, abzüglich dessen, was heute schon verbraucht ist.
 			// Dadurch rutschen neue Karten auch dann noch nach, wenn der heutige Stapel längst
 			// begonnen oder abgearbeitet ist — und trotzdem nie mehr als die Config erlaubt.
-			int newRemaining = Integer.parseInt(Config.get(type.getConfigValueNewCards()))
+			int budget = Integer.parseInt(Config.get(type.getConfigValueNewCards()))
 					- repo.getNewLearnedToday(type);
-			List<Card> newCards = new ArrayList<Card>();
+			int newAdded = 0;
+			Set<String> labels = new HashSet<>();
+
 			for (Card card : allCards.get(type)) {
 				if (card.isDueToday())
 					dueCards.get(type).put(card.getId(), card);
-				else if (card.isNew() && newRemaining > 0) {
-					newCards.add(card);
-					newRemaining--;
+				else if (card.isNew() && newAdded < budget) {
+					dueCards.get(type).put(card.getId(), card);
+					newAdded++;
 				}
-				allLabels.computeIfAbsent(type, _ -> new HashSet<>())
-					.addAll(card.getLabels());
+				labels.addAll(card.getLabels());
 			}
-			
-			for (Card card : newCards)
-				dueCards.get(type).put(card.getId(), card);
-			initialDueCounts.put(type, initialDueCounts.get(type) + newCards.size());
+
+			allLabels.put(type, labels);
+			initialDueCounts.put(type, initialDueCounts.get(type) + newAdded);
 		}
-		// Ach, was solls? Wir wollen den Schatten freigeben!
-		System.gc();
 	}
 	
+	/**
+	 * Wärmt die Karten-Shapes vor: bewusst für *alle* Anki-Decks mit Karte, nicht nur die heute
+	 * fälligen — ein Fälligkeitsfilter lohnt bei vier Decks nicht.
+	 *
+	 * <p>Die Bilder einer Bild-Karte bleiben unangetastet; von denen wird nur der Kartenname
+	 * notiert, damit der Controller die Skin-Seite vorwärmen lassen kann.</p>
+	 */
+	private void preloadMap(Deck type) {
+		if (type.getMapMetadata() == null)
+			return;
+
+		MapService.getInstance().preloadShapes(type);
+		if (type.getMapMetadata().getMapType() == MapType.IMAGE)
+			imageMapNames.add(type.getMapName());
+	}
+
 	public List<LearnSessionInfo> getDueGameInfos() {
 		ArrayList<LearnSessionInfo> result = new ArrayList<>();
 		for (Deck type : Deck.values()) {
