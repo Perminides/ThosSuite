@@ -1,6 +1,8 @@
 package app.shared.ui;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import app.shared.model.AnkiCallbacks;
 import app.shared.model.ShapeGeometry;
@@ -24,10 +26,18 @@ public class ShapeMapLearnView extends AnkiLearnView {
 	@Override
 	protected LearnMap createMap() {
 		ShapeMapPane map = new ShapeMapPane(geometries,
-				SkinService.get().learnComponentBounds(deckId(), mapName(), category(), LearnComponent.MAP));
+				SkinService.get().learnComponentBounds(deckId(), mapName(), category(), LearnComponent.MAP),
+				allIds());
 		map.setClickListener(callbacks().mapElementClicked());
-		map.reset();
 		return map;
+	}
+
+	/** Hier ist die ganze Karte das Spielfeld — die Pane behält davon, was Klicks annehmen kann. */
+	private Set<String> allIds() {
+		Set<String> ids = new HashSet<>();
+		for (ShapeGeometry geometry : geometries)
+			ids.add(geometry.id());
+		return ids;
 	}
 
 	@Override protected boolean hasInputField()      { return true; }

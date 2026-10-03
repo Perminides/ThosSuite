@@ -35,6 +35,10 @@ public class RegionLearnView {
 	private final String mapName;
 	private final String category;
 	private final List<ShapeGeometry> geometries;
+
+	/** Die Formen dieser Sitzung. Beim Skinwechsel wird die Karte neu gebaut und braucht sie wieder. */
+	private final Set<String> sessionShapes;
+
 	private final RegionCallbacks callbacks;
 
 	private final ComponentHost host = new ComponentHost();
@@ -44,12 +48,13 @@ public class RegionLearnView {
 	private SuiteTextField inputField;
 
 	public RegionLearnView(String deckId, String mapName, String category, List<ShapeGeometry> geometries,
-			boolean mitFragefeld,
+			Set<String> sessionShapes, boolean mitFragefeld,
 			RegionCallbacks callbacks) {
 		this.deckId = deckId;
 		this.mapName = mapName;
 		this.category = category;
 		this.geometries = geometries;
+		this.sessionShapes = sessionShapes;
 		this.callbacks = callbacks;
 		rebuild(mitFragefeld);
 	}
@@ -59,7 +64,7 @@ public class RegionLearnView {
 		Skin skin = SkinService.get();
 		host.setWallpaper(skin.wallpaperPath(deckId, mapName, category));
 
-		map = new ShapeMapPane(geometries, skin.learnComponentBounds(deckId, mapName, category, LearnComponent.MAP));
+		map = new ShapeMapPane(geometries, skin.learnComponentBounds(deckId, mapName, category, LearnComponent.MAP), sessionShapes);
 		map.setClickListener(callbacks.mapElementClicked());
 
 		host.clear();
@@ -87,8 +92,7 @@ public class RegionLearnView {
 
 	public void addIdsToActive(Set<String> ids)       { map.markActive(ids); }
 	public void addIdsToMarked(Set<String> ids)       { map.mark(ids); }
-	public void moveAllToActive()                     { map.resetGameToActive(); }
-	public void moveResolvedToActive()                { map.moveResolvedToActive(); }
+	public void moveAllToActive()                     { map.reset(); }
 	public void addIdsToCorrect(Set<String> elements) { map.markCorrect(elements); }
 	public void addIdsToInactive(Set<String> elements){ map.markInactive(elements); }
 	public void setIdToIncorrect(String element)      { map.markIncorrect(element); }

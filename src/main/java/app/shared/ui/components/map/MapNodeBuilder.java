@@ -40,7 +40,7 @@ final class MapNodeBuilder {
 	 * der Geometrie; zIndex/Layer-Klasse/interaktiv leitet ShapeLayer aus dem type ab.
 	 */
 	static Node buildShapeMapNode(ShapeGeometry geometry) {
-		ShapeLayer layer = ShapeLayer.fromJsonId(geometry.type());
+		ShapeLayer layer = ShapeLayer.fromJsonType(geometry.type());
 		return buildShapePath(geometry, layer.styleClass(), layer.interactive());
 	}
 

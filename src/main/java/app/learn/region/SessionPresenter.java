@@ -27,13 +27,14 @@ public class SessionPresenter {
 	private WrongClickSnapshot wrongClickSnapshot;
 	private SavedState savedState;
 	
-	public SessionPresenter(SessionProgress progress, SessionSpec spec) {
+	public SessionPresenter(SessionProgress progress, SessionSpec spec, Set<String> sessionShapes) {
 		progress.setPresenter(this);
 		view = new RegionLearnView(
 				spec.getDeckType().getId(),
 				spec.getDeckType().getMapName(),
 				spec.getDeckType().getCategory().getSkinKey(),
 				MapService.getInstance().getMap(spec.getDeckType()).getShapeGeometries(),
+				sessionShapes,
 				spec.getMode().getSubCategory() == Mode.SubCategory.CLICK,
 				new RegionCallbacks(this::clickedMapElement, this::typedText));
 		this.progress = progress;
@@ -89,7 +90,7 @@ public class SessionPresenter {
 	public void handleClickResult(String id, boolean correct, String correctId) {
 		if (correct) {
 			if (hard) {
-				view.moveResolvedToActive();
+				view.moveAllToActive();
 			}
 			view.addIdsToCorrect(Set.of(id));
 

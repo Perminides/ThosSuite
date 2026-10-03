@@ -19,7 +19,7 @@ public class EliminationSessionProgress extends SessionProgress {
 
 	@Override
 	public void start() {
-		presenter.weWaitForEliminationText(getIds(sessionRegions));
+		presenter.weWaitForEliminationText(MapShape.idsOf(sessionRegions));
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class EliminationSessionProgress extends SessionProgress {
 	        return;
 	    
 	    sessionRegions.removeAll(hits);
-	    presenter.handleCorrectAnswers(getIds(hits));
+	    presenter.handleCorrectAnswers(MapShape.idsOf(hits));
 	    hasProgressed = true;
 	    
 	    if (sessionRegions.isEmpty())

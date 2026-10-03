@@ -8,7 +8,7 @@ package app.shared.ui.components.map;
  *
  * <p>Bewusst getrennt von der <b>Lernstoff</b>-Bedeutung desselben {@code type}: die leitet learn eigenständig
  * über {@code MapShape.isPlayable()} ab. Zwei unabhängige Ableitungen aus einer Quelle, jede auf ihrer Seite —
- * früher fielen sie im überladenen {@code isInteractive} zusammen. Der doppelte {@code fromJsonId}-Lookup
+ * früher fielen sie im überladenen {@code isInteractive} zusammen. Der doppelte {@code fromJsonType}-Lookup
  * (Pane + Builder) ist bewusst in Kauf genommen; ein 4-Werte-Enum-Scan ist vernachlässigbar.</p>
  */
 enum ShapeLayer {
@@ -18,13 +18,13 @@ enum ShapeLayer {
 	WATER("2", 20, "layer-water", false),
 	OVERLAY("3", 30, "layer-overlay", false); // z.B. Bundeslandgrenzen
 
-	private final String jsonId;
+	private final String type;
 	private final int zIndex;
 	private final String styleClass;
 	private final boolean interactive;
 
-	ShapeLayer(String jsonId, int zIndex, String styleClass, boolean interactive) {
-		this.jsonId = jsonId;
+	private ShapeLayer(String type, int zIndex, String styleClass, boolean interactive) {
+		this.type = type;
 		this.zIndex = zIndex;
 		this.styleClass = styleClass;
 		this.interactive = interactive;
@@ -34,10 +34,10 @@ enum ShapeLayer {
 	String styleClass() { return styleClass; }
 	boolean interactive() { return interactive; }
 
-	static ShapeLayer fromJsonId(String id) {
+	static ShapeLayer fromJsonType(String type) {
 		for (ShapeLayer layer : values()) {
-			if (id != null && id.equals(layer.jsonId)) return layer;
+			if (type != null && type.equals(layer.type)) return layer;
 		}
-		throw new RuntimeException("Unerwarteter Value im Typen eines Shapes: " + id);
+		throw new RuntimeException("Unerwarteter Value im Typen eines Shapes: " + type);
 	}
 }

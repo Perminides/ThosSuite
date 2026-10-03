@@ -55,7 +55,7 @@ public class RegionSession implements Screen {
     		}
     		default: throw new RuntimeException("Das ist leider noch nicht implementiert :-)");
     	}
-    	this.presenter = new SessionPresenter(progress, spec);
+    	this.presenter = new SessionPresenter(progress, spec, MapShape.idsOf(regions));
         this.onSessionEnded = onSessionEnded;
 	}
 	

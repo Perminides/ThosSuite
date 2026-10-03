@@ -56,6 +56,13 @@ public record MapShape(String deckId, String regionName, String capitalName, Set
 			result.add(part.trim());
 		return result;
 	}
+	
+	public static Set<String> idsOf(Set<MapShape> regions) {
+		Set<String> ids = new HashSet<>();
+		for (MapShape region : regions)
+			ids.add(region.id());
+		return ids;
+	}
 
 	public boolean isMatchingCapital(String text) {
 		if (text == null || text.isEmpty()) {

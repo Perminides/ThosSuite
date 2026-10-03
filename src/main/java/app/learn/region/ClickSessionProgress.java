@@ -47,7 +47,7 @@ public class ClickSessionProgress extends SessionProgress {
 	@Override
 	public void resume() {
 		if (spec.isPlaySession()) {
-			sessionRegions.removeAll(getIds(notFound));
+			sessionRegions.removeAll(MapShape.idsOf(notFound));
 		} else {
 			notFound.clear();
 		}

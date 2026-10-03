@@ -45,7 +45,7 @@ public class WriteSessionProgress extends SessionProgress {
 
 	@Override
 	public void start() {
-		presenter.prepareWriteSession(getIds(sessionRegions));
+		presenter.prepareWriteSession(MapShape.idsOf(sessionRegions));
 		currentIndex++;
 		presenter.weWaitForWriteText(toLearnRegions.get(currentIndex).id());
 	}

@@ -2,8 +2,6 @@ package app.learn.region;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import app.learn.model.LearnStat;
 import app.learn.model.MapShape;
@@ -197,12 +195,5 @@ public abstract class SessionProgress {
 		case REGION -> shape.isMatchingRegion(text);
 		case BOTH -> shape.isMatching(text);
 		};
-	}
-
-	protected Set<String> getIds(Set<MapShape> regions) {
-		Set<String> result = new HashSet<>();
-		for (MapShape region : regions)
-			result.add(region.id());
-		return result;
 	}
 }
