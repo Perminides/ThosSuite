@@ -88,9 +88,6 @@ public final class RegionPlaySetup {
      *     <li>zu dem ausgewählten Modus passen</li>
      *   </ul>
      * </ul>
-     * 
-     * @param in
-     * @return
      */
     private static RegionDialogState reduce(RegionDialogState in) {
         // angehakte Decks sammeln (Label ist die id — Namen eindeutig)
@@ -136,9 +133,7 @@ public final class RegionPlaySetup {
     }
 
     /**
-     * Alle Regionen auswählbar, keine Region ausgewählt. Gewählter Modus = Elimintaion Region.
-     * 
-     * @return
+     * Alle Regionen auswählbar, keine Region ausgewählt. Gewählter Modus = Elimination Region.
      */
     private static RegionDialogState getInitialState() {
         List<Choice> modes = new ArrayList<>();
@@ -149,8 +144,6 @@ public final class RegionPlaySetup {
 
     /**
      * Erstellt einmal initial beim Erstellen des Dialogs die Regions-Spalten mit den Checkboxes 
-     * 
-     * @return
      */
     private static List<List<Toggle>> buildDeckColumns() {
         Map<MapMetadata, List<Deck>> byMap = new LinkedHashMap<>();
@@ -180,9 +173,6 @@ public final class RegionPlaySetup {
 
     /**
      * Ermittelt aus dem aktuellen Zustand des Dialogs, was jetzt eigentlich gespielt werden soll.
-     * 
-     * @param state
-     * @return
      */
     private static RegionPlayConfig toConfig(RegionDialogState state) {
         Set<Deck> selected = new HashSet<>();

@@ -27,7 +27,7 @@ public class SessionPresenter {
 	private WrongClickSnapshot wrongClickSnapshot;
 	private SavedState savedState;
 	
-	public SessionPresenter(SessionProgress progress, SessionSpec spec, Set<String> sessionShapes) {
+	SessionPresenter(SessionProgress progress, SessionSpec spec, Set<String> sessionShapes) {
 		progress.setPresenter(this);
 		view = new RegionLearnView(
 				spec.getDeckType().getId(),
@@ -42,7 +42,7 @@ public class SessionPresenter {
 		this.hard = spec.getMode().getEasyHard() == Mode.EasyHard.HARD;
 	}
 	
-	public ScreenView getView() {
+	ScreenView getView() {
 		return view.getView();
 	}
 	
@@ -50,7 +50,7 @@ public class SessionPresenter {
 	// STEP EXECUTION (from Progress)
 	// ========================================
 	
-	public void refresh() {
+	void refresh() {
 		savedState = new SavedState(view.getState(), view.getQuestion());
 		view.rebuild(spec.getMode().getSubCategory() == Mode.SubCategory.CLICK);
 		view.setState(savedState.mapState);
@@ -58,36 +58,36 @@ public class SessionPresenter {
 		savedState = null;
 	}
 
-	public void weWaitForClick(Set<String> ids) {
+	void weWaitForClick(Set<String> ids) {
 		view.addIdsToActive(ids);
 		view.setMapActive(true);
 	}
 	
-	public void weWaitForEliminationText(Set<String> ids) {
+	void weWaitForEliminationText(Set<String> ids) {
 		view.addIdsToInactive(ids);
 		view.setMapActive(false);
 	}
 	
-	public void weWaitForWriteText(String id) {
+	void weWaitForWriteText(String id) {
 		view.addIdsToMarked(Set.of(id));
 		view.setMapActive(true);
 	}
 	
-	public void prepareWriteSession(Set<String> ids) {
+	void prepareWriteSession(Set<String> ids) {
 		view.addIdsToInactive(ids);
 		view.setMapActive(false);
 	}
 	
-	public void setCorrectText(String correctText) {
+	void setCorrectText(String correctText) {
 		view.setTextInTextField(correctText);
 		view.setTextFieldActive(false);
 	}
 	
-	public void showQuestion(String text) {
+	void showQuestion(String text) {
 		view.setQuestion(text);
 	}
 	
-	public void handleClickResult(String id, boolean correct, String correctId) {
+	void handleClickResult(String id, boolean correct, String correctId) {
 		if (correct) {
 			if (hard) {
 				view.moveAllToActive();
@@ -106,7 +106,7 @@ public class SessionPresenter {
 		}
 	}
 	
-	public void handleCorrectAnswers(Set<String> matches) {
+	void handleCorrectAnswers(Set<String> matches) {
 		view.addIdsToCorrect(matches);
 		view.setTextInTextField("");
 	}
@@ -117,7 +117,7 @@ public class SessionPresenter {
 	 * <p>Das Eingabefeld muss dabei wieder freigeschaltet werden — {@link #setCorrectText} hat es
 	 * gesperrt, um die angezeigte Lösung nicht überschreibbar zu machen.</p>
 	 */
-	public void handleMissedWrite(String id) {
+	void handleMissedWrite(String id) {
 		view.setIdToIncorrect(id);
 		view.setTextInTextField("");
 		view.setTextFieldActive(true);
@@ -140,7 +140,7 @@ public class SessionPresenter {
 	 * geht weiter; im Lernmodus wird der Stand davor wiederhergestellt, damit man es nochmal
 	 * versuchen kann.
 	 */
-	public void undoWrongClick() {
+	void undoWrongClick() {
 	    if (hard) {
 	        view.moveAllToActive();
 	    } else {
@@ -158,12 +158,12 @@ public class SessionPresenter {
 	// USER INPUT (from Panel)
 	// ========================================
 	
-	public void clickedMapElement(String id) {
+	void clickedMapElement(String id) {
 		progress.elementClicked(id);
 	}
 	
 
-	public void typedText(String text) {
+	void typedText(String text) {
 		progress.textInputChanged(text);
 	}
 }

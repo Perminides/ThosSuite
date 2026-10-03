@@ -125,12 +125,15 @@ public class ClickSessionProgress extends SessionProgress {
 		}
 	}
 	
-	/** Der Name zu einer angeklickten Form. Leer, wenn sie in dieser Session nicht gefragt wurde. */
+	/**
+	 * Der Name zu einer angeklickten Form. Klicks kommen nur aus dem Spielfeld, und das ist genau
+	 * die Menge, aus der {@code quizElements} gebaut wird — gefunden wird also immer etwas.
+	 */
 	private String getNameForId(String clickedId) {
 		for (MapShape shape : quizElements)
 			if (shape.id().equals(clickedId))
 				return nameOf(shape);
-		return "";
+		throw new RuntimeException("Geklickt wurde eine Form, die gar nicht im Spiel ist: " + clickedId);
 	}
 
 	@Override

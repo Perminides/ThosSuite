@@ -13,7 +13,6 @@ public class RegionLearnSessionInfo extends LearnSessionInfo {
 		this.isDueToday = isDueToday;
 	}
 
-	// getter für spec
 	@Override
 	public String formatForMenu() {
 		return spec.getDeckType().getDisplayName() + ": " + spec.getMode().getDisplayName() + " (" + level + ")";

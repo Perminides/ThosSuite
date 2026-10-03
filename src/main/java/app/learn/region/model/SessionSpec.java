@@ -36,7 +36,7 @@ public class SessionSpec {
 		return mode;
 	}
 	
-	public Set<Deck> getAdditonalDeckTypesForPlay() {
+	public Set<Deck> getAdditionalDeckTypesForFreePlay() {
 		return additionalDeckTypesForFreePlay;
 	}
 	

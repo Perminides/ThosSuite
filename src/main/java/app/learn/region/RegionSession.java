@@ -34,7 +34,7 @@ import app.shared.ui.Alerts;
 public class RegionSession implements Screen {
 	
 	private final SessionPresenter presenter;
-	Runnable onSessionEnded;
+	private final Runnable onSessionEnded;
     private final SessionSpec spec;
     private final SessionProgress progress;
 

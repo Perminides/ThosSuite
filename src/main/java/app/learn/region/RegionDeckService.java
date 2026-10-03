@@ -84,8 +84,8 @@ public class RegionDeckService {
 	public Set<MapShape> getRegions(SessionSpec spec) {
 		Set<MapShape> result = new HashSet<>(regionCache.get(spec.getDeckType())); // Die Original-Sets bleiben HIER!
 		// For play sessions more than one deck can be combined...
-		if (spec.getAdditonalDeckTypesForPlay() != null) {
-			for (Deck deckType : spec.getAdditonalDeckTypesForPlay()) {
+		if (spec.getAdditionalDeckTypesForFreePlay() != null) {
+			for (Deck deckType : spec.getAdditionalDeckTypesForFreePlay()) {
 				result.addAll(regionCache.get(deckType));
 			}
 		}

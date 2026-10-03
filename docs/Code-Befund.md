@@ -164,7 +164,7 @@ laufen die beiden auseinander.
 | 2.7 | 270 Einzelabfragen beim Start | eine halbe Stunde | erledigt |
 | 2.8 | Welches Deck bei einer kombinierten Spielsession das primäre ist, hängt am Hashwert | zehn Minuten | verworfen — die Reihenfolge spielt keine Rolle |
 | 2.9 | Enum-`toString()` trägt Last | zwanzig Minuten | erledigt |
-| 2.10 | Kleinkram | eine halbe Stunde | offen |
+| 2.10 | Kleinkram | eine halbe Stunde | erledigt |
 | 3.1 | API-Key und Session-ID landen in der Logdatei und im Fehler-Alert | zehn Minuten | erledigt |
 | 3.2 | Zwei Methoden gleichen Namens mit entgegengesetztem Verhalten | dreiviertel Stunde | erledigt |
 | 3.3 | Der Serien-Import steht zweimal | dreiviertel Stunde | offen |
@@ -848,7 +848,28 @@ An beiden Gettern steht im Javadoc, warum es kein `toString()` ist.
 
 **Aufwand:** zusammen eine halbe Stunde.
 
-**Stand:** offen
+**Stand:** erledigt. Zwei Punkte waren schon durch, einer stimmte nicht, einer wandert.
+
+`QuizElement` samt handgeschriebenen Gettern und überflüssigem `;` sowie die Set-Überladung von
+`getNameForId` sind in der 2.3-Runde gefallen. Deren `return "";` ist jetzt ein Wurf: seit die
+Shape-Karte nur noch Klicks aus dem Spielfeld durchlässt und das Spielfeld genau die Menge ist, aus
+der `quizElements` gebaut wird, kann die Suche nicht mehr leer ausgehen.
+
+Gemacht: `RegionSession.onSessionEnded` ist `private final` wie seine drei Nachbarfelder.
+`SessionSpec.getAdditonalDeckTypesForPlay` heißt `getAdditionalDeckTypesForFreePlay`, wie sein Feld,
+mit zwei Aufrufstellen in `RegionDeckService`. In `RegionPlaySetup` sind sechs leere `@param`/
+`@return`-Tags weg — die Zeilennummern im Befund waren veraltet, es sind 93, 141, 153 und 185 —
+und „Elimintaion" bei 139 ist korrigiert. Der Kommentar „// getter für spec“ über
+`formatForMenu()` ist weg.
+
+**Der Punkt zur Sichtbarkeit war falsch beschrieben:** der Anki-Presenter ist nicht paketprivat,
+`public class SessionPresenter` steht in beiden. Der Unterschied liegt bei den Methoden — Anki hat
+keine einzige `public`, Region hatte alle. Da keine davon von außerhalb `app.learn.region` gerufen
+wird (der Controller geht über `currentScreen.refresh()` an `RegionSession`), sind die fünfzehn
+Member jetzt paketprivat, Konstruktor eingeschlossen.
+
+Die INFO-Ablaufverfolgung in `RegionSession:64,135,157` bleibt bei Befund 1.13, der sie als Ganzes
+behandelt.
 
 ### Gegenprüfung zu Befund 1.11
 
