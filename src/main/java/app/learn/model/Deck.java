@@ -68,6 +68,20 @@ public enum Deck {
     public String getId() {
         return id;
     }
+
+    /**
+     * Das Deck zu seiner Id, so wie sie in der Datenbank steht.
+     *
+     * <p>Wirft bei einer unbekannten Id. Eine Zeile, deren Deck es nicht mehr gibt, ist kein
+     * Sonderfall zum Übergehen — dann ist entweder die Id hier umbenannt worden oder die Zeile
+     * gehört nicht in die Tabelle.</p>
+     */
+    public static Deck fromId(String id) {
+        for (Deck deck : values())
+            if (deck.id.equals(id))
+                return deck;
+        throw new RuntimeException("Kein Deck mit dieser Id: " + id);
+    }
     
     public String getDisplayName() {
         return displayName;

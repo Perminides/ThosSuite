@@ -108,6 +108,15 @@ class DbDeckProgressRepository {
 		    }
 		}
 
+		/**
+		 * Wie viele Karten dieses Decks heute im Stapel stehen: die fälligen plus die, die heute schon
+		 * gespielt wurden — damit die Anzeige „3 von 12" nicht schrumpft, während man lernt.
+		 *
+		 * <p>Die Regel steht damit zweimal da: die erste Bedingung ist, was {@code Card.isDueToday()}
+		 * über {@code LearnStat.getDueDate()} entscheidet, und dieselbe Kombination aus beiden
+		 * Bedingungen formuliert {@code RegionDeckService.getDueGameInfos} in Java. Wer an der
+		 * Fälligkeit dreht, muss beide anfassen.</p>
+		 */
 		int getInitialDue(Deck type) {
 		    Connection conn = DB.getConnection();
 		    String sql = "select count(*) "

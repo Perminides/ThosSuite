@@ -20,7 +20,15 @@ import app.learn.region.repository.DbRegionDeckProgressRepository;
 import app.shared.AppClock;
 
 /**
- * Hält alle RegionSets mit LearnStats
+ * Hält alle RegionSets mit LearnStats.
+ *
+ * <p>Ob eine Deck-Modus-Kombination im Lernen auftaucht, entscheidet die Datenbank: ohne Zeile in
+ * {@code region_learn_stat} liefert {@link #getDueGameInfos()} dafür nichts, und das gilt je Modus
+ * einzeln. Das freie Spiel ist unberührt, {@code RegionPlaySetup} baut seine Auswahl aus
+ * {@code Deck.values()}.</p>
+ *
+ * <p>Bei Anki ist es umgekehrt: eine Karte ohne Stand ist <em>neu</em> und kommt über das
+ * Tagesbudget von selbst ins Lernen.</p>
  */
 public class RegionDeckService {
 	
@@ -29,30 +37,31 @@ public class RegionDeckService {
     private final Map<Deck, Set<MapShape>> regionCache = new HashMap<>();
     private final Map<Deck, Map<Mode, LearnStat>> statCache = new HashMap<>();
 
-	/**
-	 * Erstellt einen neuen RegionDeckService mit RegionSets und LearnStats von allen möglichen RegionSessions.
-	 */
+	/** Die Formen zu jedem Region-Deck und die Lernstände, die es dazu gibt. */
 	public RegionDeckService() {
-		MapService mapService = MapService.getInstance();
 		this.repo = new DbRegionDeckProgressRepository();
+		loadShapes();
+		loadStats();
+	}
+
+	private void loadShapes() {
+		MapService mapService = MapService.getInstance();
+		for (Deck type : Deck.values())
+			if (type.getCategory() == DeckCategory.REGION_DECK)
+				regionCache.put(type, mapService.getPlayableShapesForDeck(type));
+	}
+
+	private void loadStats() {
+		Map<Deck, Map<Mode, LearnStat>> stored = repo.loadAll();
 		for (Deck type : Deck.values()) {
 			if (type.getCategory() != DeckCategory.REGION_DECK)
 				continue;
 
-			Set<MapShape> regions = mapService.getPlayableShapesForDeck(type);
-			if (regions != null) {
-				regionCache.put(type, regions);
-			}
-			
-			for (Mode mode : Mode.values()) {
-				SessionSpec spec = new SessionSpec(type, mode);
-				LearnStat stat = repo.load(spec);
-				if (stat != null)
-					statCache.computeIfAbsent(type, _ -> new HashMap<>())
-			         .put(mode, stat);
-			}
+			Map<Mode, LearnStat> stats = stored.get(type);
+			if (stats == null)
+				stats = new HashMap<>(); // kein Lernstand gespeichert: dieses Deck ist nicht im Lernen
+			statCache.put(type, stats);
 		}
-
 	}
 	
 	public List<LearnSessionInfo> getDueGameInfos() {
@@ -62,7 +71,7 @@ public class RegionDeckService {
 				continue;
 			for (Mode mode : Mode.values()) {
 				SessionSpec spec = new SessionSpec(type, mode);
-				LearnStat stat = statCache.get(type) == null ? null : statCache.get(type).get(mode);
+				LearnStat stat = statCache.get(type).get(mode);
 				if (stat == null)
 					continue; 
 				if (stat.isDueToday() || stat.getLastPlayed().equals(AppClock.TODAY))

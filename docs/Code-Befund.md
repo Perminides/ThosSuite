@@ -161,7 +161,7 @@ laufen die beiden auseinander.
 | 2.4 | `RegionDeckRepository` ist eine Attrappe | eine Viertelstunde | erledigt |
 | 2.5 | Ein verschluckter Fehler | eine Minute | erledigt |
 | 2.6 | Der Progress sagt dem Presenter etwas, das der Presenter schon weiß | eine Viertelstunde | erledigt |
-| 2.7 | 270 Einzelabfragen beim Start | eine halbe Stunde | offen |
+| 2.7 | 270 Einzelabfragen beim Start | eine halbe Stunde | erledigt |
 | 2.8 | Welches Deck bei einer kombinierten Spielsession das primäre ist, hängt am Hashwert | zehn Minuten | verworfen — die Reihenfolge spielt keine Rolle |
 | 2.9 | Enum-`toString()` trägt Last | zwanzig Minuten | erledigt |
 | 2.10 | Kleinkram | eine halbe Stunde | offen |
@@ -743,7 +743,40 @@ nicht hat, und `DashboardScreen.java:88` legt bei jedem Dashboard-Aufbau ein fri
 `DeckRepository` an — die Statements würden sich auf der geteilten Connection ansammeln.
 **Aufwand Anki-Seite:** eine Viertelstunde, zusammen mit region.
 
-**Stand:** offen
+**Stand:** erledigt — aber nicht als Abfragenzahl. Es sind übrigens 290, nicht 270: 29
+Region-Decks × 10 Modi.
+
+Zwei Dinge haben die Begründung des Befunds ausgehebelt. Erstens ist 2.1 verworfen, und damit auch
+die hier genannte Nebenwirkung: dass nur Treffer im Cache landen, ist kein Mangel, sondern der
+Schalter, mit dem Perminides entscheidet, ob ein Deck am Lernen teilnimmt. Zweitens sind die
+Abfragen schnell genug, dass die Laufzeit keine Rolle spielt — Perminides' Maßstab war stattdessen:
+der Konstruktor soll leichter lesbar werden.
+
+**Region.** `loadAll()` im Repository liest die Tabelle in einem Zug; `load(SessionSpec)` ist
+gelöscht, der Konstruktor war ihr einziger Aufrufer. `Deck.fromId(String)` löst die Spalte `deck`
+auf und wirft bei einer unbekannten Id — eine Zeile ohne Deck ist kein Fall zum Übergehen. Der
+Konstruktor ist drei Zeilen plus `loadShapes()` und `loadStats()`, womit auch die zehnfach
+verschachtelte Modus-Schleife samt `SessionSpec`-Bau je Kombination verschwindet. Die Prüfung
+`if (regions != null)` ist weg, sie war tot: `MapService.getPlayableShapesForDeck` gibt immer ein
+Set zurück. Und weil jedes Region-Deck jetzt einen — notfalls leeren — Eintrag bekommt, liest
+`getDueGameInfos` ohne die Zeile
+`statCache.get(type) == null ? null : statCache.get(type).get(mode)`; alle drei Leser der Map
+lesen damit gleich.
+
+**Anki.** Hier blieb es bei der Lesbarkeit, die Abfragen stehen noch. Das 49-zeilige Javadoc vor
+dem Konstruktor beschrieb, dass hier alle Bilder geladen werden, samt zwei Heap-Messprotokollen —
+das Bildladen ist aber längst Sache der Skin-Seite (`Controller:91`). Es ist auf zehn Zeilen
+eingedampft, und Perminides hat das `System.gc()` entfernt, dessen Begründung damit entfiel. Im
+Konstruktor sind die `newCards`-Liste und ihre zweite Schleife weg (ein Zähler gegen das Budget
+statt Rückwärtszählen und Sammeln), das `computeIfAbsent` ist aus der Kartenschleife heraus, und
+das Vorwärmen steht als `preloadMap` daneben.
+
+**Nicht gemacht, bewusst:** die 8 + 16 Abfragen der Anki-Seite. `getNewLearnedToday` bräuchte eine
+neue Methode an `LearnStat` und einen eigenen Durchlauf vor der Kartenschleife, weil das Budget
+deren Abbruchbedingung ist. `getInitialDue` ließe sich in die Kartenschleife falten, würde dort
+aber einen Zweig hinzufügen, der nur zählt. Der eine Punkt, der dabei liegen bleibt — die
+Fälligkeitsregel steht als SQL und ein zweites Mal in Java —, ist jetzt im Javadoc von
+`getInitialDue` vermerkt und zeigt auf `RegionDeckService.getDueGameInfos`.
 
 ### 2.8 Welches Deck bei einer kombinierten Spielsession das primäre ist, hängt am Hashwert
 

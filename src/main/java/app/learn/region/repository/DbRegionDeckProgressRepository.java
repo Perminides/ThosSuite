@@ -3,36 +3,47 @@ package app.learn.region.repository;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
 
+import app.learn.model.Deck;
 import app.learn.model.LearnStat;
+import app.learn.region.model.Mode;
 import app.learn.region.model.SessionSpec;
 import app.shared.AppClock;
 import app.shared.DB;
 
 public class DbRegionDeckProgressRepository {
 
-	public LearnStat load(SessionSpec sessionSpec) {
+	/**
+	 * Die ganze Tabelle, nach Deck und Modus aufgeteilt.
+	 *
+	 * <p>Wer hier fehlt, wurde noch nie gespielt — und nimmt damit am Lernen nicht teil. Das ist
+	 * gewollt: die erste Zeile in {@code region_learn_stat} ist der Schalter, mit dem ein Deck
+	 * dazukommt.</p>
+	 */
+	public Map<Deck, Map<Mode, LearnStat>> loadAll() {
 	    Connection conn = DB.getConnection();
-	    String sql = "SELECT * FROM region_learn_stat where deck = ? and mode = ?";
-	    try (PreparedStatement statement = conn.prepareStatement(sql)) {
-	        statement.setString(1, sessionSpec.getDeckType().getId());
-	        statement.setString(2, sessionSpec.getMode().name());
-	        try (ResultSet rs = statement.executeQuery()) {
-	            if (!rs.next()) return null;
+	    String sql = "SELECT * FROM region_learn_stat";
+	    Map<Deck, Map<Mode, LearnStat>> result = new HashMap<>();
+	    try (Statement statement = conn.createStatement();
+	         ResultSet rs = statement.executeQuery(sql)) {
+	        while (rs.next()) {
+	            Deck deck = Deck.fromId(rs.getString("deck"));
+	            Mode mode = Mode.valueOf(rs.getString("mode"));
 	            LocalDate firstPlayed = LocalDate.parse(rs.getString("first_played"));
 	            LocalDate lastPlayed  = LocalDate.parse(rs.getString("last_played"));
-	            int level      = rs.getInt("level");
-	            int wrongCount = rs.getInt("wrong_count");
-	            return new LearnStat(firstPlayed, lastPlayed, level, wrongCount);
+	            LearnStat stat = new LearnStat(firstPlayed, lastPlayed, rs.getInt("level"), rs.getInt("wrong_count"));
+	            result.computeIfAbsent(deck, _ -> new HashMap<>()).put(mode, stat);
 	        }
 	    } catch (Exception e) {
-	        throw new RuntimeException(
-	            "Ui, ich bekomme die Stats für die RegionsSession nicht: "
-	            + sessionSpec.getDeckType().getDisplayName() + " - " + sessionSpec.getMode().name(), e);
+	        throw new RuntimeException("Ui, ich bekomme die Stats für die RegionsSessions nicht", e);
 	    }
+	    return result;
 	}
 	
 	public void save(SessionSpec spec, LearnStat stats, boolean correct, String wrongId) {
