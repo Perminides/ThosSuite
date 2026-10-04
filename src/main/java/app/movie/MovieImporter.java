@@ -18,7 +18,7 @@ import app.movie.repository.MovieRepository;
 import app.movie.repository.PendingRepository;
 import app.shared.Config;
 import app.shared.DB;
-import app.shared.ImageUtils;
+import app.movie.PosterFiles.StoredPoster;
 import app.shared.Log;
 
 /**
@@ -168,11 +168,9 @@ public class MovieImporter {
             try {
                 movieRepo.insertMovie(movie, conn);
                 if (posterW92 != null) {
-                    int[] dimensions = ImageUtils.dimensions(posterW92);
-                    String filename = PosterFiles.buildFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
-                    PosterFiles.save(filename, posterW92);
-                    writtenPosters.add(filename);
-                    movieRepo.insertMovieImage(movie, 92, dimensions[1], filename, conn);
+                    StoredPoster stored = PosterFiles.storeNew(movie.poster_path, posterW92);
+                    writtenPosters.add(stored.filename());
+                    movieRepo.insertMovieImage(movie, stored.width(), stored.height(), stored.filename(), conn);
                 } else {
                 	// Kein Dialog: der Import läuft als PreTask über dem Splash. Die Lücke holt der
                 	// Lücken-Check des Serien-Imports nach und zählt sie bis dahin in seiner Zusammenfassung.
@@ -180,11 +178,9 @@ public class MovieImporter {
                 			+ " (id=" + movie.id + ")");
                 }
                 if (posterW154 != null) {
-                    int[] dimensions = ImageUtils.dimensions(posterW154);
-                    String filename = PosterFiles.buildFilename(movie.poster_path, "en-US", dimensions[0], dimensions[1]);
-                    PosterFiles.save(filename, posterW154);
-                    writtenPosters.add(filename);
-                    movieRepo.insertMovieImage(movie, 154, dimensions[1], filename, conn);
+                    StoredPoster stored = PosterFiles.storeNew(movie.poster_path, posterW154);
+                    writtenPosters.add(stored.filename());
+                    movieRepo.insertMovieImage(movie, stored.width(), stored.height(), stored.filename(), conn);
                 } else {
                 	Log.info(MovieImporter.class, "Kein 154er Poster bei TMDB für " + movie.title
                 			+ " (id=" + movie.id + ")");

@@ -26,7 +26,7 @@ import app.movie.repository.SeasonRepository;
 import app.movie.repository.TvShowRepository;
 import app.shared.Config;
 import app.shared.DB;
-import app.shared.ImageUtils;
+import app.movie.PosterFiles.StoredPoster;
 import app.shared.Log;
 import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
@@ -243,13 +243,13 @@ public class SeriesImporter {
         try (Connection conn = DB.getNewTmdbConnection()) {
             try {
                 tvShowRepo.insertTvShow(show, conn);
-                savePoster(show.poster_path, show.id, posterW92, 92,
-                        filename -> tvShowRepo.insertTvShowImage(show, 92,
-                                ImageUtils.dimensions(posterW92)[1], filename, conn),
+                savePoster(show.poster_path, posterW92, 92,
+                        stored -> tvShowRepo.insertTvShowImage(show, stored.width(), stored.height(),
+                                stored.filename(), conn),
                         "Serie " + show.name);
-                savePoster(show.poster_path, show.id, posterW154, 154,
-                        filename -> tvShowRepo.insertTvShowImage(show, 154,
-                        		ImageUtils.dimensions(posterW154)[1], filename, conn),
+                savePoster(show.poster_path, posterW154, 154,
+                        stored -> tvShowRepo.insertTvShowImage(show, stored.width(), stored.height(),
+                                stored.filename(), conn),
                         "Serie " + show.name);
                 if (rating != null)
                     tvShowRepo.insertTvShowRating(rating, comment, conn);
@@ -365,17 +365,17 @@ public class SeriesImporter {
             try {
                 seasonRepo.insertSeason(season, conn);
                 if (season.poster_path != null && posterW92 != null) {
-                    savePoster(season.poster_path, season.id, posterW92, 92,
-                            filename -> seasonRepo.insertSeasonImage(season, 92,
-                            		ImageUtils.dimensions(posterW92)[1], filename, conn),
+                    savePoster(season.poster_path, posterW92, 92,
+                            stored -> seasonRepo.insertSeasonImage(season, stored.width(),
+                                    stored.height(), stored.filename(), conn),
                             "Season " + season.name);
                 } else {
                     seasonRepo.copyShowImageToSeason(season, conn);
                 }
                 if (season.poster_path != null && posterW154 != null) {
-                    savePoster(season.poster_path, season.id, posterW154, 154,
-                            filename -> seasonRepo.insertSeasonImage(season, 154,
-                            		ImageUtils.dimensions(posterW154)[1], filename, conn),
+                    savePoster(season.poster_path, posterW154, 154,
+                            stored -> seasonRepo.insertSeasonImage(season, stored.width(),
+                                    stored.height(), stored.filename(), conn),
                             "Season " + season.name);
                 } else {
                     seasonRepo.copyShowImageToSeason(season, conn);
@@ -523,18 +523,14 @@ public class SeriesImporter {
                     byte[] posterW92 = api.getImage(movieDetails.poster_path, "w92");
                     byte[] posterW154 = api.getImage(movieDetails.poster_path, "w154");
                     if (posterW92 != null) {
-                        int[] dim = ImageUtils.dimensions(posterW92);
-                        String filename = PosterFiles.buildFilename(movieDetails.poster_path, "en-US",
-                                dim[0], dim[1]);
-                        PosterFiles.saveIfAbsent(filename, posterW92);
-                        movieRepo.updateMoviePoster(id, dim[0], dim[1], "en-US", movieDetails.poster_path.substring(1), filename);
+                        StoredPoster stored = PosterFiles.storeIfAbsent(movieDetails.poster_path, posterW92);
+                        movieRepo.updateMoviePoster(id, stored.width(), stored.height(), PosterFiles.LANGUAGE,
+                                movieDetails.poster_path.substring(1), stored.filename());
                     }
                     if (posterW154 != null) {
-                        int[] dim = ImageUtils.dimensions(posterW154);
-                        String filename = PosterFiles.buildFilename(movieDetails.poster_path, "en-US",
-                                dim[0], dim[1]);
-                        PosterFiles.saveIfAbsent(filename, posterW154);
-                        movieRepo.updateMoviePoster(id, dim[0], dim[1], "en-US", movieDetails.poster_path.substring(1), filename);
+                        StoredPoster stored = PosterFiles.storeIfAbsent(movieDetails.poster_path, posterW154);
+                        movieRepo.updateMoviePoster(id, stored.width(), stored.height(), PosterFiles.LANGUAGE,
+                                movieDetails.poster_path.substring(1), stored.filename());
                     }
                     postersFound++;
                     movieRepo.updateMoviePosterPath(id, movieDetails.poster_path);
@@ -577,16 +573,14 @@ public class SeriesImporter {
                     byte[] posterW92 = api.getImage(showDetails.poster_path, "w92");
                     byte[] posterW154 = api.getImage(showDetails.poster_path, "w154");
                     if (posterW92 != null) {
-                        int[] dim = ImageUtils.dimensions(posterW92);
-                        String filename = PosterFiles.buildFilename(showDetails.poster_path, "en-US", dim[0], dim[1]);
-                        PosterFiles.saveIfAbsent(filename, posterW92);
-                        tvShowRepo.insertTvShowImage(id, showDetails.poster_path, dim[0], dim[1], "en-US", filename);
+                        StoredPoster stored = PosterFiles.storeIfAbsent(showDetails.poster_path, posterW92);
+                        tvShowRepo.insertTvShowImage(id, showDetails.poster_path, stored.width(),
+                                stored.height(), PosterFiles.LANGUAGE, stored.filename());
                     }
                     if (posterW154 != null) {
-                        int[] dim = ImageUtils.dimensions(posterW154);
-                        String filename = PosterFiles.buildFilename(showDetails.poster_path, "en-US", dim[0], dim[1]);
-                        PosterFiles.saveIfAbsent(filename, posterW154);
-                        tvShowRepo.insertTvShowImage(id, showDetails.poster_path, dim[0], dim[1], "en-US", filename);
+                        StoredPoster stored = PosterFiles.storeIfAbsent(showDetails.poster_path, posterW154);
+                        tvShowRepo.insertTvShowImage(id, showDetails.poster_path, stored.width(),
+                                stored.height(), PosterFiles.LANGUAGE, stored.filename());
                     }
                     postersFound++;
                     tvShowRepo.updatePosterPath(id, showDetails.poster_path);
@@ -756,24 +750,21 @@ public class SeriesImporter {
 
     @FunctionalInterface
     private interface ImageDbInsert {
-        void insert(String filename) throws Exception;
+        void insert(StoredPoster stored) throws Exception;
     }
 
     /**
      * Speichert ein Poster im Dateisystem und ruft den DB-Insert-Callback auf.
      * Zeigt einen Alert wenn kein Poster vorhanden.
      */
-    private void savePoster(String posterPath, int entityId, byte[] imageData,
+    private void savePoster(String posterPath, byte[] imageData,
             int targetWidth, ImageDbInsert dbInsert, String contextName) {
         if (imageData == null || posterPath == null) {
         	Alerts.show(targetWidth + "er Poster fehlt", "Für " + contextName, ButtonEnum.OK);
             return;
         }
         try {
-            int[] dim = ImageUtils.dimensions(imageData);
-            String filename = PosterFiles.buildFilename(posterPath, "en-US", dim[0], dim[1]);
-            PosterFiles.saveIfAbsent(filename, imageData);
-            dbInsert.insert(filename);
+            dbInsert.insert(PosterFiles.storeIfAbsent(posterPath, imageData));
         } catch (Exception e) {
             throw new RuntimeException("savePoster fehlgeschlagen. contextName=" + contextName, e);
         }
