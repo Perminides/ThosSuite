@@ -152,7 +152,7 @@ laufen die beiden auseinander.
 | 1.8 | Drei Namen für denselben Vorgang in `learn.repository` | zehn Minuten | erledigt |
 | 1.9 | Zwei GeoJSON-Leser mit wortgleichen Geometrie-Methoden | zwanzig Minuten | erledigt |
 | 1.10 | Ein Statement gibt sich als parametrisiert aus | ein paar Minuten | erledigt |
-| 1.11 | Die Anzeigetexte der Anki-Session entstehen auf der Feature-Seite | eine halbe Stunde | offen |
+| 1.11 | Die Anzeigetexte der Anki-Session entstehen auf der Feature-Seite | eine halbe Stunde | erledigt |
 | 1.12 | Toter Code | zwanzig Minuten | erledigt |
 | 1.13 | Ablaufverfolgung landet im Dateilog | zehn Minuten | erledigt |
 | 2.1 | Ein neu angelegtes Region-Deck wird nie fällig | eine halbe Stunde (gemeinsam mit 1.3) | verworfen — der erste Stand wird bewusst von Hand gesetzt |
@@ -466,7 +466,26 @@ unverändert überqueren.
 `AnkiLearnView`.
 **Aufwand:** eine halbe Stunde. Gegenprüfung in Gruppe 2 und 8, ob das ein Muster ist.
 
-**Stand:** offen
+**Stand:** erledigt, aber anders geschnitten als vorgeschlagen.
+
+Der vorgeschlagene `setProgress(SessionProgressCounter)` war so nicht baubar:
+`SessionProgressCounter` lag in `app.learn.model`, und `app.shared.ui` darf kein Feature kennen —
+das fällt bei `keinSeitwaertsgriffAufObersterEbene`. „Framework-frei" ist nicht dasselbe wie
+grenzgängig; Grenzgänger wohnen in `app.shared.model`.
+
+Statt Zahlen einzeln zu übergeben, hat Perminides zwei Records gewählt — damit ein Skin die
+Anzeige später auch als Balken bauen kann, ohne dass die Signatur wachsen muss. Also:
+`SessionProgressCounter` ist nach `app.shared.model` gezogen und hat ein `open()` bekommen (die
+Ableitung gehört dem Zähler, nicht der Anzeige), und `CardHistory(lastPlayed, level, wrongCount)`
+ist neu dazu. Umzug statt zweitem Record, weil es keine Dublette ist: `AnkiDeckSession` braucht
+für die Zusammenfassung `total`, das Label braucht `open()` — ein Record bedient beide.
+
+`AnkiLearnView` setzt jetzt die Worte zusammen und hat dazu `clearCardHistory()`. Eine Karte ohne
+Verlauf wird damit nicht über einen Sonderwert ausgedrückt, den die Anzeige deuten müsste —
+„ist die Karte neu" bleibt die Aussage des Presenters.
+
+Nicht mitgegangen ist der Zusammenfassungstext in `AnkiDeckSession:149`. Das ist Alert-Inhalt, und
+nach der Dialogregel gehört framework-freier Text genau dort hinein.
 
 ### 1.12 Toter Code
 

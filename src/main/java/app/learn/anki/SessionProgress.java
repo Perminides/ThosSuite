@@ -11,7 +11,7 @@ import app.learn.anki.model.CardSortOrder;
 import app.learn.anki.repository.PlayedCardData;
 import app.learn.model.Deck;
 import app.learn.model.LearnStat;
-import app.learn.model.SessionProgressCounter;
+import app.shared.model.SessionProgressCounter;
 import app.shared.AppClock;
 import app.shared.Log;
 

@@ -9,7 +9,8 @@ import app.learn.anki.model.Card;
 import app.learn.model.Deck;
 import app.learn.model.GeoMap;
 import app.learn.model.LearnStat;
-import app.learn.model.SessionProgressCounter;
+import app.shared.model.CardHistory;
+import app.shared.model.SessionProgressCounter;
 import app.learn.repository.SketchFileSource;
 import app.shared.model.ScreenView;
 import app.shared.model.SketchColor;
@@ -274,23 +275,17 @@ public class SessionPresenter {
 	// ========================================
 	
 	void sessionProgressChanged(SessionProgressCounter progress) {
-		String text = "Korrekt: " + progress.correct()
-			+ "\nFalsch: " + progress.incorrect()
-			+ "\nOffen: " + (progress.total() - progress.correct() - progress.incorrect());
-		view.setProgress(text);
+		view.setProgress(progress);
 	}
 
 	void newCardIncoming(LearnStat stats) {
 		// Kartenstart: Submit aus (bei MC und MC+ gleich, verrät den Modus nicht), Back nur ab Karte 2.
 		view.setSubmitActive(false);
 		view.setBackActive(sessionProgress.canGoBack());
-		String text = "";
-		if (stats != null) {
-			text = "Zuletzt gespielt: " + stats.getLastPlayed()
-				+ "\nLevel: " + stats.getCurrentLevel()
-				+ "\nFalsch beantwortet: " + stats.getWrongCount();
-		}
-		view.setCardHistory(text);
+		if (stats == null)
+			view.clearCardHistory();
+		else
+			view.setCardHistory(new CardHistory(stats.getLastPlayed(), stats.getCurrentLevel(), stats.getWrongCount()));
 	}
 	
 	/**

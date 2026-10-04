@@ -5,7 +5,7 @@ import java.util.List;
 import app.learn.anki.model.Card;
 import app.learn.anki.model.CardSortOrder;
 import app.learn.model.Deck;
-import app.learn.model.SessionProgressCounter;
+import app.shared.model.SessionProgressCounter;
 import app.shared.Config;
 import app.shared.Log;
 import app.shared.model.ButtonEnum;

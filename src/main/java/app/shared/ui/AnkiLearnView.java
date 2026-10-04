@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import app.shared.model.CardHistory;
 import app.shared.model.ScreenView;
+import app.shared.model.SessionProgressCounter;
 import app.shared.model.ShapeGeometry;
 import app.shared.model.SketchColor;
 import app.shared.model.SketchStructure;
@@ -177,8 +179,20 @@ public abstract class AnkiLearnView {
 
 	public void setQuestion(String text)        { questionArea.setText(text); }
 	public void setImage(String imageName)      { imageComponent.setImage(imageName); }
-	public void setProgress(String text)    { progressArea.setText(text); }
-	public void setCardHistory(String text) { cardHistoryArea.setText(text); }
+	public void setProgress(SessionProgressCounter progress) {
+		progressArea.setText("Korrekt: " + progress.correct()
+				+ "\nFalsch: " + progress.incorrect()
+				+ "\nOffen: " + progress.open());
+	}
+
+	public void setCardHistory(CardHistory history) {
+		cardHistoryArea.setText("Zuletzt gespielt: " + history.lastPlayed()
+				+ "\nLevel: " + history.level()
+				+ "\nFalsch beantwortet: " + history.wrongCount());
+	}
+
+	/** Eine Karte, die noch nie gespielt wurde, hat nichts zu zeigen. */
+	public void clearCardHistory() { cardHistoryArea.setText(""); }
 
 	// ===== Skizze =====
 	// Sie sitzt im Bilderrahmen und teilt sich dessen Feld mit dem Bild — wer das eine zeigt,
