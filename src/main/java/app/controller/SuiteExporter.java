@@ -56,7 +56,10 @@ public class SuiteExporter {
 			this.oneDriveFolder = Config.getPath(KEY_ONEDRIVE_FOLDER);
 			this.zipPassword = Config.get(KEY_ZIP_PASSWORD);
 		} catch (Exception e) {
-			Alerts.show("Kein Export möglich", "Ich kann vermutlich einen Ordner nicht finden.", ButtonEnum.OK);
+			// Ein unbekannter Config-Key ist laut Kontrakt ein Bug — gefangen wird er hier trotzdem,
+			// weil der globale Handler die Suite beenden würde und daran nur der Export hängt.
+			Log.error(this.getClass(), "Export: Konfiguration unvollständig", e);
+			Alerts.show("Kein Export möglich", e.getMessage(), ButtonEnum.OK);
 			return;
 		}
 
@@ -101,7 +104,7 @@ public class SuiteExporter {
             } else if (line.startsWith("file:")) {
                 rules.add(new IgnoreRule(false, Pattern.compile(line.substring(5).strip())));
             } else {
-                throw new RuntimeException("SuiteExporter: unbekannte Ignore-Zeile: " + line);
+                throw new RuntimeException("SuiteExporter: unbekannte Ignore-Zeile, Export abgebrochen: " + line);
             }
         }
         return rules;

@@ -194,11 +194,11 @@ laufen die beiden auseinander.
 | 5.8 | Kleinkram | eine halbe Stunde | offen |
 | 6.1 | Das Statistik-Menü wird über seinen Anzeigetext angesteuert — und erzeugt dabei einen toten Screen | eine halbe Stunde | erledigt |
 | 6.2 | Die Suite kann sich nicht selbst einrichten | eine halbe Stunde (Dashboard) | verworfen — die Suite wird nicht neu aufgesetzt |
-| 6.3 | Der Exporter fängt genau den Fehler ab, den `Config` bewusst wirft | eine Viertelstunde | offen |
+| 6.3 | Der Exporter fängt genau den Fehler ab, den `Config` bewusst wirft | eine Viertelstunde | erledigt |
 | 6.4 | Vier öffentliche Methoden am `MainWindow` ohne Aufrufer — samt der Mechanik dahinter | eine Viertelstunde | erledigt |
 | 6.5 | Vier Kommentare, die etwas anderes sagen als der Code | zwanzig Minuten | erledigt |
 | 6.6 | Das Übergangsgerüst `app.tmp` ist fällig | Entscheidung, keine Arbeit | erledigt — das Paket existiert nicht mehr |
-| 6.7 | Kleinkram | zwanzig Minuten | offen |
+| 6.7 | Kleinkram | zwanzig Minuten | erledigt |
 | 7.1 | Die Suite hat zwei Antworten auf „welcher Tag ist heute" | eine halbe Stunde + zwei Stunden Durchsicht | verworfen — AppClock ist kein zweiter Kalender, sondern der Arbeitstag der Startdaten |
 | 7.2 | `Config.getString` ist ein zweiter Name für `Config.get` | fünf Minuten | erledigt |
 | 7.3 | `DB` baut viermal dieselbe Verbindung auf | zwanzig Minuten | erledigt |
@@ -1843,7 +1843,21 @@ Zwei weitere Stellen derselben Datei:
 den Alert nehmen), bei `:81` das `e` durchreichen, bei `:104` den Text auf „abgebrochen" ändern.
 **Aufwand:** eine Viertelstunde.
 
-**Stand:** offen
+**Stand:** erledigt, zwei der drei Punkte waren keine mehr.
+
+Der Config-`try` **bleibt** — anders als vorgeschlagen, und zwar wegen einer Folge, die im Befund
+fehlt: der globale Handler (`ThosSuiteApp:341`) zeigt nicht nur einen Alert mit Stacktrace, er ruft
+danach `Platform.exit()`. Ersatzlos streichen hätte also heißen: ein Tippfehler in einem von vier
+Config-Keys beendet die Suite, obwohl nur der Export daran hängt.
+
+Behoben ist stattdessen der eigentliche Mangel — der Informationsverlust. Der Alert zeigt jetzt
+`e.getMessage()` und nennt damit den fehlenden Key, der Stacktrace geht per `Log.error` ins Log,
+und daneben steht, warum hier überhaupt gefangen wird.
+
+**Entfallen:** `:81` heißt längst `throw new RuntimeException("Export fehlgeschlagen", e)`, mit
+`e`. Und `:104` sagt nicht „ignoriert", wie der Befund behauptet — die Meldung lautete
+„unbekannte Ignore-Zeile: …" und damit gar nichts über die Folge. Sie sagt jetzt
+„Export abgebrochen" mit dazu.
 
 ### 6.4 Vier öffentliche Methoden am `MainWindow` ohne Aufrufer — samt der Mechanik dahinter
 
@@ -1938,7 +1952,25 @@ der Wächter bewacht die oberste Ebene jetzt ohne Ausnahme.
 
 **Aufwand:** zusammen zwanzig Minuten.
 
-**Stand:** offen
+**Stand:** erledigt. Bei `MainWindow` dreht die Messung die Empfehlung.
+
+Mit `-Xlint:deprecation` übersetzt braucht die Klasse die Unterdrückung an vier Stellen:
+`HeaderBar` bei `:57`, `:104` und `:120`, dazu `StageStyle.EXTENDED` bei `:64`. Die erste davon ist
+eine **Felddeklaration**, und ein Feld braucht seine eigene Annotation — „auf die ein, zwei
+Aufrufe eingrenzen" hätte also drei Annotationen statt einer ergeben. Dazu nutzen
+`SuiteDialog:34,39,47` und `movie/ApiClient:339,399` dieselben veralteten APIs ohne Unterdrückung,
+zeigen die Warnungen also. Die klassenweite Annotation bleibt deshalb und sagt jetzt in drei
+Zeilen, warum sie klassenweit ist.
+
+`Controller:325` (`=== SKIN CHANGE ===`) und `:355` (`=== REQUEST SESSION SWITCH ===`) stehen auf
+`debug` — die Zeilennummern 360/390 im Befund waren veraltet.
+
+Bei `ThosSuiteApp` steht jetzt je ein halber Satz daneben, und beide Gründe sind geprüft: `:198`
+liegt im `catch` des `try` ab `:133`, der `Log.initLog(…)` bei `:141` selbst enthält, und `:281`
+steht in `showSplashScreen`, gerufen bei `:86` — beide also wirklich vor dem Log. `:346` erklärt
+sich über `if (Log.isInitialized())` von selbst.
+
+`DashboardScreen` blieb unangetastet: der Befund nennt es selbst vertretbar.
 
 ### Was in dieser Gruppe trägt
 

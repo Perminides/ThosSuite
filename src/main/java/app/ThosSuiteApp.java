@@ -195,6 +195,7 @@ public class ThosSuiteApp extends Application {
 				});
 
             } catch (Exception e) {
+                // Kein Log: dieser try umschließt die Log-Initialisierung selbst.
                 e.printStackTrace();
                 Platform.runLater(() -> {
                 	StringWriter sw = new StringWriter();
@@ -278,6 +279,7 @@ public class ThosSuiteApp extends Application {
             splashStage.show();
             
         } catch (Exception e) {
+            // Kein Log: der Splash läuft, bevor Log.initLog gerufen wird.
             System.err.println("Konnte Splash-Screen nicht laden: " + e.getMessage());
         }
     }

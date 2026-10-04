@@ -33,6 +33,11 @@ import javafx.stage.Window;
  * A wrapper around the stage (the window) of the application. Holds a StackPane as its contentPane, the anchor.
  * The Stack Pane is sized correctly according to the current skin. All children will be sized by the contentPane.
  */
+/*
+ * Klassenweit, nicht je Methode: betroffen sind {@code javafx.scene.layout.HeaderBar} und
+ * {@code StageStyle.EXTENDED} an vier Stellen — eine davon ist die Felddeklaration des
+ * HeaderBar, und ein Feld braucht seine eigene Annotation. Drei Stücke statt einem.
+ */
 @SuppressWarnings("deprecation")
 public class MainWindow {
 

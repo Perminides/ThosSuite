@@ -322,7 +322,7 @@ public class Controller{
      * Und wegen der ImagePane, aber naja, vor allem wegen der oben genannten.
      */
     private void updateUiAfterSkinChange() {
-    	Log.info(this, "=== SKIN CHANGE === currentSession=" 
+    	Log.debug(this, "=== SKIN CHANGE === currentSession=" 
     	        + (currentScreen == null ? "null" : "Session@" + System.identityHashCode(currentScreen)));
         mainWindow.buildStyledUi();        
         currentScreen.refresh();
@@ -352,7 +352,7 @@ public class Controller{
 	 * @param startNewSessionRoutine
 	 */
 	public void requestSessionSwitch(Runnable startNewSessionRoutine) {
-		Log.info(this, "=== REQUEST SESSION SWITCH === currentSession=" 
+		Log.debug(this, "=== REQUEST SESSION SWITCH === currentSession=" 
 		        + (currentScreen == null ? "null" : "Session@" + System.identityHashCode(currentScreen)));
 
 	    switch (currentScreen.getSwitchStrategy()) {
