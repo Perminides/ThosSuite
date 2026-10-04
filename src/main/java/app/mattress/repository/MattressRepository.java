@@ -39,6 +39,13 @@ public class MattressRepository {
 		}
     }
     
+    /**
+     * Wie viele Tage es noch bis zum nächsten Wenden sind — negativ, wenn es überfällig ist.
+     *
+     * <p>Die eine Rechnung des Features: die Dashboard-Kachel zeigt sie an, und
+     * {@code MattressTurnDialog.showIfDue()} fragt sie. Der Vorgabewert für
+     * {@code mattress.dueAfterWeeks} steht deshalb nur hier.</p>
+     */
     public long getDaysUntilNextTurn() {
         MattressTurn last = getLastTurn();
         if (last == null)

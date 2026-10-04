@@ -2,7 +2,6 @@ package app.mattress;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 import app.mattress.model.MattressTurn;
 import app.mattress.repository.MattressRepository;
@@ -22,14 +21,15 @@ public class MattressTurnDialog {
 
     private final MattressRepository repository = new MattressRepository();
 
+    /**
+     * Zeigt den Dialog, wenn die Matratze dran ist — gefragt wird mit derselben Rechnung, die auch
+     * die Dashboard-Kachel anzeigt. Ohne jeden Eintrag ist sie dran: dann gibt es nichts, wovon man
+     * zählen könnte.
+     */
     public void showIfDue() {
-        MattressTurn last = repository.getLastTurn();
-        if (last != null) {
-            long weeksSince = ChronoUnit.WEEKS.between(last.turnedAt(), LocalDateTime.now());
-            if (weeksSince < Config.getInt("mattress.dueAfterWeeks", 4)) {
-                return;
-            }
-        }
+        if (repository.getLastTurn() != null && repository.getDaysUntilNextTurn() > 0)
+            return;
+
         show();
     }
 

@@ -185,7 +185,7 @@ laufen die beiden auseinander.
 | 4.8 | Ein stumm verschlucktes Problem im Entschlüsseler | fünf Minuten | erledigt — anders gelöst als vorgeschlagen |
 | 4.9 | Kleinkram | zwanzig Minuten | erledigt |
 | 5.1 | Der Tagebuch-Screen baut SQL | dreiviertel Stunde | erledigt |
-| 5.2 | „Ist die Matratze fällig" wird zweimal beantwortet, in zwei Einheiten | eine halbe Stunde | offen |
+| 5.2 | „Ist die Matratze fällig" wird zweimal beantwortet, in zwei Einheiten | eine halbe Stunde | erledigt |
 | 5.3 | `PointsCalculator` rechnet nicht nur, er fragt | dreiviertel Stunde | erledigt |
 | 5.4 | „Welches Wochenziel galt in Woche X" — zwei Mechanismen im selben Paket | eine halbe Stunde | offen |
 | 5.5 | `DashboardService` bekommt „heute" übergeben und benutzt es dann nicht | eine Viertelstunde | erledigt |
@@ -1575,7 +1575,32 @@ falschen.
 `getDaysUntilNextTurn() <= 0`. Der Vorgabewert steht dann einmal.
 **Aufwand:** eine halbe Stunde.
 
-**Stand:** offen
+**Stand:** erledigt — aber die beschriebene Fehlwirkung gab es nicht.
+
+Die zwei Rechnungen waren **rechnerisch gleich**. `ChronoUnit.WEEKS.between` auf `LocalDateTime`
+ist `DAYS.between / 7` abgeschnitten, und für ganzzahliges *w* gilt `floor(d/7) >= w` genau dann,
+wenn `d >= 7w`: bei 27 Tagen zeigte die Kachel 1 und der Dialog schwieg, bei 28 zeigte sie 0 und
+der Dialog kam. Der Satz „die Kachel sagt also fällig, und es passiert nichts, und umgekehrt"
+trifft nicht zu. Negative Werte entstehen aus einem anderen Grund: `showIfDue()` läuft nur beim
+Suite-Start, und nach einem Klick auf „Später" zählt die Kachel weiter herunter — so gewollt.
+
+Geblieben war die Dublette, und die ist weg. `getDaysUntilNextTurn()` ist die eine Rechnung,
+`showIfDue()` fragt sie:
+
+```java
+    if (repository.getLastTurn() != null && repository.getDaysUntilNextTurn() > 0)
+        return;
+
+    show();
+```
+
+Der Vorgabewert `4` steht damit einmal. Die Rechnung bleibt nach Perminides' Entscheidung im
+Repository — die Alternative wäre eine eigene `MattressService`-Klasse für ein Feature aus zwei
+Klassen gewesen. Am Getter steht jetzt, dass er die eine Rechnung des Features ist und wer ihn
+fragt.
+
+„Kein Eintrag" bleibt fällig — das muss vor der Frage stehen, weil `getDaysUntilNextTurn()`
+in diesem Fall wirft. Kosten dafür: ein zusätzliches `getLastTurn()` pro Suite-Start.
 
 ### 5.3 `PointsCalculator` rechnet nicht nur, er fragt
 
