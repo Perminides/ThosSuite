@@ -29,11 +29,12 @@ import app.shared.ui.components.map.LearnMap;
  * <p>Sie übersetzt Absicht in Anzeige: „stell eine Frage" wird hier zu „setze diesen Text ins
  * Fragefeld". Der Presenter im Feature sagt nur, <em>was</em> passieren soll.</p>
  *
- * <p>Was die Lernformen unterscheidet, entscheiden die drei Unterklassen:</p>
+ * <p>Was die Lernformen unterscheidet, entscheiden die vier Unterklassen:</p>
  * <pre>
  * ShapeMapLearnView   Shape-Karte · Eingabefeld
- * McLearnView         keine Karte · kein Eingabefeld
  * ImageMapLearnView   Bild-Karte  · Eingabefeld
+ * McLearnView         keine Karte · kein Eingabefeld
+ * FastWriteLearnView  keine Karte · Eingabefeld · keine Antwortauswahl
  * </pre>
  *
  * <p>Der Hintergrund unterscheidet sie nicht: jede Session fragt dieselbe Staffelung ab — eigenes
@@ -52,9 +53,13 @@ import app.shared.ui.components.map.LearnMap;
  * Reihenfolge ist Pflicht: {@code super.rebuild()} räumt den Host leer, würde also alles wegwischen,
  * was vorher angehängt wurde.</p>
  *
- * <p><b>Übergangszustand:</b> nur noch die Antwortauswahl kommt über eine Bau-Methode des Skins
- * ({@code createMultipleChoicePane}). Alle übrigen Bestandteile bekommen ihr Feld als
- * {@code Rectangle2D} übergeben und holen sich beim Skin nur, was ohne Schlüssel auskommt.</p>
+ * <p>Gebaut wird hier, nicht beim Skin: jeder Bestandteil bekommt sein Feld als
+ * {@code Rectangle2D} übergeben und holt sich beim Skin nur, was ohne Schlüssel auskommt.</p>
+ *
+ * <p><b>Optionale Bestandteile</b> hängen an je einem Schalter — {@link #hasMcPane()} und
+ * {@link #hasInputField()}. Beide folgen demselben Muster: {@code rebuild()} baut den Bestandteil
+ * nur, wenn der Schalter wahr ist, und die Methoden, die ihn bedienen, tun bei einer Lernform ohne
+ * ihn nichts. Eine Unterklasse muss dafür nichts überschreiben.</p>
  */
 public abstract class AnkiLearnView {
 
@@ -220,7 +225,11 @@ public abstract class AnkiLearnView {
 	public void setBackActive(boolean active) { if (backButton != null) backButton.setDisable(!active); }
 
 	/** Schaltet die Antwortauswahl ab. {@code McLearnView} überschreibt das leer — dort wäre es sinnlos. */
-	public void disableMcPanel() { mcPane.clearAndSetInactive(); }
+	/** Bei einer Lernform ohne Antwortauswahl gibt es nichts abzuschalten. */
+	public void disableMcPanel() {
+		if (hasMcPane())
+			mcPane.clearAndSetInactive();
+	}
 
 	// ===== Eingabefeld =====
 

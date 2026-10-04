@@ -20,5 +20,6 @@ public class McLearnView extends AnkiLearnView {
 
 	@Override protected LearnMap createMap()       { return new EmptyLearnMap(); }
 	@Override protected boolean hasInputField()      { return false; }
-	@Override public void disableMcPanel() {}; // MCPanel darf in einer MC-Session niemals deaktiviert werden. Wird allerdings vermutlich eh nie aufgerufen.
+	// Das MC-Panel darf in einer MC-Session niemals deaktiviert werden.
+	@Override public void disableMcPanel() {}
 }

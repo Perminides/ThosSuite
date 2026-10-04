@@ -8,7 +8,6 @@ import app.shared.model.AnkiCallbacks;
 import app.shared.skin.LearnComponent;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
-import javafx.scene.Node;
 import app.shared.ui.components.AnswerSlotPane;
 import app.shared.ui.components.SuiteCountdownLabel;
 import app.shared.ui.components.map.EmptyLearnMap;
@@ -39,7 +38,6 @@ public class FastWriteLearnView extends AnkiLearnView {
 	@Override protected LearnMap createMap()    { return new EmptyLearnMap(); }
 	@Override protected boolean hasInputField() { return true; }
 	@Override protected boolean hasMcPane()     { return false; }
-	@Override public void disableMcPanel()      {} // ohne Auswahl gibt es nichts abzuschalten
 
 	/** {@code super.rebuild()} muss zuerst laufen — es räumt den Host leer. Siehe AnkiLearnView. */
 	@Override

@@ -208,7 +208,7 @@ laufen die beiden auseinander.
 | 7.7 | Der Screen-Vertrag verweist auf Methoden, die es nicht gibt | zwei Minuten | erledigt |
 | 7.8 | Kleinkram | eine Viertelstunde | erledigt |
 | 8.1 | Regel 6 beschreibt nicht den Code, und der Architekturtest sagt das bereits | eine Viertelstunde Doku | erledigt |
-| 8.2 | Der Erweiterungsvertrag von `AnkiLearnView` ist an drei Stellen überholt | eine halbe Stunde | offen |
+| 8.2 | Der Erweiterungsvertrag von `AnkiLearnView` ist an drei Stellen überholt | eine halbe Stunde | erledigt |
 | 8.3 | Die Thumbnail-Höhe steht in beiden Hälften des Tagebuch-Splits | eine Viertelstunde | erledigt — Thumbnail-Dateien ersatzlos entfallen |
 | 8.4 | „Die einzige Stelle der Suite, die `ButtonType` kennt" — das sind 14 Stellen | fünf Minuten | erledigt |
 | 8.5 | Ein bekannter Mangel steht als Fließtext statt als Marker | zwei Minuten | erledigt |
@@ -2307,7 +2307,27 @@ einer MC-Session niemals deaktiviert werden") bleibt als Sonderfall erhalten —
 `hasMcPane()` ja `true`.
 **Aufwand:** eine halbe Stunde.
 
-**Stand:** offen
+**Stand:** erledigt. (a) und (b) waren Text: die Tabelle führt jetzt vier Unterklassen, und der
+„Übergangszustand"-Absatz ist weg — `createMultipleChoicePane` kam im ganzen Projekt nur noch in
+diesem Satz vor.
+
+**(c) stimmte im Mechanismus, nicht in den Zahlen.** Ungeprüft auf `mcPane` greifen nicht zwei,
+sondern alle sechs MC-Methoden zu; die „sauber gegen null prüfenden Nachbarn", die der Befund
+nennt, prüfen `submitButton` und `inputField`, also andere Felder. Gerufen wird für eine Lernform
+ohne Auswahl aber nur eine davon: `disableMcPanel()`, dreimal aus dem Presenter für *jede* Form.
+Die anderen fünf laufen nur in MC-Abläufen, und dort gibt es die Pane — eine Prüfung dort würde
+einen echten Feature-Fehler verschlucken.
+
+Gebaut ist deshalb nicht der Vorschlag des Befunds, sondern eine Vereinheitlichung: `mcPane` und
+`inputField` sind beide optional und hängen beide an einem Schalter, aber der Fall „gibt es hier
+nicht" wurde unterschiedlich abgefangen — bei `inputField` in der Basisklasse, bei `mcPane` durch
+eine leere Überschreibung in `FastWriteLearnView`. Jetzt prüft `disableMcPanel()` selbst
+`hasMcPane()`, und die Überschreibung ist weg. Der Erweiterungs-Abschnitt sagt das Muster für
+beide Schalter.
+
+`McLearnView.disableMcPanel() {}` bleibt — das ist keine Null-Absicherung, sondern die Fachregel
+„in einer MC-Session niemals deaktivieren". Kaputt war übrigens nichts: FastWrite überschrieb,
+McLearn hat eine Pane. (c) hat eine Falle für eine fünfte Lernform weggenommen, keinen Fehler.
 
 ### 8.3 Die Thumbnail-Höhe steht in beiden Hälften des Tagebuch-Splits
 
