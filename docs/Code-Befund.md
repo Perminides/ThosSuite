@@ -167,7 +167,7 @@ laufen die beiden auseinander.
 | 2.10 | Kleinkram | eine halbe Stunde | erledigt |
 | 3.1 | API-Key und Session-ID landen in der Logdatei und im Fehler-Alert | zehn Minuten | erledigt |
 | 3.2 | Zwei Methoden gleichen Namens mit entgegengesetztem Verhalten | dreiviertel Stunde | erledigt |
-| 3.3 | Der Serien-Import steht zweimal | dreiviertel Stunde | offen |
+| 3.3 | Der Serien-Import steht zweimal | dreiviertel Stunde | erledigt |
 | 3.4 | Der Import, der nicht fragen kann, fragt zweimal | zehn Minuten | erledigt |
 | 3.5 | Der Lücken-Check verschluckt jeden Fehler und meldet trotzdem Erfolg | eine halbe Stunde | erledigt |
 | 3.6 | Das Klassen-Javadoc nennt einen Config-Schlüssel, den es nicht gibt | zwei Minuten | erledigt |
@@ -1035,7 +1035,27 @@ TvShowRatingJSON ratingOrNull, String commentOrNull)`; `importNewTvShow` und `en
 werden zu je vier Zeilen davor.
 **Aufwand:** dreiviertel Stunde.
 
-**Stand:** offen
+**Stand:** erledigt. `importShow(TvShowJSON, CreditListJSON, TvShowRatingJSON, String)` trägt den
+gemeinsamen Teil; `importNewTvShow` und `ensureShowExists` sind auf ihren eigenen Teil
+geschrumpft. Netto 35 Zeilen weg, 20 dazu.
+
+Von den vier Unterschieden zog **einer** in die gemeinsame Methode ein — `if (rating != null)` vor
+`insertTvShowRating`. Die anderen blieben bei den Aufrufern, weil sie dorthin gehören: die
+Existenzprüfung ist der Daseinsgrund von `ensureShowExists`, die Kommentar-Abfrage **muss** vor die
+Transaktion (ein Dialog bei offener Verbindung ist genau das Problem aus Befund 3.4), und die
+Log-Zeile davor sagt ohnehin, welcher Fall läuft.
+
+Zwei Texte wurden zusammengelegt: die Abschlussmeldung heißt
+`"Serie importiert: <name>"` plus `" (ohne Rating)"`, und die Fehlermeldung
+`"Serien-Import fehlgeschlagen: <name> (id=<id>)"`. Das verliert nichts — `show.name` und `show.id`
+sind in beiden Fällen dasselbe, was vorher aus `rating` bzw. `tvShowId` kam.
+
+**Beim Lesen aufgefallen, gehört nicht zu diesem Befund:** Poster werden im movie-Paket an vier
+Stellen gespeichert, und zwei Antworten auf dieselbe Frage stehen darin. `MovieImporter:173,185`
+nimmt `PosterFiles.save` (wirft bei vorhandener Datei) und räumt im `catch` über `writtenPosters`
+auf — acht Zeilen Kommentar begründen das. `SeriesImporter.savePoster` und die beiden
+Lücken-Check-Stellen nehmen `saveIfAbsent` und dulden die Trümmer stattdessen. Jede Seite ist in
+sich schlüssig.
 
 ### 3.4 Der Import, der nicht fragen kann, fragt zweimal
 

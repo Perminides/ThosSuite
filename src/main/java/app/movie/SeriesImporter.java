@@ -224,6 +224,18 @@ public class SeriesImporter {
                         ? " / " + show.german_name : ""),
                 null);
 
+        importShow(show, credits, rating, comment);
+    }
+
+    /**
+     * Schreibt eine Serie samt Postern, Credits und Zuordnungen in einem Rutsch.
+     *
+     * <p>{@code rating} darf {@code null} sein: dann kommt die Serie nur über den Episodenpfad
+     * herein und bekommt kein eigenes Rating. Der Kommentar gehört zum Rating und ist ohne eines
+     * bedeutungslos — gefragt wird ohnehin vorher, denn hier ist die Transaktion offen.</p>
+     */
+    private void importShow(TvShowJSON show, CreditListJSON credits,
+            TvShowRatingJSON rating, String comment) {
         // !MagicNumber -> tmdb.posterWidths=92,154 in config?
         byte[] posterW92 = show.poster_path != null ? api.getImage(show.poster_path, "w92") : null;
         byte[] posterW154 = show.poster_path != null ? api.getImage(show.poster_path, "w154") : null;
@@ -239,7 +251,8 @@ public class SeriesImporter {
                         filename -> tvShowRepo.insertTvShowImage(show, 154,
                         		ImageUtils.dimensions(posterW154)[1], filename, conn),
                         "Serie " + show.name);
-                tvShowRepo.insertTvShowRating(rating, comment, conn);
+                if (rating != null)
+                    tvShowRepo.insertTvShowRating(rating, comment, conn);
                 processAggregatedCredits(credits, show.id, conn,
                         (cast, c) -> tvShowRepo.insertTvShowCast(cast, show.id, c),
                         (crew, job, creditId, episodeCount, c) ->
@@ -249,11 +262,12 @@ public class SeriesImporter {
                 tvShowRepo.insertTvShowCountries(show, conn);
                 tvShowRepo.insertTvShowLanguages(show, conn);
                 conn.commit();
-                Log.info(SeriesImporter.class, "Serie erfolgreich importiert: " + show.name);
+                Log.info(SeriesImporter.class, "Serie importiert: " + show.name
+                        + (rating == null ? " (ohne Rating)" : ""));
             } catch (Exception e) {
                 conn.rollback();
-                throw new RuntimeException("Import fehlgeschlagen für Serie: " + rating.name
-                        + " (id=" + rating.id + ")", e);
+                throw new RuntimeException("Serien-Import fehlgeschlagen: " + show.name
+                        + " (id=" + show.id + ")", e);
             }
         } catch (SQLException e) {
             throw new RuntimeException("TMDB-DB-Verbindung fehlgeschlagen", e);
@@ -326,41 +340,12 @@ public class SeriesImporter {
     private void ensureShowExists(int tvShowId) {
         if (tvShowRepo.tvShowExists(tvShowId))
             return;
+
         Log.info(SeriesImporter.class, "Show noch nicht in DB, importiere ohne Rating: tvShowId=" + tvShowId);
         TvShowJSON show = api.getTvShowDetails(tvShowId);
         CreditListJSON credits = api.getAggregatedTvShowCredits(tvShowId);
-        byte[] posterW92 = show.poster_path != null ? api.getImage(show.poster_path, "w92") : null;
-        byte[] posterW154 = show.poster_path != null ? api.getImage(show.poster_path, "w154") : null;
 
-        try (Connection conn = DB.getNewTmdbConnection()) {
-            try {
-                tvShowRepo.insertTvShow(show, conn);
-                savePoster(show.poster_path, show.id, posterW92, 92,
-                        filename -> tvShowRepo.insertTvShowImage(show, 92,
-                        		ImageUtils.dimensions(posterW92)[1], filename, conn),
-                        "Serie " + show.name);
-                savePoster(show.poster_path, show.id, posterW154, 154,
-                        filename -> tvShowRepo.insertTvShowImage(show, 154,
-                        		ImageUtils.dimensions(posterW154)[1], filename, conn),
-                        "Serie " + show.name);
-                processAggregatedCredits(credits, show.id, conn,
-                        (cast, c) -> tvShowRepo.insertTvShowCast(cast, show.id, c),
-                        (crew, job, creditId, episodeCount, c) ->
-                                tvShowRepo.insertTvShowCrew(crew, show.id, job, creditId, episodeCount, c),
-                        show.name);
-                tvShowRepo.insertTvShowGenres(show, conn);
-                tvShowRepo.insertTvShowCountries(show, conn);
-                tvShowRepo.insertTvShowLanguages(show, conn);
-                conn.commit();
-                Log.info(SeriesImporter.class, "Show ohne Rating importiert: " + show.name);
-            } catch (Exception e) {
-                conn.rollback();
-                throw new RuntimeException("Show-Import fehlgeschlagen: " + show.name
-                        + " (id=" + tvShowId + ")", e);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("TMDB-DB-Verbindung fehlgeschlagen", e);
-        }
+        importShow(show, credits, null, null);
     }
 
     /**
