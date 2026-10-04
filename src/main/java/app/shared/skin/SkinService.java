@@ -55,13 +55,13 @@ public final class SkinService {
         return AVAILABLE_SKINS;
     }
     
- // NEU: Die Methode für den Refresh
     public static void refresh() {
         try {
             // 1. Index finden
             int index = AVAILABLE_SKINS.indexOf(current);
             if (index == -1)
-            	throw new RuntimeException("What the heck?");
+            	throw new RuntimeException("Der aktuelle Skin steht nicht in AVAILABLE_SKINS: "
+            			+ current.getClass().getSimpleName());
             
             // 2. Neue Instanz der aktuellen Skin-Klasse erzeugen (ruft Konstruktor & loadConfig neu auf)
             Skin newInstance = current.getClass().getDeclaredConstructor().newInstance();

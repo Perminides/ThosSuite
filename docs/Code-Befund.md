@@ -206,7 +206,7 @@ laufen die beiden auseinander.
 | 7.5 | Zwei Stellen werfen ohne Ursache, eine reduziert sie auf den Text | fünf Minuten | erledigt |
 | 7.6 | `UiUtils` trägt drei unverwandte Dinge, eines davon globalen Zustand | zwanzig Minuten | erledigt |
 | 7.7 | Der Screen-Vertrag verweist auf Methoden, die es nicht gibt | zwei Minuten | erledigt |
-| 7.8 | Kleinkram | eine Viertelstunde | offen |
+| 7.8 | Kleinkram | eine Viertelstunde | erledigt |
 | 8.1 | Regel 6 beschreibt nicht den Code, und der Architekturtest sagt das bereits | eine Viertelstunde Doku | erledigt |
 | 8.2 | Der Erweiterungsvertrag von `AnkiLearnView` ist an drei Stellen überholt | eine halbe Stunde | offen |
 | 8.3 | Die Thumbnail-Höhe steht in beiden Hälften des Tagebuch-Splits | eine Viertelstunde | erledigt — Thumbnail-Dateien ersatzlos entfallen |
@@ -216,10 +216,10 @@ laufen die beiden auseinander.
 | 9.2 | `ImageMapPane` bietet zwei Vokabulare an, von denen eines nur nach innen zeigt | zwei Minuten | erledigt |
 | 9.3 | Die Thumbnail-Höhe steht ein drittes Mal — Erweiterung zu Befund 8.3 | mit 8.3 erledigt | erledigt — mit 8.3 |
 | 9.4 | Ein Rückblick zu viel — und zwei, die bleiben dürfen | fünf Minuten | erledigt |
-| 9.5 | Kleinkram | zehn Minuten | offen |
+| 9.5 | Kleinkram | zehn Minuten | erledigt |
 | 10.1 | Zwei neue Felder sind in eine Falle gelaufen, die schon aufgeschrieben war | eine halbe Stunde | erledigt — anders gelöst als vorgeschlagen |
 | 10.2 | Die Beschreibung der Staffelung stimmt in drei Punkten nicht mehr | zehn Minuten | erledigt |
-| 10.3 | Kleinkram | zehn Minuten | offen |
+| 10.3 | Kleinkram | zehn Minuten | erledigt |
 | Szenario B | Ein weiterer Screen | zwei bis drei Stunden | erledigt — anders gelöst als vorgeschlagen |
 | Szenario C | Eine zweite Datenquelle neben Fitbit | ein halber Tag | erledigt — durchgeführt, nicht nur vorbereitet |
 
@@ -2195,7 +2195,15 @@ an der parameterlosen Methode ist weg.
 
 **Aufwand:** zusammen eine Viertelstunde.
 
-**Stand:** offen
+**Stand:** erledigt. Das auskommentierte Feld in `ConfigFileSource:21` ist weg, der voll
+qualifizierte `javafx.scene.paint.Color` in `UiUtils` heißt `Color` — an drei Stellen übrigens
+(Javadoc, Signatur, `Color.TRANSPARENT`), und keine davon ist die im Befund genannte Zeile 55. An
+`SingleInstanceGuard.lockInstance` steht jetzt, warum `@SuppressWarnings("resource")` dort richtig
+ist: Channel und Lock bleiben absichtlich offen, ein try-with-resources würde die Sperre am Ende
+der Methode freigeben und damit aufheben.
+
+**Entfallen:** der Punkt zu `Activity.java:52-62`. Die Klasse gibt es nicht mehr, und im ganzen
+Anwendungscode steht kein leerer `catch` — genau das war daran der Aufhänger.
 
 ### Was in dieser Gruppe trägt
 
@@ -2584,7 +2592,13 @@ Ableitungen getrennt bleiben müssen, und ist damit eine verworfene Alternative,
 
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** erledigt, einer davon war schon erledigt. Das leere Abschnitts-Banner in
+`ImageMapPane` ist weg. Am Platzhalter in `MovieCard` steht jetzt eine Zeile, dass die Zahlen im
+Dateinamen seine Maße sind und er damit nur zur 154er-Posterbreite passt — mehr geht nicht, ohne
+die Pfad-Regel zu brechen, nach der Dateinamen der Aufrufstelle gehören.
+
+Die SVG/Raster-Weiche in `SuiteImage` trägt ihren Kommentar schon: „SVGs liegen unverkleinert in
+einem eigenen Unterordner, nicht im 500x500-Ordner der Raster."​
 
 ### Was in dieser Gruppe trägt
 
@@ -2722,7 +2736,13 @@ ignoriert“ stimmte seit dem `else`-Wurf aus Befund 10.1 nicht mehr.
 
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** erledigt. `// NEU: Die Methode für den Refresh` ist weg (die Zeile hatte auch
+die Einrückung der Methode verschoben), und `"What the heck?"` sagt jetzt, was los ist:
+„Der aktuelle Skin steht nicht in AVAILABLE_SKINS: <Klassenname>".
+
+Der Punkt zu `Skin:1347` steht im Befund schärfer als nötig: ein Kommentar erzeugt keine
+Abhängigkeit, Wächter 1 bewacht den Bytecode. Der Satz zeigt jetzt trotzdem auf die Sache statt
+auf den Ort — „dynamisch beim Bauen der Karte" statt „im createCard".
 
 ### Was in dieser Gruppe trägt
 

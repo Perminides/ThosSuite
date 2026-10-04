@@ -10,6 +10,14 @@ public class SingleInstanceGuard {
     private static FileLock lock;
     private static FileChannel channel;
 
+    /**
+     * Sperrt die Datei für diesen Prozess. {@code false} heißt: eine andere Instanz läuft schon.
+     *
+     * <p>{@code @SuppressWarnings("resource")}, weil Channel und Lock bewusst offen bleiben — die
+     * Sperre gilt, solange die Suite läuft, und wird erst im Shutdown-Hook gelöst. Ein
+     * try-with-resources würde sie am Ende dieser Methode freigeben und damit ihren Zweck
+     * aufheben.</p>
+     */
     @SuppressWarnings("resource")
     public static boolean lockInstance(Path lockFile) {
         try {

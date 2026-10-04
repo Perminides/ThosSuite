@@ -82,6 +82,7 @@ public class MovieCard extends HBox implements Card {
 				: null;
 
 		if (imageFile == null || !imageFile.exists())
+			// Die Zahlen im Namen sind die Maße des Platzhalters — er passt nur zur 154er-Posterbreite.
 			imageFile = Config.getPath("imageFolder").resolve("tmdb").resolve("None_available_en-US_154_231.jpg").toFile();
 
 		Image posterImage = new Image(imageFile.toURI().toString());

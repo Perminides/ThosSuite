@@ -300,10 +300,6 @@ public class ImageMapPane extends StackPane implements LearnMap {
 	}
 
 	// ========================================
-	// Shapes (Geometrien mit id, von der learn-Seite)
-	// ========================================
-
-	// ========================================
 	// Das gemeinsame Vokabular (LearnMap) — spricht Ids, übersetzt nach Geometrien
 	// ========================================
 

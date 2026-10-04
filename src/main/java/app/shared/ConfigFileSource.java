@@ -18,7 +18,6 @@ import java.util.LinkedHashMap;
 class ConfigFileSource {
 
     private final LinkedHashMap<String, String> props = new LinkedHashMap<>();
-    //private final LinkedHashMap<String, String> computedProps = new LinkedHashMap<>();
 
     ConfigFileSource(String folderPath) {
         if (!folderPath.endsWith("/") && !folderPath.endsWith("\\")) {

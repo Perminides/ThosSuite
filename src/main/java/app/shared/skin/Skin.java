@@ -1344,7 +1344,7 @@ public abstract class Skin extends SkinProperties {
 	        .end();
 	 
 	    // === Rating-Zahl ===
-	    // Schriftgröße wird dynamisch im createCard gesetzt (50% der Posterbreite).
+	    // Schriftgröße wird dynamisch beim Bauen der Karte gesetzt (50% der Posterbreite).
 	    // min-width sorgt dafür, dass einstellige und zweistellige Zahlen gleich breit sind.
 	    css.start(".movie-card-rating")
 	    	.add("-fx-font-weight", "bold")
