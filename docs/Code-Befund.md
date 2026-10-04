@@ -168,7 +168,7 @@ laufen die beiden auseinander.
 | 3.1 | API-Key und Session-ID landen in der Logdatei und im Fehler-Alert | zehn Minuten | erledigt |
 | 3.2 | Zwei Methoden gleichen Namens mit entgegengesetztem Verhalten | dreiviertel Stunde | erledigt |
 | 3.3 | Der Serien-Import steht zweimal | dreiviertel Stunde | offen |
-| 3.4 | Der Import, der nicht fragen kann, fragt zweimal | zehn Minuten | offen |
+| 3.4 | Der Import, der nicht fragen kann, fragt zweimal | zehn Minuten | erledigt |
 | 3.5 | Der Lücken-Check verschluckt jeden Fehler und meldet trotzdem Erfolg | eine halbe Stunde | erledigt |
 | 3.6 | Das Klassen-Javadoc nennt einen Config-Schlüssel, den es nicht gibt | zwei Minuten | erledigt |
 | 3.7 | Zehnmal derselbe Parse-Block | eine halbe Stunde | offen |
@@ -1061,7 +1061,25 @@ Lücken-Check in Schritt 3 des Serien-Imports.
 Poster beim nächsten manuellen Lauf ohnehin nach.
 **Aufwand:** zehn Minuten.
 
-**Stand:** offen
+**Stand:** erledigt, mit einer Ergänzung.
+
+Das Hauptargument steht näher, als der Befund schreibt — im Javadoc von
+`Controller.runPreTasks()`: „Gemeldet wird nichts von hier: über dem Splash gehört kein Dialog
+hin. Die Fehler werden gemerkt und in `runPostTasks()` zu **einer** Meldung zusammengefasst."
+Selbst ein gescheiterter Import darf dort nicht fragen, zwei fehlende Poster taten es.
+
+Beide `Alerts.show` sind `Log.info` mit der TMDB-Id, und `MovieImporter` hat damit seine
+`Alerts`- und `ButtonEnum`-Importe verloren. Im Klassen-Javadoc steht jetzt, dass dieser Import
+nichts fragt und was er stattdessen parkt — unbekannte Crew-Jobs in den Pending-Tabellen, fehlende
+Poster beim Lücken-Check.
+
+**Ergänzt wurde, was der Befund übersehen hat:** der Lücken-Check holt ein Poster nur nach, *wenn*
+TMDB inzwischen eines hat. Hat es weiterhin keines, bleibt `postersFound` 0, eine Exception gibt es
+nicht, also auch kein `gapChecksFailed` — die Zusammenfassung hätte den Film in keiner Zeile
+genannt. Aus einer unübersehbaren Meldung wäre Stille geworden. Deshalb zählen jetzt
+`postersStillMissing` und `overviewsStillMissing` die Lücken, die offen bleiben, und der Abschluss
+sagt „Noch ohne Poster (TMDB hat keines): 3". Das ist dieselbe Sorge, die das Javadoc an
+`gapChecksFailed` formuliert.
 
 ### 3.5 Der Lücken-Check verschluckt jeden Fehler und meldet trotzdem Erfolg
 

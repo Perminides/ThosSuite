@@ -137,6 +137,9 @@ public class SeriesImporter {
     private int overviewsFound;
     /** Gescheiterte Nachholversuche — sonst sähe ein Lauf ohne einen einzigen Treffer aus wie ein Lauf ohne Lücken. */
     private int gapChecksFailed;
+    /** Lücken, die offen bleiben, weil TMDB selbst nichts hat — sonst erfährt man nur vom Schließen. */
+    private int postersStillMissing;
+    private int overviewsStillMissing;
 
     public SeriesImporter() {
         this.api = new ApiClient();
@@ -153,6 +156,7 @@ public class SeriesImporter {
         newShows = 0; reRatedShows = 0; updatedShowData = 0;
         newEpisodes = 0; reRatedEpisodes = 0;
         postersFound = 0; overviewsFound = 0; gapChecksFailed = 0;
+        postersStillMissing = 0; overviewsStillMissing = 0;
 
         // Step 1: Serien
         showStepAlert("Wir schauen mal, ob sich bei den Serien was getan hat.");
@@ -515,6 +519,8 @@ public class SeriesImporter {
                     movieRepo.updateMovieOverview(id, movieDetails.overview);
                     overviewsFound++;
                     Log.info(SeriesImporter.class, "Overview nachgeholt für Film id=" + id);
+                } else {
+                    overviewsStillMissing++;
                 }
             } catch (Exception e) {
                 gapChecksFailed++;
@@ -548,6 +554,8 @@ public class SeriesImporter {
                     postersFound++;
                     movieRepo.updateMoviePosterPath(id, movieDetails.poster_path);
                     Log.info(SeriesImporter.class, "Poster nachgeholt für Film id=" + id);
+                } else {
+                    postersStillMissing++;
                 }
             } catch (Exception e) {
                 gapChecksFailed++;
@@ -565,6 +573,8 @@ public class SeriesImporter {
                     tvShowRepo.updateOverview(id, showDetails.overview);
                     overviewsFound++;
                     Log.info(SeriesImporter.class, "Overview nachgeholt für Serie id=" + id);
+                } else {
+                    overviewsStillMissing++;
                 }
             } catch (Exception e) {
                 gapChecksFailed++;
@@ -596,6 +606,8 @@ public class SeriesImporter {
                     postersFound++;
                     tvShowRepo.updatePosterPath(id, showDetails.poster_path);
                     Log.info(SeriesImporter.class, "Poster nachgeholt für Serie id=" + id);
+                } else {
+                    postersStillMissing++;
                 }
             } catch (Exception e) {
                 gapChecksFailed++;
@@ -614,6 +626,8 @@ public class SeriesImporter {
                     overviewsFound++;
                     Log.info(SeriesImporter.class, "Overview nachgeholt für Episode showId=" + ep.tvShowId()
                             + " S" + ep.seasonNumber() + "E" + ep.episodeNumber());
+                } else {
+                    overviewsStillMissing++;
                 }
             } catch (Exception e) {
                 gapChecksFailed++;
@@ -714,8 +728,11 @@ public class SeriesImporter {
         if (postersFound > 0) sb.append("Nachgeholte Poster: ").append(postersFound).append("\n");
         if (overviewsFound > 0) sb.append("Nachgeholte Zusammenfassungen: ").append(overviewsFound).append("\n");
         if (gapChecksFailed > 0) sb.append("Fehlgeschlagene Nachholversuche: ").append(gapChecksFailed).append("\n");
+        if (postersStillMissing > 0) sb.append("Noch ohne Poster (TMDB hat keines): ").append(postersStillMissing).append("\n");
+        if (overviewsStillMissing > 0) sb.append("Noch ohne Zusammenfassung (TMDB hat keine): ").append(overviewsStillMissing).append("\n");
         if (newShows + reRatedShows + updatedShowData + newEpisodes + reRatedEpisodes
-                + postersFound + overviewsFound + gapChecksFailed == 0)
+                + postersFound + overviewsFound + gapChecksFailed
+                + postersStillMissing + overviewsStillMissing == 0)
             sb.append("Nichts Neues gefunden.");
 
         Log.info(SeriesImporter.class, "Zusammenfassung: " + sb.toString());

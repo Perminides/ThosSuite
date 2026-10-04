@@ -20,8 +20,6 @@ import app.shared.Config;
 import app.shared.DB;
 import app.shared.ImageUtils;
 import app.shared.Log;
-import app.shared.model.ButtonEnum;
-import app.shared.ui.Alerts;
 
 /**
  * Orchestriert den täglichen TMDB-Import.
@@ -40,6 +38,11 @@ import app.shared.ui.Alerts;
  * Bild-Metadaten landen in der DB.
  *
  * Alle Fehler sind fatal — kein stiller Fallback.
+ *
+ * <p>Und dieser Import fragt nichts: er läuft als PreTask über dem Splash, wo kein Dialog
+ * hingehört (siehe {@code Controller.runPreTasks}). Was er nicht entscheiden kann, parkt er —
+ * unbekannte Crew-Jobs in den Pending-Tabellen für den {@code MovieCleanup}-PostTask, fehlende
+ * Poster beim Lücken-Check des Serien-Imports.</p>
  */
 public class MovieImporter {
 
@@ -171,7 +174,10 @@ public class MovieImporter {
                     writtenPosters.add(filename);
                     movieRepo.insertMovieImage(movie, 92, dimensions[1], filename, conn);
                 } else {
-                	Alerts.show("92er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, ButtonEnum.OK);
+                	// Kein Dialog: der Import läuft als PreTask über dem Splash. Die Lücke holt der
+                	// Lücken-Check des Serien-Imports nach und zählt sie bis dahin in seiner Zusammenfassung.
+                	Log.info(MovieImporter.class, "Kein 92er Poster bei TMDB für " + movie.title
+                			+ " (id=" + movie.id + ")");
                 }
                 if (posterW154 != null) {
                     int[] dimensions = ImageUtils.dimensions(posterW154);
@@ -180,7 +186,8 @@ public class MovieImporter {
                     writtenPosters.add(filename);
                     movieRepo.insertMovieImage(movie, 154, dimensions[1], filename, conn);
                 } else {
-                	Alerts.show("154er Poster fehlt", "Für " + movie.german_title + " / " + movie.title, ButtonEnum.OK);
+                	Log.info(MovieImporter.class, "Kein 154er Poster bei TMDB für " + movie.title
+                			+ " (id=" + movie.id + ")");
                 }
                 movieRepo.insertMovieRating(rating, null, conn);
                 processCredits(credits, movie, conn);
