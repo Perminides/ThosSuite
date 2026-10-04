@@ -10,6 +10,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 
+import app.activity.model.GoalHistory;
 import app.activity.model.GoalHistoryEntry;
 import app.activity.model.WeekData;
 import app.shared.DB;
@@ -97,35 +98,6 @@ public class Repository {
     }
 
     /**
-     * Das Wochenziel, das am gegebenen Datum galt — der neueste Eintrag, dessen
-     * {@code valid_from} nicht hinter dem Datum liegt.
-     */
-    public int getWeeklyGoalForDate(LocalDate date) {
-        String sql = """
-            SELECT weekly_goal
-            FROM activity_goal_history
-            WHERE valid_from <= ?
-            ORDER BY valid_from DESC
-            LIMIT 1
-            """;
-
-        Connection conn = DB.getConnection();
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, date.toString());
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt("weekly_goal");
-            } else {
-                throw new RuntimeException("Kein Wochenziel gefunden für " + date);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Fehler beim Laden des Wochenziels", e);
-        }
-    }
-
-    /**
      * Die Punkte der Woche, die das gegebene Datum enthält.
      *
      * @return die Gesamtpunkte dieser Woche, oder 0, wenn für die Woche nichts vorliegt
@@ -197,7 +169,7 @@ public class Repository {
     /**
      * Die komplette Ziel-Historie, aufsteigend nach {@code validFrom}.
      */
-    public List<GoalHistoryEntry> getAllGoalHistory() {
+    public GoalHistory getAllGoalHistory() {
         String sql = """
             SELECT valid_from, weekly_goal
             FROM activity_goal_history
@@ -217,7 +189,7 @@ public class Repository {
             }
 
             Log.debug(this, "Geladene Ziel-Einträge: " + result.size());
-            return result;
+            return new GoalHistory(result);
 
         } catch (SQLException e) {
             throw new RuntimeException("Fehler beim Laden der Ziel-Historie", e);

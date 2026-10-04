@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
+import app.activity.model.GoalHistory;
 import app.activity.model.WeekData;
 import app.activity.repository.Repository;
 import app.shared.AppClock;
@@ -17,6 +18,12 @@ import app.shared.AppClock;
 public class ActivityDashboardService {
 
     private final Repository repository = new Repository();
+
+    /**
+     * Einmal geladen, dreimal gebraucht: {@code calculateRecordStreak} läuft über die ganze
+     * Historie, und die ändert sich während eines Dashboard-Aufbaus nicht.
+     */
+    private final GoalHistory goalHistory = repository.getAllGoalHistory();
 
     /**
      * Die Schritte, die an jedem verbleibenden Tag dieser Woche im Schnitt nötig sind, um das
@@ -36,7 +43,7 @@ public class ActivityDashboardService {
         int t = (int) Math.max(0, ChronoUnit.DAYS.between(nextDay, sunday.plusDays(1)));
 
         int p = repository.getPointsForWeek(AppClock.TODAY);
-        int z = repository.getWeeklyGoalForDate(monday);
+        int z = goalHistory.goalForDate(monday);
         double s = PointsCalculator.POINTS_FOR_STEP;
 
         if (t == 0) return 0;
@@ -69,7 +76,7 @@ public class ActivityDashboardService {
         int streak = 0;
         for (int i = startIndex; i >= 0; i--) {
             WeekData week = weeks.get(i);
-            int goal = repository.getWeeklyGoalForDate(week.weekStart());
+            int goal = goalHistory.goalForDate(week.weekStart());
 
             if (week.points() >= goal)
                 streak++;
@@ -93,7 +100,7 @@ public class ActivityDashboardService {
         int maxStreak = 0;
 
         for (WeekData week : weeks) {
-            int goal = repository.getWeeklyGoalForDate(week.weekStart());
+            int goal = goalHistory.goalForDate(week.weekStart());
 
             if (week.points() >= goal) {
                 currentStreak++;

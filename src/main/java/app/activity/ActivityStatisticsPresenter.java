@@ -6,7 +6,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 
-import app.activity.model.GoalHistoryEntry;
+import app.activity.model.GoalHistory;
 import app.activity.model.WeekData;
 import app.activity.repository.Repository;
 import app.shared.AppClock;
@@ -33,7 +33,7 @@ public class ActivityStatisticsPresenter implements BarChartDataProvider {
         LocalDate rangeEnd   = roundToSunday(to);
 
         List<WeekData> weeks = repository.getWeeksInRange(rangeStart, rangeEnd);
-        List<GoalHistoryEntry> goalHistory = repository.getAllGoalHistory();
+        GoalHistory goalHistory = repository.getAllGoalHistory();
 
         if (weeks.isEmpty()) {
             Log.warn(this, "Keine Aktivitätsdaten im gewählten Zeitraum");
@@ -45,7 +45,7 @@ public class ActivityStatisticsPresenter implements BarChartDataProvider {
         List<Bar> bars = new ArrayList<>();
         List<Double> targetY = new ArrayList<>();
         for (WeekData week : weeks) {
-            int goal = findGoalForDate(week.weekStart(), goalHistory);
+            int goal = goalHistory.goalForDate(week.weekStart());
             State state;
             if (week.weekStart().equals(currentWeekStart))
                 state = State.IN_PROGRESS;
@@ -64,23 +64,9 @@ public class ActivityStatisticsPresenter implements BarChartDataProvider {
         for (WeekData week : weeks)
             maxPoints = Math.max(maxPoints, week.points());
 
-        int maxGoal = 4000;
-        for (GoalHistoryEntry entry : goalHistory)
-            maxGoal = Math.max(maxGoal, entry.weeklyGoal());
-        int yMax      = Math.max(maxPoints, maxGoal) + 500;
+        int yMax = maxPoints + 500;
 
         return new BarChartData(bars, new TargetLine(targetY), YAxis.fixed(yMax, 500));
-    }
-
-    private int findGoalForDate(LocalDate date, List<GoalHistoryEntry> history) {
-        GoalHistoryEntry lastValid = null;
-        for (GoalHistoryEntry entry : history)
-            if (!entry.validFrom().isAfter(date))
-                lastValid = entry; // die Liste ist chronologisch — das letzte Treffer gewinnt
-
-        if (lastValid == null)
-            throw new RuntimeException("Kein Wochenziel gefunden für " + date);
-        return lastValid.weeklyGoal();
     }
 
     private LocalDate roundToMonday(LocalDate date) {

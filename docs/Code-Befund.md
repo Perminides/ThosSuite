@@ -187,7 +187,7 @@ laufen die beiden auseinander.
 | 5.1 | Der Tagebuch-Screen baut SQL | dreiviertel Stunde | erledigt |
 | 5.2 | „Ist die Matratze fällig" wird zweimal beantwortet, in zwei Einheiten | eine halbe Stunde | erledigt |
 | 5.3 | `PointsCalculator` rechnet nicht nur, er fragt | dreiviertel Stunde | erledigt |
-| 5.4 | „Welches Wochenziel galt in Woche X" — zwei Mechanismen im selben Paket | eine halbe Stunde | offen |
+| 5.4 | „Welches Wochenziel galt in Woche X" — zwei Mechanismen im selben Paket | eine halbe Stunde | erledigt |
 | 5.5 | `DashboardService` bekommt „heute" übergeben und benutzt es dann nicht | eine Viertelstunde | erledigt |
 | 5.6 | `logApiResponse` loggt keine API-Antwort | zehn Minuten bis eine halbe Stunde | offen |
 | 5.7 | Ein Übergangsgerüst, dessen Termin verstrichen ist | Entscheidung, keine Arbeit | erledigt — mit der Health-Migration abgerissen |
@@ -1678,7 +1678,24 @@ Zuordnung wie der Presenter — die sich dabei anbietet, in eine kleine gemeinsa
 ziehen.
 **Aufwand:** eine halbe Stunde.
 
-**Stand:** offen
+**Stand:** erledigt, und es ist wirklich **ein** Mechanismus geworden.
+
+Die Historie reist jetzt als `GoalHistory(List<GoalHistoryEntry> entries)` mit genau einer Frage:
+`goalForDate(LocalDate)`. `repository.getAllGoalHistory()` gibt die Hülle zurück statt einer
+nackten Liste, der Statistik-Presenter hat sein privates `findGoalForDate` abgegeben, und
+`ActivityDashboardService` hält die Historie als Feld, statt sie je Woche einzeln zu erfragen.
+
+Damit hatte `Repository.getWeeklyGoalForDate` keinen Aufrufer mehr und ist gelöscht — 29 Zeilen
+SQL weniger. Das Verhalten ist unverändert: beide Fassungen warfen vorher schon dieselbe Meldung
+(„Kein Wochenziel gefunden für …"), der eine aus SQL, der andere aus der Schleife. Und
+`calculateRecordStreak` über fünf Jahre macht statt 260 Einzelabfragen keine mehr.
+
+**Dabei ist eine Fehlrechnung gefallen, die im Befund nicht steht.** Die Y-Achse des
+Wochen-Diagramms wurde aus dem höchsten Ziel der **gesamten** Historie bemessen, obwohl die
+Ziellinie nur die **angezeigten** Wochen zeichnet. Ein altes, hohes Ziel hätte die Achse
+hochgezogen und die Balken gestaucht. Perminides' Ziel liegt durchgehend bei 4000, der Startwert
+`maxPoints = 5000` deckt es also immer ab — die ganze `maxGoal`-Schleife ist weg, `yMax` ist
+`maxPoints + 500`. Ihr Startwert `4000` war ohnehin tot, weil `maxPoints` bei 5000 beginnt.
 
 ### 5.5 `DashboardService` bekommt „heute" übergeben und benutzt es dann nicht
 
