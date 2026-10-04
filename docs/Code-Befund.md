@@ -186,7 +186,7 @@ laufen die beiden auseinander.
 | 4.9 | Kleinkram | zwanzig Minuten | erledigt |
 | 5.1 | Der Tagebuch-Screen baut SQL | dreiviertel Stunde | erledigt |
 | 5.2 | „Ist die Matratze fällig" wird zweimal beantwortet, in zwei Einheiten | eine halbe Stunde | offen |
-| 5.3 | `PointsCalculator` rechnet nicht nur, er fragt | dreiviertel Stunde | offen |
+| 5.3 | `PointsCalculator` rechnet nicht nur, er fragt | dreiviertel Stunde | erledigt |
 | 5.4 | „Welches Wochenziel galt in Woche X" — zwei Mechanismen im selben Paket | eine halbe Stunde | offen |
 | 5.5 | `DashboardService` bekommt „heute" übergeben und benutzt es dann nicht | eine Viertelstunde | erledigt |
 | 5.6 | `logApiResponse` loggt keine API-Antwort | zehn Minuten bis eine halbe Stunde | offen |
@@ -1610,7 +1610,30 @@ Liste in seinem ohnehin vorhandenen Abschluss-Dialog. Die zwei `throw`-Fälle bl
 sind — das sind echte FailFast-Fälle.
 **Aufwand:** dreiviertel Stunde. Lohnt vor allem, weil die Health-Migration genau hier ansetzt.
 
-**Stand:** offen
+**Stand:** erledigt. `getDayPoints` liefert jetzt
+`DayPoints(int points, List<String> notes)` und kennt weder `Alerts` noch `ButtonEnum` noch `Log`
+— eine reine Funktion, aufrufbar aus dem Dashboard oder einer rückwirkenden Rechnung.
+
+**Die Eskalationstabelle im Befund ist überholt.** Die Health-Migration hat die beiden
+`throw`-Fälle und alle `Log.error` entfernt; geblieben waren drei Stellen mit ein und derselben
+Reaktion (`Alerts.show` plus `Log.warn`). Der Vorschlag wurde dadurch einfacher, nicht schwerer —
+es gab keine FailFast-Fälle mehr zu erhalten.
+
+**Was der Befund nicht nennt:** die Hinweise kamen zu spät, um ihnen zu folgen. `getDayPoints`
+läuft erst **nach** `dialog.showAndWait()`, der OUTDOOR_BIKE-Hinweis „ändere den Typ auf BIKING"
+zeigte also auf einen Dialog, der schon zu war. Daran ändert die Umstellung nichts — sie kann es
+nicht: die Prüfungen gelten für die *bestätigten* Werte. Vor den Dialog gezogen würden sie über
+Rohwerte warnen, die man dort gerade korrigiert. Es sind Notizen fürs nächste Mal, und das steht
+jetzt im Javadoc von `showNotes`.
+
+**Nicht gebaut wurde die Fassung aus dem Befund**, nach der die Notizen nur im Abschluss-Dialog
+stehen. Perminides hätte sie nach sieben Tagen Durchklicken übersehen. Stattdessen zeigt
+`ActivityDataReviewService.showNotes` sie einmal pro Tag direkt nach dessen Dialog — aus bis zu
+drei modalen Fenstern für denselben Tag wird eines — und der Abschluss führt sie unter dem
+jeweiligen Datum nochmal auf. `DayImportResult` trägt sie dazu mit.
+
+**„Danach nicht mehr auffindbar" traf nicht zu:** `Log.warn` landet in der Datei, und die
+Aktivität selbst steht im `raw_data`-JSON des Tages. Was fehlte, war die Sammlung an einer Stelle.
 
 ### 5.4 „Welches Wochenziel galt in Woche X" — zwei Mechanismen im selben Paket
 

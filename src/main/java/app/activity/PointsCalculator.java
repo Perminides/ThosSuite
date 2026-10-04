@@ -1,13 +1,18 @@
 package app.activity;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import app.activity.model.DayPoints;
 import app.activity.model.ReviewedActivity;
 import app.activity.model.ReviewedDay;
-import app.shared.Log;
-import app.shared.model.ButtonEnum;
-import app.shared.ui.Alerts;
 
 /**
  * Berechnet die Tagespunkte aus den reviewten Aktivitäten und der Tagesschrittzahl.
+ *
+ * <p>Rechnet und meldet, fragt aber nicht: Auffälligkeiten kommen als Notizen im
+ * {@link DayPoints} zurück, nicht als Dialog. Damit läuft die Berechnung auch dort, wo kein
+ * Fenster aufgehen darf.</p>
  *
  * <h3>Punkteberechnung (über Jahre verfeinert):</h3>
  * <ul>
@@ -45,11 +50,13 @@ public class PointsCalculator {
     private static final double POINTS_FOR_KM_BIKE = 19;
 
     /**
-     * Die Tagespunkte aus Tagesschritten, Rad-Kilometern und Pauschalen.
+     * Die Tagespunkte aus Tagesschritten, Rad-Kilometern und Pauschalen, samt allem, was dabei
+     * auffiel.
      */
-    public static int getDayPoints(ReviewedDay day) {
+    public static DayPoints getDayPoints(ReviewedDay day) {
         double kmOnBike = 0d;
         double points = 0;
+        List<String> notes = new ArrayList<>();
 
         for (ReviewedActivity activity : day.activities()) {
             switch (activity.exerciseType()) {
@@ -57,42 +64,41 @@ public class PointsCalculator {
                     // Die Schritte zählen über die Tagessumme mit
                 }
                 case "BIKING" -> {
-                    warnOnUnexpectedSteps(activity);
+                    noteUnexpectedSteps(activity, notes);
                     kmOnBike += activity.distanceKm();
                 }
                 case "OUTDOOR_BIKE" -> {
-                    warnOnUnexpectedSteps(activity);
-                    Alerts.show("Achtung", "Scheinbar hat eine Radfahren-Aktion nicht korrekt aufgezeichnet.\nWenn Du magst, trage einfach die Kilometer im Log nach und ändere den Typ auf BIKING...", ButtonEnum.OK);
-                    Log.warn(PointsCalculator.class, "OUTDOOR_BIKE erkannt - möglicherweise fehlerhafte Aufzeichnung. Bitte manuell im Dialog korrigieren!");
+                    noteUnexpectedSteps(activity, notes);
+                    notes.add(
+                        "Eine Radfahren-Aktion hat scheinbar nicht korrekt aufgezeichnet und trägt keine Kilometer bei.\n"
+                        + "Wenn Du magst, trage die Kilometer im Log nach und ändere den Typ auf BIKING.");
                 }
                 case "SPINNING" -> {
-                    warnOnUnexpectedSteps(activity);
+                    noteUnexpectedSteps(activity, notes);
                     points += POINTS_FOR_SPINNING;
                 }
                 case "WORKOUT" -> {
-                    warnOnUnexpectedSteps(activity);
+                    noteUnexpectedSteps(activity, notes);
                     points += POINTS_FOR_WORKOUT;
                 }
-                default -> {
-                    Alerts.show("Achtung", "Ich ignoriere die Aktivität " + activity.exerciseType(), ButtonEnum.OK);
-                    Log.warn(PointsCalculator.class, "Unbekannter Aktivitätstyp wird ignoriert: " + activity.exerciseType());
-                }
+                default -> notes.add("Die Aktivität " + activity.exerciseType()
+                        + " kenne ich nicht und habe sie mit null Punkten gezählt.");
             }
         }
 
-        return (int) (points + kmOnBike * POINTS_FOR_KM_BIKE + day.steps() * POINTS_FOR_STEP);
+        int total = (int) (points + kmOnBike * POINTS_FOR_KM_BIKE + day.steps() * POINTS_FOR_STEP);
+        return new DayPoints(total, notes);
     }
 
     /**
-     * Meldet Schritte an einer Aktivität, die ihre Punkte pauschal oder über Kilometer bekommt.
+     * Notiert Schritte an einer Aktivität, die ihre Punkte pauschal oder über Kilometer bekommt.
      */
-    private static void warnOnUnexpectedSteps(ReviewedActivity activity) {
+    private static void noteUnexpectedSteps(ReviewedActivity activity, List<String> notes) {
         if (activity.steps() == 0)
             return;
 
-        Log.warn(PointsCalculator.class, "Aktivität mit eigenen Punkten trägt Schritte: " + activity);
-        Alerts.show("Achtung", activity.exerciseType() + " bringt auf einmal " + activity.steps()
+        notes.add(activity.exerciseType() + " bringt auf einmal " + activity.steps()
                 + " Schritte mit. Die stecken schon in der Tagessumme und werden hier ein zweites Mal\n"
-                + "bewertet. Bitte anschauen!", ButtonEnum.OK);
+                + "bewertet. Bitte anschauen!");
     }
 }

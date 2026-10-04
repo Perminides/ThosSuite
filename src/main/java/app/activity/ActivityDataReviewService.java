@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import app.activity.model.DayData;
+import app.activity.model.DayPoints;
 import app.activity.model.Exercise;
 import app.activity.model.ReviewedActivity;
 import app.activity.model.ReviewedDay;
@@ -70,13 +71,14 @@ public class ActivityDataReviewService {
         if (reviewed == null)
             return null;
 
-        int points = PointsCalculator.getDayPoints(reviewed);
-        Log.info(this, day.date() + " → " + points + " Punkte");
+        DayPoints points = PointsCalculator.getDayPoints(reviewed);
+        Log.info(this, day.date() + " → " + points.points() + " Punkte");
+        showNotes(day.date(), points.notes());
 
         String adjustedData = reviewed.equals(dialog.asShown()) ? null : toJson(reviewed);
-        repository.saveDay(day.date(), points, toJson(day), adjustedData);
+        repository.saveDay(day.date(), points.points(), toJson(day), adjustedData);
 
-        return new DayImportResult(day.date(), points);
+        return new DayImportResult(day.date(), points.points(), points.notes());
     }
 
     /**
@@ -95,11 +97,29 @@ public class ActivityDataReviewService {
                 + "Trag die Zahl von Hand ein, sonst zählt der Tag mit 0 Schritten.", ButtonEnum.OK);
     }
 
+    /**
+     * Was bei der Punkteberechnung auffiel — einmal für diesen Tag, gleich nach seinem Dialog.
+     *
+     * <p>Die Hinweise lassen sich nicht mehr im Dialog umsetzen, der ist zu. Sie gelten fürs
+     * nächste Mal, und im Abschluss stehen sie noch einmal — nach sieben Tagen Durchklicken soll
+     * nicht weg sein, was am Dienstag auffiel.</p>
+     */
+    private void showNotes(LocalDate date, List<String> notes) {
+        if (notes.isEmpty())
+            return;
+
+        Log.warn(this, date + ": " + String.join(" | ", notes));
+        Alerts.show("Auffälligkeiten am " + date, String.join("\n\n", notes), ButtonEnum.OK);
+    }
+
     private void showSummary(List<DayImportResult> results) {
         StringBuilder message = new StringBuilder("Import abgeschlossen:\n\n");
 
-        for (DayImportResult result : results)
+        for (DayImportResult result : results) {
             message.append(result.date()).append(" → ").append(result.points()).append(" Punkte\n");
+            for (String note : result.notes())
+                message.append("    ! ").append(note.replace("\n", " ")).append("\n");
+        }
 
         Alerts.show("Aktivitäts-Import", message.toString(), ButtonEnum.OK);
     }
@@ -153,5 +173,5 @@ public class ActivityDataReviewService {
         }
     }
 
-    private record DayImportResult(LocalDate date, int points) {}
+    private record DayImportResult(LocalDate date, int points, List<String> notes) {}
 }
