@@ -190,10 +190,14 @@ public class SeriesImporter {
                 Integer dbRating = tvShowRepo.getTvShowRating(rating.id);
 
                 if (dbRating == null) {
-                    // Neue Serie
+                    // Neue Serie. Kein Daten-Check danach: in der DB steht genau das, was gerade
+                    // von TMDB kam — der Vergleich könnte nur "unverändert" sagen.
                     importNewTvShow(rating);
                     newShows++;
-                } else if (!dbRating.equals(rating.account_rating.value)) {
+                    continue;
+                }
+
+                if (!dbRating.equals(rating.account_rating.value)) {
                     // Umbewertung
                     Log.info(SeriesImporter.class, "Serien-Umbewertung erkannt: " + rating.name + " (id=" + rating.id + ")");
                     String existingComment = tvShowRepo.getTvShowComment(rating.id);
@@ -207,7 +211,7 @@ public class SeriesImporter {
                     reRatedShows++;
                 }
 
-                // Daten-Check für alle bewerteten Serien
+                // Daten-Check für jede Serie, die schon in der DB stand
                 checkTvShowDataChanged(rating.id, rating.name);
             }
         } while (pageNo < page.total_pages);
@@ -278,7 +282,7 @@ public class SeriesImporter {
         TvShowComparisonData dbData = tvShowRepo.loadComparisonData(tvShowId);
         if (dbData == null)
             return;
-        TvShowJSON webData = api.getTvShowDetails(tvShowId);
+        TvShowJSON webData = api.getTvShowDetailsEnOnly(tvShowId);
         if (dbData.differs(webData)) {
             Log.info(SeriesImporter.class, "Seriendaten haben sich geändert: " + showName);
             ButtonEnum result = Alerts.show(
@@ -549,7 +553,7 @@ public class SeriesImporter {
         List<Integer> shows = tvShowRepo.getShowsWithoutOverview();
         for (Integer id : shows) {
             try {
-                var showDetails = api.getTvShowDetails(id);
+                var showDetails = api.getTvShowDetailsEnOnly(id);
                 if (showDetails.overview != null && !showDetails.overview.isEmpty()) {
                     tvShowRepo.updateOverview(id, showDetails.overview);
                     overviewsFound++;
@@ -568,7 +572,7 @@ public class SeriesImporter {
         List<Integer> shows = tvShowRepo.getShowsWithoutPoster();
         for (Integer id : shows) {
             try {
-                var showDetails = api.getTvShowDetails(id);
+                var showDetails = api.getTvShowDetailsEnOnly(id);
                 if (showDetails.poster_path != null) {
                     byte[] posterW92 = api.getImage(showDetails.poster_path, "w92");
                     byte[] posterW154 = api.getImage(showDetails.poster_path, "w154");

@@ -172,7 +172,7 @@ laufen die beiden auseinander.
 | 3.5 | Der Lücken-Check verschluckt jeden Fehler und meldet trotzdem Erfolg | eine halbe Stunde | erledigt |
 | 3.6 | Das Klassen-Javadoc nennt einen Config-Schlüssel, den es nicht gibt | zwei Minuten | erledigt |
 | 3.7 | Zehnmal derselbe Parse-Block | eine halbe Stunde | erledigt |
-| 3.8 | Jede bewertete Serie wird bei jedem Lauf zusätzlich zweimal vollständig geholt | zwanzig Minuten | offen |
+| 3.8 | Jede bewertete Serie wird bei jedem Lauf zusätzlich zweimal vollständig geholt | zwanzig Minuten | erledigt |
 | 3.9 | Toter Code | zehn Minuten | erledigt |
 | 3.10 | Kleinkram | eine halbe Stunde | offen |
 | 4.1 | Die eigene Signal-Kennung steht im Quelltext | zehn Minuten | erledigt |
@@ -1210,7 +1210,29 @@ DE-Ersparnis wäre ein zweiter Schritt (`getTvShowDetailsEnOnly`) und lohnt erst
 ohnehin angefasst wird.
 **Aufwand:** zwanzig Minuten für den ersten Teil.
 
-**Stand:** offen
+**Stand:** erledigt, der erste Teil kleiner als vorgeschlagen.
+
+Der Befund will das schon geholte Objekt durchreichen
+(`checkTvShowDataChanged(int, String, TvShowJSON bereitsGeholt)`). Nötig war das nicht: nach einem
+Neuimport steht in der DB genau das, was gerade von TMDB kam — `differs(webData)` könnte nur
+„unverändert" sagen. Der Check läuft deshalb gar nicht mehr für die gerade importierte Serie
+(`continue` in der Schleife), keine neue Signatur.
+
+Der zweite Teil ist mitgemacht, weil 3.7 ihn billig gemacht hat:
+`ApiClient.getTvShowDetailsEnOnly(int)` ist mit dem `parse`-Helfer vier Zeilen, und
+`getTvShowDetails` ruft sie für ihren englischen Teil — die EN-Abfrage steht also nur noch einmal
+da. Die vier verglichenen Felder (Staffel- und Episodenzahl, Status, `last_air_date`) sind
+sprachunabhängig, der DE-Request war reine Verschwendung.
+
+Die beiden Serien-Lückenchecks nehmen sie ebenfalls: `processShowsWithoutOverview` braucht
+`overview`, `processShowsWithoutPoster` braucht `poster_path` — beide stehen in der englischen
+Antwort.
+
+`importNewTvShow` und `ensureShowExists` holen weiter beide Sprachen, und das muss so sein:
+`insertTvShow` schreibt `german_name` in die Tabelle.
+
+Ersparnis je Lauf: bei N bewerteten Serien N statt 2N Requests für den Check, zwei weniger pro
+Neuimport, und einer weniger pro geschlossener Serien-Lücke.
 
 ### 3.9 Toter Code
 

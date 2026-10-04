@@ -133,13 +133,31 @@ public class ApiClient {
     public TvShowJSON getTvShowDetails(int tvShowId) {
         String call = "getTvShowDetails, tvShowId " + tvShowId;
         Log.info(ApiClient.class, "TMDB " + call);
-        String path = "tv/" + tvShowId;
 
-        TvShowJSON tvShowEN = parse(getV3(path, Map.of("language", LANG_EN)), TvShowJSON.class, call + " EN");
-        TvShowJSON tvShowDE = parse(getV3(path, Map.of("language", LANG_DE)), TvShowJSON.class, call + " DE");
+        TvShowJSON tvShowEN = getTvShowDetailsEnOnly(tvShowId);
+        TvShowJSON tvShowDE = parse(getV3("tv/" + tvShowId, Map.of("language", LANG_DE)),
+                TvShowJSON.class, call + " DE");
         tvShowEN.german_name = tvShowDE.name;
 
         return tvShowEN;
+    }
+
+    /**
+     * Wie {@link #getTvShowDetails}, aber nur der englische Request — der deutsche Name bleibt leer.
+     *
+     * <p>Für alles, was nur sprachunabhängige Felder braucht: der Daten-Check vergleicht
+     * Staffel- und Episodenzahl, Status und {@code last_air_date}, der Lückencheck will
+     * {@code overview} und {@code poster_path} — alle vier bzw. beide stehen schon in der englischen
+     * Antwort. Das halbiert die Requests dieser Läufe.</p>
+     *
+     * @param tvShowId  TMDB-ID der Serie
+     * @return          TvShowJSON ohne {@code german_name}
+     */
+    public TvShowJSON getTvShowDetailsEnOnly(int tvShowId) {
+        String call = "getTvShowDetailsEnOnly, tvShowId " + tvShowId;
+        Log.info(ApiClient.class, "TMDB " + call);
+
+        return parse(getV3("tv/" + tvShowId, Map.of("language", LANG_EN)), TvShowJSON.class, call);
     }
     
     /**
