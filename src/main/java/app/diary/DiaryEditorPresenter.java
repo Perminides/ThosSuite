@@ -21,15 +21,6 @@ import app.shared.ui.DiaryEditor;
  * Framework-freie Hälfte des Tagebuch-Editors. Öffnet die modale {@link DiaryEditor}-View
  * (shared) für genau einen Eintrag, verdrahtet Speichern/Löschen als Callbacks und macht
  * die Domäne: Anlegen/Updaten, Attachment-Kopieren/Diff, Invasiv-Regel. Kein JavaFX.
- *
- * Erwartete DiaryEditor-API (gebaut in Schicht 2):
- *   new DiaryEditor(DiaryCardData initialEntry,   // createdAt==null => neuer Eintrag
- *                   List<String> allTags,
- *                   InvasiveConfig invasive,       // null => nicht invasiv (showEdit)
- *                   Consumer<DiaryCardData> onSave,
- *                   Consumer<DiaryCardData> onDelete) // null => kein Löschen (showNew)
- *   editor.showNew()   — Dialog bleibt nach jedem Save offen, View leert sich
- *   editor.showEdit()  — Dialog schließt nach Save/Delete
  */
 public class DiaryEditorPresenter {
 

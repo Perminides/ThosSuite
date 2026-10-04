@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import app.alc.model.Status;
 import app.alc.repository.AlcRepository;
+import app.shared.AppClock;
 import app.shared.Log;
 import app.shared.model.ButtonEnum;
 import app.shared.ui.Alerts;
@@ -24,7 +25,7 @@ public class StartupService {
      * Wird in Controller.runPostTasks() aufgerufen.
      */
     public void checkAndPrompt() {
-    	LocalDate yesterday = LocalDate.now().minusDays(1);
+    	LocalDate yesterday = AppClock.TODAY.minusDays(1);
         
         // Letzten Eintrag finden
         LocalDate lastEntry = repository.getLastEntryDate();

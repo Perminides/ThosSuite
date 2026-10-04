@@ -189,9 +189,9 @@ laufen die beiden auseinander.
 | 5.3 | `PointsCalculator` rechnet nicht nur, er fragt | dreiviertel Stunde | erledigt |
 | 5.4 | „Welches Wochenziel galt in Woche X" — zwei Mechanismen im selben Paket | eine halbe Stunde | erledigt |
 | 5.5 | `DashboardService` bekommt „heute" übergeben und benutzt es dann nicht | eine Viertelstunde | erledigt |
-| 5.6 | `logApiResponse` loggt keine API-Antwort | zehn Minuten bis eine halbe Stunde | offen |
+| 5.6 | `logApiResponse` loggt keine API-Antwort | zehn Minuten bis eine halbe Stunde | verworfen |
 | 5.7 | Ein Übergangsgerüst, dessen Termin verstrichen ist | Entscheidung, keine Arbeit | erledigt — mit der Health-Migration abgerissen |
-| 5.8 | Kleinkram | eine halbe Stunde | offen |
+| 5.8 | Kleinkram | eine halbe Stunde | erledigt |
 | 6.1 | Das Statistik-Menü wird über seinen Anzeigetext angesteuert — und erzeugt dabei einen toten Screen | eine halbe Stunde | erledigt |
 | 6.2 | Die Suite kann sich nicht selbst einrichten | eine halbe Stunde (Dashboard) | verworfen — die Suite wird nicht neu aufgesetzt |
 | 6.3 | Der Exporter fängt genau den Fehler ab, den `Config` bewusst wirft | eine Viertelstunde | erledigt |
@@ -1747,7 +1747,10 @@ drinsteht. Wer wirklich die Rohantwort will, bekommt sie als zweite Zeile; `ApiC
 trägt das `originalJson` bereits mit sich und niemand liest es heute aus.
 **Aufwand:** zehn Minuten für den Namen, eine halbe Stunde mit der Rohantwort.
 
-**Stand:** offen
+**Stand:** verworfen — entfallen mit der Health-Migration. `logApiResponse` existiert nicht mehr,
+ebenso wenig `log/fitbit_import.log` oder das `originalJson` der alten `ApiResponse`. Der Befund
+hat seine Berechtigung damit verloren, bevor er dran war: die Datei, die als Referenz für den
+Umzug nicht taugte, wird nicht mehr geschrieben.
 
 ### 5.7 Ein Übergangsgerüst, dessen Termin verstrichen ist
 
@@ -1786,7 +1789,29 @@ keine Termine.
 
 **Aufwand:** zusammen eine halbe Stunde.
 
-**Stand:** offen
+**Stand:** erledigt. Drei der sechs Punkte hatte die Health-Migration schon abgeräumt, zwei sind
+gemacht, einer ist verworfen.
+
+**Entfallen:** die Einrückung in `ActivityDataFetcher` ist sauber; Jackson und `LinkedHashMap`
+stehen in `ActivityDataReviewService` als Importe (`:5`, `:9`, `:10`); und von `Log.error` **und**
+`throw` ist nur der `throw` mit `e` übrig (`:152`).
+
+**Gemacht:** der Bauplan „Erwartete DiaryEditor-API (gebaut in Schicht 2)" in
+`DiaryEditorPresenter` ist weg — er stimmte zwar noch (gegen `DiaryEditor:81-88` geprüft), war aber
+eine Zweitkopie fremder Signatur, die beim nächsten Parameter still falsch wird. Und
+`alc/StartupService:27` nimmt `AppClock.TODAY.minusDays(1)`: beim Start geholte Daten folgen dem
+Suite-Tag, dieselbe Entscheidung wie bei Activity.
+
+**Verworfen:** die 6 in `WeekdayDialog:30` bleibt hart. Perminides will dafür keinen
+Config-Schlüssel, und der von WhatsApp (`whatsapp.daystartHour`) taugt nicht als gemeinsamer — dort
+geht es um die Zuordnung von Nachrichten zu Tagen, hier um „frag mich nicht vor dem Aufstehen".
+Ein geteilter Schlüssel würde zwei Features aneinanderbinden, die Verschiedenes meinen.
+
+**Nicht umgestellt:** die vier übrigen `now()`-Stellen sind echte Zeitstempel — `createdAt`, der
+Stundenabstand für die Invasiv-Regel, der Zeitpunkt des Matratzen-Wendens. `AppClock` hat keine
+Uhrzeit, sie könnten es gar nicht. Und `DiaryEditorPresenter:47` belegt nur das Datumsfeld eines
+neuen Eintrags vor; das ist eine Vorbelegung der Oberfläche, keine beim Start festgeschriebene
+Angabe, und bleibt deshalb am Kalendertag.
 
 ### Was in dieser Gruppe trägt
 
