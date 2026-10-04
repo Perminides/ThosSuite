@@ -171,7 +171,7 @@ laufen die beiden auseinander.
 | 3.4 | Der Import, der nicht fragen kann, fragt zweimal | zehn Minuten | erledigt |
 | 3.5 | Der Lücken-Check verschluckt jeden Fehler und meldet trotzdem Erfolg | eine halbe Stunde | erledigt |
 | 3.6 | Das Klassen-Javadoc nennt einen Config-Schlüssel, den es nicht gibt | zwei Minuten | erledigt |
-| 3.7 | Zehnmal derselbe Parse-Block | eine halbe Stunde | offen |
+| 3.7 | Zehnmal derselbe Parse-Block | eine halbe Stunde | erledigt |
 | 3.8 | Jede bewertete Serie wird bei jedem Lauf zusätzlich zweimal vollständig geholt | zwanzig Minuten | offen |
 | 3.9 | Toter Code | zehn Minuten | erledigt |
 | 3.10 | Kleinkram | eine halbe Stunde | offen |
@@ -1169,7 +1169,25 @@ Methoden werden zu zwei Zeilen. Vier Methoden brauchen danach weiterhin ihren EN
 auch der schrumpft.
 **Aufwand:** eine halbe Stunde.
 
-**Stand:** offen
+**Stand:** erledigt, und größer als beschrieben — es waren **zwölf** Blöcke, nicht zehn, und
+dreierlei stand darin zwölfmal: die `Log.debug`-Zeile mit der Antwort, das try/catch, und der
+Methodenname von Hand.
+
+`private <T> T parse(String json, Class<T> type, String call)` nimmt alle drei. Das `call` ist
+dieselbe Beschreibung, die der Aufrufer schon ins `Log.info` gibt — damit steht der Methodenname
+genau einmal in der Methode und kann in der Fehlermeldung nicht mehr veralten. Aus 215 Zeilen
+wurden 92 neue gegen 123 alte.
+
+Eine einfache Methode ist jetzt vier Zeilen, eine EN/DE-Methode acht statt sechzehn.
+
+**Zwei Dinge ändern sich im Verhalten:**
+
+Die Meldung lautet `"[FAILFAST] TMDB getMovieDetails, movieId 550 EN: JSON-Mapping nach MovieJSON
+fehlgeschlagen"` — dieselbe Information plus den Zieltyp, der sagt, welche Form nicht passte.
+
+Und ein Netzfehler beim DE-Request wird nicht mehr falsch beschriftet. Er lag bisher *innerhalb*
+des try, eine abgebrochene Verbindung meldete sich also als „JSON-Mapping fehlgeschlagen". Jetzt
+fliegt, was `getV3` wirft.
 
 ### 3.8 Jede bewertete Serie wird bei jedem Lauf zusätzlich zweimal vollständig geholt
 
