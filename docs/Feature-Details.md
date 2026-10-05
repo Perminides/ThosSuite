@@ -1,6 +1,6 @@
 # ThosSuite — Feature-Details
 
-**Stand:** 07.08.2026 · Fast Write Absatz hinzugefügt
+**Stand:** 06.10.2026 · Flaggen-Deck aufgenommen
 
 **Charakter:** Das *Nachschlagewerk* — pro Feature (der Lern-Kern als größtes eingeschlossen),
 wie es konkret gebaut ist. Deskriptiv wie das Architektur-Dokument, aber feature-tief statt
@@ -47,6 +47,14 @@ und beginnt mit jedem Treffer von vorn. Untereinander stehen die Antwortfelder, 
 Hinweis darin, und decken sich nach und nach auf. Läuft die Zeit ab, erscheint das Fehlende, und die
 Karte gilt als falsch. Je nach Aufgabe zählt die Reihenfolge, oder es genügt eine bestimmte Zahl von
 Treffern aus einem größeren Vorrat.
+
+**Flaggen.** Die Flaggen der Welt, in zwei Richtungen gefragt. Die eine Karte zeigt den Namen eines
+Landes und lässt seine Flagge **Schritt für Schritt entstehen**: erst die grobe Gliederung, dann der
+Hintergrund, dann die Zusatzelemente mit Anzahl und Ort, zuletzt alle Farben. Nach jeder Antwort
+wächst eine Skizze mit, am Ende steht die echte Flagge daneben. Die Gegenrichtung zeigt die Flagge
+und lässt das Land auf der Weltkarte anklicken. Anders als die übrigen Decks ist dieses nicht von
+Hand geschrieben, sondern **erzeugt**: Quelle ist eine Tabelle mit einer Zeile je Flagge, aus der
+ein Skript die Karten baut. Die Regeln dazu stehen in `docs/flaggen/Regeln.md`.
 
 **Regionen.** Mehrere Karten aus anklickbaren Formen (analog der Deutschlandkarte oben) — Schweizer
 Kantone, US-Bundesstaaten, deutsche Bundesländer und etliche mehr. Gelernt werden die Regionen

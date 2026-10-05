@@ -473,9 +473,11 @@ public class FlagDeckGenerator {
 		elementFills(steps, canvas, elements(row), fills, id(row), background);
 		fillAreas(steps, fills);
 		add(steps, "Image:" + image(row));
+		add(steps, "Output:<b>" + sheet.country(row) + "</b>");
 		add(steps, "Pause:"); // Zeit, die echte Flagge anzusehen
 		// Dasselbe noch einmal als Abspann: Auch wer die Karte reisst, soll die Flagge sehen.
 		add(steps, "<OnFail>Image:" + image(row));
+		add(steps, "Output:<b>" + sheet.country(row) + "</b>");
 		add(steps, "Pause:");
 		prependHint(steps, row);
 		hinweisVorweg(steps, row);

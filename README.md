@@ -27,6 +27,11 @@ Reines Faktenwissen ohne Landkarte.
 
 ![Multiple Choice – Frage mit Antwortvorgaben](docs/img/ThosSuite3.png)
 
+### Flaggen
+Flaggen von Ländern erst konstruieren und anschließend einfärben.
+
+![Flaggen – Flagge konstruieren](docs/img/ThosSuite6.png)
+
 ### Regionen-Serien
 Eine Gebietsgruppe komplett durchgehen (US-Bundesstaaten, Schweizer
 Kantone, Kreise und Städte Niedersachsens und mehr): alle Gebiete oder deren Hauptorte auf der Karte finden oder benennen; am Ende bestanden oder auch nicht.

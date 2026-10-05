@@ -35,18 +35,21 @@ class SessionProgress {
 	private final AnkiDeckService service;
 	private final Deck type;
 	private final CardSortOrder sortOrder;
+	private final boolean isFreePlay; // im freien Spiel keine neuen Karten vorziehen
 
 	private SessionPresenter presenter;
 	private Map<Integer, CardProgress> cardProgressById;
 	private List<Card> cards;
 	private int currentIndex = -1;
 
-	public SessionProgress(List<Card> cards, AnkiDeckService service, Deck type, CardSortOrder sortOrder, Runnable onLastCardDone) {
+	public SessionProgress(List<Card> cards, AnkiDeckService service, Deck type, CardSortOrder sortOrder,
+			boolean isFreePlay, Runnable onLastCardDone) {
 		Log.debug(this, "=== PROGRESS CONSTRUCTOR === Progress@" + System.identityHashCode(this));
 		this.cards = cards;
 		this.service = service;
 		this.type = type;
 		this.sortOrder = sortOrder;
+		this.isFreePlay = isFreePlay;
 		this.onLastCardDone = onLastCardDone;
 	}
 
@@ -64,14 +67,17 @@ class SessionProgress {
 
 	public void start() {
 		Log.debug(this, "=== PROGRESS START === Progress@" + System.identityHashCode(this));
-		// Neue Karten immer zuerst
+		// Beim Lernen nach Fälligkeit zuerst die neuen Karten. Im freien Spiel nicht: Dort ist die
+		// Auswahl schon gemischt, und ein Vorziehen zeigt nur das, was zuletzt dazukam.
 		List<Card> newCards = new ArrayList<>();
-		Iterator<Card> iter = cards.listIterator();
-		while (iter.hasNext()) {
-			Card card = iter.next();
-			if (card.isNew()) {
-				iter.remove();
-				newCards.add(card);
+		if (!isFreePlay) {
+			Iterator<Card> iter = cards.listIterator();
+			while (iter.hasNext()) {
+				Card card = iter.next();
+				if (card.isNew()) {
+					iter.remove();
+					newCards.add(card);
+				}
 			}
 		}
 		CardSortService.getSorter(sortOrder).accept(cards);

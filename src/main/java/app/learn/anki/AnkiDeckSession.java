@@ -53,7 +53,7 @@ public class AnkiDeckSession implements Screen {
 		this.isFreePlay = isFreePlay;
 		this.type = type;
 		CardSortOrder sortOrder = isFreePlay ? CardSortOrder.RANDOM : CardSortOrder.valueOf(Config.get("pref.sortOrder"));
-		this.progress = new SessionProgress(cards, service, type, sortOrder, this::closeLoud);
+		this.progress = new SessionProgress(cards, service, type, sortOrder, isFreePlay, this::closeLoud);
 		this.presenter = new SessionPresenter(type, progress); // registriert sich selbst am Progress via setPresenter(this)
 	}
 
