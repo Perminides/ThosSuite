@@ -154,8 +154,7 @@ public class MovieImporter {
         Log.info(MovieImporter.class, "Importiere neuen Film: " + rating.title + " (id=" + rating.id + ")");
         MovieJSON movie = api.getMovieDetails(rating.id);
         CreditListJSON credits = api.getMovieCredits(rating.id);
-        byte[] posterW92 = movie.poster_path != null ? api.getImage(movie.poster_path, "w92") : null;
-        byte[] posterW154 = movie.poster_path != null ? api.getImage(movie.poster_path, "w154") : null;
+        List<byte[]> posters = movie.poster_path == null ? List.of() : api.getPosters(movie.poster_path);
 
         // Die Poster liegen im Dateisystem, nicht in der Transaktion — ein rollback() erwischt sie
         // nicht. Bliebe eine Datei liegen, scheiterte derselbe Film beim nächsten Start erneut, und
@@ -167,23 +166,16 @@ public class MovieImporter {
         try (var conn = DB.getNewTmdbConnection()) {
             try {
                 movieRepo.insertMovie(movie, conn);
-                if (posterW92 != null) {
-                    StoredPoster stored = PosterFiles.storeNew(movie.poster_path, posterW92);
+                if (posters.isEmpty())
+                    // Kein Dialog: der Import läuft als PreTask über dem Splash. Die Lücke holt der
+                    // Lücken-Check des Serien-Imports nach und zählt sie bis dahin in seiner Zusammenfassung.
+                    Log.info(MovieImporter.class, "Kein Poster bei TMDB für " + movie.title
+                            + " (id=" + movie.id + ")");
+
+                for (byte[] image : posters) {
+                    StoredPoster stored = PosterFiles.storeNew(movie.poster_path, image);
                     writtenPosters.add(stored.filename());
                     movieRepo.insertMovieImage(movie, stored.width(), stored.height(), stored.filename(), conn);
-                } else {
-                	// Kein Dialog: der Import läuft als PreTask über dem Splash. Die Lücke holt der
-                	// Lücken-Check des Serien-Imports nach und zählt sie bis dahin in seiner Zusammenfassung.
-                	Log.info(MovieImporter.class, "Kein 92er Poster bei TMDB für " + movie.title
-                			+ " (id=" + movie.id + ")");
-                }
-                if (posterW154 != null) {
-                    StoredPoster stored = PosterFiles.storeNew(movie.poster_path, posterW154);
-                    writtenPosters.add(stored.filename());
-                    movieRepo.insertMovieImage(movie, stored.width(), stored.height(), stored.filename(), conn);
-                } else {
-                	Log.info(MovieImporter.class, "Kein 154er Poster bei TMDB für " + movie.title
-                			+ " (id=" + movie.id + ")");
                 }
                 movieRepo.insertMovieRating(rating, null, conn);
                 processCredits(credits, movie, conn);
@@ -230,9 +222,4 @@ public class MovieImporter {
             }
         }
     }
-
-    /**
-     * Speichert ein Bild im Dateisystem. Wirft Exception wenn bereits vorhanden —
-     * das sollte nie passieren.
-     */
 }

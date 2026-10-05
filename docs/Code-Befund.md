@@ -174,7 +174,7 @@ laufen die beiden auseinander.
 | 3.7 | Zehnmal derselbe Parse-Block | eine halbe Stunde | erledigt |
 | 3.8 | Jede bewertete Serie wird bei jedem Lauf zusätzlich zweimal vollständig geholt | zwanzig Minuten | erledigt |
 | 3.9 | Toter Code | zehn Minuten | erledigt |
-| 3.10 | Kleinkram | eine halbe Stunde | offen |
+| 3.10 | Kleinkram | eine halbe Stunde | erledigt |
 | 4.1 | Die eigene Signal-Kennung steht im Quelltext | zehn Minuten | erledigt |
 | 4.2 | Die Kontakt-Auflösung steht in beiden Zweigen | eine Stunde | erledigt |
 | 4.3 | Der WhatsApp-Import merkt sich „heute geprüft", bevor er geprüft hat | zehn Minuten | erledigt |
@@ -1268,7 +1268,36 @@ dieser Liste. (Und `scripts` wird mitkompiliert, ein Löschen hätte den Build g
 
 **Aufwand:** zusammen eine halbe Stunde, ohne den Marker.
 
-**Stand:** offen
+**Stand:** erledigt. Vier der sechs Punkte gemacht, zwei verworfen — und einer kam anders heraus,
+als der Befund ihn vorschlägt.
+
+Der Waisen-Javadoc am Ende von `MovieImporter` ist weg; er stand nicht über der falschen Methode,
+sondern über gar keiner. `askWhitelistOrBlacklist` steht einmal, als `CrewJobQuestion.ask(…)` in
+`app.movie` — im PostTask-Dialog heißt die vierte Zeile damit „Kontext:" statt „Film:". Und die
+zehn Zählerfelder werden nicht mehr von Hand genullt: `new SeriesImporter().run()` baut die Klasse
+je Lauf neu, Java setzt `int`-Felder ohnehin auf 0.
+
+**`CardDataFactory` liegt jetzt in `app.movie.model`, nicht in der Wurzel.** Der Befund empfiehlt
+`app.movie` — das erzeugt einen Paketzyklus, weil ausgerechnet `MovieViewerRepository` die Fabrik
+ruft (`movie → movie.repository → movie`), und `keineZyklen` schlug fehl. `movie.model` geht von
+beiden Seiten abwärts.
+
+**Verworfen:** die beiden `LocalDate.now()`-Stellen bleiben am Kalendertag. „Lief der Import heute
+schon?" fragt nach dem Tag, an dem TMDB zählt, nicht nach dem Suite-Tag, und der 100-Tage-Stichtag
+für Bewertungen ohne Kommentar genauso. Die übrigen sechs Stellen sind echte Zeitstempel und
+könnten gar nicht umgestellt werden.
+
+**Der Marker ist eingelöst, nur anders als er fragt.** Kein Config-Schlüssel — dafür müssten
+Schema, Dateiname und Viewer mit N Breiten umgehen können. Stattdessen die Aufzählung
+`PosterWidth`, und `ApiClient.getPosters(posterPath)` lädt alle Größen auf einmal. Damit wurden
+aus fünf Paaren fünf Schleifen, und die Zahlen 92 und 154 stehen nur noch in der Aufzählung selbst
+— vorher an 27 Stellen. `getImage` ist privat geworden.
+
+Dabei ist noch etwas gefallen: `savePoster` hatte seit dem `PosterFiles`-Umbau einen Parameter, der
+nur den Alert-Text fütterte, und dieser Alert feuerte bei einer Serie ohne Poster **zweimal** —
+einmal je Breite. Jetzt prüft der Aufrufer einmal und schreibt eine Log-Zeile; die Serie taucht im
+selben Lauf in „Noch ohne Poster" der Zusammenfassung auf. Und eine Staffel ohne eigenes Poster
+bekommt das der Serie einmal kopiert statt zweimal.
 
 ### Was in dieser Gruppe trägt
 

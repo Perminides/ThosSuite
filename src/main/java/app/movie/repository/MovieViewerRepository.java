@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import app.movie.model.CardDataFactory;
 import app.shared.Config;
 import app.shared.DB;
 import app.shared.model.CardData;

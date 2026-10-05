@@ -153,10 +153,6 @@ public class SeriesImporter {
     public void run() {
         Log.info(SeriesImporter.class, "TmdbSeriesImporter gestartet");
         crewFilterRepo.load();
-        newShows = 0; reRatedShows = 0; updatedShowData = 0;
-        newEpisodes = 0; reRatedEpisodes = 0;
-        postersFound = 0; overviewsFound = 0; gapChecksFailed = 0;
-        postersStillMissing = 0; overviewsStillMissing = 0;
 
         // Step 1: Serien
         showStepAlert("Wir schauen mal, ob sich bei den Serien was getan hat.");
@@ -240,21 +236,22 @@ public class SeriesImporter {
      */
     private void importShow(TvShowJSON show, CreditListJSON credits,
             TvShowRatingJSON rating, String comment) {
-        // !MagicNumber -> tmdb.posterWidths=92,154 in config?
-        byte[] posterW92 = show.poster_path != null ? api.getImage(show.poster_path, "w92") : null;
-        byte[] posterW154 = show.poster_path != null ? api.getImage(show.poster_path, "w154") : null;
+        List<byte[]> posters = show.poster_path == null ? List.of() : api.getPosters(show.poster_path);
 
         try (Connection conn = DB.getNewTmdbConnection()) {
             try {
                 tvShowRepo.insertTvShow(show, conn);
-                savePoster(show.poster_path, posterW92, 92,
-                        stored -> tvShowRepo.insertTvShowImage(show, stored.width(), stored.height(),
-                                stored.filename(), conn),
-                        "Serie " + show.name);
-                savePoster(show.poster_path, posterW154, 154,
-                        stored -> tvShowRepo.insertTvShowImage(show, stored.width(), stored.height(),
-                                stored.filename(), conn),
-                        "Serie " + show.name);
+                if (posters.isEmpty())
+                    // Kein Dialog: der Lückencheck in Schritt 3 findet die Serie im selben Lauf
+                    // und meldet sie in der Zusammenfassung.
+                    Log.info(SeriesImporter.class, "Kein Poster bei TMDB für Serie " + show.name
+                            + " (id=" + show.id + ")");
+
+                for (byte[] image : posters)
+                    savePoster(show.poster_path, image,
+                            stored -> tvShowRepo.insertTvShowImage(show, stored.width(), stored.height(),
+                                    stored.filename(), conn),
+                            "Serie " + show.name);
                 if (rating != null)
                     tvShowRepo.insertTvShowRating(rating, comment, conn);
                 processAggregatedCredits(credits, show.id, conn,
@@ -287,12 +284,12 @@ public class SeriesImporter {
             Log.info(SeriesImporter.class, "Seriendaten haben sich geändert: " + showName);
             ButtonEnum result = Alerts.show(
                     "Seriendaten geändert",
-                    "Die Daten der Serie \"" + showName + "\" haben sich geändert.\n\n"
+                    "An den vier Meta-Daten der Serie \"" + showName + "\" hat sich etwas geändert.\n\n"
                     + "Seasons: " + dbData.numberOfSeasons + " → " + webData.number_of_seasons + "\n"
                     + "Episodes: " + dbData.numberOfEpisodes + " → " + webData.number_of_episodes + "\n"
                     + "Status: " + dbData.status + " → " + webData.status + "\n"
                     + "Last Air Date: " + dbData.lastAirDate + " → " + webData.last_air_date + "\n\n"
-                    + "Sollen die Daten aktualisiert werden?",
+                    + "Sollen diese Daten aktualisiert werden?",
                     ButtonEnum.YES, ButtonEnum.NO);
             if (result == ButtonEnum.YES) {
                 tvShowRepo.updateTvShowData(webData);
@@ -362,28 +359,20 @@ public class SeriesImporter {
                 + ", seasonNumber=" + seasonNumber);
         SeasonJSON season = api.getSeasonDetails(tvShowId, seasonNumber);
         CreditListJSON credits = api.getAggregatedSeasonCredits(tvShowId, seasonNumber);
-        byte[] posterW92 = season.poster_path != null ? api.getImage(season.poster_path, "w92") : null;
-        byte[] posterW154 = season.poster_path != null ? api.getImage(season.poster_path, "w154") : null;
+        List<byte[]> posters = season.poster_path == null ? List.of() : api.getPosters(season.poster_path);
 
         try (Connection conn = DB.getNewTmdbConnection()) {
             try {
                 seasonRepo.insertSeason(season, conn);
-                if (season.poster_path != null && posterW92 != null) {
-                    savePoster(season.poster_path, posterW92, 92,
+                // Ohne eigenes Poster bekommt die Staffel das der Serie — einmal, nicht je Größe.
+                if (posters.isEmpty())
+                    seasonRepo.copyShowImageToSeason(season, conn);
+
+                for (byte[] image : posters)
+                    savePoster(season.poster_path, image,
                             stored -> seasonRepo.insertSeasonImage(season, stored.width(),
                                     stored.height(), stored.filename(), conn),
                             "Season " + season.name);
-                } else {
-                    seasonRepo.copyShowImageToSeason(season, conn);
-                }
-                if (season.poster_path != null && posterW154 != null) {
-                    savePoster(season.poster_path, posterW154, 154,
-                            stored -> seasonRepo.insertSeasonImage(season, stored.width(),
-                                    stored.height(), stored.filename(), conn),
-                            "Season " + season.name);
-                } else {
-                    seasonRepo.copyShowImageToSeason(season, conn);
-                }
                 processAggregatedCredits(credits, tvShowId, conn,
                         (cast, c) -> seasonRepo.insertSeasonCast(cast, season, c),
                         (crew, job, creditId, episodeCount, c) ->
@@ -468,7 +457,7 @@ public class SeriesImporter {
                     movieRepo.insertPersonIfNotExists(api.getPerson(crew.id), conn);
                     episodeRepo.insertEpisodeCrew(crew, episode.id, conn);
                 } else {
-                    boolean whitelist = askWhitelistOrBlacklist(crew.name, job, crew.department,
+                    boolean whitelist = CrewJobQuestion.ask(crew.name, job, crew.department,
                             episode.name);
                     if (whitelist) {
                         crewFilterRepo.addToWhitelist(job, conn);
@@ -524,15 +513,8 @@ public class SeriesImporter {
             try {
                 var movieDetails = api.getMovieDetails(id);
                 if (movieDetails.poster_path != null) {
-                    byte[] posterW92 = api.getImage(movieDetails.poster_path, "w92");
-                    byte[] posterW154 = api.getImage(movieDetails.poster_path, "w154");
-                    if (posterW92 != null) {
-                        StoredPoster stored = PosterFiles.storeIfAbsent(movieDetails.poster_path, posterW92);
-                        movieRepo.updateMoviePoster(id, stored.width(), stored.height(), PosterFiles.LANGUAGE,
-                                movieDetails.poster_path.substring(1), stored.filename());
-                    }
-                    if (posterW154 != null) {
-                        StoredPoster stored = PosterFiles.storeIfAbsent(movieDetails.poster_path, posterW154);
+                    for (byte[] image : api.getPosters(movieDetails.poster_path)) {
+                        StoredPoster stored = PosterFiles.storeIfAbsent(movieDetails.poster_path, image);
                         movieRepo.updateMoviePoster(id, stored.width(), stored.height(), PosterFiles.LANGUAGE,
                                 movieDetails.poster_path.substring(1), stored.filename());
                     }
@@ -574,15 +556,8 @@ public class SeriesImporter {
             try {
                 var showDetails = api.getTvShowDetailsEnOnly(id);
                 if (showDetails.poster_path != null) {
-                    byte[] posterW92 = api.getImage(showDetails.poster_path, "w92");
-                    byte[] posterW154 = api.getImage(showDetails.poster_path, "w154");
-                    if (posterW92 != null) {
-                        StoredPoster stored = PosterFiles.storeIfAbsent(showDetails.poster_path, posterW92);
-                        tvShowRepo.insertTvShowImage(id, showDetails.poster_path, stored.width(),
-                                stored.height(), PosterFiles.LANGUAGE, stored.filename());
-                    }
-                    if (posterW154 != null) {
-                        StoredPoster stored = PosterFiles.storeIfAbsent(showDetails.poster_path, posterW154);
+                    for (byte[] image : api.getPosters(showDetails.poster_path)) {
+                        StoredPoster stored = PosterFiles.storeIfAbsent(showDetails.poster_path, image);
                         tvShowRepo.insertTvShowImage(id, showDetails.poster_path, stored.width(),
                                 stored.height(), PosterFiles.LANGUAGE, stored.filename());
                     }
@@ -655,7 +630,7 @@ public class SeriesImporter {
                     movieRepo.insertPersonIfNotExists(api.getPerson(crew.id), conn);
                     crewInsert.insert(crew, job, jobEntry.credit_id, jobEntry.episode_count, conn);
                 } else {
-                    boolean whitelist = askWhitelistOrBlacklist(crew.name, job, crew.department,
+                    boolean whitelist = CrewJobQuestion.ask(crew.name, job, crew.department,
                             contextName);
                     if (whitelist) {
                         crewFilterRepo.addToWhitelist(job, conn);
@@ -732,22 +707,6 @@ public class SeriesImporter {
         return result.trim();
     }
 
-    private boolean askWhitelistOrBlacklist(String personName, String job,
-            String department, String contextName) {
-        ButtonEnum result = Alerts.show(
-                "Unbekannter Crew-Job",
-                "Person: " + personName + "\n"
-                + "Job: " + job + "\n"
-                + "Department: " + department + "\n"
-                + "Kontext: " + contextName,
-                ButtonEnum.WHITELIST, ButtonEnum.BLACKLIST);
-
-        if (result != ButtonEnum.WHITELIST && result !=  ButtonEnum.BLACKLIST)
-            throw new RuntimeException("Crew-Dialog ohne Auswahl geschlossen. job=" + job);
-
-        return result == ButtonEnum.WHITELIST;
-    }
-
     // =========================================================================
     // Bild-Hilfsmethoden
     // =========================================================================
@@ -762,11 +721,11 @@ public class SeriesImporter {
      * Zeigt einen Alert wenn kein Poster vorhanden.
      */
     private void savePoster(String posterPath, byte[] imageData,
-            int targetWidth, ImageDbInsert dbInsert, String contextName) {
-        if (imageData == null || posterPath == null) {
-        	Alerts.show(targetWidth + "er Poster fehlt", "Für " + contextName, ButtonEnum.OK);
-            return;
-        }
+            ImageDbInsert dbInsert, String contextName) {
+        if (imageData == null || posterPath == null)
+            throw new RuntimeException("savePoster ohne Bild gerufen — der Aufrufer prüft das. contextName="
+                    + contextName);
+
         try {
             dbInsert.insert(PosterFiles.storeIfAbsent(posterPath, imageData));
         } catch (Exception e) {

@@ -3,6 +3,7 @@ package app.movie.repository;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -322,7 +323,7 @@ public class TvShowRepository {
                 "WHERE tv_show_id = ?")) {
             ps.setInt(1, rating.account_rating.value);
             ps.setString(2, comment == null || comment.isEmpty() ? "." : comment);
-            ps.setString(3, java.time.LocalDateTime.now().toString());
+            ps.setString(3, LocalDateTime.now().toString());
             ps.setInt(4, rating.id);
             ps.execute();
         } catch (Exception e) {

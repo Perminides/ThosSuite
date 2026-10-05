@@ -73,7 +73,8 @@ public class MovieCleanup {
                 Log.info(MovieCleanup.class, "Job mittlerweile blacklisted, überspringe: " + entry.job);
                 cleanupPending(entry);
             } else {
-                boolean whitelist = askWhitelistOrBlacklist(entry);
+                boolean whitelist = CrewJobQuestion.ask(entry.personName, entry.job,
+                        entry.department, entry.movieTitle);
                 if (whitelist) {
                     crewFilterRepo.addToWhitelist(entry.job);
                     transferAndInsert(entry);
@@ -110,21 +111,6 @@ public class MovieCleanup {
      * Zeigt einen Alert mit Whitelist/Blacklist-Auswahl für einen unbekannten Job.
      * @return true = whitelist, false = blacklist
      */
-    private boolean askWhitelistOrBlacklist(CrewPendingEntry entry) {
-        ButtonEnum result = Alerts.show(
-            "Unbekannter Crew-Job",
-            "Person: " + entry.personName + "\n" +
-            "Job: " + entry.job + "\n" +
-            "Department: " + entry.department + "\n" +
-            "Film: " + entry.movieTitle,
-            ButtonEnum.WHITELIST, ButtonEnum.BLACKLIST
-        );
-        if (result != ButtonEnum.WHITELIST && result != ButtonEnum.BLACKLIST)
-            throw new RuntimeException("Crew-Pending-Dialog wurde ohne Auswahl geschlossen. personId=" + entry.personId + ", job=" + entry.job);
-
-        return result == ButtonEnum.WHITELIST;
-    }
-
     /**
      * Fragt für alle Filme mit null-Kommentar der letzten 100 Tage nach einem Kommentar.
      */

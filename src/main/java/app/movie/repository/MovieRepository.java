@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -270,7 +271,7 @@ public class MovieRepository {
                 "UPDATE movie_rating SET ar_value = ?, comment = ?, last_updated_at = ? WHERE movie_id = ?")) {
             ps.setInt(1, rating.account_rating.value);
             ps.setString(2, comment == null || comment.isEmpty() ? "." : comment);
-            ps.setString(3, java.time.LocalDateTime.now().toString());
+            ps.setString(3, LocalDateTime.now().toString());
             ps.setInt(4, rating.id);
             ps.execute();
         } catch (Exception e) {

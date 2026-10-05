@@ -1,4 +1,4 @@
-package app.movie.repository;
+package app.movie.model;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

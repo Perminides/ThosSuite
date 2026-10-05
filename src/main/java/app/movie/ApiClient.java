@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -313,14 +315,31 @@ public class ApiClient {
     }
 
     /**
-     * Lädt ein Bild von der TMDB-Bildserver herunter.
+     * Lädt alle Postergrößen zu einem Bildpfad, in der Reihenfolge von {@link PosterWidth}.
+     *
+     * <p>Je Größe ein Request. Der Aufrufer holt sie damit <b>vor</b> seiner Transaktion — in der
+     * Schleife eines offenen {@code Connection} wären es Downloads bei offener Verbindung.</p>
+     *
+     * @param posterPath Bildpfad wie von der API geliefert, z.B. "/abc123.jpg"
+     * @return           je ein Byte-Array, nie {@code null} und nie leer
+     */
+    public List<byte[]> getPosters(String posterPath) {
+        List<byte[]> images = new ArrayList<>();
+        for (PosterWidth width : PosterWidth.values())
+            images.add(getImage(posterPath, width));
+
+        return images;
+    }
+
+    /**
+     * Lädt ein Bild vom TMDB-Bildserver herunter.
      *
      * @param path   Bildpfad wie von der API geliefert, z.B. "/abc123.jpg"
-     * @param width  Gewünschte Breite, z.B. "w92" oder "w154"
+     * @param width  Gewünschte Breite
      * @return       Rohe Bilddaten als Byte-Array
      */
-    public byte[] getImage(String path, String width) {
-        String urlString = "https://image.tmdb.org/t/p/" + width + path;
+    private byte[] getImage(String path, PosterWidth width) {
+        String urlString = "https://image.tmdb.org/t/p/" + width.token() + path;
         Log.info(ApiClient.class, "TMDB getImage, url " + urlString);
         try {
             HttpURLConnection con = (HttpURLConnection) new URL(urlString).openConnection();
