@@ -7,6 +7,10 @@ liegt, ob die Schichten halten —, nicht die Implementierung einzelner Methoden
 Maßstab: `Design-Regeln.md`, `ArchitekturRegelnTest.java`, `Architektur-Dokumentation.md`,
 `Feature-Details.md`. Umfang: `src/main/java/app` ohne das Paket `scripts`.
 
+Die Aufnahme ist abgeschlossen und abgearbeitet. Wer sie später liest: die Befundtexte sind der
+Stand der Durchsicht, der `**Stand:**` darunter der des Codes — wo beide auseinandergehen, gilt
+der zweite, und er sagt warum.
+
 ## Was tragfähig ist
 
 Kein Lob, sondern eine Liste: benannte Entscheidungen, die im Code nachweisbar halten und die
@@ -107,6 +111,13 @@ sondern beim Klicken. Überall dort, wo stattdessen ein Enum oder ein `sealed in
 `PlayMenuNode`, `ButtonEnum`, `Card.Step`, `LearnComponent`, `SessionSwitchStrategy` — gibt es das
 Problem nicht. Die Suite kennt die Lösung; sie ist an drei Stellen nicht angewandt.
 
+**Wie die zwölf ausgegangen sind:** neun erledigt, drei verworfen. Verworfen wurden **7.1**
+(`AppClock` ist kein zweiter Kalender, sondern der Arbeitstag der beim Start geholten Daten — die
+46 `LocalDate.now()`-Stellen sind zum größten Teil echte Zeitstempel), **2.1** (der erste Eintrag
+in `region_learn_stat` ist der Schalter, mit dem ein Deck ins Lernen kommt, keine Hürde) und
+**6.2** (die Suite wird nicht neu aufgesetzt). Bei **Szenario B** und **10.1** steht die Lösung
+anders da als vorgeschlagen; die Begründung jeweils im Befund.
+
 **Was auffällig selten vorkommt:** echte Doppelungen von Fachlogik. Die Kandidaten (1.3, 2.2, 5.2,
 3.3) sind allesamt klein und lokal. Der Bericht enthält keinen einzigen Befund der Sorte „diese
 Zuständigkeit ist über fünf Pakete verteilt" — die Schichtung hält.
@@ -131,6 +142,16 @@ Zuständigkeit ist über fünf Pakete verteilt" — die Schichtung hält.
 
 Alle elf Gruppen sind durch. Die beiden zusammenfassenden Abschnitte stehen oben, die offenen
 Fragen am Ende der Datei.
+
+**Und die Abarbeitung ist es ebenfalls: 75 erledigt, 5 verworfen, 0 offen.** Jeder Befund wurde
+vor dem Anfassen gegen den aktuellen Code geprüft; an etlichen Stellen stimmte er nicht mehr oder
+beschrieb etwas anderes, als dastand. Das ist jeweils im `**Stand:**` des Befunds vermerkt, samt
+der Entscheidung, wenn sie vom Vorschlag abweicht.
+
+Die fünf verworfenen sind keine Resterampe, sondern Entscheidungen: 2.1 und 6.2 beschreiben einen
+Ablauf, der so gewollt ist; 7.1 hat die Rolle von `AppClock` missverstanden; 2.8 betrifft eine
+Reihenfolge, die keine Rolle spielt; 5.6 ist mit der Health-Migration entfallen, bevor es dran
+war.
 
 ### Entscheidungen je Befund
 
@@ -3217,56 +3238,42 @@ Rechenklasse nicht fragen sollte.
 
 ## Offene Fragen
 
-Sieben Punkte, die sich aus dem Code nicht beantworten ließen. Sie sind hier Fragen und keine
-Befunde, weil die Antwort die Bewertung ändert — nicht nur den Aufwand.
+Von den sieben Fragen, die sich beim Schreiben des Berichts aus dem Code nicht beantworten
+ließen, sind fünf inzwischen beantwortet — meist dadurch, dass der betroffene Code weg ist.
 
-**1 · Setzt eine der ausgelieferten Skin-Dateien einen der vier `Double`-Schlüssel?**
-Betrifft Befund 10.1. `shapeMapStandardBorderWidth`, `shapeMapFederalStateBorderWidth`,
-`sketchStrokeWidth`, `sketchMarkedHatchWidth` kommen durch die FailFast-Prüfung und werden
-danach still verworfen. Steht einer davon heute in einer `skin_*.properties`, weicht das
-sichtbare Ergebnis seit dem Eintrag von dem ab, was dort steht — dann ist 10.1 kein latenter,
-sondern ein aktiver Fehler. Die Dateien liegen im Datenordner und waren von hier nicht
-einsehbar.
+### Noch offen
 
-**2 · Fehlt `MainWindow.setCurrentSortOrder` oder ist sie überflüssig?**
-Betrifft Befund 6.4. Die Methode hat keinen Aufrufer, ihr Javadoc behauptet, der Controller rufe
-sie beim Start, und eine eigene Mechanik (`item.setUserData(order)`) existiert nur für sie. Heute
-markiert das Menü die aktive Reihenfolge über den Umweg `lastSortOrderString` beim Bauen. Ist das
-die Absicht — dann kann beides weg. War der Aufruf einmal geplant und fiel weg — dann fehlt er,
-und das Menü ist nach einem Skinwechsel möglicherweise nicht mehr korrekt markiert. Das
-unterscheidet „drei Zeilen löschen" von „eine Zeile ergänzen".
-
-**3 · Ist die Frist von `app.tmp` erreicht oder verlängert?**
-Betrifft Befunde 5.7 und 6.6. Beide Klassen nennen September als Wegfall, der Stand dieses
-Berichts ist der 20.09.2026. Am Gerüst hängen sechs Stellen in vier Paketen, darunter eine
-öffentliche Projektion in `app.fitbit` und eine Ausnahmezeile im Architekturtest. Ob der Abriss
-ansteht oder der Vergleich weiterlaufen soll, ist eine Entscheidung über den Health-Umstieg und
-keine über den Code.
-
-**4 · Ist `Config.getString` als Markierung für Geheimnisse gemeint?**
-Betrifft Befund 7.2. Die Methode ist ein reiner Alias für `Config.get` und hat drei Aufrufer —
-zwei davon lesen ein Geheimnis (`exporter.zipPassword`, `signal.key`), der dritte einen Pfad.
-Wenn das Zufall ist, gehört die Methode gelöscht. Wenn dahinter die Absicht stand, sensible
-Zugriffe erkennbar zu machen, ist der Befund falsch herum — dann gehört die Idee ausgebaut statt
-zurückgenommen, und `tmdb.v3.apiKey` und `whatsapp.key` müssten mit.
-
-**5 · Trägt eine JDBC-Fehlermeldung die Signal-URL mitsamt Schlüssel?**
+**1 · Trägt eine JDBC-Fehlermeldung die Signal-URL mitsamt Schlüssel?**
 `SignalIncrementalImport.java:142-143` baut die Verbindungs-URL mit
 `?cipher=sqlcipher&key=x'…'`, und `DriverManager.getConnection(url)` bekommt sie. Der eigene
-`catch` in `:164-166` gibt die URL nicht weiter — was der SQLite-Treiber selbst in seine
-`SQLException` schreibt, habe ich nicht geprüft und wollte es nicht raten. Wenn er die URL
-mitnimmt, ist das derselbe Fall wie Befund 3.1, nur für den Datenbankschlüssel.
+`catch` gibt die URL nicht weiter — was der SQLite-Treiber selbst in seine `SQLException`
+schreibt, lässt sich nur ausprobieren: einmal mit falschem Pfad starten und nachsehen, was im Log
+steht. Nimmt er die URL mit, ist das derselbe Fall wie Befund 3.1, nur für den Datenbankschlüssel.
 
-**6 · Soll `MarkMapElements.right` (die optionalen Shapes) noch kommen?**
-`Card.java:35` führt das Feld samt Kommentar „Momentan ist right immer leer. Vielleicht will ich
-später aber auch mal die optionalen Shapes berücksichtigen…". Es wird gefüllt und nie gelesen.
-Als Platzhalter für eine geplante Erweiterung ist es in Ordnung — dann gehört ein Marker dran.
-Als Überbleibsel gehört es weg (Befund 1.12).
+**2 · Bleibt `MainWindow` auf dem toten Rest von 6.4 sitzen?**
+`setCurrentSortOrder` ist mit 6.4 gelöscht. Stehen geblieben ist die Mechanik, die es nur für sie
+gab: `MainWindow:145` ruft `item.setUserData(order)`, und der Kommentar daneben nennt die
+gelöschte Methode als Grund. Die Menüeinträge werden von niemandem per `getUserData` gelesen —
+die beiden Treffer im Projekt gehören zu `AnkiConfigDialog` und `ImageMapPane`. Zeile und
+Kommentar können also weg; das ist eher eine Bestätigung als eine Frage.
 
-**7 · Wird `app.fitbit` beim Quellenwechsel umbenannt?**
-Betrifft Szenario C. Nach dem Umstieg heißen Paket, Screen, Presenter und Logdatei nach einem
-Dienst, den es nicht mehr gibt — und der Prüfsatz des Regelwerks („was, wenn ein zweites Deck
-derselben Bauart dazukäme?") fällt eindeutig aus. Die DB-Tabelle sollte dagegen `fitbit` heißen
-bleiben; Historie umzubenennen kostet mehr, als es bringt. Ob der Code mitgeht und ob der
-Unterschied zwischen Tabellen- und Paketnamen dann als Satz danebensteht, ist eine Entscheidung,
-die vor dem Umbau fällt und nicht danach.
+### Beantwortet
+
+**Setzt eine Skin-Datei einen der vier `Double`-Schlüssel?** Nein — sonst startete die Suite nicht
+mehr. Mit 10.1 wirft der Loader bei einem Feldtyp ohne eigenen Zweig
+(`"Feldtyp ohne Loader-Zweig: …"`), und einen `Double`-Zweig gibt es weiterhin nicht. Aus dem
+stillen Verschlucken ist ein lautes Scheitern geworden; dass die Suite täglich hochkommt, ist der
+Beweis, dass keine ausgelieferte Datei einen der vier Schlüssel setzt.
+
+**Ist die Frist von `app.tmp` erreicht?** Erledigt — das Paket existiert nicht mehr, mit der
+Health-Migration abgerissen (Befunde 5.7 und 6.6).
+
+**Ist `Config.getString` als Markierung für Geheimnisse gemeint?** Die Methode gibt es nicht mehr
+(Befund 7.2). Die Idee, sensible Zugriffe erkennbar zu machen, ist damit nicht ausgebaut, sondern
+zurückgenommen worden.
+
+**Soll `MarkMapElements.right` noch kommen?** Ja — das Feld trägt jetzt einen `!Idee:`-Marker mit
+der Begründung, genau wie es die Frage vorgeschlagen hat (Befund 1.12).
+
+**Wird `app.fitbit` beim Quellenwechsel umbenannt?** Ist passiert: das Paket heißt `app.activity`,
+die Klassen `ActivityDataFetcher`, `ActivityDashboardService`, `ActivityStatisticsPresenter`.

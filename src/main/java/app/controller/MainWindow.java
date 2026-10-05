@@ -142,7 +142,6 @@ public class MainWindow {
         String lastSortOrderString = Config.get("pref.sortOrder");
         for (CardSortOrder order : CardSortOrder.values()) {
             item = new MenuItem(order.getDisplayName());
-            item.setUserData(order); // damit setCurrentSortOrder den Eintrag nicht über seinen Text suchen muss
             item.setOnAction(e -> {
             	Config.set("pref.sortOrder", order.name());
                 controller.sortOrderChanged();
