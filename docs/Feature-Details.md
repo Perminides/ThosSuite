@@ -19,10 +19,10 @@ Das zentrale Feature der Suite. Es bündelt mehrere Lerndecks, die sich Fortschr
 
 ### Was gelernt wird
 
-Gelernt wird nach dem Prinzip der verteilten Wiederholung (*spaced repetition*): Wer eine Aufgabe
-richtig löst, hebt ihr Level, und mit dem Level wächst der Abstand bis zur nächsten Wiederholung.
-Ein Fehler wirft das Level zurück — die Aufgabe kommt schon am nächsten Tag erneut. Sicheres 
-verschwindet so für Wochen aus dem Blick, Wackeliges bleibt eng getaktet.
+Gelernt wird nach dem Prinzip der [Spaced Repetition](https://de.wikipedia.org/wiki/Spaced_Repetition):
+Wer eine Aufgabe richtig löst, hebt ihr Level, und mit dem Level wächst der Abstand bis zur
+nächsten Wiederholung. Ein Fehler wirft das Level zurück — die Aufgabe kommt schon am nächsten Tag
+erneut. Sicheres verschwindet so für Wochen aus dem Blick, Wackeliges bleibt eng getaktet.
 
 **Deutschland.** Eine Deutschlandkarte aus rund 400 anklickbaren Formen — den Kreisen und
 kreisfreien Städten. Dazu ein Vorrat von etwa 2500 Fragen, von denen jede ihren eigenen Lernstand

@@ -102,21 +102,25 @@ public class CardProgress {
 	 *
 	 * <p><b>Was der Autor dafür tun muss:</b> gleichartige Steps mit demselben Optionsuniversum
 	 * schreiben; nur die Präfixe wandern. Vergisst man es, springen die Antworten sichtbar. Das ist ein
-	 * Netz, kein Zwang — erzwungen wird nur die Pflicht-Menge ≤ {@value #MAX_MC}.</p>
+	 * Netz, kein Zwang — erzwungen wird nur die Pflicht-Menge eines einzelnen Steps ≤ {@value #MAX_MC}.</p>
+	 *
+	 * <p>Ist die Pflicht-Menge eines Clusters größer als {@value #MAX_MC} — zwölf Zeichner, jeder einmal
+	 * richtig —, passt sie nicht auf feste Plätze. Dann zieht jeder Step seine Anzeige selbst, und die
+	 * Antworten springen.</p>
 	 */
 	private void planMcClusters() {
 		requiredPerCluster = new HashMap<>();
 		for (Step step : steps) {
 			if (!(step instanceof ChoiceStep cs))
 				continue;
+			Set<String> pinned = pinnedOf(cs.options());
+			if (pinned.size() > MAX_MC)
+				throw new RuntimeException("MC: Pflicht-Menge größer als " + MAX_MC + " — " + pinned);
 			RequiredAnswers req = requiredPerCluster.computeIfAbsent(universeOf(cs.options()),
 					_ -> new RequiredAnswers());
-			req.fromAllSteps.addAll(pinnedOf(cs.options()));
+			req.fromAllSteps.addAll(pinned);
 			mergeOrder(req.order, cs.orderHint());
 		}
-		for (Map.Entry<Set<String>, RequiredAnswers> entry : requiredPerCluster.entrySet())
-			if (entry.getValue().fromAllSteps.size() > MAX_MC)
-				throw new RuntimeException("MC: Pflicht-Menge größer als " + MAX_MC + " — " + entry.getKey());
 	}
 
 	private static void mergeOrder(List<String> into, List<String> incoming) {
@@ -151,13 +155,13 @@ public class CardProgress {
 		return roles;
 	}
 
-	/** Einmal pro Cluster und Durchlauf: Pflicht pinnen, aus dem Pool auffüllen, ordnen, einfrieren. */
-	private List<String> buildFrozen(Set<String> universe) {
+	/** Pflicht pinnen, aus dem Pool auffüllen, ordnen — einmal pro Cluster oder, wenn zu groß, je Step. */
+	private List<String> buildDisplay(Set<String> universe, Set<String> pinned) {
 		RequiredAnswers req = requiredPerCluster.get(universe);
-		List<String> chosen = new ArrayList<>(req.fromAllSteps);
+		List<String> chosen = new ArrayList<>(pinned);
 
 		List<String> pool = new ArrayList<>(universe);
-		pool.removeAll(req.fromAllSteps);
+		pool.removeAll(pinned);
 		Collections.shuffle(pool);
 		for (String text : pool) {
 			if (chosen.size() >= MAX_MC)
@@ -494,16 +498,19 @@ public class CardProgress {
 								isPaused = true;}
 			case ChoiceStep cs -> {
 				Set<String> universe = universeOf(cs.options());
-				List<String> frozen = frozenDisplay.computeIfAbsent(universe, this::buildFrozen);
+				Set<String> required = requiredPerCluster.get(universe).fromAllSteps;
+				List<String> display = required.size() <= MAX_MC
+						? frozenDisplay.computeIfAbsent(universe, u -> buildDisplay(u, required))
+						: buildDisplay(universe, pinnedOf(cs.options()));
 
 				Map<String, Role> roles = rolesOf(cs.options());
 				List<AnswerOption> shown = new ArrayList<>();
-				for (String text : frozen)
+				for (String text : display)
 					shown.add(new AnswerOption(text, roles.get(text)));
 
 				activeSessionMC = new MultipleChoiceAnswers(shown);
 				clickedMcAnswers.clear(); // sonst zählt die Auswahl des vorigen Steps weiter mit
-				presenter.showMultipleChoice(frozen);
+				presenter.showMultipleChoice(display);
 			}
 			
 			case MarkMapElements left -> presenter.markMapElements(left.left());
