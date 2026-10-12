@@ -87,14 +87,15 @@ public class PendingRepository {
      * Überträgt eine Person von person_pending in die echte person-Tabelle.
      * Löscht den Pending-Eintrag danach.
      * Wenn Person bereits übertragen wurde, passiert nichts.
-     * Wenn Person bereits in Person-Tabelle drin, gibt es eine Exception.
+     * Wenn Person bereits in Person-Tabelle drin, bleibt der vorhandene Eintrag stehen —
+     * das passiert, wenn sie auch eine Rolle oder einen bekannten Job hat, etwa im selben Film.
      *
      * @param personId  TMDB-ID der Person
      */
     public void transferPersonToMain(int personId) {
         Log.info(PendingRepository.class, "transferPersonToMain, personId " + personId);
         try (PreparedStatement ps = DB.getTmdbConnection().prepareStatement(
-                "INSERT INTO person SELECT * FROM person_pending WHERE id = ?")) {
+                "INSERT OR IGNORE INTO person SELECT * FROM person_pending WHERE id = ?")) {
             ps.setInt(1, personId);
             ps.execute();
         } catch (Exception e) {
