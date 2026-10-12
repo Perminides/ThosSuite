@@ -9,12 +9,15 @@ public class DB {
 	
 	private static Path dbPath = null;
 	private static Path tmdbDbPath = null;
+	private static Path quizDbPath = null;
 	private static Connection connection = null;
 	private static Connection tmdbConnection = null;
-	
-	public static void init (Path dbPath, Path tmdbDbPath) {
+	private static Connection quizConnection = null;
+
+	public static void init (Path dbPath, Path tmdbDbPath, Path quizDbPath) {
 		DB.dbPath = dbPath;
 		DB.tmdbDbPath = tmdbDbPath;
+		DB.quizDbPath = quizDbPath;
 	}
 	
 	/**
@@ -100,6 +103,31 @@ public class DB {
 	}
 
 	/**
+	 * Gibt die gemeinsame Singleton-Connection zur Quiz-Datenbank zurück. Eigene DB, weil ein Import
+	 * von außerhalb der Suite in sie schreibt.
+	 */
+	public static Connection getQuizConnection() {
+		try {
+			if (quizConnection != null && quizConnection.isClosed())
+				throw new IllegalStateException("[FAILFAST] Die Quiz-Connection ist geschlossen. "
+						+ "Sie bleibt die gesamte Laufzeit offen und wird nur beim Shutdown geschlossen — "
+						+ "hier hat sie also jemand geschlossen, der es nicht durfte.");
+			if (quizConnection == null)
+				quizConnection = open(quizDbPath, true);
+		} catch (SQLException e) {
+			throw new RuntimeException("Quiz-Connection: Zustand nicht prüfbar", e);
+		}
+		return quizConnection;
+	}
+
+	/**
+	 * Öffnet eine neue, dedizierte Verbindung zur Quiz-Datenbank mit AutoCommit=false.
+	 */
+	public static Connection getNewQuizConnection() {
+		return open(quizDbPath, false);
+	}
+
+	/**
 	 * Die einzige Stelle, an der eine Verbindung entsteht — damit {@code PRAGMA foreign_keys = ON}
 	 * nicht viermal dasteht und eine fünfte Verbindungsart sie nicht vergessen kann. Ein fehlendes
 	 * PRAGMA meldet sich nämlich nicht, es schaltet still die Fremdschlüsselprüfung ab.
@@ -124,6 +152,8 @@ public class DB {
 			connection.close();
 		if (tmdbConnection != null && !tmdbConnection.isClosed())
 			tmdbConnection.close();
+		if (quizConnection != null && !quizConnection.isClosed())
+			quizConnection.close();
 		} catch (SQLException e) {
 			throw new RuntimeException("SQL error while closing connection ", e);
 		}

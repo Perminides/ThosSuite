@@ -13,15 +13,14 @@ public class LearnStat {
 	private final static Random random = new Random();
 	
 	public static LearnStat forFirstPlay(boolean correct) {
-		return new LearnStat(AppClock.TODAY, AppClock.TODAY, correct ? 1 : 0, correct ? 0 : 1);
+		return new LearnStat(AppClock.TODAY, correct ? 1 : 0, correct ? 0 : 1);
 	}
 	
-	private LocalDate lastPlayed, firstPlayed;
+	private LocalDate lastPlayed;
 	private int level;
 	private int wrongCount;
 
-	public LearnStat(LocalDate firstPlayed, LocalDate lastPlayed, int level, int wrongCount) {
-		this.firstPlayed = firstPlayed;
+	public LearnStat(LocalDate lastPlayed, int level, int wrongCount) {
 		this.lastPlayed = lastPlayed;
 		this.level = level;
 		this.wrongCount = wrongCount; 

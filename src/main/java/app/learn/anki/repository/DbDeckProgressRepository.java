@@ -41,11 +41,10 @@ class DbDeckProgressRepository {
 	             ResultSet rs = statement.executeQuery(sql)) {
 	            while (rs.next()) {
 	                int id = rs.getInt("card_id");
-	                LocalDate firstPlayed = LocalDate.parse(rs.getString("first_played"));
 	                LocalDate lastPlayed = LocalDate.parse(rs.getString("last_played"));
 	                int level = rs.getInt("level");
 	                int wrongCount = rs.getInt("wrong_count");
-	                result.put(id, new LearnStat(firstPlayed, lastPlayed, level, wrongCount));
+	                result.put(id, new LearnStat(lastPlayed, level, wrongCount));
 	            }
 	        } catch (SQLException e) {
 	            throw new RuntimeException("Fehler beim Lesen der Card-Progress-Daten", e);

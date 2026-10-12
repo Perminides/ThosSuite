@@ -37,10 +37,10 @@ import app.movie.MovieCleanup;
 import app.movie.MovieImporter;
 import app.movie.MovieViewerScreen;
 import app.movie.SeriesImporter;
+import app.quiz.QuizRound;
 import app.shared.Config;
 import app.shared.DialogOwner;
 import app.shared.Log;
-import app.shared.UiUtils;
 import app.shared.model.ButtonEnum;
 import app.shared.model.Screen;
 import app.shared.skin.Skin;
@@ -307,6 +307,10 @@ public class Controller{
     
     public void mattressSelected() {
     	new MattressTurnDialog().show();
+    }
+
+    public void quizSelected() {
+    	new QuizRound().start();
     }
     
     public void exportSelected() {

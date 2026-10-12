@@ -147,6 +147,11 @@ public abstract class Skin extends SkinProperties {
 	       //.add("-fx-background-color", UIUtils.toHex(playFieldBackground)) // NEU!
 	       .end();
 	    css.rule(".text", "-fx-fill", textColor);
+	    css.start(".progress-indicator")
+	       .add("-fx-progress-color", textColor)
+	       .add("-fx-pref-width", "3em")
+	       .add("-fx-pref-height", "3em")
+	       .end();
 	    
 	    // CSS generieren
 		// Java-FX Klassen, deren Logik wir übernehmen und die durchaus auch mal in anderen Komponenten implizit benutzt werden könnten.
@@ -303,6 +308,9 @@ public abstract class Skin extends SkinProperties {
 	       .end();
 	    
 	    // Content VBox
+	    // Quiz-Dialoge: Breite in em, damit die Zeilenlänge mit der Schrift des Skins mitwächst
+	    builder.rule(".my-quiz-dialog", "-fx-pref-width", "40em");
+	    
 	    builder.start(".my-dialog-vbox")
 	    .add("-fx-background-color", playFieldBackground)
 	    .add("-fx-padding", font.getSize() * 0.5 + "px")

@@ -76,9 +76,12 @@ Prozessende. Ob ein konkreter Laufzeitfehler fatal (globaler Handler) oder lokal
 ist eine Einzelfallentscheidung an der jeweiligen Stelle.
 
 ### Nebenläufigkeit
-Keine Threads; alles läuft auf dem JavaFX Application Thread. Einzige Ausnahme: die
+Keine Threads; alles läuft auf dem JavaFX Application Thread. Ausnahmen: die
 Startup-Initialisierung (ein Hintergrund-Thread für Config, Logging und Font-Loading) mit
-Splash-Screen-Pattern. Auch die PreTasks mit externen
+Splash-Screen-Pattern, der Shutdown-Hook im `SingleInstanceGuard` und der `WaitDialog` in
+`shared.ui`: Er führt eine lange Arbeit (etwa einen API-Aufruf) in einem eigenen Thread aus, während
+ein modaler Dialog mit drehendem Kreis alles andere sperrt. Für den Aufrufer bleibt das synchron;
+die Arbeit darf weder Anzeige noch Datenbank anfassen. Auch die PreTasks mit externen
 API-Calls (Google Health) laufen nicht in eigenen Threads, sondern über `Platform.runLater` auf dem
 FX-Thread.
 

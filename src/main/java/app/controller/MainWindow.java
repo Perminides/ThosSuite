@@ -199,6 +199,9 @@ public class MainWindow {
         MenuItem mattressItem = new MenuItem("Matratze");
         mattressItem.setOnAction(_ -> controller.mattressSelected());
         menuModule.getItems().add(mattressItem);
+        MenuItem quizItem = new MenuItem("Quiz");
+        quizItem.setOnAction(_ -> controller.quizSelected());
+        menuModule.getItems().add(quizItem);
 
         
         // ANSICHT-MENÜ

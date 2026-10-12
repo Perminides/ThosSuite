@@ -3,7 +3,7 @@ package app.movie;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -342,7 +342,7 @@ public class ApiClient {
         String urlString = "https://image.tmdb.org/t/p/" + width.token() + path;
         Log.info(ApiClient.class, "TMDB getImage, url " + urlString);
         try {
-            HttpURLConnection con = (HttpURLConnection) new URL(urlString).openConnection();
+            HttpURLConnection con = (HttpURLConnection) URI.create(urlString).toURL().openConnection();
             con.setRequestMethod("GET");
             con.setConnectTimeout(5000);
             con.setReadTimeout(5000);
@@ -402,7 +402,7 @@ public class ApiClient {
      */
     private String sendGet(String urlString, String authorizationHeader) {
         try {
-            HttpURLConnection con = (HttpURLConnection) new URL(urlString).openConnection();
+            HttpURLConnection con = (HttpURLConnection) URI.create(urlString).toURL().openConnection();
             con.setRequestMethod("GET");
             con.setConnectTimeout(5000);
             con.setReadTimeout(5000);

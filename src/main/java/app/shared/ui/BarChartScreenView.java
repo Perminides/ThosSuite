@@ -10,6 +10,7 @@ import app.shared.model.BarChartDataProvider;
 import app.shared.model.ScreenView;
 import app.shared.skin.SkinService;
 import app.shared.ui.components.SuiteBackground;
+import app.shared.ui.components.SuiteDatePicker;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
@@ -19,7 +20,6 @@ import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.Tooltip;
@@ -29,7 +29,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import app.shared.ui.components.SuiteDatePicker;
 
 /**
  * Framework-gebundene, feature-neutrale Hälfte: zeichnet eine {@link BarChartData}

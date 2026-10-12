@@ -43,7 +43,7 @@ public class Config {
         fileSource = new ConfigFileSource(folderPath);
 
         Path dbFolder = Path.of(fileSource.get("dbFolder"));
-        DB.init(dbFolder.resolve("thossuite.db"), dbFolder.resolve("movies.db"));
+        DB.init(dbFolder.resolve("thossuite.db"), dbFolder.resolve("movies.db"), dbFolder.resolve("quiz.db"));
 
         keyValues = new KeyValueRepository();
 

@@ -55,6 +55,8 @@ import javafx.scene.shape.Shape;
  *
  * <p>CSS (vom Skin gesetzt): Fläche = {@code .my-sketch-area}, {@code :marked} und je Farbe eine
  * Klasse aus {@link SketchColor#styleClass()}.</p>
+ * 
+ * TODO: Belarus vs Turkmenistan, das passt noch nicht
  */
 class SketchPane extends StackPane {
 

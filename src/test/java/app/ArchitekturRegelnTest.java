@@ -213,9 +213,11 @@ public class ArchitekturRegelnTest {
 	 * einen Thread aufmacht, muss jede Anzeige-Änderung über {@code Platform.runLater} schicken —
 	 * vergisst er es, entstehen Fehler, die sporadisch auftreten und schwer zu finden sind.</p>
 	 *
-	 * <p>Die zwei Ausnahmen stehen so im Architekturdokument: die Startup-Initialisierung in
-	 * {@code ThosSuiteApp} und der Shutdown-Hook im {@code SingleInstanceGuard} (die JVM verlangt
-	 * dort ein {@code Thread}-Objekt).</p>
+	 * <p>Die drei Ausnahmen stehen so im Architekturdokument: die Startup-Initialisierung in
+	 * {@code ThosSuiteApp}, der Shutdown-Hook im {@code SingleInstanceGuard} (die JVM verlangt
+	 * dort ein {@code Thread}-Objekt) und der {@code WaitDialog}, der eine lange Arbeit hinter einem
+	 * modalen Dialog mit drehendem Kreis ausführt. Seine Arbeit kommt aus einem Feature und kann
+	 * deshalb keine Anzeige anfassen (Regel 11).</p>
 	 *
 	 * <p>Zeitgesteuertes gehört <b>nicht</b> hierher: Ein Zeitlimit oder ein Countdown baut sich mit
 	 * {@code Timeline} oder {@code PauseTransition} auf dem FX-Thread, ohne eigenen Thread.</p>
@@ -224,6 +226,7 @@ public class ArchitekturRegelnTest {
 	static final ArchRule keineEigenenThreads = noClasses()
 			.that().doNotHaveFullyQualifiedName("app.ThosSuiteApp")
 			.and().doNotHaveFullyQualifiedName("app.shared.SingleInstanceGuard")
+			.and().doNotHaveFullyQualifiedName("app.shared.ui.WaitDialog")
 			.should().dependOnClassesThat(name("java.lang.Thread")
 					.or(resideInAPackage("java.util.concurrent.."))
 					.or(resideInAPackage("javafx.concurrent..")))

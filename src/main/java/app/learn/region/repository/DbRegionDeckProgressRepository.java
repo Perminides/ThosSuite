@@ -35,9 +35,8 @@ public class DbRegionDeckProgressRepository {
 	        while (rs.next()) {
 	            Deck deck = Deck.fromId(rs.getString("deck"));
 	            Mode mode = Mode.valueOf(rs.getString("mode"));
-	            LocalDate firstPlayed = LocalDate.parse(rs.getString("first_played"));
 	            LocalDate lastPlayed  = LocalDate.parse(rs.getString("last_played"));
-	            LearnStat stat = new LearnStat(firstPlayed, lastPlayed, rs.getInt("level"), rs.getInt("wrong_count"));
+	            LearnStat stat = new LearnStat(lastPlayed, rs.getInt("level"), rs.getInt("wrong_count"));
 	            result.computeIfAbsent(deck, _ -> new HashMap<>()).put(mode, stat);
 	        }
 	    } catch (Exception e) {

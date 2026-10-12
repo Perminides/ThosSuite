@@ -1,6 +1,6 @@
 # ThosSuite — Feature-Details
 
-**Stand:** 06.10.2026 · Flaggen-Deck aufgenommen
+**Stand:** 10.10.2026 · Quizfragen aufgenommen
 
 **Charakter:** Das *Nachschlagewerk* — pro Feature (der Lern-Kern als größtes eingeschlossen),
 wie es konkret gebaut ist. Deskriptiv wie das Architektur-Dokument, aber feature-tief statt
@@ -370,6 +370,60 @@ fällig ist, zeigt in dem Fall den Dialog und protokolliert die Bestätigung.
 
 Trainiert Datums-/Wochentagswissen: `WeekdayDialog` erzeugt eine Datumsaufgabe, nimmt die Antwort
 entgegen und wertet aus. Läuft als Post-Startup-Task, an die tägliche Nutzung gekoppelt.
+
+## ❓ Quizfragen (`quiz`)
+
+Legt Fragen aus gespielten Quiz-Sets (Online-Liga, später Deutschland-Cup) einzeln vor und macht
+aus den interessanten Vorschläge für **echte Anki-Karten** — Vorder- und Rückseite, im
+Anki-Programm von Hand angelegt, nicht für Decks der Suite. Aufgerufen über „Module → Quiz“, nicht
+beim Start. Die Planung mit allen Entscheidungen und dem Import steht im tools-Repo unter
+`quiz/Quiz-Karten.md`; hier steht nur, was die Suite davon tut.
+
+**Ablauf (`QuizRound`).** Eine Runde zeigt zuerst alle Fragen, aus denen eine Karte werden soll
+(`QuizCardDialog`, „Karte erstellt?“), dann zufällige offene Fragen (`QuizQuestionDialog`), bis
+*Fertig* kommt oder keine mehr offen ist. Je Frage ein Dialog mit framework-freiem Ergebnis; die
+Schleife, die Auswahl und das Speichern liegen im Feature. Jede Antwort wird sofort gespeichert,
+*Fertig* verwirft nichts.
+
+- **Fragedialog:** *Lösung zeigen* deckt auf und legt Frage und Lösung in die Zwischenablage. Bis
+  dahin sind die Antwortknöpfe ausgegraut: *Weiß ich*, *Claude* (Vorschlag holen), *Mach ich
+  selbst*, *Uninteressant*. Ein Hinweisfeld geht beim Vorschlag an Claude mit. *Überspringen*
+  geht immer und speichert nichts — die Frage bleibt offen, kommt aber erst in der nächsten Runde
+  wieder.
+- **„Karte erstellt?“:** Frage, Lösung, neuester Vorschlag zum Kopieren und das Hinweisfeld.
+  *Karte erstellt*, *Nachbessern* (neuer Vorschlag mit Hinweis, derselbe Dialog zeigt ihn — bei
+  Fragen ohne Vorschlag heißt der Knopf *Claude*), *Noch nicht*, *Keine Karte*.
+- **Kein Rückgängig:** Fehlklicks werden von Hand in der DB korrigiert.
+
+**Kartenvorschlag (`ClaudeClient`).** Der Prompt ist der **komplette Anfrage-Body** an die
+Claude-API, als JSON in der Quiz-DB; die Suite nimmt die höchste Version. Modell, `max_tokens` und
+Rückfallmodell wählt der Prompt, nicht der Code. Ersetzt werden nur `<<FRAGE>>`, `<<ANTWORT>>`
+und `<<ZUSATZ>>` (der Hinweis) — in den Textwerten des geparsten JSON, nicht im Rohtext, damit
+Anführungszeichen und Umbrüche korrekt escapt werden. Raw HTTP statt des offiziellen SDK, weil der
+Body unverändert durchgereicht wird. Der Schlüssel steht als `anthropicApiKey` in der Config.
+
+**Warten auf Claude (`WaitDialog`).** Ein Vorschlag dauert bis zu einer halben Minute. Der Aufruf
+läuft im `WaitDialog` aus `shared.ui`: modal, drehender Kreis, für den Aufrufer synchron. Er ist
+die dritte benannte Ausnahme von Architekturregel 13 (siehe Architektur → Nebenläufigkeit). Die
+Arbeit im Hintergrund darf weder Anzeige noch DB anfassen — deshalb liest `ClaudeClient` den
+Schlüssel im Konstruktor, denn `Config.get` fällt für unbekannte Schlüssel auf die Suite-DB
+zurück. Gespeichert wird danach im FX-Thread. Scheitert die API (nicht erreichbar, Ablehnung,
+abgeschnitten), kommt eine Meldung über `ClaudeException`; die Frage bleibt, wie sie war.
+
+### DB-Schema (Quiz-DB)
+
+Eine eigene DB (`quiz.db`), nicht die Suite-DB: Befüllt wird sie von einem Import **außerhalb der
+Suite** (Python im tools-Repo), und ein Fehler darin soll Tagebuch, Nachrichten und
+Gesundheitsdaten nicht erreichen. Die Suite liest die Fragen und schreibt nur Status, Log und
+Vorschläge. Das vollständige Schema samt Begründungen steht in `quiz/Quiz-Karten.md` §4.
+
+- **`quiz_set`, `question`, `category`:** Spieltage und Fragen; die Antwort ist der Rohtext aus
+  der Quelle samt Alternativen. Kategorien als eigene Tabelle mit Fremdschlüssel.
+- **Status an der Frage, Log in `question_log`:** `open`, `known`, `boring`, `card_requested`,
+  `card_self`, `card_created`, `card_discarded`. Status und Log-Eintrag entstehen in derselben
+  Transaktion; der Status ist nur Zwischenspeicher, maßgeblich ist das Log.
+- **`prompt`:** die Prompt-Versionen. **`card_suggestion`:** jeder Vorschlag eine Zeile, mit
+  Modell laut API, Prompt-Version und dem Hinweis, der zu ihm geführt hat; der neueste gilt.
 
 ## 💬 Nachrichten-Archiv (`messaging`)
 
