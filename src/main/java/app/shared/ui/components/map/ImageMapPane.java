@@ -366,7 +366,7 @@ public class ImageMapPane extends StackPane implements LearnMap {
 		int y = (int) lastClick.getY();
 
 		// Marker: kein place (mehrere möglich, keine wiederauffindbare id) — schlicht anhängen.
-		Node marker = MapNodeBuilder.buildImageMapNode(ShapeGeometry.circle("small|" + x + "|" + y, x, y, MARKER_RADIUS));
+		Node marker = MapNodeBuilder.buildImageMapNode(ShapeGeometry.circle("small:" + x + ":" + y, x, y, MARKER_RADIUS));
 		marker.pseudoClassStateChanged(INCORRECT, true);
 		marker.toFront();
 		shapeLayer.getChildren().add(marker);

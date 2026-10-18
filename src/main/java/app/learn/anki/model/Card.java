@@ -32,9 +32,7 @@ public class Card {
     public record Input(List<String> parts) implements Step {}
     public record MC(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
     public record MCPlus(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
-    // !Idee: right ist immer leer und wird nie gelesen — gedacht für optionale Shapes, die beim
-    // Markieren mitgehen sollen. Bleibt, bis entschieden ist, ob das kommt.
-    public record MarkMapElements(Set<String> left, Set<String> right) implements Step {}
+    public record MarkMapElements(Set<String> shapes) implements Step {}
     public record Pause() implements Step {}
     public record Fast(int seconds, boolean ordered, int slots, List<Answer> answers) implements Step {}
 

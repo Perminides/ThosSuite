@@ -1,7 +1,6 @@
 package app.learn.anki.repository;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -136,11 +135,11 @@ public class CardParser {
         return switch (kind) {
             case "Image" -> new Image(body);
             case "Output"  -> new Output(body);
-            case "Input"  -> new Input(Arrays.asList(body.split("\\|")));
+            case "Input"  -> parseInput(body);
             case "MC"    -> parseMc(body, false);
             case "MC+"   -> parseMc(body, true);
-            case "Click" -> parseClickOrMark(body, true);
-            case "Mark"  -> parseClickOrMark(body, false);
+            case "Click" -> parseClick(body);
+            case "Mark"  -> parseMark(body);
             case "Pause" -> new Pause();
             case "Fast"  -> parseFast(body);
             case "SketchImage"     -> new SketchImage(body.trim());
@@ -236,20 +235,17 @@ public class CardParser {
 
     private static List<Answer> parseFastAnswers(String block) {
         List<Answer> answers = new ArrayList<>();
-        for (String raw : block.split("\\|")) {
+        for (String raw : splitUnescaped(block, '|')) {
             String s = raw.trim();
             String hint = null;
             if (s.startsWith("<")) {
                 int zu = s.indexOf('>');
                 if (zu < 0)
                     throw new RuntimeException("Hinweis ohne schließendes >: " + raw);
-                hint = s.substring(1, zu).trim();
+                hint = unescape(s.substring(1, zu).trim());
                 s = s.substring(zu + 1);
             }
-            List<String> variants = new ArrayList<>();
-            for (String variant : s.split(","))
-                if (!variant.trim().isEmpty())
-                    variants.add(variant.trim());
+            List<String> variants = parseVariants(s);
             if (variants.isEmpty())
                 throw new RuntimeException("Antwort ohne Text: " + raw);
             answers.add(new Answer(hint, List.copyOf(variants)));
@@ -284,8 +280,8 @@ public class CardParser {
      * frisst beide Zeichen ({@code -~-40°} = „-40°"). Beginnt der Text einer <i>einfachen</i> Rolle
      * mit dem anderen Zeichen des Paars, braucht er deshalb ein Escape: {@code ~\-40°}.</p>
      *
-     * <p>Ein führendes {@code \} vor dem Text wird weggeworfen und macht das nächste Zeichen
-     * literal. Nötig ist das nur ohne Rolle ({@code \-40°} = Füller „-40°") und im Fall oben.</p>
+     * <p>Ein {@code \} macht das nächste Zeichen literal (siehe {@link #unescape}). Am Textanfang
+     * nötig ist das nur ohne Rolle ({@code \-40°} = Füller „-40°") und im Fall oben.</p>
      *
      * <p>Ein führendes {@code =} hält die geschriebene Reihenfolge als {@code orderHint} fest.</p>
      *
@@ -302,7 +298,7 @@ public class CardParser {
 
         Set<AnswerOption> options = new LinkedHashSet<>();
         Set<String> seen = new HashSet<>();
-        for (String part : rest.split("\\|", -1)) {
+        for (String part : splitUnescaped(rest, '|')) {
             String p = part.trim();
             if (hasDoubleRole(p))
                 addOption(options, seen, unescape(p.substring(2)), Role.TOLERATED_ALWAYS_SHOWN);
@@ -345,9 +341,61 @@ public class CardParser {
         return !part.isEmpty() && "+-~?".indexOf(part.charAt(0)) >= 0;
     }
 
-    /** Ein führendes {@code \} macht das nächste Zeichen literal — es wird beim Lesen weggeworfen. */
+    /** Ein {@code \} macht das nächste Zeichen literal und wird beim Lesen weggeworfen; {@code \\} ist ein Backslash. */
     private static String unescape(String text) {
-        return text.startsWith("\\") ? text.substring(1) : text;
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '\\' && i + 1 < text.length())
+                c = text.charAt(++i);
+            out.append(c);
+        }
+        return out.toString();
+    }
+
+    /** Trennt an {@code sep}, nicht aber an einem mit {@code \} geschützten; der Backslash bleibt für {@link #unescape} stehen. */
+    private static List<String> splitUnescaped(String text, char sep) {
+        List<String> parts = new ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '\\' && i + 1 < text.length()) {
+                cur.append(c).append(text.charAt(++i));
+            } else if (c == sep) {
+                parts.add(cur.toString());
+                cur.setLength(0);
+            } else {
+                cur.append(c);
+            }
+        }
+        parts.add(cur.toString());
+        return parts;
+    }
+
+    /** Schreibweisen derselben Antwort, mit {@code ,} getrennt; leere fallen weg. */
+    private static List<String> parseVariants(String text) {
+        List<String> variants = new ArrayList<>();
+        for (String variant : splitUnescaped(text, ','))
+            if (!variant.trim().isEmpty())
+                variants.add(unescape(variant.trim()));
+        return List.copyOf(variants);
+    }
+
+    // --- Input ---
+
+    /**
+     * {@code <schreibweise>,<schreibweise>,…} — die erste wird beim Aufdecken gezeigt.
+     *
+     * <p>{@code |} trennt überall verschiedene Antworten. Input kennt bisher nur eine, deshalb bricht
+     * ein {@code |} ab, statt die alte Schreibweise {@code a|b} still als eine Variante „a|b" zu lesen.</p>
+     */
+    private static Step parseInput(String body) {
+        if (splitUnescaped(body, '|').size() > 1)
+            throw new RuntimeException("Input: Schreibweisen trennt ',' — '|' ist für mehrere Antworten reserviert: " + body);
+        List<String> variants = parseVariants(body);
+        if (variants.isEmpty())
+            throw new RuntimeException("Input ohne Antwort: " + body);
+        return new Input(variants);
     }
 
     private static Role roleOf(String part) {
@@ -369,11 +417,36 @@ public class CardParser {
 	}
 
 	// --- Click/Mark
-	/** Getrennt wird an {@code >}, nicht am Bindestrich: Der steckt in Namen wie Theodor-Heuss-Platz. */
-	private static Step parseClickOrMark(String body, boolean isClick) {
-		String[] g = body.split(">");
-		Set<String> left = splitAndTrim(g[0]);
-		Set<String> right = g.length > 1 ? splitAndTrim(g[1]) : new HashSet<>();
-		return isClick ? new ClickMapElements(left, right) : new MarkMapElements(left, right);
+
+	/**
+	 * {@code <pflicht>|<pflicht>…>optional|…} — getrennt wird an {@code >}, nicht am Bindestrich: Der
+	 * steckt in Namen wie Theodor-Heuss-Platz.
+	 */
+	private static Step parseClick(String body) {
+		String[] g = body.split(">", -1);
+		if (g.length > 2)
+			throw new RuntimeException("Click mit mehr als einem '>': " + body);
+		Set<String> optional = g.length > 1 ? parseShapes(g[1]) : new HashSet<>();
+		return new ClickMapElements(parseShapes(g[0]), optional);
+	}
+
+	private static Step parseMark(String body) {
+		if (body.contains(">"))
+			throw new RuntimeException("Mark kennt kein '>': " + body);
+		return new MarkMapElements(parseShapes(body));
+	}
+
+	/**
+	 * Formen, mit {@code |} getrennt. Ein Kreis ist eine Form: {@code small:120:340}. Ein Komma ist die
+	 * alte Schreibweise und bricht ab, statt still eine Form namens „a,b" zu suchen.
+	 */
+	private static Set<String> parseShapes(String text) {
+		if (splitUnescaped(text, ',').size() > 1)
+			throw new RuntimeException("Formen trennt '|', nicht ',': " + text);
+		Set<String> shapes = new HashSet<>();
+		for (String shape : splitUnescaped(text, '|'))
+			if (!shape.trim().isEmpty())
+				shapes.add(unescape(shape.trim()));
+		return shapes;
 	}
 }

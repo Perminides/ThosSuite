@@ -9,11 +9,24 @@ Aufbau: `<id>;<remark>;<label,label,…>;<step>;<step>;…`
 
 | Zeile | Bedeutung |
 |---|---|
-| `42;;Geografie;Output:Hauptstadt?;MC:Paris*Lyon\|Marseille;Pause:` | Karte 42, Label „Geografie", drei Steps. |
-| `7;knifflig;Sport,Historie;Input:1998\|MCMXCVIII` | remark „knifflig", zwei Labels, ein Step. |
+| `42;;Geografie;Output:Hauptstadt?;MC:+Paris\|Lyon\|Marseille;Pause:` | Karte 42, Label „Geografie", drei Steps. |
+| `7;knifflig;Sport,Historie;Input:1998,MCMXCVIII` | remark „knifflig", zwei Labels, ein Step. |
 
 - `id` — ganze Zahl, überlebt jede Regenerierung. `remark` und `labels` dürfen leer sein.
 - Eine Karte **muss irgendwo Input verlangen** (`MC`, `MC+`, `Input`, `Click`, `Fast`) — sonst fliegt sie.
+
+## Trennzeichen
+
+In jedem Step dasselbe:
+
+| Zeichen | Bedeutung |
+|---|---|
+| `\|` | trennt **verschiedene** Antworten, Optionen oder Formen |
+| `,` | trennt **Schreibweisen derselben** Antwort — nur in `Input` und `Fast`; in `MC` ist es gewöhnlicher Text |
+| `\` | macht das nächste Zeichen zu Text: `\,` `\\|` `\-` · `\\` ist ein Backslash |
+
+Alte Schreibweisen brechen ab, statt still etwas anderes zu bedeuten: `|` in `Input` (reserviert für
+mehrere Antworten), `,` in `Click` und `Mark`, `>` in `Mark`.
 
 ## Beispielsammlung
 
@@ -23,10 +36,12 @@ Aufbau: `<id>;<remark>;<label,label,…>;<step>;<step>;…`
 | `Image:rom.png` | Zeigt das Bild. |
 | `Pause:` | Wartet auf einen Tastendruck. |
 | `Input:Rom` | Tippen; „Rom" (ohne Groß/klein, getrimmt) ist richtig. |
-| `Input:1998\|MCMXCVIII` | Tippen; beide Schreibweisen gelten. |
+| `Input:1998,MCMXCVIII` | Tippen; beide Schreibweisen gelten. Die erste wird beim Aufdecken gezeigt. |
+| `Input:Eder\, Lahn und Sieg,Eder,Lahn,Sieg` | Komma im Text escapen. |
 | `Click:hannover` | Die Form „hannover" auf der Karte anklicken. |
-| `Click:berlin,potsdam>brandenburg` | Pflicht: berlin + potsdam; optional: brandenburg. Getrennt wird an `>`, weil Namen Bindestriche tragen (Theodor-Heuss-Platz). |
-| `Mark:bayern,sachsen` | Markiert die zwei Formen (nur Anzeige). |
+| `Click:berlin\|potsdam>brandenburg` | Pflicht: berlin + potsdam; optional: brandenburg. Getrennt wird an `>`, weil Namen Bindestriche tragen (Theodor-Heuss-Platz). |
+| `Click:small:120:340` | Ein Kreis als Form: Größe, x, y. Größen: `ultra small`, `small`, `middle small`, `middle`, `middle big`, `big`, `ultra big`; `empty` zentriert nur. |
+| `Mark:bayern\|sachsen` | Markiert die zwei Formen (nur Anzeige). |
 | `MC:+Paris\|Lyon\|Marseille` | Auswahl, Einzelklick: Paris richtig, Rest falsch. |
 | `MC:+Rot\|+Blau\|Grün` | Rot **und** Blau richtig, Grün falsch. |
 | `MC:+Paris\|-Keine\|Lyon` | Paris richtig, „Keine" immer sichtbar, Lyon Füller. |
@@ -78,6 +93,7 @@ bricht ab, statt still etwas anderes zu bedeuten.
 | `MC:+50°\|--40°` | ✓ | `--40°` = fester Distraktor „-40°". |
 | `MC:++5\|0\|10` | ✓ | Die Rolle frisst nur ihr Zeichen → richtig ist „+5", ohne Escape. |
 | `MC:+0°\|\-40°` | ✓ | Escape ohne Rolle → „-40°" ist ein Füller, kein fester Distraktor. |
+| `MC:+Ja, sie hat einen Rahmen\|Nein` | ✓ | Komma ist in MC gewöhnlicher Text. |
 | `MC:+0°\|-~-40°` | ✓ | Doppelrolle, danach ist das Minus Text → toleriert und immer sichtbar „-40°". |
 | `MC:+0°\|~\-40°` | ✓ | Einfache Rolle, deren Text mit dem anderen Zeichen des Paars beginnt → Escape nötig, sonst wäre es die Doppelrolle. |
 | `MC:+Ja\|+Nein` | ✓ | Beide richtig. |
@@ -167,7 +183,7 @@ Block nie erreicht.
 
 | Zeile | Bedeutung |
 |---|---|
-| `Output:Frage?;MC:A*B;Image:X.svg;Pause:;<OnFail>Image:X.svg;Pause:` | Richtig: Bild, Pause, Ende. Falsch: Aufdeckung, Pause, dann Bild, Pause, Ende. |
+| `Output:Frage?;MC:+A\|B;Image:X.svg;Pause:;<OnFail>Image:X.svg;Pause:` | Richtig: Bild, Pause, Ende. Falsch: Aufdeckung, Pause, dann Bild, Pause, Ende. |
 
 - Der Block **darf nichts fragen** (`MC`, `MC+`, `Input`, `Click`, `Fast`) → Abbruch. Die Karte ist an
   dieser Stelle längst entschieden. Er zählt deshalb auch nicht für die Pflicht, dass eine Karte
@@ -183,5 +199,4 @@ Block nie erreicht.
 ## Datei-Konventionen
 
 - UTF-8 **mit BOM**, **CRLF**, `;` als Spaltentrenner.
-- **Keine Kommas in Zellen** außer als Werttrenner (`,` trennt Varianten und Labels).
 - `x` in einer Spalte des Systematik-Blattes heißt „diese Frage nicht stellen" (Generator-Ebene, nicht im Deck).

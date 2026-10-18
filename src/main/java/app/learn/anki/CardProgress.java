@@ -513,7 +513,7 @@ public class CardProgress {
 				presenter.showMultipleChoice(display);
 			}
 			
-			case MarkMapElements left -> presenter.markMapElements(left.left());
+			case MarkMapElements mark -> presenter.markMapElements(mark.shapes());
 
 			case Fast fast -> {
 				activeFast = new FastAnswers(fast);

@@ -73,13 +73,13 @@ public class GeoMap {
 	 * Übersetzt eine id in ihre framework-freie Geometrie. Drei id-Sorten:
 	 * <ul>
 	 *   <li>echtes Shape ("Frankreich", "Donau") → Lookup, die Geometrie steht schon aus dem GeoJSON fest;</li>
-	 *   <li>sichtbarer Kreis ("größe|x|y", z.B. Städte als Punkte) → CIRCLE, Radius aus CircleSizes;</li>
-	 *   <li>Zentrier-Anker ("empty|x|y") → CENTER, kein sichtbares Shape; die Bild-Karte zentriert nur darauf.</li>
+	 *   <li>sichtbarer Kreis ("größe:x:y", z.B. Städte als Punkte) → CIRCLE, Radius aus CircleSizes;</li>
+	 *   <li>Zentrier-Anker ("empty:x:y") → CENTER, kein sichtbares Shape; die Bild-Karte zentriert nur darauf.</li>
 	 * </ul>
 	 */
 	private ShapeGeometry geometryFor(String id) {
-		if (id.contains("|")) {
-			String[] parts = id.split("\\|");
+		if (id.contains(":")) {
+			String[] parts = id.split(":");
 			CircleSizes size = CircleSizes.fromCsvName(parts[0]);
 			int x = Integer.parseInt(parts[1]);
 			int y = Integer.parseInt(parts[2]);

@@ -2,7 +2,7 @@ package app.learn.model;
 
 /**
  * Größen der Kreis-Shapes. Kreise sind vollwertige Shapes (unsichtbare Trefferflächen, Marker), aber ihre
- * Definition kommt nicht aus GeoJSON, sondern direkt aus der id: {@code "größe|x|y"} (so in der CSV notiert).
+ * Definition kommt nicht aus GeoJSON, sondern direkt aus der id: {@code "größe:x:y"} (so in der CSV notiert).
  *
  * <p>Framework-frei — nur Name → Radius. Den Node baut daraus der MapNodeBuilder.</p>
  */
