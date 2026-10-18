@@ -33,6 +33,9 @@ public class WhatsAppSourceRepository {
             "       CASE " +
             "         WHEN m.message_type = 5  THEN '[Standort wurde geteilt]' " +
             "         WHEN m.message_type = 16 THEN '[Live-Standort wurde geteilt]' " +
+            // Einmalansicht-Bild: Das Bild selbst ist nie greifbar, eine Bildunterschrift schon
+            "         WHEN m.message_type = 42 THEN '[Einmalansicht-Bild wurde gesendet]' " +
+            "                                      || COALESCE(char(10) || NULLIF(m.text_data, ''), '') " +
             "         ELSE m.text_data " +
             "       END AS content, " +
             "       CASE " +

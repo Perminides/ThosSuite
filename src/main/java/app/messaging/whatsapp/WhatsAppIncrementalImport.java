@@ -70,6 +70,8 @@ public class WhatsAppIncrementalImport {
     private static final String KV_LAST_IMPORT    = "whatsapp.lastImport";
     private static final String SOURCE            = "whatsapp";
     private static final String MEDIA             = "Media/";
+    private static final String VIEW_ONCE         = "/data/user/0/com.whatsapp/files/ViewOnce/";
+    private static final int    TYPE_VIEW_ONCE    = 42;
 
     private final MessageRepository        msgRepo   = new MessageRepository();
     private final WhatsAppCrypt15Decryptor decryptor = new WhatsAppCrypt15Decryptor();
@@ -287,6 +289,12 @@ public class WhatsAppIncrementalImport {
         boolean isGroup        = rs.getInt("is_group") == 1;
         String  quoteKeyId     = rs.getString("quote_key_id");
         String  sourceIdStr    = String.valueOf(sourceId);
+
+        // Ungeöffnete Einmalansicht-Bilder zeigen in den privaten App-Speicher, der nie im Backup
+        // landet. Nach dem Öffnen leert WhatsApp den Pfad ohnehin — also genauso behandeln wie
+        // geöffnete: Der Verweis bleibt über message_url als nicht verfügbarer Anhang erhalten.
+        if (type == TYPE_VIEW_ONCE && filePath != null && filePath.startsWith(VIEW_ONCE))
+            filePath = null;
 
         // Konsistenzcheck
         if (sourceId < lastId || timestamp < lastTs)
