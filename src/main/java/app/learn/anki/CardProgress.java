@@ -58,6 +58,7 @@ public class CardProgress {
 	private int currentIndex = -1;
 	private Set<String> clickedIds = new HashSet<>();
 	private Set<Integer> clickedMcAnswers = new HashSet<>();
+	private Set<Integer> foundInputAnswers = new HashSet<>();
 	private boolean isPaused = false;
 	
 	private MultipleChoiceAnswers activeSessionMC = null;
@@ -196,21 +197,35 @@ public class CardProgress {
 	    }
 	    
 	    String typed = text.trim().toLowerCase();
-	    boolean correct = false;
-	    for (String part : input.parts())
-	        if (part.toLowerCase().equals(typed)) {
-	            correct = true;
-	            break;
+	    for (String stopWord : input.stopWords())
+	        if (stopWord.toLowerCase().equals(typed)) {
+	            revealInput(input);
+	            return;
 	        }
-	    
-	    if (!correct) {
-	        return; // Falsche Eingabe, nichts tun
+
+	    for (int i = 0; i < input.answers().size(); i++) {
+	        if (foundInputAnswers.contains(i))
+	            continue; // schon gefunden: doppelt Getipptes läuft ins Leere
+	        for (String variant : input.answers().get(i))
+	            if (variant.toLowerCase().equals(typed)) {
+	                foundInputAnswers.add(i);
+	                presenter.textIsCorrect();
+	                if (foundInputAnswers.size() == input.answers().size()) {
+	                    currentIndex++;
+	                    runSteps();
+	                }
+	                return;
+	            }
 	    }
-	    
-	    // Richtige Eingabe
-	    presenter.textIsCorrect();
-	    currentIndex++;
-	    runSteps();
+	    // Falsche Eingabe, nichts tun
+	}
+
+	/** Lösung ins Feld, Karte falsch, Pause — für ESC und für ein getipptes Stoppwort. */
+	private void revealInput(Input input) {
+		isPaused = true; // vor dem Setzen: das Feld meldet die Lösung sonst als Eingabe zurück
+		playedTimestamp = LocalDateTime.now();
+		correctlyAnswered = false;
+		presenter.setCorrectText(input.solutionText());
 	}
 	
 	// ========================================
@@ -424,12 +439,8 @@ public class CardProgress {
 		} else {
 			// ESC während des Wartens auf Input beendet die Karte
 			Step step = steps.get(currentIndex);
-			if (step instanceof Input (var parts)) {
-				presenter.setCorrectText(parts.get(0));
-				playedTimestamp = LocalDateTime.now();
-				correctlyAnswered = false;
-				isPaused = true;
-			}
+			if (step instanceof Input input)
+				revealInput(input);
 		}
 	}
 	
@@ -493,7 +504,10 @@ public class CardProgress {
 					add.offsetX(), add.offsetY());
 			case SketchImageMark mark -> presenter.markSketchAreas(mark.areas());
 			case SketchImageFill fill -> presenter.fillSketchAreas(fill.areas(), fill.color());
-			case Input _ -> presenter.waitForText();
+			case Input _ -> {
+				foundInputAnswers.clear(); // sonst zählen die Treffer des vorigen Inputs weiter mit
+				presenter.waitForText();
+			}
 			case Pause _ -> {	presenter.pause();
 								isPaused = true;}
 			case ChoiceStep cs -> {

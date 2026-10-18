@@ -29,7 +29,16 @@ public class Card {
     public record Image(String file) implements Step {}
     public record ClickMapElements(Set<String> mandatory, Set<String> optional) implements Step {}
     public record Output(String text) implements Step {}
-    public record Input(List<String> parts) implements Step {}
+    /** Alle Antworten sind nötig, je mit ihren Schreibweisen; ein Stoppwort macht die Karte sofort falsch. */
+    public record Input(List<List<String>> answers, List<String> stopWords) implements Step {
+        /** Die erste Schreibweise jeder Antwort — das steht beim Aufdecken im Feld. */
+        public String solutionText() {
+            List<String> firsts = new ArrayList<>();
+            for (List<String> variants : answers)
+                firsts.add(variants.get(0));
+            return String.join(", ", firsts);
+        }
+    }
     public record MC(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
     public record MCPlus(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
     public record MarkMapElements(Set<String> shapes) implements Step {}

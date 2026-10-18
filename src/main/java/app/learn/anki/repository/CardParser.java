@@ -384,18 +384,33 @@ public class CardParser {
     // --- Input ---
 
     /**
-     * {@code <schreibweise>,<schreibweise>,…} — die erste wird beim Aufdecken gezeigt.
+     * {@code <antwort>|<antwort>|-<stoppwort>…}, jede mit Schreibweisen {@code a,b,c}.
      *
-     * <p>{@code |} trennt überall verschiedene Antworten. Input kennt bisher nur eine, deshalb bricht
-     * ein {@code |} ab, statt die alte Schreibweise {@code a|b} still als eine Variante „a|b" zu lesen.</p>
+     * <p>Nackt heißt richtig, {@code -} Stoppwort. {@code + ~ ?} am Anfang sind reserviert und
+     * brechen ab, damit eine spätere Bedeutung keine bestehende Karte still verändert.</p>
      */
     private static Step parseInput(String body) {
-        if (splitUnescaped(body, '|').size() > 1)
-            throw new RuntimeException("Input: Schreibweisen trennt ',' — '|' ist für mehrere Antworten reserviert: " + body);
-        List<String> variants = parseVariants(body);
-        if (variants.isEmpty())
-            throw new RuntimeException("Input ohne Antwort: " + body);
-        return new Input(variants);
+        List<List<String>> answers = new ArrayList<>();
+        List<String> stopWords = new ArrayList<>();
+        for (String raw : splitUnescaped(body, '|')) {
+            String part = raw.trim();
+            if (part.isEmpty())
+                continue;
+            char first = part.charAt(0);
+            if ("+~?".indexOf(first) >= 0)
+                throw new RuntimeException("Input: '" + first + "' am Anfang ist reserviert, als Text mit \\ schützen: " + body);
+            boolean stop = first == '-';
+            List<String> variants = parseVariants(stop ? part.substring(1) : part);
+            if (variants.isEmpty())
+                throw new RuntimeException("Input: Antwort ohne Text: " + body);
+            if (stop)
+                stopWords.addAll(variants);
+            else
+                answers.add(variants);
+        }
+        if (answers.isEmpty())
+            throw new RuntimeException("Input ohne richtige Antwort: " + body);
+        return new Input(List.copyOf(answers), List.copyOf(stopWords));
     }
 
     private static Role roleOf(String part) {

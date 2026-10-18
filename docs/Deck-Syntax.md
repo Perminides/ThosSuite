@@ -25,8 +25,8 @@ In jedem Step dasselbe:
 | `,` | trennt **Schreibweisen derselben** Antwort — nur in `Input` und `Fast`; in `MC` ist es gewöhnlicher Text |
 | `\` | macht das nächste Zeichen zu Text: `\,` `\\|` `\-` · `\\` ist ein Backslash |
 
-Alte Schreibweisen brechen ab, statt still etwas anderes zu bedeuten: `|` in `Input` (reserviert für
-mehrere Antworten), `,` in `Click` und `Mark`, `>` in `Mark`.
+Alte Schreibweisen brechen ab, statt still etwas anderes zu bedeuten: `,` in `Click` und `Mark`,
+`>` in `Mark`.
 
 ## Beispielsammlung
 
@@ -38,6 +38,8 @@ mehrere Antworten), `,` in `Click` und `Mark`, `>` in `Mark`.
 | `Input:Rom` | Tippen; „Rom" (ohne Groß/klein, getrimmt) ist richtig. |
 | `Input:1998,MCMXCVIII` | Tippen; beide Schreibweisen gelten. Die erste wird beim Aufdecken gezeigt. |
 | `Input:Eder\, Lahn und Sieg,Eder,Lahn,Sieg` | Komma im Text escapen. |
+| `Input:Regnitz\|-Main` | Stoppwort: „Main" macht die Karte sofort falsch. |
+| `Input:Esters\|Lange` | Beide nötig, beliebige Reihenfolge; nach jedem Treffer leert sich das Feld. |
 | `Click:hannover` | Die Form „hannover" auf der Karte anklicken. |
 | `Click:berlin\|potsdam>brandenburg` | Pflicht: berlin + potsdam; optional: brandenburg. Getrennt wird an `>`, weil Namen Bindestriche tragen (Theodor-Heuss-Platz). |
 | `Click:small:120:340` | Ein Kreis als Form: Größe, x, y. Größen: `ultra small`, `small`, `middle small`, `middle`, `middle big`, `big`, `ultra big`; `empty` zentriert nur. |
@@ -124,6 +126,22 @@ Nicht Syntax, aber die Antwort auf „warum tickt das so":
   die Präfixe wandern. Dann stehen die Antworten über alle diese Steps hinweg an ihrem Platz; sonst
   springen sie sichtbar. Erzwungen wird nur, dass die Pflicht-Antworten (`+`/`-`) in einer solchen
   Gruppe zusammen höchstens acht sind.
+
+## Input — Details
+
+Aufbau: `Input:<antwort>|<antwort>|-<stoppwort>…`, jede mit Schreibweisen `a,b,c`. Geprüft wird bei
+jedem Tastendruck.
+
+| Präfix | Bedeutung |
+|---|---|
+| *(nackt)* | richtig; alle Antworten sind nötig, in beliebiger Reihenfolge |
+| `-` | Stoppwort: Lösung ins Feld, Karte falsch, Pause — wie ESC |
+| `+ ~ ?` | reserviert → Abbruch; als Text mit `\` schützen |
+
+- Nach jedem Treffer leert sich das Feld. Doppelt Getipptes läuft ins Leere.
+- Beim Aufdecken steht die erste Schreibweise jeder Antwort im Feld, mit Komma verbunden.
+- Ist eine Antwort der Anfang einer anderen (`Main|Mainz`), rastet sie unterwegs ein — danach die
+  andere tippen.
 
 ## Fast — Details
 
