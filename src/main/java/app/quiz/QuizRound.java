@@ -42,7 +42,7 @@ public class QuizRound {
 			switch (result.answer()) {
 				case SKIP -> skipped.add(question.id()); // bleibt offen, nur nicht mehr in dieser Runde
 				case KNOWN -> repository.record(question.id(), QuizAction.KNOWN);
-				case BORING -> repository.record(question.id(), QuizAction.BORING);
+				case NOT_INTERESTED -> repository.record(question.id(), QuizAction.NO_CARD);
 				case OWN_CARD -> repository.record(question.id(), QuizAction.CARD_SELF);
 				case CARD -> {
 					Suggestion suggestion = fetchSuggestion(question, result.instruction());
@@ -74,8 +74,8 @@ public class QuizRound {
 					repository.record(question.id(), QuizAction.CARD_CREATED);
 					return true;
 				}
-				case DISCARD -> {
-					repository.record(question.id(), QuizAction.CARD_DISCARDED);
+				case NO_CARD -> {
+					repository.record(question.id(), QuizAction.NO_CARD);
 					return true;
 				}
 				case NOT_YET -> {

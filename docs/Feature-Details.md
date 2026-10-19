@@ -419,9 +419,12 @@ Vorschläge. Das vollständige Schema samt Begründungen steht in `quiz/Quiz-Kar
 
 - **`quiz_set`, `question`, `category`:** Spieltage und Fragen; die Antwort ist der Rohtext aus
   der Quelle samt Alternativen. Kategorien als eigene Tabelle mit Fremdschlüssel.
-- **Status an der Frage, Log in `question_log`:** `open`, `known`, `boring`, `card_requested`,
-  `card_self`, `card_created`, `card_discarded`. Status und Log-Eintrag entstehen in derselben
-  Transaktion; der Status ist nur Zwischenspeicher, maßgeblich ist das Log.
+- **Status an der Frage, Log in `question_log`:** `open`, `known`, `no_card`, `card_requested`,
+  `card_self`, `card_created`. Status und Log-Eintrag entstehen in derselben Transaktion; der
+  Status ist nur Zwischenspeicher, maßgeblich ist das Log. `no_card` steht für „Uninteressant“ wie
+  für „Keine Karte“ — ob eine Karte einmal vorgesehen war, zeigt das Log. Dazu `paused`, nur von
+  Hand gesetzt und ohne Log-Eintrag, um ein Set ruhen zu lassen; die Suite holt nur `open` und die
+  angeforderten Karten und übergeht `paused` damit von selbst.
 - **`prompt`:** die Prompt-Versionen. **`card_suggestion`:** jeder Vorschlag eine Zeile, mit
   Modell laut API, Prompt-Version und dem Hinweis, der zu ihm geführt hat; der neueste gilt.
 

@@ -5,7 +5,7 @@ public enum QuizCardDecision {
 	CREATED("Karte erstellt"),
 	REFINE("Nachbessern"),
 	NOT_YET("Noch nicht"),
-	DISCARD("Keine Karte"),
+	NO_CARD("Keine Karte"),
 	DONE("Fertig");
 
 	private final String text;

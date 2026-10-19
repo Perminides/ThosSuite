@@ -8,7 +8,7 @@ public enum QuizAnswer {
 	KNOWN("Weiß ich"),
 	CARD("Claude"),
 	OWN_CARD("Mach ich selbst"),
-	BORING("Uninteressant"),
+	NOT_INTERESTED("Uninteressant"),
 	SKIP("Überspringen"),
 	DONE("Fertig");
 
