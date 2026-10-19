@@ -264,6 +264,20 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
   eigener Schritt, das spart einen Klick; sichtbar ist er dann nur während der ersten Frage.
 - Die erste Flagge eines Landes braucht keinen Hinweistext, jede weitere schon.
 
+## Nachbarländer
+
+- Spalte `Nachbarländer`, nur in der Hauptzeile (Version leer oder 1): `Namibia|Sambia|~Republik Kongo`.
+  `~` heißt toleriert — eine Grenze über Exklave, Überseegebiet oder Anspruch. Nur Landgrenzen.
+- Die Spalte ist **in sich geschlossen**: Jeder genannte Nachbar hat eine gefüllte Zeile und nennt
+  zurück, mit demselben `~`; jeder Name steht in der Spalte `Name`. Sonst bricht der Generator ab,
+  `FlagSheetCheck` listet alle Widersprüche auf einmal.
+- Daraus entsteht die Wortliste `Länder` in `listen-generiert.csv` (Deck-Ordner): genau die Länder
+  mit gefüllter Zeile. Inselstaaten ohne Landgrenze stehen deshalb nicht darin.
+- Eine Karte bekommt, wer `Generieren = 1` hat und mindestens einen Nachbarn ohne `~` — Collect
+  braucht eine nötige Antwort. Id `20000 + Land-Id`, Label `Nachbarländer`: Flagge zeigen, Nachbarn
+  sammeln, die Weltkarte steht dabei abseits auf einer Stelle ohne Land (Konstante `KARTE_ABSEITS`
+  im Generator); markiert wird erst im Abspann.
+
 ## Nummernblöcke
 
 Jeder erzeugte Fragetyp bekommt einen eigenen Block von zehntausend, die handgeschriebenen
@@ -272,7 +286,8 @@ Zusatzfragen liegen ab einer Million.
 ```
         1 …  9999   Flagge skizzieren         generiert
     10001 … 19999   Flagge auf Karte finden   generiert
-    20001 … 29999   der nächste Typ           generiert
+    20001 … 29999   Nachbarländer             generiert
+    30001 … 39999   der nächste Typ           generiert
   k·10000 + Id      Block k, bis k = 99       generiert
   1000000 … 1999999   1cccbaa                 von Hand, 1000 je Land
   2000000 + n                                 von Hand, passt nicht ins Schema

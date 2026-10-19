@@ -45,6 +45,9 @@ public class FlagDeckGenerator {
 	private static final Path DATA = Path.of(System.getProperty("user.home"),
 			"Documents", "Gedächtnis Lernen und so", "ThosSuite", "data");
 	private static final Path DECK = DATA.resolve("decks").resolve("flaggenDeckJavaFX.csv");
+	/** Gehört dem Generator allein und entsteht jeden Lauf neu — Handgepflegtes steht in listen.csv. */
+	private static final Path LISTEN = DATA.resolve("decks").resolve("listen-generiert.csv");
+	private static final String LAENDER = "Länder";
 	private static final Path SKETCHES = DATA.resolve("sketches");
 
 	// ---- Antwortvokabulare ----------------------------------------------------
@@ -274,6 +277,12 @@ public class FlagDeckGenerator {
 	 */
 	private static final int MAP_CARD_BASE = 10000;
 
+	/** Block 2: die Nachbarländer, {@code 20000 + Land-Id}. Sie hängen an keiner Flagge, {@code b} ist immer 0. */
+	private static final int NEIGHBOR_CARD_BASE = 20000;
+
+	/** Wohin die Weltkarte bei der Nachbarfrage zentriert — eine Stelle ohne Land, sonst sähe man die Nachbarn. */
+	private static final String KARTE_ABSEITS = "Mark:empty:808:2144";
+
 	/**
 	 * Streumuster für „verstreut" (Ortswert 9): drei Rasterfelder, die gestreut <i>aussehen</i> —
 	 * keine Reihe, keine Diagonale, nichts aneinandergrenzend.
@@ -291,6 +300,9 @@ public class FlagDeckGenerator {
 			new int[] {1, 5, 6}, new int[] {0, 5, 6}, new int[] {2, 4, 7});
 
 	private final FlagSheet sheet;
+	private final Nachbarlaender nachbarn;
+	/** Für den Parser in {@link #check}: ohne die Liste wäre jede Nachbarkarte unlesbar. */
+	private final Map<String, List<String>> wordLists;
 	private final Map<String, Integer> areas = new LinkedHashMap<>();
 	private final Map<String, List<String>> sketchColors = new LinkedHashMap<>();
 	/** Flaggenbilder, die es noch nicht gibt. Gemeldet am Ende, nicht abgebrochen. */
@@ -300,6 +312,11 @@ public class FlagDeckGenerator {
 
 	private FlagDeckGenerator(FlagSheet sheet) {
 		this.sheet = sheet;
+		this.nachbarn = new Nachbarlaender(sheet);
+		if (!nachbarn.probleme().isEmpty())
+			throw new RuntimeException("Spalte " + Nachbarlaender.SPALTE + " ist nicht in sich geschlossen:\n  "
+					+ String.join("\n  ", nachbarn.probleme()));
+		this.wordLists = Map.of(LAENDER, nachbarn.wortliste());
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -320,6 +337,7 @@ public class FlagDeckGenerator {
 			return;
 		}
 		write(generated);
+		writeWordList(generator.nachbarn.wortliste());
 	}
 
 	/**
@@ -331,6 +349,8 @@ public class FlagDeckGenerator {
 		try {
 			einhaengen(generated, id, card(row));
 			einhaengen(generated, MAP_CARD_BASE + id, mapCard(row));
+			if (Nachbarlaender.hauptzeile(sheet, row) && hatPflichtNachbarn(row))
+				einhaengen(generated, NEIGHBOR_CARD_BASE + id, neighborCard(row));
 		} catch (RuntimeException e) {
 			throw new RuntimeException(sheet.country(row) + " (Id " + id + "): " + e.getMessage(), e);
 		}
@@ -499,6 +519,30 @@ public class FlagDeckGenerator {
 	private List<String> mapCard(List<String> row) {
 		return List.of(String.valueOf(MAP_CARD_BASE + id(row)), remark(row), "Flagge auf Karte finden",
 				"Image:" + image(row), "Click:" + shape(row));
+	}
+
+	/**
+	 * Die Nachbarländer: Flagge zeigen, Nachbarn sammeln. Die Karte steht dafür abseits, wo kein Land
+	 * zu sehen ist ({@link #KARTE_ABSEITS}); erst im Abspann wird das Land markiert.
+	 *
+	 * <p>Ein Land, dessen Nachbarn alle toleriert sind, bekommt keine Karte — Collect braucht
+	 * mindestens eine nötige Antwort. In der Wortliste steht es trotzdem.</p>
+	 */
+	private List<String> neighborCard(List<String> row) {
+		List<String> antworten = new ArrayList<>();
+		for (Nachbarlaender.Nachbar n : nachbarn.von(sheet.country(row)))
+			antworten.add((n.toleriert() ? "~" : "") + n.name());
+		return List.of(String.valueOf(NEIGHBOR_CARD_BASE + id(row)), remark(row), "Nachbarländer",
+				KARTE_ABSEITS, "Image:" + image(row), "Output:Welche <b>Nachbarländer</b> hat der Staat?",
+				"Collect:" + LAENDER + ":" + String.join("|", antworten),
+				"<OnFail>Mark:" + shape(row), "Pause:");
+	}
+
+	private boolean hatPflichtNachbarn(List<String> row) {
+		for (Nachbarlaender.Nachbar n : nachbarn.von(sheet.country(row)))
+			if (!n.toleriert())
+				return true;
+		return false;
 	}
 
 	/** Die Folgefragen des Zweigs — je Hintergrundtyp die Spalten, die er nach sich zieht. */
@@ -1284,7 +1328,7 @@ public class FlagDeckGenerator {
 	/** Der echte Parser und ein Flächenlauf — beide finden anderes. */
 	private void check(List<String> steps) {
 		try {
-			CardParser.parse(steps);
+			CardParser.parse(steps, wordLists);
 		} catch (RuntimeException e) {
 			throw new RuntimeException("die erzeugte Zeile ist nicht lesbar", e);
 		}
@@ -1372,6 +1416,23 @@ public class FlagDeckGenerator {
 		System.out.println("   neu         " + liste(neu));
 		System.out.println("   entfallen   " + liste(fort));
 		System.out.println("   geaendert   " + liste(anders));
+	}
+
+	/**
+	 * Die Wortliste {@code Länder} aus der Spalte Nachbarländer — die ganze Datei neu, eine Zeile je
+	 * Wert. Unverändert bleibt sie liegen, damit ihr Zeitstempel nichts vortäuscht.
+	 */
+	private static void writeWordList(List<String> laender) throws IOException {
+		List<String> lines = new ArrayList<>(List.of("Liste;Wert"));
+		for (String land : laender)
+			lines.add(LAENDER + ";" + land);
+		String inhalt = "﻿" + String.join("\r\n", lines) + "\r\n";
+		if (Files.exists(LISTEN) && Files.readString(LISTEN, StandardCharsets.UTF_8).equals(inhalt)) {
+			System.out.println("Wortliste " + LAENDER + " unveraendert (" + laender.size() + ")");
+			return;
+		}
+		Files.writeString(LISTEN, inhalt, StandardCharsets.UTF_8);
+		System.out.println("Wortliste " + LAENDER + " geschrieben: " + laender.size() + " Laender");
 	}
 
 	/** Die Karten der bestehenden Deck-Datei, nach Id. Leer, wenn es sie noch nicht gibt. */

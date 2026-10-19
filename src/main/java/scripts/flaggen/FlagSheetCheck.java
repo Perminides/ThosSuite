@@ -83,6 +83,7 @@ public class FlagSheetCheck {
 		check.checkChains();
 		check.checkElements();
 		check.checkInvariants();
+		check.checkNeighbors();
 		check.reportOutliers();
 		System.out.println("Widersprüche gesamt: " + check.problems);
 	}
@@ -200,6 +201,18 @@ public class FlagSheetCheck {
 				if (!COLORS.contains(einzel))
 					return false;
 		return true;
+	}
+
+	// ---- Nachbarländer ---------------------------------------------------------
+
+	/** Dieselben Regeln wie im Generator, aber gesammelt statt beim ersten abgebrochen. */
+	private void checkNeighbors() {
+		List<String> probleme = new Nachbarlaender(sheet).probleme();
+		System.out.println("Nachbarländer: " + (probleme.isEmpty() ? "in sich geschlossen" : probleme.size() + " Widersprüche"));
+		for (String problem : probleme)
+			System.out.println("        " + problem);
+		problems += probleme.size();
+		System.out.println();
 	}
 
 	// ---- 3. Invarianten --------------------------------------------------------

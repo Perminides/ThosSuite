@@ -40,6 +40,7 @@ public class FlagSheet {
 
 	private final List<List<String>> rows;
 	private final List<List<String>> flags = new ArrayList<>();
+	private final List<List<String>> countries = new ArrayList<>();
 	private final List<String> withoutSignature = new ArrayList<>();
 	private final int headerRow;
 	private final int signatureColumn;
@@ -90,6 +91,7 @@ public class FlagSheet {
 		for (List<String> row : rows.subList(headerRow + 1, rows.size())) {
 			if (cell(row, nameColumn).isEmpty())
 				continue;
+			countries.add(row);
 			if (cell(row, signatureColumn).isEmpty())
 				withoutSignature.add(cell(row, nameColumn));
 			else
@@ -187,6 +189,8 @@ public class FlagSheet {
 	}
 
 	public List<List<String>> flags()      { return flags; }
+	/** Alle Zeilen mit Namen, auch ohne Signatur — für Spalten, die nicht an der Flagge hängen. */
+	public List<List<String>> countries()  { return countries; }
 	public List<String> withoutSignature() { return withoutSignature; }
 	public List<String> attributeNames()   { return attributeNames; }
 
