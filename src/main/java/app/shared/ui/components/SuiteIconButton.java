@@ -2,6 +2,7 @@ package app.shared.ui.components;
 
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
+import javafx.css.PseudoClass;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
@@ -14,6 +15,9 @@ import javafx.scene.image.ImageView;
  * kommt über die eigene Klasse {@code .my-icon-button}, also überall gleich.</p>
  */
 public class SuiteIconButton extends Button {
+
+	/** Grau, aber klickbar — wie die MC-Knöpfe. Was ein Klick dann bedeutet, entscheidet der Aufrufer. */
+	private static final PseudoClass STATE_INACTIVE = PseudoClass.getPseudoClass("inactive");
 
 	/** Ohne feste Lage — für Aufrufer, die die Komponente in ein Layout hängen. */
 	public SuiteIconButton(Skin.IconButtonType rolle) {
@@ -31,6 +35,10 @@ public class SuiteIconButton extends Button {
 
 	public void onClick(Runnable action) {
 		setOnAction(_ -> action.run());
+	}
+
+	public void setInactive(boolean inactive) {
+		pseudoClassStateChanged(STATE_INACTIVE, inactive);
 	}
 
 }

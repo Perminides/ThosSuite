@@ -546,6 +546,13 @@ public abstract class Skin extends SkinProperties {
 	       .add("-fx-opacity", "1.0") // JavaFX setzt da sonst per se einen Default von 40% oder so für disabled...
 	       .add("-fx-background-color", disabledComponentBgColor)
 	       .end();
+
+	    // Dasselbe Grau, aber der Knopf nimmt Klicks weiter an — so wie die MC-Knöpfe.
+	    builder.start(".my-icon-button:inactive")
+	       .add("-fx-background-color", disabledComponentBgColor)
+	       .end();
+
+	    builder.rule(".my-icon-button:inactive:hover", "-fx-background-color", disabledComponentBgColor);
 	}
 	
 	private void addImageMapStyles(CssBuilder builder) {

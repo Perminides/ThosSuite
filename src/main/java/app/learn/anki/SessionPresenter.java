@@ -285,9 +285,14 @@ public class SessionPresenter {
 		sessionProgress.goBack();
 	}
 
-	/** Absende-Knopf, Enter am Fenster und Enter im leeren Eingabefeld — ein Weg für alle drei. */
+	/**
+	 * Absende-Knopf, Enter am Fenster und Enter im leeren Eingabefeld — ein Weg für alle drei. In der
+	 * Pause schaltet er weiter, genau wie ein Klick auf einen der grauen MC-Knöpfe.
+	 */
 	void clickedSubmit() {
-		if (!sessionProgress.isPaused()) {
+		if (sessionProgress.isPaused())
+			sessionProgress.reactOnPausePressed();
+		else {
 			view.setSubmitActive(false);
 			sessionProgress.submitClicked();
 		}

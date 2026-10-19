@@ -144,7 +144,7 @@ public abstract class AnkiLearnView {
 			submitButton.onClick(callbacks.submitClicked());
 			// Sonst löst die Eingabetaste den zuletzt geklickten Knopf ein zweites Mal aus.
 			submitButton.setFocusTraversable(false);
-			submitButton.setDisable(true);
+			submitButton.setInactive(true);
 		}
 
 		backButton = new SuiteIconButton(Skin.IconButtonType.BACK,
@@ -261,8 +261,12 @@ public abstract class AnkiLearnView {
 	/**
 	 * Der Absende-Knopf steht immer da und ist nur bei einer Frage mit mehreren richtigen Antworten
 	 * ansprechbar — er ist damit der erste Hinweis, dass gesammelt geantwortet wird.
+	 *
+	 * <p>Grau heißt hier wie bei den MC-Knöpfen nur „gerade gibt es nichts abzusenden"; abgeschaltet
+	 * wird der Knopf nie. Was ein Klick bedeutet, entscheidet der Presenter — in der Pause schaltet
+	 * er weiter, sonst sendet er ab oder läuft ins Leere.</p>
 	 */
-	public void setSubmitActive(boolean active) { if (submitButton != null) submitButton.setDisable(!active); }
+	public void setSubmitActive(boolean active) { if (submitButton != null) submitButton.setInactive(!active); }
 	public void setBackActive(boolean active) { if (backButton != null) backButton.setDisable(!active); }
 
 	/** Leert die Antwortauswahl — wenn als Nächstes anders geantwortet wird und am Kartenende. */
