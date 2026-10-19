@@ -221,6 +221,76 @@ public abstract class AnkiLearnView {
 		return canvas;
 	}
 
+	// ===== Was als Nächstes erwartet wird =====
+	// Der Presenter sagt nur die Absicht; welche Bausteine dafür an- und ausgehen, entscheidet die View.
+	// Was nicht gefragt ist, wird abgeräumt: das MC-Feld, die Chips eines Collect-Steps. Ein neuer
+	// Step beginnt ohne Auswahl, der Absende-Knopf ist deshalb grau.
+
+	public void askMultipleChoice(List<String> answers) {
+		setSubmitActive(false);
+		setMapActive(false);
+		setTextInTextField("");
+		setTextFieldActive(false);
+		endCollect();
+		setMultipleChoice(answers);
+	}
+
+	public void askClick(Set<String> ids) {
+		setSubmitActive(false);
+		setClickTargets(ids);
+		setMapActive(true);
+		setTextInTextField("");
+		setTextFieldActive(false);
+		disableMcPanel();
+		endCollect();
+	}
+
+	public void askText() {
+		setSubmitActive(false);
+		endCollect(); // sonst schlüge das Feld noch die Wörter eines vorigen Collect-Steps vor
+		setTextFieldActive(true);
+		setMapActive(false);
+		disableMcPanel();
+	}
+
+	public void askCollect(List<String> suggestions) {
+		setSubmitActive(false);
+		setMapActive(false);
+		disableMcPanel();
+		startCollect(suggestions);
+	}
+
+	/** Friert ein, räumt nichts weg: was aufgedeckt oder beantwortet dasteht, bleibt sichtbar. */
+	public void pause() {
+		setMapActive(false);
+		setTextFieldActive(false);
+		setSubmitActive(false);
+		freezeMcPanel();
+	}
+
+	/** Kartenende: alles weg, was die Karte hinterlassen hat. */
+	public void clearCard() {
+		resetMarkers();
+		setImage(null);
+		setTextInTextField("");
+		setQuestion("");
+		disableMcPanel();
+		endCollect();
+	}
+
+	/** Die Lösung steht im Feld, tippen lässt sich nichts mehr. */
+	public void revealText(String solution) {
+		setTextInTextField(solution);
+		setTextFieldActive(false);
+	}
+
+	/** Gewertet: die Chips zeigen das Ergebnis, ändern lässt sich nichts mehr. */
+	public void revealCollect(List<CollectChip> chips) {
+		setSubmitActive(false);
+		setCollectChips(chips);
+		setTextFieldActive(false);
+	}
+
 	// ===== Frage, Bild, Fortschritt =====
 
 	public void setQuestion(String text)        { questionArea.setText(text); }
@@ -252,7 +322,7 @@ public abstract class AnkiLearnView {
 
 	// ===== Antwortauswahl =====
 
-	public void setMultipleChoice(List<String> answers) { mcPane.initiateMultipleChoice(answers); }
+	private void setMultipleChoice(List<String> answers) { mcPane.initiateMultipleChoice(answers); }
 	public void setMcCorrect(int id, boolean correct)   { mcPane.setCorrect(id, correct); }
 	public void setMcMarked(int id, boolean marked)     { mcPane.setMarked(id, marked); }
 	public void setMcSolution(Set<Integer> correctIds)  { mcPane.setCorrectAndInactive(correctIds); }
@@ -270,13 +340,13 @@ public abstract class AnkiLearnView {
 	public void setBackActive(boolean active) { if (backButton != null) backButton.setDisable(!active); }
 
 	/** Leert die Antwortauswahl — wenn als Nächstes anders geantwortet wird und am Kartenende. */
-	public void disableMcPanel() {
+	private void disableMcPanel() {
 		if (hasMcPane())
 			mcPane.clearAndSetInactive();
 	}
 
 	/** Die Pause: offene Knöpfe werden grau, stehen bleibt, was dasteht. Ein Klick beendet die Pause. */
-	public void freezeMcPanel() {
+	private void freezeMcPanel() {
 		if (hasMcPane())
 			mcPane.freeze();
 	}
@@ -288,7 +358,7 @@ public abstract class AnkiLearnView {
 
 	// ===== Sammeln (Collect) =====
 
-	public void startCollect(List<String> suggestions) {
+	private void startCollect(List<String> suggestions) {
 		if (inputField == null)
 			throw new RuntimeException("Collect braucht eine Lernform mit Eingabefeld");
 		collectSuggestions = List.copyOf(suggestions);
@@ -313,7 +383,7 @@ public abstract class AnkiLearnView {
 	}
 
 	/** Ohne Vorschläge, ohne Chips, volle Fragefeld-Höhe — das Feld ist wieder ein gewöhnliches Eingabefeld. */
-	public void endCollect() {
+	private void endCollect() {
 		if (inputField == null)
 			return;
 		collectSuggestions = List.of();
@@ -336,10 +406,10 @@ public abstract class AnkiLearnView {
 
 	// ===== Karte =====
 
-	public void resetMarkers()                    { map.reset(); }
-	public void setMapActive(boolean active)      { map.setActive(active); }
+	private void resetMarkers()                   { map.reset(); }
+	private void setMapActive(boolean active)     { map.setActive(active); }
 	public void addIdsToCorrect(Set<String> ids)  { map.markCorrect(ids); }
 	public void setIdToIncorrect(String id)       { map.markIncorrect(id); }
 	public void setMarkedIds(Set<String> ids)     { map.mark(ids); }
-	public void setClickTargets(Set<String> ids)  { map.setClickTargets(ids); }
+	private void setClickTargets(Set<String> ids) { map.setClickTargets(ids); }
 }

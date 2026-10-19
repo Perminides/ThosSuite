@@ -328,7 +328,7 @@ public class CardProgress {
 	    	else
 	    		clickedMcAnswers.add(index);
 	    	presenter.mcMarked(index, !wasMarked);
-	    	presenter.setSubmitActive(!clickedMcAnswers.isEmpty());
+	    	presenter.canSubmit(!clickedMcAnswers.isEmpty());
 	    	return;
 	    }
 
@@ -419,7 +419,7 @@ public class CardProgress {
 		for (String word : collected)
 			chips.add(new CollectChip(word, CollectChip.State.CHOSEN));
 		presenter.showCollected(chips);
-		presenter.setSubmitActive(!collected.isEmpty());
+		presenter.canSubmit(!collected.isEmpty());
 	}
 
 	/**

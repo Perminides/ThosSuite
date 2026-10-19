@@ -62,23 +62,32 @@ public class FastWriteLearnView extends AnkiLearnView {
 	// ===== Antwortfelder =====
 
 	public void showFastStep(List<String> hints, Integer expectedSlot, int firstSeconds, int nextSeconds) {
+		askText();
 		slotPane.showSlots(hints);
 		slotPane.setExpected(expectedSlot);
 		clock.start(firstSeconds, nextSeconds);
 	}
 
+	/** Ein Treffer: rastet ins Feld ein, klingt, und das Eingabefeld ist frei für die nächste Antwort. */
 	public void revealSlot(int slot, String text, Integer expectedSlot) {
 		slotPane.revealCorrect(slot, text);
 		slotPane.setExpected(expectedSlot);
+		Sound.play(CORRECT_SOUND);
+		setTextInTextField("");
 	}
 
 	public void revealMissing(Map<Integer, String> missing) {
 		slotPane.revealMissing(missing);
 		slotPane.setExpected(null);
 		clock.stop();
+		setTextFieldActive(false);
 	}
 
-	public void clearSlots() {
+	/** Auch beim Zurückspringen — sonst tickte die Uhr in die nächste Karte. */
+	@Override
+	public void clearCard() {
+		super.clearCard();
+		clock.stop();
 		slotPane.clear();
 	}
 
@@ -89,6 +98,4 @@ public class FastWriteLearnView extends AnkiLearnView {
 	public void stopClock()    { clock.stop(); }
 	public void suspendClock() { clock.suspend(); }
 	public void resumeClock()  { clock.resume(); }
-
-	public void playCorrectSound() { Sound.play(CORRECT_SOUND); }
 }

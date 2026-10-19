@@ -109,28 +109,16 @@ public class SessionPresenter {
 		view.setQuestion(text);
 	}
 	
-	/** Submit ist auf MC und MC+ gleich sichtbar — seine Anwesenheit darf den Modus nicht verraten. */
 	void showMultipleChoice (List<String> answers) {
-		view.setMapActive(false);
-		view.setTextInTextField("");
-		view.setTextFieldActive(false);
-		view.endCollect();
-		view.setMultipleChoice(answers);
+		view.askMultipleChoice(answers);
 	}
 
 	void waitForClick(Set<String> idsInQuestion) {
-		view.setClickTargets(idsInQuestion);
-		view.setMapActive(true);
-		view.setTextInTextField("");
-		view.setTextFieldActive(false);
-		view.disableMcPanel();
-		view.endCollect();
+		view.askClick(idsInQuestion);
 	}
+
 	void waitForText() {
-		view.endCollect(); // sonst schlüge das Feld noch die Wörter eines vorigen Collect-Steps vor
-		view.setTextFieldActive(true);
-		view.setMapActive(false);
-		view.disableMcPanel();
+		view.askText();
 	}
 
 	// ========================================
@@ -138,21 +126,15 @@ public class SessionPresenter {
 	// ========================================
 
 	void waitForCollect(List<String> suggestions) {
-		view.setMapActive(false);
-		view.disableMcPanel();
-		view.setSubmitActive(false);
-		view.startCollect(suggestions);
+		view.askCollect(suggestions);
 	}
 
 	void showCollected(List<CollectChip> chips) {
 		view.setCollectChips(chips);
 	}
 
-	/** Gewertet: die Chips zeigen das Ergebnis, ändern lässt sich nichts mehr. */
 	void revealCollect(List<CollectChip> chips) {
-		view.setSubmitActive(false);
-		view.setCollectChips(chips);
-		view.setTextFieldActive(false);
+		view.revealCollect(chips);
 	}
 
 	// ========================================
@@ -160,19 +142,15 @@ public class SessionPresenter {
 	// ========================================
 
 	void showFastStep(List<String> slotHints, Integer expectedSlot, int firstSeconds, int nextSeconds) {
-		waitForText();
 		fastView.showFastStep(slotHints, expectedSlot, firstSeconds, nextSeconds);
 	}
 
 	void fastAnswerCorrect(int slot, String text, Integer expectedSlot) {
 		fastView.revealSlot(slot, text, expectedSlot);
-		fastView.playCorrectSound();
-		view.setTextInTextField("");
 	}
 
 	void fastTimeUp(Map<Integer, String> missing) {
 		fastView.revealMissing(missing);
-		view.setTextFieldActive(false);
 	}
 
 	void restartClock() {
@@ -206,8 +184,7 @@ public class SessionPresenter {
 	// Input
 		
 	void setCorrectText(String correctText) {
-		view.setTextInTextField(correctText);
-		view.setTextFieldActive(false);
+		view.revealText(correctText);
 	}
 	
 	void textIsCorrect() {
@@ -253,9 +230,9 @@ public class SessionPresenter {
 		view.setMcSolution(correctIds);
 	}
 
-	/** Vom Progress gesteuert: Submit ist aktiv, sobald in einem MC+ etwas ausgewählt ist. */
-	void setSubmitActive(boolean active) {
-		view.setSubmitActive(active);
+	/** Ob Absenden jetzt eine Wirkung hätte — bei MC+ und Collect, sobald etwas ausgewählt ist. */
+	void canSubmit(boolean possible) {
+		view.setSubmitActive(possible);
 	}
 	
 	// ========================================
@@ -318,8 +295,7 @@ public class SessionPresenter {
 	}
 
 	void newCardIncoming(LearnStat stats) {
-		// Kartenstart: Submit aus (bei MC und MC+ gleich, verrät den Modus nicht), Back nur ab Karte 2.
-		view.setSubmitActive(false);
+		// Kartenstart: Back nur ab Karte 2.
 		view.setBackActive(sessionProgress.canGoBack());
 		if (stats == null)
 			view.clearCardHistory();
@@ -327,30 +303,12 @@ public class SessionPresenter {
 			view.setCardHistory(new CardHistory(stats.getLastPlayed(), stats.getCurrentLevel(), stats.getWrongCount()));
 	}
 	
-	/**
-	 * Remove the image, clean the textfield, question and markers.
-	 */
 	void cardFinished() {
-		view.resetMarkers();
-		view.setImage(null);
-		view.setTextInTextField("");
-		view.setQuestion("");
-		view.disableMcPanel();
-		view.endCollect();
-		if (fastView != null) {
-			fastView.stopClock(); // auch beim Zurückspringen, sonst tickt sie in die nächste Karte
-			fastView.clearSlots();
-		}
+		view.clearCard();
 	}
-	
-	// !Sofort Erst Collect-Prototyp entscheiden (bleibt: alles nach master / fliegt: Collect raus). Dann View-Methoden
-	// nach Absichten (halt an, warte auf Klick/Text/Auswahl/Collect) statt Einzelschaltern hier und in showMultipleChoice/waitFor…
-	/** Friert ein, räumt nichts weg: was aufgedeckt oder beantwortet dasteht, bleibt sichtbar. */
+
 	void pause() {
-		view.setMapActive(false);
-		view.setTextFieldActive(false);
-		view.setSubmitActive(false);
-		view.freezeMcPanel();
+		view.pause();
 	}
 
 }
