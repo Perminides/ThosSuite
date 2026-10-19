@@ -138,11 +138,16 @@ public class FlagSheetCheck {
 		System.out.println();
 	}
 
-	/** Der Ortswert samt Toleranzklammer — {@code 4(9|5)} ist nur gültig, wenn 4, 9 und 5 es sind. */
+	/**
+	 * Der Ortswert samt Toleranzklammer — {@code 4(9|5)} ist nur gültig, wenn 4, 9 und 5 es sind.
+	 * Vor der Klammer dürfen mehrere Felder stehen, mit {@code |} getrennt: {@code 0|3|6} ist eine
+	 * Figur, die eine ganze Spalte besetzt.
+	 */
 	private static boolean arePositions(String value) {
 		for (String part : positionValues(value))
-			if (!POSITIONS.contains(part))
-				return false;
+			for (String einzel : part.split("\\|"))
+				if (!POSITIONS.contains(einzel.trim()))
+					return false;
 		return true;
 	}
 

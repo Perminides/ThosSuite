@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -63,6 +64,11 @@ public class FlagDeckGenerator {
 	// „Form" statt „Dreieck": Kuwaits Trapez und das Band der VAE gehören genauso hierher.
 	private static final String FORM_VON_LINKS = "Nur eine Form von links";
 	private static final String NICHTS_DAVON = "Nichts davon";
+	// „Kein Viereck" statt „Nicht rechteckig": Ein Quadrat ist keins, damit waren beim Vatikan zwei
+	// Antworten wahr. Nepal ist die einzige Flagge, die wirklich kein Viereck ist.
+	private static final String RECHTECKIG = "Rechteckig";
+	private static final String QUADRATISCH_ANTWORT = "Quadratisch";
+	private static final String KEIN_VIERECK = "Kein Viereck";
 	// „Durchgehend": Das Kreuz in Griechenlands Gösch ist keins, das die Flagge teilt.
 	private static final String KREUZ_DURCHGEHEND = "Durchgehendes Kreuz";
 	private static final String DIAGONALE_DURCHGEHEND = "Durchgehende Diagonale";
@@ -346,13 +352,13 @@ public class FlagDeckGenerator {
 		ask(steps, "Welche Form hat die Flagge?",
 				answer(rectangular(plain(row, "Rechtwinklig?")),
 						tolerated(sheet.value(row, "Rechtwinklig?"), FlagDeckGenerator::rectangular),
-						"Rechteckig", "Nicht rechteckig", "Quadratisch"));
+						RECHTECKIG, KEIN_VIERECK, QUADRATISCH_ANTWORT));
 
 		// Frage 2 ist eine Weiche: Kreuz, Diagonale und Dreieck von links gliedern die Flagge, ihre
 		// Einzelheiten fragen erst die Folgefragen. Kreuz und Diagonale vorweg, sonst würde ihr linker
 		// Arm mit einem Dreieck von links verwechselt.
-		boolean nichtRechteckig = rectangular(plain(row, "Rechtwinklig?")).equals("Nicht rechteckig");
-		boolean quadratisch = rectangular(plain(row, "Rechtwinklig?")).equals("Quadratisch");
+		boolean nichtRechteckig = rectangular(plain(row, "Rechtwinklig?")).equals(KEIN_VIERECK);
+		boolean quadratisch = rectangular(plain(row, "Rechtwinklig?")).equals(QUADRATISCH_ANTWORT);
 		String typeCell = sheet.value(row, "Hintergrundtyp");
 		String type = untolerated(typeCell);
 		// Der Zweig haengt am Typ, nicht am Antworttext: Sonst bricht ein Umbenennen der Option
@@ -777,6 +783,9 @@ public class FlagDeckGenerator {
 	 * darauf gilt als falsch, bricht die Karte aber nicht ab.
 	 */
 	private static String position(Element element) {
+		// Eine Figur über mehrere Felder wird gefragt wie mehrere Figuren: alle Felder sind richtig.
+		if (felder(element.position()).size() > 1)
+			return positionen(List.of(element));
 		List<String> tolerated = new ArrayList<>();
 		for (String value : bracket(element.position()))
 			tolerated.add(POSITIONS.get(Integer.parseInt(value)));
@@ -792,7 +801,8 @@ public class FlagDeckGenerator {
 		List<String> richtig = new ArrayList<>();
 		List<String> geduldet = new ArrayList<>();
 		for (Element element : figur) {
-			richtig.add(POSITIONS.get(Integer.parseInt(untolerated(element.position()))));
+			for (String feld : felder(element.position()))
+				richtig.add(POSITIONS.get(Integer.parseInt(feld)));
 			for (String value : bracket(element.position()))
 				geduldet.add(POSITIONS.get(Integer.parseInt(value)));
 		}
@@ -926,7 +936,7 @@ public class FlagDeckGenerator {
 			parent[i] = -1;
 			for (int p = i - 1; p >= 0; p--)
 				if (CONTAINERS.containsKey(elements.get(p).name())
-						&& elements.get(p).position().equals(elements.get(i).position())) {
+						&& selbesFeld(elements.get(p), elements.get(i))) {
 					parent[i] = p;
 					break;
 				}
@@ -970,13 +980,12 @@ public class FlagDeckGenerator {
 			}
 			// Ein Ornamentband besetzt eine ganze Spalte, keinen Punkt. Bei ihm sind die Werte der
 			// Toleranzklammer deshalb Platzierungen und nicht bloß geduldete Klicks.
-			if (element.name().equals("Muster") && !bracket(element.position()).isEmpty()) {
-				List<String> felder = new ArrayList<>(bracket(element.position()));
-				felder.add(untolerated(element.position()));
+			// Mehrere Felder im Ort heißt: eine Figur, die eine ganze Spalte oder Reihe besetzt —
+			// Turkmenistans Ornamentband steht als 0|3|6. Gezeichnet wird sie in jedem genannten Feld.
+			if (felder(element.position()).size() > 1) {
 				List<String> placements = new ArrayList<>();
-				for (int feld = 0; feld <= 8; feld++)      // aufsteigend, damit die Flächen von oben zählen
-					if (felder.contains(String.valueOf(feld)))
-						placements.add(feld + "," + number(size));
+				for (String feld : felder(element.position()))   // aufsteigend, damit die Flächen von oben zählen
+					placements.add(feld + "," + number(size));
 				result.add(new Layout(element, sketchOf(element, false), placements));
 				continue;
 			}
@@ -1012,10 +1021,14 @@ public class FlagDeckGenerator {
 	private static List<Integer> gruppe(List<Element> elements, int[] parent, int i) {
 		List<Integer> result = new ArrayList<>();
 		for (int j = 0; j < elements.size(); j++)
-			if (parent[j] == parent[i]
-					&& elements.get(j).position().equals(elements.get(i).position()))
+			if (parent[j] == parent[i] && selbesFeld(elements.get(j), elements.get(i)))
 				result.add(j);
 		return result;
+	}
+
+	/** Zwei Figuren stehen im selben Feld. Die Toleranzklammer zählt dafür nicht — sie ist kein Ort. */
+	private static boolean selbesFeld(Element a, Element b) {
+		return untolerated(a.position()).equals(untolerated(b.position()));
 	}
 
 	/** Der Ortswert, der „über die ganze Flagge verteilt" bedeutet. */
@@ -1024,12 +1037,18 @@ public class FlagDeckGenerator {
 	/** Die Rasterfelder, in denen schon etwas liegt — verstreute Elemente zählen nicht mit. */
 	private static Set<Integer> belegteFelder(List<Element> elements) {
 		Set<Integer> belegt = new HashSet<>();
-		for (Element element : elements) {
-			String ort = untolerated(element.position());
-			if (!ort.equals(VERSTREUT_ORT))
-				belegt.add(Integer.parseInt(ort));
-		}
+		for (Element element : elements)
+			for (String ort : felder(element.position()))
+				if (!ort.equals(VERSTREUT_ORT))
+					belegt.add(Integer.parseInt(ort));
 		return belegt;
+	}
+
+	/** Die Felder einer Ortsangabe, aufsteigend. Mehrere stehen mit {@code |} darin: {@code 0|3|6}. */
+	private static List<String> felder(String position) {
+		List<String> result = new ArrayList<>(List.of(untolerated(position).split("\\|")));
+		Collections.sort(result);
+		return result;
 	}
 
 	/**
@@ -1136,12 +1155,12 @@ public class FlagDeckGenerator {
 
 	// ---- Ableitungen ----------------------------------------------------------
 
-	/** Nepal ist weder das eine noch das andere, die Schweiz und der Vatikan sind quadratisch. */
+	/** Nepal ist als einzige Flagge kein Viereck, die Schweiz und der Vatikan sind quadratisch. */
 	private static String rectangular(String code) {
 		return switch (code) {
-			case "1" -> "Rechteckig";
-			case "2" -> "Quadratisch";
-			default -> "Nicht rechteckig";
+			case "1" -> RECHTECKIG;
+			case "2" -> QUADRATISCH_ANTWORT;
+			default -> KEIN_VIERECK;
 		};
 	}
 

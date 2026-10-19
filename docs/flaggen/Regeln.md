@@ -178,7 +178,7 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
   Barbados, Kanada, Peru und Algerien sind ganz aus Streifen gebaut, da schneidet keiner keinen. Das
   kann man sehen, ohne die Einteilung zu kennen — nach der Breite geht es nicht, Pakistans Streifen
   ist so schmal wie das Band der VAE.
-- Nach „Nicht rechteckig" entfallen Weiche, Dreieck, Hintergrund, Gösch und Rahmen — sie alle setzen ein
+- Nach „Kein Viereck" entfallen Weiche, Dreieck, Hintergrund, Gösch und Rahmen — sie alle setzen ein
   Rechteck voraus. Die Skizze ist `nicht-rechteckig` (Feld und Rand), weiter geht es mit den Elementen.
   Weil die Feldmitten dort teils neben der Flagge lägen, legt `ANKER` im Generator je Feld Größe und
   Versatz fest — abgeleitet aus der Skizze, nicht aus dem Land.
@@ -203,6 +203,9 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 - Die **Position** ist die Richtung vom Mittelpunkt, nicht das überdeckte Feld. Werte 0…8 wie das
   Raster, 9 ist verstreut.
 - Mehrere Instanzen, die **symmetrisch um die Mitte** liegen, gelten als zentriert.
+- Eine Figur, die **eine ganze Spalte oder Reihe besetzt**, trägt ihre Felder mit `|` getrennt:
+  `0|3|6` für Turkmenistans Ornamentband. Sie wird in jedem genannten Feld gezeichnet, und die
+  Ortsfrage wird zur Mehrfachauswahl mit allen genannten Feldern als richtiger Antwort.
 - Tolerierte Zweitantworten stehen als Klammer in der Zelle: `4(9)`, mehrere mit `|` getrennt:
   `4(9|5)`. Kein Komma — das trennt im Blatt die Spalten. Der Generator macht daraus `~`-Optionen:
   falsch, aber ohne Abbruch.
@@ -235,11 +238,11 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 - Karten-Id = `(Version − 1) × 1000 + Land-Id`, aus der Spalte `Land-ID`. Sie trägt den
   Lernfortschritt und überlebt jede Regenerierung; zwei Zeilen mit derselben Karten-Id brechen den
   Lauf ab. Die **Land-Id** steht bewusst im Blatt statt der fertigen Karten-Id: Die
-  handgeschriebenen Zusatzfragen gruppieren nach Land, nicht nach Flagge.
+  handgeschriebenen Zusatzfragen gruppieren zuerst nach Land, erst darin nach Flagge.
 - Bei 214 Ländern reicht der Flaggenblock für **zehn** Versionen (bis 9214). Die elfte ergäbe 10214
   und läge im Block der Kartenkarten.
 - Der Kartenmarker hinter `Mark:` ist der **Name**. Nur wo die Weltkarte ihn nicht kennt, steht in
-  Spalte `ShapeId` eine Ausnahme (`middle|3434|951`) — leer heißt: nimm den Namen.
+  Spalte `ShapeId` eine Ausnahme (`middle:3434:951`) — leer heißt: nimm den Namen.
 - Erzeugt werden die Zeilen mit `Generieren = 1`.
 - **Keine Kommas in Zellen** — mehrere Werte mit `|` trennen. Sonst braucht der Leser einen
   quotefähigen CSV-Parser.
@@ -267,16 +270,37 @@ Jeder erzeugte Fragetyp bekommt einen eigenen Block von zehntausend, die handges
 Zusatzfragen liegen ab einer Million.
 
 ```
-        1 …  9214   Flagge skizzieren         generiert
-    10001 … 19214   Flagge auf Karte finden   generiert
-    20001 … 29214   der nächste Typ           generiert
+        1 …  9999   Flagge skizzieren         generiert
+    10001 … 19999   Flagge auf Karte finden   generiert
+    20001 … 29999   der nächste Typ           generiert
   k·10000 + Id      Block k, bis k = 99       generiert
-1000000 + Land·1000 + n                       von Hand, 1000 je Land
+  1000000 … 1999999   1cccbaa                 von Hand, 1000 je Land
+  2000000 + n                                 von Hand, passt nicht ins Schema
 ```
 
-Die Blöcke 0 bis 99 reichen bis 998214 und stoßen damit nicht an die Million — Platz für
-99 erzeugte Fragetypen. Die handgeschriebenen gruppieren nach **Land**, nicht nach Flagge; welche
-Flagge gemeint ist, sagt der Karteninhalt.
+Ab zwei Millionen liegen Zusatzfragen ohne Platz im Schema — meist solche, die mehr als ein Land
+betreffen; eine Frage zu einem einzelnen Land hätte ihren Platz im Landesblock.
+
+Die Blöcke 0 bis 99 reichen bis 999999 und stoßen damit nicht an die Million — Platz für
+100 erzeugte Fragetypen. Gelesen wird eine erzeugte Id als `aabccc`:
+
+- `aa` — Fragetyp − 1 (00 skizzieren, 01 auf Karte finden, 02 der dritte Typ …)
+- `b` — Flagge − 1 (0 die erste, 9 die zehnte)
+- `ccc` — Land-Id
+
+Ein Fragetyp, der nicht von einer Flagge ausgeht (etwa: Land auf der Karte markiert, Hauptstadt
+gefragt), setzt `b` immer auf 0. Ob 0 „erste Flagge" oder „keine Flagge" heißt, sagt der Fragetyp.
+
+Eine handgeschriebene Id liest sich als `1cccbaa`:
+
+- `ccc` — Land-Id
+- `b` — Flagge − 1, wie oben; 0 auch für Fragen zum Land ohne bestimmte Flagge
+- `aa` — laufende Nummer der Frage, ab 00
+
+Das Land steht hier **vorne**, anders als beim erzeugten Typ: `aa` ist nur ein Zähler, kein Typ,
+und als Block taugt es nichts. So stehen in der sortierten Datei alle Fragen eines Landes
+beieinander, und die nächste freie Nummer ist die letzte plus eins. Beispiel: 1002100 ist die
+erste Frage zur zweiten Flagge Afghanistans.
 
 ## Werkzeuge
 

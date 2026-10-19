@@ -57,6 +57,8 @@ import javafx.scene.shape.Shape;
  * Klasse aus {@link SketchColor#styleClass()}.</p>
  * 
  * TODO: Belarus vs Turkmenistan, das passt noch nicht
+ * TODO: Aha, der Mond von Pakistan liegt rechts vom Zentrum?
+ * TODO: Schnauze voll: Nur noch ein Blau!
  */
 class SketchPane extends StackPane {
 

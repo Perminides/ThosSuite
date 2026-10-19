@@ -779,9 +779,9 @@ Eine falsche Antwort beendet die Karte, wie überall sonst in der Suite. Die Ski
 halbfertig stehen; sie baut sich also nur bei einem fehlerfreien Durchlauf ganz auf.
 
 **Die echte Flagge kommt trotzdem** — über einen `<OnFail>`-Abspann am Zeilenende, der nur nach einem
-Fehler läuft. Erst wird wie bisher aufgedeckt und pausiert, dann erscheint die Flagge neben der
-halbfertigen Skizze. Das ist das ehrliche Bild: so weit bist Du gekommen, und daneben steht die
-Auflösung. Ohne den Abspann wäre gerade der Durchlauf ohne Belohnung geblieben, in dem man sie am
+Fehler läuft. Er startet gleich mit der Aufdeckung: Die Flagge erscheint zusammen mit der richtigen
+Antwort neben der halbfertigen Skizze, eine Pause hält beides stehen. Das ist das ehrliche Bild: so
+weit bist Du gekommen, und daneben steht die Auflösung. Ohne den Abspann wäre gerade der Durchlauf ohne Belohnung geblieben, in dem man sie am
 nötigsten hat.
 
 Weil der Block nur im Fehlerfall läuft, steht der `Image:`-Step **zweimal** in der Zeile — einmal als
