@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +22,17 @@ import app.shared.Config;
 class CsvDeckCardSource {
 		// Der Deck-Dateiname darf eine mit ';' getrennte Liste sein — dann wird jede Datei geladen.
 		private final Map<Deck, List<File>> bundles = new EnumMap<>(Deck.class);
+		/** Listenname → Vorschläge, einmal geladen; ein Collect-Step bekommt beim Einlesen seine Liste. */
+		private final Map<String, List<String>> wordLists = new HashMap<>();
 
 		CsvDeckCardSource() {
+			for (Map.Entry<String, List<List<String>>> list : new CsvWordListSource().loadAll().entrySet()) {
+				List<String> shown = new ArrayList<>();
+				for (List<String> variants : list.getValue())
+					shown.add(variants.get(0));
+				wordLists.put(list.getKey(), List.copyOf(shown));
+			}
+
 			File dataDir = Config.getPath("deckFolder").toFile();
 			for (Deck type : Deck.values()) {
 				if (type.getCategory() == DeckCategory.ANKI_DECK) {
@@ -54,7 +64,7 @@ class CsvDeckCardSource {
 	                String[] tokens = line.split(";");
 
 	                // 1. Wir bauen erst das Karten-Objekt (dabei wird die ID geparst)
-	                Card card = CardParser.parse(Arrays.asList(tokens));
+	                Card card = CardParser.parse(Arrays.asList(tokens), wordLists);
 
 	                // 2. add() liefert 'false', wenn die ID schon drin war!
 	                if (!seenIds.add(card.getId())) {

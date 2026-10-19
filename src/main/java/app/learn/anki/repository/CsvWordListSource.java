@@ -1,0 +1,74 @@
+package app.learn.anki.repository;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import app.shared.Config;
+
+/**
+ * Die Wortlisten, aus denen ein Collect-Step seine Vorschläge holt. Sie liegen neben den Decks,
+ * eine Datei je Schreiber: {@code listen.csv} pflegt der Mensch, {@code listen-generiert.csv} schreibt
+ * der Flaggen-Generator bei jedem Lauf neu. Fehlt eine Datei, ist sie leer.
+ *
+ * <p>Eine Zeile je Wert: {@code <liste>;<schreibweise>,<schreibweise>,…}, Kopfzeile wie bei den Decks.
+ * Eine Liste gehört genau einer Datei — derselbe Name in beiden bricht ab, statt dass eine die andere
+ * still überschreibt.</p>
+ */
+class CsvWordListSource {
+
+	// Wie beim Deck-Dateinamen: eine mit ';' getrennte Sammlung von Dateien.
+	private static final String FILES = "listen.csv;listen-generiert.csv";
+
+	/** Listenname → Einträge, je Eintrag seine Schreibweisen in Dateireihenfolge. */
+	Map<String, List<List<String>>> loadAll() {
+		Path folder = Config.getPath("deckFolder");
+		Map<String, List<List<String>>> lists = new LinkedHashMap<>();
+		Map<String, String> fileOfList = new HashMap<>();
+		for (String name : FILES.split(";")) {
+			Path file = folder.resolve(name.trim());
+			if (!Files.exists(file))
+				continue;
+			for (Map.Entry<String, List<List<String>>> list : read(file).entrySet()) {
+				String other = fileOfList.putIfAbsent(list.getKey(), name);
+				if (other != null)
+					throw new RuntimeException("Liste '" + list.getKey() + "' steht in " + other + " und in " + name);
+				lists.put(list.getKey(), List.copyOf(list.getValue()));
+			}
+		}
+		return lists;
+	}
+
+	private Map<String, List<List<String>>> read(Path file) {
+		try {
+			List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
+			Map<String, List<List<String>>> lists = new LinkedHashMap<>();
+			Map<String, Set<String>> seen = new HashMap<>();
+			for (String line : lines.subList(Math.min(1, lines.size()), lines.size())) { // Kopfzeile überspringen
+				if (line.isBlank())
+					continue;
+				String[] cells = line.split(";", -1);
+				if (cells.length < 2 || cells[0].isBlank())
+					throw new RuntimeException("Zeile ohne Liste oder Wert in " + file.getFileName() + ": " + line);
+				List<String> variants = CardParser.parseVariants(cells[1]);
+				if (variants.isEmpty())
+					throw new RuntimeException("Zeile ohne Wert in " + file.getFileName() + ": " + line);
+				String list = cells[0].trim();
+				if (!seen.computeIfAbsent(list, _ -> new HashSet<>()).add(variants.get(0)))
+					throw new RuntimeException("'" + variants.get(0) + "' steht doppelt in Liste '" + list + "', " + file.getFileName());
+				lists.computeIfAbsent(list, _ -> new ArrayList<>()).add(variants);
+			}
+			return lists;
+		} catch (IOException e) {
+			throw new RuntimeException("Fehler beim Lesen von " + file, e);
+		}
+	}
+}

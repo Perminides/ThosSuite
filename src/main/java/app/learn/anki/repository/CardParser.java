@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import app.learn.anki.model.Card;
@@ -45,10 +46,16 @@ import app.shared.model.SketchColor;
  */
 public class CardParser {
 
+	/** Ohne Wortlisten — ein Collect-Step bricht dann ab. Für Aufrufer, die keine Listen laden. */
+	public static Card parse(List<String> csvTokens) {
+		return parse(csvTokens, Map.of());
+	}
+
 	/**
 	 * Eine an {@code ;} zerlegte Zeile: id, Bemerkung (wird nicht gelesen), Labels, danach die Steps.
+	 * Die Wortlisten (Name → Vorschläge) braucht nur ein Collect-Step.
 	 */
-	public static Card parse(List<String> csvTokens) {
+	public static Card parse(List<String> csvTokens, Map<String, List<String>> wordLists) {
 		int id = Integer.parseInt(csvTokens.get(0));
 		Set<String> labels = splitAndTrim(csvTokens.get(2));
 
@@ -107,7 +114,7 @@ public class CardParser {
 				}
 
 				if (!s.isEmpty()) {
-					Step step = parseStep(s);
+					Step step = parseStep(s, wordLists);
 					if (inOnFail)
 						onFail.add(step);
 					else if (segments == null)
@@ -128,7 +135,7 @@ public class CardParser {
 	}
 
     // --- Parsing eines einzelnen Step-Strings (ohne Marker) ---
-    private static Step parseStep(String s) {
+    private static Step parseStep(String s, Map<String, List<String>> wordLists) {
         String[] p = s.split(":", 2);
         String kind = p[0];
         String body = p.length > 1 ? p[1] : "";
@@ -137,7 +144,7 @@ public class CardParser {
             case "Image" -> new Image(body);
             case "Output"  -> new Output(body);
             case "Input"  -> parseInput(body);
-            case "Collect" -> parseCollect(body);
+            case "Collect" -> parseCollect(body, wordLists);
             case "MC"    -> parseMc(body, false);
             case "MC+"   -> parseMc(body, true);
             case "Click" -> parseClick(body);
@@ -374,8 +381,8 @@ public class CardParser {
         return parts;
     }
 
-    /** Schreibweisen derselben Antwort, mit {@code ,} getrennt; leere fallen weg. */
-    private static List<String> parseVariants(String text) {
+    /** Schreibweisen derselben Antwort, mit {@code ,} getrennt; leere fallen weg. Auch für die Wortlisten. */
+    static List<String> parseVariants(String text) {
         List<String> variants = new ArrayList<>();
         for (String variant : splitUnescaped(text, ','))
             if (!variant.trim().isEmpty())
@@ -436,11 +443,22 @@ public class CardParser {
 	// --- Collect
 
 	/**
-	 * {@code <antwort>|<antwort>|~<toleriert>…}, jede mit Schreibweisen {@code a,b}. Nackt heißt nötig,
-	 * {@code ~} toleriert; {@code + - ?} sind reserviert. Die Schreibweisen zählen beim Werten;
+	 * {@code <liste>:<antwort>|<antwort>|~<toleriert>…}, jede mit Schreibweisen {@code a,b}. Nackt heißt
+	 * nötig, {@code ~} toleriert; {@code + - ?} sind reserviert. Die Schreibweisen zählen beim Werten;
 	 * vorgeschlagen wird nur, was in der Wortliste steht.
+	 *
+	 * <p>Die Liste ist Pflicht — ohne sie gäbe es nichts zu wählen. Getrennt wird nur am ersten
+	 * {@code :}, Antworten dürfen selbst einen tragen.</p>
 	 */
-	private static Step parseCollect(String body) {
+	private static Step parseCollect(String body, Map<String, List<String>> wordLists) {
+		String[] p = body.split(":", 2);
+		if (p.length < 2)
+			throw new RuntimeException("Collect braucht eine Liste — Collect:<liste>:<antworten>: " + body);
+		List<String> suggestions = wordLists.get(p[0].trim());
+		if (suggestions == null)
+			throw new RuntimeException("Collect: unbekannte Liste '" + p[0].trim() + "', bekannt sind " + wordLists.keySet());
+		body = p[1];
+
 		List<List<String>> answers = new ArrayList<>();
 		List<String> tolerated = new ArrayList<>();
 		for (String raw : splitUnescaped(body, '|')) {
@@ -460,7 +478,7 @@ public class CardParser {
 		}
 		if (answers.isEmpty())
 			throw new RuntimeException("Collect ohne Antwort: " + body);
-		return new Collect(List.copyOf(answers), List.copyOf(tolerated));
+		return new Collect(suggestions, List.copyOf(answers), List.copyOf(tolerated));
 	}
 
 	/** Ein Rollenzeichen, das der Step nicht kennt, ist reserviert — als Text mit {@code \} schützen. */

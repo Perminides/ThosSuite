@@ -40,10 +40,11 @@ public class Card {
         }
     }
     /**
-     * Aus Vorschlägen sammeln, frei ändern, erst das Absenden wertet — ganz oder gar nicht. Die erste
-     * Schreibweise ist der Chip-Text. Tolerierte Wörter sind weder nötig noch falsch.
+     * Aus Vorschlägen sammeln, frei ändern, erst das Absenden wertet — ganz oder gar nicht. Die
+     * Vorschläge kommen aus der Wortliste, beim Einlesen aufgelöst. Die erste Schreibweise einer
+     * Antwort ist der Chip-Text. Tolerierte Wörter sind weder nötig noch falsch.
      */
-    public record Collect(List<List<String>> answers, List<String> tolerated) implements Step {}
+    public record Collect(List<String> suggestions, List<List<String>> answers, List<String> tolerated) implements Step {}
     public record MC(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
     public record MCPlus(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
     public record MarkMapElements(Set<String> shapes) implements Step {}

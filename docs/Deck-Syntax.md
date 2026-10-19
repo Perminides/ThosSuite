@@ -43,8 +43,8 @@ Alte Schreibweisen brechen ab, statt still etwas anderes zu bedeuten: `,` und `>
 | `Input:Eder\, Lahn und Sieg,Eder,Lahn,Sieg` | Komma im Text escapen. |
 | `Input:Regnitz\|-Main` | Stoppwort: „Main" macht die Karte sofort falsch. |
 | `Input:Esters\|Lange` | Beide nötig, beliebige Reihenfolge; nach jedem Treffer leert sich das Feld. |
-| `Collect:Dänemark\|Polen\|…` | **Prototyp.** Aus Vorschlägen (fest: alle Länder) Chips sammeln, mit × entfernen; erst Absenden (Enter auf leerem Feld, Knopf) wertet, ganz oder gar nicht. |
-| `Collect:Litauen\|Belarus\|~Polen` | Polen ist toleriert: gewählt kein Fehler, weggelassen auch nicht. |
+| `Collect:Länder:Dänemark\|Polen\|…` | Aus den Vorschlägen der Liste „Länder" Chips sammeln, mit × entfernen; erst Absenden (Enter auf leerem Feld, Knopf) wertet, ganz oder gar nicht. Siehe [Wortlisten](#wortlisten). |
+| `Collect:Länder:Litauen\|Belarus\|~Polen` | Polen ist toleriert: gewählt kein Fehler, weggelassen auch nicht. |
 | `Click:hannover` | Die Form „hannover" auf der Karte anklicken. |
 | `Click:berlin\|potsdam\|~brandenburg` | Pflicht: berlin + potsdam; toleriert: brandenburg (wird grün, muss aber nicht). |
 | `Click:small:120:340` | Ein Kreis als Form: Größe, x, y. Größen: `ultra small`, `small`, `middle small`, `middle`, `middle big`, `big`, `ultra big`; `empty` zentriert nur. |
@@ -147,6 +147,18 @@ jedem Tastendruck.
 - Beim Aufdecken steht die erste Schreibweise jeder Antwort im Feld, mit Komma verbunden.
 - Ist eine Antwort der Anfang einer anderen (`Main|Mainz`), rastet sie unterwegs ein — danach die
   andere tippen.
+
+## Wortlisten
+
+Ein `Collect`-Step nennt seine Liste als ersten Parameter: `Collect:<liste>:<antworten>`. Vorgeschlagen
+wird nur, was in der Liste steht; Freitext zählt nicht.
+
+- Zwei Dateien im Deck-Ordner, eine je Schreiber: `listen.csv` pflegst du, `listen-generiert.csv` schreibt
+  der Flaggen-Generator bei jedem Lauf neu. Fehlt eine, ist sie leer.
+- Eine Zeile je Wert, Kopfzeile wie bei den Decks: `Länder;Belarus,Weißrussland`. Als Vorschlag
+  erscheint die erste Schreibweise.
+- Geladen wird einmal beim Start, zusammen mit den Decks — eine geänderte Liste gilt nach dem Neustart.
+- Abbruch: unbekannte Liste, dieselbe Liste in beiden Dateien, ein Wert doppelt in einer Liste.
 
 ## Fast — Details
 

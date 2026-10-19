@@ -608,9 +608,9 @@ public class CardProgress {
 				foundInputAnswers.clear(); // sonst zählen die Treffer des vorigen Inputs weiter mit
 				presenter.waitForText();
 			}
-			case Collect _ -> {
+			case Collect collect -> {
 				collected.clear(); // sonst stünden die Wörter des vorigen Collect-Steps noch da
-				presenter.waitForCollect(CollectWords.COUNTRIES);
+				presenter.waitForCollect(collect.suggestions());
 			}
 			case Pause _ -> pause();
 			case ChoiceStep cs -> {
