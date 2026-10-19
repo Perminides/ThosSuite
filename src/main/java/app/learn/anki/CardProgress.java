@@ -17,6 +17,7 @@ import app.learn.anki.model.MultipleChoiceAnswers;
 import app.learn.anki.model.Card.AnswerOption;
 import app.learn.anki.model.Card.ChoiceStep;
 import app.learn.anki.model.Card.ClickMapElements;
+import app.learn.anki.model.Card.Collect;
 import app.learn.anki.model.Card.Fast;
 import app.learn.anki.model.Card.Image;
 import app.learn.anki.model.Card.Input;
@@ -31,6 +32,7 @@ import app.learn.anki.model.Card.SketchImageFill;
 import app.learn.anki.model.Card.SketchImageMark;
 import app.learn.anki.model.Card.Step;
 import app.shared.Log;
+import app.shared.model.CollectChip;
 
 
 /**
@@ -59,6 +61,7 @@ public class CardProgress {
 	private Set<String> clickedIds = new HashSet<>();
 	private Set<Integer> clickedMcAnswers = new HashSet<>();
 	private Set<Integer> foundInputAnswers = new HashSet<>();
+	private final List<String> collected = new ArrayList<>();
 	private boolean isPaused = false;
 	
 	private MultipleChoiceAnswers activeSessionMC = null;
@@ -222,10 +225,8 @@ public class CardProgress {
 
 	/** Lösung ins Feld, Karte falsch, Pause — für ESC und für ein getipptes Stoppwort. */
 	private void revealInput(Input input) {
-		isPaused = true; // vor dem Setzen: das Feld meldet die Lösung sonst als Eingabe zurück
-		playedTimestamp = LocalDateTime.now();
-		correctlyAnswered = false;
 		presenter.setCorrectText(input.solutionText());
+		failed();
 	}
 	
 	// ========================================
@@ -253,10 +254,8 @@ public class CardProgress {
 
 	/** Die Uhr ist abgelaufen: aufdecken, Karte ist falsch, und es geht in die Pause. */
 	public void timeUp() {
-		playedTimestamp = LocalDateTime.now();
-		correctlyAnswered = false;
 		presenter.fastTimeUp(activeFast.revealRest());
-		isPaused = true;
+		failed();
 	}
 
 	// ========================================
@@ -281,10 +280,8 @@ public class CardProgress {
 	    
 	    if (!correct) {
 	        // ----- FALSCH -----
-	    	playedTimestamp = LocalDateTime.now();
-	        correctlyAnswered = false;
 	        presenter.mapClickChecked(id, correct, input.mandatory());
-	        isPaused = true;
+	        failed();
 	    } else {
 	        presenter.mapClickChecked(id, true, null);
 	        if (clickedIds.containsAll(input.mandatory())) {
@@ -360,21 +357,24 @@ public class CardProgress {
 	    } else {
 	        // ----- FALSCH ----- (fest sichtbar oder Füller)
 	        presenter.mcClickChecked(index, false);
-	    	playedTimestamp = LocalDateTime.now();
-	    	correctlyAnswered = false;
 	    	// Lösung für die aktuell angezeigten Optionen anzeigen
 	        presenter.setCorrectMc(activeSessionMC.getCorrectIndexes());
-	        isPaused = true;
+	        failed();
 	    }
 	}
 
 	/**
-	 * Die markierte Auswahl wird als Ganzes geprüft. Falsch ist sie schon dann, wenn eine richtige
-	 * Antwort fehlt — aufgedeckt werden die falsch gewählten rot und alle richtigen grün.
+	 * Absenden bei MC+ oder Collect. Bei MC+ wird die markierte Auswahl als Ganzes geprüft. Falsch
+	 * ist sie schon dann, wenn eine richtige Antwort fehlt — aufgedeckt werden die falsch gewählten
+	 * rot und alle richtigen grün.
 	 */
-	public void mcSubmitted() {
+	public void submitted() {
 		if (isPaused)
 			return;
+		if (steps.get(currentIndex) instanceof Collect collect) {
+			collectSubmitted(collect);
+			return;
+		}
 		if (activeSessionMC == null || !(steps.get(currentIndex) instanceof MCPlus))
 			return;
 		if (clickedMcAnswers.isEmpty())
@@ -391,16 +391,87 @@ public class CardProgress {
 				if (!correctIndexes.contains(clicked))
 					presenter.mcClickChecked(clicked, false);
 			presenter.setCorrectMc(correctIndexes);
-			playedTimestamp = LocalDateTime.now();
-			correctlyAnswered = false;
-			isPaused = true;
+			failed();
 		}
+	}
+
+	// ========================================
+	// Collect
+	// ========================================
+
+	public void collectAdded(String word) {
+		if (isPaused || !(steps.get(currentIndex) instanceof Collect))
+			return;
+		if (!collected.contains(word))
+			collected.add(word);
+		showCollected();
+	}
+
+	public void collectRemoved(String word) {
+		if (isPaused || !(steps.get(currentIndex) instanceof Collect))
+			return;
+		collected.remove(word);
+		showCollected();
+	}
+
+	private void showCollected() {
+		List<CollectChip> chips = new ArrayList<>();
+		for (String word : collected)
+			chips.add(new CollectChip(word, CollectChip.State.CHOSEN));
+		presenter.showCollected(chips);
+		presenter.setSubmitActive(!collected.isEmpty());
+	}
+
+	/**
+	 * Wie MC+: erst das Absenden wertet, ganz oder gar nicht. Aufgedeckt wird in der gewählten
+	 * Reihenfolge, die vergessenen hinten dran — falsch gewählt und vergessen sind beide rot, der
+	 * Zustand unterscheidet sie.
+	 */
+	private void collectSubmitted(Collect collect) {
+		if (collected.isEmpty())
+			return;
+
+		boolean[] found = new boolean[collect.answers().size()];
+		boolean allRight = true;
+		List<CollectChip> result = new ArrayList<>();
+		for (String word : collected) {
+			int answer = answerIndexOf(collect, word);
+			if (answer >= 0) {
+				found[answer] = true;
+				result.add(new CollectChip(word, CollectChip.State.CORRECT));
+			} else {
+				allRight = false;
+				result.add(new CollectChip(word, CollectChip.State.WRONG));
+			}
+		}
+		for (int i = 0; i < found.length; i++)
+			if (!found[i]) {
+				allRight = false;
+				result.add(new CollectChip(collect.answers().get(i).get(0), CollectChip.State.MISSING));
+			}
+
+		presenter.revealCollect(result);
+		if (allRight) {
+			currentIndex++;
+			runSteps();
+		} else {
+			failed();
+		}
+	}
+
+	/** Index der Antwort, zu der das Wort eine Schreibweise ist, sonst -1. */
+	private static int answerIndexOf(Collect collect, String word) {
+		for (int i = 0; i < collect.answers().size(); i++)
+			for (String variant : collect.answers().get(i))
+				if (variant.equalsIgnoreCase(word))
+					return i;
+		return -1;
 	}
 
 	// ========================================
 	// Other
 	// ========================================
-	
+
 	/**
 	 * Die Pause-Taste. Steht die Karte in einer echten Pause, beendet sie diese. Läuft dagegen gerade
 	 * ein Fast-Step, friert sie nur die Uhr ein beziehungsweise taut sie wieder auf — die
@@ -415,21 +486,41 @@ public class CardProgress {
 
 		isPaused = false;
 
+		// Falsch und ohne Abspann: dieser Druck quittiert die Aufdeckung. Mit Abspann läuft er schon seit dem Fehler.
 		if (correctlyAnswered != null && !correctlyAnswered && !inOnFail) {
-			// Statt sofort zu enden: der Abspann, falls die Karte einen trägt. Die Aufdeckung des
-			// Fehlers stand schon da, dieser Druck quittiert sie.
-			if (card.getOnFailSteps().isEmpty()) {
-				cardFinished();
-			} else {
-				inOnFail = true;
-				steps = card.getOnFailSteps();
-				currentIndex = 0;
-				runSteps();
-			}
+			cardFinished();
 		} else {
 			currentIndex++;
 			runSteps();
 		}
+	}
+
+	/** Die eine Pause — für den {@code Pause:}-Step wie nach einer Aufdeckung. Ein Druck beendet sie. */
+	private void pause() {
+		isPaused = true;
+		presenter.pause();
+	}
+
+	/**
+	 * Die Karte ist falsch, die Aufdeckung steht schon da. Trägt die Karte einen Abspann, läuft er
+	 * sofort mit — beides ist gleichzeitig zu sehen, bis die Pause im Abspann quittiert wird. Ohne
+	 * Abspann hält eine Pause die Aufdeckung stehen.
+	 *
+	 * <p>Was der Abspann anzeigt, kann die Aufdeckung überdecken: ein {@code Image:} ersetzt etwa
+	 * eine Skizze im selben Bildrahmen.</p>
+	 */
+	private void failed() {
+		playedTimestamp = LocalDateTime.now();
+		correctlyAnswered = false;
+		if (card.getOnFailSteps().isEmpty()) {
+			pause();
+			return;
+		}
+		isPaused = false;
+		inOnFail = true;
+		steps = card.getOnFailSteps();
+		currentIndex = 0;
+		runSteps();
 	}
 	
 	public void cancel() {
@@ -508,8 +599,11 @@ public class CardProgress {
 				foundInputAnswers.clear(); // sonst zählen die Treffer des vorigen Inputs weiter mit
 				presenter.waitForText();
 			}
-			case Pause _ -> {	presenter.pause();
-								isPaused = true;}
+			case Collect _ -> {
+				collected.clear(); // sonst stünden die Wörter des vorigen Collect-Steps noch da
+				presenter.waitForCollect(CollectWords.COUNTRIES);
+			}
+			case Pause _ -> pause();
 			case ChoiceStep cs -> {
 				Set<String> universe = universeOf(cs.options());
 				Set<String> required = requiredPerCluster.get(universe).fromAllSteps;
@@ -539,6 +633,7 @@ public class CardProgress {
 
 	private boolean requiresUserInput(Step step) {
 	    return step instanceof Card.Input
+	        || step instanceof Card.Collect
 	        || step instanceof Card.ChoiceStep
 	        || step instanceof Card.ClickMapElements
 	        || step instanceof Card.Pause

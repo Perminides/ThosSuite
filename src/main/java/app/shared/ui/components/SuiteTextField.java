@@ -25,6 +25,11 @@ public class SuiteTextField extends TextField {
 	 */
 	public SuiteTextField(Rectangle2D bounds) {
 		this();
+		placeAt(bounds);
+	}
+
+	/** Lage und Breite aus dem Rechteck — auch für Unterklassen mit eigenem Konstruktor. */
+	protected final void placeAt(Rectangle2D bounds) {
 		setLayoutX(bounds.getMinX());
 		setLayoutY(bounds.getMinY());
 		setPrefWidth(bounds.getWidth());

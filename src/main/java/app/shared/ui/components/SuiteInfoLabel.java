@@ -106,7 +106,8 @@ public class SuiteInfoLabel extends StackPane {
         textFlow.setMaxWidth(width);
     }
 
-    private void setFixedHeight(double height) {
+    /** Auch nachträglich — die Lernansicht kürzt das Fragefeld, solange Chips darunter stehen. */
+    public void setFixedHeight(double height) {
         setPrefHeight(height);
         setMaxHeight(height);
     }

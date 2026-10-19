@@ -132,7 +132,15 @@ class SessionProgress {
 	}
 
 	public void submitClicked() {
-		getCurrentProgress().mcSubmitted();
+		getCurrentProgress().submitted();
+	}
+
+	public void collectAdded(String word) {
+		getCurrentProgress().collectAdded(word);
+	}
+
+	public void collectRemoved(String word) {
+		getCurrentProgress().collectRemoved(word);
 	}
 
 	public void reactOnPausePressed() {

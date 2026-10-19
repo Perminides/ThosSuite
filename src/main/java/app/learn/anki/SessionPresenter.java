@@ -10,6 +10,7 @@ import app.learn.model.Deck;
 import app.learn.model.GeoMap;
 import app.learn.model.LearnStat;
 import app.shared.model.CardHistory;
+import app.shared.model.CollectChip;
 import app.shared.model.SessionProgressCounter;
 import app.learn.repository.SketchFileSource;
 import app.shared.model.ScreenView;
@@ -62,7 +63,7 @@ public class SessionPresenter {
 
         AnkiCallbacks callbacks = new AnkiCallbacks(
                 this::clickedMapElement, this::clickedMCAnswer, this::typedText, this::clickedBack,
-                this::clickedSubmit, this::timeExpired);
+                this::clickedSubmit, this::timeExpired, this::collectAdded, this::collectRemoved);
 
         return switch(type) {
             case GERMANY_CARDS -> new ShapeMapLearnView(id, mapName, category, map.getShapeGeometries(), callbacks);
@@ -113,6 +114,7 @@ public class SessionPresenter {
 		view.setMapActive(false);
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);
+		view.endCollect();
 		view.setMultipleChoice(answers);
 	}
 
@@ -122,11 +124,35 @@ public class SessionPresenter {
 		view.setTextInTextField("");
 		view.setTextFieldActive(false);
 		view.disableMcPanel();
+		view.endCollect();
 	}
 	void waitForText() {
+		view.endCollect(); // sonst schlüge das Feld noch die Wörter eines vorigen Collect-Steps vor
 		view.setTextFieldActive(true);
 		view.setMapActive(false);
 		view.disableMcPanel();
+	}
+
+	// ========================================
+	// COLLECT (from Progress)
+	// ========================================
+
+	void waitForCollect(List<String> suggestions) {
+		view.setMapActive(false);
+		view.disableMcPanel();
+		view.setSubmitActive(false);
+		view.startCollect(suggestions);
+	}
+
+	void showCollected(List<CollectChip> chips) {
+		view.setCollectChips(chips);
+	}
+
+	/** Gewertet: die Chips zeigen das Ergebnis, ändern lässt sich nichts mehr. */
+	void revealCollect(List<CollectChip> chips) {
+		view.setSubmitActive(false);
+		view.setCollectChips(chips);
+		view.setTextFieldActive(false);
 	}
 
 	// ========================================
@@ -197,7 +223,6 @@ public class SessionPresenter {
 		else {
 				view.setIdToIncorrect(id);
 			view.addIdsToCorrect(corectSet);
-			pause(); 
 			}
 	}
 	
@@ -241,6 +266,14 @@ public class SessionPresenter {
 		sessionProgress.textInputChanged(text);
 	}
 
+	void collectAdded(String word) {
+		sessionProgress.collectAdded(word);
+	}
+
+	void collectRemoved(String word) {
+		sessionProgress.collectRemoved(word);
+	}
+
 	void clickedMapElement(String id) {
 		if (sessionProgress.isPaused())
 			sessionProgress.reactOnPausePressed();
@@ -252,6 +285,7 @@ public class SessionPresenter {
 		sessionProgress.goBack();
 	}
 
+	/** Absende-Knopf, Enter am Fenster und Enter im leeren Eingabefeld — ein Weg für alle drei. */
 	void clickedSubmit() {
 		if (!sessionProgress.isPaused()) {
 			view.setSubmitActive(false);
@@ -296,16 +330,22 @@ public class SessionPresenter {
 		view.setImage(null);
 		view.setTextInTextField("");
 		view.setQuestion("");
+		view.disableMcPanel();
+		view.endCollect();
 		if (fastView != null) {
 			fastView.stopClock(); // auch beim Zurückspringen, sonst tickt sie in die nächste Karte
 			fastView.clearSlots();
 		}
 	}
 	
-	void pause() { // Von außen wegen Pause: im csv...
+	// !Sofort Erst Collect-Prototyp entscheiden (bleibt: alles nach master / fliegt: Collect raus). Dann View-Methoden
+	// nach Absichten (halt an, warte auf Klick/Text/Auswahl/Collect) statt Einzelschaltern hier und in showMultipleChoice/waitFor…
+	/** Friert ein, räumt nichts weg: was aufgedeckt oder beantwortet dasteht, bleibt sichtbar. */
+	void pause() {
 		view.setMapActive(false);
 		view.setTextFieldActive(false);
-		view.disableMcPanel();
+		view.setSubmitActive(false);
+		view.freezeMcPanel();
 	}
 
 }

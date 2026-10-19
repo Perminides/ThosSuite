@@ -40,6 +40,7 @@ Alte Schreibweisen brechen ab, statt still etwas anderes zu bedeuten: `,` in `Cl
 | `Input:Eder\, Lahn und Sieg,Eder,Lahn,Sieg` | Komma im Text escapen. |
 | `Input:Regnitz\|-Main` | Stoppwort: „Main" macht die Karte sofort falsch. |
 | `Input:Esters\|Lange` | Beide nötig, beliebige Reihenfolge; nach jedem Treffer leert sich das Feld. |
+| `Collect:Dänemark\|Polen\|…` | **Prototyp.** Aus Vorschlägen (fest: alle Länder) Chips sammeln, mit × entfernen; erst Absenden (Enter auf leerem Feld, Knopf) wertet, ganz oder gar nicht. |
 | `Click:hannover` | Die Form „hannover" auf der Karte anklicken. |
 | `Click:berlin\|potsdam>brandenburg` | Pflicht: berlin + potsdam; optional: brandenburg. Getrennt wird an `>`, weil Namen Bindestriche tragen (Theodor-Heuss-Platz). |
 | `Click:small:120:340` | Ein Kreis als Form: Größe, x, y. Größen: `ultra small`, `small`, `middle small`, `middle`, `middle big`, `big`, `ultra big`; `empty` zentriert nur. |
@@ -201,7 +202,7 @@ Block nie erreicht.
 
 | Zeile | Bedeutung |
 |---|---|
-| `Output:Frage?;MC:+A\|B;Image:X.svg;Pause:;<OnFail>Image:X.svg;Pause:` | Richtig: Bild, Pause, Ende. Falsch: Aufdeckung, Pause, dann Bild, Pause, Ende. |
+| `Output:Frage?;MC:+A\|B;Image:X.svg;Pause:;<OnFail>Image:X.svg;Pause:` | Richtig: Bild, Pause, Ende. Falsch: Aufdeckung und Bild zugleich, Pause, Ende. |
 
 - Der Block **darf nichts fragen** (`MC`, `MC+`, `Input`, `Click`, `Fast`) → Abbruch. Die Karte ist an
   dieser Stelle längst entschieden. Er zählt deshalb auch nicht für die Pflicht, dass eine Karte
@@ -209,8 +210,10 @@ Block nie erreicht.
 - **Kein Endezeichen** — der Block reicht bis Zeilenende. Anders als bei `<ShuffleStart>` kann dabei
   nichts verloren gehen.
 - Höchstens einmal je Zeile; nicht innerhalb eines Shuffle-Blocks und kein Shuffle darin → Abbruch.
-- Der Fehler wird wie bisher aufgedeckt und pausiert; erst der Druck darauf startet den Abspann. Im
-  Fehlerfall also zwei Tastendrücke — erst die Aufdeckung ansehen, dann den Abspann.
+- Der Abspann startet **sofort mit der Aufdeckung**; seine Pause hält beides stehen, ein Tastendruck.
+  Was er anzeigt, kann die Aufdeckung überdecken — ein `Image:` ersetzt eine Skizze im selben Bildrahmen.
+  Ohne `Pause:` im Block endet die Karte, bevor man die Aufdeckung sieht.
+- Ohne Abspann hält eine automatische Pause die Aufdeckung stehen.
 - Wer ihn **immer** sehen will, schreibt seine Steps zweimal: einmal am normalen Ende, einmal im
   Block. Der Flaggen-Generator tut genau das mit dem `Image:`-Step.
 

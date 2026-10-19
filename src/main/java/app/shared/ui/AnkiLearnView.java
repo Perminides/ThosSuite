@@ -1,10 +1,12 @@
 package app.shared.ui;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import app.shared.model.CardHistory;
+import app.shared.model.CollectChip;
 import app.shared.model.ScreenView;
 import app.shared.model.SessionProgressCounter;
 import app.shared.model.ShapeGeometry;
@@ -14,12 +16,14 @@ import app.shared.model.AnkiCallbacks;
 import app.shared.skin.LearnComponent;
 import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import app.shared.ui.components.CollectChipPane;
 import app.shared.ui.components.MultipleChoicePane;
 import app.shared.ui.components.SuiteIconButton;
 import app.shared.ui.components.SuiteImage;
 import app.shared.ui.components.SuiteInfoLabel;
-import app.shared.ui.components.SuiteTextField;
+import app.shared.ui.components.SuiteSuggestionTextField;
 import app.shared.ui.components.map.LearnMap;
 
 /**
@@ -78,7 +82,12 @@ public abstract class AnkiLearnView {
 	private MultipleChoicePane mcPane;
 	private SuiteIconButton backButton;
 	private SuiteIconButton submitButton;
-	private SuiteTextField inputField;
+	private SuiteSuggestionTextField inputField;
+
+	private Rectangle2D questionBounds;
+	private CollectChipPane collectChips;
+	private List<String> collectSuggestions = List.of();
+	private double collectGap;
 
 	protected AnkiLearnView(String deckId, String mapName, String category, AnkiCallbacks callbacks) {
 		this.deckId = deckId;
@@ -143,13 +152,43 @@ public abstract class AnkiLearnView {
 		backButton.onClick(callbacks.backClicked());
 
 		inputField = null;
-		if (hasInputField()) {
-			inputField = new SuiteTextField(skin.learnComponentBounds(deckId, mapName, category, LearnComponent.TEXT_INPUT));
-			inputField.onType(callbacks.textTyped());
-		}
+		collectChips = null;
+		questionBounds = skin.learnTextLabelBounds(deckId, mapName, category, Skin.TextLabelType.QUESTION);
+		if (hasInputField())
+			buildInput(skin);
 
 		canvas.clear();
 		canvas.addComponents(components());
+	}
+
+	/**
+	 * Ein Eingabefeld für Input, Fast und Collect. Ohne Vorschläge prüft es bei jedem Tastendruck;
+	 * bei Collect bekommt es die Vorschläge, eine Auswahl wird zum Chip. Die Chips hängen am unteren
+	 * Rand des Fragefelds, siehe {@link #layoutCollect()}.
+	 */
+	private void buildInput(Skin skin) {
+		inputField = new SuiteSuggestionTextField("", skin.learnComponentBounds(deckId, mapName, category, LearnComponent.TEXT_INPUT));
+		inputField.onType(callbacks.textTyped());
+		inputField.setSuggestionsAbove(skin.learnSuggestionsAbove());
+		inputField.setOnSelected(word -> {
+			inputField.clearSilent();
+			callbacks.collectAdded().accept(word);
+		});
+		// Mit gesetztem onAction kommt Enter nicht mehr beim Fenster an — das Feld sendet selbst ab. Freitext zählt nicht.
+		inputField.setOnAction(_ -> {
+			if (inputField.getText().isBlank())
+				callbacks.submitClicked().run();
+		});
+
+		collectGap = skin.learnChipGap();
+		collectChips = new CollectChipPane(questionBounds.getWidth());
+		collectChips.setLayoutX(questionBounds.getMinX());
+		collectChips.onRemove(word -> {
+			callbacks.collectRemoved().accept(word);
+			inputField.requestFocus();
+		});
+		collectChips.setVisible(false);
+		collectChips.heightProperty().addListener((_, _, _) -> layoutCollect());
 	}
 
 	/** Der Modifikator entscheidet nur über den abweichenden Hintergrund — der Rest steht in {@code .my-info-label}. */
@@ -163,8 +202,10 @@ public abstract class AnkiLearnView {
 		List<Node> parts = new ArrayList<>();
 		parts.add(map.getView()); // die Karte ist ein Interface — der eine Schritt zum Node bleibt
 		parts.add(questionArea);
-		if (inputField != null)
+		if (inputField != null) {
 			parts.add(inputField);
+			parts.add(collectChips);
+		}
 		parts.add(imageComponent);
 		if (mcPane != null) {
 			parts.add(mcPane);
@@ -224,17 +265,70 @@ public abstract class AnkiLearnView {
 	public void setSubmitActive(boolean active) { if (submitButton != null) submitButton.setDisable(!active); }
 	public void setBackActive(boolean active) { if (backButton != null) backButton.setDisable(!active); }
 
-	/** Schaltet die Antwortauswahl ab. {@code McLearnView} überschreibt das leer — dort wäre es sinnlos. */
-	/** Bei einer Lernform ohne Antwortauswahl gibt es nichts abzuschalten. */
+	/** Leert die Antwortauswahl — wenn als Nächstes anders geantwortet wird und am Kartenende. */
 	public void disableMcPanel() {
 		if (hasMcPane())
 			mcPane.clearAndSetInactive();
+	}
+
+	/** Die Pause: offene Knöpfe werden grau, stehen bleibt, was dasteht. Ein Klick beendet die Pause. */
+	public void freezeMcPanel() {
+		if (hasMcPane())
+			mcPane.freeze();
 	}
 
 	// ===== Eingabefeld =====
 
 	public void setTextFieldActive(boolean active) { if (inputField != null) inputField.setActive(active); }
 	public void setTextInTextField(String text)    { if (inputField != null) inputField.setText(text); }
+
+	// ===== Sammeln (Collect) =====
+
+	public void startCollect(List<String> suggestions) {
+		if (inputField == null)
+			throw new RuntimeException("Collect braucht eine Lernform mit Eingabefeld");
+		collectSuggestions = List.copyOf(suggestions);
+		inputField.setAllItems(collectSuggestions);
+		inputField.setActive(true);
+		collectChips.setChips(List.of());
+		collectChips.setVisible(true);
+		layoutCollect();
+	}
+
+	/** Was schon als Chip dasteht, wird nicht nochmal vorgeschlagen. */
+	public void setCollectChips(List<CollectChip> chips) {
+		collectChips.setChips(chips);
+		Set<String> taken = new HashSet<>();
+		for (CollectChip chip : chips)
+			taken.add(chip.text());
+		List<String> remaining = new ArrayList<>();
+		for (String word : collectSuggestions)
+			if (!taken.contains(word))
+				remaining.add(word);
+		inputField.setAllItems(remaining);
+	}
+
+	/** Ohne Vorschläge, ohne Chips, volle Fragefeld-Höhe — das Feld ist wieder ein gewöhnliches Eingabefeld. */
+	public void endCollect() {
+		if (inputField == null)
+			return;
+		collectSuggestions = List.of();
+		inputField.setAllItems(collectSuggestions);
+		collectChips.setChips(List.of());
+		collectChips.setVisible(false);
+		layoutCollect();
+	}
+
+	/**
+	 * Die Chips sitzen bündig am unteren Rand des Fragefeld-Rechtecks, das Fragefeld schrumpft um ihre
+	 * Höhe und den Abstand aus dem Skin.
+	 */
+	private void layoutCollect() {
+		double chips = collectChips.isVisible() && !collectChips.getChildren().isEmpty() ? collectChips.getHeight() : 0;
+		double reserved = chips > 0 ? chips + collectGap : 0;
+		collectChips.setLayoutY(questionBounds.getMaxY() - chips);
+		questionArea.setFixedHeight(questionBounds.getHeight() - reserved);
+	}
 
 	// ===== Karte =====
 

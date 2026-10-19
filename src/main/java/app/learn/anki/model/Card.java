@@ -13,7 +13,7 @@ import app.shared.AppClock;
  * Aktueller Ansatz: Jede Karte gibt es genau 1x im Speicher!
  */
 public class Card {
-    public sealed interface Step permits Image, ClickMapElements, Output, Input, ChoiceStep, MarkMapElements, Pause, Fast,
+    public sealed interface Step permits Image, ClickMapElements, Output, Input, Collect, ChoiceStep, MarkMapElements, Pause, Fast,
             SketchImage, SketchImageAdd, SketchImageMark, SketchImageFill {}
 
     /** MC und MC+ teilen sich Optionen und Reihenfolge; der Typ trägt das Verhalten. */
@@ -39,6 +39,8 @@ public class Card {
             return String.join(", ", firsts);
         }
     }
+    /** Aus Vorschlägen sammeln, frei ändern, erst das Absenden wertet — ganz oder gar nicht. Die erste Schreibweise ist der Chip-Text. */
+    public record Collect(List<List<String>> answers) implements Step {}
     public record MC(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
     public record MCPlus(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
     public record MarkMapElements(Set<String> shapes) implements Step {}
@@ -132,8 +134,8 @@ public class Card {
 
 	/** Die Schritte, bei denen die Karte etwas von mir will. Alles andere zeigt nur an. */
 	private static boolean expectsInput(Step step) {
-		return step instanceof ChoiceStep || step instanceof Input || step instanceof ClickMapElements
-				|| step instanceof Fast;
+		return step instanceof ChoiceStep || step instanceof Input || step instanceof Collect
+				|| step instanceof ClickMapElements || step instanceof Fast;
 	}
 
 	/** Ob in dieser Folge überhaupt irgendwo nach Input gefragt wird. */
@@ -184,7 +186,7 @@ public class Card {
 
 	/**
 	 * Der Abspann hinter {@code <OnFail>} — läuft nur, wenn die Karte falsch beantwortet wurde, und
-	 * ersetzt dann das sofortige Ende. Leer, wenn die Zeile keinen Block trägt.
+	 * dann gleich mit der Aufdeckung. Leer, wenn die Zeile keinen Block trägt.
 	 *
 	 * <p>Er zeigt nur an: eine Merkhilfe fürs nächste Mal, die Auflösung, das echte Bild. Eine Frage
 	 * darf nicht darin stehen — an dieser Stelle ist die Karte längst entschieden.</p>

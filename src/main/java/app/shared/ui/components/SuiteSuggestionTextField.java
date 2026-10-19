@@ -6,8 +6,8 @@ import java.util.function.Consumer;
 
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
@@ -16,9 +16,10 @@ import javafx.stage.Popup;
  * Ein Textfeld, das während des Tippens passende Vorschläge unter sich einblendet
  * (SWYT = „Search While You Type").
  *
- * <p>Es <b>ist</b> ein {@link TextField} — wer es einbaut, hängt es direkt in sein Layout und nutzt
- * alles, was ein Textfeld kann: {@code setPromptText}, {@code setPrefWidth}, {@code setOnAction},
- * {@code requestFocus}.</p>
+ * <p>Es <b>ist</b> ein {@link SuiteTextField} — wer es einbaut, hängt es direkt in sein Layout und
+ * nutzt alles, was ein Textfeld kann: {@code setPromptText}, {@code setPrefWidth}, {@code setOnAction},
+ * {@code requestFocus}, dazu {@code onType} und {@code setActive}. Ohne Einträge öffnet sich nie eine
+ * Liste; es ist dann ein gewöhnliches Suite-Textfeld.</p>
  *
  * <p>Was es <b>nicht</b> entscheidet: was eine Auswahl bedeutet. Über {@link #setOnSelected} meldet
  * es nur, dass der Benutzer einen Eintrag aus der Liste genommen hat. Ob daraus ein Chip wird
@@ -37,7 +38,7 @@ import javafx.stage.Popup;
  *
  * <p>CSS: Liste = {@code .suggestion-box}, hervorgehobene Zeile = {@code :highlighted}.</p>
  */
-public class SuiteSuggestionTextField extends TextField {
+public class SuiteSuggestionTextField extends SuiteTextField {
 
     private static final PseudoClass HIGHLIGHTED = PseudoClass.getPseudoClass("highlighted");
     private static final int MAX_SUGGESTIONS = 20;
@@ -55,6 +56,8 @@ public class SuiteSuggestionTextField extends TextField {
     /** Wird aufgerufen, wenn ein Vorschlag ausgewählt wird (Enter, Tab, Klick). */
     private Consumer<String> onSelected;
 
+    private boolean suggestionsAbove = false;
+
     public SuiteSuggestionTextField(String promptText) {
         setPromptText(promptText);
 
@@ -66,12 +69,31 @@ public class SuiteSuggestionTextField extends TextField {
         setupListeners();
     }
 
+    /** Mit fester Lage — für absolut positionierende Hosts. Die Höhe bestimmen Schrift und Padding. */
+    public SuiteSuggestionTextField(String promptText, Rectangle2D bounds) {
+        this(promptText);
+        placeAt(bounds);
+    }
+
     public void setAllItems(List<String> items) {
         this.allItems = new ArrayList<>(items);
     }
 
     public void setOnSelected(Consumer<String> onSelected) {
         this.onSelected = onSelected;
+    }
+
+    /**
+     * Die Liste über statt unter dem Feld. Sie steht dann umgedreht: der beste Treffer direkt über
+     * dem Feld, Pfeil hoch führt vom Feld weg.
+     *
+     * <p>Ohne {@code autoFix}: Beim Nachschieben hat das Fenster noch die alte Höhe, autoFix würde es
+     * damit vom unteren Bildschirmrand zurückholen — nach dem Schrumpfen bliebe eine Lücke zum Feld.
+     * Die Unterkante ist die Oberkante des Felds, unten hinaus kann die Liste ohnehin nicht.</p>
+     */
+    public void setSuggestionsAbove(boolean above) {
+        this.suggestionsAbove = above;
+        suggestionPopup.setAutoFix(!above);
     }
 
     /**
@@ -116,11 +138,11 @@ public class SuiteSuggestionTextField extends TextField {
                 }
                 case DOWN -> {
                     e.consume();
-                    setActiveIndex(Math.min(activeIndex + 1, currentMatches.size() - 1));
+                    moveActive(suggestionsAbove ? -1 : 1);
                 }
                 case UP -> {
                     e.consume();
-                    setActiveIndex(Math.max(activeIndex - 1, 0));
+                    moveActive(suggestionsAbove ? 1 : -1);
                 }
                 case ESCAPE -> {
                     e.consume();
@@ -180,9 +202,10 @@ public class SuiteSuggestionTextField extends TextField {
         rebuildSuggestionBox();
         activeIndex = 0;
         highlightActive();
-        showPopupBelowInput();
+        showPopup();
     }
 
+    /** Die Zeilen in Trefferreihenfolge, über dem Feld umgedreht — der beste Treffer steht immer am Feld. */
     private void rebuildSuggestionBox() {
         suggestionBox.getChildren().clear();
         for (int i = 0; i < currentMatches.size(); i++) {
@@ -194,9 +217,16 @@ public class SuiteSuggestionTextField extends TextField {
             label.setOnMouseEntered(_ -> setActiveIndex(index));
             label.setOnMouseClicked(_ -> selectItem(match));
 
-            suggestionBox.getChildren().add(label);
+            if (suggestionsAbove)
+                suggestionBox.getChildren().add(0, label);
+            else
+                suggestionBox.getChildren().add(label);
         }
         suggestionBox.setPrefWidth(getWidth());
+    }
+
+    private void moveActive(int step) {
+        setActiveIndex(Math.max(0, Math.min(activeIndex + step, currentMatches.size() - 1)));
     }
 
     private void setActiveIndex(int index) {
@@ -208,13 +238,24 @@ public class SuiteSuggestionTextField extends TextField {
         var children = suggestionBox.getChildren();
         for (int i = 0; i < children.size(); i++) {
             Label label = (Label) children.get(i);
-            label.pseudoClassStateChanged(HIGHLIGHTED, i == activeIndex);
+            int match = suggestionsAbove ? children.size() - 1 - i : i;
+            label.pseudoClassStateChanged(HIGHLIGHTED, match == activeIndex);
         }
     }
 
-    private void showPopupBelowInput() {
+    /**
+     * Unter dem Feld oder darüber. Darüber steht erst nach dem Öffnen fest, wie hoch die Liste ist —
+     * deshalb erst zeigen, dann um ihre Höhe hochschieben; bei jeder Aktualisierung neu.
+     */
+    private void showPopup() {
         Bounds bounds = localToScreen(getBoundsInLocal());
-        if (bounds != null)
-            suggestionPopup.show(this, bounds.getMinX(), bounds.getMaxY() + 2);
+        if (bounds == null)
+            return;
+        suggestionPopup.show(this, bounds.getMinX(), bounds.getMaxY() + 2);
+        if (suggestionsAbove) {
+            suggestionBox.applyCss();
+            double height = suggestionBox.prefHeight(-1);
+            suggestionPopup.setY(bounds.getMinY() - height - 2);
+        }
     }
 }

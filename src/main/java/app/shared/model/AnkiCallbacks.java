@@ -14,6 +14,8 @@ import java.util.function.Consumer;
  * @param backClicked       der Zurück-Knopf wurde gedrückt
  * @param submitClicked     die markierte Auswahl soll geprüft werden
  * @param timeExpired       die Uhr eines Schritts mit Zeitlimit ist abgelaufen
+ * @param collectAdded      ein Vorschlag wurde gewählt und soll als Chip dazu (Text)
+ * @param collectRemoved    das × eines Chips wurde geklickt (Text)
  */
 public record AnkiCallbacks(
 		Consumer<String> mapElementClicked,
@@ -21,4 +23,6 @@ public record AnkiCallbacks(
 		Consumer<String> textTyped,
 		Runnable backClicked,
 		Runnable submitClicked,
-		Runnable timeExpired) {}
+		Runnable timeExpired,
+		Consumer<String> collectAdded,
+		Consumer<String> collectRemoved) {}

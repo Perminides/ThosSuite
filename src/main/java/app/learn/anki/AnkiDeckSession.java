@@ -112,8 +112,7 @@ public class AnkiDeckSession implements Screen {
 
 	@Override
 	public void enterPressed() {
-		if (!progress.isPaused())
-			progress.submitClicked();
+		presenter.clickedSubmit();
 	}
 
 	@Override

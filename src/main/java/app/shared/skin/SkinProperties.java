@@ -98,6 +98,8 @@ public abstract class SkinProperties {
 	protected Integer imageMapShapeMarkedInnerWidth = 4;
 	protected Integer imageMapOverlayContentInset = 11;         // Welt: weich auslaufender Rahmen im Bild
 	protected Integer hannoverImageMapOverlayContentInset = 0;  // Hannover: Karte bis an jede Kante
+	protected Boolean learnSuggestionsAbove = true; // Vorschläge des Lern-Eingabefelds über statt unter dem Feld
+	protected Integer learnChipGap = 13; // Abstand zwischen Fragefeld und den Chips eines Collect-Steps
 	
 	protected Double shapeMapStandardBorderWidth = 1.8;
 	protected Double shapeMapFederalStateBorderWidth = 2.8; // für Niedersachsen z. B.
@@ -459,6 +461,16 @@ public abstract class SkinProperties {
 		return emptyWallpaperName;
 	}
 
+	/** Ob die Vorschläge des Lern-Eingabefelds über dem Feld stehen — hängt daran, wo der Skin das Feld hinlegt. */
+	public boolean learnSuggestionsAbove() {
+		return learnSuggestionsAbove;
+	}
+
+	/** Der Spalt zwischen Fragefeld und Chip-Block eines Collect-Steps. */
+	public int learnChipGap() {
+		return learnChipGap;
+	}
+
 	/**
 	 * Die Maße einer Multiple-Choice-Auswahl.
 	 *
@@ -652,6 +664,10 @@ public abstract class SkinProperties {
 	                    field.set(this, parseRectangle(value));
 	                } else if (field.getType() == String.class) {
 	                    field.set(this, value);
+	                } else if (field.getType() == Boolean.class) {
+	                    if (!value.equals("true") && !value.equals("false"))
+	                        throw new RuntimeException(field.getName() + " kennt nur true oder false, nicht '" + value + "'");
+	                    field.set(this, Boolean.valueOf(value));
 	                } else {
 	                    throw new RuntimeException("Feldtyp ohne Loader-Zweig: " + field.getName()
 	                            + " (" + field.getType().getSimpleName() + ")");

@@ -180,6 +180,7 @@ public abstract class Skin extends SkinProperties {
 	    addDashboardStyles(css);
 	    addChartStyles(css);
 	    addSuggestionBoxStyles(css);
+	    addCollectChipStyles(css);
 	    addCardListStyles(css);
 	    addDiaryViewerStyles(css);
 	    addMovieViewerStyles(css);
@@ -1236,7 +1237,7 @@ public abstract class Skin extends SkinProperties {
 	    builder.start(".tag-chip-remove")
 	       .add("-fx-border-width", "0px")
 	       .add("-fx-border-color", Color.TRANSPARENT)
-	       .add("-fx-background-color", playFieldBackground)
+	       .add("-fx-background-color", Color.TRANSPARENT)
 	       .add("-fx-padding", "0 0")
 	    .end();
 	    
@@ -1244,6 +1245,18 @@ public abstract class Skin extends SkinProperties {
 	    
 	}
 	
+	/**
+	 * Die Chips eines Collect-Steps. Ungewertet sehen sie aus wie die im Tagebuch: kein eigener
+	 * Hintergrund, das × über {@code .tag-chip-remove}. Gewertet heißt grün oder rot wie überall;
+	 * falsch gewählt und vergessen sind beide rot, das Durchstreichen trennt sie.
+	 */
+	private void addCollectChipStyles(CssBuilder builder) {
+		builder.rule(".collect-chip:correct", "-fx-background-color", correctColor);
+		builder.rule(".collect-chip:incorrect", "-fx-background-color", incorrectColor);
+		builder.rule(".collect-chip:missing", "-fx-background-color", incorrectColor);
+		builder.rule(".collect-chip:incorrect .text", "-fx-strikethrough", "true");
+	}
+
 	private String padding(double oben, int right, double unten, int left) { // Kurzform wo möglich: ohne Schatten steht dort dasselbe wie zuvor, der Vergleich bleibt aussagekräftig.
 		if (oben == unten && right == left)
 			return oben + "px " + right + "px";

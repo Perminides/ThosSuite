@@ -11,6 +11,7 @@ import app.learn.anki.model.Card.Answer;
 import app.learn.anki.model.Card.AnswerOption;
 import app.learn.anki.model.Card.Chunk;
 import app.learn.anki.model.Card.ClickMapElements;
+import app.learn.anki.model.Card.Collect;
 import app.learn.anki.model.Card.Fast;
 import app.learn.anki.model.Card.FixedStep;
 import app.learn.anki.model.Card.Image;
@@ -136,6 +137,7 @@ public class CardParser {
             case "Image" -> new Image(body);
             case "Output"  -> new Output(body);
             case "Input"  -> parseInput(body);
+            case "Collect" -> parseCollect(body);
             case "MC"    -> parseMc(body, false);
             case "MC+"   -> parseMc(body, true);
             case "Click" -> parseClick(body);
@@ -429,6 +431,24 @@ public class CardParser {
 		for (String part : commaSeparated.split(","))
 			result.add(part.trim());
 		return result;
+	}
+
+	// --- Collect
+
+	/**
+	 * {@code <antwort>|<antwort>|…}, jede mit Schreibweisen {@code a,b}. Keine Rollen. Die Schreibweisen
+	 * zählen beim Werten; vorgeschlagen wird nur, was in der Wortliste steht.
+	 */
+	private static Step parseCollect(String body) {
+		List<List<String>> answers = new ArrayList<>();
+		for (String raw : splitUnescaped(body, '|')) {
+			List<String> variants = parseVariants(raw);
+			if (!variants.isEmpty())
+				answers.add(variants);
+		}
+		if (answers.isEmpty())
+			throw new RuntimeException("Collect ohne Antwort: " + body);
+		return new Collect(List.copyOf(answers));
 	}
 
 	// --- Click/Mark

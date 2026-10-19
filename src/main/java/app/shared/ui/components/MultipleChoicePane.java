@@ -127,6 +127,14 @@ public class MultipleChoicePane extends Pane {
         }
     }
 
+    /** Für die Pause: Noch offene Knöpfe werden grau, Text und gewertete oder markierte Knöpfe bleiben stehen. */
+    public void freeze() {
+        stopShake();
+        for (Button btn : buttons)
+            if (btn.getPseudoClassStates().contains(STATE_ACTIVE))
+                setButtonLogicState(btn, STATE_INACTIVE);
+    }
+
     public void setCorrectAndInactive(Collection<Integer> correctIndices) {
         for (int i = 0; i < buttons.size(); i++) {
             Button btn = buttons.get(i);
