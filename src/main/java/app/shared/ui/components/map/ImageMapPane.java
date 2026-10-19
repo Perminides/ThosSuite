@@ -297,6 +297,7 @@ public class ImageMapPane extends StackPane implements LearnMap {
 			return;
 		mainImageView.setImage(active ? background : inactiveMain);
 		miniMapImageView.setImage(active ? overlay : inactiveOverlay);
+		miniMapImageView.setVisible(active); // sie navigiert nur — ohne Klick verriete sie bloß die Welt, etwa die Nachbarländer
 	}
 
 	// ========================================
