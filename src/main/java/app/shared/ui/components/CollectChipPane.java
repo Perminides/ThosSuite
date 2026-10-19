@@ -16,7 +16,7 @@ import javafx.scene.layout.HBox;
  *
  * <p>Den Zustand jedes Chips entscheidet der Aufrufer ({@link CollectChip.State}); hier wird er nur
  * zur Pseudoklasse: {@code :correct}, {@code :incorrect} (falsch gewählt), {@code :missing}
- * (vergessen). Nur ein noch ungewerteter Chip trägt ein ×.</p>
+ * (vergessen). Ein tolerierter Chip bekommt keine. Nur ein noch ungewerteter Chip trägt ein ×.</p>
  *
  * <p>CSS: Chip = {@code .collect-chip}, × = {@code .tag-chip-remove} wie im Tagebuch.</p>
  */

@@ -13,7 +13,7 @@ Aufbau: `<id>;<remark>;<label,label,…>;<step>;<step>;…`
 | `7;knifflig;Sport,Historie;Input:1998,MCMXCVIII` | remark „knifflig", zwei Labels, ein Step. |
 
 - `id` — ganze Zahl, überlebt jede Regenerierung. `remark` und `labels` dürfen leer sein.
-- Eine Karte **muss irgendwo Input verlangen** (`MC`, `MC+`, `Input`, `Click`, `Fast`) — sonst fliegt sie.
+- Eine Karte **muss irgendwo Input verlangen** (`MC`, `MC+`, `Input`, `Collect`, `Click`, `Fast`) — sonst fliegt sie.
 
 ## Trennzeichen
 
@@ -22,11 +22,14 @@ In jedem Step dasselbe:
 | Zeichen | Bedeutung |
 |---|---|
 | `\|` | trennt **verschiedene** Antworten, Optionen oder Formen |
-| `,` | trennt **Schreibweisen derselben** Antwort — nur in `Input` und `Fast`; in `MC` ist es gewöhnlicher Text |
-| `\` | macht das nächste Zeichen zu Text: `\,` `\\|` `\-` · `\\` ist ein Backslash |
+| `,` | trennt **Schreibweisen derselben** Antwort — nur in `Input`, `Collect` und `Fast`; in `MC` ist es gewöhnlicher Text |
+| `\` | macht das nächste Zeichen zu Text: `\,` `\\|` `\-` `\~` · `\\` ist ein Backslash |
 
-Alte Schreibweisen brechen ab, statt still etwas anderes zu bedeuten: `,` in `Click` und `Mark`,
-`>` in `Mark`.
+Ein führendes `~` heißt überall **toleriert**: kein Fehler, wenn gewählt, nicht nötig, wenn nicht.
+Wie es aussieht, entscheidet der Step — `MC` schüttelt den Knopf, `Collect` lässt den Chip ohne Farbe,
+`Click` färbt die Form grün.
+
+Alte Schreibweisen brechen ab, statt still etwas anderes zu bedeuten: `,` und `>` in `Click` und `Mark`.
 
 ## Beispielsammlung
 
@@ -41,8 +44,9 @@ Alte Schreibweisen brechen ab, statt still etwas anderes zu bedeuten: `,` in `Cl
 | `Input:Regnitz\|-Main` | Stoppwort: „Main" macht die Karte sofort falsch. |
 | `Input:Esters\|Lange` | Beide nötig, beliebige Reihenfolge; nach jedem Treffer leert sich das Feld. |
 | `Collect:Dänemark\|Polen\|…` | **Prototyp.** Aus Vorschlägen (fest: alle Länder) Chips sammeln, mit × entfernen; erst Absenden (Enter auf leerem Feld, Knopf) wertet, ganz oder gar nicht. |
+| `Collect:Litauen\|Belarus\|~Polen` | Polen ist toleriert: gewählt kein Fehler, weggelassen auch nicht. |
 | `Click:hannover` | Die Form „hannover" auf der Karte anklicken. |
-| `Click:berlin\|potsdam>brandenburg` | Pflicht: berlin + potsdam; optional: brandenburg. Getrennt wird an `>`, weil Namen Bindestriche tragen (Theodor-Heuss-Platz). |
+| `Click:berlin\|potsdam\|~brandenburg` | Pflicht: berlin + potsdam; toleriert: brandenburg (wird grün, muss aber nicht). |
 | `Click:small:120:340` | Ein Kreis als Form: Größe, x, y. Größen: `ultra small`, `small`, `middle small`, `middle`, `middle big`, `big`, `ultra big`; `empty` zentriert nur. |
 | `Mark:bayern\|sachsen` | Markiert die zwei Formen (nur Anzeige). |
 | `MC:+Paris\|Lyon\|Marseille` | Auswahl, Einzelklick: Paris richtig, Rest falsch. |
@@ -204,7 +208,7 @@ Block nie erreicht.
 |---|---|
 | `Output:Frage?;MC:+A\|B;Image:X.svg;Pause:;<OnFail>Image:X.svg;Pause:` | Richtig: Bild, Pause, Ende. Falsch: Aufdeckung und Bild zugleich, Pause, Ende. |
 
-- Der Block **darf nichts fragen** (`MC`, `MC+`, `Input`, `Click`, `Fast`) → Abbruch. Die Karte ist an
+- Der Block **darf nichts fragen** (`MC`, `MC+`, `Input`, `Collect`, `Click`, `Fast`) → Abbruch. Die Karte ist an
   dieser Stelle längst entschieden. Er zählt deshalb auch nicht für die Pflicht, dass eine Karte
   irgendwo Input verlangt.
 - **Kein Endezeichen** — der Block reicht bis Zeilenende. Anders als bei `<ShuffleStart>` kann dabei

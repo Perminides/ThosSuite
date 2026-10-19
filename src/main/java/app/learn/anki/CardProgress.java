@@ -425,7 +425,7 @@ public class CardProgress {
 	/**
 	 * Wie MC+: erst das Absenden wertet, ganz oder gar nicht. Aufgedeckt wird in der gewählten
 	 * Reihenfolge, die vergessenen hinten dran — falsch gewählt und vergessen sind beide rot, der
-	 * Zustand unterscheidet sie.
+	 * Zustand unterscheidet sie. Ein toleriertes Wort bleibt ohne Farbe; fehlt es, taucht es nicht auf.
 	 */
 	private void collectSubmitted(Collect collect) {
 		if (collected.isEmpty())
@@ -439,6 +439,8 @@ public class CardProgress {
 			if (answer >= 0) {
 				found[answer] = true;
 				result.add(new CollectChip(word, CollectChip.State.CORRECT));
+			} else if (isTolerated(collect, word)) {
+				result.add(new CollectChip(word, CollectChip.State.TOLERATED));
 			} else {
 				allRight = false;
 				result.add(new CollectChip(word, CollectChip.State.WRONG));
@@ -457,6 +459,13 @@ public class CardProgress {
 		} else {
 			failed();
 		}
+	}
+
+	private static boolean isTolerated(Collect collect, String word) {
+		for (String variant : collect.tolerated())
+			if (variant.equalsIgnoreCase(word))
+				return true;
+		return false;
 	}
 
 	/** Index der Antwort, zu der das Wort eine Schreibweise ist, sonst -1. */

@@ -436,52 +436,79 @@ public class CardParser {
 	// --- Collect
 
 	/**
-	 * {@code <antwort>|<antwort>|…}, jede mit Schreibweisen {@code a,b}. Keine Rollen. Die Schreibweisen
-	 * zählen beim Werten; vorgeschlagen wird nur, was in der Wortliste steht.
+	 * {@code <antwort>|<antwort>|~<toleriert>…}, jede mit Schreibweisen {@code a,b}. Nackt heißt nötig,
+	 * {@code ~} toleriert; {@code + - ?} sind reserviert. Die Schreibweisen zählen beim Werten;
+	 * vorgeschlagen wird nur, was in der Wortliste steht.
 	 */
 	private static Step parseCollect(String body) {
 		List<List<String>> answers = new ArrayList<>();
+		List<String> tolerated = new ArrayList<>();
 		for (String raw : splitUnescaped(body, '|')) {
-			List<String> variants = parseVariants(raw);
-			if (!variants.isEmpty())
+			String part = raw.trim();
+			if (part.isEmpty())
+				continue;
+			boolean tilde = part.startsWith("~");
+			if (!tilde)
+				checkNoRole(part, "Collect", body);
+			List<String> variants = parseVariants(tilde ? part.substring(1) : part);
+			if (variants.isEmpty())
+				throw new RuntimeException("Collect: Antwort ohne Text: " + body);
+			if (tilde)
+				tolerated.addAll(variants);
+			else
 				answers.add(variants);
 		}
 		if (answers.isEmpty())
 			throw new RuntimeException("Collect ohne Antwort: " + body);
-		return new Collect(List.copyOf(answers));
+		return new Collect(List.copyOf(answers), List.copyOf(tolerated));
+	}
+
+	/** Ein Rollenzeichen, das der Step nicht kennt, ist reserviert — als Text mit {@code \} schützen. */
+	private static void checkNoRole(String part, String step, String body) {
+		if ("+-~?".indexOf(part.charAt(0)) >= 0)
+			throw new RuntimeException(step + ": '" + part.charAt(0) + "' am Anfang ist reserviert, als Text mit \\ schützen: " + body);
 	}
 
 	// --- Click/Mark
 
-	/**
-	 * {@code <pflicht>|<pflicht>…>optional|…} — getrennt wird an {@code >}, nicht am Bindestrich: Der
-	 * steckt in Namen wie Theodor-Heuss-Platz.
-	 */
+	/** {@code <pflicht>|<pflicht>|~<toleriert>…} — eine tolerierte Form darf geklickt werden, muss aber nicht. */
 	private static Step parseClick(String body) {
-		String[] g = body.split(">", -1);
-		if (g.length > 2)
-			throw new RuntimeException("Click mit mehr als einem '>': " + body);
-		Set<String> optional = g.length > 1 ? parseShapes(g[1]) : new HashSet<>();
-		return new ClickMapElements(parseShapes(g[0]), optional);
+		Set<String> mandatory = new HashSet<>();
+		Set<String> tolerated = new HashSet<>();
+		for (String part : shapeParts(body)) {
+			if (part.startsWith("~")) {
+				tolerated.add(unescape(part.substring(1).trim()));
+			} else {
+				checkNoRole(part, "Click", body);
+				mandatory.add(unescape(part));
+			}
+		}
+		return new ClickMapElements(mandatory, tolerated);
 	}
 
 	private static Step parseMark(String body) {
-		if (body.contains(">"))
-			throw new RuntimeException("Mark kennt kein '>': " + body);
-		return new MarkMapElements(parseShapes(body));
+		Set<String> shapes = new HashSet<>();
+		for (String part : shapeParts(body)) {
+			checkNoRole(part, "Mark", body);
+			shapes.add(unescape(part));
+		}
+		return new MarkMapElements(shapes);
 	}
 
 	/**
-	 * Formen, mit {@code |} getrennt. Ein Kreis ist eine Form: {@code small:120:340}. Ein Komma ist die
-	 * alte Schreibweise und bricht ab, statt still eine Form namens „a,b" zu suchen.
+	 * Formen, mit {@code |} getrennt, noch mit Rolle und Escape. Ein Kreis ist eine Form:
+	 * {@code small:120:340}. Komma und {@code >} sind alte Schreibweisen und brechen ab, statt still
+	 * eine Form namens „a,b" zu suchen.
 	 */
-	private static Set<String> parseShapes(String text) {
+	private static List<String> shapeParts(String text) {
 		if (splitUnescaped(text, ',').size() > 1)
 			throw new RuntimeException("Formen trennt '|', nicht ',': " + text);
-		Set<String> shapes = new HashSet<>();
-		for (String shape : splitUnescaped(text, '|'))
-			if (!shape.trim().isEmpty())
-				shapes.add(unescape(shape.trim()));
-		return shapes;
+		if (splitUnescaped(text, '>').size() > 1)
+			throw new RuntimeException("'>' gibt es nicht mehr — tolerierte Formen tragen '~': " + text);
+		List<String> parts = new ArrayList<>();
+		for (String part : splitUnescaped(text, '|'))
+			if (!part.trim().isEmpty())
+				parts.add(part.trim());
+		return parts;
 	}
 }

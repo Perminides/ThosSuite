@@ -13,6 +13,8 @@ public record CollectChip(String text, State state) {
 		/** Gewählt, gehört aber nicht dazu. */
 		WRONG,
 		/** Gehört dazu, wurde aber nicht gewählt. */
-		MISSING
+		MISSING,
+		/** Gewählt und toleriert: weder richtig noch falsch, deshalb ohne Farbe. */
+		TOLERATED
 	}
 }
