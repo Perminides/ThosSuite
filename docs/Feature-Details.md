@@ -379,20 +379,19 @@ Anki-Programm von Hand angelegt, nicht für Decks der Suite. Aufgerufen über �
 beim Start. Die Planung mit allen Entscheidungen und dem Import steht im tools-Repo unter
 `quiz/Quiz-Karten.md`; hier steht nur, was die Suite davon tut.
 
-**Ablauf (`QuizRound`).** Eine Runde zeigt zuerst alle Fragen, aus denen eine Karte werden soll
-(`QuizCardDialog`, „Karte erstellt?“), dann zufällige offene Fragen (`QuizQuestionDialog`), bis
-*Fertig* kommt oder keine mehr offen ist. Je Frage ein Dialog mit framework-freiem Ergebnis; die
-Schleife, die Auswahl und das Speichern liegen im Feature. Jede Antwort wird sofort gespeichert,
-*Fertig* verwirft nichts.
+**Ablauf (`QuizRound`).** Eine Runde zeigt offene Fragen (`QuizQuestionDialog`), bis *Fertig*
+kommt oder keine mehr offen ist — zuerst die mit Vorschlag von Claude, über die schon nachgedacht
+wurde, dann zufällig. Je Frage ein Dialog mit framework-freiem Ergebnis; die Schleife, die Auswahl
+und das Speichern liegen im Feature. Jede Antwort wird sofort gespeichert, *Fertig* verwirft nichts.
 
-- **Fragedialog:** *Lösung zeigen* deckt auf und legt Frage und Lösung in die Zwischenablage. Bis
-  dahin sind die Antwortknöpfe ausgegraut: *Weiß ich*, *Claude* (Vorschlag holen), *Mach ich
-  selbst*, *Uninteressant*. Ein Hinweisfeld geht beim Vorschlag an Claude mit. *Überspringen*
-  geht immer und speichert nichts — die Frage bleibt offen, kommt aber erst in der nächsten Runde
-  wieder.
-- **„Karte erstellt?“:** Frage, Lösung, neuester Vorschlag zum Kopieren und das Hinweisfeld.
-  *Karte erstellt*, *Nachbessern* (neuer Vorschlag mit Hinweis, derselbe Dialog zeigt ihn — bei
-  Fragen ohne Vorschlag heißt der Knopf *Claude*), *Noch nicht*, *Keine Karte*.
+- **Ein Dialog, immer dieselben Knöpfe:** *Lösung zeigen* deckt auf und legt Frage und Lösung in
+  die Zwischenablage. Bis dahin sind die Antwortknöpfe ausgegraut: *Weiß ich*, *Claude*, *Karte
+  erstellt*, *Wird keine Karte*. *Überspringen* geht immer und speichert nichts — die Frage bleibt
+  offen, kommt aber erst in der nächsten Runde wieder.
+- **Claude:** holt einen Vorschlag, mit dem Hinweis aus dem Hinweisfeld. Danach erscheint dieselbe
+  Frage aufgedeckt wieder, mit dem Vorschlag in einem kopierbaren Textfeld; ein weiterer Klick auf
+  *Claude* bessert nach. Die Frage bleibt dabei offen. Kommt sie später wieder, steht der neueste
+  Vorschlag mit da — erst nach *Lösung zeigen*, weil er die Lösung verrät.
 - **Kein Rückgängig:** Fehlklicks werden von Hand in der DB korrigiert.
 
 **Kartenvorschlag (`ClaudeClient`).** Der Prompt ist der **komplette Anfrage-Body** an die
@@ -414,19 +413,18 @@ abgeschnitten), kommt eine Meldung über `ClaudeException`; die Frage bleibt, wi
 
 Eine eigene DB (`quiz.db`), nicht die Suite-DB: Befüllt wird sie von einem Import **außerhalb der
 Suite** (Python im tools-Repo), und ein Fehler darin soll Tagebuch, Nachrichten und
-Gesundheitsdaten nicht erreichen. Die Suite liest die Fragen und schreibt nur Status, Log und
-Vorschläge. Das vollständige Schema samt Begründungen steht in `quiz/Quiz-Karten.md` §4.
+Gesundheitsdaten nicht erreichen. Die Suite liest die Fragen und schreibt nur die Antwort (Status
+und Zeitpunkt) und Vorschläge. Das vollständige Schema samt Begründungen steht in `quiz/Quiz-Karten.md` §4.
 
 - **`quiz_set`, `question`, `category`:** Spieltage und Fragen; die Antwort ist der Rohtext aus
   der Quelle samt Alternativen. Kategorien als eigene Tabelle mit Fremdschlüssel.
-- **Status an der Frage, Log in `question_log`:** `open`, `known`, `no_card`, `card_requested`,
-  `card_self`, `card_created`. Status und Log-Eintrag entstehen in derselben Transaktion; der
-  Status ist nur Zwischenspeicher, maßgeblich ist das Log. `no_card` steht für „Uninteressant“ wie
-  für „Keine Karte“ — ob eine Karte einmal vorgesehen war, zeigt das Log. Dazu `paused`, nur von
-  Hand gesetzt und ohne Log-Eintrag, um ein Set ruhen zu lassen; die Suite holt nur `open` und die
-  angeforderten Karten und übergeht `paused` damit von selbst.
+- **Antwort an der Frage:** Status `open`, `known`, `no_card`, `card_created` und der Zeitpunkt der
+  Antwort in `answered_at`. Eine beantwortete Frage kommt nie wieder, ein eigenes Log bräuchte es
+  erst, wenn sie mehrmals beantwortet werden könnte. Dazu `paused`, nur von Hand gesetzt, um ein Set
+  ruhen zu lassen; die Suite holt nur `open` und übergeht `paused` damit von selbst.
 - **`prompt`:** die Prompt-Versionen. **`card_suggestion`:** jeder Vorschlag eine Zeile, mit
-  Modell laut API, Prompt-Version und dem Hinweis, der zu ihm geführt hat; der neueste gilt.
+  Modell laut API, Prompt-Version und dem Hinweis, der zu ihm geführt hat; der neueste gilt. Ein
+  Vorschlag ist keine Antwort — er lässt die Frage unberührt.
 
 ## 💬 Nachrichten-Archiv (`messaging`)
 

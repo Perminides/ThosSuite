@@ -2,13 +2,14 @@ package app.shared.model;
 
 /**
  * Die Antwort auf eine Quizfrage. {@link #SKIP} und {@link #DONE} gehen jederzeit, die übrigen erst,
- * wenn die Lösung aufgedeckt ist.
+ * wenn die Lösung aufgedeckt ist. {@link #CARD} holt einen Vorschlag von Claude, danach erscheint
+ * dieselbe Frage wieder.
  */
 public enum QuizAnswer {
 	KNOWN("Weiß ich"),
 	CARD("Claude"),
-	OWN_CARD("Mach ich selbst"),
-	NOT_INTERESTED("Uninteressant"),
+	CREATED("Karte erstellt"),
+	NOT_INTERESTED("Wird keine Karte"),
 	SKIP("Überspringen"),
 	DONE("Fertig");
 

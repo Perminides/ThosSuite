@@ -1,16 +1,12 @@
 package app.quiz.repository;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
-import app.quiz.model.PendingCard;
 import app.quiz.model.Prompt;
 import app.quiz.model.QuizAction;
 import app.quiz.model.Question;
@@ -19,10 +15,7 @@ import app.shared.DB;
 
 /**
  * Zugriff auf die Quiz-DB. Befüllt wird sie von einem Import außerhalb der Suite; die Suite liest
- * die Fragen und schreibt nur Status, Log und Kartenvorschläge.
- *
- * <p>Status und Log-Eintrag entstehen immer in derselben Transaktion — der Status ist nur ein
- * Zwischenspeicher, maßgeblich ist das Log.</p>
+ * die Fragen und schreibt nur die Antwort (Status und Zeitpunkt) und Kartenvorschläge.
  */
 public class Repository {
 
@@ -32,18 +25,20 @@ public class Repository {
 	private static final String QUESTION_COLUMNS = "q.id, q.category, q.topic, q.question, q.answer";
 
 	/**
-	 * Eine zufällige offene Frage, oder {@code null}, wenn keine mehr offen ist.
+	 * Die nächste offene Frage, oder {@code null}, wenn keine mehr offen ist. Fragen mit Vorschlag von
+	 * Claude kommen zuerst — über die wurde schon nachgedacht, sie sollen nicht wochenlang liegen —,
+	 * innerhalb beider Gruppen zufällig.
 	 *
 	 * @param excluded Fragen, die in dieser Runde übersprungen wurden
 	 */
-	public Question randomOpen(Set<Integer> excluded) {
+	public Question nextOpen(Set<Integer> excluded) {
 		StringBuilder sql = new StringBuilder("SELECT " + QUESTION_COLUMNS + " FROM question q WHERE q.status = 'open'");
 		if (!excluded.isEmpty()) {
 			sql.append(" AND q.id NOT IN (?");
 			sql.append(", ?".repeat(excluded.size() - 1));
 			sql.append(")");
 		}
-		sql.append(" ORDER BY RANDOM() LIMIT 1");
+		sql.append(" ORDER BY EXISTS (SELECT 1 FROM card_suggestion s WHERE s.question_id = q.id) DESC, RANDOM() LIMIT 1");
 		try (PreparedStatement ps = DB.getQuizConnection().prepareStatement(sql.toString())) {
 			int index = 1;
 			for (int id : excluded)
@@ -56,22 +51,17 @@ public class Repository {
 		}
 	}
 
-	/** Fragen, aus denen eine Karte werden soll, mit dem neuesten Vorschlag; die älteste Anforderung zuerst. */
-	public List<PendingCard> pendingCards() {
-		String sql = "SELECT " + QUESTION_COLUMNS + ","
-				+ " (SELECT s.text FROM card_suggestion s WHERE s.question_id = q.id ORDER BY s.id DESC LIMIT 1) AS suggestion"
-				+ " FROM question q"
-				+ " WHERE q.status IN ('" + QuizAction.CARD_REQUESTED.dbValue() + "', '" + QuizAction.CARD_SELF.dbValue() + "')"
-				+ " ORDER BY (SELECT MAX(l.id) FROM question_log l WHERE l.question_id = q.id)";
-		List<PendingCard> cards = new ArrayList<>();
-		try (PreparedStatement ps = DB.getQuizConnection().prepareStatement(sql);
-				ResultSet rs = ps.executeQuery()) {
-			while (rs.next())
-				cards.add(new PendingCard(readQuestion(rs), rs.getString("suggestion")));
+	/** Der neueste Vorschlag von Claude zu einer Frage, oder {@code null}, wenn es keinen gibt. */
+	public String latestSuggestion(int questionId) {
+		String sql = "SELECT text FROM card_suggestion WHERE question_id = ? ORDER BY id DESC LIMIT 1";
+		try (PreparedStatement ps = DB.getQuizConnection().prepareStatement(sql)) {
+			ps.setInt(1, questionId);
+			try (ResultSet rs = ps.executeQuery()) {
+				return rs.next() ? rs.getString("text") : null;
+			}
 		} catch (SQLException e) {
-			throw new RuntimeException("Fehler beim Holen der offenen Karten", e);
+			throw new RuntimeException("Fehler beim Holen des Kartenvorschlags", e);
 		}
-		return cards;
 	}
 
 	/** Der neueste Prompt. Ohne Prompt in der DB lässt sich kein Vorschlag holen — das ist ein Fehler. */
@@ -87,64 +77,38 @@ public class Repository {
 		}
 	}
 
-	/** Setzt den Status einer Frage und schreibt den Log-Eintrag dazu. */
+	/** Speichert die Antwort auf eine Frage: neuer Status und der Zeitpunkt der Antwort. */
 	public void record(int questionId, QuizAction action) {
-		try (Connection con = DB.getNewQuizConnection()) {
-			try {
-				updateStatusAndLog(con, questionId, action);
-				con.commit();
-			} catch (SQLException | RuntimeException e) {
-				con.rollback();
-				throw e;
-			}
+		String sql = "UPDATE question SET status = ?, answered_at = ? WHERE id = ?";
+		try (PreparedStatement ps = DB.getQuizConnection().prepareStatement(sql)) {
+			ps.setString(1, action.dbValue());
+			ps.setString(2, now());
+			ps.setInt(3, questionId);
+			if (ps.executeUpdate() != 1)
+				throw new IllegalStateException("[FAILFAST] Quizfrage " + questionId + " nicht gefunden.");
 		} catch (SQLException e) {
 			throw new RuntimeException("Fehler beim Speichern der Quizantwort", e);
 		}
 	}
 
 	/**
-	 * Speichert einen Kartenvorschlag samt Hinweis und setzt die Frage auf „Karte angefordert“. Jeder
-	 * Vorschlag bekommt eine eigene Zeile; der neueste gilt.
+	 * Speichert einen Kartenvorschlag samt Hinweis. Jeder Vorschlag bekommt eine eigene Zeile; der
+	 * neueste gilt. Die Frage bleibt unberührt — ein Vorschlag ist keine Antwort.
 	 *
 	 * @param instruction der Hinweis an Claude, oder {@code null}
 	 */
 	public void saveSuggestion(int questionId, Suggestion suggestion, int promptVersion, String instruction) {
 		String sql = "INSERT INTO card_suggestion (question_id, created_at, model, prompt_version, text, instruction) VALUES (?, ?, ?, ?, ?, ?)";
-		try (Connection con = DB.getNewQuizConnection()) {
-			try {
-				try (PreparedStatement ps = con.prepareStatement(sql)) {
-					ps.setInt(1, questionId);
-					ps.setString(2, now());
-					ps.setString(3, suggestion.model());
-					ps.setInt(4, promptVersion);
-					ps.setString(5, suggestion.text());
-					ps.setString(6, instruction);
-					ps.executeUpdate();
-				}
-				updateStatusAndLog(con, questionId, QuizAction.CARD_REQUESTED);
-				con.commit();
-			} catch (SQLException | RuntimeException e) {
-				con.rollback();
-				throw e;
-			}
-		} catch (SQLException e) {
-			throw new RuntimeException("Fehler beim Speichern des Kartenvorschlags", e);
-		}
-	}
-
-	private void updateStatusAndLog(Connection con, int questionId, QuizAction action) throws SQLException {
-		try (PreparedStatement ps = con.prepareStatement("UPDATE question SET status = ? WHERE id = ?")) {
-			ps.setString(1, action.dbValue());
-			ps.setInt(2, questionId);
-			if (ps.executeUpdate() != 1)
-				throw new IllegalStateException("[FAILFAST] Quizfrage " + questionId + " nicht gefunden.");
-		}
-		try (PreparedStatement ps = con.prepareStatement(
-				"INSERT INTO question_log (question_id, created_at, action) VALUES (?, ?, ?)")) {
+		try (PreparedStatement ps = DB.getQuizConnection().prepareStatement(sql)) {
 			ps.setInt(1, questionId);
 			ps.setString(2, now());
-			ps.setString(3, action.dbValue());
+			ps.setString(3, suggestion.model());
+			ps.setInt(4, promptVersion);
+			ps.setString(5, suggestion.text());
+			ps.setString(6, instruction);
 			ps.executeUpdate();
+		} catch (SQLException e) {
+			throw new RuntimeException("Fehler beim Speichern des Kartenvorschlags", e);
 		}
 	}
 
