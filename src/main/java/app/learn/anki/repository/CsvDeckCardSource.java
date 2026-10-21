@@ -8,7 +8,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,16 +21,11 @@ import app.shared.Config;
 class CsvDeckCardSource {
 		// Der Deck-Dateiname darf eine mit ';' getrennte Liste sein — dann wird jede Datei geladen.
 		private final Map<Deck, List<File>> bundles = new EnumMap<>(Deck.class);
-		/** Listenname → Vorschläge, einmal geladen; ein Collect-Step bekommt beim Einlesen seine Liste. */
-		private final Map<String, List<String>> wordLists = new HashMap<>();
+		/** Listenname → Einträge mit Schreibweisen, einmal geladen; Collect und Input mit Liste lösen sie beim Einlesen auf. */
+		private final Map<String, List<List<String>>> wordLists;
 
 		CsvDeckCardSource() {
-			for (Map.Entry<String, List<List<String>>> list : new CsvWordListSource().loadAll().entrySet()) {
-				List<String> shown = new ArrayList<>();
-				for (List<String> variants : list.getValue())
-					shown.add(variants.get(0));
-				wordLists.put(list.getKey(), List.copyOf(shown));
-			}
+			wordLists = new CsvWordListSource().loadAll();
 
 			File dataDir = Config.getPath("deckFolder").toFile();
 			for (Deck type : Deck.values()) {

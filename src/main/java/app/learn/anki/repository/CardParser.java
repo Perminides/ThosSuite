@@ -46,16 +46,16 @@ import app.shared.model.SketchColor;
  */
 public class CardParser {
 
-	/** Ohne Wortlisten — ein Collect-Step bricht dann ab. Für Aufrufer, die keine Listen laden. */
+	/** Ohne Wortlisten — ein Step mit Liste bricht dann ab. Für Aufrufer, die keine Listen laden. */
 	public static Card parse(List<String> csvTokens) {
 		return parse(csvTokens, Map.of());
 	}
 
 	/**
 	 * Eine an {@code ;} zerlegte Zeile: id, Bemerkung (wird nicht gelesen), Labels, danach die Steps.
-	 * Die Wortlisten (Name → Vorschläge) braucht nur ein Collect-Step.
+	 * Die Wortlisten (Name → Einträge mit ihren Schreibweisen) brauchen Collect und Input mit Liste.
 	 */
-	public static Card parse(List<String> csvTokens, Map<String, List<String>> wordLists) {
+	public static Card parse(List<String> csvTokens, Map<String, List<List<String>>> wordLists) {
 		int id = Integer.parseInt(csvTokens.get(0));
 		Set<String> labels = splitAndTrim(csvTokens.get(2));
 
@@ -135,7 +135,7 @@ public class CardParser {
 	}
 
     // --- Parsing eines einzelnen Step-Strings (ohne Marker) ---
-    private static Step parseStep(String s, Map<String, List<String>> wordLists) {
+    private static Step parseStep(String s, Map<String, List<List<String>>> wordLists) {
         String[] p = s.split(":", 2);
         String kind = p[0];
         String body = p.length > 1 ? p[1] : "";
@@ -143,7 +143,7 @@ public class CardParser {
         return switch (kind) {
             case "Image" -> new Image(body);
             case "Output"  -> new Output(body);
-            case "Input"  -> parseInput(body);
+            case "Input"  -> parseInput(body, wordLists);
             case "Collect" -> parseCollect(body, wordLists);
             case "MC"    -> parseMc(body, false);
             case "MC+"   -> parseMc(body, true);
@@ -393,33 +393,76 @@ public class CardParser {
     // --- Input ---
 
     /**
-     * {@code <antwort>|<antwort>|-<stoppwort>…}, jede mit Schreibweisen {@code a,b,c}.
+     * {@code [<liste>:]<antwort>|<antwort>|-<stoppwort>|~<toleriert>…}, jede mit Schreibweisen {@code a,b,c}.
      *
-     * <p>Nackt heißt richtig, {@code -} Stoppwort. {@code + ~ ?} am Anfang sind reserviert und
-     * brechen ab, damit eine spätere Bedeutung keine bestehende Karte still verändert.</p>
+     * <p>Nackt heißt richtig, {@code -} Stoppwort, {@code ~} toleriert — kein Fehler, kein Treffer.
+     * {@code + ?} am Anfang sind reserviert. Ein {@code :} ohne {@code \} trennt die Liste ab.</p>
+     *
+     * <p>Mit Liste ist jeder ihrer Einträge ein Stoppwort, außer denen, die eine Antwort oder ein
+     * toleriertes Wort als Schreibweise tragen. Ein Listen-Stoppwort, das der Anfang einer richtigen
+     * Schreibweise ist, gilt nicht — sonst stürbe „Porto-Novo" schon bei „Porto". Von Hand gesetzte
+     * Stoppwörter bleiben, wie sie dastehen.</p>
      */
-    private static Step parseInput(String body) {
+    private static Step parseInput(String body, Map<String, List<List<String>>> wordLists) {
+        List<String> head = splitUnescaped(body, ':');
+        List<List<String>> list = null;
+        if (head.size() > 1) {
+            String name = unescape(head.get(0).trim());
+            list = wordLists.get(name);
+            if (list == null)
+                throw new RuntimeException("Input: unbekannte Liste '" + name + "', bekannt sind " + wordLists.keySet()
+                        + " — ein Doppelpunkt im Text braucht \\: " + body);
+            body = body.substring(head.get(0).length() + 1);
+        }
+
         List<List<String>> answers = new ArrayList<>();
         List<String> stopWords = new ArrayList<>();
+        Set<String> known = new HashSet<>(); // Antworten und Toleriertes, klein geschrieben
         for (String raw : splitUnescaped(body, '|')) {
             String part = raw.trim();
             if (part.isEmpty())
                 continue;
             char first = part.charAt(0);
-            if ("+~?".indexOf(first) >= 0)
+            if ("+?".indexOf(first) >= 0)
                 throw new RuntimeException("Input: '" + first + "' am Anfang ist reserviert, als Text mit \\ schützen: " + body);
-            boolean stop = first == '-';
-            List<String> variants = parseVariants(stop ? part.substring(1) : part);
+            boolean stop = first == '-', tolerated = first == '~';
+            List<String> variants = parseVariants(stop || tolerated ? part.substring(1) : part);
             if (variants.isEmpty())
                 throw new RuntimeException("Input: Antwort ohne Text: " + body);
             if (stop)
                 stopWords.addAll(variants);
-            else
-                answers.add(variants);
+            else {
+                if (!tolerated)
+                    answers.add(variants);
+                for (String v : variants)
+                    known.add(v.toLowerCase());
+            }
         }
         if (answers.isEmpty())
             throw new RuntimeException("Input ohne richtige Antwort: " + body);
+
+        if (list != null)
+            for (List<String> entry : list) {
+                boolean own = false;
+                for (String v : entry)
+                    if (known.contains(v.toLowerCase()))
+                        own = true;
+                if (!own)
+                    for (String v : entry)
+                        if (!startsAnAnswer(v, answers))
+                            stopWords.add(v);
+            }
         return new Input(List.copyOf(answers), List.copyOf(stopWords));
+    }
+
+    /** Ob {@code word} der Anfang (oder das Ganze) einer richtigen Schreibweise ist. */
+    private static boolean startsAnAnswer(String word, List<List<String>> answers) {
+        String w = word.toLowerCase();
+        for (List<String> variants : answers)
+            for (String v : variants)
+                if (v.toLowerCase().startsWith(w))
+                    return true;
+        return false;
     }
 
     private static Role roleOf(String part) {
@@ -450,13 +493,16 @@ public class CardParser {
 	 * <p>Die Liste ist Pflicht — ohne sie gäbe es nichts zu wählen. Getrennt wird nur am ersten
 	 * {@code :}, Antworten dürfen selbst einen tragen.</p>
 	 */
-	private static Step parseCollect(String body, Map<String, List<String>> wordLists) {
+	private static Step parseCollect(String body, Map<String, List<List<String>>> wordLists) {
 		String[] p = body.split(":", 2);
 		if (p.length < 2)
 			throw new RuntimeException("Collect braucht eine Liste — Collect:<liste>:<antworten>: " + body);
-		List<String> suggestions = wordLists.get(p[0].trim());
-		if (suggestions == null)
+		List<List<String>> list = wordLists.get(p[0].trim());
+		if (list == null)
 			throw new RuntimeException("Collect: unbekannte Liste '" + p[0].trim() + "', bekannt sind " + wordLists.keySet());
+		List<String> suggestions = new ArrayList<>();
+		for (List<String> entry : list)
+			suggestions.add(entry.get(0)); // vorgeschlagen wird die erste Schreibweise
 		body = p[1];
 
 		List<List<String>> answers = new ArrayList<>();
@@ -478,7 +524,7 @@ public class CardParser {
 		}
 		if (answers.isEmpty())
 			throw new RuntimeException("Collect ohne Antwort: " + body);
-		return new Collect(suggestions, List.copyOf(answers), List.copyOf(tolerated));
+		return new Collect(List.copyOf(suggestions), List.copyOf(answers), List.copyOf(tolerated));
 	}
 
 	/** Ein Rollenzeichen, das der Step nicht kennt, ist reserviert — als Text mit {@code \} schützen. */

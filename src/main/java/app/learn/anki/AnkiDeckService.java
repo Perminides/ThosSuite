@@ -40,7 +40,7 @@ public class AnkiDeckService {
 	 * fälligen. Bewusst alles im Voraus, damit später nichts nachgeladen werden muss.
 	 *
 	 * <p>Je Deck steht danach fest, was heute dran ist: die fälligen Karten plus so viele neue, wie
-	 * das Tagesbudget aus der Config noch zulässt.</p>
+	 * das Tagesbudget aus der Config noch zulässt — zufällig gewählt, bei jedem Start neu.</p>
 	 *
 	 * <p>Bilder fasst er nicht an. Die Bild-Decks nennt er nur beim Namen — sie vorzuwärmen ist
 	 * Sache der Skin-Seite, angestoßen vom Controller.</p>
@@ -67,15 +67,22 @@ public class AnkiDeckService {
 					- repo.getNewLearnedToday(type);
 			int newAdded = 0;
 			Set<String> labels = new HashSet<>();
+			List<Card> newCards = new ArrayList<>();
 
 			for (Card card : allCards.get(type)) {
 				if (card.isDueToday())
 					dueCards.get(type).put(card.getId(), card);
-				else if (card.isNew() && newAdded < budget) {
-					dueCards.get(type).put(card.getId(), card);
-					newAdded++;
-				}
+				else if (card.isNew())
+					newCards.add(card);
 				labels.addAll(card.getLabels());
+			}
+			// Gemischt, sonst käme in der Dateireihenfolge erst ein ganzer Id-Block dran, bevor der nächste beginnt.
+			Collections.shuffle(newCards);
+			for (Card card : newCards) {
+				if (newAdded >= budget)
+					break;
+				dueCards.get(type).put(card.getId(), card);
+				newAdded++;
 			}
 
 			allLabels.put(type, labels);

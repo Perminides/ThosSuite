@@ -302,7 +302,7 @@ public class FlagDeckGenerator {
 	private final FlagSheet sheet;
 	private final Nachbarlaender nachbarn;
 	/** Für den Parser in {@link #check}: ohne die Liste wäre jede Nachbarkarte unlesbar. */
-	private final Map<String, List<String>> wordLists;
+	private final Map<String, List<List<String>>> wordLists;
 	private final Map<String, Integer> areas = new LinkedHashMap<>();
 	private final Map<String, List<String>> sketchColors = new LinkedHashMap<>();
 	/** Flaggenbilder, die es noch nicht gibt. Gemeldet am Ende, nicht abgebrochen. */
@@ -316,7 +316,10 @@ public class FlagDeckGenerator {
 		if (!nachbarn.probleme().isEmpty())
 			throw new RuntimeException("Spalte " + Nachbarlaender.SPALTE + " ist nicht in sich geschlossen:\n  "
 					+ String.join("\n  ", nachbarn.probleme()));
-		this.wordLists = Map.of(LAENDER, nachbarn.wortliste());
+		List<List<String>> laender = new ArrayList<>();
+		for (String land : nachbarn.wortliste())
+			laender.add(List.of(land));
+		this.wordLists = Map.of(LAENDER, laender);
 	}
 
 	public static void main(String[] args) throws IOException {

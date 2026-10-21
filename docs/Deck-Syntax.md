@@ -27,7 +27,7 @@ In jedem Step dasselbe:
 
 Ein führendes `~` heißt überall **toleriert**: kein Fehler, wenn gewählt, nicht nötig, wenn nicht.
 Wie es aussieht, entscheidet der Step — `MC` schüttelt den Knopf, `Collect` lässt den Chip ohne Farbe,
-`Click` färbt die Form grün.
+`Click` färbt die Form grün, bei `Input` passiert beim Tippen nichts.
 
 Alte Schreibweisen brechen ab, statt still etwas anderes zu bedeuten: `,` und `>` in `Click` und `Mark`.
 
@@ -134,24 +134,34 @@ Nicht Syntax, aber die Antwort auf „warum tickt das so":
 
 ## Input — Details
 
-Aufbau: `Input:<antwort>|<antwort>|-<stoppwort>…`, jede mit Schreibweisen `a,b,c`. Geprüft wird bei
-jedem Tastendruck.
+Aufbau: `Input:[<liste>:]<antwort>|<antwort>|-<stoppwort>|~<toleriert>…`, jede mit Schreibweisen
+`a,b,c`. Geprüft wird bei jedem Tastendruck.
 
 | Präfix | Bedeutung |
 |---|---|
 | *(nackt)* | richtig; alle Antworten sind nötig, in beliebiger Reihenfolge |
 | `-` | Stoppwort: Lösung ins Feld, Karte falsch, Pause — wie ESC |
-| `+ ~ ?` | reserviert → Abbruch; als Text mit `\` schützen |
+| `~` | toleriert: kein Fehler, kein Treffer; fällt aus der Stoppliste der Liste |
+| `+ ?` | reserviert → Abbruch; als Text mit `\` schützen |
 
 - Nach jedem Treffer leert sich das Feld. Doppelt Getipptes läuft ins Leere.
 - Beim Aufdecken steht die erste Schreibweise jeder Antwort im Feld, mit Komma verbunden.
 - Ist eine Antwort der Anfang einer anderen (`Main|Mainz`), rastet sie unterwegs ein — danach die
   andere tippen.
 
+**Mit Liste** (`Input:Städte:Canberra`) ist jeder Eintrag der [Wortliste](#wortlisten) ein Stoppwort —
+außer den Einträgen, die eine Antwort oder ein toleriertes Wort als Schreibweise tragen.
+
+- Ein Listen-Stoppwort, das der Anfang einer richtigen Schreibweise ist, gilt nicht: Bei Benin stirbt
+  „Porto-Novo" nicht schon bei „Porto". Von Hand gesetzte `-`-Stoppwörter bleiben, wie sie dastehen.
+- Der Doppelpunkt trennt die Liste ab und ist in `Input` deshalb reserviert — im Text als `\:`
+  (`Input:Star Trek\: Operation Enterprise`). Eine unbekannte Liste bricht ab.
+
 ## Wortlisten
 
-Ein `Collect`-Step nennt seine Liste als ersten Parameter: `Collect:<liste>:<antworten>`. Vorgeschlagen
-wird nur, was in der Liste steht; Freitext zählt nicht.
+Eine Liste ist der Wortvorrat einer Frage, genannt als erster Parameter. Bei `Collect:<liste>:…` wird
+daraus gewählt — vorgeschlagen wird nur, was in der Liste steht, Freitext zählt nicht. Bei
+`Input:<liste>:…` ist alles daraus, was nicht die Antwort ist, ein Stoppwort.
 
 - Zwei Dateien im Deck-Ordner, eine je Schreiber: `listen.csv` pflegst du, `listen-generiert.csv` schreibt
   der Flaggen-Generator bei jedem Lauf neu. Fehlt eine, ist sie leer.
