@@ -188,7 +188,6 @@ public abstract class AnkiLearnView {
 			inputField.requestFocus();
 		});
 		collectChips.setVisible(false);
-		collectChips.heightProperty().addListener((_, _, _) -> layoutCollect());
 	}
 
 	/** Der Modifikator entscheidet nur über den abweichenden Hintergrund — der Rest steht in {@code .my-info-label}. */
@@ -372,6 +371,7 @@ public abstract class AnkiLearnView {
 	/** Was schon als Chip dasteht, wird nicht nochmal vorgeschlagen. */
 	public void setCollectChips(List<CollectChip> chips) {
 		collectChips.setChips(chips);
+		layoutCollect();
 		Set<String> taken = new HashSet<>();
 		for (CollectChip chip : chips)
 			taken.add(chip.text());
@@ -396,9 +396,18 @@ public abstract class AnkiLearnView {
 	/**
 	 * Die Chips sitzen bündig am unteren Rand des Fragefeld-Rechtecks, das Fragefeld schrumpft um ihre
 	 * Höhe und den Abstand aus dem Skin.
+	 *
+	 * <p>Läuft dort, wo sich die Chips ändern, und rechnet ihre Höhe selbst aus, statt auf die von
+	 * JavaFX zu warten: Die steht erst im nächsten Layout-Durchlauf fest, und eine Änderung aus diesem
+	 * Durchlauf heraus erschien erst beim übernächsten — nach dem letzten × blieb das Fragefeld klein,
+	 * bis das Fenster den Fokus verlor.</p>
 	 */
 	private void layoutCollect() {
-		double chips = collectChips.isVisible() && !collectChips.getChildren().isEmpty() ? collectChips.getHeight() : 0;
+		double chips = 0;
+		if (collectChips.isVisible() && !collectChips.getChildren().isEmpty()) {
+			collectChips.applyCss();   // neue Chips haben ihr Stylesheet sonst noch nicht, ihre Größe wäre falsch
+			chips = collectChips.prefHeight(questionBounds.getWidth());
+		}
 		double reserved = chips > 0 ? chips + collectGap : 0;
 		collectChips.setLayoutY(questionBounds.getMaxY() - chips);
 		questionArea.setFixedHeight(questionBounds.getHeight() - reserved);
