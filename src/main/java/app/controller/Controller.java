@@ -47,6 +47,7 @@ import app.shared.skin.Skin;
 import app.shared.skin.SkinImageCache;
 import app.shared.skin.SkinService;
 import app.shared.ui.Alerts;
+import app.tmp.WikidataProbe;
 import app.weekday.WeekdayDialog;
 import javafx.application.Platform;
 
@@ -71,6 +72,7 @@ public class Controller{
     // Dialog. Siehe runPreTasks.
     private Exception activityError;
     private Exception movieImportError;
+    private Exception wikidataError; // Wegwerf-Experiment, siehe app.tmp.WikidataProbe
 
     
     public enum SessionSwitchAction {
@@ -124,6 +126,13 @@ public class Controller{
                 movieImportError = e;
                 Log.error(this.getClass(), "TMDB-Import fehlgeschlagen", e);
             }
+
+            try {
+                new WikidataProbe().run();
+            } catch (Exception e) {
+                wikidataError = e;
+                Log.error(this.getClass(), "Wikidata-Abruf fehlgeschlagen", e);
+            }
         }
     }
      
@@ -143,6 +152,8 @@ public class Controller{
             failed.add("Aktivität: " + activityError.getMessage());
         if (movieImportError != null)
             failed.add("TMDB: " + movieImportError.getMessage());
+        if (wikidataError != null)
+            failed.add("Wikidata: " + wikidataError.getMessage());
 
         if (!failed.isEmpty())
             Alerts.show("Importe fehlgeschlagen", String.join("\n\n", failed), ButtonEnum.OK);
