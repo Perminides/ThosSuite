@@ -212,7 +212,7 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
 - Die Klammer gilt in **jeder Spalte, zu der eine Frage gehört** — Streifenzahlen, `5W`, Gösch,
   Rahmen, Dreieck, Anzahlen, alle kodierten Spalten. Gezeichnet und weitergefragt wird immer mit dem
   Wert vor der Klammer: Wer die tolerierte Antwort klickt, geht den Weg der richtigen weiter.
-  Verboten ist sie in Spalten ohne Frage (`Generieren`, `Version`, `ShapeId`, `Spezial`) und beim
+  Verboten ist sie in Spalten ohne Frage (`Version`, `ShapeId`, `Spezial`) und beim
   Hintergrundtyp für Kreuz und Diagonale; dort bricht der Generator ab.
 - **Dasselbe Element mehrfach** (Panama: `E1 = Stern` auf 0 in Blau, `E2 = Stern` auf 8 in Rot) wird
   gefragt wie eine Figur: „Wie viele Sterne?" mit der Zahl der Einträge, dann „Wo liegen die Sterne?"
@@ -243,9 +243,9 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
   und läge im Block der Kartenkarten.
 - Der Kartenmarker hinter `Mark:` ist der **Name**. Nur wo die Weltkarte ihn nicht kennt, steht in
   Spalte `ShapeId` eine Ausnahme (`middle:3434:951`) — leer heißt: nimm den Namen.
-- Erzeugt werden die Zeilen mit `Generieren = 1`.
-- **Keine Kommas in Zellen** — mehrere Werte mit `|` trennen. Sonst braucht der Leser einen
-  quotefähigen CSV-Parser.
+- Mehrere Werte in einer Zelle trennt `|`. Ein Komma heißt wie in der Deck-Syntax: Schreibweisen
+  derselben Antwort (`Kiew,Kyjiw`). Der Export setzt solche Zellen in Anführungszeichen, der Leser
+  kommt damit zurecht.
 - **Kein Semikolon in einem Schritt** — es trennt die Spalten der Deck-Datei. Der Generator bricht ab.
 - **Kein Zeilenumbruch in einer Zelle.** Das Fragefeld versteht dafür `<br />`, `<b>` und `<i>`.
 - Deck-CSV: UTF-8 mit BOM, CRLF, `;` als Trenner.
@@ -273,10 +273,53 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
   `FlagSheetCheck` listet alle Widersprüche auf einmal.
 - Daraus entsteht die Wortliste `Länder` in `listen-generiert.csv` (Deck-Ordner): genau die Länder
   mit gefüllter Zeile. Inselstaaten ohne Landgrenze stehen deshalb nicht darin.
-- Eine Karte bekommt, wer `Generieren = 1` hat und mindestens einen Nachbarn ohne `~` — Collect
+- Eine Karte bekommt, wer mindestens einen Nachbarn ohne `~` hat — Collect
   braucht eine nötige Antwort. Id `20000 + Land-Id`, Label `Nachbarländer`: Flagge zeigen, Nachbarn
   sammeln, die Weltkarte steht dabei abseits auf einer Stelle ohne Land (Konstante `KARTE_ABSEITS`
   im Generator); markiert wird erst im Abspann.
+
+## Einfache Felder (Hauptstadt)
+
+- Eine Spalte, je Land eine Input-Frage zur Flagge. Die Zelle ist der Input-Inhalt:
+  `Pretoria,Tshwane|Kapstadt,Cape Town|Bloemfontein,Mangaung` — `|` mehrere Antworten (alle nötig),
+  `,` Schreibweisen, die erste wird beim Aufdecken gezeigt. Nur in der Hauptzeile; kein `:` und kein `\`.
+- Geprüft wird gegen die Liste `Städte` in `listen-generiert.csv`: jede andere Stadt daraus ist falsch.
+  In die Karte kommt je Antwort nur die erste Schreibweise, die übrigen holt die Suite aus der Liste.
+- Die Liste `Städte` entsteht aus den Spalten `Hauptstadt`, `Größte Städte` und `Weitere Städte` aller
+  Länder. Schlüssel ist die Hauptform, die erste Schreibweise: Was mit ihr beginnt, ist ein Eintrag,
+  seine Schreibweisen aus allen Spalten werden vereinigt (`Kiew,Kyjiw` und `Kiew,Kyiv` ergeben
+  `Kiew,Kyjiw,Kyiv`). Nebenschreibweisen dürfen mehrere Einträge teilen (Libyen `Tripolis`, Libanon
+  `Tripoli,Tripolis`).
+- Vereinigt sich dieselbe Hauptform aus verschiedenen Ländern mit verschiedenen Schreibweisen
+  (`Valencia,València` in Spanien, `Valencia` in Venezuela), meldet der Generator das mit `~`. Die Karte
+  des einen Landes nimmt dann die Schreibweisen des anderen mit an; soll das nicht sein, braucht eine
+  der beiden Städte eine eigene Hauptform.
+- Karte bei gefüllter Zelle, Id `Block + Land-Id`. Sie markiert das Land auf der
+  Weltkarte, zeigt die Flagge und nennt das Land in der Frage — gefragt wird die Hauptstadt, nicht
+  Flagge oder Umriss. Einen Abspann gibt es nicht. Welche Kartentypen es gibt, steht in der Tabelle
+  `typen` im Generator — ein neues Feld ist dort eine Zeile (`Laenderkarten.feld`), dazu ein Eintrag
+  in `LISTEN_SPALTEN`, wenn seine Werte in eine Wortliste gehören.
+
+## Größte Städte
+
+- Spalte `Größte Städte`, nur in der Hauptzeile: die Städte in Rangfolge bis zu einem klaren Schnitt,
+  `Mumbai|Delhi|Bengaluru|~Hyderabad`. Gezählt wird die Stadt selbst, nicht die Agglomeration.
+  Schreibweisen mit `,` wie bei der Hauptstadt; dieselbe Stadt beginnt in allen Spalten mit derselben
+  Schreibweise.
+- `~` vor einer Stadt heißt „knapp hinter der davor". Die Reihenfolge steht trotzdem fest: Bei der
+  Frage nach der einen ist die andere toleriert (kein Fehler, kein Treffer), in beide Richtungen.
+  Vor der ersten Stadt ist `~` ein Fehler.
+- Eine Karte je Land, Id `40000 + Land-Id`, Label `Größte Städte`: Land markieren, Flagge zeigen,
+  dann je Rang eine Frage („die größte", „Und die zweitgrößte?" …) mit einem Input gegen die Liste
+  `Städte`. Ein Fehler beendet die Karte. Höchstens zwanzig Ränge.
+- Die Städte gehen mit in die Liste `Städte`; jede andere Stadt daraus ist falsch, auch eine schon
+  genannte.
+
+## Weitere Städte
+
+- Spalte `Weitere Städte`, nur in der Hauptzeile: Städte, die in die Liste `Städte` gehören, aber keine
+  Karte bekommen — etwa für Handkarten über Städte außerhalb der Ränge (`Valparaíso,Valparaiso`). Die
+  Rangspalte bleibt so lückenlos. Jede Stadt hier ist bei allen Städtekarten ein Stoppwort.
 
 ## Nummernblöcke
 
@@ -287,7 +330,9 @@ Zusatzfragen liegen ab einer Million.
         1 …  9999   Flagge skizzieren         generiert
     10001 … 19999   Flagge auf Karte finden   generiert
     20001 … 29999   Nachbarländer             generiert
-    30001 … 39999   der nächste Typ           generiert
+    30001 … 39999   Hauptstadt                generiert
+    40001 … 49999   Größte Städte             generiert
+    50001 … 59999   der nächste Typ           generiert
   k·10000 + Id      Block k, bis k = 99       generiert
   1000000 … 1999999   1cccbaa                 von Hand, 1000 je Land
   2000000 + n                                 von Hand, passt nicht ins Schema

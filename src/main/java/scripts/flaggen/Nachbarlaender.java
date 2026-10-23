@@ -39,7 +39,7 @@ final class Nachbarlaender {
 			String zelle = sheet.value(row, SPALTE).trim();
 			if (zelle.isEmpty())
 				continue;
-			if (!hauptzeile(sheet, row)) {
+			if (!sheet.hauptzeile(row)) {
 				probleme.add(land + " (Version " + sheet.value(row, "Version") + "): Nachbarn nur in der Hauptzeile");
 				continue;
 			}
@@ -93,12 +93,6 @@ final class Nachbarlaender {
 		for (String name : genannt)
 			if (!perLand.containsKey(name))
 				probleme.add(name + " wird genannt, hat aber keine gefüllte Zeile");
-	}
-
-	/** Leer, {@code x} oder 1 — die erste Flagge, an der alles hängt, was nicht von der Flagge abhängt. */
-	static boolean hauptzeile(FlagSheet sheet, List<String> row) {
-		String version = sheet.value(row, "Version").trim();
-		return !FlagSheet.isSet(version) || version.equals("1");
 	}
 
 	List<String> probleme() {

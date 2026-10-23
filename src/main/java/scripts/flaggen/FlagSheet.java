@@ -114,16 +114,46 @@ public class FlagSheet {
 	}
 
 	/**
-	 * Zerlegt die Datei. <b>Kein quotefähiger Leser</b>: Das Blatt wird bewusst ohne Kommas in den
-	 * Zellen geführt, damit hier ein {@code split} reicht. Taucht doch eines auf, fliegt es — sonst
-	 * verschöben sich ab dieser Zeile still alle Spalten.
+	 * Zerlegt die Datei nach der CSV-Regel des Exports: Eine Zelle mit Komma, Anführungszeichen oder
+	 * Zeilenumbruch steht in {@code "…"}, ein Anführungszeichen darin als {@code ""}. Kommas in Zellen
+	 * braucht das Blatt für die Schreibweisen ({@code Kiew,Kyjiw}), wie die Deck-Syntax.
 	 */
 	private static List<List<String>> parse(String csv) {
 		List<List<String>> result = new ArrayList<>();
-		for (String line : csv.replace("\r\n", "\n").split("\n")) {
-			if (line.indexOf('"') >= 0)
-				throw new RuntimeException("Anführungszeichen in der Datei — eine Zelle enthält ein Komma: " + line);
-			result.add(List.of(line.split(",", -1)));
+		List<String> row = new ArrayList<>();
+		StringBuilder cell = new StringBuilder();
+		boolean quoted = false;
+		String text = csv.replace("\r\n", "\n");
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+			if (quoted) {
+				if (c == '"' && i + 1 < text.length() && text.charAt(i + 1) == '"') {
+					cell.append('"');
+					i++;
+				} else if (c == '"') {
+					quoted = false;
+				} else {
+					cell.append(c);
+				}
+			} else if (c == '"') {
+				quoted = true;
+			} else if (c == ',') {
+				row.add(cell.toString());
+				cell.setLength(0);
+			} else if (c == '\n') {
+				row.add(cell.toString());
+				cell.setLength(0);
+				result.add(List.copyOf(row));
+				row.clear();
+			} else {
+				cell.append(c);
+			}
+		}
+		if (quoted)
+			throw new RuntimeException("Anführungszeichen ohne Gegenstück — die Datei ist abgeschnitten?");
+		if (cell.length() > 0 || !row.isEmpty()) {
+			row.add(cell.toString());
+			result.add(List.copyOf(row));
 		}
 		return result;
 	}
@@ -186,6 +216,12 @@ public class FlagSheet {
 	/** Gesetzt heißt: nicht leer und nicht 'x'. Beides bedeutet "hier wird nicht gefragt". */
 	public static boolean isSet(String value) {
 		return !value.isEmpty() && !value.equals("x");
+	}
+
+	/** Leer, {@code x} oder 1 — die erste Flagge, an der alles hängt, was nicht von der Flagge abhängt. */
+	public boolean hauptzeile(List<String> row) {
+		String version = value(row, "Version").trim();
+		return !isSet(version) || version.equals("1");
 	}
 
 	public List<List<String>> flags()      { return flags; }

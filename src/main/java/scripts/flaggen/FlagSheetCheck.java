@@ -152,10 +152,12 @@ public class FlagSheetCheck {
 		return true;
 	}
 
-	/** Der Union Jack deckt die Gösch ganz ab, ihre eigene Farbe sähe man nie. */
+	/** Diese Elemente decken die Gösch ganz ab — ihre eigene Farbe sähe man nie. */
+	private static final Set<String> GOESCH_FUELLER = Set.of("Union Jack", "Flagge");
+
 	private boolean hasUnionJack(List<String> row) {
 		for (int slot = 1; slot <= 4; slot++)
-			if (hauptwert(sheet.value(row, "E" + slot)).equals("Union Jack"))
+			if (GOESCH_FUELLER.contains(hauptwert(sheet.value(row, "E" + slot))))
 				return true;
 		return false;
 	}
@@ -235,19 +237,16 @@ public class FlagSheetCheck {
 		checkUnique("Karten-Id", this::kartenId);
 		// Was generiert werden soll, braucht seine Farben — auch die des Gösch und des Dreiecks.
 		// Ohne Farbe bliebe die Fläche grau und würde stillschweigend nicht gefragt.
-		report("Generieren=1 -> Hintergrundfarben gesetzt",
-				row -> sheet.value(row, "Generieren").equals("1")
-						&& sheet.value(row, "Hintergrundfarben").isEmpty(),
+		report("Hintergrundfarben gesetzt",
+				row -> sheet.value(row, "Hintergrundfarben").isEmpty(),
 				row -> "Hintergrundfarben fehlen");
-		report("Generieren=1 und Gösch -> Gösch Farbe gesetzt",
-				row -> sheet.value(row, "Generieren").equals("1")
-						&& hauptwert(sheet.value(row, "Gösch?")).equals("1")
+		report("Gösch -> Gösch Farbe gesetzt",
+				row -> hauptwert(sheet.value(row, "Gösch?")).equals("1")
 						&& !FlagSheet.isSet(sheet.value(row, "Gösch Farbe"))
 						&& !hasUnionJack(row),
 				row -> "Gösch Farbe fehlt");
-		report("Generieren=1 und Dreieck -> Form Farbe gesetzt",
-				row -> sheet.value(row, "Generieren").equals("1")
-						&& !sheet.value(row, "Form?").equals("0")
+		report("Form -> Form Farbe gesetzt",
+				row -> !sheet.value(row, "Form?").equals("0")
 						&& FlagSheet.isSet(sheet.value(row, "Form?"))
 						&& !FlagSheet.isSet(sheet.value(row, "Form Farbe")),
 				row -> "Form Farbe fehlt");
