@@ -398,16 +398,21 @@ public class CardParser {
      * <p>Nackt heißt richtig, {@code -} Stoppwort, {@code ~} toleriert — kein Fehler, kein Treffer.
      * {@code + ?} am Anfang sind reserviert. Ein {@code :} ohne {@code \} trennt die Liste ab.</p>
      *
-     * <p>Mit Liste ist jeder ihrer Einträge ein Stoppwort, außer denen, die eine Antwort oder ein
-     * toleriertes Wort als Schreibweise tragen. Ein Listen-Stoppwort, das der Anfang einer richtigen
-     * Schreibweise ist, gilt nicht — sonst stürbe „Porto-Novo" schon bei „Porto". Von Hand gesetzte
-     * Stoppwörter bleiben, wie sie dastehen.</p>
+     * <p>Mit Liste ist jede Schreibweise der Liste ein Stoppwort, außer denen, die eine Antwort oder ein
+     * toleriertes Wort selbst trägt — eine Nebenschreibweise, die zwei Einträge teilen, wird so nie zum
+     * Stoppwort ihrer eigenen Karte. Ein Listen-Stoppwort, das der Anfang einer richtigen Schreibweise
+     * ist, gilt nicht — sonst stürbe „Porto-Novo" schon bei „Porto". Von Hand gesetzte Stoppwörter
+     * bleiben, wie sie dastehen.</p>
+     *
+     * <p>Antworten und Toleriertes müssen dann in der Liste stehen; ihre Schreibweisen kommen von dort
+     * (siehe {@link #ausListe}).</p>
      */
     private static Step parseInput(String body, Map<String, List<List<String>>> wordLists) {
         List<String> head = splitUnescaped(body, ':');
         List<List<String>> list = null;
+        String name = null;
         if (head.size() > 1) {
-            String name = unescape(head.get(0).trim());
+            name = unescape(head.get(0).trim());
             list = wordLists.get(name);
             if (list == null)
                 throw new RuntimeException("Input: unbekannte Liste '" + name + "', bekannt sind " + wordLists.keySet()
@@ -429,6 +434,8 @@ public class CardParser {
             List<String> variants = parseVariants(stop || tolerated ? part.substring(1) : part);
             if (variants.isEmpty())
                 throw new RuntimeException("Input: Antwort ohne Text: " + body);
+            if (list != null && !stop)
+                variants = ausListe(variants, list, name, "Input", body);
             if (stop)
                 stopWords.addAll(variants);
             else {
@@ -442,16 +449,10 @@ public class CardParser {
             throw new RuntimeException("Input ohne richtige Antwort: " + body);
 
         if (list != null)
-            for (List<String> entry : list) {
-                boolean own = false;
+            for (List<String> entry : list)
                 for (String v : entry)
-                    if (known.contains(v.toLowerCase()))
-                        own = true;
-                if (!own)
-                    for (String v : entry)
-                        if (!startsAnAnswer(v, answers))
-                            stopWords.add(v);
-            }
+                    if (!known.contains(v.toLowerCase()) && !startsAnAnswer(v, answers))
+                        stopWords.add(v);
         return new Input(List.copyOf(answers), List.copyOf(stopWords));
     }
 
@@ -486,9 +487,9 @@ public class CardParser {
 	// --- Collect
 
 	/**
-	 * {@code <liste>:<antwort>|<antwort>|~<toleriert>…}, jede mit Schreibweisen {@code a,b}. Nackt heißt
-	 * nötig, {@code ~} toleriert; {@code + - ?} sind reserviert. Die Schreibweisen zählen beim Werten;
-	 * vorgeschlagen wird nur, was in der Wortliste steht.
+	 * {@code <liste>:<antwort>|<antwort>|~<toleriert>…}. Nackt heißt nötig, {@code ~} toleriert;
+	 * {@code + - ?} sind reserviert. Jede Antwort muss in der Wortliste stehen, ihre Schreibweisen
+	 * kommen von dort (siehe {@link #ausListe}); vorgeschlagen wird nur, was in der Liste steht.
 	 *
 	 * <p>Die Liste ist Pflicht — ohne sie gäbe es nichts zu wählen. Getrennt wird nur am ersten
 	 * {@code :}, Antworten dürfen selbst einen tragen.</p>
@@ -517,6 +518,7 @@ public class CardParser {
 			List<String> variants = parseVariants(tilde ? part.substring(1) : part);
 			if (variants.isEmpty())
 				throw new RuntimeException("Collect: Antwort ohne Text: " + body);
+			variants = ausListe(variants, list, p[0].trim(), "Collect", body);
 			if (tilde)
 				tolerated.addAll(variants);
 			else
@@ -525,6 +527,37 @@ public class CardParser {
 		if (answers.isEmpty())
 			throw new RuntimeException("Collect ohne Antwort: " + body);
 		return new Collect(List.copyOf(suggestions), List.copyOf(answers), List.copyOf(tolerated));
+	}
+
+	/**
+	 * Der Listeneintrag einer Antwort. Gefunden wird er über seine <b>Hauptform</b>, die erste
+	 * Schreibweise — sie ist der Schlüssel, Nebenschreibweisen dürfen mehrere Einträge teilen
+	 * ({@code Tripolis} bei Libyen und beim Libanon). Seine Schreibweisen ersetzen die der Karte, die
+	 * Hauptform steht beim Aufdecken.
+	 *
+	 * <p>Wer eine Liste nennt, schreibt nur Werte aus ihr: Ist die erste Schreibweise der Karte keine
+	 * Hauptform der Liste, oder trägt der Eintrag eine weitere Schreibweise der Karte nicht, bricht das
+	 * Laden ab — sonst entstünde still eine Antwort, die niemand tippen kann.</p>
+	 */
+	private static List<String> ausListe(List<String> variants, List<List<String>> list, String name,
+			String step, String body) {
+		List<String> entry = null;
+		for (List<String> candidate : list)
+			if (candidate.get(0).equalsIgnoreCase(variants.get(0)))
+				entry = candidate;
+		if (entry == null)
+			throw new RuntimeException(step + ": '" + variants.get(0) + "' ist keine Hauptform der Liste '"
+					+ name + "': " + body);
+		for (String variant : variants) {
+			boolean drin = false;
+			for (String spelling : entry)
+				if (spelling.equalsIgnoreCase(variant))
+					drin = true;
+			if (!drin)
+				throw new RuntimeException(step + ": '" + variant + "' gehört nicht zum Eintrag '"
+						+ String.join(",", entry) + "' der Liste '" + name + "': " + body);
+		}
+		return entry;
 	}
 
 	/** Ein Rollenzeichen, das der Step nicht kennt, ist reserviert — als Text mit {@code \} schützen. */

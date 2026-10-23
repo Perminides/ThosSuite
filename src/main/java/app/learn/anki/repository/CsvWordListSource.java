@@ -19,7 +19,9 @@ import app.shared.Config;
  * eine Datei je Schreiber: {@code listen.csv} pflegt der Mensch, {@code listen-generiert.csv} schreibt
  * der Flaggen-Generator bei jedem Lauf neu. Fehlt eine Datei, ist sie leer.
  *
- * <p>Eine Zeile je Wert: {@code <liste>;<schreibweise>,<schreibweise>,…}, Kopfzeile wie bei den Decks.
+ * <p>Eine Zeile je Wert: {@code <liste>;<hauptform>,<schreibweise>,…}, Kopfzeile wie bei den Decks. Die
+ * Hauptform ist der Schlüssel und in ihrer Liste eindeutig; weitere Schreibweisen dürfen bei mehreren
+ * Einträgen stehen (Libyen {@code Tripolis}, Libanon {@code Tripoli,Tripolis}).
  * Eine Liste gehört genau einer Datei — derselbe Name in beiden bricht ab, statt dass eine die andere
  * still überschreibt.</p>
  */
@@ -62,7 +64,8 @@ class CsvWordListSource {
 				if (variants.isEmpty())
 					throw new RuntimeException("Zeile ohne Wert in " + file.getFileName() + ": " + line);
 				String list = cells[0].trim();
-				if (!seen.computeIfAbsent(list, _ -> new HashSet<>()).add(variants.get(0)))
+				// Die erste Schreibweise ist der Schlüssel des Eintrags, die übrigen dürfen auch anderswo stehen.
+				if (!seen.computeIfAbsent(list, _ -> new HashSet<>()).add(variants.get(0).toLowerCase()))
 					throw new RuntimeException("'" + variants.get(0) + "' steht doppelt in Liste '" + list + "', " + file.getFileName());
 				lists.computeIfAbsent(list, _ -> new ArrayList<>()).add(variants);
 			}

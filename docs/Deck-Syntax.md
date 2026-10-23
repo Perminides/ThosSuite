@@ -163,12 +163,24 @@ Eine Liste ist der Wortvorrat einer Frage, genannt als erster Parameter. Bei `Co
 daraus gewählt — vorgeschlagen wird nur, was in der Liste steht, Freitext zählt nicht. Bei
 `Input:<liste>:…` ist alles daraus, was nicht die Antwort ist, ein Stoppwort.
 
+**Wer eine Liste nennt, schreibt nur Werte aus ihr.** Jede Antwort und jedes `~`-Wort nennt die
+**Hauptform** eines Eintrags, seine erste Schreibweise — sonst bricht das Laden ab. Die übrigen
+Schreibweisen kommen aus der Liste: `Input:Städte:Kiew` nimmt auch `Kyjiw` an, wenn der Eintrag
+`Kiew,Kyjiw` lautet, und beim Aufdecken steht die Hauptform. Weitere Schreibweisen in der Karte sind
+erlaubt, wenn sie zum Eintrag gehören. `-`-Stoppwörter stehen in keiner Liste und bleiben unberührt.
+
+- Die Hauptform ist der Schlüssel und in ihrer Liste eindeutig. Nebenschreibweisen dürfen mehrere
+  Einträge teilen: Libyen `Tripolis`, Libanon `Tripoli,Tripolis` — die Libyen-Karte nimmt nur
+  „Tripolis" an, die Libanon-Karte beide.
+- Stoppwörter sind die Schreibweisen der anderen Einträge, außer denen, die die Antwort selbst trägt.
+
 - Zwei Dateien im Deck-Ordner, eine je Schreiber: `listen.csv` pflegst du, `listen-generiert.csv` schreibt
   der Flaggen-Generator bei jedem Lauf neu. Fehlt eine, ist sie leer.
 - Eine Zeile je Wert, Kopfzeile wie bei den Decks: `Länder;Belarus,Weißrussland`. Als Vorschlag
   erscheint die erste Schreibweise.
 - Geladen wird einmal beim Start, zusammen mit den Decks — eine geänderte Liste gilt nach dem Neustart.
-- Abbruch: unbekannte Liste, dieselbe Liste in beiden Dateien, ein Wert doppelt in einer Liste.
+- Abbruch: unbekannte Liste, dieselbe Liste in beiden Dateien, eine Hauptform doppelt in einer Liste,
+  eine Antwort, die keine Hauptform ihrer Liste ist.
 
 ## Fast — Details
 
