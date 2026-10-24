@@ -8,11 +8,13 @@ import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,7 +46,7 @@ import app.shared.ui.WhatsAppChatDialog;
  *   <li>Hash der crypt15-Datei vergleichen → keine Änderung → fertig</li>
  *   <li>Zielverzeichnis für Attachments prüfen</li>
  *   <li>crypt15 entschlüsseln in Temp-Verzeichnis</li>
- *   <li>Transaktion öffnen, Nachrichten sequenziell importieren</li>
+ *   <li>Transaktion öffnen, WhatsApp-DB gegen den Importstand prüfen, Nachrichten sequenziell importieren</li>
  *   <li>Commit, Hash und letzten Check-Zeitpunkt speichern</li>
  *   <li>Attachments kopieren (PostTask)</li>
  *   <li>Temp-Datei löschen</li>
@@ -58,6 +60,8 @@ import app.shared.ui.WhatsAppChatDialog;
  *   <li>{@code whatsapp.key}             – 64-stelliger Hex-E2E-Backup-Schlüssel</li>
  *   <li>{@code whatsapp.daystartHour}    – Stunde ab der ein neuer "Tag" beginnt (0–23)</li>
  *   <li>{@code whatsapp.warningAfterDays}– Warnung wenn seit so vielen Tagen kein Import</li>
+ *   <li>{@code whatsapp.maxLowerIds}     – optional (Default 5): so viele gelesene Zeilen dürfen eine
+ *       kleinere _id haben als die zuletzt importierte, bevor der Import abbricht</li>
  * </ul>
  * </p>
  *
@@ -72,6 +76,9 @@ public class WhatsAppIncrementalImport {
     private static final String MEDIA             = "Media/";
     private static final String VIEW_ONCE         = "/data/user/0/com.whatsapp/files/ViewOnce/";
     private static final int    TYPE_VIEW_ONCE    = 42;
+    private static final int    ANCHOR_COUNT      = 10;
+    private static final String KEY_MAX_LOWER_IDS = "whatsapp.maxLowerIds";
+    private static final int    DEFAULT_MAX_LOWER_IDS = 5;
 
     private final MessageRepository        msgRepo   = new MessageRepository();
     private final WhatsAppCrypt15Decryptor decryptor = new WhatsAppCrypt15Decryptor();
@@ -84,6 +91,7 @@ public class WhatsAppIncrementalImport {
     private String hexKey;
     private int    dayStartHour;
     private int    warningAfterDays;
+    private int    maxLowerIds;
 
     // Laufzeit-State
     private final Map<String, Integer>       knownChats    = new LinkedHashMap<>();
@@ -102,7 +110,7 @@ public class WhatsAppIncrementalImport {
 
     /**
      * Läuft erst hinter dem Wächter in {@link #run()}: Auf einem Rechner ohne WhatsApp bliebe das
-     * Objekt sonst halb gebaut stehen, mit sechs leeren Feldern.
+     * Objekt sonst halb gebaut stehen, mit sieben leeren Feldern.
      */
     private void ladeKonfiguration() {
         this.whatsAppExternalDir = Config.getPath("whatsapp.externalPath");
@@ -111,6 +119,7 @@ public class WhatsAppIncrementalImport {
         this.hexKey           = Config.get("whatsapp.key");
         this.dayStartHour     = Config.getInt("whatsapp.daystartHour");
         this.warningAfterDays = Config.getInt("whatsapp.warningAfterDays");
+        this.maxLowerIds      = Config.getInt(KEY_MAX_LOWER_IDS, DEFAULT_MAX_LOWER_IDS);
     }
 
     // -------------------------------------------------------------------------
@@ -266,15 +275,59 @@ public class WhatsAppIncrementalImport {
 		LocalDateTime lastSentAt = lastSourceId != null ? msgRepo.getSentAtForSourceId(SOURCE, lastSourceId) : null;
 		long lastTs = lastSentAt != null ? lastSentAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() : 0L;
 
+        if (lastSourceId != null)
+            checkSourceDb(wa, lastId, lastTs);
+
         Map<Integer, Boolean> messageTypeToIgnore = msgRepo.loadMessageTypes(SOURCE);
 
         waRepo.forEachMessage(wa, lastId, lastTs,
-            rs -> processRow(rs, wa, thos, messageTypeToIgnore, lastId, lastTs));
+            rs -> processRow(rs, wa, thos, messageTypeToIgnore));
+    }
+
+    /**
+     * Prüft vor dem ersten Lesen, ob die WhatsApp-DB noch zum Importstand passt. Hat WhatsApp die
+     * _ids zurückgesetzt oder neu nummeriert, zeigt eine source_id auf eine fremde Nachricht: Neues
+     * würde als „bereits importiert" übersprungen, Altes doppelt importiert.
+     *
+     * <p>Kein Vergleich pro Zeile: Nachzügler (neue _id, älterer Timestamp) sind bei WhatsApp normal,
+     * etwa verspätet zugestellte Nachrichten oder „Gruppe erstellt" beim Beitritt zu einer alten Gruppe.</p>
+     */
+    private void checkSourceDb(Connection wa, long lastId, long lastTs) throws SQLException {
+        Map<Long, LocalDateTime> anchors = msgRepo.loadHighestNumericSourceIds(SOURCE, ANCHOR_COUNT);
+        long maxImportedId = anchors.keySet().iterator().next();
+        long maxSourceId   = waRepo.getMaxMessageId(wa);
+        if (maxSourceId < maxImportedId)
+            throw new IllegalStateException(
+                "Die WhatsApp-DB reicht nur bis _id=" + maxSourceId + ", importiert ist aber schon bis source_id=" +
+                maxImportedId + ". WhatsApp hat die IDs offenbar zurückgesetzt oder neu nummeriert.");
+
+        for (Map.Entry<Long, LocalDateTime> anchor : anchors.entrySet()) {
+            Long ts = waRepo.getTimestamp(wa, anchor.getKey());
+            if (ts == null)
+                throw new IllegalStateException(
+                    "Anker fehlt: Die importierte Nachricht source_id=" + anchor.getKey() + " (" + anchor.getValue() +
+                    ") gibt es in der WhatsApp-DB nicht mehr. Entweder hat WhatsApp die IDs neu nummeriert, " +
+                    "oder die Nachricht wurde auf dem Handy gelöscht.");
+            LocalDateTime sourceSentAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(ts), ZoneId.systemDefault())
+                                                      .truncatedTo(ChronoUnit.SECONDS);
+            if (!sourceSentAt.equals(anchor.getValue()))
+                throw new IllegalStateException(
+                    "Anker passt nicht: source_id=" + anchor.getKey() + " wurde mit " + anchor.getValue() +
+                    " importiert, unter dieser _id steht in der WhatsApp-DB aber eine Nachricht von " + sourceSentAt +
+                    ". WhatsApp hat die IDs offenbar neu nummeriert.");
+        }
+
+        int belowLastId = waRepo.countMessagesBelowId(wa, lastId, lastTs);
+        if (belowLastId > maxLowerIds)
+            throw new IllegalStateException(
+                belowLastId + " Nachrichten, die der Import lesen würde, haben eine kleinere _id als die zuletzt " +
+                "importierte (source_id=" + lastId + ", " + formatTs(lastTs) + "). Erlaubt sind " + maxLowerIds +
+                ". Das spricht für neu nummerierte IDs. Ist trotzdem alles in Ordnung, läuft der Import mit '" +
+                KEY_MAX_LOWER_IDS + "=" + belowLastId + "' in der config.txt durch.");
     }
 
     private void processRow(ResultSet rs, Connection wa, Connection thos,
-                            Map<Integer, Boolean> messageTypeToIgnore,
-                            long lastId, long lastTs) throws Exception {
+                            Map<Integer, Boolean> messageTypeToIgnore) throws Exception {
         long    sourceId       = rs.getLong("_id");
         long    timestamp      = rs.getLong("timestamp");
         int     type           = rs.getInt("message_type");
@@ -295,13 +348,6 @@ public class WhatsAppIncrementalImport {
         // geöffnete: Der Verweis bleibt über message_url als nicht verfügbarer Anhang erhalten.
         if (type == TYPE_VIEW_ONCE && filePath != null && filePath.startsWith(VIEW_ONCE))
             filePath = null;
-
-        // Konsistenzcheck
-        if (sourceId < lastId || timestamp < lastTs)
-            throw new IllegalStateException(
-                "Konsistenzfehler: Nachricht _id=" + sourceId +
-                " timestamp=" + timestamp + " liegt vor dem letzten importierten Wert " +
-                "(lastId=" + lastId + ", lastTs=" + lastTs + ")");
 
         // Bereits importiert? (Überlappungsbereich, kein Fehler)
         if (msgRepo.isAlreadyImported(thos, SOURCE, sourceIdStr)) return;

@@ -473,10 +473,15 @@ Läuft einmal täglich nach `whatsapp.daystartHour` und nur, wenn sich das Vollb
 (`msgstore.db.crypt15`, aus dem Filen-Sync) seit dem letzten Import geändert hat — erkannt per
 SHA-256-Hash. Anders als Signal liest WhatsApp nicht live, sondern entschlüsselt die `crypt15`
 mit dem E2E-Backup-Schlüssel in ein Temp-Verzeichnis, importiert daraus und löscht es wieder.
-Anker ist ein Paar aus höchster importierter `_id` und letztem Timestamp: gelesen wird alles mit
-`_id > lastId OR timestamp > lastTs` (Sortierung timestamp, dann `_id`), das Aussortieren bereits
-importierter Zeilen macht der Aufrufer. Nach dem Commit werden Hash und Check-Zeitpunkt
-gespeichert; die Attachments zieht ein eigener PostTask nach. Bleibt der Import länger aus
+Untere Grenze ist die zeitlich neueste importierte Nachricht (`lastId`, `lastTs`): gelesen wird
+alles mit `_id > lastId OR timestamp > lastTs` (Sortierung timestamp, dann `_id`), das Aussortieren
+bereits importierter Zeilen macht der Aufrufer. Nachzügler mit neuer `_id` und älterem Timestamp
+sind normal (verspätete Zustellung, „Gruppe erstellt" beim Beitritt) und werden nicht pro Zeile
+geprüft. Stattdessen prüft der Import vor dem ersten Lesen, ob die WhatsApp-DB neu nummeriert
+wurde, und bricht sonst ab: höchste `_id` unter der höchsten importierten `source_id`; einer der
+10 höchsten importierten Anker fehlt oder hat einen anderen Timestamp; mehr als
+`whatsapp.maxLowerIds` (Default 5) gelesene Zeilen liegen unter `lastId`. Nach dem Commit werden
+Hash und Check-Zeitpunkt gespeichert; die Attachments zieht ein eigener PostTask nach. Bleibt der Import länger aus
 (`whatsapp.warningAfterDays`), warnt die Suite.
 
 WhatsApp hält kein `model`-Paket — die Fremdzeilen werden direkt aus dem `ResultSet` gelesen,

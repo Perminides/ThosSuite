@@ -10,6 +10,21 @@ import app.shared.model.ThrowingConsumer;
  */
 public class WhatsAppSourceRepository {
 
+    /** Gemeinsam für Lesen und Zählen, damit die Startprüfung genau die Zeilen zählt, die der Import liest. */
+    private static final String FROM_NEW_MESSAGES =
+        "FROM message m " +
+        "JOIN chat c ON m.chat_row_id = c._id " +
+        "JOIN jid j ON c.jid_row_id = j._id " +
+        "LEFT JOIN jid_map jmc ON jmc.lid_row_id = j._id " +
+        "LEFT JOIN jid jmapc ON jmc.jid_row_id = jmapc._id " +
+        "LEFT JOIN jid js ON m.sender_jid_row_id = js._id " +
+        "LEFT JOIN jid_map jm ON jm.lid_row_id = m.sender_jid_row_id " +
+        "LEFT JOIN jid jmap ON jm.jid_row_id = jmap._id " +
+        "LEFT JOIN message_media mm ON mm.message_row_id = m._id " +
+        "LEFT JOIN message_quoted mq ON mq.message_row_id = m._id " +
+        "WHERE (m._id > ? OR m.timestamp > ?) " +
+        "AND COALESCE(jmapc.user, j.user) || '@' || COALESCE(jmapc.server, j.server) != 'status@broadcast' ";
+
     // -------------------------------------------------------------------------
     // Nachrichten
     // -------------------------------------------------------------------------
@@ -49,18 +64,7 @@ public class WhatsAppSourceRepository {
             "       mm.file_path, " +
             "       mm.message_url, " +
             "       mq.key_id AS quote_key_id " +
-            "FROM message m " +
-            "JOIN chat c ON m.chat_row_id = c._id " +
-            "JOIN jid j ON c.jid_row_id = j._id " +
-            "LEFT JOIN jid_map jmc ON jmc.lid_row_id = j._id " +
-            "LEFT JOIN jid jmapc ON jmc.jid_row_id = jmapc._id " +
-            "LEFT JOIN jid js ON m.sender_jid_row_id = js._id " +
-            "LEFT JOIN jid_map jm ON jm.lid_row_id = m.sender_jid_row_id " +
-            "LEFT JOIN jid jmap ON jm.jid_row_id = jmap._id " +
-            "LEFT JOIN message_media mm ON mm.message_row_id = m._id " +
-            "LEFT JOIN message_quoted mq ON mq.message_row_id = m._id " +
-            "WHERE (m._id > ? OR m.timestamp > ?) " +
-            "AND COALESCE(jmapc.user, j.user) || '@' || COALESCE(jmapc.server, j.server) != 'status@broadcast' " +
+            FROM_NEW_MESSAGES +
             "ORDER BY m.timestamp ASC, m._id ASC";
 
         try (var ps = wa.prepareStatement(sql)) {
@@ -69,6 +73,45 @@ public class WhatsAppSourceRepository {
             try (var rs = ps.executeQuery()) {
                 while (rs.next())
                     consumer.accept(rs);
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Startprüfungen
+    // -------------------------------------------------------------------------
+
+    /** Höchste _id der Nachrichtentabelle, 0 bei leerer Tabelle. */
+    public long getMaxMessageId(Connection wa) throws SQLException {
+        try (var ps = wa.prepareStatement("SELECT COALESCE(MAX(_id), 0) FROM message");
+             var rs = ps.executeQuery()) {
+            rs.next();
+            return rs.getLong(1);
+        }
+    }
+
+    /** Timestamp (Unix-ms) der Nachricht mit dieser _id, oder null wenn es sie nicht gibt. */
+    public Long getTimestamp(Connection wa, long id) throws SQLException {
+        try (var ps = wa.prepareStatement("SELECT timestamp FROM message WHERE _id = ?")) {
+            ps.setLong(1, id);
+            try (var rs = ps.executeQuery()) {
+                return rs.next() ? rs.getLong(1) : null;
+            }
+        }
+    }
+
+    /**
+     * Zählt die Zeilen, die {@link #forEachMessage} lesen würde und deren _id unter lastId liegt —
+     * vor jedem Filter auf Typ, Blacklist oder bereits importiert.
+     */
+    public int countMessagesBelowId(Connection wa, long lastId, long lastTs) throws SQLException {
+        try (var ps = wa.prepareStatement("SELECT COUNT(*) " + FROM_NEW_MESSAGES + "AND m._id < ?")) {
+            ps.setLong(1, lastId);
+            ps.setLong(2, lastTs);
+            ps.setLong(3, lastId);
+            try (var rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
             }
         }
     }
