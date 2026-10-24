@@ -71,14 +71,15 @@ final class DeckDatei {
 	 * bleibt sie liegen, damit ihr Zeitstempel nichts vortäuscht.
 	 */
 	static void writeWordLists(Map<String, List<List<String>>> listen) throws IOException {
-		List<String> lines = new ArrayList<>(List.of("Liste;Wert"));
+		List<String> lines = new ArrayList<>(List.of("Liste;Hauptform;Alternativen"));
 		StringBuilder bericht = new StringBuilder();
 		Collator deutsch = Collator.getInstance(Locale.GERMAN);
 		for (Map.Entry<String, List<List<String>>> liste : listen.entrySet()) {
 			List<List<String>> sortiert = new ArrayList<>(liste.getValue());
 			sortiert.sort((a, b) -> deutsch.compare(a.get(0), b.get(0)));
 			for (List<String> eintrag : sortiert)
-				lines.add(liste.getKey() + ";" + String.join(",", eintrag));
+				lines.add(liste.getKey() + ";" + eintrag.get(0) + ";"
+						+ String.join(",", eintrag.subList(1, eintrag.size())));
 			bericht.append(" ").append(liste.getKey()).append(" ").append(liste.getValue().size());
 		}
 		String inhalt = "\uFEFF" + String.join("\r\n", lines) + "\r\n";

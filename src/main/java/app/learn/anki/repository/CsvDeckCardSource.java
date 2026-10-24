@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import app.learn.anki.model.Card;
+import app.learn.anki.model.WordLists;
 import app.learn.model.Deck;
 import app.learn.model.DeckCategory;
 import app.shared.Config;
@@ -21,11 +22,11 @@ import app.shared.Config;
 class CsvDeckCardSource {
 		// Der Deck-Dateiname darf eine mit ';' getrennte Liste sein — dann wird jede Datei geladen.
 		private final Map<Deck, List<File>> bundles = new EnumMap<>(Deck.class);
-		/** Listenname → Einträge mit Schreibweisen, einmal geladen; Collect und Input mit Liste lösen sie beim Einlesen auf. */
-		private final Map<String, List<List<String>>> wordLists;
+		/** Listenname → Einträge mit Schreibweisen; Collect und Input mit Liste lösen sie beim Einlesen auf. */
+		private final WordLists wordLists;
 
-		CsvDeckCardSource() {
-			wordLists = new CsvWordListSource().loadAll();
+		CsvDeckCardSource(WordLists wordLists) {
+			this.wordLists = wordLists;
 
 			File dataDir = Config.getPath("deckFolder").toFile();
 			for (Deck type : Deck.values()) {

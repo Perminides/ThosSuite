@@ -29,8 +29,15 @@ public class Card {
     public record Image(String file) implements Step {}
     public record ClickMapElements(Set<String> mandatory, Set<String> optional) implements Step {}
     public record Output(String text) implements Step {}
-    /** Alle Antworten sind nötig, je mit ihren Schreibweisen; ein Stoppwort macht die Karte sofort falsch. */
-    public record Input(List<List<String>> answers, List<String> stopWords) implements Step {
+    /**
+     * Alle Antworten sind nötig, je mit ihren Schreibweisen; ein Stoppwort macht die Karte sofort falsch.
+     *
+     * <p>Mit Liste ({@code listName}) steht hier nur die Hauptform jeder Antwort. Ihre Schreibweisen und
+     * die Stoppwörter der Liste holt der Progress zur Laufzeit — sonst hinge an jeder Karte eine eigene
+     * Kopie der ganzen Liste. {@code tolerated} sind Wörter, die weder zählen noch bestraft werden.</p>
+     */
+    public record Input(List<List<String>> answers, List<String> tolerated, String listName,
+            List<String> stopWords) implements Step {
         /** Die erste Schreibweise jeder Antwort — das steht beim Aufdecken im Feld. */
         public String solutionText() {
             List<String> firsts = new ArrayList<>();

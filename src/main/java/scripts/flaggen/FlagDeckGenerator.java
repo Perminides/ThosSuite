@@ -15,6 +15,7 @@ import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
+import app.learn.anki.model.WordLists;
 import app.learn.anki.repository.CardParser;
 
 /**
@@ -131,7 +132,7 @@ public class FlagDeckGenerator {
 	/** Der echte Parser und ein Flächenlauf — beide finden anderes. */
 	private void check(List<String> steps) {
 		try {
-			CardParser.parse(steps, laender.wordLists());
+			CardParser.parse(steps, new WordLists(laender.wordLists()));
 		} catch (RuntimeException e) {
 			throw new RuntimeException("die erzeugte Zeile ist nicht lesbar", e);
 		}

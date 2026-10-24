@@ -17,6 +17,7 @@ import app.learn.anki.model.Card.Fast;
 import app.learn.anki.model.Card.FixedStep;
 import app.learn.anki.model.Card.Image;
 import app.learn.anki.model.Card.Input;
+import app.learn.anki.model.WordLists;
 import app.learn.anki.model.Card.MC;
 import app.learn.anki.model.Card.MCPlus;
 import app.learn.anki.model.Card.MarkMapElements;
@@ -48,14 +49,15 @@ public class CardParser {
 
 	/** Ohne Wortlisten — ein Step mit Liste bricht dann ab. Für Aufrufer, die keine Listen laden. */
 	public static Card parse(List<String> csvTokens) {
-		return parse(csvTokens, Map.of());
+		return parse(csvTokens, WordLists.leer());
 	}
 
 	/**
 	 * Eine an {@code ;} zerlegte Zeile: id, Bemerkung (wird nicht gelesen), Labels, danach die Steps.
 	 * Die Wortlisten (Name → Einträge mit ihren Schreibweisen) brauchen Collect und Input mit Liste.
+	 * Ist public weil sie aus scripts aufgerufen wird. Ja, etwas unschön...
 	 */
-	public static Card parse(List<String> csvTokens, Map<String, List<List<String>>> wordLists) {
+	public static Card parse(List<String> csvTokens, WordLists wordLists) {
 		int id = Integer.parseInt(csvTokens.get(0));
 		Set<String> labels = splitAndTrim(csvTokens.get(2));
 
@@ -135,7 +137,7 @@ public class CardParser {
 	}
 
     // --- Parsing eines einzelnen Step-Strings (ohne Marker) ---
-    private static Step parseStep(String s, Map<String, List<List<String>>> wordLists) {
+    private static Step parseStep(String s, WordLists wordLists) {
         String[] p = s.split(":", 2);
         String kind = p[0];
         String body = p.length > 1 ? p[1] : "";
@@ -407,22 +409,20 @@ public class CardParser {
      * <p>Antworten und Toleriertes müssen dann in der Liste stehen; ihre Schreibweisen kommen von dort
      * (siehe {@link #ausListe}).</p>
      */
-    private static Step parseInput(String body, Map<String, List<List<String>>> wordLists) {
+    private static Step parseInput(String body, WordLists wordLists) {
         List<String> head = splitUnescaped(body, ':');
-        List<List<String>> list = null;
         String name = null;
         if (head.size() > 1) {
             name = unescape(head.get(0).trim());
-            list = wordLists.get(name);
-            if (list == null)
-                throw new RuntimeException("Input: unbekannte Liste '" + name + "', bekannt sind " + wordLists.keySet()
+            if (!wordLists.knowsList(name))
+                throw new RuntimeException("Input: unbekannte Liste '" + name + "', bekannt sind " + wordLists.listNames()
                         + " — ein Doppelpunkt im Text braucht \\: " + body);
             body = body.substring(head.get(0).length() + 1);
         }
 
         List<List<String>> answers = new ArrayList<>();
         List<String> stopWords = new ArrayList<>();
-        Set<String> known = new HashSet<>(); // Antworten und Toleriertes, klein geschrieben
+        List<String> toleratedWords = new ArrayList<>();
         for (String raw : splitUnescaped(body, '|')) {
             String part = raw.trim();
             if (part.isEmpty())
@@ -434,36 +434,21 @@ public class CardParser {
             List<String> variants = parseVariants(stop || tolerated ? part.substring(1) : part);
             if (variants.isEmpty())
                 throw new RuntimeException("Input: Antwort ohne Text: " + body);
-            if (list != null && !stop)
-                variants = ausListe(variants, list, name, "Input", body);
+            if (name != null && !stop)
+                variants = ausListe(variants, wordLists, name, "Input", body);
             if (stop)
                 stopWords.addAll(variants);
-            else {
-                if (!tolerated)
-                    answers.add(variants);
-                for (String v : variants)
-                    known.add(v.toLowerCase());
-            }
+            else if (tolerated)
+                toleratedWords.addAll(variants);
+            else
+                answers.add(variants);
         }
         if (answers.isEmpty())
             throw new RuntimeException("Input ohne richtige Antwort: " + body);
 
-        if (list != null)
-            for (List<String> entry : list)
-                for (String v : entry)
-                    if (!known.contains(v.toLowerCase()) && !startsAnAnswer(v, answers))
-                        stopWords.add(v);
-        return new Input(List.copyOf(answers), List.copyOf(stopWords));
-    }
-
-    /** Ob {@code word} der Anfang (oder das Ganze) einer richtigen Schreibweise ist. */
-    private static boolean startsAnAnswer(String word, List<List<String>> answers) {
-        String w = word.toLowerCase();
-        for (List<String> variants : answers)
-            for (String v : variants)
-                if (v.toLowerCase().startsWith(w))
-                    return true;
-        return false;
+        // Die Liste selbst wandert nicht in den Step: Bei 488 Karten auf dieselbe Liste waeren das
+        // hunderttausende Zeichenketten. Gefragt wird sie beim Tippen, siehe CardProgress.
+        return new Input(List.copyOf(answers), List.copyOf(toleratedWords), name, List.copyOf(stopWords));
     }
 
     private static Role roleOf(String part) {
@@ -494,16 +479,14 @@ public class CardParser {
 	 * <p>Die Liste ist Pflicht — ohne sie gäbe es nichts zu wählen. Getrennt wird nur am ersten
 	 * {@code :}, Antworten dürfen selbst einen tragen.</p>
 	 */
-	private static Step parseCollect(String body, Map<String, List<List<String>>> wordLists) {
+	private static Step parseCollect(String body, WordLists wordLists) {
 		String[] p = body.split(":", 2);
 		if (p.length < 2)
 			throw new RuntimeException("Collect braucht eine Liste — Collect:<liste>:<antworten>: " + body);
-		List<List<String>> list = wordLists.get(p[0].trim());
-		if (list == null)
-			throw new RuntimeException("Collect: unbekannte Liste '" + p[0].trim() + "', bekannt sind " + wordLists.keySet());
-		List<String> suggestions = new ArrayList<>();
-		for (List<String> entry : list)
-			suggestions.add(entry.get(0)); // vorgeschlagen wird die erste Schreibweise
+		String liste = p[0].trim();
+		if (!wordLists.knowsList(liste))
+			throw new RuntimeException("Collect: unbekannte Liste '" + liste + "', bekannt sind " + wordLists.listNames());
+		List<String> suggestions = wordLists.mainForms(liste); // vorgeschlagen wird die Hauptform
 		body = p[1];
 
 		List<List<String>> answers = new ArrayList<>();
@@ -518,7 +501,7 @@ public class CardParser {
 			List<String> variants = parseVariants(tilde ? part.substring(1) : part);
 			if (variants.isEmpty())
 				throw new RuntimeException("Collect: Antwort ohne Text: " + body);
-			variants = ausListe(variants, list, p[0].trim(), "Collect", body);
+			variants = ausListe(variants, wordLists, liste, "Collect", body);
 			if (tilde)
 				tolerated.addAll(variants);
 			else
@@ -539,12 +522,9 @@ public class CardParser {
 	 * Hauptform der Liste, oder trägt der Eintrag eine weitere Schreibweise der Karte nicht, bricht das
 	 * Laden ab — sonst entstünde still eine Antwort, die niemand tippen kann.</p>
 	 */
-	private static List<String> ausListe(List<String> variants, List<List<String>> list, String name,
+	private static List<String> ausListe(List<String> variants, WordLists wordLists, String name,
 			String step, String body) {
-		List<String> entry = null;
-		for (List<String> candidate : list)
-			if (candidate.get(0).equalsIgnoreCase(variants.get(0)))
-				entry = candidate;
+		List<String> entry = wordLists.entryFor(name, variants.get(0));
 		if (entry == null)
 			throw new RuntimeException(step + ": '" + variants.get(0) + "' ist keine Hauptform der Liste '"
 					+ name + "': " + body);

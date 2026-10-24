@@ -11,6 +11,7 @@ import java.util.Set;
 
 import app.learn.MapService;
 import app.learn.anki.model.Card;
+import app.learn.anki.model.WordLists;
 import app.learn.anki.model.AnkiLearnSessionInfo;
 import app.learn.anki.repository.DeckRepository;
 import app.learn.anki.repository.PlayedCardData;
@@ -31,6 +32,8 @@ public class AnkiDeckService {
 	private final Map<Deck,Map<Integer, Card>> dueCards;
 	private final Map<Deck,Integer> initialDueCounts;
 	private final Map<Deck, Set<String>> allLabels;
+	/** Listenname → Einträge mit Schreibweisen. Einmal geholt und gehalten: Der Progress fragt sie beim Tippen. */
+	private final WordLists wordLists;
 	
 	/** Kartennamen der Bild-Decks — der Controller lässt die Skin-Seite deren Bilder vorwärmen. */
 	private final List<String> imageMapNames = new ArrayList<>();
@@ -47,6 +50,7 @@ public class AnkiDeckService {
 	 */
 	public AnkiDeckService() {
 		repo = new DeckRepository();
+		wordLists = repo.getWordLists();
 		allCards = new EnumMap<>(Deck.class);
 		dueCards = new EnumMap<>(Deck.class);
 		allLabels = new EnumMap<>(Deck.class);
@@ -120,6 +124,11 @@ public class AnkiDeckService {
 		return result;
 	}
 	
+	/** Die Wortlisten der Decks — der Progress prüft damit Eingaben gegen die Liste. */
+	public WordLists getWordLists() {
+		return wordLists;
+	}
+
 	public List<Card> getDueCards(Deck type) {
 		return new ArrayList<Card>(dueCards.get(type).values());
 	}

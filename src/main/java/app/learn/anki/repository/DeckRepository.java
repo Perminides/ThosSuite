@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import app.learn.anki.model.Card;
+import app.learn.anki.model.WordLists;
 import app.learn.model.Deck;
 import app.learn.model.LearnStat;
 
@@ -15,9 +16,12 @@ public class DeckRepository {
 
     private final CsvDeckCardSource csv;
     private final DbDeckProgressRepository db;
+    /** Hier geladen, weil es die einzige Stelle ist, die beide Nutzer kennt: den Parser und den Dienst. */
+    private final WordLists wordLists;
 
     public DeckRepository() {
-    	csv = new CsvDeckCardSource();
+    	wordLists = new CsvWordListSource().loadAll();
+    	csv = new CsvDeckCardSource(wordLists);
     	db = new DbDeckProgressRepository();
     }
 
@@ -31,6 +35,11 @@ public class DeckRepository {
 	    }
 
 	    return cards;
+	}
+
+	/** Die Wortlisten der Decks: Listenname → Einträge mit ihren Schreibweisen, Hauptform zuerst. */
+	public WordLists getWordLists() {
+		return wordLists;
 	}
 
 	public void savePlayedCards(Deck type, List<PlayedCardData> rows){

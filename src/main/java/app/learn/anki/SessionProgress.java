@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import app.learn.anki.model.Card;
+import app.learn.anki.model.WordLists;
 import app.learn.anki.model.CardSortOrder;
 import app.learn.anki.repository.PlayedCardData;
 import app.learn.model.Deck;
@@ -63,6 +64,11 @@ class SessionProgress {
 		cardProgressById = new HashMap<>();
 		for (Card card : cards)
 			cardProgressById.put(card.getId(), new CardProgress(card, presenter, this));
+	}
+
+	/** Die Wortlisten, die der CardProgress beim Tippen befragt. */
+	WordLists wordLists() {
+		return service.getWordLists();
 	}
 
 	public void start() {

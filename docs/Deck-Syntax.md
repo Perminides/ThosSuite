@@ -166,18 +166,21 @@ daraus gewählt — vorgeschlagen wird nur, was in der Liste steht, Freitext zä
 **Wer eine Liste nennt, schreibt nur Werte aus ihr.** Jede Antwort und jedes `~`-Wort nennt die
 **Hauptform** eines Eintrags, seine erste Schreibweise — sonst bricht das Laden ab. Die übrigen
 Schreibweisen kommen aus der Liste: `Input:Städte:Kiew` nimmt auch `Kyjiw` an, wenn der Eintrag
-`Kiew,Kyjiw` lautet, und beim Aufdecken steht die Hauptform. Weitere Schreibweisen in der Karte sind
+`Kiew;Kyjiw` lautet, und beim Aufdecken steht die Hauptform. Weitere Schreibweisen in der Karte sind
 erlaubt, wenn sie zum Eintrag gehören. `-`-Stoppwörter stehen in keiner Liste und bleiben unberührt.
 
 - Die Hauptform ist der Schlüssel und in ihrer Liste eindeutig. Nebenschreibweisen dürfen mehrere
   Einträge teilen: Libyen `Tripolis`, Libanon `Tripoli,Tripolis` — die Libyen-Karte nimmt nur
   „Tripolis" an, die Libanon-Karte beide.
 - Stoppwörter sind die Schreibweisen der anderen Einträge, außer denen, die die Antwort selbst trägt.
+  Die Liste wandert dafür **nicht** in die Karte: Im Step steht nur ihr Name, gefragt wird sie beim
+  Tippen. Sonst hinge an jeder der hunderten Städtekarten eine eigene Kopie der ganzen Liste.
 
 - Zwei Dateien im Deck-Ordner, eine je Schreiber: `listen.csv` pflegst du, `listen-generiert.csv` schreibt
   der Flaggen-Generator bei jedem Lauf neu. Fehlt eine, ist sie leer.
-- Eine Zeile je Wert, Kopfzeile wie bei den Decks: `Länder;Belarus,Weißrussland`. Als Vorschlag
-  erscheint die erste Schreibweise.
+- Eine Zeile je Eintrag, drei Spalten: `Liste;Hauptform;Alternativen` — `Städte;Quezon City;Quezon-Stadt,Quezon Stadt`.
+  Die Hauptform steht allein, damit man ihr ansieht, dass sie der Schlüssel ist; sie erscheint als
+  Vorschlag und beim Aufdecken. Ohne Alternativen bleibt die dritte Spalte leer: `Länder;Belarus;`.
 - Geladen wird einmal beim Start, zusammen mit den Decks — eine geänderte Liste gilt nach dem Neustart.
 - Abbruch: unbekannte Liste, dieselbe Liste in beiden Dateien, eine Hauptform doppelt in einer Liste,
   eine Antwort, die keine Hauptform ihrer Liste ist.

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import app.learn.anki.model.WordLists;
 import app.shared.Config;
 
 /**
@@ -31,7 +32,7 @@ class CsvWordListSource {
 	private static final String FILES = "listen.csv;listen-generiert.csv";
 
 	/** Listenname → Einträge, je Eintrag seine Schreibweisen in Dateireihenfolge. */
-	Map<String, List<List<String>>> loadAll() {
+	WordLists loadAll() {
 		Path folder = Config.getPath("deckFolder");
 		Map<String, List<List<String>>> lists = new LinkedHashMap<>();
 		Map<String, String> fileOfList = new HashMap<>();
@@ -46,7 +47,7 @@ class CsvWordListSource {
 				lists.put(list.getKey(), List.copyOf(list.getValue()));
 			}
 		}
-		return lists;
+		return new WordLists(lists);
 	}
 
 	private Map<String, List<List<String>>> read(Path file) {
@@ -60,11 +61,18 @@ class CsvWordListSource {
 				String[] cells = line.split(";", -1);
 				if (cells.length < 2 || cells[0].isBlank())
 					throw new RuntimeException("Zeile ohne Liste oder Wert in " + file.getFileName() + ": " + line);
-				List<String> variants = CardParser.parseVariants(cells[1]);
+				// Drei Spalten: Liste, Hauptform, Alternativen. Die Hauptform steht allein, damit man
+				// ihr ansieht, dass sie der Schlüssel ist — in der Karte steht nur sie.
+				List<String> variants = new ArrayList<>(CardParser.parseVariants(cells[1]));
+				if (variants.size() > 1)
+					throw new RuntimeException("Die Hauptform steht allein in der zweiten Spalte, Alternativen in die"
+							+ " dritte: " + file.getFileName() + ": " + line);
+				if (cells.length > 2)
+					variants.addAll(CardParser.parseVariants(cells[2]));
 				if (variants.isEmpty())
 					throw new RuntimeException("Zeile ohne Wert in " + file.getFileName() + ": " + line);
 				String list = cells[0].trim();
-				// Die erste Schreibweise ist der Schlüssel des Eintrags, die übrigen dürfen auch anderswo stehen.
+				// Die Hauptform ist der Schlüssel des Eintrags, die übrigen dürfen auch anderswo stehen.
 				if (!seen.computeIfAbsent(list, _ -> new HashSet<>()).add(variants.get(0).toLowerCase()))
 					throw new RuntimeException("'" + variants.get(0) + "' steht doppelt in Liste '" + list + "', " + file.getFileName());
 				lists.computeIfAbsent(list, _ -> new ArrayList<>()).add(variants);

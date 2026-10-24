@@ -220,7 +220,30 @@ public class CardProgress {
 	                return;
 	            }
 	    }
-	    // Falsche Eingabe, nichts tun
+
+	    if (ausDerListe(input, typed))
+	        revealInput(input);
+	    // Sonst: falsche Eingabe, nichts tun
+	}
+
+	/**
+	 * Ob das Getippte ein Wort der Liste ist, das hier als Stoppwort zählt — die Liste hängt nicht am
+	 * Step, sie wird erst jetzt gefragt.
+	 *
+	 * <p>Nicht als Stoppwort zählen das Tolerierte und ein Wort, das der Anfang einer richtigen
+	 * Schreibweise ist: Sonst stürbe „Porto-Novo" schon bei „Porto".</p>
+	 */
+	private boolean ausDerListe(Input input, String typed) {
+		if (input.listName() == null)
+			return false;
+		for (String wort : input.tolerated())
+			if (wort.equalsIgnoreCase(typed))
+				return false;
+		for (List<String> answer : input.answers())
+			for (String variant : answer)
+				if (variant.toLowerCase().startsWith(typed))
+					return false;
+		return sessionProgress.wordLists().contains(input.listName(), typed);
 	}
 
 	/** Lösung ins Feld, Karte falsch, Pause — für ESC und für ein getipptes Stoppwort. */
