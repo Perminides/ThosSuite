@@ -159,7 +159,7 @@ public class WikidataProbe {
 				.timeout(TIMEOUT)
 				.header("Accept", "application/sparql-results+json")
 				.header("Content-Type", "application/x-www-form-urlencoded")
-				.header("User-Agent", "ThosSuite/1.0 (private Lernsuite, Stabilitaetsbeobachtung)")
+				.header("User-Agent", "ThosSuite/1.0 (private Lernsuite; perminides@gmail.com)")
 				.POST(HttpRequest.BodyPublishers.ofString("query=" + URLEncoder.encode(query, StandardCharsets.UTF_8)))
 				.build();
 		try {

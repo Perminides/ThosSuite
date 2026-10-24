@@ -60,9 +60,8 @@ public class MessageRepository {
      * Gibt den gespeicherten sent_at-Wert (yyyy-MM-ddTHH:mm:ss) einer Nachricht
      * anhand ihrer source_id zurück.
      * <p>
-     * Wird beim WhatsApp-Import für den Konsistenzcheck genutzt: die höchste bekannte
-     * source_id wird mit dem zugehörigen Timestamp verglichen, um sicherzustellen dass
-     * ID-Reihenfolge und Timestamp-Reihenfolge übereinstimmen.
+     * Liefert beim WhatsApp-Import die untere Zeitgrenze: den sent_at der zeitlich neuesten
+     * importierten Nachricht aus {@link #getLastImportedSourceId(String)}.
      * </p>
      *
      * @throws IllegalStateException [FAILFAST] wenn die sourceId nicht in der Suite-DB gefunden wird
@@ -84,6 +83,28 @@ public class MessageRepository {
         } catch (Exception e) {
             throw new RuntimeException("Fehler beim Laden des Timestamps für source_id='" + sourceId + "'", e);
         }
+    }
+
+    /**
+     * Gibt die numerisch höchsten source_ids einer Quelle mit ihrem sent_at zurück, höchste zuerst.
+     * Nur für Quellen mit numerischen source_ids (WhatsApp).
+     */
+    public Map<Long, LocalDateTime> loadHighestNumericSourceIds(String source, int limit) {
+        String sql = "SELECT source_id, sent_at FROM msg_messages WHERE source = ? "
+                   + "ORDER BY CAST(source_id AS INTEGER) DESC LIMIT ?";
+        Map<Long, LocalDateTime> result = new LinkedHashMap<>();
+        Connection con = DB.getConnection();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, source);
+            ps.setInt(2, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next())
+                    result.put(Long.parseLong(rs.getString("source_id")), LocalDateTime.parse(rs.getString("sent_at"), DB_FORMAT));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Fehler beim Laden der höchsten source_ids für source='" + source + "'", e);
+        }
+        return result;
     }
 
     /**
