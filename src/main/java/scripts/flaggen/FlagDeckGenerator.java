@@ -1,8 +1,11 @@
 package scripts.flaggen;
 
+import static scripts.flaggen.Laenderkarten.CODE;
 import static scripts.flaggen.Laenderkarten.HAUPTSTADT;
+import static scripts.flaggen.Laenderkarten.LAENDERCODE;
 import static scripts.flaggen.Laenderkarten.RANG_SPALTE;
 import static scripts.flaggen.Laenderkarten.STAEDTE;
+import static scripts.flaggen.Laenderkarten.WAEHRUNG;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -78,7 +81,12 @@ public class FlagDeckGenerator {
 						laender::nachbarkarte),
 				new Kartentyp(30000, "Hauptstadt", z -> z.hat(HAUPTSTADT),
 						Laenderkarten.feld(HAUPTSTADT, "<b>%s</b>: Wie heißt die <b>Hauptstadt</b>?", STAEDTE)),
-				new Kartentyp(40000, "Größte Städte", z -> z.hat(RANG_SPALTE), laender::rangkarte));
+				new Kartentyp(40000, "Größte Städte", z -> z.hat(RANG_SPALTE), laender::rangkarte),
+				new Kartentyp(50000, "Währung", z -> z.hat(WAEHRUNG),
+						Laenderkarten.feld(WAEHRUNG, "<b>%s</b>: Wie heißt die <b>Währung</b>?", WAEHRUNG)),
+				new Kartentyp(60000, "Ländercode", z -> z.hat(CODE),
+						Laenderkarten.feld(CODE, "<b>%s</b>: Wie lautet der <b>Ländercode</b>?", LAENDERCODE)),
+				new Kartentyp(70000, "Land zum Ländercode", z -> z.hat(CODE), laender::codekarte));
 		Set<Integer> bloecke = new HashSet<>();
 		for (Kartentyp typ : typen)
 			if (typ.block() % 10000 != 0 || typ.block() >= 1000000 || !bloecke.add(typ.block()))

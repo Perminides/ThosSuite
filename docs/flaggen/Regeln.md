@@ -321,6 +321,34 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
   Karte bekommen — etwa für Handkarten über Städte außerhalb der Ränge (`Valparaíso,Valparaiso`). Die
   Rangspalte bleibt so lückenlos. Jede Stadt hier ist bei allen Städtekarten ein Stoppwort.
 
+## Währung
+
+- Spalte `Währung`, nur in der Hauptzeile, aufgebaut wie die Hauptstadt (siehe „Einfache Felder"). Der
+  Name steht **ohne Hinweis auf das Land**: `Kwacha`, `Dollar`, `Rand` — eine Vorschlagsliste verriete
+  sonst mit „Sambi…" die Antwort. Regionsnamen bleiben (`Ostkaribischer Dollar`, `CFA-Franc`), weil sie
+  kein Land verraten; wo der Ländername fester Teil des Namens ist (`Simbabwe-Gold`), bleibt er auch.
+- Daraus entsteht die Liste `Währung`. Jede andere Währung der Liste ist ein Stoppwort — `Dollar` bei
+  Grenada ist falsch, weil `Dollar` ein eigener Eintrag ist. Wie streng das ist, steht in der Zelle:
+  `Pfund Sterling,Pfund` lässt `Pfund` als richtig gelten, und zwar für alle Länder mit dieser
+  Hauptform (die Schreibweisen werden vereinigt, einmal eintragen genügt);
+  `Ostkaribischer Dollar|~Dollar` toleriert `Dollar` nur auf der Karte dieses Landes.
+- Karte bei gefüllter Zelle, Id `50000 + Land-Id`, Label `Währung`: Land markieren, Flagge zeigen,
+  „Wie heißt die Währung?".
+
+## Ländercode
+
+- Spalte `Code`, nur in der Hauptzeile: der ISO-3166-1-Code mit zwei Buchstaben (`DE`, `ZM`, `XK`).
+  Gebiete ohne Code (England, Abchasien …) bleiben leer und bekommen keine Code-Karten. Daraus entsteht
+  die Liste `Ländercode`.
+- Zwei Karten bei gefüllter Zelle:
+  - Id `60000 + Land-Id`, Label `Ländercode`: wie die Hauptstadt — Land markieren, Flagge zeigen,
+    „Wie lautet der Ländercode?", Input gegen die Liste.
+  - Id `70000 + Land-Id`, Label `Land zum Ländercode`: den Code nennen und das Land auf der Karte
+    anklicken lassen. Ohne Flagge und ohne Markierung — beide verrieten das Land.
+
+Die Listen `Städte`, `Währung` und `Ländercode` schreibt der Generator. In der handgepflegten
+`listen.csv` dürfen sie nicht stehen; dieselbe Liste in beiden Dateien bricht den Start der Suite ab.
+
 ## Nummernblöcke
 
 Jeder erzeugte Fragetyp bekommt einen eigenen Block von zehntausend, die handgeschriebenen
@@ -332,7 +360,10 @@ Zusatzfragen liegen ab einer Million.
     20001 … 29999   Nachbarländer             generiert
     30001 … 39999   Hauptstadt                generiert
     40001 … 49999   Größte Städte             generiert
-    50001 … 59999   der nächste Typ           generiert
+    50001 … 59999   Währung                   generiert
+    60001 … 69999   Ländercode                generiert
+    70001 … 79999   Land zum Ländercode       generiert
+    80001 … 89999   der nächste Typ           generiert
   k·10000 + Id      Block k, bis k = 99       generiert
   1000000 … 1999999   1cccbaa                 von Hand, 1000 je Land
   2000000 + n                                 von Hand, passt nicht ins Schema

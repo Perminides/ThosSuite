@@ -25,9 +25,9 @@ Stand der Überlegung, nicht vorschreibend — die Regeln der Suite stehen weite
 
 ## 1. Zuschnitt
 
-Ein **eigenes Flaggen-Deck**, kein Länder-Deck. Länderattribute (Hauptstadt, Währung, höchster
-Berg, Einwohnerzahl) sind bewusst draußen: Hauptstädte und Währungen sitzen längst in einem echten
-Anki-Deck, der höchste Berg Albaniens ist Trivia ohne Aufhänger.
+Ein **eigenes Flaggen-Deck**. Neben der Flagge erzeugt der Generator Karten zu Fakten, die an der
+Hauptzeile eines Landes hängen: Lage auf der Karte, Nachbarländer, Hauptstadt, größte Städte, Währung
+und Ländercode. Welche es gibt und wie sie aussehen, steht in `Regeln.md`.
 
 Das Kernfeature: **eine Flagge aus dem Gedächtnis vollständig beschreiben**, geführt durch eine
 Fragenkette, während sich daneben eine Skizze aufbaut. Dazu kommen Geschichten-Karten rund um die
@@ -1234,7 +1234,6 @@ reine Dateneingabe ohne Entwurfsrisiko.
 
 | Idee | Warum |
 |---|---|
-| Länder-Deck mit Attributen (Hauptstadt, Währung, Berge, Einwohner) | Sitzt längst in einem echten Anki-Deck, kein Lerngewinn. Damit entfiel auch ein geplanter Zahlen-Step mit Toleranz. |
 | Taxonomie statt Messung | Schließt nie ab; jeder neue Sonderfall kann frühere Länder rückwirkend umwerfen. |
 | Bilder als Antwortoptionen der Einstiegsfrage | Zu viele Optionen zur Auswahl. Als Blattfrage weiter denkbar. |
 | Klick ins Flaggenbild | Das Bild soll reine Anzeige bleiben, nicht interaktiv. |

@@ -11,7 +11,7 @@ import java.util.function.BiConsumer;
 
 /**
  * Die Karten, die am Land hängen und nicht an der Flagge: Karte, Nachbarländer, Hauptstadt, größte
- * Städte. Dazu die Wortlisten, gegen die ihre Antworten geprüft werden.
+ * Städte, Währung und Ländercode. Dazu die Wortlisten, gegen die ihre Antworten geprüft werden.
  */
 final class Laenderkarten {
 
@@ -21,13 +21,20 @@ final class Laenderkarten {
 	static final String RANG_SPALTE = "Größte Städte";
 	/** Städte, die nur in die Liste gehören und keine Karte bekommen — für Handkarten außerhalb der Ränge. */
 	static final String WEITERE_STAEDTE = "Weitere Städte";
+	/** Spalte und Liste heißen gleich. */
+	static final String WAEHRUNG = "Währung";
+	/** Die Spalte mit dem ISO-Code (DE, ZM); die Liste dazu heißt {@link #LAENDERCODE}. */
+	static final String CODE = "Code";
+	static final String LAENDERCODE = "Ländercode";
 
 	/**
 	 * Welche Spalten in welche Wortliste gehen, in dieser Reihenfolge. Eine neue Spalte, deren Input
 	 * gegen eine Liste prüft, braucht hier ihren Eintrag — sonst kennt die Liste ihre Werte nicht.
 	 */
 	private static final List<Map.Entry<String, List<String>>> LISTEN_SPALTEN = List.of(
-			Map.entry(STAEDTE, List.of(HAUPTSTADT, RANG_SPALTE, WEITERE_STAEDTE)));
+			Map.entry(STAEDTE, List.of(HAUPTSTADT, RANG_SPALTE, WEITERE_STAEDTE)),
+			Map.entry(WAEHRUNG, List.of(WAEHRUNG)),
+			Map.entry(LAENDERCODE, List.of(CODE)));
 
 	/** Wohin die Weltkarte bei der Nachbarfrage zentriert — eine Stelle ohne Land, sonst sähe man die Nachbarn. */
 	private static final String KARTE_ABSEITS = "Mark:empty:808:2144";
@@ -74,6 +81,15 @@ final class Laenderkarten {
 	 */
 	void kartenkarte(Zeile z, Kartenbauer k) {
 		k.add("Image:" + z.image());
+		k.add("Click:" + z.shape());
+	}
+
+	/**
+	 * Die Gegenrichtung zur Ländercode-Frage: den Code nennen und das Land auf der Karte anklicken
+	 * lassen. Ohne Flagge — sie verriete das Land.
+	 */
+	void codekarte(Zeile z, Kartenbauer k) {
+		k.add("Output:Zu welchem Land gehört der Ländercode <b>" + z.value(CODE) + "</b>?");
 		k.add("Click:" + z.shape());
 	}
 
