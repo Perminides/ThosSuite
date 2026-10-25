@@ -327,11 +327,9 @@ Tabelle nach (aktuell leer, also alle gleich breit). Bei allen anderen Streifenz
   Name steht **ohne Hinweis auf das Land**: `Kwacha`, `Dollar`, `Rand` — eine Vorschlagsliste verriete
   sonst mit „Sambi…" die Antwort. Regionsnamen bleiben (`Ostkaribischer Dollar`, `CFA-Franc`), weil sie
   kein Land verraten; wo der Ländername fester Teil des Namens ist (`Simbabwe-Gold`), bleibt er auch.
-- Daraus entsteht die Liste `Währung`. Jede andere Währung der Liste ist ein Stoppwort — `Dollar` bei
-  Grenada ist falsch, weil `Dollar` ein eigener Eintrag ist. Wie streng das ist, steht in der Zelle:
-  `Pfund Sterling,Pfund` lässt `Pfund` als richtig gelten, und zwar für alle Länder mit dieser
-  Hauptform (die Schreibweisen werden vereinigt, einmal eintragen genügt);
-  `Ostkaribischer Dollar|~Dollar` toleriert `Dollar` nur auf der Karte dieses Landes.
+- Daraus entsteht die Liste `Währung`. Jede andere Währung der Liste ist ein Stoppwort — auch `Dollar`
+  bei Grenada, weil `Dollar` ein eigener Eintrag ist. Soll eine Kurzform gelten, steht sie wie bei der
+  Hauptstadt als Schreibweise oder toleriert in der Zelle.
 - Karte bei gefüllter Zelle, Id `50000 + Land-Id`, Label `Währung`: Land markieren, Flagge zeigen,
   „Wie heißt die Währung?".
 
