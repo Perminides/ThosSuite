@@ -49,3 +49,5 @@ scratchpad/
 # Arbeitsordner von Claude Code: Worktrees, Sitzungsdaten. Liegt im Repo-Ordner, gehoert
 # aber nicht dazu — ein Worktree ist eine vollstaendige zweite Kopie des Baums.
 .claude/
+
+docs/flaggen working dir/
