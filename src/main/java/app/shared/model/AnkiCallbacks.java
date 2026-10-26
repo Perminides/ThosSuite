@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  * @param submitClicked     die markierte Auswahl soll geprüft werden
  * @param timeExpired       die Uhr eines Schritts mit Zeitlimit ist abgelaufen
  * @param collectAdded      ein Vorschlag wurde gewählt und soll als Chip dazu (Text)
- * @param collectRemoved    das × eines Chips wurde geklickt (Text)
+ * @param collectRemoved    ein Chip soll weg, per × oder Backspace im leeren Feld (Text)
  */
 public record AnkiCallbacks(
 		Consumer<String> mapElementClicked,

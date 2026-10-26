@@ -18,6 +18,8 @@ import app.shared.skin.Skin;
 import app.shared.skin.SkinService;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import app.shared.ui.components.CollectChipPane;
 import app.shared.ui.components.MultipleChoicePane;
 import app.shared.ui.components.SuiteIconButton;
@@ -88,6 +90,10 @@ public abstract class AnkiLearnView {
 	private CollectChipPane collectChips;
 	private List<String> collectSuggestions = List.of();
 	private double collectGap;
+	private String newestChip;
+	// Die letzte Übernahme: Backspace direkt danach holt den getippten Text zurück
+	private String undoChip;
+	private String undoTyped;
 
 	protected AnkiLearnView(String deckId, String mapName, String category, AnkiCallbacks callbacks) {
 		this.deckId = deckId;
@@ -171,8 +177,18 @@ public abstract class AnkiLearnView {
 		inputField.onType(callbacks.textTyped());
 		inputField.setSuggestionsAbove(skin.learnSuggestionsAbove());
 		inputField.setOnSelected(word -> {
+			String typed = inputField.typedBeforeSelection();
 			inputField.clearSilent();
 			callbacks.collectAdded().accept(word);
+			undoChip = word;
+			undoTyped = typed;
+		});
+		inputField.textProperty().addListener((_, _, _) -> undoChip = null);
+		inputField.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+			if (e.getCode() == KeyCode.BACK_SPACE && inputField.getText().isEmpty() && newestChip != null) {
+				e.consume();
+				removeNewestChip();
+			}
 		});
 		// Mit gesetztem onAction kommt Enter nicht mehr beim Fenster an — das Feld sendet selbst ab. Freitext zählt nicht.
 		inputField.setOnAction(_ -> {
@@ -365,6 +381,8 @@ public abstract class AnkiLearnView {
 		inputField.setActive(true);
 		collectChips.setChips(List.of());
 		collectChips.setVisible(true);
+		newestChip = null;
+		undoChip = null;
 		layoutCollect();
 	}
 
@@ -372,6 +390,7 @@ public abstract class AnkiLearnView {
 	public void setCollectChips(List<CollectChip> chips) {
 		collectChips.setChips(chips);
 		layoutCollect();
+		newestChip = chips.isEmpty() ? null : chips.getLast().text();
 		Set<String> taken = new HashSet<>();
 		for (CollectChip chip : chips)
 			taken.add(chip.text());
@@ -390,7 +409,23 @@ public abstract class AnkiLearnView {
 		inputField.setAllItems(collectSuggestions);
 		collectChips.setChips(List.of());
 		collectChips.setVisible(false);
+		newestChip = null;
+		undoChip = null;
 		layoutCollect();
+	}
+
+	/**
+	 * Backspace im leeren Feld. Direkt nach einer Übernahme steht danach wieder da, was getippt war,
+	 * samt Vorschlägen. Sonst ist der neueste Chip einfach weg.
+	 */
+	private void removeNewestChip() {
+		String typed = newestChip.equals(undoChip) ? undoTyped : null;
+		undoChip = null;
+		callbacks.collectRemoved().accept(newestChip);
+		if (typed != null) {
+			inputField.setText(typed);   // nicht still: die Vorschläge sollen wieder aufgehen
+			inputField.positionCaret(typed.length());
+		}
 	}
 
 	/**

@@ -56,6 +56,8 @@ public class SuiteSuggestionTextField extends SuiteTextField {
     /** Wird aufgerufen, wenn ein Vorschlag ausgewählt wird (Enter, Tab, Klick). */
     private Consumer<String> onSelected;
 
+    private String typedBeforeSelection = "";
+
     private boolean suggestionsAbove = false;
 
     public SuiteSuggestionTextField(String promptText) {
@@ -81,6 +83,11 @@ public class SuiteSuggestionTextField extends SuiteTextField {
 
     public void setOnSelected(Consumer<String> onSelected) {
         this.onSelected = onSelected;
+    }
+
+    /** Was vor der letzten Auswahl im Feld stand — im Callback steht dort schon der Vorschlag. */
+    public String typedBeforeSelection() {
+        return typedBeforeSelection;
     }
 
     /**
@@ -165,6 +172,7 @@ public class SuiteSuggestionTextField extends SuiteTextField {
     }
 
     private void selectItem(String item) {
+        typedBeforeSelection = getText();
         setTextSilent(item);
         hideSuggestions();
         // Gesamten Text markieren, damit Weitertippen ihn ersetzt

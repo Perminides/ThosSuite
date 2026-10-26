@@ -56,7 +56,7 @@ import javafx.scene.shape.Shape;
  * <p>CSS (vom Skin gesetzt): Fläche = {@code .my-sketch-area}, {@code :marked} und je Farbe eine
  * Klasse aus {@link SketchColor#styleClass()}.</p>
  * 
- * TODO: Belarus vs Turkmenistan, das passt noch nicht
+ * TODO: Belarus vs Turkmenistan, das passt noch nicht. Und Kasachstan!
  * TODO: Aha, der Mond von Pakistan liegt rechts vom Zentrum?
  * TODO: Schnauze voll: Nur noch ein Blau!
  */
