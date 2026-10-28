@@ -36,7 +36,7 @@ public class FlagSheet {
 
 	private static final String SHEET = "1FX8SgpOr9G_Ss030KkQDAtOUE3AbEHuMPfxpl3PBQdE";
 	private static final int GID = 184257391;   // Systematik. Eine Id, keine Position — Verschieben ändert sie nicht.
-	private static final Path FILE = Path.of("docs", "flaggen", "systematik.csv");
+	private static final Path FILE = Path.of("docs", "flaggen working dir", "systematik.csv");
 
 	private final List<List<String>> rows;
 	private final List<List<String>> flags = new ArrayList<>();

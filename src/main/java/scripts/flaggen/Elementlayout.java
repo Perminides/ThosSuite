@@ -76,12 +76,20 @@ final class Elementlayout {
 	 * Wo Elemente auf einer Skizze liegen, die ihre Leinwand nicht füllt: je Rasterfeld Größe und
 	 * Versatz zur Feldmitte, in Leinwand-Einheiten, y nach oben positiv. Die Mitte von Feld 1 läge
 	 * neben dem schmalen oberen Wimpel. Die Punkte hängen an der Skizze und der Antwort, nicht am
-	 * Land: Es ist jeweils die Mitte des größten Kreises, der in den Wimpel passt.
+	 * Land: Es ist jeweils die Mitte des größten Kreises, der in den Wimpel passt. Die Größe gilt
+	 * gemeinsam für alle Figuren einer zugelassenen Gruppe.
 	 */
 	static final Map<String, Map<Integer, double[]>> ANKER = Map.of(
 			NICHT_RECHTECKIG, Map.of(
-					1, new double[] {0.7, -27.6, -18.4},
+					1, new double[] {0.55, -27.6, -18.4},
 					7, new double[] {0.7, -21.7, 7.5}));
+
+	/** Zusätzlicher Versatz der Figuren, die sich einen Anker teilen. */
+	static final Map<String, Map<Integer, Map<String, double[]>>> ANKER_GRUPPEN = Map.of(
+			NICHT_RECHTECKIG, Map.of(
+					1, Map.of(
+							"Mond", new double[] {0, 0},
+							"Stern", new double[] {8, 0})));
 
 	/**
 	 * Wo die Geschwister im Kasten ihres Behälters sitzen, je nach Anzahl. Keine Größen — Orte.
@@ -155,12 +163,21 @@ final class Elementlayout {
 
 			if (anker != null) {
 				String ort = untolerated(element.position());
-				double[] a = ort.matches("\\d") ? anker.get(Integer.parseInt(ort)) : null;
-				if (a == null || group.size() > 1 || parent[i] >= 0)
+				Integer feld = ort.matches("\\d") ? Integer.valueOf(ort) : null;
+				double[] a = feld == null ? null : anker.get(feld);
+				double[] versatz = {0, 0};
+				if (group.size() > 1) {
+					Map<Integer, Map<String, double[]>> gruppen = ANKER_GRUPPEN.get(background);
+					Map<String, double[]> plaetze = feld == null || gruppen == null ? Map.of()
+							: gruppen.getOrDefault(feld, Map.of());
+					versatz = plaetze.get(element.name());
+				}
+				if (a == null || versatz == null || parent[i] >= 0)
 					throw new RuntimeException(background + " kennt für " + element.name() + " auf " + ort
-							+ " keinen Platz — ANKER hat nur einzelne Figuren auf " + anker.keySet());
+							+ " keinen Platz — ANKER kennt dieses Feld oder diese Figurengruppe nicht");
 				result.add(new Layout(element, sketchOf(element, false),
-						List.of(ort + "," + number(a[0]) + "," + number(a[1]) + "," + number(a[2]))));
+						List.of(ort + "," + number(a[0]) + "," + number(a[1] + versatz[0]) + ","
+								+ number(a[2] + versatz[1]))));
 				continue;
 			}
 			if (untolerated(element.position()).equals(VERSTREUT_ORT)) {
