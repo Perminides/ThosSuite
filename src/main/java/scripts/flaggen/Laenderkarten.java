@@ -142,7 +142,8 @@ final class Laenderkarten {
 	/**
 	 * Die größten Städte: ein Input je Rang, in Rangfolge. Steht vor einer Stadt {@code ~}, liegt sie
 	 * knapp hinter der davor — bei der Frage nach der einen ist die andere toleriert, in beide Richtungen.
-	 * Ein Fehler beendet die Karte wie bei der Flaggenkarte.
+	 * Bereits abgefragte Städte sind bei allen späteren Rängen ebenfalls toleriert. Ein Fehler beendet
+	 * die Karte wie bei der Flaggenkarte.
 	 */
 	void rangkarte(Zeile z, Kartenbauer k) {
 		List<String> staedte = new ArrayList<>(), knapp = new ArrayList<>();
@@ -165,8 +166,8 @@ final class Laenderkarten {
 					? "<b>" + z.land() + "</b>: Welches ist die <b>größte</b> Stadt?"
 					: "Und die <b>" + RAENGE.get(i) + "</b>?";
 			String input = staedte.get(i);
-			if (!knapp.get(i).isEmpty())
-				input += "|~" + staedte.get(i - 1);
+			for (int j = 0; j < i; j++)
+				input += "|~" + staedte.get(j);
 			if (i + 1 < staedte.size() && !knapp.get(i + 1).isEmpty())
 				input += "|~" + staedte.get(i + 1);
 			k.ask(frage, "Input:" + STAEDTE + ":" + input);
