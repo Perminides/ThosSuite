@@ -1,6 +1,7 @@
 package app.shared.ui.components;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -23,9 +24,10 @@ import javafx.stage.Popup;
  *
  * <p>Was es <b>nicht</b> entscheidet: was eine Auswahl bedeutet. Über {@link #setOnSelected} meldet
  * es nur, dass der Benutzer einen Eintrag aus der Liste genommen hat. Ob daraus ein Chip wird
- * (Tagebuch), eine Kontakt-Id (WhatsApp) oder ein Filter (Filme), ist Sache des Aufrufers. Ebenso
- * die Reihenfolge: gefiltert wird stabil in der Reihenfolge der übergebenen Liste, sortieren muss
- * der Aufrufer.</p>
+ * (Tagebuch), eine Kontakt-Id (WhatsApp) oder ein Filter (Filme), ist Sache des Aufrufers.</p>
+ *
+ * <p>Treffer werden nach Position des Suchtexts, dann nach Länge und abschließend alphabetisch
+ * sortiert. Erst danach wird die Liste auf 20 Einträge begrenzt.</p>
  *
  * <p>Freitext, der auf keinen Vorschlag passt, läuft am Popup vorbei: dann ist es zu, ENTER wird
  * nicht abgefangen und landet beim {@code setOnAction} des Aufrufers. Genau daran unterscheiden
@@ -196,11 +198,15 @@ public class SuiteSuggestionTextField extends SuiteTextField {
         String lower = filter.toLowerCase();
         currentMatches.clear();
         for (String item : allItems) {
-            if (currentMatches.size() == MAX_SUGGESTIONS)
-                break;
             if (item.toLowerCase().contains(lower))
                 currentMatches.add(item);
         }
+        currentMatches.sort(Comparator
+                .comparingInt((String item) -> item.toLowerCase().indexOf(lower))
+                .thenComparingInt(String::length)
+                .thenComparing(String.CASE_INSENSITIVE_ORDER));
+        if (currentMatches.size() > MAX_SUGGESTIONS)
+            currentMatches.subList(MAX_SUGGESTIONS, currentMatches.size()).clear();
 
         if (currentMatches.isEmpty()) {
             hideSuggestions();
