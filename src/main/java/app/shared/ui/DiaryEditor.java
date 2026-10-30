@@ -17,6 +17,7 @@ import app.shared.ui.components.SuiteDatePicker;
 import app.shared.ui.components.SuiteDialog;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -106,7 +107,7 @@ public class DiaryEditor {
         });
 
         dialog.setOnShown(_ -> {
-            textArea.requestFocus();
+            Platform.runLater(tagInput::requestFocus);
             if (invasive != null)
                 makeInvasive(dialog);
         });
@@ -291,5 +292,6 @@ public class DiaryEditor {
         attachments.clear();
         rebuildAttachmentPane();
         makeNonInvasive(dialog);
+        tagInput.requestFocus();
     }
 }
