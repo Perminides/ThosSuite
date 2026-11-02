@@ -3,6 +3,7 @@ package app.shared.ui;
 import java.util.Optional;
 
 import app.shared.ui.components.SuiteDialog;
+import javafx.application.Platform;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -27,7 +28,7 @@ public class TextPromptDialog {
         content.getChildren().addAll(new Label(headerText), textArea);
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-        dialog.setOnShown(_ -> textArea.requestFocus());
+        dialog.setOnShown(_ -> Platform.runLater(textArea::requestFocus));
 
         Optional<?> result = dialog.showAndWait();
         if (result.isEmpty() || result.get().equals(ButtonType.CANCEL))
