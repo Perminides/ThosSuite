@@ -192,7 +192,7 @@ Bildet den Ablauf einer Anki-Lernsession ab: Laden aller Decks samt Fortschritt,
 
 ### SessionPresenter
 - **Rolle:** Vermittelt zwischen der Anzeige (shared.ui) und dem SessionProgress: reicht Nutzereingaben (Klick, MC-Auswahl, Text, Submit, Zeitablauf) weiter und setzt dessen Anzeige-Anweisungen (Bild, Frage, Skizze, MC-Optionen, Fast-Write-Uhr, Kartenverlauf, Fortschrittstext) auf der passenden AnkiLearnView um; wählt je Deck-Typ die konkrete View-Implementierung.
-- **Öffentlich:** u. a. `getView()`, `refresh()`, `showImage`, `showSketch`, `addSketch`, `markSketchAreas`, `fillSketchAreas`, `showQuestion`, `showMultipleChoice`, `waitForClick`, `waitForText`, `showFastStep`, `fastAnswerCorrect`, `fastTimeUp`, `restartClock`, `toggleClock`, `stopClock`, `suspendClock`, `resumeClock`, `setCorrectText`, `textIsCorrect`, `mapClickChecked`, `setCorrectMapElements`, `markMapElements`, `mcClickChecked`, `mcMarked`, `mcClickRejected`, `setCorrectMc`, `setSubmitActive`, `sessionProgressChanged`, `newCardIncoming`, `cardFinished`, `pause` … (n weitere, paketsichtbare Aufrufe von Progress und View)
+- **Öffentlich:** u. a. `getView()`, `refresh()`, `showImage`, `showSketch`, `addSketch`, `markSketchAreas`, `fillSketchAreas`, `showQuestion`, `showMultipleChoice`, `waitForClick`, `waitForText`, `showFastStep`, `fastAnswerCorrect`, `fastFailed`, `restartClock`, `toggleClock`, `stopClock`, `suspendClock`, `resumeClock`, `setCorrectText`, `textIsCorrect`, `mapClickChecked`, `setCorrectMapElements`, `markMapElements`, `mcClickChecked`, `mcMarked`, `mcClickRejected`, `setCorrectMc`, `setSubmitActive`, `sessionProgressChanged`, `newCardIncoming`, `cardFinished`, `pause` … (n weitere, paketsichtbare Aufrufe von Progress und View)
 - **Kennt:** app.learn (MapService), app.learn.anki.model (Card), app.learn.model (Deck, GeoMap, LearnStat, SessionProgressCounter), app.learn.repository (SketchFileSource), app.shared.model (ScreenView, SketchColor, AnkiCallbacks), app.shared.ui (AnkiLearnView, FastWriteLearnView, ShapeMapLearnView, ImageMapLearnView, McLearnView)
 - **Art:** Presenter/Controller
 
@@ -230,10 +230,10 @@ Domänenmodell einer Anki-Karte: ihre Step-Typen, Sortierordnung und die Zustand
 - **Art:** Enum/Konstanten
 
 ### FastAnswers
-- **Rolle:** Zustand eines laufenden Fast-Write-Steps: prüft getippten Text gegen offene Antworten, verwaltet gebundene (Hinweis/Reihenfolge) oder freie Feldbelegung, liefert Starttexte der Felder sowie die beim Zeitablauf aufzudeckenden Restantworten.
+- **Rolle:** Zustand eines laufenden Fast-Write-Steps: prüft getippten Text gegen offene Antworten und ihre Position, verwaltet gebundene (Hinweis/Reihenfolge) oder freie Feldbelegung, liefert Starttexte der Felder sowie die nach einem Fehlschlag aufzudeckenden Restantworten.
 - **Öffentlich:**
-  - `accept(String typed)`, `isComplete()`, `slotHints()`, `revealRest()`, `expectedSlot()`
-  - Record `Hit(int slot, String text)`
+  - `check(String typed)`, `isComplete()`, `slotHints()`, `revealRest()`, `expectedSlot()`
+  - Sealed Interface `Result`; Records `Hit(int slot, String text)`, `WrongPosition()`, `NoMatch()`
 - **Kennt:** app.learn.anki.model (Card.Answer, Card.Fast — selbes Paket)
 - **Art:** Sitzung/Ablauf (Stepzustand)
 

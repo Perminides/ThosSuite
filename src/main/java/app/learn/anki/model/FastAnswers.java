@@ -11,7 +11,7 @@ import app.learn.anki.model.Card.Fast;
 
 /**
  * Der Stand eines laufenden {@link Fast}-Steps: welche Antwort schon saß, in welchem Feld sie steht
- * und was beim Zeitablauf noch aufzudecken ist. Pendant zu {@link MultipleChoiceAnswers} — der
+ * und was nach einem Fehlschlag noch aufzudecken ist. Pendant zu {@link MultipleChoiceAnswers} — der
  * CardProgress hält beide für die Dauer eines Steps.
  *
  * <p><b>Gebunden oder nicht.</b> Ein Feld gehört genau dann einer bestimmten Antwort, wenn es etwas
@@ -22,8 +22,17 @@ import app.learn.anki.model.Card.Fast;
  */
 public class FastAnswers {
 
+	/** Das Ergebnis einer Eingabeprüfung. */
+	public sealed interface Result permits Hit, WrongPosition, NoMatch {}
+
 	/** Ein Treffer: in welches Feld er gehört und was dort stehen soll. */
-	public record Hit(int slot, String text) {}
+	public record Hit(int slot, String text) implements Result {}
+
+	/** Eine bekannte Antwort, die bei erzwungener Reihenfolge gerade nicht erwartet wird. */
+	public record WrongPosition() implements Result {}
+
+	/** Eine Eingabe, die keine offene Antwort trifft. */
+	public record NoMatch() implements Result {}
 
 	private final Fast step;
 	private final boolean bound;
@@ -48,20 +57,15 @@ public class FastAnswers {
 				answerIndexesByVariant.computeIfAbsent(variant.toLowerCase(), _ -> new ArrayList<>()).add(index);
 	}
 
-	/**
-	 * Prüft die Eingabe gegen die noch offenen Antworten.
-	 *
-	 * @return das getroffene Feld samt anzuzeigendem Text, oder {@code null} wenn die Eingabe (noch)
-	 *         auf keine offene Antwort passt — auch bei einer bereits gegebenen Antwort.
-	 */
-	public Hit accept(String typed) {
+	/** Prüft die Eingabe einmal gegen die noch offenen Antworten und ihre geforderte Position. */
+	public Result check(String typed) {
 		List<Integer> candidates = answerIndexesByVariant.get(typed.trim().toLowerCase());
 		if (candidates == null)
-			return null;
+			return new NoMatch();
 
 		int answerIndex = pickAnswer(candidates);
 		if (answerIndex < 0)
-			return null;
+			return step.ordered() ? new WrongPosition() : new NoMatch();
 
 		int slot = bound ? answerIndex : nextFreeSlot();
 		answered[answerIndex] = true;
@@ -87,7 +91,7 @@ public class FastAnswers {
 	}
 
 	/**
-	 * Was beim Zeitablauf in den noch leeren Feldern erscheint. Ohne Bindung kommen die Antworten aus
+	 * Was nach einem Fehlschlag in den noch leeren Feldern erscheint. Ohne Bindung kommen die Antworten aus
 	 * dem Vorrat in CSV-Reihenfolge nach — bei einem großen Vorrat sieht man also Beispiele, nicht alles.
 	 */
 	public Map<Integer, String> revealRest() {

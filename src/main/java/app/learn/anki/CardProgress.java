@@ -257,27 +257,33 @@ public class CardProgress {
 	// ========================================
 
 	/**
-	 * Eine erkannte Antwort rastet in ihr Feld ein und zieht die Uhr wieder voll auf. Was nicht passt
-	 * läuft ins Leere, die Uhr tickt weiter.
+	 * Eine erkannte Antwort rastet in ihr Feld ein und zieht die Uhr wieder voll auf. Eine bekannte
+	 * Antwort an falscher Position beendet die Karte; sonstige Eingaben laufen ins Leere.
 	 */
 	private void checkFastInput(String text) {
-		FastAnswers.Hit hit = activeFast.accept(text);
-		if (hit == null)
-			return;
-
-		presenter.fastAnswerCorrect(hit.slot(), hit.text(), activeFast.expectedSlot());
-		if (activeFast.isComplete()) {
-			presenter.stopClock();
-			currentIndex++;
-			runSteps();
-		} else {
-			presenter.restartClock();
+		switch (activeFast.check(text)) {
+			case FastAnswers.Hit hit -> {
+				presenter.fastAnswerCorrect(hit.slot(), hit.text(), activeFast.expectedSlot());
+				if (activeFast.isComplete()) {
+					presenter.stopClock();
+					currentIndex++;
+					runSteps();
+				} else {
+					presenter.restartClock();
+				}
+			}
+			case FastAnswers.WrongPosition _ -> failFast();
+			case FastAnswers.NoMatch _ -> {}
 		}
 	}
 
-	/** Die Uhr ist abgelaufen: aufdecken, Karte ist falsch, und es geht in die Pause. */
 	public void timeUp() {
-		presenter.fastTimeUp(activeFast.revealRest());
+		failFast();
+	}
+
+	/** Rest aufdecken, Karte ist falsch, und es geht in die Pause. */
+	private void failFast() {
+		presenter.fastFailed(activeFast.revealRest());
 		failed();
 	}
 

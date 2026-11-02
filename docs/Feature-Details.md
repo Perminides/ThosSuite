@@ -45,8 +45,9 @@ Frage ihren eigenen Lernstand.
 keine Auswahl, dafür Zeitdruck. Jede gesuchte Antwort hat ihr eigenes Limit; eine Uhr zählt herunter
 und beginnt mit jedem Treffer von vorn. Untereinander stehen die Antwortfelder, leer oder mit einem
 Hinweis darin, und decken sich nach und nach auf. Läuft die Zeit ab, erscheint das Fehlende, und die
-Karte gilt als falsch. Je nach Aufgabe zählt die Reihenfolge, oder es genügt eine bestimmte Zahl von
-Treffern aus einem größeren Vorrat.
+Karte gilt als falsch. Bei erzwungener Reihenfolge gilt das auch, sobald eine bekannte Antwort an
+falscher Position eingegeben wird; unbekannte Eingaben laufen ins Leere. Je nach Aufgabe zählt die
+Reihenfolge, oder es genügt eine bestimmte Zahl von Treffern aus einem größeren Vorrat.
 
 **Flaggen.** Die Flaggen der Welt, in zwei Richtungen gefragt. Die eine Karte zeigt den Namen eines
 Landes und lässt seine Flagge **Schritt für Schritt entstehen**: erst die grobe Gliederung, dann der

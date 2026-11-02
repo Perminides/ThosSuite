@@ -149,7 +149,7 @@ public class SessionPresenter {
 		fastView.revealSlot(slot, text, expectedSlot);
 	}
 
-	void fastTimeUp(Map<Integer, String> missing) {
+	void fastFailed(Map<Integer, String> missing) {
 		fastView.revealMissing(missing);
 	}
 

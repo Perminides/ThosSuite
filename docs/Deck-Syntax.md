@@ -191,7 +191,7 @@ Aufbau: `Fast:<sekunden>:<modus>:<antwort>\|<antwort>\|…` — Zeit je Feld > 0
 
 | Modus | Bedeutung |
 |---|---|
-| `ordered` | in dieser Reihenfolge eingeben; doppelte Antworten erlaubt |
+| `ordered` | in dieser Reihenfolge eingeben; bekannte Antwort an falscher Position = Karte falsch; doppelte Antworten erlaubt |
 | `any` | beliebige Reihenfolge, **alle** nötig |
 | `anyN` | N von allen genügen (`any3`); **keine** Hinweise |
 
