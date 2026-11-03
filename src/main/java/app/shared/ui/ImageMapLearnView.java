@@ -12,7 +12,7 @@ import app.shared.skin.SkinService;
 import app.shared.ui.components.map.ImageMapPane;
 import app.shared.ui.components.map.LearnMap;
 
-/** Welt und Hannover: Bild-Karte, Eingabefeld, leerer Hintergrund. */
+/** Welt, Hannover und Flaggen: Bild-Karte, Eingabefeld, leerer Hintergrund. */
 public class ImageMapLearnView extends AnkiLearnView {
 
 	private final Function<Set<String>, List<ShapeGeometry>> geometryFor;

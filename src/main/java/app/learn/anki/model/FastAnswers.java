@@ -36,7 +36,7 @@ public class FastAnswers {
 
 	private final Fast step;
 	private final boolean bound;
-	private final Map<String, List<Integer>> answerIndexesByVariant = new HashMap<>();
+	private final Map<String, List<Integer>> answerIndexesByVariant = new HashMap<>(); // erlaubte Antwort -> [Indexe an denen sie erlaubt ist]
 
 	private final int[] slotToAnswer; // -1 = Feld noch leer
 	private final boolean[] answered;
