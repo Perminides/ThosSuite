@@ -36,12 +36,12 @@ Input:Städte:Hannover|Braunschweig|Oldenburg|~Osnabrück
 
 Finde alle europäischen Länder:
 ```
-MC:+Schweiz|Japan|+Island|~-Türkei|-Australien|Brasilien|Guam|China|?USA|Mexiko|~Grönland
+MC:+Schweiz|Japan|+Island|~-Türkei|-Australien|Brasilien|Guam|China|USA|Mexiko|~Grönland
 ```
 
+- Klick auf Japan, Brasilien, Guam, China, USA oder Mexiko beendet den Step sofort.
 - \+ → Sobald Schweiz und Island angeklickt wurden, geht es weiter
 - ~ → Türkei und Grönland schütteln sich beim Draufklicken, beenden den Step aber nicht
-- ? → Klick auf Japan, Brasilien, Guam, China, USA oder Mexiko beendet den Step sofort. Das Fragezeichen kann weggelassen werden
 - \- → Auch ein Klick auf Australien beendet den Step sofort. Australien ist ein fester Distraktor und wird immer als Option angezeigt
 - \-~ → Auch die sich schüttelnde Türkei wird immer angezeigt.
 

@@ -73,8 +73,8 @@ sucht weiter. Die Vollständigkeit prüft die Karte. Bei `MC+` muss man selbst w
 ist: Wer nur einen Teil anhakt und absendet, liegt falsch. Deshalb `MC+` überall dort, wo aufgezählt
 werden soll, was man weiß, und nicht erkannt, was man sieht.
 
-Optionen trennt `|`. Ein führendes `+ - ~ ?` gibt die Rolle, nackt heißt `?`. Die Rolle frisst nur ihr
-Zeichen, der Rest ist Text. Einzige Doppelrolle: `-~` oder `~-` heißt toleriert und immer sichtbar.
+Optionen trennt `|`. Ein führendes `+ - ~` gibt die Rolle, ohne Präfix ist die Option ein Füller. Die
+Rolle frisst nur ihr Zeichen, der Rest ist Text. Einzige Doppelrolle: `-~` oder `~-` heißt toleriert und immer sichtbar.
 
 Die alte Sternform `a|b*c|d` ist abgeschafft. Sie hat die Bedeutung einer Antwort davon abhängig
 gemacht, ob eine **andere** Antwort derselben Zeile mit `+` beginnt: Ein führendes Minus war mal
@@ -89,8 +89,7 @@ bricht ab, statt still etwas anderes zu bedeuten.
 | `-` | falsch, **immer sichtbar** | fester Distraktor (z. B. `Keine`) |
 | `~` | falsch, **kein Abbruch** | der Knopf schüttelt beim Klick, die Karte läuft weiter; zählt in **keinem** der beiden Typen zur Antwort; wird aus dem Pool gelost |
 | `-~` oder `~-` | falsch, kein Abbruch, **immer sichtbar** | wie `~`, wird aber nie weggelost |
-| `?` | Füller | wird nur zum Auffüllen gezogen |
-| *(nackt)* | Füller | wie `?` |
+| *(nackt)* | Füller | wird nur zum Auffüllen gezogen |
 
 ### Sonderfälle
 
@@ -142,7 +141,7 @@ Aufbau: `Input:[<liste>:]<antwort>|<antwort>|-<stoppwort>|~<toleriert>…`, jede
 | *(nackt)* | richtig; alle Antworten sind nötig, in beliebiger Reihenfolge |
 | `-` | Stoppwort: Lösung ins Feld, Karte falsch, Pause — wie ESC |
 | `~` | toleriert: kein Fehler, kein Treffer; fällt aus der Stoppliste der Liste |
-| `+ ?` | reserviert → Abbruch; als Text mit `\` schützen |
+| `+` | reserviert → Abbruch; als Text mit `\` schützen |
 
 - Nach jedem Treffer leert sich das Feld. Doppelt Getipptes läuft ins Leere.
 - Beim Aufdecken steht die erste Schreibweise jeder Antwort im Feld, mit Komma verbunden.

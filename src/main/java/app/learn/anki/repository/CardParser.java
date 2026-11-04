@@ -284,8 +284,8 @@ public class CardParser {
 
     /**
      * Zerlegt einen MC-Body. <b>Eine</b> Schreibweise: Optionen trennt {@code |}, ein führendes
-     * {@code + - ~ ?} gibt die Rolle, nackt heißt {@code ?}. Die Rolle frisst nur ihr Zeichen, der
-     * Rest ist Text ({@code +-40°} = richtig „-40°", {@code ++5} = richtig „+5").
+     * {@code + - ~} gibt die Rolle; ohne Präfix ist die Option ein Füller. Die Rolle frisst nur ihr
+     * Zeichen, der Rest ist Text ({@code +-40°} = richtig „-40°", {@code ++5} = richtig „+5").
      *
      * <p>Die eine Doppelrolle: {@code -~} oder {@code ~-} heißt toleriert und immer sichtbar. Sie
      * frisst beide Zeichen ({@code -~-40°} = „-40°"). Beginnt der Text einer <i>einfachen</i> Rolle
@@ -349,7 +349,7 @@ public class CardParser {
     }
 
     private static boolean hasRolePrefix(String part) {
-        return !part.isEmpty() && "+-~?".indexOf(part.charAt(0)) >= 0;
+        return !part.isEmpty() && "+-~".indexOf(part.charAt(0)) >= 0;
     }
 
     /** Ein {@code \} macht das nächste Zeichen literal und wird beim Lesen weggeworfen; {@code \\} ist ein Backslash. */
@@ -398,7 +398,7 @@ public class CardParser {
      * {@code [<liste>:]<antwort>|<antwort>|-<stoppwort>|~<toleriert>…}, jede mit Schreibweisen {@code a,b,c}.
      *
      * <p>Nackt heißt richtig, {@code -} Stoppwort, {@code ~} toleriert — kein Fehler, kein Treffer.
-     * {@code + ?} am Anfang sind reserviert. Ein {@code :} ohne {@code \} trennt die Liste ab.</p>
+     * {@code +} am Anfang ist reserviert. Ein {@code :} ohne {@code \} trennt die Liste ab.</p>
      *
      * <p>Mit Liste ist jede Schreibweise der Liste ein Stoppwort, außer denen, die eine Antwort oder ein
      * toleriertes Wort selbst trägt — eine Nebenschreibweise, die zwei Einträge teilen, wird so nie zum
@@ -428,7 +428,7 @@ public class CardParser {
             if (part.isEmpty())
                 continue;
             char first = part.charAt(0);
-            if ("+?".indexOf(first) >= 0)
+            if (first == '+')
                 throw new RuntimeException("Input: '" + first + "' am Anfang ist reserviert, als Text mit \\ schützen: " + body);
             boolean stop = first == '-', tolerated = first == '~';
             List<String> variants = parseVariants(stop || tolerated ? part.substring(1) : part);
@@ -458,7 +458,7 @@ public class CardParser {
             case '+' -> Role.CORRECT;
             case '-' -> Role.WRONG_ALWAYS_SHOWN;
             case '~' -> Role.TOLERATED;
-            default  -> Role.DISTRACTOR_OPTIONAL; // '?'
+            default  -> Role.DISTRACTOR_OPTIONAL;
         };
     }
 
@@ -473,7 +473,7 @@ public class CardParser {
 
 	/**
 	 * {@code <liste>:<antwort>|<antwort>|~<toleriert>…}. Nackt heißt nötig, {@code ~} toleriert;
-	 * {@code + - ?} sind reserviert. Jede Antwort muss in der Wortliste stehen, ihre Schreibweisen
+	 * {@code + -} sind reserviert. Jede Antwort muss in der Wortliste stehen, ihre Schreibweisen
 	 * kommen von dort (siehe {@link #ausListe}); vorgeschlagen wird nur, was in der Liste steht.
 	 *
 	 * <p>Die Liste ist Pflicht — ohne sie gäbe es nichts zu wählen. Getrennt wird nur am ersten
@@ -542,7 +542,7 @@ public class CardParser {
 
 	/** Ein Rollenzeichen, das der Step nicht kennt, ist reserviert — als Text mit {@code \} schützen. */
 	private static void checkNoRole(String part, String step, String body) {
-		if ("+-~?".indexOf(part.charAt(0)) >= 0)
+		if ("+-~".indexOf(part.charAt(0)) >= 0)
 			throw new RuntimeException(step + ": '" + part.charAt(0) + "' am Anfang ist reserviert, als Text mit \\ schützen: " + body);
 	}
 
