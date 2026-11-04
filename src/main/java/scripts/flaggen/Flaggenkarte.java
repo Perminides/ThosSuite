@@ -156,6 +156,7 @@ final class Flaggenkarte {
 				{"Stoßzahn", new String[] {"der Stoßzahn", "die Stoßzähne"}},
 				{"Flagge", new String[] {"die Flagge", "die Flaggen"}},
 				{"Kanu", new String[] {"das Kanu", "die Kanus"}},
+				{"Hammer", new String[] {"der Hammer", "die Hämmer"}},
 			});
 
 	/**

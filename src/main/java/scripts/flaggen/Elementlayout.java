@@ -30,7 +30,7 @@ final class Elementlayout {
 			"Vogel", "vogel", "Sonne", "sonne", "Union Jack", "union-jack",
 			"Dreizack", "dreizack", "Muster", "muster", "Drache", "drache", "Blatt / Zweig",
 			"zweig", "Kreuz", "kreuz", "Nuss", "nuss", "Blume", "blume",
-			"Gebäude", "gebaeude", "Landumriss", "landumriss",
+			"Gebäude", "gebaeude", "Landumriss", "landumriss", "Hammer", "hammer",
 			"Hut", "hut", "Baum", "baum", "Krone", "krone", "Gewehr", "gewehr", "Buch", "buch",
 			"Stoßzahn", "stosszahn", "Löwe", "loewe", "Chakra", "chakra", "Flagge", "flagge", "Kanu", "kanu");
 
