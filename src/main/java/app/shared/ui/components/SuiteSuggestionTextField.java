@@ -163,7 +163,7 @@ public class SuiteSuggestionTextField extends SuiteTextField {
 
         textProperty().addListener((_, _, newVal) -> {
             if (!suppressSuggestions)
-                updateSuggestions(newVal);
+                updateSuggestions(newVal == null ? null : newVal.trim());
         });
 
         // Popup schließen wenn das Feld den Fokus verliert
