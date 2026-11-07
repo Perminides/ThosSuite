@@ -29,7 +29,7 @@ public class WriteSessionProgress extends SessionProgress {
 	private final Set<MapShape> sessionRegions;
 	private final List<MapShape> toLearnRegions;
 
-	/** Nur im freien Spiel gefüllt: was per ESC aufgegeben wurde, in der Reihenfolge des Fragens. */
+	/** Nur im freien Spiel gefüllt: was verfehlt oder per ESC aufgegeben wurde, in der Reihenfolge des Fragens. */
 	private final List<MapShape> notFound = new ArrayList<>();
 
 	private int currentIndex = -1;
@@ -64,11 +64,67 @@ public class WriteSessionProgress extends SessionProgress {
 	public void textInputChanged(String text) {
 		MapShape currentRegion = toLearnRegions.get(currentIndex);
 
-		if (!matches(currentRegion, text))
+		if (matches(currentRegion, text)) {
+			presenter.handleCorrectAnswers(Set.of(currentRegion.id()));
+			nextStep();
+			return;
+		}
+
+		MapShape wrongRegion = findWrongRegion(currentRegion, text);
+		if (wrongRegion == null)
 			return;
 
-		presenter.handleCorrectAnswers(Set.of(currentRegion.id()));
-		nextStep();
+		presenter.setCorrectText(nameOf(currentRegion));
+		presenter.handleClickResult(wrongRegion.id(), false, currentRegion.id());
+		paused = true;
+		finishIncorrect("Statt " + nameOf(currentRegion) + " wurde " + nameOf(wrongRegion) + " eingegeben.",
+				true, currentRegion.id());
+	}
+
+	@Override
+	void resume() {
+		MapShape currentRegion = toLearnRegions.get(currentIndex);
+		if (spec.isPlaySession())
+			notFound.add(currentRegion);
+		paused = false;
+		presenter.undoWrongClick();
+		if (spec.isPlaySession()) {
+			nextStep();
+		} else {
+			presenter.weWaitForWriteText(currentRegion.id());
+			presenter.retryWrite();
+		}
+	}
+
+	private MapShape findWrongRegion(MapShape currentRegion, String text) {
+		if (isPrefixOfCurrent(currentRegion, text))
+			return null;
+		for (MapShape region : toLearnRegions)
+			if (!region.equals(currentRegion) && matches(region, text))
+				return region;
+		return null;
+	}
+
+	private boolean isPrefixOfCurrent(MapShape currentRegion, String text) {
+		String normalized = text.toLowerCase().trim();
+		if (normalized.isEmpty())
+			return false;
+		return switch (spec.getMode().getCapitalOrRegion()) {
+		case CAPITAL -> isPrefix(normalized, currentRegion.capitalName(), currentRegion.altCapitalNames());
+		case REGION -> isPrefix(normalized, currentRegion.regionName(), currentRegion.altRegionNames());
+		case BOTH -> isPrefix(normalized, currentRegion.capitalName(), currentRegion.altCapitalNames())
+				|| isPrefix(normalized, currentRegion.regionName(), currentRegion.altRegionNames());
+		};
+	}
+
+	private boolean isPrefix(String normalized, String name, Set<String> alternatives) {
+		if (name.toLowerCase().trim().startsWith(normalized))
+			return true;
+		if (alternatives != null)
+			for (String alternative : alternatives)
+				if (alternative.toLowerCase().trim().startsWith(normalized))
+					return true;
+		return false;
 	}
 
 	@Override

@@ -66,7 +66,10 @@ Lernstand, sondern das Deck als Ganzes. Drei Arten von Aufgabe gibt es:
 - **Finden** — die genannte Region oder den genannten Ort auf der Karte anklicken.
 - **Eliminieren** — der Reihe nach alle Regionen oder alle Orte abklappern; ein Fehler beendet den
   Durchgang.
-- **Benennen** — die gerade markierte Region oder den markierten Ort eintippen.
+- **Benennen** — die gerade markierte Region oder den markierten Ort eintippen. Ein anderer bekannter
+  Regions- oder Ortsname gilt als Fehlgriff und öffnet den Fehlerdialog mit Fortsetzen; unbekannte
+  Eingaben laufen ins Leere. Eliminieren bleibt davon ausgenommen: Dort ist auch ein bereits genannter
+  Name kein Fehler.
 
 Im Menü **Lernen** liegt bereit, was heute fällig ist: bei den Regionen die anstehenden Sessions,
 bei den Frage-Decks die Decks mitsamt ihren fälligen Karten. Unabhängig davon lässt sich jedes

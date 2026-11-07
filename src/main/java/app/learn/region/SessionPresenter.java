@@ -119,6 +119,10 @@ public class SessionPresenter {
 	 */
 	void handleMissedWrite(String id) {
 		view.setIdToIncorrect(id);
+		retryWrite();
+	}
+
+	void retryWrite() {
 		view.setTextInTextField("");
 		view.setTextFieldActive(true);
 	}
@@ -136,7 +140,7 @@ public class SessionPresenter {
 	 * verpasste Kreis bleibt im freien Spiel rot markiert.</p>
 	 */
 	/**
-	 * Nimmt einen Fehlklick zurück. Im freien Spiel bleibt die verfehlte Form rot stehen und es
+	 * Nimmt einen Fehlgriff zurück. Im freien Spiel bleibt die verfehlte Form rot stehen und es
 	 * geht weiter; im Lernmodus wird der Stand davor wiederhergestellt, damit man es nochmal
 	 * versuchen kann.
 	 */
