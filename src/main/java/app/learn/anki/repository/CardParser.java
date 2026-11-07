@@ -207,7 +207,10 @@ public class CardParser {
     // --- Fast ---
 
     /**
-     * {@code <sekunden>:<ordered|any|anyN>:<antwort>|<antwort>|…}
+     * {@code <sekunden>:<ordered|any|anyN>:<antwort>|-<stoppwort>|…}
+     *
+     * <p>Antworten und Stoppwörter tragen Schreibweisen mit Komma. Ein führendes Minus ist ihre Rolle;
+     * als Text bleibt es mit {@code \-} möglich. Ein Stoppwort macht den Step sofort falsch.</p>
      *
      * <p>Vor den Antworten stehen immer genau zwei Pflichtfelder. Nur deshalb darf der Antwortblock
      * selbst Doppelpunkte tragen ("Blade Runner: 2049") — das Limit trennt sauber ab.</p>
@@ -222,7 +225,8 @@ public class CardParser {
             throw new RuntimeException("Fast braucht eine Zeit größer null: " + body);
 
         String mode = parts[1].trim();
-        List<Answer> answers = parseFastAnswers(parts[2]);
+        List<String> stopWords = new ArrayList<>();
+        List<Answer> answers = parseFastAnswers(parts[2], stopWords);
         boolean ordered = mode.equals("ordered");
         int slots = answers.size();
 
@@ -240,11 +244,12 @@ public class CardParser {
             throw new RuntimeException(slots + " Antwortfelder, erlaubt sind " + Card.MAX_FAST_SLOTS);
         if (!ordered)
             checkNoDuplicates(answers);
+        checkStopWords(answers, stopWords);
 
-        return new Fast(seconds, ordered, slots, answers);
+        return new Fast(seconds, ordered, slots, answers, List.copyOf(stopWords));
     }
 
-    private static List<Answer> parseFastAnswers(String block) {
+    private static List<Answer> parseFastAnswers(String block, List<String> stopWords) {
         List<Answer> answers = new ArrayList<>();
         for (String raw : splitUnescaped(block, '|')) {
             String s = raw.trim();
@@ -256,14 +261,30 @@ public class CardParser {
                 hint = unescape(s.substring(1, zu).trim());
                 s = s.substring(zu + 1);
             }
-            List<String> variants = parseVariants(s);
+            boolean stop = s.startsWith("-");
+            if (stop && hint != null)
+                throw new RuntimeException("Fast: Ein Stoppwort kann keinen Hinweis tragen: " + raw);
+            List<String> variants = parseVariants(stop ? s.substring(1) : s);
             if (variants.isEmpty())
                 throw new RuntimeException("Antwort ohne Text: " + raw);
-            answers.add(new Answer(hint, List.copyOf(variants)));
+            if (stop)
+                stopWords.addAll(variants);
+            else
+                answers.add(new Answer(hint, variants));
         }
         if (answers.isEmpty())
             throw new RuntimeException("Fast ohne Antworten: " + block);
         return List.copyOf(answers);
+    }
+
+    private static void checkStopWords(List<Answer> answers, List<String> stopWords) {
+        Set<String> answerVariants = new HashSet<>();
+        for (Answer answer : answers)
+            for (String variant : answer.variants())
+                answerVariants.add(variant.toLowerCase());
+        for (String stopWord : stopWords)
+            if (answerVariants.contains(stopWord.toLowerCase()))
+                throw new RuntimeException("Fast: '" + stopWord + "' ist zugleich Antwort und Stoppwort");
     }
 
     private static boolean hasHints(List<Answer> answers) {

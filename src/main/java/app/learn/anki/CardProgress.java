@@ -257,8 +257,8 @@ public class CardProgress {
 	// ========================================
 
 	/**
-	 * Eine erkannte Antwort rastet in ihr Feld ein und zieht die Uhr wieder voll auf. Eine bekannte
-	 * Antwort an falscher Position beendet die Karte; sonstige Eingaben laufen ins Leere.
+	 * Eine erkannte Antwort rastet in ihr Feld ein und zieht die Uhr wieder voll auf. Ein Stoppwort
+	 * oder eine bekannte Antwort an falscher Position beendet die Karte; sonstige Eingaben laufen ins Leere.
 	 */
 	private void checkFastInput(String text) {
 		switch (activeFast.check(text)) {
@@ -272,6 +272,7 @@ public class CardProgress {
 					presenter.restartClock();
 				}
 			}
+			case FastAnswers.StopWord _ -> failFast();
 			case FastAnswers.WrongPosition _ -> failFast();
 			case FastAnswers.NoMatch _ -> {}
 		}

@@ -55,6 +55,7 @@ Alte Schreibweisen brechen ab, statt still etwas anderes zu bedeuten: `,` und `>
 | `MC+:+Rot\|+Blau\|-Keine\|Gelb` | Sammeln + absenden: Rot+Blau richtig, „Keine" immer dabei. |
 | `MC:=1\|2\|+3\|4\|mehr` | Feste Reihenfolge, 3 ist richtig. |
 | `Fast:20:any:Berlin\|Hamburg` | Tippen auf Zeit, beliebige Reihenfolge, beide nötig. |
+| `Fast:5:any:Median\|-Medina` | „Medina“ ist Stoppwort und macht die Karte sofort falsch. |
 | `Fast:30:ordered:Gold\|Silber\|Bronze` | Tippen, in dieser Reihenfolge. |
 | `SketchImage:waagerecht-3` | Lädt eine Skizze (setzt sie zurück). |
 | `SketchImageAdd:stern,4` | Hängt „stern" in Rasterfeld 4 an. |
@@ -186,7 +187,7 @@ erlaubt, wenn sie zum Eintrag gehören. `-`-Stoppwörter stehen in keiner Liste 
 
 ## Fast — Details
 
-Aufbau: `Fast:<sekunden>:<modus>:<antwort>\|<antwort>\|…` — Zeit je Feld > 0, höchstens 10 Felder.
+Aufbau: `Fast:<sekunden>:<modus>:<antwort>\|-<stoppwort>\|…` — Zeit je Feld > 0, höchstens 10 Felder.
 
 | Modus | Bedeutung |
 |---|---|
@@ -194,14 +195,22 @@ Aufbau: `Fast:<sekunden>:<modus>:<antwort>\|<antwort>\|…` — Zeit je Feld > 0
 | `any` | beliebige Reihenfolge, **alle** nötig |
 | `anyN` | N von allen genügen (`any3`); **keine** Hinweise |
 
-Je Antwort: Schreibvarianten mit `,` getrennt, optional ein `<Hinweis>` davor.
+Je Antwort: Schreibvarianten mit `,` getrennt, optional ein `<Hinweis>` davor. Ein führendes `-`
+macht stattdessen ein **Stoppwort**: Vollständig getippt deckt es den Rest auf, die Karte ist falsch
+und pausiert. Das gilt in allen Modi. Stoppwörter belegen keine Felder und dürfen keine Hinweise tragen;
+ihre Schreibvarianten werden wie bei `Input` mit `,` getrennt. Andere unbekannte Eingaben laufen ins Leere.
+Ein literales führendes Minus wird als `\-` geschrieben. Dasselbe Wort als Antwort und Stoppwort bricht
+das Laden ab.
 
 | Beispiel | | Bedeutung |
 |---|---|---|
 | `Fast:15:any:Kubrick,Stanley Kubrick\|1968` | ✓ | Zwei Antworten, die erste mit zwei Varianten. |
+| `Fast:5:any:Median\|-Medina` | ✓ | „Medina“ macht die Karte sofort falsch. |
+| `Fast:5:any:\-40` | ✓ | Gesucht ist der Text „-40“. |
 | `Fast:30:ordered:<1.>Gold\|<2.>Silber` | ✓ | Mit Hinweisen, in Reihenfolge. |
 | `Fast:20:any3:rot\|blau\|grün\|gelb\|schwarz` | ✓ | Drei von fünf genügen. |
 | `Fast:20:any2:<Hinweis>rot\|blau` | ✗ | `anyN` + Hinweis geht nicht. |
+| `Fast:5:any:Median\|-Median` | ✗ | Dasselbe Wort kann nicht Antwort und Stoppwort sein. |
 | `Fast:0:any:rot\|blau` | ✗ | Zeit muss > 0 sein. |
 
 ## Sketch-Steps

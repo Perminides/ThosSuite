@@ -54,7 +54,7 @@ MC+ hat die gleiche Syntax. Der Unterschied ist, dass die geklickten Antworten e
 
 Nenne einen Gott der Unterwelt.
 ```
-Fast:10:any1:Hades,Haades|Pluto
+Fast:10:any1:Hades,Haades|Pluto|-Aphrodite
 ```
 
 - Es gibt 10 Sekunden pro Antwort
@@ -62,6 +62,7 @@ Fast:10:any1:Hades,Haades|Pluto
 - Wenn hinter any keine Zahl folgt, müssen alle Antworten gegeben werden
 - Alternativschreibweisen werden durch Komma getrennt
 - Unterschiedliche Antworten werden durch | getrennt
+- Eine mit Minus beginnende Antwort ist ein Stoppwort. Das Tippen dieses beendet den Step sofort.
 
 ### Sortiert
 Nenne die beiden Staatschefs von Deutschland

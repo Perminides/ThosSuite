@@ -2,9 +2,11 @@ package app.learn.anki.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import app.learn.anki.model.Card.Answer;
 import app.learn.anki.model.Card.Fast;
@@ -23,10 +25,13 @@ import app.learn.anki.model.Card.Fast;
 public class FastAnswers {
 
 	/** Das Ergebnis einer Eingabeprüfung. */
-	public sealed interface Result permits Hit, WrongPosition, NoMatch {}
+	public sealed interface Result permits Hit, StopWord, WrongPosition, NoMatch {}
 
 	/** Ein Treffer: in welches Feld er gehört und was dort stehen soll. */
 	public record Hit(int slot, String text) implements Result {}
+
+	/** Ein ausdrücklich als falsch ausgewiesenes Wort. */
+	public record StopWord() implements Result {}
 
 	/** Eine bekannte Antwort, die bei erzwungener Reihenfolge gerade nicht erwartet wird. */
 	public record WrongPosition() implements Result {}
@@ -37,6 +42,7 @@ public class FastAnswers {
 	private final Fast step;
 	private final boolean bound;
 	private final Map<String, List<Integer>> answerIndexesByVariant = new HashMap<>(); // erlaubte Antwort -> [Indexe an denen sie erlaubt ist]
+	private final Set<String> stopWords = new HashSet<>();
 
 	private final int[] slotToAnswer; // -1 = Feld noch leer
 	private final boolean[] answered;
@@ -55,11 +61,16 @@ public class FastAnswers {
 		for (int index = 0; index < step.answers().size(); index++)
 			for (String variant : step.answers().get(index).variants())
 				answerIndexesByVariant.computeIfAbsent(variant.toLowerCase(), _ -> new ArrayList<>()).add(index);
+		for (String stopWord : step.stopWords())
+			stopWords.add(stopWord.toLowerCase());
 	}
 
-	/** Prüft die Eingabe einmal gegen die noch offenen Antworten und ihre geforderte Position. */
+	/** Prüft die Eingabe einmal gegen Stoppwörter, offene Antworten und ihre geforderte Position. */
 	public Result check(String typed) {
-		List<Integer> candidates = answerIndexesByVariant.get(typed.trim().toLowerCase());
+		String normalized = typed.trim().toLowerCase();
+		if (stopWords.contains(normalized))
+			return new StopWord();
+		List<Integer> candidates = answerIndexesByVariant.get(normalized);
 		if (candidates == null)
 			return new NoMatch();
 

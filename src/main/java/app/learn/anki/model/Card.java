@@ -56,7 +56,9 @@ public class Card {
     public record MCPlus(Set<AnswerOption> options, List<String> orderHint) implements ChoiceStep {}
     public record MarkMapElements(Set<String> shapes) implements Step {}
     public record Pause() implements Step {}
-    public record Fast(int seconds, boolean ordered, int slots, List<Answer> answers) implements Step {}
+    /** Ein Stoppwort macht den Step sofort falsch; es belegt keines der Antwortfelder. */
+    public record Fast(int seconds, boolean ordered, int slots, List<Answer> answers,
+            List<String> stopWords) implements Step {}
 
     /**
      * Die drei Schritte einer Skizze: laden, eine Fläche hervorheben, eine Fläche färben.
