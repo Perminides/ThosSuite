@@ -1079,7 +1079,7 @@ Orchestrierungsschicht: verdrahtet das Hauptfenster mit den Feature-Diensten, h�
 - **Art:** Sitzung/Ablauf
 
 ### MainWindow
-- **Rolle:** Kapselt die Stage der Anwendung: Fensteraufbau (BorderPane, ContentPane, HeaderBar), Menüleiste (Datei/Optionen/Lernen/Spielen/Statistik/Module/Ansicht/?), globale Tastaturkürzel (Esc/Enter/Pause) sowie das Umschalten des angezeigten `ScreenView`-Inhalts. Nimmt vom Controller Callback-Runnables/Consumer entgegen, statt selbst Fachlogik zu enthalten.
+- **Rolle:** Kapselt die Stage der Anwendung: Fensteraufbau (BorderPane, ContentPane, HeaderBar), Menüleiste (Datei/Optionen/Lernen/Statistik/Module/Ansicht/?; das Lernen-Menü hält unten hinter einem Trenner das Untermenü „Ohne Fortschritt" für das Spielen ohne Lernfortschritt), globale Tastaturkürzel (Esc/Enter/Pause) sowie das Umschalten des angezeigten `ScreenView`-Inhalts. Nimmt vom Controller Callback-Runnables/Consumer entgegen, statt selbst Fachlogik zu enthalten.
 - **Öffentlich:**
   - `MainWindow(Stage stage)`
   - `void buildStyledUi()`

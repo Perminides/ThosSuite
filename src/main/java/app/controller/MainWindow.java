@@ -46,7 +46,8 @@ public class MainWindow {
     private Menu menuLearn = null;
     private Menu menuOptions = null;
     private Menu menuSort = null;
-    private Menu menuPlay = null;
+    // Untermenü von Lernen (unten, hinter einem Trenner): Decks ohne Änderung des Lernfortschritts.
+    private Menu menuFreePlay = null;
     private List<PlayMenuNode> playMenuNodes;
     private List<LearnSessionInfo> todaysLearnSessions;
     
@@ -156,16 +157,17 @@ public class MainWindow {
         }
         menuOptions.getItems().add(menuSort);
         
+        // OHNE-FORTSCHRITT-UNTERMENÜ (unter Lernen) — vor dem Lernen-Menü anlegen, weil
+        // updateLearnMenuItems() es ans Ende der Lernen-Einträge hängt.
+        menuFreePlay = new Menu("Ohne Fortschritt");
+        if (playMenuNodes != null) {
+            updatePlayMenuItems();
+        }
+
         // LERNEN-MENÜ
         menuLearn = new Menu("Lernen");
         if (todaysLearnSessions != null) {
             updateLearnMenuItems();
-        }
-        
-        // SPIELEN-MENÜ
-        menuPlay = new Menu("Spielen");
-        if (playMenuNodes != null) {
-            updatePlayMenuItems();
         }
         
         // STATISTIK-MENÜ
@@ -220,18 +222,7 @@ public class MainWindow {
             });
             menuView.getItems().add(item);
         }
-        // Trenner und Aktualisieren-Button.
-        // Ich habe es nicht hinbekommen, dem Trenner über CSS mehr vertikales Padding zu geben, deswegen der Hack...
-        SeparatorMenuItem separator = new SeparatorMenuItem();
-        MenuItem spacer = new MenuItem("");
-        spacer.setDisable(true);
-        spacer.getStyleClass().add("my-spacer");
-        menuView.getItems().add(spacer);
-        menuView.getItems().add(separator);
-        MenuItem spacer2 = new MenuItem("");
-        spacer2.setDisable(true);
-        spacer2.getStyleClass().add("my-spacer");
-        menuView.getItems().add(spacer2);
+        addSpacer(menuView);
         MenuItem itemReload = new MenuItem("Aktualisieren");
         itemReload.setOnAction(_ -> controller.triggerSkinRefresh());
         menuView.getItems().add(itemReload);
@@ -243,7 +234,7 @@ public class MainWindow {
         menuHelp.getItems().add(infoItem);
 
         // Menüs zur MenuBar hinzufügen
-        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuPlay, menuStatistics, menuModule, menuView, menuHelp);
+        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuStatistics, menuModule, menuView, menuHelp);
         return menuBar;
     }
     
@@ -258,6 +249,8 @@ public class MainWindow {
             }
             menuLearn.getItems().add(item);
         }
+        addSpacer(menuLearn);
+        menuLearn.getItems().add(menuFreePlay);
     }
     
  // Methoden
@@ -267,13 +260,13 @@ public class MainWindow {
     }
 
     private void updatePlayMenuItems() {
-        if (menuPlay == null) return;
+        if (menuFreePlay == null) return;
         
-        menuPlay.getItems().clear();
+        menuFreePlay.getItems().clear();
         for (PlayMenuNode node : playMenuNodes) {
             MenuItem menuItem = new MenuItem(node.label());
             menuItem.setOnAction(_ -> controller.onPlayMenuItemSelected(node));
-            menuPlay.getItems().add(menuItem);
+            menuFreePlay.getItems().add(menuItem);
         }
     }
     
@@ -321,6 +314,22 @@ public class MainWindow {
                     break;
             }
         });
+    }
+    
+    /**
+     * Ich habe es nicht hinbekommen, dem Trenner über CSS mehr vertikales Padding zu geben, deswegen der Hack...
+     */
+    private void addSpacer(Menu menu) {
+        SeparatorMenuItem separator = new SeparatorMenuItem();
+        MenuItem spacer = new MenuItem("");
+        spacer.setDisable(true);
+        spacer.getStyleClass().add("my-spacer");
+        menu.getItems().add(spacer);
+        menu.getItems().add(separator);
+        MenuItem spacer2 = new MenuItem("");
+        spacer2.setDisable(true);
+        spacer2.getStyleClass().add("my-spacer");
+        menu.getItems().add(spacer2);
     }
     
     /** Setzt der Controller in seinem Konstruktor, bevor das Fenster sichtbar wird. */
