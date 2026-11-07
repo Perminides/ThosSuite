@@ -67,7 +67,8 @@ Lernstand, sondern das Deck als Ganzes. Drei Arten von Aufgabe gibt es:
 - **Eliminieren** — der Reihe nach alle Regionen oder alle Orte abklappern; ein Fehler beendet den
   Durchgang.
 - **Benennen** — die gerade markierte Region oder den markierten Ort eintippen. Ein anderer bekannter
-  Regions- oder Ortsname gilt als Fehlgriff und öffnet den Fehlerdialog mit Fortsetzen; unbekannte
+  Regions- oder Ortsname gilt als Fehlgriff und deckt die Lösung auf; nur die Lernsession öffnet dabei
+  den Fehlerdialog mit Fortsetzen. Im freien Spiel führen ESC oder Pause ohne Dialog weiter. Unbekannte
   Eingaben laufen ins Leere. Eliminieren bleibt davon ausgenommen: Dort ist auch ein bereits genannter
   Name kein Fehler.
 

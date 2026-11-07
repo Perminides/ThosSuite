@@ -157,6 +157,13 @@ public class SessionPresenter {
 	    }
 	    wrongClickSnapshot = null;
 	}
+
+	void undoWrongWrite() {
+		if (wrongClickSnapshot == null)
+			return;
+		view.setState(wrongClickSnapshot.beforeMap());
+		wrongClickSnapshot = null;
+	}
 	
 	// ========================================
 	// USER INPUT (from Panel)

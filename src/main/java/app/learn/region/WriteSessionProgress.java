@@ -77,23 +77,18 @@ public class WriteSessionProgress extends SessionProgress {
 		presenter.setCorrectText(nameOf(currentRegion));
 		presenter.handleClickResult(wrongRegion.id(), false, currentRegion.id());
 		paused = true;
-		finishIncorrect("Statt " + nameOf(currentRegion) + " wurde " + nameOf(wrongRegion) + " eingegeben.",
-				true, currentRegion.id());
+		if (!spec.isPlaySession())
+			finishIncorrect("Statt " + nameOf(currentRegion) + " wurde " + nameOf(wrongRegion) + " eingegeben.",
+					true, currentRegion.id());
 	}
 
 	@Override
 	void resume() {
 		MapShape currentRegion = toLearnRegions.get(currentIndex);
-		if (spec.isPlaySession())
-			notFound.add(currentRegion);
 		paused = false;
 		presenter.undoWrongClick();
-		if (spec.isPlaySession()) {
-			nextStep();
-		} else {
-			presenter.weWaitForWriteText(currentRegion.id());
-			presenter.retryWrite();
-		}
+		presenter.weWaitForWriteText(currentRegion.id());
+		presenter.retryWrite();
 	}
 
 	private MapShape findWrongRegion(MapShape currentRegion, String text) {
@@ -138,6 +133,7 @@ public class WriteSessionProgress extends SessionProgress {
 			finishIncorrect("Folgendes Element nicht erkannt: \n\n" + nameOf(currentRegion), false, currentRegion.id());
 		} else {
 			notFound.add(currentRegion);
+			presenter.undoWrongWrite();
 			presenter.handleMissedWrite(currentRegion.id());
 			paused = false;
 			nextStep();

@@ -118,7 +118,7 @@ public abstract class SessionProgress {
 	// Was nur manche Modi kennen — leer heißt: gibt es hier nicht
 	// ========================================
 
-	/** Nach einem Fehlgriff weiterspielen. Nur Click. */
+	/** Nach einem Fehlgriff weiterspielen. Click sowie Benennen in der Lernsession. */
 	void resume() {}
 
 	/** Die Pause nach einem Fehlgriff beenden. Nicht bei Elimination. */
