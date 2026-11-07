@@ -44,9 +44,8 @@ public class MainWindow {
 	private final StackPane contentPane;
 	
     private Menu menuLearn = null;
-    private Menu menuOptions = null;
     private Menu menuSort = null;
-    // Untermenü von Lernen (unten, hinter einem Trenner): Decks ohne Änderung des Lernfortschritts.
+    // Untermenüs von Lernen (unten, hinter einem Trenner)
     private Menu menuFreePlay = null;
     private List<PlayMenuNode> playMenuNodes;
     private List<LearnSessionInfo> todaysLearnSessions;
@@ -135,11 +134,10 @@ public class MainWindow {
         item.setOnAction(_ -> controller.quitSelected());
         menuFile.getItems().add(item);
         
-        
-        // OPTIONEN-MENÜ
-        menuOptions = new Menu("Optionen");
+        // SORTIER-UNTERMENÜ (unter Lernen) — vor dem Lernen-Menü anlegen, weil
+        // updateLearnMenuItems() es ans Ende der Lernen-Einträge hängt.
         menuSort = new Menu("Anzeigereihenfolge");
-        
+
         String lastSortOrderString = Config.get("pref.sortOrder");
         for (CardSortOrder order : CardSortOrder.values()) {
             item = new MenuItem(order.getDisplayName());
@@ -155,7 +153,6 @@ public class MainWindow {
             	item.setDisable(true);
             menuSort.getItems().add(item);
         }
-        menuOptions.getItems().add(menuSort);
         
         // OHNE-FORTSCHRITT-UNTERMENÜ (unter Lernen) — vor dem Lernen-Menü anlegen, weil
         // updateLearnMenuItems() es ans Ende der Lernen-Einträge hängt.
@@ -234,7 +231,7 @@ public class MainWindow {
         menuHelp.getItems().add(infoItem);
 
         // Menüs zur MenuBar hinzufügen
-        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuStatistics, menuModule, menuView, menuHelp);
+        menuBar.getMenus().addAll(menuFile, menuLearn, menuStatistics, menuModule, menuView, menuHelp);
         return menuBar;
     }
     
@@ -250,7 +247,7 @@ public class MainWindow {
             menuLearn.getItems().add(item);
         }
         addSpacer(menuLearn);
-        menuLearn.getItems().add(menuFreePlay);
+        menuLearn.getItems().addAll(menuSort, menuFreePlay);
     }
     
  // Methoden

@@ -164,7 +164,6 @@
 							<Git-Commit-Message>${git.commit.message.short}</Git-Commit-Message>
 						</manifestEntries>
 					</archive>
-					<manifestEncoding>UTF-8</manifestEncoding>
 				</configuration>
 			</plugin>
 
