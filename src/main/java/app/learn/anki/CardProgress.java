@@ -616,6 +616,7 @@ public class CardProgress {
 	}
 	
 	private void process(Step step) {
+		Log.debug(getClass(), "Step: " + step.getClass());
 		/**
 		 * Neues switch mit Pattern Matching ab Java 21
 		 */

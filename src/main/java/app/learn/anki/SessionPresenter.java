@@ -15,6 +15,7 @@ import app.shared.model.SessionProgressCounter;
 import app.learn.repository.SketchFileSource;
 import app.shared.model.ScreenView;
 import app.shared.model.SketchColor;
+import app.shared.Log;
 import app.shared.model.AnkiCallbacks;
 import app.shared.ui.AnkiLearnView;
 import app.shared.ui.FastWriteLearnView;
@@ -84,6 +85,7 @@ public class SessionPresenter {
 	// ========================================
 	
 	void showImage(String imageName) {
+		Log.debug(getClass(), "showImage: " + imageName);
 		view.setImage(imageName);
 	}
 
