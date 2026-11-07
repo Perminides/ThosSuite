@@ -1079,7 +1079,7 @@ Orchestrierungsschicht: verdrahtet das Hauptfenster mit den Feature-Diensten, h�
 - **Art:** Sitzung/Ablauf
 
 ### MainWindow
-- **Rolle:** Kapselt die Stage der Anwendung: Fensteraufbau (BorderPane, ContentPane, HeaderBar), Menüleiste (Datei/Optionen/Lernen/Spielen/Statistik/Module/Ansicht), globale Tastaturkürzel (Esc/Enter/Pause) sowie das Umschalten des angezeigten `ScreenView`-Inhalts. Nimmt vom Controller Callback-Runnables/Consumer entgegen, statt selbst Fachlogik zu enthalten.
+- **Rolle:** Kapselt die Stage der Anwendung: Fensteraufbau (BorderPane, ContentPane, HeaderBar), Menüleiste (Datei/Optionen/Lernen/Spielen/Statistik/Module/Ansicht/?), globale Tastaturkürzel (Esc/Enter/Pause) sowie das Umschalten des angezeigten `ScreenView`-Inhalts. Nimmt vom Controller Callback-Runnables/Consumer entgegen, statt selbst Fachlogik zu enthalten.
 - **Öffentlich:**
   - `MainWindow(Stage stage)`
   - `void buildStyledUi()`
@@ -1179,6 +1179,16 @@ Basisdienste der Suite: Konfiguration, Datenbankverbindungen, Logging, Single-In
   - `static final LocalDate TODAY`
   - `static void init()`
 - **Kennt:** nur `java.time`.
+- **Art:** Hilfsklasse.
+
+### BuildInfo
+- **Rolle:** Liefert Bauzeit und Git-Infos (Commit-Kurzid, -Zeit, -Nachricht) des laufenden Builds aus dem Manifest der eigenen JAR; die Werte schreibt der Maven-Build (git-commit-id-Plugin + maven-jar-plugin). Aus der IDE gestartet fehlt das Manifest — dann sind alle Werte null und der Info-Dialog zeigt „unbekannt".
+- **Öffentlich:**
+  - `static String buildTimestamp()`
+  - `static String commitId()`
+  - `static String commitTime()`
+  - `static String commitMessage()`
+- **Kennt:** nur JDK (JarFile, Manifest, ProtectionDomain).
 - **Art:** Hilfsklasse.
 
 ### Config

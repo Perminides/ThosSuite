@@ -17,6 +17,9 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<jackson.version>2.20.0</jackson.version>
+		<!-- Format des Bauzeitstempels, der über ${maven.build.timestamp} ins Manifest kommt.
+		     Achtung: immer UTC, unabhängig von der lokalen Zeitzone. -->
+		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
 		<!-- NICHT unter 26 zurückdrehen. Bis 25 konnte ein Fenster mit StageStyle.EXTENDED nach dem
 		     Sichtbarwerden keine Eingabe mehr annehmen, bis die Maus es einmal verlassen und wieder
 		     betreten hatte (JDK-8367557, in 26 behoben). JavaFX 26 ist gegen Java 24 übersetzt und
@@ -151,6 +154,38 @@
 					<excludes>
 						<exclude>scripts/**</exclude>
 					</excludes>
+					<!-- Bauzeit und Git-Infos fürs Info-Menü (Auslesen in app.shared.BuildInfo).
+					     Die ${git.*}-Werte stellt das git-commit-id-Plugin unten bereit. -->
+					<archive>
+						<manifestEntries>
+							<Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
+							<Git-Commit-Id>${git.commit.id.abbrev}</Git-Commit-Id>
+							<Git-Commit-Time>${git.commit.time}</Git-Commit-Time>
+							<Git-Commit-Message>${git.commit.message.short}</Git-Commit-Message>
+						</manifestEntries>
+					</archive>
+					<manifestEncoding>UTF-8</manifestEncoding>
+				</configuration>
+			</plugin>
+
+			<!-- Befüllt ${git.*}-Properties (Commit-Id, -Zeit, -Nachricht) für die Manifest-Einträge
+			     oben. Läuft bei initialize, also vor dem JAR-Bau. Die Werte stehen auch in der IDE
+			     nicht zur Verfügung — dort zeigt der Info-Eintrag "unbekannt" an. -->
+			<plugin>
+				<groupId>io.github.git-commit-id</groupId>
+				<artifactId>git-commit-id-maven-plugin</artifactId>
+				<version>9.0.1</version>
+				<executions>
+					<execution>
+						<id>git-infos-fuer-manifest</id>
+						<goals>
+							<goal>revision</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<generateGitPropertiesFile>false</generateGitPropertiesFile>
+					<dateFormat>yyyy-MM-dd HH:mm:ss</dateFormat>
 				</configuration>
 			</plugin>
 

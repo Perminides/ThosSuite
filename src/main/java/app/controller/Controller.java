@@ -38,6 +38,7 @@ import app.movie.MovieImporter;
 import app.movie.MovieViewerScreen;
 import app.movie.SeriesImporter;
 import app.quiz.QuizRound;
+import app.shared.BuildInfo;
 import app.shared.Config;
 import app.shared.DialogOwner;
 import app.shared.Log;
@@ -326,6 +327,19 @@ public class Controller{
     
     public void exportSelected() {
     	new SuiteExporter().export();
+    }
+
+    public void infoSelected() {
+        String text = "Erstellt: " + orUnknown(BuildInfo.buildTimestamp())
+                + "\n\nLetzter Commit: " + orUnknown(BuildInfo.commitMessage())
+                + "\nCommit-Zeit: " + orUnknown(BuildInfo.commitTime())
+                + "\nCommit-Id: " + orUnknown(BuildInfo.commitId());
+        Alerts.show("Info", text, ButtonEnum.OK);
+    }
+
+    /** Manifest-Werte fehlen beim Start aus der IDE — dort gibt es nichts zu zeigen. */
+    private static String orUnknown(String value) {
+        return value != null ? value : "unbekannt";
     }
     
     public void additionalTmdbImportSelected() {

@@ -235,9 +235,15 @@ public class MainWindow {
         MenuItem itemReload = new MenuItem("Aktualisieren");
         itemReload.setOnAction(_ -> controller.triggerSkinRefresh());
         menuView.getItems().add(itemReload);
-        
+
+        // HILFE-MENÜ ("?")
+        Menu menuHelp = new Menu("?");
+        MenuItem infoItem = new MenuItem("Info");
+        infoItem.setOnAction(_ -> controller.infoSelected());
+        menuHelp.getItems().add(infoItem);
+
         // Menüs zur MenuBar hinzufügen
-        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuPlay, menuStatistics, menuModule, menuView);        
+        menuBar.getMenus().addAll(menuFile, menuOptions, menuLearn, menuPlay, menuStatistics, menuModule, menuView, menuHelp);
         return menuBar;
     }
     
