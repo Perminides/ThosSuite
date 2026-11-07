@@ -54,7 +54,7 @@ public class ClickSessionProgress extends SessionProgress {
 			
 		isPaused = false;
 
-		presenter.undoWrongClick();
+		presenter.undoWrongAnswer();
 		
 		if (!spec.isPlaySession()) {
 		    // In einer Lernsession ist das hier ein starker Eingriff in die Logik. 
@@ -86,13 +86,13 @@ public class ClickSessionProgress extends SessionProgress {
 
 			lastClickedId = id;
 			if (quizElements.get(currentIndex).id().equals(id)) {
-				presenter.handleClickResult(id, true, null);
+				presenter.handleAnswerResult(id, true, null);
 				sessionRegions.remove(id);
 				nextStep();
 			} else {
 				notFound.add(quizElements.get(currentIndex));
 				isPaused = true;
-				presenter.handleClickResult(id, false, quizElements.get(currentIndex).id());
+				presenter.handleAnswerResult(id, false, quizElements.get(currentIndex).id());
 			}
 		}
 	}

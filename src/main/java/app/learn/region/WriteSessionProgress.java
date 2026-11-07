@@ -75,7 +75,7 @@ public class WriteSessionProgress extends SessionProgress {
 			return;
 
 		presenter.setCorrectText(nameOf(currentRegion));
-		presenter.handleClickResult(wrongRegion.id(), false, currentRegion.id());
+		presenter.handleAnswerResult(wrongRegion.id(), false, currentRegion.id());
 		paused = true;
 		if (!spec.isPlaySession())
 			finishIncorrect("Statt " + nameOf(currentRegion) + " wurde " + nameOf(wrongRegion) + " eingegeben.",
@@ -86,7 +86,7 @@ public class WriteSessionProgress extends SessionProgress {
 	void resume() {
 		MapShape currentRegion = toLearnRegions.get(currentIndex);
 		paused = false;
-		presenter.undoWrongClick();
+		presenter.undoWrongAnswer();
 		presenter.weWaitForWriteText(currentRegion.id());
 		presenter.retryWrite();
 	}

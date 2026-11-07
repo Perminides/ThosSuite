@@ -17,14 +17,14 @@ import app.shared.ui.RegionLearnView;
 public class SessionPresenter {
 	// Wir speichern auch die Frage für Skinwechsel
 	private record SavedState (ShapeMapState mapState, String text) {};
-	private record WrongClickSnapshot(ShapeMapState beforeMap, String beforeText, String expectedId) {}
+	private record WrongAnswerSnapshot(ShapeMapState beforeMap, String beforeText, String expectedId) {}
 	
 	private final RegionLearnView view;
 	private final SessionSpec spec; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 	private final SessionProgress progress;
 	private final boolean hard;
 
-	private WrongClickSnapshot wrongClickSnapshot;
+	private WrongAnswerSnapshot wrongAnswerSnapshot;
 	private SavedState savedState;
 	
 	SessionPresenter(SessionProgress progress, SessionSpec spec, Set<String> sessionShapes) {
@@ -87,7 +87,7 @@ public class SessionPresenter {
 		view.setQuestion(text);
 	}
 	
-	void handleClickResult(String id, boolean correct, String correctId) {
+	void handleAnswerResult(String id, boolean correct, String correctId) {
 		if (correct) {
 			if (hard) {
 				view.moveAllToActive();
@@ -95,7 +95,7 @@ public class SessionPresenter {
 			view.addIdsToCorrect(Set.of(id));
 
 		} else {
-			wrongClickSnapshot = new WrongClickSnapshot(
+			wrongAnswerSnapshot = new WrongAnswerSnapshot(
 				    view.getState(),
 				    view.getQuestion(),
 				    correctId // expected target
@@ -144,25 +144,25 @@ public class SessionPresenter {
 	 * geht weiter; im Lernmodus wird der Stand davor wiederhergestellt, damit man es nochmal
 	 * versuchen kann.
 	 */
-	void undoWrongClick() {
-	    if (hard) {
-	        view.moveAllToActive();
-	    } else {
-	        ShapeMapState base = wrongClickSnapshot.beforeMap();
-	        if (spec.isPlaySession()) {
-	        	base.incorrectShapes().add(wrongClickSnapshot.expectedId());
-	        	base.activeShapes().remove(wrongClickSnapshot.expectedId());
-	        }
-	        view.setState(base);
-	    }
-	    wrongClickSnapshot = null;
+	void undoWrongAnswer() {
+		if (hard) {
+			view.moveAllToActive();
+		} else {
+			ShapeMapState base = wrongAnswerSnapshot.beforeMap();
+			if (spec.isPlaySession()) {
+				base.incorrectShapes().add(wrongAnswerSnapshot.expectedId());
+				base.activeShapes().remove(wrongAnswerSnapshot.expectedId());
+			}
+			view.setState(base);
+		}
+		wrongAnswerSnapshot = null;
 	}
 
 	void undoWrongWrite() {
-		if (wrongClickSnapshot == null)
+		if (wrongAnswerSnapshot == null)
 			return;
-		view.setState(wrongClickSnapshot.beforeMap());
-		wrongClickSnapshot = null;
+		view.setState(wrongAnswerSnapshot.beforeMap());
+		wrongAnswerSnapshot = null;
 	}
 	
 	// ========================================
