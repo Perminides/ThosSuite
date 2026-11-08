@@ -77,6 +77,7 @@ public class MultipleChoicePane extends Pane {
             Button btn = createButton(i, width, buttonHeight);
             btn.setLayoutX(0);
             btn.setLayoutY(yPos);
+            btn.setPickOnBounds(false); // Ohne das nimmt JavaFX den Schatten des Knopfs in die Klick-/Hover-Fläche auf (containsBounds zählt den Effekt, Region defaulted pickOnBounds auf true) — die Zonen benachbarter Knöpfe überlappen sich und der untere gewinnt.
             buttons.add(btn);
             getChildren().add(btn);
             yPos += buttonHeight + verticalGap;
