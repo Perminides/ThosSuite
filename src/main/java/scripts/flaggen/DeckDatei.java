@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /** Die beiden Dateien, die dem Generator gehören: die Deck-Datei und die generierten Wortlisten. */
 final class DeckDatei {
@@ -69,17 +70,23 @@ final class DeckDatei {
 	 * Die Wortlisten des Generators — {@code Länder} aus den Nachbarn, dazu die Listen der Felder —, die
 	 * ganze Datei neu, eine Zeile je Wert, je Liste alphabetisch nach der ersten Schreibweise. Unverändert
 	 * bleibt sie liegen, damit ihr Zeitstempel nichts vortäuscht.
+	 *
+	 * <p>Ein Stoppwort trägt die vierte Spalte {@code Stoppwort} — lesbar für den Menschen, die Suite
+	 * liest nur die ersten drei Spalten.</p>
 	 */
-	static void writeWordLists(Map<String, List<List<String>>> listen) throws IOException {
-		List<String> lines = new ArrayList<>(List.of("Liste;Hauptform;Alternativen"));
+	static void writeWordLists(Map<String, List<List<String>>> listen, Map<String, Set<String>> stopwoerter)
+			throws IOException {
+		List<String> lines = new ArrayList<>(List.of("Liste;Hauptform;Alternativen;Stoppwort"));
 		StringBuilder bericht = new StringBuilder();
 		Collator deutsch = Collator.getInstance(Locale.GERMAN);
 		for (Map.Entry<String, List<List<String>>> liste : listen.entrySet()) {
 			List<List<String>> sortiert = new ArrayList<>(liste.getValue());
 			sortiert.sort((a, b) -> deutsch.compare(a.get(0), b.get(0)));
+			Set<String> stopp = stopwoerter.getOrDefault(liste.getKey(), Set.of());
 			for (List<String> eintrag : sortiert)
 				lines.add(liste.getKey() + ";" + eintrag.get(0) + ";"
-						+ String.join(",", eintrag.subList(1, eintrag.size())));
+						+ String.join(",", eintrag.subList(1, eintrag.size()))
+						+ (stopp.contains(eintrag.get(0).toLowerCase()) ? ";Stoppwort" : ""));
 			bericht.append(" ").append(liste.getKey()).append(" ").append(liste.getValue().size());
 		}
 		String inhalt = "\uFEFF" + String.join("\r\n", lines) + "\r\n";

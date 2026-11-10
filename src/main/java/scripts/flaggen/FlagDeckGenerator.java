@@ -113,7 +113,7 @@ public class FlagDeckGenerator {
 			return;
 		}
 		DeckDatei.write(generated);
-		DeckDatei.writeWordLists(generator.laender.wordLists());
+		DeckDatei.writeWordLists(generator.laender.wordLists(), generator.laender.stopwoerter());
 	}
 
 	/**

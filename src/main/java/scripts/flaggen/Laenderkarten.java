@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +19,8 @@ final class Laenderkarten {
 	static final String LAENDER = "Länder";
 	static final String STAEDTE = "Städte";
 	static final String HAUPTSTADT = "Hauptstadt";
+	/** Wo die Regierung sitzt, wenn es nicht die Hauptstadt ist — keine eigene Karte, nur ein Wert der Städte-Liste. */
+	static final String REGIERUNGSSITZ = "Regierungssitz";
 	static final String RANG_SPALTE = "Größte Städte";
 	/** Städte, die nur in die Liste gehören und keine Karte bekommen — für Handkarten außerhalb der Ränge. */
 	static final String WEITERE_STAEDTE = "Weitere Städte";
@@ -32,7 +35,7 @@ final class Laenderkarten {
 	 * gegen eine Liste prüft, braucht hier ihren Eintrag — sonst kennt die Liste ihre Werte nicht.
 	 */
 	private static final List<Map.Entry<String, List<String>>> LISTEN_SPALTEN = List.of(
-			Map.entry(STAEDTE, List.of(HAUPTSTADT, RANG_SPALTE, WEITERE_STAEDTE)),
+			Map.entry(STAEDTE, List.of(HAUPTSTADT, REGIERUNGSSITZ, RANG_SPALTE, WEITERE_STAEDTE)),
 			Map.entry(WAEHRUNG, List.of(WAEHRUNG)),
 			Map.entry(LAENDERCODE, List.of(CODE)));
 
@@ -47,6 +50,8 @@ final class Laenderkarten {
 	private final FlagSheet sheet;
 	private final Nachbarlaender nachbarn;
 	private final Map<String, List<List<String>>> wordLists = new LinkedHashMap<>();
+	/** Stoppwörter je Liste, kleingeschrieben — für die vierte Spalte der Wortlistendatei. */
+	private final Map<String, Set<String>> stopwoerter = new LinkedHashMap<>();
 	private final List<String> hinweise = new ArrayList<>();
 
 	Laenderkarten(FlagSheet sheet) {
@@ -60,12 +65,17 @@ final class Laenderkarten {
 			laender.add(List.of(land));
 		wordLists.put(LAENDER, laender);
 		for (Map.Entry<String, List<String>> liste : LISTEN_SPALTEN)
-			wordLists.put(liste.getKey(), sammle(liste.getValue()));
+			wordLists.put(liste.getKey(), sammle(liste.getKey(), liste.getValue()));
 	}
 
 	/** Alle Wortlisten, nach Namen — für den Parser beim Prüfen und für die Datei. */
 	Map<String, List<List<String>>> wordLists() {
 		return wordLists;
+	}
+
+	/** Die Stoppwörter je Liste, kleingeschrieben — für die vierte Spalte der Wortlistendatei. */
+	Map<String, Set<String>> stopwoerter() {
+		return stopwoerter;
 	}
 
 	/** Was beim Sammeln zusammengelegt wurde und einen Blick wert ist — kein Fehler, nur ein Hinweis. */
@@ -86,10 +96,20 @@ final class Laenderkarten {
 
 	/**
 	 * Die Gegenrichtung zur Ländercode-Frage: den Code nennen und das Land auf der Karte anklicken
-	 * lassen. Ohne Flagge — sie verriete das Land.
+	 * lassen. Ohne Flagge — sie verriete das Land. Ein {@code -} vorgeteilter Teil der Zelle ist ein
+	 * Stoppwort und kommt nicht in die Frage.
 	 */
 	void codekarte(Zeile z, Kartenbauer k) {
-		k.add("Output:Zu welchem Land gehört der Ländercode <b>" + z.value(CODE) + "</b>?");
+		List<String> codes = new ArrayList<>();
+		for (String teil : z.value(CODE).split("\\|")) {
+			String t = teil.trim();
+			if (t.isEmpty() || t.startsWith("-"))
+				continue;
+			codes.add(ersteSchreibweise(t));
+		}
+		if (codes.isEmpty())
+			throw new RuntimeException(z.land() + ": " + CODE + " ohne echten Code: " + z.value(CODE));
+		k.add("Output:Zu welchem Land gehört der Ländercode <b>" + String.join(",", codes) + "</b>?");
 		k.add("Click:" + z.shape());
 	}
 
@@ -123,15 +143,21 @@ final class Laenderkarten {
 	/**
 	 * Ein einfaches Feld: Land markieren, Flagge zeigen, mit Namen fragen, gegen die Liste prüfen. Die
 	 * Zelle ist der Input-Inhalt ({@code Pretoria,Tshwane|Kapstadt}), in die Karte kommt je Antwort die
-	 * erste Schreibweise; jedes andere Wort der Liste ist falsch. {@code %s} in der Frage ist der
-	 * Ländername. Einen Abspann gibt es nicht.
+	 * erste Schreibweise; jedes andere Wort der Liste ist falsch. Ein {@code -} vorgeteilter Teil ist
+	 * ein Stoppwort — er bleibt der Karte fern und geht über die Liste in alle Karten. {@code %s} in
+	 * der Frage ist der Ländername. Einen Abspann gibt es nicht.
 	 */
 	static BiConsumer<Zeile, Kartenbauer> feld(String spalte, String frage, String liste) {
 		return (z, k) -> {
 			List<String> antworten = new ArrayList<>();
-			for (String teil : z.value(spalte).split("\\|"))
-				if (!teil.isBlank())
-					antworten.add(ersteSchreibweise(teil));
+			for (String teil : z.value(spalte).split("\\|")) {
+				String t = teil.trim();
+				if (t.isEmpty() || t.startsWith("-"))
+					continue;
+				antworten.add(ersteSchreibweise(t));
+			}
+			if (antworten.isEmpty())
+				throw new RuntimeException(z.land() + ": " + spalte + " ohne echten Wert: " + z.value(spalte));
 			k.add("Mark:" + z.shape());
 			k.add("Image:" + z.image());
 			k.add("Output:" + frage.formatted(z.land()));
@@ -142,18 +168,23 @@ final class Laenderkarten {
 	/**
 	 * Die größten Städte: ein Input je Rang, in Rangfolge. Steht vor einer Stadt {@code ~}, liegt sie
 	 * knapp hinter der davor — bei der Frage nach der einen ist die andere toleriert, in beide Richtungen.
-	 * Bereits abgefragte Städte sind bei allen späteren Rängen ebenfalls toleriert. Ein Fehler beendet
-	 * die Karte wie bei der Flaggenkarte.
+	 * Bereits abgefragte Städte sind bei allen späteren Rängen ebenfalls toleriert. Ein {@code -}
+	 * vorgeteilter Teil ist ein Stoppwort — kein Rang, er geht über die Städte-Liste in alle Karten.
+	 * Ein Fehler beendet die Karte wie bei der Flaggenkarte.
 	 */
 	void rangkarte(Zeile z, Kartenbauer k) {
 		List<String> staedte = new ArrayList<>(), knapp = new ArrayList<>();
 		for (String teil : z.value(RANG_SPALTE).split("\\|")) {
 			String t = teil.trim();
-			if (t.isEmpty() || t.startsWith("-"))
-				throw new RuntimeException(RANG_SPALTE + ": leerer Rang oder '-' in " + z.value(RANG_SPALTE));
+			if (t.isEmpty())
+				throw new RuntimeException(RANG_SPALTE + ": leerer Rang in " + z.value(RANG_SPALTE));
+			if (t.startsWith("-"))
+				continue;
 			knapp.add(t.startsWith("~") ? "~" : "");
 			staedte.add(ersteSchreibweise(t.startsWith("~") ? t.substring(1) : t));
 		}
+		if (staedte.isEmpty())
+			throw new RuntimeException(z.land() + ": " + RANG_SPALTE + " ohne echte Stadt: " + z.value(RANG_SPALTE));
 		if (!knapp.get(0).isEmpty())
 			throw new RuntimeException(RANG_SPALTE + ": die größte Stadt kann nicht knapp hinter einer anderen liegen");
 		if (staedte.size() > RAENGE.size())
@@ -183,14 +214,22 @@ final class Laenderkarten {
 	 * {@code Kiew,Kyiv} ergeben {@code Kiew,Kyjiw,Kyiv}). Nebenschreibweisen dürfen mehrere Einträge
 	 * teilen — Libyen {@code Tripolis}, Libanon {@code Tripoli,Tripolis}.
 	 *
+	 * <p>Ein {@code -} vorgeteilter Teil ist ein Stoppwort: Es kommt als eigener Eintrag in die Liste
+	 * und bricht damit jede Karte, die die Liste benutzt — nie als Antwort in eine einzelne Karte.
+	 * Steht dasselbe Wort irgendwo als echter Wert derselben Liste, fliegt es: Die eigene Karte des
+	 * Worts sähe ihren Stoppworteintrag als Listenwort und bräche unlösbar. In der geschriebenen Datei
+	 * trägt ein Stoppwort die vierte Spalte {@code Stoppwort}; die Suite liest nur die ersten drei.</p>
+	 *
 	 * <p>Vereinigt sich dabei dieselbe Hauptform aus verschiedenen Ländern mit verschiedenen
 	 * Schreibweisen ({@code Valencia,València} in Spanien, {@code Valencia} in Venezuela), steht das als
 	 * Hinweis in {@link #hinweise}: Die Karte des einen Landes nimmt dann auch die Schreibweisen des
 	 * anderen an. Soll das nicht sein, braucht eine der beiden Städte eine eigene Hauptform.</p>
 	 */
-	private List<List<String>> sammle(List<String> spalten) {
+	private List<List<String>> sammle(String liste, List<String> spalten) {
 		Map<String, List<String>> eintraege = new LinkedHashMap<>();             // Hauptform klein → Schreibweisen
 		Map<String, Map<String, Set<String>>> herkunft = new HashMap<>();       // Hauptform klein → Land → Schreibweisen
+		Map<String, String> stopwoerter = new LinkedHashMap<>();                // klein → Stoppwort, wie geschrieben
+		Map<String, String> stopHerkunft = new LinkedHashMap<>();               // klein → Land, das es notiert hat
 		for (String spalte : spalten)
 			for (List<String> row : sheet.countries()) {
 				String zelle = sheet.value(row, spalte).trim();
@@ -203,8 +242,18 @@ final class Laenderkarten {
 							+ "die Liste setzt der Generator selbst davor: " + zelle);
 				for (String antwort : zelle.split("\\|")) {
 					String a = antwort.trim();
-					if (a.startsWith("-"))
-						continue;   // ein Stoppwort von Hand ist kein Wert der Liste
+					if (a.startsWith("-")) {
+						String wort = a.substring(1).trim();
+						if (wort.isEmpty())
+							throw new RuntimeException(sheet.country(row) + ": " + spalte
+									+ " Stoppwort ohne Wort: " + zelle);
+						if (wort.contains(",") || wort.contains(";"))
+							throw new RuntimeException(sheet.country(row) + ": " + spalte
+									+ " Stoppwort als einzelnes Wort: " + wort);
+						stopwoerter.put(wort.toLowerCase(), wort);
+						stopHerkunft.put(wort.toLowerCase(), sheet.country(row));
+						continue;
+					}
 					List<String> varianten = new ArrayList<>();
 					for (String v : (a.startsWith("~") ? a.substring(1) : a).split(","))
 						if (!v.isBlank())
@@ -222,12 +271,23 @@ final class Laenderkarten {
 						klein.add(v.toLowerCase());
 				}
 			}
+		for (Map.Entry<String, String> stopp : stopwoerter.entrySet())
+			for (Map.Entry<String, List<String>> eintrag : eintraege.entrySet())
+				for (String v : eintrag.getValue())
+					if (v.equalsIgnoreCase(stopp.getKey()))
+						throw new RuntimeException("'" + stopp.getValue() + "' ist bei " + stopHerkunft.get(stopp.getKey())
+								+ " Stoppwort in '" + liste + "', aber schon echter Wert bei "
+								+ String.join(" und ", herkunft.get(eintrag.getKey()).keySet()));
 		for (Map.Entry<String, Map<String, Set<String>>> e : herkunft.entrySet()) {
 			Map<String, Set<String>> laender = e.getValue();
 			if (laender.size() > 1 && new HashSet<>(laender.values()).size() > 1)
 				hinweise.add(String.join(",", eintraege.get(e.getKey())) + ": Schreibweisen aus "
 						+ String.join(" und ", laender.keySet()) + " vereinigt");
 		}
+		for (Map.Entry<String, String> stopp : stopwoerter.entrySet())
+			eintraege.put(stopp.getKey(), List.of(stopp.getValue()));
+		if (!stopwoerter.isEmpty())
+			this.stopwoerter.computeIfAbsent(liste, k -> new LinkedHashSet<>()).addAll(stopwoerter.keySet());
 		return new ArrayList<>(eintraege.values());
 	}
 
@@ -237,9 +297,7 @@ final class Laenderkarten {
 	 */
 	private static String ersteSchreibweise(String teil) {
 		String t = teil.trim();
-		String rolle = t.startsWith("~") || t.startsWith("-") ? t.substring(0, 1) : "";
-		if (rolle.equals("-"))
-			return t;   // ein Stoppwort von Hand steht in keiner Liste, es bleibt, wie es ist
+		String rolle = t.startsWith("~") ? t.substring(0, 1) : "";
 		return rolle + t.substring(rolle.length()).split(",")[0].trim();
 	}
 }

@@ -23,12 +23,13 @@ Input:Speyer,Speier|Worms|Mainz|-Trier
 Was sind die drei größten Städte Niedersachsens?
 
 ```text
-Input:Städte:Hannover|Braunschweig|Oldenburg|~Osnabrück
+Input:Städte:Hannover|Braunschweig|Oldenburg|~Osnabrück|-Hanover
 ```
 
 - Es kann nach einer Menge von Wörtern gesucht werden.
 - Es können mittels `|~` eigentliche Stoppwörter aus der Liste erlaubt werden.
-- Alternativantworten und Stoppwörter sind hier nicht gewollt. Die gehören wenn dann in die Liste!
+- Alternativantworten sind hier nicht erlaubt. Die gehören in die Liste.
+- Zusätzliche Stoppwörter sind sehr wohl erlaubt.
 
 ## MC
 
