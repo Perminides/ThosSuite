@@ -261,11 +261,11 @@ public class Controller{
 	}
 	
 	public void escPressed() {
-		currentScreen.escClicked();
+		currentScreen.escPressed();
 	}
 	
 	public void pausePressed() {
-		currentScreen.reactOnPausePressed();
+		currentScreen.pausePressed();
 	}
 
 	public void enterPressed() {

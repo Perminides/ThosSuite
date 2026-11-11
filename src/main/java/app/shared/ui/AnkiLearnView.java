@@ -100,6 +100,7 @@ public abstract class AnkiLearnView {
 		this.mapName = mapName;
 		this.category = category;
 		this.callbacks = callbacks;
+		canvas.requestFocus();
 	}
 
 	// ===== Was die Unterklassen festlegen =====
@@ -279,8 +280,8 @@ public abstract class AnkiLearnView {
 	public void pause() {
 		setMapActive(false);
 		setTextFieldActive(false);
-		setSubmitActive(false);
 		freezeMcPanel();
+		canvas.requestFocus();
 	}
 
 	/** Kartenende: alles weg, was die Karte hinterlassen hat. */

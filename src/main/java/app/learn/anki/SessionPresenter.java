@@ -254,10 +254,7 @@ public class SessionPresenter {
 	}
 
 	void clickedMapElement(String id) {
-		if (sessionProgress.isPaused())
-			sessionProgress.reactOnPausePressed();
-		else
-			sessionProgress.elementClicked(id);
+		sessionProgress.elementClicked(id);
 	}
 	
 	void clickedBack() {
@@ -265,23 +262,16 @@ public class SessionPresenter {
 	}
 
 	/**
-	 * Absende-Knopf, Enter am Fenster und Enter im leeren Eingabefeld — ein Weg für alle drei. In der
-	 * Pause schaltet er weiter, genau wie ein Klick auf einen der grauen MC-Knöpfe.
+	 * Absende-Knopf, Enter am Fenster und Enter im leeren Eingabefeld — ein Weg für alle drei.
+	 * Was Absenden in den Warte-Pausen bewirkt, entscheidet der CardProgress: Ein Klick quittiert
+	 * die Pause wie die Pausetaste.
 	 */
 	void clickedSubmit() {
-		if (sessionProgress.isPaused())
-			sessionProgress.reactOnPausePressed();
-		else {
-			view.setSubmitActive(false);
-			sessionProgress.submitClicked();
-		}
+		sessionProgress.submitClicked();
 	}
 	
 	void clickedMCAnswer(int index) {
-		if (sessionProgress.isPaused())
-			sessionProgress.reactOnPausePressed();
-		else
-			sessionProgress.mcClicked(index);
+		sessionProgress.mcClicked(index);
 	}
 
 	void timeExpired() {

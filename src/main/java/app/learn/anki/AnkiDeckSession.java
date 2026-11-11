@@ -106,15 +106,20 @@ public class AnkiDeckSession implements Screen {
 	}
 
 	@Override
-	public void reactOnPausePressed() {
-		progress.reactOnPausePressed();
+	public void pausePressed() {
+		progress.pausePressed();
 	}
 
 	@Override
 	public void enterPressed() {
-		presenter.clickedSubmit();
+		progress.enterPressed();
 	}
 
+	@Override
+	public void escPressed() {
+		progress.escPressed();
+	}
+	
 	@Override
 	public void suspend() {
 		presenter.suspendClock();
@@ -123,11 +128,6 @@ public class AnkiDeckSession implements Screen {
 	@Override
 	public void resume() {
 		presenter.resumeClock();
-	}
-
-	@Override
-	public void escClicked() {
-		progress.escClicked();
 	}
 
 	@Override

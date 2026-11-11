@@ -149,22 +149,22 @@ class SessionProgress {
 		getCurrentProgress().collectRemoved(word);
 	}
 
-	public void reactOnPausePressed() {
-		getCurrentProgress().pauseKeyPressed();
-	}
-
 	public void timeUp() {
 		getCurrentProgress().timeUp();
 	}
 
-	public void escClicked() {
-		getCurrentProgress().cancel();
+	public void pausePressed() {
+		getCurrentProgress().pausePressed();
 	}
-
-	public boolean isPaused() {
-		return getCurrentProgress().isPaused();
+	
+	public void escPressed() {
+		getCurrentProgress().escPressed();
 	}
-
+	
+	public void enterPressed() {
+		getCurrentProgress().enterPressed();
+	}
+	
 	boolean canGoBack() {
 		return currentIndex > 0;
 	}

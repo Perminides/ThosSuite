@@ -66,7 +66,7 @@ public class RegionSession implements Screen {
     }
 
 	@Override
-	public void escClicked() {
+	public void escPressed() {
 		progress.cancel();
 	}
 
@@ -79,7 +79,7 @@ public class RegionSession implements Screen {
 	}
 	
 	@Override
-	public void reactOnPausePressed() {
+	public void pausePressed() {
 		progress.endPause();
 	}
 	

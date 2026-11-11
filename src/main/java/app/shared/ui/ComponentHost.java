@@ -35,4 +35,10 @@ public class ComponentHost implements ScreenView {
     public Pane getPane() {
         return pane;
     }
+    
+    /** Zieht den Tastatur-Fokus auf die leere Leinwand — in Pausen feuert Tippen sonst fokussierte Knöpfe. */
+    public void requestFocus() {
+        pane.setFocusTraversable(true);
+        pane.requestFocus();
+    }
 }

@@ -11,11 +11,11 @@ package app.shared.model;
  * Nicht-Zuständigkeit – kein FailFast.
  * <p>
  * <b>Warum nicht in Sub-Interfaces aufgeteilt:</b> Methoden wie
- * {@link #sortOrderChanged()} und {@link #reactOnPausePressed()} sehen lern- bzw.
+ * {@link #sortOrderChanged()} und {@link #pausePressed()} sehen lern- bzw.
  * anki-spezifisch aus und könnten theoretisch in eine {@code LearnScreen}/
  * {@code AnkiScreen}-Hierarchie wandern. Das scheitert aber daran, dass der
  * Controller sie über eine {@code Screen}-Referenz aufruft
- * ({@code currentScreen.sortOrderChanged()}, {@code currentScreen.reactOnPausePressed()}) –
+ * ({@code currentScreen.sortOrderChanged()}, {@code currentScreen.pausePressed()}) –
  * der konkrete Typ ist dort bewusst vergessen. Solange der Aufruf über {@code Screen}
  * läuft, müssen die Methoden hier liegen. Eine Trennung würde erst möglich, wenn der
  * Controller vor dem Aufruf die Screen-Art prüfte; dieser Umbau lohnt den Gewinn
@@ -43,7 +43,7 @@ public interface Screen {
 	/**
 	 * ESC pressed
 	 */
-	default void escClicked() {};
+	default void escPressed() {};
 	
 	/**
 	 * Bitte mach deine Aufräumarbeiten vorm baldigen Schließen aber belästige
@@ -61,7 +61,7 @@ public interface Screen {
 	/**
 	 * Der User hat auf Pause geklickt.
 	 */
-	default void reactOnPausePressed() {};
+	default void pausePressed() {};
 
 	/**
 	 * Der User hat die Eingabetaste gedrückt — dasselbe wie ein Klick auf den Absende-Knopf.
