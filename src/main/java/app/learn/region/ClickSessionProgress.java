@@ -45,16 +45,8 @@ public class ClickSessionProgress extends SessionProgress {
 	}
 
 	/**
-	 * Weiter nach einem Fehlgriff. Der gezeigte Vergleich (ein rot, ein grün) verschwindet dabei.
-	 *
-	 * <p>Bei „schwer" bleibt danach <b>nichts</b> stehen — weder der verpasste Kreis noch das Grün
-	 * früherer Treffer. Es gibt dort also auch nichts wiederherzustellen, die Karte wird schlicht
-	 * geleert. Würde man stattdessen den Schnappschuss von vor dem Falsch-Klick einspielen, käme
-	 * altes Grün zurück und neues Rot käme dazu; nach zwei Fehlern in Folge stünde die halbe Karte
-	 * bunt da.</p>
-	 *
-	 * <p>Bei „leicht" ist genau das Gegenteil gewollt: der Stand von vorher lebt weiter, und der
-	 * verpasste Kreis bleibt im freien Spiel rot markiert.</p>
+	 * Weiter nach einem Fehlgriff. Im leichten freien Spiel bleibt die verfehlte Form rot stehen;
+	 * bei „schwer" nicht, dort bleibt ja auch kein Grün stehen.
 	 */
 	@Override
 	public void resume() {
@@ -66,10 +58,9 @@ public class ClickSessionProgress extends SessionProgress {
 
 		isPaused = false;
 
-		if (easy)
-			presenter.restoreBeforeWrongAnswer(spec.isPlaySession());
-		else
-			presenter.clearMap();
+		presenter.restoreBeforeWrongAnswer();
+		if (easy && spec.isPlaySession())
+			presenter.markMissed(quizElements.get(currentIndex).id());
 		
 		if (!spec.isPlaySession()) {
 		    // In einer Lernsession ist das hier ein starker Eingriff in die Logik. 

@@ -86,7 +86,7 @@ public class WriteSessionProgress extends SessionProgress {
 	void resume() {
 		MapShape currentRegion = toLearnRegions.get(currentIndex);
 		paused = false;
-		presenter.restoreBeforeWrongAnswer(false);
+		presenter.restoreBeforeWrongAnswer();
 		presenter.weWaitForWriteText(currentRegion.id());
 		presenter.retryWrite();
 	}
@@ -133,8 +133,9 @@ public class WriteSessionProgress extends SessionProgress {
 			finishIncorrect("Folgendes Element nicht erkannt: \n\n" + nameOf(currentRegion), false, currentRegion.id());
 		} else {
 			notFound.add(currentRegion);
-			presenter.restoreBeforeWrongAnswer(false);
-			presenter.handleMissedWrite(currentRegion.id());
+			presenter.restoreBeforeWrongAnswer();
+			presenter.markMissed(currentRegion.id());
+			presenter.retryWrite();
 			paused = false;
 			nextStep();
 		}

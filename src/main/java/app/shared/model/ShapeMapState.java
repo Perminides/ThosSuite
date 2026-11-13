@@ -8,10 +8,6 @@ import java.util.Set;
  * <p>Framework-frei — fünf Mengen von Ids und ein Schalter. Deshalb darf das Feature ihn halten:
  * {@code region.SessionPresenter} sichert damit den Stand vor einem Fehlklick, um ihn danach
  * wiederherzustellen. Das ist Spielregel, nicht Anzeige.</p>
- *
- * <p>Achtung: die Mengen sind <b>veränderbar</b>, und der Presenter nutzt das
- * ({@code restoreBeforeWrongAnswer} ergänzt auf Wunsch die Falsch-Menge). Kein sauberer Wert-Typ,
- * aber unverändert übernommen.</p>
  */
 public record ShapeMapState(
 		Set<String> correctShapes,

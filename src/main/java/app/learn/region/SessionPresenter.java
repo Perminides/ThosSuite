@@ -17,13 +17,11 @@ import app.shared.ui.RegionLearnView;
 public class SessionPresenter {
 	// Wir speichern auch die Frage für Skinwechsel
 	private record SavedState (ShapeMapState mapState, String text) {};
-	private record WrongAnswerSnapshot(ShapeMapState beforeMap, String beforeText, String expectedId) {}
-	
 	private final RegionLearnView view;
 	private final SessionSpec spec; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 	private final SessionProgress progress;
 
-	private WrongAnswerSnapshot wrongAnswerSnapshot;
+	private ShapeMapState beforeWrongAnswer;
 	private SavedState savedState;
 	
 	SessionPresenter(SessionProgress progress, SessionSpec spec, Set<String> sessionShapes) {
@@ -90,11 +88,7 @@ public class SessionPresenter {
 			view.addIdsToCorrect(Set.of(id));
 
 		} else {
-			wrongAnswerSnapshot = new WrongAnswerSnapshot(
-				    view.getState(),
-				    view.getQuestion(),
-				    correctId // expected target
-				);
+			beforeWrongAnswer = view.getState();
 			view.moveAllToActive();
 			view.setIdToIncorrect(id);
 			view.addIdsToCorrect(Set.of(correctId));
@@ -106,51 +100,29 @@ public class SessionPresenter {
 		view.setTextInTextField("");
 	}
 
-	/**
-	 * Schreib-Modus im freien Spiel: das aufgegebene Element bleibt rot auf der Karte stehen.
-	 *
-	 * <p>Das Eingabefeld muss dabei wieder freigeschaltet werden — {@link #setCorrectText} hat es
-	 * gesperrt, um die angezeigte Lösung nicht überschreibbar zu machen.</p>
-	 */
-	void handleMissedWrite(String id) {
-		view.setIdToIncorrect(id);
-		retryWrite();
-	}
-
+	/** Hebt die Sperre aus {@link #setCorrectText} auf und leert das Feld. */
 	void retryWrite() {
 		view.setTextInTextField("");
 		view.setTextFieldActive(true);
 	}
-	
-	/**
-	 * Leert die Karte: alle Formen zurück auf aktiv, kein Grün, kein Rot. Ein gemerkter Fehlgriff
-	 * ist damit ebenfalls erledigt.
-	 */
+
+	void markMissed(String id) {
+		view.setIdToIncorrect(id);
+	}
+
 	void clearMap() {
 		view.moveAllToActive();
-		wrongAnswerSnapshot = null;
 	}
 
 	/**
-	 * Nimmt den gezeigten Vergleich (ein rot, ein grün) zurück und stellt den Stand von vor dem
-	 * Fehlgriff wieder her.
-	 *
-	 * <p>Ohne gemerkten Fehlgriff passiert nichts: Im Schreib-Modus endet auch eine per ESC
-	 * aufgegebene Pause hier, und vor der stand kein Vergleich.</p>
-	 *
-	 * @param keepMissedRed die gesuchte, verfehlte Form bleibt rot stehen, statt in den alten Stand
-	 *                      zurückzukehren
+	 * Stellt den Stand von vor dem Fehlgriff wieder her. Ohne Fehlgriff passiert nichts — das
+	 * Benennen landet hier auch nach ESC im freien Spiel.
 	 */
-	void restoreBeforeWrongAnswer(boolean keepMissedRed) {
-		if (wrongAnswerSnapshot == null)
+	void restoreBeforeWrongAnswer() {
+		if (beforeWrongAnswer == null)
 			return;
-		ShapeMapState base = wrongAnswerSnapshot.beforeMap();
-		if (keepMissedRed) {
-			base.incorrectShapes().add(wrongAnswerSnapshot.expectedId());
-			base.activeShapes().remove(wrongAnswerSnapshot.expectedId());
-		}
-		view.setState(base);
-		wrongAnswerSnapshot = null;
+		view.setState(beforeWrongAnswer);
+		beforeWrongAnswer = null;
 	}
 	
 	// ========================================
