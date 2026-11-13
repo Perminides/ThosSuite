@@ -10,8 +10,8 @@ import java.util.Set;
  * wiederherzustellen. Das ist Spielregel, nicht Anzeige.</p>
  *
  * <p>Achtung: die Mengen sind <b>veränderbar</b>, und der Presenter nutzt das
- * ({@code undoWrongClick} ergänzt die Falsch-Menge). Kein sauberer Wert-Typ, aber unverändert
- * übernommen.</p>
+ * ({@code restoreBeforeWrongAnswer} ergänzt auf Wunsch die Falsch-Menge). Kein sauberer Wert-Typ,
+ * aber unverändert übernommen.</p>
  */
 public record ShapeMapState(
 		Set<String> correctShapes,

@@ -22,7 +22,6 @@ public class SessionPresenter {
 	private final RegionLearnView view;
 	private final SessionSpec spec; // Benötigt für den Neuaufbau eines Panels bei skinChanged
 	private final SessionProgress progress;
-	private final boolean hard;
 
 	private WrongAnswerSnapshot wrongAnswerSnapshot;
 	private SavedState savedState;
@@ -39,7 +38,6 @@ public class SessionPresenter {
 				new RegionCallbacks(this::clickedMapElement, this::typedText));
 		this.progress = progress;
 		this.spec = spec;
-		this.hard = spec.getMode().getEasyHard() == Mode.EasyHard.HARD;
 	}
 	
 	ScreenView getView() {
@@ -89,9 +87,6 @@ public class SessionPresenter {
 	
 	void handleAnswerResult(String id, boolean correct, String correctId) {
 		if (correct) {
-			if (hard) {
-				view.moveAllToActive();
-			}
 			view.addIdsToCorrect(Set.of(id));
 
 		} else {
@@ -128,40 +123,33 @@ public class SessionPresenter {
 	}
 	
 	/**
-	 * Der gezeigte Vergleich (ein rot, ein grün) verschwindet, sobald es weitergeht.
-	 *
-	 * <p>Bei „schwer" bleibt danach <b>nichts</b> stehen — weder der verpasste Kreis noch das Grün
-	 * früherer Treffer. Es gibt dort also auch nichts wiederherzustellen, die Karte wird schlicht
-	 * geleert. Würde man stattdessen den Schnappschuss von vor dem Falsch-Klick einspielen, käme
-	 * altes Grün zurück und neues Rot käme dazu; nach zwei Fehlern in Folge stünde die halbe Karte
-	 * bunt da.</p>
-	 *
-	 * <p>Bei „leicht" ist genau das Gegenteil gewollt: der Stand von vorher lebt weiter, und der
-	 * verpasste Kreis bleibt im freien Spiel rot markiert.</p>
+	 * Leert die Karte: alle Formen zurück auf aktiv, kein Grün, kein Rot. Ein gemerkter Fehlgriff
+	 * ist damit ebenfalls erledigt.
 	 */
-	/**
-	 * Nimmt einen Fehlgriff zurück. Im freien Spiel bleibt die verfehlte Form rot stehen und es
-	 * geht weiter; im Lernmodus wird der Stand davor wiederhergestellt, damit man es nochmal
-	 * versuchen kann.
-	 */
-	void undoWrongAnswer() {
-		if (hard) {
-			view.moveAllToActive();
-		} else {
-			ShapeMapState base = wrongAnswerSnapshot.beforeMap();
-			if (spec.isPlaySession()) {
-				base.incorrectShapes().add(wrongAnswerSnapshot.expectedId());
-				base.activeShapes().remove(wrongAnswerSnapshot.expectedId());
-			}
-			view.setState(base);
-		}
+	void clearMap() {
+		view.moveAllToActive();
 		wrongAnswerSnapshot = null;
 	}
 
-	void undoWrongWrite() {
+	/**
+	 * Nimmt den gezeigten Vergleich (ein rot, ein grün) zurück und stellt den Stand von vor dem
+	 * Fehlgriff wieder her.
+	 *
+	 * <p>Ohne gemerkten Fehlgriff passiert nichts: Im Schreib-Modus endet auch eine per ESC
+	 * aufgegebene Pause hier, und vor der stand kein Vergleich.</p>
+	 *
+	 * @param keepMissedRed die gesuchte, verfehlte Form bleibt rot stehen, statt in den alten Stand
+	 *                      zurückzukehren
+	 */
+	void restoreBeforeWrongAnswer(boolean keepMissedRed) {
 		if (wrongAnswerSnapshot == null)
 			return;
-		view.setState(wrongAnswerSnapshot.beforeMap());
+		ShapeMapState base = wrongAnswerSnapshot.beforeMap();
+		if (keepMissedRed) {
+			base.incorrectShapes().add(wrongAnswerSnapshot.expectedId());
+			base.activeShapes().remove(wrongAnswerSnapshot.expectedId());
+		}
+		view.setState(base);
 		wrongAnswerSnapshot = null;
 	}
 	
