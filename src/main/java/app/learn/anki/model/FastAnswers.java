@@ -1,6 +1,7 @@
 package app.learn.anki.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -102,26 +103,34 @@ public class FastAnswers {
 	}
 
 	/**
-	 * Was nach einem Fehlschlag in den noch leeren Feldern erscheint. Ohne Bindung kommen die Antworten aus
-	 * dem Vorrat in CSV-Reihenfolge nach — bei einem großen Vorrat sieht man also Beispiele, nicht alles.
+	 * Was nach einem Fehlschlag aufgedeckt wird. Mit Bindung die leeren Felder mit ihrer Antwort. Ohne
+	 * Bindung der ganze offene Vorrat, gemischt: erst in die leeren Spielfelder, dann in die Felder
+	 * darunter, so viele wie die Spalte hat — bei einem größeren Vorrat jedes Mal eine andere Auswahl.
 	 */
 	public Map<Integer, String> revealRest() {
 		Map<Integer, String> rest = new LinkedHashMap<>();
-		int unnamed = 0;
-		for (int slot = 0; slot < slotToAnswer.length; slot++) {
-			if (slotToAnswer[slot] >= 0)
-				continue;
-			if (bound) {
-				rest.put(slot, textOf(slot));
-			} else {
-				while (unnamed < answered.length && answered[unnamed])
-					unnamed++;
-				if (unnamed < answered.length) {
-					rest.put(slot, textOf(unnamed));
-					unnamed++;
-				}
-			}
+		if (bound) {
+			for (int slot = 0; slot < slotToAnswer.length; slot++)
+				if (slotToAnswer[slot] < 0)
+					rest.put(slot, textOf(slot));
+			return rest;
 		}
+
+		List<Integer> open = new ArrayList<>();
+		for (int index = 0; index < answered.length; index++)
+			if (!answered[index])
+				open.add(index);
+		Collections.shuffle(open);
+
+		List<Integer> freeSlots = new ArrayList<>();
+		for (int slot = 0; slot < slotToAnswer.length; slot++)
+			if (slotToAnswer[slot] < 0)
+				freeSlots.add(slot);
+		for (int slot = slotToAnswer.length; slot < Card.MAX_FAST_SLOTS; slot++)
+			freeSlots.add(slot);
+
+		for (int i = 0; i < open.size() && i < freeSlots.size(); i++)
+			rest.put(freeSlots.get(i), textOf(open.get(i)));
 		return rest;
 	}
 

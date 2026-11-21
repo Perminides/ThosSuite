@@ -193,7 +193,7 @@ Aufbau: `Fast:<sekunden>:<modus>:<antwort>\|-<stoppwort>\|…` — Zeit je Feld 
 |---|---|
 | `ordered` | in dieser Reihenfolge eingeben; bekannte Antwort an falscher Position = Karte falsch; doppelte Antworten erlaubt |
 | `any` | beliebige Reihenfolge, **alle** nötig |
-| `anyN` | N von allen genügen (`any3`); **keine** Hinweise |
+| `anyN` | N von allen genügen (`any3`); **keine** Hinweise; nach einem Fehlschlag wird der offene Vorrat gemischt aufgedeckt, auch in den Feldern unter den N, bis die zehn voll sind |
 
 Je Antwort: Schreibvarianten mit `,` getrennt, optional ein `<Hinweis>` davor. Ein führendes `-`
 macht stattdessen ein **Stoppwort**: Vollständig getippt deckt es den Rest auf, die Karte ist falsch

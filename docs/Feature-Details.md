@@ -45,7 +45,8 @@ Frage ihren eigenen Lernstand.
 keine Auswahl, dafür Zeitdruck. Jede gesuchte Antwort hat ihr eigenes Limit; eine Uhr zählt herunter
 und beginnt mit jedem Treffer von vorn. Untereinander stehen die Antwortfelder, leer oder mit einem
 Hinweis darin, und decken sich nach und nach auf. Läuft die Zeit ab, erscheint das Fehlende, und die
-Karte gilt als falsch. Bei erzwungener Reihenfolge gilt das auch, sobald eine bekannte Antwort an
+Karte gilt als falsch. Genügt eine Zahl von Treffern aus einem größeren Vorrat, erscheint dabei der
+ganze offene Vorrat, gemischt und so weit die Felder reichen. Bei erzwungener Reihenfolge gilt das auch, sobald eine bekannte Antwort an
 falscher Position eingegeben wird. Ein mit `-` ausdrücklich markiertes Stoppwort bricht ebenfalls sofort
 ab; andere unbekannte Eingaben laufen ins Leere. Je nach Aufgabe zählt die Reihenfolge, oder es genügt
 eine bestimmte Zahl von Treffern aus einem größeren Vorrat.
@@ -169,6 +170,29 @@ Fachlichkeit mehr hergibt:
 
 Was daraus im Einzelnen folgt — welcher Dialog in welcher Konstellation erscheint —, steht als
 Tabelle im Javadoc von `RegionSession.closeLoud()`, wo es beim Lesen des Codes gebraucht wird.
+
+### DB-Schema (Anki-Lernstand)
+
+Zwei Tabellen, mit verschiedener Aufgabe:
+
+- **`card_learn_stat`** — eine Zeile je Karte mit dem aktuellen Stand (`last_played`, `level`).
+  Jedes Spielen überschreibt sie. Was heute fällig ist, steht nur hier verlässlich.
+- **`card_log`** — eine Zeile je Spielen, die Historie. `played_day` ist der Suite-Tag, nicht das
+  Datum aus `played_timestamp`: Wer nach Mitternacht weiterspielt, spielt noch am Vortag.
+
+`played_day` und `new_level` werden erst seit dem 14.09.2026 geschrieben; ältere Zeilen haben dort
+`NULL`. Zwei Ausnahmen sorgen dafür, dass der aktuelle Stand jeder Karte auch im Log steht:
+
+- **Seed-Zeilen mit Zeitstempel `2001-01-01T00:…`** und `correct_flag = NULL` — der Stand der
+  Karten, die zuletzt vor Beginn des Logs (27.10.2025) gespielt wurden; einige Dutzend liegen etwas
+  später. Sie sind kein Spielen.
+- **Das letzte Spiel vor dem 14.09.2026** trägt `played_day` und `new_level`, nachgetragen aus
+  `card_learn_stat` für jede Karte, die bis zum 15.11.2026 nicht wieder gespielt worden war.
+
+Die Auswertungs-Views liegen nur in der DB, nicht im Repo. `card_day_history` nimmt den offenen
+Zeitraum einer Karte aus `card_learn_stat` und nur die abgeschlossenen aus `card_log`. Fehlt einem
+Spiel der Level, nimmt sie an, die Karte sei am Tag ihres nächsten Spielens fällig geworden — die
+Annahme steht als Kommentar in der View-Definition. `deck_succes_history` gruppiert nach `played_day`.
 
 ## 💪 Aktivitäts-Integration (`activity`)
 
