@@ -31,7 +31,7 @@ public class SuiteCountdownLabel extends SuiteInfoLabel {
 	private boolean ranBeforePause;
 
 	public SuiteCountdownLabel(Rectangle2D bounds) {
-		super("", bounds);
+		super(" ", bounds); // ein Leerzeichen gibt dem leeren Feld schon die Höhe der Zahl
 		centerText();
 		timeline = new Timeline(new KeyFrame(Duration.seconds(1), _ -> tick()));
 		timeline.setCycleCount(Animation.INDEFINITE);
