@@ -324,7 +324,8 @@ final class Flaggenkarte {
 		k.add("Pause:"); // Zeit, die echte Flagge anzusehen
 		// Dasselbe noch einmal als Abspann: Auch wer die Karte reisst, soll die Flagge sehen.
 		k.add("<OnFail>Image:" + z.image());
-		k.add("Output:<b>" + z.land() + "</b>");
+		String bemerkung = z.value("Bemerkung");   // nur im Abspann: eine Merkhilfe für den, der danebenlag
+		k.add("Output:<b>" + z.land() + "</b>" + (bemerkung.isEmpty() ? "" : "<br /><br />" + bemerkung));
 		k.add("Pause:");
 		prependHint(k.steps(), z);
 		hinweisVorweg(k.steps(), z);
