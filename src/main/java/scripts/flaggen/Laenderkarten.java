@@ -87,11 +87,13 @@ final class Laenderkarten {
 
 	/**
 	 * Die Gegenrichtung zur Flaggenkarte: die echte Flagge zeigen und das Land auf der Karte anklicken
-	 * lassen. Zwei Schritte, mehr braucht sie nicht.
+	 * lassen. Im Abspann der Name dazu: Die Aufdeckung zeigt nur die Fläche, nicht welches Land sie ist.
 	 */
 	void kartenkarte(Zeile z, Kartenbauer k) {
 		k.add("Image:" + z.image());
 		k.add("Click:" + z.shape());
+		k.add("<OnFail>Output:<b>" + z.land() + "</b>");
+		k.add("Pause:");
 	}
 
 	/**
