@@ -114,7 +114,7 @@ final class Flaggenkarte {
 			List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "15", "27", "50");
 
 	/** Immer sichtbare Ablenker der Elementfrage — außer sie sind selbst die richtige Antwort. */
-	private static final List<String> ELEMENT_PINNED = List.of("Keine", "Stern", "Emblem");
+	private static final List<String> ELEMENT_PINNED = List.of("Keine", "Stern", "Emblem", "Mond");
 
 	// ---- Sprache --------------------------------------------------------------
 
